@@ -511,6 +511,20 @@ function normalizePublishSection(publish) {
       ? ""
       : assertString(publish.main_package, "publish.main_package"),
   };
+  if (publish.shared_alpha_authority_major !== undefined) {
+    const sharedAlphaAuthorityMajor = Number(
+      publish.shared_alpha_authority_major,
+    );
+    if (
+      !Number.isSafeInteger(sharedAlphaAuthorityMajor) ||
+      sharedAlphaAuthorityMajor < 1
+    ) {
+      throw new Error(
+        "publish.shared_alpha_authority_major must be a positive integer",
+      );
+    }
+    normalized.sharedAlphaAuthorityMajor = sharedAlphaAuthorityMajor;
+  }
   if (publish.kind !== undefined) {
     normalized.kind = kind;
   }

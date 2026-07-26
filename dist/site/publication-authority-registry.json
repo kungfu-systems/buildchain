@@ -4,6 +4,19 @@
   "defaultDecision": "deny",
   "entries": [
     {
+      "workflowPath": ".github/workflows/.auditable-demo.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.auditable-demo.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.binary-release-assets.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -520,6 +533,11 @@
   ],
   "workflowFacts": [
     {
+      "path": ".github/workflows/.auditable-demo.yml",
+      "signals": [],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.binary-release-assets.yml",
       "signals": [
         "write-permission",
@@ -870,5 +888,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "5487944a7dcac3931faeec5cde33a00254b9fdd8023ef0d21e1569c43d65e1bf"
+  "registryDigest": "cb18522c1957f0cb2e03c525847602a6163d3b276c106a8bce5b8028d8b9a011"
 }

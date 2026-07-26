@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:199fd83a7da33b0f654692ca973b33155e376ed50f0ce1f5864e1b6b18e0500a",
+    "compatibilityDigest": "sha256:008b1c5a90a787cf30106829ac7aca68ab501f6d9c375e415d9c5c6b89039f46",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e04e65883d48ed353c4a07f340b827444122ec28815d9b0d876b6fe45833e3bf",
+    "sha256": "b95d6937fa884cbb0f69c64b8361e3e862a87bd659f793c3d8e7a145d0a0c2dc",
     "summary": {
       "cliCommandCount": 87,
-      "workflowCount": 52,
+      "workflowCount": 53,
       "actionCount": 5,
-      "sitePageCount": 54,
+      "sitePageCount": 56,
       "docCommandRefCount": 276,
       "failureCount": 0
     },
@@ -228,12 +228,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e04e65883d48ed353c4a07f340b827444122ec28815d9b0d876b6fe45833e3bf",
+      "sha256": "b95d6937fa884cbb0f69c64b8361e3e862a87bd659f793c3d8e7a145d0a0c2dc",
       "summary": {
         "cliCommandCount": 87,
-        "workflowCount": 52,
+        "workflowCount": 53,
         "actionCount": 5,
-        "sitePageCount": 54,
+        "sitePageCount": 56,
         "docCommandRefCount": 276,
         "failureCount": 0
       },
@@ -331,6 +331,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/auditable-demo.md",
+          "name": "Auditable demo artifact pipeline",
+          "kind": "documentation",
+          "sourcePath": "docs/auditable-demo.md",
+          "evidencePath": "docs/auditable-demo.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/binary-distribution.md",
@@ -1424,6 +1436,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-propagation"
+        },
+        {
+          "id": "export:./release-activation-transaction",
+          "name": "@kungfu-tech/buildchain/release-activation-transaction",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-activation-transaction.js",
+          "evidencePath": "packages/core/release-activation-transaction.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-activation-transaction"
         },
         {
           "id": "export:./surface-manifest",
@@ -2718,6 +2742,30 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "workflow:.auditable-demo",
+          "name": "workflow:.auditable-demo",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.auditable-demo.yml",
+          "evidencePath": ".github/workflows/.auditable-demo.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 9,
+          "inputs": [
+            "adapter-path",
+            "artifact-retention-days",
+            "buildchain-repository",
+            "render-media",
+            "renderer-image",
+            "require-trusted-event",
+            "source-artifact-digest",
+            "source-artifact-name",
+            "source-ref"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:.binary-release-assets",
           "name": "workflow:.binary-release-assets",
           "kind": "workflow",
@@ -2933,7 +2981,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 79,
+          "inputCount": 83,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -2992,10 +3040,14 @@
             "publish-required-artifacts-json",
             "publish-target",
             "publish-transaction-override",
+            "release-activation-command",
+            "release-activation-receipt-set-path",
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
             "release-passport-buildchain-self-kfd",
+            "release-passport-evidence-command",
+            "release-passport-evidence-path",
             "release-passport-impact-json",
             "release-passport-invariant-passport-command",
             "release-passport-invariant-passport-jsons",
@@ -3244,7 +3296,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 40,
+          "inputCount": 41,
           "inputs": [
             "artifact-path",
             "aws-region",
@@ -3274,6 +3326,7 @@
             "production-release-on-main",
             "production-release-pr-mode",
             "production-release-pr-token",
+            "production-source-sha",
             "publication-admission-json",
             "publication-control-plane-audit-json",
             "publication-expected-json",
@@ -3920,7 +3973,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 71,
+          "inputCount": 75,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3971,10 +4024,14 @@
             "publish-required-artifacts-json",
             "publish-target",
             "publish-transaction-override",
+            "release-activation-command",
+            "release-activation-receipt-set-path",
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
             "release-passport-buildchain-self-kfd",
+            "release-passport-evidence-command",
+            "release-passport-evidence-path",
             "release-passport-impact-json",
             "release-passport-invariant-passport-command",
             "release-passport-invariant-passport-jsons",
@@ -4615,6 +4672,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:auditable-demo",
+          "name": "site-page:manual:auditable-demo",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:binary-distribution",
           "name": "site-page:manual:binary-distribution",
           "kind": "site-page",
@@ -4857,6 +4926,18 @@
         {
           "id": "site-page:manual:readme-badges",
           "name": "site-page:manual:readme-badges",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:release-activation-transaction",
+          "name": "site-page:manual:release-activation-transaction",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -5172,6 +5253,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 329
+    "publicSurfaceCount": 334
   }
 }

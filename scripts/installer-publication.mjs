@@ -77,11 +77,14 @@ function readAsset(artifactRoot, relativePath, expected) {
   const safePath = safeRelative(relativePath, "installer asset path");
   const absolute = path.resolve(artifactRoot, safePath);
   const rootPath = path.resolve(artifactRoot);
-  if (
-    !absolute.startsWith(`${rootPath}${path.sep}`) ||
-    !fs.statSync(absolute).isFile()
-  ) {
-    throw new Error(`installer asset is missing: ${safePath}`);
+  if (!absolute.startsWith(`${rootPath}${path.sep}`)) {
+    throw new Error(`installer asset escapes artifact root: ${safePath}`);
+  }
+  const stat = fs.lstatSync(absolute);
+  if (!stat.isFile() || stat.isSymbolicLink()) {
+    throw new Error(
+      `installer asset must be a regular non-symlink file: ${safePath}`,
+    );
   }
   const bytes = fs.readFileSync(absolute);
   const observed = {
@@ -163,6 +166,13 @@ export function validateInstallerPublication({ publication, artifactRoot }) {
       requireRoot(asset.digest, `${asset.name}.digest`);
       if (!Number.isSafeInteger(asset.size) || asset.size < 1) {
         throw new Error(`${asset.name}.size is invalid`);
+      }
+      const expectedContentType =
+        asset.name === "install.sh"
+          ? "text/x-shellscript; charset=utf-8"
+          : "text/plain; charset=utf-8";
+      if (asset.contentType !== expectedContentType) {
+        throw new Error(`${asset.name}.contentType is invalid`);
       }
       const immutable = readAsset(
         artifactRoot,

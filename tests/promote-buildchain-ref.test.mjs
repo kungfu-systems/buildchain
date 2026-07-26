@@ -15,6 +15,7 @@ const {
   assertExpectedPublicationVersion,
   assertChannelPromotionPr,
   assertProviderEnforcedChannelTransaction,
+  assertProtectedChannel,
   assertPromotableRepository,
   assertPromotableTargetRef,
   createTreeEquivalentReleaseImpact,
@@ -44,23 +45,40 @@ const {
   loadBuildchainConfig,
 } = await import("../packages/core/buildchain-config.js");
 
-test("older minor alpha publication preserves the global npm alpha channel", () => {
+test("only the configured major can write the shared npm alpha channel", () => {
   assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: true,
-    line: "v2.13",
+    line: "v3.0",
+    sharedAlphaAuthorityMajor: 3,
   }), "");
   assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: true,
-    line: "v2.13",
+    line: "v3.0",
     publishDistTag: "alpha",
+    sharedAlphaAuthorityMajor: 3,
   }), "alpha");
   assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: true,
+    line: "v2.14",
+    sharedAlphaAuthorityMajor: 3,
+  }), "v2.14-alpha");
+  assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: false,
-    line: "v2.12",
-  }), "v2.12-alpha");
+    line: "v3.0",
+    sharedAlphaAuthorityMajor: 3,
+  }), "v3.0-alpha");
+  assert.throws(
+    () => alphaDistTagForPromotion({
+      ownsMajorAlphaTag: true,
+      line: "v2.14",
+      publishDistTag: "alpha",
+      sharedAlphaAuthorityMajor: 3,
+    }),
+    /shared npm alpha authority belongs to v3/,
+  );
   assert.throws(
     () => alphaDistTagForPromotion({ ownsMajorAlphaTag: false, line: "" }),
-    /older-minor alpha publication requires a vN\.N release line/,
+    /alpha publication requires a vN\.N release line/,
   );
 });
 
@@ -207,6 +225,17 @@ key = "release.version"
   assert.equal(resolved.release.line, "v2.11");
   assert.equal(resolved.classification, "patch");
   assert.equal(resolved.summary, "Version-bound Buildchain release impact.");
+
+  const nextMajor = JSON.parse(resolveReleaseImpactInput({
+    cwd,
+    impactJson: ".buildchain/release-impact.json",
+    version: "3.0.0",
+    line: "v3.0",
+  }));
+  assert.deepEqual(nextMajor.release, {
+    version: "3.0.0",
+    line: "v3.0",
+  });
 });
 
 test("tree-equivalent stable promotion derives a release-governance impact ledger", () => {
@@ -6967,6 +6996,239 @@ assert.match(version, /^2\\.0\\.(?:0|1-alpha\\.0)$/);
   );
 });
 
+test("publish-gate/major resumes contained published finalization without selecting the next patch", async () => {
+  const transactionSourceSha = "1".repeat(40);
+  const transactionReleaseSha = "2".repeat(40);
+  const channelMergeSha = "3".repeat(40);
+  const version = "2.0.0";
+  const exactTag = `v${version}`;
+  const artifact = {
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: version,
+    digest: "sha512:major0",
+  };
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.10",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/unexpected-publish.mjs": `
+import fs from "node:fs";
+fs.writeFileSync("unexpected-publish.txt", "provider mutation reran\\n");
+process.exitCode = 9;
+`,
+  });
+  const evidencePath = path.join(
+    cwd,
+    ".buildchain/release-evidence",
+    exactTag,
+    "evidence.json",
+  );
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(evidencePath, JSON.stringify({
+    schema: 1,
+    version,
+    channel: "major",
+    source_sha: transactionSourceSha,
+    release_sha: transactionReleaseSha,
+    target_ref: "publish-gate/major",
+    release_material_sha: transactionReleaseSha,
+    publish_tooling_sha: transactionReleaseSha,
+    artifacts: [artifact],
+  }, null, 2) + "\n");
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([["heads/publish-gate/major", channelMergeSha]]),
+  });
+  commits.set(channelMergeSha, {
+    sha: channelMergeSha,
+    tree: { sha: `tree-${channelMergeSha}` },
+    parents: [{ sha: transactionSourceSha }, { sha: transactionReleaseSha }],
+  });
+  const repoUpdates = [];
+  octokit.rest.repos = {
+    get: async () => ({
+      data: { default_branch: "dev/v2/v2.0" },
+    }),
+    update: async (input) => {
+      repoUpdates.push(input);
+      return {};
+    },
+    listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+      assert.equal(commit_sha, channelMergeSha);
+      return {
+        data: [
+          {
+            merged_at: "2026-07-25T00:00:00Z",
+            base: { ref: "publish-gate/major" },
+            head: {
+              ref: "release/v1/v1.0",
+              repo: { full_name: "kungfu-systems/buildchain" },
+            },
+          },
+        ],
+      };
+    },
+  };
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "contained-published-major",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "publish-gate/major",
+      source_sha: transactionSourceSha,
+      release_sha: transactionReleaseSha,
+      release_material_sha: transactionReleaseSha,
+      publish_tooling_sha: transactionReleaseSha,
+      version,
+      exact_tag: exactTag,
+      channel: "major",
+      line: "v2.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/2-0-0",
+      state_path: "",
+      evidence_path: "",
+      state: "finalizing",
+      previous_state: "published",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [artifact],
+      evidence: [".buildchain/release-evidence/v2.0.0/evidence.json"],
+      created_at: "2026-07-25T00:00:00.000Z",
+      updated_at: "2026-07-25T00:00:00.000Z",
+    },
+    evidencePath,
+  });
+  fs.rmSync(path.join(cwd, ".buildchain/release-state"), {
+    recursive: true,
+    force: true,
+  });
+  fs.rmSync(path.join(cwd, ".buildchain/release-evidence"), {
+    recursive: true,
+    force: true,
+  });
+
+  const plan = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "publish-gate/major",
+    cwd,
+    dryRun: true,
+    publishTransaction: true,
+    requireVersionState: true,
+  });
+  assert.deepEqual(
+    plan.updates.find((update) => update.action === "dry-run-publish-transaction"),
+    {
+      action: "dry-run-publish-transaction",
+      version,
+      tag: exactTag,
+      publicTag: exactTag,
+      sha: transactionReleaseSha,
+      finalizationOnly: true,
+    },
+  );
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "publish-gate/major",
+    cwd,
+    publishTransaction: true,
+    publishCommand: "node scripts/unexpected-publish.mjs",
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    requireVersionState: true,
+    expectedPublicationVersion: version,
+    releasePassport: false,
+  });
+
+  const nextAlphaSha = refs.get("heads/alpha/v2/v2.0");
+  assert.equal(result.sha, transactionReleaseSha);
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
+  assert.equal(refs.get("heads/publish-gate/major"), channelMergeSha);
+  assert.equal(refs.get("heads/release/v2/v2.0"), transactionReleaseSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
+  assert.equal(refs.get("tags/v2.0"), transactionReleaseSha);
+  assert.equal(refs.get("tags/v2"), transactionReleaseSha);
+  assert.equal(refs.get("heads/dev/v2/v2.0"), nextAlphaSha);
+  assert.equal(refs.get("tags/v2.0.1-alpha.0"), nextAlphaSha);
+  assert.equal(refs.get("tags/v2.0-alpha"), nextAlphaSha);
+  assert.equal(refs.get("tags/v2-alpha"), nextAlphaSha);
+  assert.equal(refs.has("tags/v2.0.1"), false);
+  assert.equal(fs.existsSync(path.join(cwd, "unexpected-publish.txt")), false);
+  assert.deepEqual(repoUpdates, []);
+  assert.deepEqual(
+    result.updates.find(
+      (update) => update.action === "existing-default-branch",
+    ),
+    {
+      ref: "dev/v2/v2.0",
+      action: "existing-default-branch",
+    },
+  );
+
+  for (const ref of [
+    "heads/alpha/v2/v2.0",
+    "heads/dev/v2/v2.0",
+    "tags/v2.0.1-alpha.0",
+    "tags/v2.0-alpha",
+    "tags/v2-alpha",
+  ]) {
+    refs.delete(ref);
+  }
+
+  const completedPlan = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "publish-gate/major",
+    cwd,
+    dryRun: true,
+    publishTransaction: true,
+    requireVersionState: true,
+  });
+  assert.equal(
+    completedPlan.updates.find((update) =>
+      update.action === "dry-run-publish-transaction"
+    )?.version,
+    version,
+  );
+
+  const completedResume = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "publish-gate/major",
+    cwd,
+    publishTransaction: true,
+    publishCommand: "node scripts/unexpected-publish.mjs",
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    requireVersionState: true,
+    expectedPublicationVersion: version,
+    releasePassport: false,
+  });
+  assert.equal(completedResume.publishTransaction.state, "complete");
+  assert.equal(refs.get("tags/v2.0.1"), undefined);
+  assert.equal(fs.existsSync(path.join(cwd, "unexpected-publish.txt")), false);
+  assert.equal(refs.has("heads/alpha/v2/v2.0"), true);
+  assert.equal(refs.has("heads/dev/v2/v2.0"), true);
+});
+
 test("publish-gate/major finalization opens next-alpha PR from current alpha head", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
@@ -7081,6 +7343,140 @@ test("publish-gate/major finalization opens next-alpha PR from current alpha hea
   assert.equal(result.sha, releaseSha);
   assert.equal(result.nextAlphaSha, nextAlphaSha);
   assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
+});
+
+test("publish-gate/major settles a generated next-alpha commit already contained by the protected branch", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.10",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const generatedAlphaSha = "b".repeat(40);
+  const currentAlphaSha = "c".repeat(40);
+  const versionStateBranch = versionStateBranchName(
+    "alpha/v2/v2.0",
+    generatedAlphaSha,
+  );
+  const refs = new Map([
+    ["heads/publish-gate/major", SHA],
+    ["heads/alpha/v2/v2.0", currentAlphaSha],
+    [`heads/${versionStateBranch}`, generatedAlphaSha],
+    ["tags/v2.0.1-alpha.0", generatedAlphaSha],
+  ]);
+  const commits = [];
+  const branchUpdates = [];
+  const comparisons = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` }, parents: [] },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async ({ message, parents }) => {
+          const sha = `commit-${commits.length + 1}`.padEnd(40, "0");
+          commits.push({ sha, message, parents });
+          return { data: { sha } };
+        },
+        updateRef: async ({ ref, sha }) => {
+          branchUpdates.push({ ref, sha });
+          if (ref === "heads/alpha/v2/v2.0") {
+            const error = new Error("Update is not a fast forward");
+            error.status = 422;
+            throw error;
+          }
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      pulls: {
+        list: async () => {
+          assert.fail("contained generated commits should not need an open PR lookup");
+        },
+        create: async () => {
+          assert.fail("contained generated commits should not create a duplicate PR");
+        },
+      },
+      repos: {
+        compareCommitsWithBasehead: async ({ basehead }) => {
+          comparisons.push(basehead);
+          return {
+            data: {
+              status:
+                basehead === `${generatedAlphaSha}...${currentAlphaSha}`
+                  ? "ahead"
+                  : "diverged",
+            },
+          };
+        },
+        update: async () => ({}),
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          assert.equal(commit_sha, SHA);
+          return {
+            data: [
+              {
+                merged_at: "2026-06-30T00:00:00Z",
+                base: { ref: "publish-gate/major" },
+                head: {
+                  ref: "release/v1/v1.0",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          };
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "publish-gate/major",
+    cwd,
+  });
+
+  assert.equal(refs.get("heads/alpha/v2/v2.0"), currentAlphaSha);
+  assert.equal(refs.get("heads/dev/v2/v2.0"), generatedAlphaSha);
+  assert.equal(
+    branchUpdates.some(({ ref }) => ref === "heads/alpha/v2/v2.0"),
+    false,
+  );
+  assert(comparisons.includes(`${generatedAlphaSha}...${currentAlphaSha}`));
+  assert.deepEqual(
+    result.updates.find(
+      (update) => update.action === "existing-contained-version-state",
+    ),
+    {
+      ref: "alpha/v2/v2.0",
+      action: "existing-contained-version-state",
+      sha: currentAlphaSha,
+      sourceSha: generatedAlphaSha,
+    },
+  );
 });
 
 test("release promotion rerun reuses prepared next alpha version commit", async () => {
@@ -7751,11 +8147,21 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
 
 test("strict alpha promotion uses provider transaction evidence when protection details are unreadable", async () => {
   let reviewState = "APPROVED";
+  let protectionReadStatus = 403;
   const pullRequestHeadSha = "b".repeat(40);
   const checkedRefs = [];
   const octokit = {
     rest: {
       repos: {
+        getBranchProtection: async () => {
+          const error = new Error(
+            protectionReadStatus === 404
+              ? "Not Found"
+              : "Resource not accessible by integration",
+          );
+          error.status = protectionReadStatus;
+          throw error;
+        },
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
             {
@@ -7808,20 +8214,23 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     },
   };
 
-  const resolvedStatusCheck = await assertProviderEnforcedChannelTransaction({
-    octokit,
-    owner: "kungfu-systems",
-    repo: "buildchain",
-    sourceSha: SHA,
-    targetRef: "alpha/v1/v1.0",
-    requiredStatusCheck: "check",
-  });
-  assert.equal(resolvedStatusCheck, "check");
-  assert.deepEqual(checkedRefs, [pullRequestHeadSha]);
+  for (const status of [403, 404]) {
+    protectionReadStatus = status;
+    const resolvedStatusCheck = await assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+    });
+    assert.equal(resolvedStatusCheck, "check");
+  }
+  assert.deepEqual(checkedRefs, [pullRequestHeadSha, pullRequestHeadSha]);
 
   reviewState = "CHANGES_REQUESTED";
   await assert.rejects(
-    assertProviderEnforcedChannelTransaction({
+    assertProtectedChannel({
       octokit,
       owner: "kungfu-systems",
       repo: "buildchain",

@@ -38,7 +38,13 @@ function input(name, required = true) {
 function runFile(
   command,
   args,
-  { cwd, env, redact = false, stdoutOnly = false } = {},
+  {
+    cwd,
+    env,
+    redact = false,
+    stdoutOnly = false,
+    failureLabel = "",
+  } = {},
 ) {
   const result = spawnSync(command, args, {
     cwd,
@@ -56,7 +62,7 @@ function runFile(
     throw (
       result.error ||
       new Error(
-        `${path.basename(command)} failed with status ${result.status}: ${detail}`,
+        `${failureLabel || path.basename(command)} failed with status ${result.status}: ${detail}`,
       )
     );
   }
@@ -291,10 +297,12 @@ async function main() {
     writeCleanupState(cleanupStatePath, state);
     runSecurity(["create-keychain", "-p", keychainPassword, keychainPath], {
       redact: true,
+      failureLabel: "create temporary keychain",
     });
     runSecurity(["set-keychain-settings", "-lut", "21600", keychainPath]);
     runSecurity(["unlock-keychain", "-p", keychainPassword, keychainPath], {
       redact: true,
+      failureLabel: "unlock temporary keychain",
     });
     runSecurity(
       [
@@ -309,7 +317,10 @@ async function main() {
         "-T",
         "/usr/bin/security",
       ],
-      { redact: true },
+      {
+        redact: true,
+        failureLabel: "import Developer ID PKCS#12",
+      },
     );
     runSecurity(
       [
@@ -321,7 +332,10 @@ async function main() {
         keychainPassword,
         keychainPath,
       ],
-      { redact: true },
+      {
+        redact: true,
+        failureLabel: "configure Developer ID key access",
+      },
     );
     runSecurity([
       "list-keychains",

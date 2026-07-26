@@ -11,6 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   issues: write
   id-token: write
@@ -24,6 +25,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3-alpha
     permissions:
+      actions: read
       contents: read
       issues: write
       id-token: write
@@ -45,6 +47,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3-alpha
     permissions:
+      actions: read
       contents: read
       issues: write
       id-token: write
