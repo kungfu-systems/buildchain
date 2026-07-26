@@ -11,6 +11,12 @@
     "logicalRef": "v3",
     "callRef": "v3",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
-    "forwardInternalInputs": true
+    "forwardInternalInputs": true,
+    "unsupportedInputs": [
+      "release-activation-command",
+      "release-activation-receipt-set-path",
+      "release-passport-evidence-command",
+      "release-passport-evidence-path"
+    ]
   }
 }

@@ -832,10 +832,6 @@ jobs:
       github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
       publication-commit-command: ${{ inputs.publication-commit-command }}
       publication-commit-evidence-path: ${{ inputs.publication-commit-evidence-path }}
-      release-activation-command: ${{ inputs.release-activation-command }}
-      release-activation-receipt-set-path: ${{ inputs.release-activation-receipt-set-path }}
-      release-passport-evidence-command: ${{ inputs.release-passport-evidence-command }}
-      release-passport-evidence-path: ${{ inputs.release-passport-evidence-path }}
       standalone-binary-distribution: ${{ inputs.standalone-binary-distribution }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
