@@ -402,12 +402,16 @@ jobs:
       - name: Expose Windows runner user toolchain
         if: ${{ runner.os == 'Windows' }}
         shell: pwsh
-        run: Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+        run: |
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".cargo\bin")
 
       - name: Expose POSIX runner user toolchain
         if: ${{ runner.os != 'Windows' }}
         shell: bash
-        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+        run: |
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+          echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
 
       - name: Download locked Gate plan
         uses: actions/download-artifact@v7.0.0

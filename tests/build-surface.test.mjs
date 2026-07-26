@@ -2628,8 +2628,10 @@ test("reusable build exposes runner-local tools before lifecycle execution", () 
 
   assert.match(workflow, /name: Expose Windows runner user toolchain/);
   assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
+  assert.match(workflow, /Join-Path \$HOME "\.cargo\\bin"/);
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
+  assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
   const nativeBuild = workflow.slice(workflow.indexOf("  build-native:"));
   assert.ok(
     nativeBuild.indexOf("name: Expose Windows runner user toolchain") <
@@ -2662,8 +2664,10 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /refusing to clean Gate source outside GITHUB_WORKSPACE/);
   assert.match(workflow, /name: Expose Windows runner user toolchain/);
   assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
+  assert.match(workflow, /Join-Path \$HOME "\.cargo\\bin"/);
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
+  assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
   assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
