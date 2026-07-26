@@ -206,6 +206,10 @@ test("reusable build workflow exposes the required surface contract", () => {
     path.join(root, ".github/workflows/.build.yml"),
     "utf8",
   );
+  const summarizeJob = workflow.slice(
+    workflow.indexOf("  summarize:"),
+    workflow.indexOf("\n  controller-receipt:", workflow.indexOf("  summarize:")),
+  );
   assert.match(workflow, /workflow_call:/);
   assert.match(
     workflow,
@@ -261,6 +265,23 @@ test("reusable build workflow exposes the required surface contract", () => {
     /install --dir \.buildchain\/workflow-shell --prod --frozen-lockfile --ignore-scripts/,
   );
   assert.match(workflow, /node "\$\{\{ steps\.anchored-verifier\.outputs\.path \}\}"/);
+  assert.match(
+    summarizeJob,
+    /name: Checkout Buildchain workflow shell for aggregate compatibility[\s\S]*?ref: \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-sha \}\}[\s\S]*?path: \.buildchain\/workflow-shell/,
+  );
+  assert.match(
+    summarizeJob,
+    /binder=\.buildchain\/runtime\/scripts\/resolve-artifact-coordinates\.mjs/,
+  );
+  assert.match(
+    summarizeJob,
+    /binder=\.buildchain\/workflow-shell\/scripts\/resolve-artifact-coordinates\.mjs/,
+    "new workflow shells must retain producer artifact coordinates when the selected stable runtime predates the binder",
+  );
+  assert.match(
+    summarizeJob,
+    /node "\$\{\{ steps\.artifact-coordinate-binder\.outputs\.path \}\}"/,
+  );
   assert.match(workflow, /kind":"anchored-version-material"/);
   assert.match(workflow, /target_ref="release\/\$\{BUILDCHAIN_TARGET_LINE\}"/);
   assert.ok(
@@ -3561,12 +3582,23 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   const alphaLock = JSON.parse(
     fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
   );
+  const stableLock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain/contract-lock.json"), "utf8"),
+  );
   const currentContract = JSON.parse(
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v3-alpha");
   assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
+  assert.equal(stableLock.buildchain.ref, "v3");
+  assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
+  assert.equal(stableLock.buildchain.majorLine, "v3");
+  assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
+  assert.equal(
+    stableLock.buildchain.compatibilityDigest,
+    alphaLock.buildchain.compatibilityDigest,
+  );
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),
   ).version;

@@ -2012,6 +2012,14 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Checkout Buildchain workflow shell for aggregate compatibility
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
@@ -2141,9 +2149,24 @@ jobs:
               JSON.stringify(artifacts, null, 2) + "\n",
             );
 
+      - name: Resolve artifact coordinate binder
+        id: artifact-coordinate-binder
+        shell: bash
+        run: |
+          set -euo pipefail
+          binder=.buildchain/runtime/scripts/resolve-artifact-coordinates.mjs
+          if [[ ! -f "${binder}" ]]; then
+            binder=.buildchain/workflow-shell/scripts/resolve-artifact-coordinates.mjs
+          fi
+          if [[ ! -f "${binder}" ]]; then
+            echo "::error::Artifact coordinate binder is absent from both the selected runtime and trusted workflow shell"
+            exit 1
+          fi
+          echo "path=${binder}" >> "$GITHUB_OUTPUT"
+
       - name: Bind producer-owned exact artifact coordinates
         id: artifact-coordinates
-        run: node .buildchain/runtime/scripts/resolve-artifact-coordinates.mjs
+        run: node "${{ steps.artifact-coordinate-binder.outputs.path }}"
         env:
           BUILDCHAIN_ARTIFACT_LIST_PATH: .buildchain/artifacts/github-artifacts.json
           BUILDCHAIN_ARTIFACT_COORDINATES_PATH: .buildchain/artifacts/artifact-coordinates.json
