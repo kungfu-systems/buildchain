@@ -316,7 +316,7 @@ function runAdapter(values) {
     const result = spawnSync(
       adapter,
       ["--artifact-root", artifactRoot, "--output", output, "--source-coordinate", sourceCoordinate],
-      { cwd: sourceRoot, env, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+      { cwd: sourceRoot, env: environment, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
     );
     fs.writeFileSync(path.join(diagnostics, "adapter.stdout.log"), result.stdout || "");
     fs.writeFileSync(path.join(diagnostics, "adapter.stderr.log"), result.stderr || result.error?.message || "");

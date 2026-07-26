@@ -45,23 +45,40 @@ const {
   loadBuildchainConfig,
 } = await import("../packages/core/buildchain-config.js");
 
-test("older minor alpha publication preserves the global npm alpha channel", () => {
+test("only the configured major can write the shared npm alpha channel", () => {
   assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: true,
-    line: "v2.13",
+    line: "v3.0",
+    sharedAlphaAuthorityMajor: 3,
   }), "");
   assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: true,
-    line: "v2.13",
+    line: "v3.0",
     publishDistTag: "alpha",
+    sharedAlphaAuthorityMajor: 3,
   }), "alpha");
   assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: true,
+    line: "v2.14",
+    sharedAlphaAuthorityMajor: 3,
+  }), "v2.14-alpha");
+  assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: false,
-    line: "v2.12",
-  }), "v2.12-alpha");
+    line: "v3.0",
+    sharedAlphaAuthorityMajor: 3,
+  }), "v3.0-alpha");
+  assert.throws(
+    () => alphaDistTagForPromotion({
+      ownsMajorAlphaTag: true,
+      line: "v2.14",
+      publishDistTag: "alpha",
+      sharedAlphaAuthorityMajor: 3,
+    }),
+    /shared npm alpha authority belongs to v3/,
+  );
   assert.throws(
     () => alphaDistTagForPromotion({ ownsMajorAlphaTag: false, line: "" }),
-    /older-minor alpha publication requires a vN\.N release line/,
+    /alpha publication requires a vN\.N release line/,
   );
 });
 

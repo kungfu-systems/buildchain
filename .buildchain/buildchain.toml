@@ -52,6 +52,9 @@ command = "node scripts/generate-site-bundle.mjs"
 [lifecycle.publish]
 command = "node scripts/npm-publish-transaction.mjs"
 
+[publish]
+shared_alpha_authority_major = 3
+
 [governance.dev.merge_queue]
 mode = "enabled"
 required_workflows = [".github/workflows/verify.yml"]
