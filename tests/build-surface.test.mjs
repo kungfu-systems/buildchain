@@ -3561,12 +3561,23 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   const alphaLock = JSON.parse(
     fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
   );
+  const stableLock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain/contract-lock.json"), "utf8"),
+  );
   const currentContract = JSON.parse(
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v3-alpha");
   assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
+  assert.equal(stableLock.buildchain.ref, "v3");
+  assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
+  assert.equal(stableLock.buildchain.majorLine, "v3");
+  assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
+  assert.equal(
+    stableLock.buildchain.compatibilityDigest,
+    alphaLock.buildchain.compatibilityDigest,
+  );
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),
   ).version;
