@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "1bd7609dcd53c17ac52bfe77e9b993ceb4dae8605f1ec792377483baba070897",
+    "sha256": "08eb47b0eeab5cf1a11b63314b9572115ba71feb20843adf3e6cef0536dd5f47",
     "summary": {
       "cliCommandCount": 96,
       "workflowCount": 53,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "1bd7609dcd53c17ac52bfe77e9b993ceb4dae8605f1ec792377483baba070897",
+      "sha256": "08eb47b0eeab5cf1a11b63314b9572115ba71feb20843adf3e6cef0536dd5f47",
       "summary": {
         "cliCommandCount": 96,
         "workflowCount": 53,
@@ -1148,6 +1148,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./candidate-timeline"
+        },
+        {
+          "id": "export:./cache-evidence",
+          "name": "@kungfu-tech/buildchain/cache-evidence",
+          "kind": "package-export",
+          "sourcePath": "packages/core/cache-evidence.js",
+          "evidencePath": "packages/core/cache-evidence.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./cache-evidence"
         },
         {
           "id": "export:./controller-evidence",
@@ -2925,7 +2937,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 66,
+          "inputCount": 69,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2945,6 +2957,9 @@
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
+            "cache-dependency-lock-root",
+            "cache-policy-root",
+            "cache-toolchain-root",
             "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
@@ -3566,7 +3581,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 69,
+          "inputCount": 72,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3589,6 +3604,9 @@
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
+            "cache-dependency-lock-root",
+            "cache-policy-root",
+            "cache-toolchain-root",
             "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
@@ -5392,6 +5410,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 344
+    "publicSurfaceCount": 345
   }
 }

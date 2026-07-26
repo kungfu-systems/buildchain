@@ -332,6 +332,21 @@ on:
         default: ""
         type: string
         required: false
+      cache-dependency-lock-root:
+        description: "Optional consumer-owned exact dependency-lock root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-toolchain-root:
+        description: "Optional consumer-owned exact toolchain root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-policy-root:
+        description: "Optional consumer-owned exact qualification policy root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
         default: ""
@@ -724,6 +739,9 @@ jobs:
       checkout-cache-fetch-attempts: ${{ inputs.checkout-cache-fetch-attempts }}
       shifu-cache-profile-ref: ${{ inputs.shifu-cache-profile-ref }}
       shifu-cache-profile-digest: ${{ inputs.shifu-cache-profile-digest }}
+      cache-dependency-lock-root: ${{ inputs.cache-dependency-lock-root }}
+      cache-toolchain-root: ${{ inputs.cache-toolchain-root }}
+      cache-policy-root: ${{ inputs.cache-policy-root }}
       gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
     secrets: inherit
 
