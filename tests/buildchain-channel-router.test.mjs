@@ -100,6 +100,11 @@ test("generated channel workflow mirrors the advanced build surface", () => {
   assert.match(current, /router-sha: \$\{\{ steps\.router\.outputs\.sha \}\}/);
   assert.match(current, /ref: \$\{\{ steps\.router\.outputs\.sha \}\}/);
   assert.match(current, /ref: \$\{\{ needs\.resolve-channel\.outputs\.router-sha \}\}/);
+  assert.match(current, /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"/);
+  assert.equal(
+    (current.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
+    4,
+  );
   assert.doesNotMatch(
     current,
     /ref: \$\{\{ steps\.router\.outputs\.ref \}\}\n\s+path: \.buildchain\/router/,

@@ -116,6 +116,26 @@ on:
         default: "24"
         type: string
         required: false
+      rust-toolchain:
+        description: "Rust toolchain provisioned when a runner declares the rust capability"
+        default: "stable"
+        type: string
+        required: false
+      rustup-dist-server:
+        description: "Optional rustup distribution mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
+      rustup-update-root:
+        description: "Optional rustup self-update mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
+      cargo-registry-index:
+        description: "Optional crates.io-compatible Cargo registry index; empty uses the Cargo default"
+        default: ""
+        type: string
+        required: false
       require-trusted-event:
         default: true
         type: boolean
@@ -390,6 +410,8 @@ jobs:
         gate: ${{ fromJSON(needs.plan.outputs.gate-matrix-json) }}
     runs-on: ${{ fromJSON(matrix.gate.runner) }}
     timeout-minutes: ${{ matrix.gate.timeoutMinutes }}
+    env:
+      CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
     steps:
       - name: Reset prior Windows Gate source workspace
         if: ${{ runner.os == 'Windows' }}
@@ -489,6 +511,38 @@ jobs:
         run: |
           echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
           echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
+
+      - name: Setup Rust toolchain on Windows
+        if: ${{ contains(matrix.gate.capabilities, 'rust') && runner.os == 'Windows' }}
+        shell: cmd
+        env:
+          BUILDCHAIN_RUST_TOOLCHAIN: ${{ inputs.rust-toolchain }}
+          RUSTUP_DIST_SERVER: ${{ inputs.rustup-dist-server || 'https://static.rust-lang.org' }}
+          RUSTUP_UPDATE_ROOT: ${{ inputs.rustup-update-root || 'https://static.rust-lang.org/rustup' }}
+        run: |
+          @echo off
+          set "CARGO_HOME=%RUNNER_TEMP%\buildchain-gate-cargo-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_HOME=%RUNNER_TEMP%\buildchain-gate-rustup-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_INIT_ROOT=%RUNNER_TEMP%\buildchain-gate-rustup-init-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_INIT=%RUSTUP_INIT_ROOT%\rustup-init.exe"
+          if not exist "%RUSTUP_INIT_ROOT%" mkdir "%RUSTUP_INIT_ROOT%"
+          if errorlevel 1 exit /b %errorlevel%
+          curl.exe --proto "=https" --tlsv1.2 --retry 10 --retry-connrefused --fail --silent --show-error --location "https://win.rustup.rs/x86_64" --output "%RUSTUP_INIT%"
+          if errorlevel 1 exit /b %errorlevel%
+          "%RUSTUP_INIT%" --default-toolchain "%BUILDCHAIN_RUST_TOOLCHAIN%" --profile minimal -y --no-modify-path
+          if errorlevel 1 exit /b %errorlevel%
+          echo %CARGO_HOME%\bin>>"%GITHUB_PATH%"
+          echo CARGO_HOME=%CARGO_HOME%>>"%GITHUB_ENV%"
+          echo RUSTUP_HOME=%RUSTUP_HOME%>>"%GITHUB_ENV%"
+
+      - name: Setup Rust toolchain
+        if: ${{ contains(matrix.gate.capabilities, 'rust') && runner.os != 'Windows' }}
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        env:
+          RUSTUP_DIST_SERVER: ${{ inputs.rustup-dist-server || 'https://static.rust-lang.org' }}
+          RUSTUP_UPDATE_ROOT: ${{ inputs.rustup-update-root || 'https://static.rust-lang.org/rustup' }}
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
 
       - name: Download locked Gate plan
         uses: actions/download-artifact@v7.0.0

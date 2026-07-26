@@ -215,6 +215,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /workflow_call:/);
   assert.match(
     workflow,
+    /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
+  );
+  assert.equal(
+    (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
+    9,
+  );
+  assert.match(
+    workflow,
     /fail-fast:\n\s+description: "Cancel sibling platform lanes[\s\S]*?default: false[\s\S]*?type: boolean/,
   );
   assert.equal(
@@ -2654,6 +2662,10 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /checkout-cache-mode:/);
   assert.match(workflow, /checkout-cache-fallback:/);
   assert.match(workflow, /checkout-cache-fetch-attempts:/);
+  assert.match(workflow, /rust-toolchain:/);
+  assert.match(workflow, /rustup-dist-server:/);
+  assert.match(workflow, /rustup-update-root:/);
+  assert.match(workflow, /cargo-registry-index:/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode plan/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode run/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode aggregate/);
@@ -2671,6 +2683,11 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
   assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
+  assert.match(workflow, /name: Setup Rust toolchain on Windows/);
+  assert.match(workflow, /contains\(matrix\.gate\.capabilities, 'rust'\)/);
+  assert.match(workflow, /buildchain-gate-cargo-/);
+  assert.match(workflow, /name: Setup Rust toolchain/);
+  assert.match(workflow, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
   assert.match(workflow, /name: Upload Buildchain runtime checkout bootstrap/);
   assert.match(workflow, /name: Download Buildchain runtime checkout bootstrap/);
   assert.equal(
