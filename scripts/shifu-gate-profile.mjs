@@ -114,10 +114,24 @@ export function prepareGateExecutionFiles(files) {
   for (const file of files) fs.rmSync(file, { force: true });
 }
 
+export function commandSpawnOptions({
+  cwd,
+  env = process.env,
+  streamOutput = false,
+} = {}) {
+  if (streamOutput) return { cwd, env, stdio: "inherit" };
+  return {
+    cwd,
+    env,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  };
+}
+
 function runArgv(
   argv,
   args,
-  { cwd, env = process.env, allowFailure = false } = {},
+  { cwd, env = process.env, allowFailure = false, streamOutput = false } = {},
 ) {
   const command = argv[0];
   const commandArgs = [...argv.slice(1), ...args];
@@ -126,25 +140,12 @@ function runArgv(
   const batchInvocation = windowsBatch
     ? windowsBatchInvocation(command, commandArgs, { cwd })
     : null;
+  const spawnOptions = commandSpawnOptions({ cwd, env, streamOutput });
   const result = windowsBatch
-    ? spawnSync(
-        batchInvocation.command,
-        batchInvocation.args,
-        {
-          cwd,
-          env,
-          encoding: "utf8",
-          maxBuffer: 16 * 1024 * 1024,
-        },
-      )
-    : spawnSync(command, commandArgs, {
-        cwd,
-        env,
-        encoding: "utf8",
-        maxBuffer: 16 * 1024 * 1024,
-      });
-  if (result.stdout) process.stdout.write(result.stdout);
-  if (result.stderr) process.stderr.write(result.stderr);
+    ? spawnSync(batchInvocation.command, batchInvocation.args, spawnOptions)
+    : spawnSync(command, commandArgs, spawnOptions);
+  if (!streamOutput && result.stdout) process.stdout.write(result.stdout);
+  if (!streamOutput && result.stderr) process.stderr.write(result.stderr);
   if (result.error) throw result.error;
   const status = result.status ?? 1;
   if (!allowFailure && status !== 0)
@@ -257,7 +258,12 @@ function runMode() {
     ],
     registry,
   );
-  const runResult = runArgv(argv, runArgs, { cwd, env, allowFailure: true });
+  const runResult = runArgv(argv, runArgs, {
+    cwd,
+    env,
+    allowFailure: true,
+    streamOutput: true,
+  });
   let receipt = fs.existsSync(receiptPath)
     ? readJson(receiptPath, "Shifu gate receipt")
     : null;
