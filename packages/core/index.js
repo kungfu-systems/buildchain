@@ -65,6 +65,16 @@ export {
 } from "./portable-dev-cache.js";
 
 export {
+  BUILDCHAIN_CACHE_EVIDENCE_SET_CONTRACT,
+  BUILDCHAIN_CACHE_OPERATION_RECEIPT_CONTRACT,
+  cacheEvidenceDigest,
+  createCacheEvidenceSet,
+  createCacheOperationReceipt,
+  verifyCacheEvidenceSet,
+  verifyCacheOperationReceipt,
+} from "./cache-evidence.js";
+
+export {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
 } from "./release-line-dry-run.js";
