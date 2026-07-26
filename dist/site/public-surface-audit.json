@@ -6,7 +6,7 @@
     "cliCommandCount": 87,
     "workflowCount": 53,
     "actionCount": 5,
-    "sitePageCount": 56,
+    "sitePageCount": 57,
     "docCommandRefCount": 276,
     "failureCount": 0
   },
@@ -2408,6 +2408,10 @@
         "category": "fixture"
       },
       {
+        "id": "fixture:macos-credential-island-shaped",
+        "category": "fixture"
+      },
+      {
         "id": "fixture:publication-artifact-shaped",
         "category": "fixture"
       },
@@ -3965,7 +3969,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
     "workflowRegistryDigest": "4a627dcf07131d07095d5e6bf0a3373e55c62cf325b3f81bb156c43d31367d62",
-    "pageRegistryDigest": "7e69864afd479bdd5e0bfd5c6daef328625b10f6a50cb4821a74aeaa62b11d48"
+    "pageRegistryDigest": "97c2fd7eb78e60709c2edd5bd989272663119751e5c738b0c129b717b8ecf981"
   },
   "comparison": {
     "missingCliRegistry": [],

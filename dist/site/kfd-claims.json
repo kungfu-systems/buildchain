@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "ddaa4f26cc5ed42f56bac53ec7813b344846580c8d4957cfa836e086d099a78b",
+    "sha256": "f209130ca70758470ae2ab803774f045e68acddd0999de7bf81380ba6d417baa",
     "summary": {
       "cliCommandCount": 87,
       "workflowCount": 53,
       "actionCount": 5,
-      "sitePageCount": 56,
+      "sitePageCount": 57,
       "docCommandRefCount": 276,
       "failureCount": 0
     },
@@ -228,12 +228,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "ddaa4f26cc5ed42f56bac53ec7813b344846580c8d4957cfa836e086d099a78b",
+      "sha256": "f209130ca70758470ae2ab803774f045e68acddd0999de7bf81380ba6d417baa",
       "summary": {
         "cliCommandCount": 87,
         "workflowCount": 53,
         "actionCount": 5,
-        "sitePageCount": 56,
+        "sitePageCount": 57,
         "docCommandRefCount": 276,
         "failureCount": 0
       },
@@ -782,6 +782,18 @@
           "kind": "documentation",
           "sourcePath": "fixtures/libnode-shaped/README.md",
           "evidencePath": "fixtures/libnode-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/macos-credential-island-shaped/README.md",
+          "name": "fixtures/macos-credential-island-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/macos-credential-island-shaped/README.md",
+          "evidencePath": "fixtures/macos-credential-island-shaped/README.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -4612,6 +4624,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:fixture:macos-credential-island-shaped",
+          "name": "site-page:fixture:macos-credential-island-shaped",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:fixture:publication-artifact-shaped",
           "name": "site-page:fixture:publication-artifact-shaped",
           "kind": "site-page",
@@ -5253,6 +5277,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 334
+    "publicSurfaceCount": 336
   }
 }
