@@ -93,7 +93,7 @@ function routerControllerPlanJob() {
   return `  controller-plan:
     name: Plan channel router controller evidence
     needs: resolve-channel
-    runs-on: ubuntu-24.04
+    runs-on: \${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       controller-plan-artifact: \${{ steps.names.outputs.controller-plan-artifact }}
       controller-plan-json: \${{ steps.plan.outputs.controller-plan-json }}
@@ -156,7 +156,7 @@ function routerControllerReceiptJob() {
       - controller-plan
       - build
     if: \${{ always() && needs.controller-plan.result == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: \${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       controller-receipt-artifact: \${{ steps.names.outputs.controller-receipt-artifact }}
       controller-receipt-json: \${{ steps.receipt.outputs.controller-receipt-json }}
@@ -218,7 +218,7 @@ function routerAggregateJob() {
       - build
       - controller-receipt
     if: \${{ always() }}
-    runs-on: ubuntu-24.04
+    runs-on: \${{ fromJSON(inputs.control-runner-json) }}
     steps:
       - name: Enforce public channel router aggregate
         shell: bash
@@ -295,6 +295,7 @@ function bindRouterCheckoutToWorkflowSha(workflow) {
 
 export function generateChannelBuildWorkflow(source) {
   const generated = bindRouterCheckoutToWorkflowSha(generateChannelBuildWorkflowBase(source))
+    .replaceAll("runs-on: ubuntu-24.04", "runs-on: ${{ fromJSON(inputs.control-runner-json) }}")
     .replace(
       "\npermissions:\n  contents: read\n",
       "\npermissions:\n  actions: read\n  contents: read\n",

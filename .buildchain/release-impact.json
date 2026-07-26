@@ -12,6 +12,13 @@
   },
   "surfaceImpacts": [
     {
+      "id": "configurable-build-control-runner",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "The channel router and reusable build expose an additive control-runner-json input so trusted consumers can route control-plane and lifecycle jobs to the same governed self-hosted runner while existing callers retain the GitHub-hosted default.",
+      "source": ".github/workflows/build.yml"
+    },
+    {
       "id": "auditable-demo-artifact-gate",
       "impact": "minor",
       "class": "workflow-contract",
@@ -394,5 +401,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence and release governance with anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
+  "summary": "Buildchain v3.0 extends sealed evidence and release governance with configurable trusted control runners, anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
 }

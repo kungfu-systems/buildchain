@@ -215,6 +215,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /workflow_call:/);
   assert.match(
     workflow,
+    /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
+  );
+  assert.equal(
+    (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
+    9,
+  );
+  assert.match(
+    workflow,
     /fail-fast:\n\s+description: "Cancel sibling platform lanes[\s\S]*?default: false[\s\S]*?type: boolean/,
   );
   assert.equal(
