@@ -167,7 +167,12 @@ test("stable route calls the hidden advanced workflow through the current major 
     callRef: "v3",
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
-    unsupportedInputs: [],
+    unsupportedInputs: [
+      "release-activation-command",
+      "release-activation-receipt-set-path",
+      "release-passport-evidence-command",
+      "release-passport-evidence-path",
+    ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v3/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: v3/);
@@ -179,13 +184,17 @@ test("stable route calls the hidden advanced workflow through the current major 
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
 });
 
-test("stable route forwards every input supported by the current workflow shell", () => {
+test("stable route forwards only inputs supported by the current workflow shell", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
   const stableBlock = generated.slice(generated.indexOf("  stable:\n"));
 
   for (const name of workflowFields(advanced, "inputs")) {
+    if (shellRouting.stable.unsupportedInputs.includes(name)) continue;
     assert.match(stableBlock, new RegExp(`^      ${name}:`, "m"));
+  }
+  for (const name of shellRouting.stable.unsupportedInputs) {
+    assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
   assert.match(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(stableBlock, /^      publish-rematerialize-on-resume:/m);
