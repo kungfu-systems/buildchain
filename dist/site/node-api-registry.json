@@ -477,7 +477,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:f7a27ef72c0ffe3e18ad5d4d0520e14d8f343a55a417182c5da74a150b8f58fc"
+      "digest": "sha256:d32f4822475ffd2d041a743fe28eed50092937f05918b490b8ade0c157089d0b"
     },
     {
       "id": "build-facts",
@@ -502,7 +502,7 @@
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f"
+      "digest": "sha256:40831ce35dca6ac2a3a81d54a83fb0e5ab064137829a4f7844e5d80ba61aa65c"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."

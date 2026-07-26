@@ -10,7 +10,7 @@ the actual build should not run yet.
 ## Usage
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/validate-config@v2
+- uses: kungfu-systems/buildchain/actions/validate-config@v3
   with:
     require-version-state: "true"
     require-lifecycle-stages: "install,build,verify"

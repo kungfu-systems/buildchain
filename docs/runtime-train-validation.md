@@ -1,14 +1,14 @@
 # Runtime Train Validation
 
-Buildchain consumers should keep stable workflow refs such as `@v2` in
+Buildchain consumers should keep stable workflow refs such as `@v3` in
 committed workflow YAML. Runtime trains provide a temporary validation pointer
 for Buildchain changes that are ready for downstream testing but not yet
 promoted through the normal `dev -> alpha -> release` chain.
 
 Official floating channels are not runtime overrides. A consumer that
-deliberately follows `@v2-alpha` gets the matching runtime on pull requests and
+deliberately follows `@v3-alpha` gets the matching runtime on pull requests and
 pushes because the reusable workflow reads the called workflow identity from
-`job.workflow_ref`. Passing `buildchain-ref: v2-alpha` explicitly is also
+`job.workflow_ref`. Passing `buildchain-ref: v3-alpha` explicitly is also
 accepted when the caller wants the channel binding visible in its input set.
 The caller's `github.workflow_ref` is not used for this inference because it
 identifies the caller workflow during reusable calls.
@@ -71,7 +71,7 @@ Consumers keep their reusable workflow pinned to the stable shell:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
 ```
 
 To validate a train without committing temporary workflow refs, expose a
@@ -88,7 +88,7 @@ on:
 
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || '' }}
 ```
@@ -102,7 +102,7 @@ Use this short request when a train is ready:
 
 ```text
 Buildchain train ready: buildchain-ref=train/v2/v2.3/<capability>.
-Keep uses: ...@v2; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
+Keep uses: ...@v3; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
 ```
 
 The consumer should run a trusted `workflow_dispatch`, paste the train ref into
@@ -119,7 +119,7 @@ summary. The evidence should include:
 
 ## Trust and limitation
 
-Official floating channel refs such as `v2` and `v2-alpha` may be selected on
+Official floating channel refs such as `v2` and `v3-alpha` may be selected on
 pull requests and pushes. Train refs and arbitrary exact-SHA overrides still
 fail closed unless the event is `workflow_dispatch` and the actor has write,
 maintain, or admin permission on the caller repository. Pull requests,

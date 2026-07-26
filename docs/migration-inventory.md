@@ -33,9 +33,9 @@ surface. New publish integrations should use `.build.yml`, `buildchain.toml`,
 Release templates that previously performed direct publishing or deployment are
 now fail-closed when retained for compatibility discovery. They do not call
 legacy publish actions, `npm publish`, or deploy providers directly. Callers must
-migrate to `release-candidate-promote.yml@v2` or a project-owned
+migrate to `release-candidate-promote.yml@v3` or a project-owned
 `lifecycle.publish` command behind a publish-gate source lock, so floating
-`@v2` consumers cannot bypass source-lock drift protection.
+`@v3` consumers cannot bypass source-lock drift protection.
 
 The public promotion workflow is now a generated dual-channel router. Existing
 callers remain source-compatible, while callers that want alpha workflow-shell
@@ -113,8 +113,8 @@ older standalone action repository.
 
 ## Stable v2 Refs
 
-- Actions: `kungfu-systems/buildchain/actions/<name>@v2`
-- Reusable workflows: `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2`
+- Actions: `kungfu-systems/buildchain/actions/<name>@v3`
+- Reusable workflows: `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3`
 
 ## Verification Gates
 

@@ -169,12 +169,12 @@ The written lock has contract
 ## Reusable Workflow
 
 Upstream repositories can call
-`.github/workflows/release-propagation.yml@v2` after release finalization:
+`.github/workflows/release-propagation.yml@v3` after release finalization:
 
 ```yaml
 jobs:
   propagate-site:
-    uses: kungfu-systems/buildchain/.github/workflows/release-propagation.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/release-propagation.yml@v3
     with:
       buildchain-ref: v2
       graph-json: ${{ needs.release.outputs.propagation-graph-json }}
@@ -219,7 +219,7 @@ PR updates source-of-truth facts, then downstream alpha or release publication
 runs through its own protected channel. A byte-identical rerun is an explicit
 successful no-op.
 For unreleased runtime validation, keep the caller's reusable workflow reference
-on `@v2` and pass a temporary train ref through `buildchain-ref`.
+on `@v3` and pass a temporary train ref through `buildchain-ref`.
 
 ## kfd to site-libkungfu-dev
 

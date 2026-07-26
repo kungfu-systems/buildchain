@@ -88,7 +88,7 @@ import publicSurfaceAudit from "@kungfu-tech/buildchain/site/public-surface-audi
 
 Use `dist/site/manual-registry.json` to find the packaged operating manuals and
 their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
-floating-ref contract world for a runtime such as `@v2`.
+floating-ref contract world for a runtime such as `@v3`.
 
 ## Commands
 
@@ -524,7 +524,7 @@ buildchain publication-artifact npm-package --json
 This command reads `project.type = "publication-artifact"`,
 `publication.version`, and `[publish] kind = "npm-paper-package"` plus
 `publish.package`; it writes `.buildchain/publication/npm-package` by default.
-The `paper-release.yml@v2` reusable workflow uses the same command before
+The `paper-release.yml@v3` reusable workflow uses the same command before
 running the standard npm publish transaction.
 
 The command writes `.buildchain/publication/publication-artifact.json`,

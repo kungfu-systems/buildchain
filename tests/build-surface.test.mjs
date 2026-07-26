@@ -157,7 +157,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(
     libnodeConsumer,
-    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v2/,
+    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v3/,
   );
 
   const reusableBuild = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
@@ -651,7 +651,7 @@ test("paper release workflow publishes declared npm package with source lock and
   );
   assert.match(workflow, /cannot read branch protection before publication build/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.match(docs, /paper-release-sealed\.yml@v2/);
+  assert.match(docs, /paper-release-sealed\.yml@v3/);
   assert.match(docs, /does not use a long-lived token for npm publication/);
   assert.match(docs, /only for machine-generated[\s\S]*version-state updates/);
   assert.match(workflow, /default: true/);
@@ -1085,7 +1085,7 @@ test("legacy release workflows fail closed instead of bypassing publish-gate sou
       "utf8",
     );
     assert.match(workflow, /release path is retired/);
-    assert.match(workflow, /release-candidate-promote\.yml@v2/);
+    assert.match(workflow, /release-candidate-promote\.yml@v3/);
     assert.match(workflow, /publish-gate source-lock enforcement/);
     assert.doesNotMatch(workflow, /npm publish --access=public/);
     assert.doesNotMatch(workflow, /actions\/publish-prebuilt@v2/);
@@ -1207,7 +1207,7 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
   assert.match(dogfoodDaily, /required-status-checks: check/);
-  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
   assert.match(dogfoodDaily, /landing-mode: queue/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
@@ -1262,7 +1262,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(ledger, /publish-gate\/release/);
   assert.match(implementation, /BUILDCHAIN_STABLE_RELEASE_NOW/);
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
-  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
   assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(
     dogfood,
