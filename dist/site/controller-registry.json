@@ -222,6 +222,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "control-runner-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "credential-island-caller-owned": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -423,7 +427,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:a06607b6ebd3fb00b77519098c81d6fb5e9943ec268aebb1e5fdbefef6e598ad"
+      "digest": "sha256:79920272446ddef3cc1e28c23f9efc4192e51d603fb5bf3ab1060b15342980c8"
     },
     {
       "schemaVersion": 1,
@@ -580,6 +584,10 @@
           "source": "workflow-call-input"
         },
         "checkout-cache-timeout-seconds": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "control-runner-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -765,7 +773,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:4fc6c33bf5b429f8087ac752d5cf2a19f4a1cc30db01aae927a28cee1cf924f0"
+      "digest": "sha256:af7d22d385b6993a2039de602ce1f9d27efdad62bb2b37998a89cbaf7257c127"
     },
     {
       "schemaVersion": 1,
@@ -2092,5 +2100,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:9bf81a98b6025c17568d479dd69417770f19e16aeb8ad9b11cc0513e9ed81cf5"
+  "digest": "sha256:becd8aae765ed9ac3dd0fd737d0d4ce4d7b5b4dff3ec31355bce5b2cf6493c6c"
 }

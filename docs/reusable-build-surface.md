@@ -1151,6 +1151,24 @@ with:
 Do not set `require-trusted-event: false` for workflows that use self-hosted
 runners or secrets.
 
+The build matrix and the workflow control plane are routed independently. The
+matrix continues to use `runner-preset` and `platforms-json`. Consumers with a
+governed runner may also move channel resolution, trust evaluation, contract
+resolution, controller evidence, artifact transfer, and aggregation off the
+default GitHub-hosted runner:
+
+```yaml
+with:
+  control-runner-json: '["self-hosted","agent-120"]'
+  runner-preset: custom
+  platforms-json: '[{"id":"linux-x64","name":"Linux x64","runner":"[\"self-hosted\",\"agent-120\"]"}]'
+```
+
+`control-runner-json` is additive and defaults to `["ubuntu-24.04"]`. Keep
+`require-trusted-event: true` whenever either runner input selects
+`self-hosted`; a self-hosted control plane must not be exposed to untrusted fork
+events or arbitrary caller-controlled workflow code.
+
 `require-trusted-event` controls access to build runners. It does not override
 the publish gate: pull requests remain non-publishing events.
 
