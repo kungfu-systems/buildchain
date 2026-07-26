@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:3274ea5fc0ce782bcaa29db5de5111b71198c7bee893e477c49dcceb61ee59cd",
+      "digest": "sha256:39f3b0e201a0362716e6a7727ce759e64ba7da2648c40696e41e78c0c9977cae",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:3274ea5fc0ce782bcaa29db5de5111b71198c7bee893e477c49dcceb61ee59cd",
+      "digest": "sha256:39f3b0e201a0362716e6a7727ce759e64ba7da2648c40696e41e78c0c9977cae",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -75,6 +75,32 @@
       "target": "./packages/core/artifact-verification-envelope.js",
       "digest": "sha256:c8cc0b031fc1e78fe25b3034854b038f75eb2ea046734d32323707a4085dbbe4",
       "summary": "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/artifact-signing",
+      "export": "./artifact-signing",
+      "target": "./packages/core/artifact-signing.js",
+      "digest": "sha256:90e1a397c7c36facfd7ed29f06fdd7379b1d5d5c8f810f869d7d9b13e9119b86",
+      "summary": "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/detached-artifact-signature",
+      "export": "./detached-artifact-signature",
+      "target": "./packages/core/detached-artifact-signature.js",
+      "digest": "sha256:91d6cec70ec23531d3b8b6229da70f9135ee2d417ea4741bfd691e120a21a00f",
+      "summary": "Buildchain-authority Ed25519 detached signature and verification APIs for arbitrary binary artifacts.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",

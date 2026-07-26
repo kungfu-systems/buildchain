@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "62e1dfcbbd4b36cf507d1b2f76374ede93175d86c463bb98cb05aa445b50ad69",
+    "sha256": "7ba423a65f42ca83de407b15e3f936f15b1c94992a642c143e2aefaac20bf018",
     "summary": {
       "cliCommandCount": 96,
       "workflowCount": 53,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "62e1dfcbbd4b36cf507d1b2f76374ede93175d86c463bb98cb05aa445b50ad69",
+      "sha256": "7ba423a65f42ca83de407b15e3f936f15b1c94992a642c143e2aefaac20bf018",
       "summary": {
         "cliCommandCount": 96,
         "workflowCount": 53,
@@ -1124,6 +1124,30 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./artifact-verification-envelope"
+        },
+        {
+          "id": "export:./artifact-signing",
+          "name": "@kungfu-tech/buildchain/artifact-signing",
+          "kind": "package-export",
+          "sourcePath": "packages/core/artifact-signing.js",
+          "evidencePath": "packages/core/artifact-signing.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./artifact-signing"
+        },
+        {
+          "id": "export:./detached-artifact-signature",
+          "name": "@kungfu-tech/buildchain/detached-artifact-signature",
+          "kind": "package-export",
+          "sourcePath": "packages/core/detached-artifact-signature.js",
+          "evidencePath": "packages/core/detached-artifact-signature.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./detached-artifact-signature"
         },
         {
           "id": "export:./anchored-version-material",
@@ -5434,6 +5458,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 347
+    "publicSurfaceCount": 349
   }
 }

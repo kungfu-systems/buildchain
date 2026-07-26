@@ -55,6 +55,11 @@ const SUPPORTED_INFRA_APPLY_MODES = new Set(["disabled", "manual-approval", "env
 const SUPPORTED_FACT_VERSION_SOURCE_TYPES = new Set(["static", "json", "toml", "regex", "command"]);
 const SUPPORTED_FACT_LEGACY_PROJECTIONS = new Set(["kungfu-buildinfo"]);
 const SUPPORTED_PUBLICATION_TOOLCHAINS = new Set(["custom-command", "latex-docker"]);
+const SUPPORTED_SIGNING_PROFILES = new Set(["auto", "apple-developer-id", "detached-signature-v1"]);
+const SUPPORTED_SIGNING_ARTIFACT_KINDS = new Set([
+  "auto", "binary", "archive", "blob", "directory", "mach-o", "app-bundle",
+  "framework-bundle", "plugin-bundle", "xpc-bundle", "dylib", "pkg", "dmg",
+]);
 
 function posixPath(value) {
   return String(value || "").split(path.sep).join("/");
@@ -218,6 +223,9 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.facts !== undefined) {
     normalized.facts = normalizeFactsSection(normalized.facts);
   }
+  if (normalized.signing !== undefined) {
+    normalized.signing = normalizeSigningSection(normalized.signing);
+  }
   validateWebSurfaceConfig(normalized);
   validateInfraContractConfig(normalized);
   validateAnchoredDerivedVersionMaterialConfig(normalized);
@@ -333,6 +341,49 @@ function normalizeFactsSection(facts) {
     products: normalizeFactProducts(facts.products),
     legacyProjections: normalizeFactLegacyProjections(facts.legacy_projections),
   };
+}
+
+function normalizeSigningSection(signing) {
+  assertPlainObject(signing, "signing");
+  for (const key of Object.keys(signing)) {
+    if (key !== "artifacts") {
+      throw new Error(`signing.${key} is not supported; consumer signing declarations cannot configure credentials or authority infrastructure`);
+    }
+  }
+  if (!Array.isArray(signing.artifacts) || signing.artifacts.length === 0) {
+    throw new Error("signing.artifacts must declare at least one artifact");
+  }
+  const artifacts = signing.artifacts.map((artifact, index) => {
+    const label = `signing.artifacts[${index}]`;
+    assertPlainObject(artifact, label);
+    const allowedKeys = new Set(["id", "path", "profile", "kind", "platforms", "required"]);
+    for (const key of Object.keys(artifact)) {
+      if (!allowedKeys.has(key)) {
+        throw new Error(`${label}.${key} is not supported; declare desired signature state only`);
+      }
+    }
+    const artifactPath = posixPath(assertString(artifact.path, `${label}.path`));
+    const profile = artifact.profile === undefined ? "auto" : assertString(artifact.profile, `${label}.profile`);
+    if (!SUPPORTED_SIGNING_PROFILES.has(profile)) {
+      throw new Error(`${label}.profile must be one of auto, apple-developer-id, or detached-signature-v1`);
+    }
+    const kind = artifact.kind === undefined ? "auto" : assertString(artifact.kind, `${label}.kind`);
+    if (!SUPPORTED_SIGNING_ARTIFACT_KINDS.has(kind)) {
+      throw new Error(`${label}.kind is not a supported signing artifact kind`);
+    }
+    return {
+      id: artifact.id === undefined ? artifactPath : assertString(artifact.id, `${label}.id`),
+      path: artifactPath,
+      profile,
+      kind,
+      platforms: normalizeStringArray(artifact.platforms, `${label}.platforms`),
+      required: optionalBoolean(artifact.required, true),
+    };
+  });
+  if (new Set(artifacts.map((artifact) => artifact.id)).size !== artifacts.length) {
+    throw new Error("signing.artifacts must use unique ids");
+  }
+  return { artifacts };
 }
 
 function normalizeFactVersionSources(sources = []) {
@@ -1615,6 +1666,7 @@ export function validateBuildchainConfig(
     release: loadedConfig.config.release,
     governance: loadedConfig.config.governance,
     facts: loadedConfig.config.facts,
+    signing: loadedConfig.config.signing,
     publication: loadedConfig.config.publication,
   };
 }

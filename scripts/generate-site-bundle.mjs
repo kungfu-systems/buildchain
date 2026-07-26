@@ -528,6 +528,8 @@ function nodeApiMeta(exportName) {
     "./github-governance-authority": { group: "governance-versioning", summary: "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs." },
     "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
     "./artifact-verification-envelope": { group: "release-passport-trust", summary: "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission." },
+    "./artifact-signing": { group: "reusable-build", summary: "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs." },
+    "./detached-artifact-signature": { group: "release-passport-trust", summary: "Buildchain-authority Ed25519 detached signature and verification APIs for arbitrary binary artifacts." },
     "./anchored-version-material": { group: "reusable-build", summary: "Anchored/manual derived version material preflight, exact-tree binding, and digest evidence APIs." },
     "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
     "./kfd-agent-hub": { group: "kfd-trust", summary: "Declarative Agent Hub adapter inspection, fixed-suite execution, exact KFD cut locking, and agent explanation APIs." },

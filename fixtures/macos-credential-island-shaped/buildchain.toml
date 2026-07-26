@@ -12,3 +12,10 @@ sample_process_tree = true
 compiler_cache = "none"
 expected_tools = ["node", "clang"]
 artifact_dirs = ["dist"]
+
+[[signing.artifacts]]
+id = "buildchain-credential-island-app"
+path = "dist/Buildchain Credential Island.app"
+profile = "apple-developer-id"
+kind = "app-bundle"
+platforms = ["macos-hosted"]

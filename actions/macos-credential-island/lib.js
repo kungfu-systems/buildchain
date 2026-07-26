@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
+import { validateArtifactSigningRequest } from "../../packages/core/artifact-signing.js";
+
 export const INPUT_CONTRACT = "buildchain.macos-credential-input/v1";
 export const EVIDENCE_CONTRACT =
   "buildchain.macos-credential-island-evidence/v1";
@@ -289,6 +291,128 @@ export function loadCredentialInput(inputRoot, expected = {}) {
   if (Number(manifest.archive?.bytes) !== fs.statSync(archivePath).size)
     throw new Error("credential input archive size mismatch");
   return { manifest, manifestPath, archivePath };
+}
+
+export function loadArtifactSigningInput(inputRoot, expected = {}) {
+  const requests = [];
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(target);
+      else if (entry.isFile() && entry.name === "request.json")
+        requests.push(target);
+    }
+  };
+  const root = path.resolve(inputRoot);
+  visit(root);
+  const candidates = requests
+    .map((requestPath) => ({
+      requestPath,
+      request: JSON.parse(fs.readFileSync(requestPath, "utf8")),
+    }))
+    .filter(
+      ({ request }) => request.signature?.profile === "apple-developer-id",
+    );
+  if (candidates.length !== 1) {
+    throw new Error(
+      `expected one apple-developer-id request.json under input-root, found ${candidates.length}`,
+    );
+  }
+  const { requestPath, request } = candidates[0];
+  const check = validateArtifactSigningRequest(request);
+  if (!check.ok) {
+    throw new Error(
+      `artifact signing request is invalid: ${check.issues.join(", ")}`,
+    );
+  }
+  if (request.artifact.platform !== "macos") {
+    throw new Error("artifact signing request platform must be macos");
+  }
+  if (request.artifact.kind !== "app-bundle") {
+    throw new Error(
+      `apple authority adapter does not yet support ${request.artifact.kind}; expected app-bundle`,
+    );
+  }
+  const repository = requireRepository(request.source.repository);
+  const sourceSha = requireSha(
+    request.source.sha,
+    "artifact signing source SHA",
+  );
+  const sourceTreeSha = requireSha(
+    request.source.treeSha,
+    "artifact signing source tree SHA",
+  );
+  const runtimeSha = requireSha(
+    request.runtime.sha,
+    "artifact signing runtime SHA",
+  );
+  if (expected.repository && repository !== expected.repository)
+    throw new Error("artifact signing request repository mismatch");
+  if (expected.sourceSha && sourceSha !== expected.sourceSha)
+    throw new Error("artifact signing request source SHA mismatch");
+  if (expected.sourceTreeSha && sourceTreeSha !== expected.sourceTreeSha)
+    throw new Error("artifact signing request source tree SHA mismatch");
+  if (expected.runtimeSha && runtimeSha !== expected.runtimeSha)
+    throw new Error("artifact signing request runtime SHA mismatch");
+  const transport = request.artifact.transport;
+  if (transport?.format !== "ditto-zip") {
+    throw new Error("apple app signing request must use ditto-zip transport");
+  }
+  const archivePath = resolveInside(
+    root,
+    transport.file,
+    "artifact signing transport",
+  );
+  if (!fs.statSync(archivePath).isFile()) {
+    throw new Error("artifact signing transport is not a file");
+  }
+  assertRealPathInside(root, archivePath, "artifact signing transport");
+  if (sha256File(archivePath) !== transport.digest) {
+    throw new Error("artifact signing transport digest mismatch");
+  }
+  if (fs.statSync(archivePath).size !== transport.bytes) {
+    throw new Error("artifact signing transport size mismatch");
+  }
+  const archivePathInPayload = path.basename(request.artifact.path);
+  return {
+    request,
+    requestPath,
+    manifestPath: requestPath,
+    archivePath,
+    manifest: {
+      schema: request.contract,
+      source: request.source,
+      platform: {
+        id: String(expected.platformId || "macos"),
+        os: "macos",
+        arch: request.artifact.arch,
+      },
+      app: {
+        archivePath: archivePathInPayload,
+        productName: archivePathInPayload.replace(/\.app$/iu, ""),
+      },
+      archive: {
+        file: transport.file,
+        format: transport.format,
+        bytes: transport.bytes,
+        sha256: transport.digest,
+      },
+    },
+  };
+}
+
+export function loadMacosSigningInput(inputRoot, expected = {}) {
+  try {
+    return loadArtifactSigningInput(inputRoot, expected);
+  } catch (genericError) {
+    try {
+      return loadCredentialInput(inputRoot, expected);
+    } catch (legacyError) {
+      throw new Error(
+        `macOS signing input is neither a generic artifact request nor a legacy credential input: ${genericError.message}; ${legacyError.message}`,
+      );
+    }
+  }
 }
 
 export function parseIdentityListing(output, expectedSha1) {

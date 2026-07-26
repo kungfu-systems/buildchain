@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:4dc9a093dbc5e0010e0845610a05db2cf7fb2c2301c5d780ea437b1f9e91da27"
+      "auditDigest": "sha256:d014be554c1a9cbfc405159a6f36e0ab480085306f57bb6029eb4ed27ed1d374"
     },
     {
       "contractVersion": 1,
@@ -691,7 +691,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:468988ff5efce541e06ac0bb4609ebd9cc51b9f01fec34e0b9ce01f6662c2dd5"
+      "auditDigest": "sha256:3365e96fe5f1a6186536c696973d549907f079b6a3f30044d3469ca1911054a8"
     },
     {
       "contractVersion": 1,
@@ -713,7 +713,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:7e1d0269cb7bbdc308595a5ad87cbd7190187ba3363f2dd07bc02ba8d5c7c5da"
+      "auditDigest": "sha256:77ca782f04938a928fa11d5e453c3b55a6f236e27a1c9f555049afa55187d235"
     },
     {
       "contractVersion": 1,
@@ -1249,7 +1249,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
-      "auditDigest": "sha256:4dc9a093dbc5e0010e0845610a05db2cf7fb2c2301c5d780ea437b1f9e91da27"
+      "auditDigest": "sha256:d014be554c1a9cbfc405159a6f36e0ab480085306f57bb6029eb4ed27ed1d374"
     },
     {
       "contractVersion": 1,
@@ -3311,5 +3311,5 @@
     }
   ],
   "compatibilityDigest": "sha256:008b1c5a90a787cf30106829ac7aca68ab501f6d9c375e415d9c5c6b89039f46",
-  "contractDigest": "sha256:4104e1ef35a34a8f1e635755d9e56c70e2533d5b9b79fec0a41476449a14d0ff"
+  "contractDigest": "sha256:2e4f53a7656d61883d2d1044fa39b8583aadc99e65b7e56c4b6176897effeda7"
 }

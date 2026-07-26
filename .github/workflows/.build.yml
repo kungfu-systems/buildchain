@@ -1406,6 +1406,28 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Seal declared artifact signing requests
+        id: signing-requests
+        run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Publish Buildchain-owned artifact signing request
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.signing-requests.outputs.request-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Seal macOS credential-island input
         if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
         run: node .buildchain/runtime/scripts/seal-macos-credential-input.mjs
@@ -1710,6 +1732,28 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Seal declared artifact signing requests
+        id: signing-requests
+        run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Publish Buildchain-owned artifact signing request
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.signing-requests.outputs.request-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}
         run: >-
@@ -1961,6 +2005,13 @@ jobs:
           github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-runtime-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime/actions/macos-credential-island
+
+      - name: Download generic Buildchain artifact signing request
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ inputs.artifact-name }}-signing-request-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/credential-island-input
 
       - name: Download source-bound sealed application archive
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}

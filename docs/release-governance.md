@@ -1,3 +1,21 @@
+---
+status: draft
+period: ongoing
+theme: buildchain-release-governance
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-27
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-27
+  invisible_context: not asserted
+---
+
 # Release Governance
 
 Buildchain v2 preserves the release semantics of the older ABV workflow while
@@ -237,15 +255,23 @@ duplicating lifecycle configuration in the consumer.
 
 A third, Buildchain-owned macOS lane calls the local reusable workflow from the
 same reviewed source commit. Its ordinary hosted runner compiles and verifies
-an unsigned native `.app` without credentials, then seals the app for the
-existing protected credential-island job. That job runs only when the repository
-variable `BUILDCHAIN_MACOS_CREDENTIAL_ISLAND_ENVIRONMENT` names the provisioned
-protected environment. The caller does not inherit repository or organization
-secrets; GitHub binds the environment secrets only after the protected signer
-job enters that environment. A missing environment, skipped signer, missing
-retained artifact, digest mismatch, non-Developer-ID identity, rejected Apple
-notarization, or false signing/stapling/Gatekeeper check fails the aggregate
-canary rather than becoming a successful skip.
+an unsigned native `.app` without credentials. The fixture declares that
+artifact through Buildchain's generic signing contract, so the same build lane
+automatically seals a source-, tree-, runtime-, platform-, and digest-bound
+signing request. The `.app` is the first Apple provider fixture, not the product
+boundary: Mach-O files, libraries, bundles, packages, disk images, and detached
+signatures for arbitrary binary artifacts share the request/receipt authority
+model.
+
+During compatibility migration, the self-dogfood lane also exercises the older
+protected macOS signer. That job runs only when the repository variable
+`BUILDCHAIN_MACOS_CREDENTIAL_ISLAND_ENVIRONMENT` names the provisioned protected
+environment. A missing environment, skipped signer, missing retained artifact,
+digest mismatch, non-Developer-ID identity, rejected Apple notarization, or
+false signing/stapling/Gatekeeper check fails the aggregate canary rather than
+becoming a successful skip. Consumer repositories must not copy this
+environment or its credentials; the generic target architecture keeps them in
+the Buildchain-owned signing authority.
 
 The aggregate evidence binds the exact caller source commit and tree to the
 immutable Buildchain runtime, signed DMG and app ZIP digests, Developer ID team
