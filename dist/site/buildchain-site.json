@@ -630,6 +630,32 @@
       "markdown": "---\nstatus: draft\nperiod: ongoing\ntheme: buildchain-controller-evidence\ndoc_type: analysis\nsource_level: local-files\nconfidence: high\nsensitivity: public\nevidence_grade: B\nreview_state: unreviewed\nlast_reviewed: 2026-07-14\nai_provenance:\n  model_family: GPT-5\n  product: Codex\n  generated_at: 2026-07-14\n  boundary: Based on repository source and tests; no claim about unobserved downstream runs.\n---\n\n# Controller Evidence\n\nBuildchain controller evidence records what a reusable workflow intended to do\nand what it actually completed. It is a project-independent envelope around\nBuildchain orchestration; it does not replace a consumer project's own policy,\nGate registry, or domain receipts.\n\nThe machine-readable entrypoint is\n`dist/site/controller-registry.json`. The Node API is exported as\n`@kungfu-tech/buildchain/controller-evidence`.\n\n## Public controller inventory\n\nThe first versioned inventory contains:\n\n- source check;\n- lifecycle build and channel routing;\n- the Shifu Gate profile envelope;\n- web-surface build/deploy orchestration;\n- publication artifact and paper release;\n- release-candidate promotion;\n- release propagation.\n\nPatrol and repository-maintenance workflows are not controllers. A controller\ndescriptor declares its workflow, version, input classifications, expected\nstages, capabilities, evidence kinds, and a deterministic descriptor digest.\n\n## Plan contract\n\nA `buildchain.controller-evidence/v1` plan binds:\n\n- the controller id, version, workflow path, and descriptor digest;\n- the exact consumer repository and 40-character source SHA;\n- the requested Buildchain ref, exact runtime SHA, and runtime contract digest;\n- normalized inputs;\n- expected stages, capabilities, and evidence kinds.\n\nInputs use one of four policies:\n\n- `included` for safe scalar values;\n- `digest-only` for commands, structured values, runner selection, paths, role\n  identifiers, registries, mirrors, and other environment-shaped values;\n- `redacted` for workflow secrets and token/private-key shaped fields;\n- `unsupported` for a declared input that must fail closed when provided.\n\nRedacted inputs carry no value, digest, or presence bit. Included path-like\ninputs reject absolute runner paths. Undeclared inputs fail plan creation.\n\n## Receipt and aggregation\n\nA receipt binds back to the plan digest and repeats the source and runtime\nidentities. Every declared stage is recorded as `passed`, `failed`, `skipped`,\n`cancelled`, or `missing`; the receipt status is `passed`, `failed`, `skipped`,\nor `partial`. Evidence is represented by kind and SHA-256 digest, with an\noptional artifact name.\n\nReusable workflows expose these outputs:\n\n- `controller-plan-artifact`, `controller-plan-json`, and\n  `controller-plan-digest`;\n- `controller-receipt-artifact`, `controller-receipt-json`,\n  `controller-receipt-digest`, and `controller-receipt-status`.\n\nFinal aggregation uses `always()`. A required missing stage, required missing\nevidence, invalid digest, source/runtime mismatch, or missing receipt cannot be\nreported as qualifying green. `aggregateControllerReceipts()` reports an\nexplicit `receipt-missing` status when a plan has no receipt.\n\n## Shifu boundary\n\nThe Shifu profile controller is an envelope only. Its controller receipt\nreferences the digest and status of `buildchain.shifu-gate-aggregate/v1`; it\ndoes not copy project Gate identifiers, Gate semantics, registry contents, or\nper-Gate results into Buildchain's generic controller contract.\n\n## Release Passport references\n\nRelease-candidate and final Release Passport documents may carry compact\n`controllerReceipts[]` references. Each reference contains the controller id,\nplan and receipt digests, source and runtime SHAs, status, and artifact name.\nThe passport validates those identities; it never invents a controller receipt\nfrom a successful job conclusion.\n\nThe PR-stage lifecycle build creates its qualifying receipt before the\nrelease-candidate passport. Promotion validates that passport and preserves the\nsame references in the final Release Passport, closing the build-to-publish\nevidence chain.\n\n## Train validation\n\nAn unreleased contract should be tested through a temporary Buildchain train\nref and an exact downstream consumer source SHA. The downstream run should\nretain the plan artifact, receipt artifact, workflow outputs, and Release\nPassport or release-candidate reference. Promote to an official alpha or stable\nchannel only after those identities and digests agree."
     },
     {
+      "id": "manual:dev-alpha-candidate-patrol",
+      "title": "Dev to Alpha Candidate Patrol",
+      "route": "/docs/dev-alpha-candidate-patrol",
+      "category": "manual",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent"
+      ],
+      "maturity": "stable",
+      "sourcePath": "docs/dev-alpha-candidate-patrol.md",
+      "digest": "sha256:ebaec4d54f0f66fd82ec24b34e227b20f90a4a76cf724cf94d9e912422ee89a2",
+      "headings": [
+        {
+          "level": 1,
+          "title": "Dev to Alpha Candidate Patrol",
+          "anchor": "dev-to-alpha-candidate-patrol"
+        },
+        {
+          "level": 2,
+          "title": "Reusable workflow",
+          "anchor": "reusable-workflow"
+        }
+      ],
+      "markdown": "---\nstatus: preview\nperiod: ongoing\ntheme: dev-alpha-candidate-patrol\ndoc_type: architecture-and-usage\nsource_level: local-files\nconfidence: high\nsensitivity: public\nevidence_grade: A\nreview_state: self-reviewed\nlast_reviewed: 2026-07-26\nai_provenance:\n  model_family: GPT-5\n  product: Codex\n  generated_at: 2026-07-26\n  visible_context: Existing Buildchain stable-candidate source locks, Kungfu exact-source Alpha preflight, Dev Patrol, and repository release governance.\n  invisible_context_boundary: No credentials, private logs, or private configuration were used.\n---\n\n# Dev to Alpha Candidate Patrol\n\nBuildchain provides a reusable observation and PR controller for repositories\nthat promote a development branch into a protected Alpha branch. It does not\npublish Alpha. The controller reads the exact heads of both branches and accepts\nthe development head only when:\n\n- the source is strictly ahead of the recorded target head;\n- the latest completed Dev Patrol for that exact source SHA succeeded;\n- the latest completed Alpha preflight for the same SHA succeeded; and\n- both runs are within the caller's evidence age limit.\n\nThe decision is `kungfu-buildchain-channel-candidate-decision/v1`. It records the\nsource and target branches and SHAs, comparison distance, workflow paths, run\nidentities and attempts, completion times, URLs, policy, and a canonical decision\nroot. Missing, stale, failed, duplicate, or source-mismatched evidence fails\nclosed.\n\n## Reusable workflow\n\nCall `.github/workflows/dev-alpha-candidate-patrol.yml` from a thin repository\nworkflow. Start with `dry-run: true`. Once the repository has proven that its\ntwo workflow names and branch topology produce exact same-SHA evidence, it may\nset `create-pull-request: true` and `dry-run: false`.\n\nCandidate mode creates one branch named from the target branch and the first 12\ncharacters of the full source SHA. An existing branch must point to the same\nfull SHA or the run fails. The controller then creates or reuses one open pull\nrequest from that immutable branch to the protected Alpha branch.\n\nThe workflow never moves the Alpha ref directly, merges or auto-merges the pull\nrequest, publishes npm, creates a Git tag or GitHub Release, or changes branch\nprotection. Those remain repository-owned protected settlement actions."
+    },
+    {
       "id": "manual:github-governance-authority",
       "title": "GitHub Governance Authority",
       "route": "/docs/github-governance-authority",
@@ -2620,7 +2646,7 @@
   "pageRegistry": {
     "path": "page-registry.json",
     "contract": "kungfu-buildchain-site-page-registry",
-    "pageCount": 56,
+    "pageCount": 57,
     "categories": [
       "action",
       "api",

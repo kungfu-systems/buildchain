@@ -20,6 +20,7 @@
     "./anchored-version-material": "./packages/core/anchored-version-material.js",
     "./buildchain-contract": "./packages/core/buildchain-contract.js",
     "./candidate-timeline": "./packages/core/candidate-timeline.js",
+    "./channel-candidate": "./packages/core/channel-candidate.js",
     "./controller-evidence": "./packages/core/controller-evidence.js",
     "./diagnostics": "./packages/core/diagnostics.js",
     "./homebrew": "./packages/core/homebrew.js",

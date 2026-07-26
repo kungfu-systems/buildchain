@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 96,
-    "workflowCount": 53,
+    "workflowCount": 54,
     "actionCount": 5,
-    "sitePageCount": 56,
+    "sitePageCount": 57,
     "docCommandRefCount": 286,
     "failureCount": 0
   },
@@ -1603,6 +1603,35 @@
         "outputCount": 7
       },
       {
+        "id": "dev-alpha-candidate-patrol",
+        "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
+        "reusable": true,
+        "inputs": [
+          "alpha-workflow-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "create-pull-request",
+          "dev-workflow-path",
+          "dry-run",
+          "max-age-seconds",
+          "source-branch",
+          "target-branch"
+        ],
+        "inputCount": 9,
+        "secrets": [
+          "promotion-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "eligible",
+          "promotion-pr",
+          "result-path",
+          "selected-sha",
+          "source-lock-ref"
+        ],
+        "outputCount": 5
+      },
+      {
         "id": "dev-merge-queue-governance",
         "path": ".github/workflows/dev-merge-queue-governance.yml",
         "reusable": false,
@@ -2513,6 +2542,10 @@
       },
       {
         "id": "manual:controller-evidence",
+        "category": "manual"
+      },
+      {
+        "id": "manual:dev-alpha-candidate-patrol",
         "category": "manual"
       },
       {
@@ -4078,8 +4111,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a1c10dd6977d85a7bc793054baa549108b46d6d18098de109733e01b9151a024",
-    "workflowRegistryDigest": "97e21bf5f4332b830cbaffecc3c1891d9fa1036984c7093e77daac78dc8e3221",
-    "pageRegistryDigest": "d11a4b7ed807d075b52fedb80c85bfa8f13431f5aa86dae38fc00d3f428f0c6e"
+    "workflowRegistryDigest": "027f3a6220bbd118f8d00dfe4c54547f05bf2eb7f666984624e22d51247acd39",
+    "pageRegistryDigest": "39008acb63c81d36e08b4b4e3c035626169dc53f954867ea59940342a0cfd295"
   },
   "comparison": {
     "missingCliRegistry": [],
