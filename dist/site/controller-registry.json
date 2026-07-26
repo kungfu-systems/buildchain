@@ -801,6 +801,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "cargo-registry-index": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "checkout-cache-fallback": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -869,6 +873,18 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "rust-toolchain": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "rustup-dist-server": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "rustup-update-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "shifu-cache-profile-digest": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -914,7 +930,7 @@
         ]
       },
       "semanticBoundary": "References the Shifu aggregate digest and status without copying project Gate identifiers or Gate policy.",
-      "digest": "sha256:bd2d12e2cda0802ab00d8964b4bd36f1630442b8d1bff83865840acd2d74f428"
+      "digest": "sha256:8e42956a2c10fa109500e72b97994f06b3d22a19cc63a46f66410b2e81706e9d"
     },
     {
       "schemaVersion": 1,
@@ -2084,5 +2100,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:c50e39b38608d27d4010c66989b32a5afc194d5e4a161bce0f30620e1f0a72d9"
+  "digest": "sha256:becd8aae765ed9ac3dd0fd737d0d4ce4d7b5b4dff3ec31355bce5b2cf6493c6c"
 }

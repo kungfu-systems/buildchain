@@ -661,6 +661,7 @@
           "artifact-retention-days",
           "buildchain-ref",
           "buildchain-repository",
+          "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
           "checkout-cache-github-timeout-seconds",
@@ -678,13 +679,16 @@
           "platforms-json",
           "require-trusted-event",
           "runner-preset",
+          "rust-toolchain",
+          "rustup-dist-server",
+          "rustup-update-root",
           "shifu-cache-profile-digest",
           "shifu-cache-profile-ref",
           "source-ref",
           "untrusted-policy",
           "working-directory"
         ],
-        "inputCount": 26,
+        "inputCount": 30,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -3968,7 +3972,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "a1322ce3fb8600459c136c7e6dec7c7e0005f51d114b80d660047e3068ecc7e1",
+    "workflowRegistryDigest": "1554826457054dabf1b877aa2bd2ae2b764f90b0bab5552230ea38278ca707df",
     "pageRegistryDigest": "91dcb302decbe07ebb402c3571f59b5d624feb28e4ac90ef11678050a2c73c67"
   },
   "comparison": {
