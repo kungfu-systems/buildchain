@@ -226,6 +226,13 @@
         "artifact-retention-days",
         "buildchain-ref",
         "buildchain-repository",
+        "checkout-cache-fallback",
+        "checkout-cache-fetch-attempts",
+        "checkout-cache-github-timeout-seconds",
+        "checkout-cache-mirror-url-template",
+        "checkout-cache-mode",
+        "checkout-cache-reference-repository-template",
+        "checkout-cache-timeout-seconds",
         "gate-command-json",
         "gate-environment-json",
         "gate-plan-command-json",
@@ -242,7 +249,7 @@
         "untrusted-policy",
         "working-directory"
       ],
-      "inputCount": 19,
+      "inputCount": 26,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
