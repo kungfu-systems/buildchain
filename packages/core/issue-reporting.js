@@ -214,9 +214,6 @@ export function buildWorkflowFrictionIssueReport(options = {}) {
     repository,
     workflow,
     channel,
-    releaseIntent,
-    sourceRef,
-    sourceSha,
     frictionClass,
   });
   const marker = workflowFrictionMarker(fingerprint);
@@ -265,6 +262,10 @@ export function buildWorkflowFrictionIssueReport(options = {}) {
         `- Workflow: ${workflow || "(unknown)"}`,
         `- Run: ${runUrl || runId || "(unknown)"}`,
         `- Attempt: ${runAttempt || "(unknown)"}`,
+        `- Channel: ${channel || "(unknown)"}`,
+        `- Release intent: ${releaseIntent || "(unknown)"}`,
+        `- Source ref: ${sourceRef || "(unknown)"}`,
+        `- Source SHA: ${sourceSha || "(unknown)"}`,
         `- Friction class: ${frictionClass}`,
         `- Fingerprint: ${fingerprint}`,
         options.summary ? `\n${options.summary}` : "",

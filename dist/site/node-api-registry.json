@@ -164,7 +164,7 @@
       "specifier": "@kungfu-tech/buildchain/issue-reporting",
       "export": "./issue-reporting",
       "target": "./packages/core/issue-reporting.js",
-      "digest": "sha256:2e6fb7f8b3d15b9c93e9bec952fbb70d7dc466311b7d8f94e654e145eb29ec49",
+      "digest": "sha256:a42caf54c8b47f4802705d58636fcebf911b20cbbbdd87986c354de8c8e752e6",
       "summary": "Buildchain-owned issue reporting API for workflow friction feedback.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [

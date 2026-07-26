@@ -19,6 +19,28 @@ import {
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
 const commonJsSourcePattern = /\b(require\s*\(|module\.exports|exports\.|require\.main|createRequire)\b/;
+
+function assertSelfReleaseImpactContract(impact, { expectedVersion = "" } = {}) {
+  if (!impact || typeof impact !== "object" || Array.isArray(impact)) {
+    throw new Error("Buildchain self release impact must be a JSON object");
+  }
+  const version = String(impact.release?.version || "").trim();
+  const versionMatch = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/);
+  if (!versionMatch) throw new Error("Buildchain self release impact release.version must be a semantic version");
+  if (expectedVersion && version !== expectedVersion) {
+    throw new Error("Buildchain self release impact version must match package.json version");
+  }
+  const expectedLine = `v${versionMatch[1]}.${versionMatch[2]}`;
+  const line = String(impact.release?.line || "").trim();
+  if (line !== expectedLine) {
+    throw new Error(`Buildchain self release impact line must be ${expectedLine} for release.version ${version}`);
+  }
+  const summary = String(impact.summary || "").trim();
+  if (!summary.startsWith(`Buildchain ${line} `)) {
+    throw new Error(`Buildchain self release impact summary must describe the current ${line} line`);
+  }
+}
+
 const requiredPaths = [
   "AGENTS.md",
   "CONTRIBUTING.md",
@@ -844,19 +866,16 @@ const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/w
 const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
 const npmPublishTransactionScript = fs.readFileSync(path.join(root, "scripts/npm-publish-transaction.mjs"), "utf8");
 const rootPackageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
-const selfReleaseImpact = JSON.parse(fs.readFileSync(path.join(root, ".buildchain/release-impact.json"), "utf8"));
-const selfReleaseLineMatch = String(rootPackageJson.version || "").match(/^(\d+)\.(\d+)\./);
-const expectedSelfReleaseLine = selfReleaseLineMatch ? `v${selfReleaseLineMatch[1]}.${selfReleaseLineMatch[2]}` : "";
-if (selfReleaseImpact.release?.version !== rootPackageJson.version) {
-  throw new Error("Buildchain self release impact version must match package.json version");
-}
-if (!expectedSelfReleaseLine || selfReleaseImpact.release?.line !== expectedSelfReleaseLine) {
-  throw new Error("Buildchain self release impact line must match package.json major/minor line");
-}
+const selfReleaseImpactPath = path.resolve(
+  root,
+  process.env.BUILDCHAIN_SELF_RELEASE_IMPACT_PATH || ".buildchain/release-impact.json",
+);
+const selfReleaseImpact = JSON.parse(fs.readFileSync(selfReleaseImpactPath, "utf8"));
+assertSelfReleaseImpactContract(selfReleaseImpact, { expectedVersion: rootPackageJson.version });
 if (!["patch", "minor", "major"].includes(selfReleaseImpact.classification)) {
   throw new Error("Buildchain self release impact classification must be patch, minor, or major");
 }
-if (!String(selfReleaseImpact.summary || "").trim() || !Array.isArray(selfReleaseImpact.surfaceImpacts) || selfReleaseImpact.surfaceImpacts.length === 0) {
+if (!Array.isArray(selfReleaseImpact.surfaceImpacts) || selfReleaseImpact.surfaceImpacts.length === 0) {
   throw new Error("Buildchain self release impact requires a summary and surfaceImpacts[]");
 }
 for (const requiredSnippet of [

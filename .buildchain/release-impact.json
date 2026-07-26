@@ -369,6 +369,20 @@
       "source": "packages/core/issue-reporting.js"
     },
     {
+      "id": "workflow-friction-stable-incident-identity",
+      "impact": "patch",
+      "class": "observability-diagnostics",
+      "rationale": "Workflow-friction reports keep one incident identity per target, repository, workflow, channel, and friction class while preserving release intent, source ref, source SHA, and run facts as occurrence comments.",
+      "source": "packages/core/issue-reporting.js"
+    },
+    {
+      "id": "web-surface-release-pr-replay-suppression",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "The production release handoff suppresses a new release intent when the source commit is already associated with one qualifying merged same-repository release PR, while ordinary main pushes retain the existing create-or-update path.",
+      "source": "scripts/web-surface-production-release-pr.mjs"
+    },
+    {
       "id": "same-repository-pr-head-runtime-trust",
       "impact": "patch",
       "class": "release-governance",
@@ -380,5 +394,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.14 extends sealed evidence and release governance with anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
+  "summary": "Buildchain v3.0 extends sealed evidence and release governance with anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
 }
