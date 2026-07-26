@@ -8,6 +8,7 @@ import {
   finalizeGate,
   finalizeMedia,
   prepareSmoke,
+  runAdapter,
   sha256,
   stableJson,
   validateAdapterOutput,
@@ -88,6 +89,69 @@ function writeRendererOutput(directory, inputs) {
   }));
   writeChecksums(directory);
 }
+
+test("adapter execution uses the bounded environment", { skip: process.platform === "win32" }, (t) => {
+  const root = temporaryDirectory(t);
+  const source = path.join(root, "source");
+  const artifact = path.join(root, "artifact");
+  const output = path.join(root, "output");
+  const diagnostics = path.join(root, "diagnostics");
+  const coordinate = path.join(root, "source-artifact.json");
+  fs.mkdirSync(source);
+  fs.mkdirSync(artifact);
+  fs.writeFileSync(coordinate, stableJson({
+    schema: "buildchain.github-artifact-coordinate/v1",
+    repository: "kungfu-systems/consumer",
+    runId: "42",
+    runAttempt: "1",
+    sourceSha: SOURCE_SHA,
+    id: "99",
+    nodeId: "artifact-node",
+    name: "exact-build-output",
+    digest: `sha256:${"d".repeat(64)}`,
+    sizeInBytes: 1024,
+    createdAt: "2026-07-25T00:00:00Z",
+    expiresAt: "2026-08-08T00:00:00Z",
+  }));
+  const adapter = path.join(source, "adapter.mjs");
+  fs.writeFileSync(adapter, `#!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
+const values = Object.fromEntries(process.argv.slice(2).reduce((rows, value, index, all) => {
+  if (index % 2 === 0) rows.push([value, all[index + 1]]);
+  return rows;
+}, []));
+fs.mkdirSync(values["--output"], { recursive: true });
+fs.writeFileSync(path.join(values["--output"], "complete-transcript.txt"), "artifact qualified\\n");
+fs.writeFileSync(path.join(values["--output"], "scene.json"), JSON.stringify({
+  schema: "build-images.demo-scene/v1", id: "qualification", width: 1280,
+  height: 720, fps: 15, durationMs: 2500, title: "Qualified build"
+}) + "\\n");
+fs.writeFileSync(path.join(values["--output"], "public-projection.json"), JSON.stringify({
+  schema: "build-images.demo-projection/v1", evidenceClass: "qualified-build-output",
+  claimBoundary: "Traceable fixture output.", cues: [{
+    startMs: 0, endMs: 2500, transcriptLines: [1]
+  }]
+}) + "\\n");
+if (!process.env.HOME || process.env.TZ !== "UTC" || process.env.SOURCE_DATE_EPOCH !== "0") process.exit(9);
+`);
+  fs.chmodSync(adapter, 0o755);
+
+  runAdapter({
+    "--source-root": source,
+    "--artifact-root": artifact,
+    "--source-coordinate": coordinate,
+    "--adapter": "adapter.mjs",
+    "--output": output,
+    "--diagnostics": diagnostics,
+  });
+
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(diagnostics, "adapter.json"), "utf8")).exitCode,
+    0,
+  );
+  assert.equal(fs.readFileSync(path.join(output, "complete-transcript.txt"), "utf8"), "artifact qualified\n");
+});
 
 test("adapter output is strict and smoke input is bounded", (t) => {
   const root = temporaryDirectory(t);
