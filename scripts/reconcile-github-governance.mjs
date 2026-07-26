@@ -90,6 +90,12 @@ function readJson(filePath, label) {
   }
 }
 
+function writeJson(filePath, value) {
+  const target = path.resolve(filePath);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, `${JSON.stringify(value, null, 2)}\n`);
+}
+
 function githubApi(route, { method = "GET", body } = {}) {
   const args = [
     "api",
@@ -236,8 +242,8 @@ function rulesetPlan(args) {
     ...planCore,
     planRoot: githubGovernanceDigest(planCore),
   };
-  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshot, null, 2)}\n`);
-  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  writeJson(snapshotOutput, snapshot);
+  writeJson(planOutput, finalPlan);
   return finalPlan;
 }
 
@@ -327,8 +333,8 @@ function rulesetPolicyPlan(args) {
     ...planCore,
     planRoot: githubGovernanceDigest(planCore),
   };
-  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshot, null, 2)}\n`);
-  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  writeJson(snapshotOutput, snapshot);
+  writeJson(planOutput, finalPlan);
   return finalPlan;
 }
 
@@ -495,8 +501,8 @@ function protectionPolicyPlan(args) {
     ...boundCore,
     planRoot: githubGovernanceDigest(boundCore),
   };
-  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshotWithRoot, null, 2)}\n`);
-  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  writeJson(snapshotOutput, snapshotWithRoot);
+  writeJson(planOutput, finalPlan);
   return finalPlan;
 }
 
@@ -546,8 +552,8 @@ function plan(args) {
     ...boundCore,
     planRoot: githubGovernanceDigest(boundCore),
   };
-  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshotWithRoot, null, 2)}\n`);
-  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  writeJson(snapshotOutput, snapshotWithRoot);
+  writeJson(planOutput, finalPlan);
   return finalPlan;
 }
 
