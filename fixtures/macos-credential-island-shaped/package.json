@@ -1,0 +1,10 @@
+{
+  "name": "@kungfu-systems/macos-credential-island-shaped-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "verify": "node scripts/verify.mjs"
+  }
+}

@@ -65,13 +65,41 @@ jobs:
       require-verify: true
       artifact-retention-days: 7
 
+  credential-island-consumer:
+    if: ${{ (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') && vars.BUILDCHAIN_MACOS_CREDENTIAL_ISLAND_ENVIRONMENT != '' }}
+    uses: ./.github/workflows/.build.yml
+    permissions:
+      actions: read
+      contents: read
+    with:
+      working-directory: fixtures/macos-credential-island-shaped
+      buildchain-contract-drift-issue-mode: "off"
+      runner-preset: custom
+      platforms-json: >-
+        [{"id":"macos-hosted","name":"macOS hosted credential-free build","runner":"[\"macos-15\"]"}]
+      artifact-name: buildchain-v3-credential-island-self-dogfood
+      artifact-name-template: "{artifact}-{platform}-{shortSha}"
+      artifact-paths: fixtures/macos-credential-island-shaped/dist
+      credential-island-macos-app-path: fixtures/macos-credential-island-shaped/dist/Buildchain Credential Island.app
+      credential-island-environment: ${{ vars.BUILDCHAIN_MACOS_CREDENTIAL_ISLAND_ENVIRONMENT }}
+      credential-island-macos-platform-id: macos-hosted
+      require-verify: true
+      artifact-retention-days: 7
+
   verify-floating-refs:
     name: Verify floating refs
     needs:
       - alpha-consumer
       - stable-consumer
+      - credential-island-consumer
+    if: ${{ always() }}
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout Buildchain source
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
       - name: Verify resolved runtime SHAs
         uses: actions/github-script@v8
         env:
@@ -142,11 +170,39 @@ jobs:
               core.setFailed(`floating ref self-dogfood failed: ${failures.join(", ")}`);
             }
 
+      - name: Download authoritative signed macOS payload
+        if: ${{ always() && needs.credential-island-consumer.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.credential-island-consumer.outputs.credential-island-macos-artifact }}
+          path: .buildchain/self-dogfood/credential-payload
+
+      - name: Download authoritative signed macOS manifest
+        if: ${{ always() && needs.credential-island-consumer.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.credential-island-consumer.outputs.credential-island-macos-manifest-artifact }}
+          path: .buildchain/self-dogfood/credential-manifest
+
+      - name: Verify retained credential-island evidence
+        if: ${{ always() }}
+        run: node scripts/verify-credential-island-self-dogfood.mjs
+        env:
+          BUILDCHAIN_CREDENTIAL_JOB_RESULT: ${{ needs.credential-island-consumer.result }}
+          BUILDCHAIN_CREDENTIAL_PAYLOAD_ROOT: .buildchain/self-dogfood/credential-payload
+          BUILDCHAIN_CREDENTIAL_MANIFEST_ROOT: .buildchain/self-dogfood/credential-manifest
+          BUILDCHAIN_EXPECTED_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.credential-island-consumer.outputs.publish-source-sha }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.credential-island-consumer.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_EXPECTED_ARTIFACT_NAME: ${{ needs.credential-island-consumer.outputs.credential-island-macos-artifact }}
+          BUILDCHAIN_EXPECTED_MANIFEST_ARTIFACT_NAME: ${{ needs.credential-island-consumer.outputs.credential-island-macos-manifest-artifact }}
+          BUILDCHAIN_SELF_DOGFOOD_OUTPUT: .buildchain/self-dogfood/credential-island.json
+
       - name: Upload self-dogfood evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-v3-alpha-self-dogfood-evidence
-          path: .buildchain/self-dogfood/evidence.json
+          path: .buildchain/self-dogfood/*.json
           if-no-files-found: error
           retention-days: 14

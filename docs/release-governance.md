@@ -228,12 +228,31 @@ while exact tags and SHAs remain the reproducible audit choice.
 ### Buildchain Alpha Self-Dogfood
 
 Buildchain continuously consumes its own current major alpha through
-`.github/workflows/buildchain-alpha-self-dogfood.yml`. Both lanes call the
-released channel router at `build.yml@v3-alpha`. The auto lane must resolve
-`v3-alpha`; the explicit stable lane must resolve `v2`. Both execute the same
-declared install, build, and verify fixture, proving that a single consumer
-surface routes to distinct released runtimes without duplicating lifecycle
-configuration in the consumer.
+`.github/workflows/buildchain-alpha-self-dogfood.yml`. The ordinary alpha and
+stable lanes call the released channel router at `build.yml@v3-alpha`. The auto
+lane must resolve `v3-alpha`; the explicit stable lane must resolve `v2`. Both
+execute the same declared install, build, and verify fixture, proving that a
+single consumer surface routes to distinct released runtimes without
+duplicating lifecycle configuration in the consumer.
+
+A third, Buildchain-owned macOS lane calls the local reusable workflow from the
+same reviewed source commit. Its ordinary hosted runner compiles and verifies
+an unsigned native `.app` without credentials, then seals the app for the
+existing protected credential-island job. That job runs only when the repository
+variable `BUILDCHAIN_MACOS_CREDENTIAL_ISLAND_ENVIRONMENT` names the provisioned
+protected environment. The caller does not inherit repository or organization
+secrets; GitHub binds the environment secrets only after the protected signer
+job enters that environment. A missing environment, skipped signer, missing
+retained artifact, digest mismatch, non-Developer-ID identity, rejected Apple
+notarization, or false signing/stapling/Gatekeeper check fails the aggregate
+canary rather than becoming a successful skip.
+
+The aggregate evidence binds the exact caller source commit and tree to the
+immutable Buildchain runtime, signed DMG and app ZIP digests, Developer ID team
+and certificate identity, both Apple notarization request IDs, stapling, and
+Gatekeeper acceptance. Linux continues to prove only the ordinary fixture and
+floating-ref integrity contracts; it does not claim macOS signing,
+notarization, stapling, or Gatekeeper verification.
 
 The reusable build trust gate reads `job.workflow_ref`, which identifies the
 called workflow and its selected ref. It does not infer the runtime from

@@ -3705,8 +3705,8 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /permissions:\n  actions: read\n  contents: read/);
   assert.equal(
     workflow.match(/^\s{6}actions: read$/gmu)?.length,
-    2,
-    "both self-dogfood reusable-workflow call jobs must propagate artifact read permission",
+    3,
+    "all self-dogfood reusable-workflow call jobs must propagate artifact read permission",
   );
   assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
   assert.match(workflow, /cancel-in-progress: false/);
@@ -3718,6 +3718,26 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /ref: `tags\/\$\{tag\}`/);
   assert.match(workflow, /kungfu-buildchain-alpha-self-dogfood/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+  assert.match(workflow, /credential-island-consumer:/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.build\.yml/);
+  assert.match(workflow, /vars\.BUILDCHAIN_MACOS_CREDENTIAL_ISLAND_ENVIRONMENT != ''/);
+  const credentialLane = workflow.slice(
+    workflow.indexOf("  credential-island-consumer:"),
+    workflow.indexOf("  verify-floating-refs:"),
+  );
+  assert.doesNotMatch(credentialLane, /secrets:/);
+  assert.doesNotMatch(credentialLane, /id-token: write/);
+  assert.doesNotMatch(credentialLane, /issues: write/);
+  assert.match(
+    workflow,
+    /credential-island-macos-app-path: fixtures\/macos-credential-island-shaped\/dist\/Buildchain Credential Island\.app/,
+  );
+  assert.match(workflow, /credential-island-macos-platform-id: macos-hosted/);
+  assert.match(workflow, /needs\.credential-island-consumer\.result == 'success'/);
+  assert.match(workflow, /node scripts\/verify-credential-island-self-dogfood\.mjs/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_SOURCE_SHA:/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_RUNTIME_SHA:/);
+  assert.match(workflow, /if-no-files-found: error/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
   assert.doesNotMatch(workflow, /\.build\.yml@v3\n/);
   assert.doesNotMatch(workflow, /buildchain-contract-lock-path:/);

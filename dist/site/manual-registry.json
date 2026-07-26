@@ -373,7 +373,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:a77c2bb1d2245e1ee2318f650ad64ada6c8cdd3292a62a028e3ccc7517fb4e12",
+      "digest": "sha256:0f89edb4fbaca7fb2f859a2ba0e0c2638558c057e72ac7ebd53cb597f4466fcc",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

@@ -1,0 +1,14 @@
+schema = 1
+
+[lifecycle.build]
+command = "node scripts/build.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+
+[diagnostics.native]
+enabled = true
+sample_process_tree = true
+compiler_cache = "none"
+expected_tools = ["node", "clang"]
+artifact_dirs = ["dist"]
