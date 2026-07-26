@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-check-report",
+  "checkedAt": "2026-07-26T17:50:59.977Z",
+  "ok": true,
+  "trust": "pass",
+  "surfaceImpactRequirement": {
+    "required": false,
+    "type": "alpha",
+    "reason": "surfaceImpacts[] is optional for alpha, local, and legacy passport contexts",
+    "channel": "alpha",
+    "targetRef": "alpha/v3/v3.0"
+  },
+  "completeness": {
+    "artifactCount": 1,
+    "evidenceArtifactCount": 1,
+    "packageSetPresent": false,
+    "trustedPublishingPresent": true,
+    "transactionPresent": true,
+    "anchorManifestPresent": false,
+    "buildSummaryPresent": false,
+    "platformArtifactManifestCount": 0,
+    "distTagPromotionEvidencePresent": true,
+    "impactPresent": true,
+    "agentIndexPresent": true,
+    "productMechanismPresent": true,
+    "surfaceImpactsRequired": false,
+    "surfaceImpactCount": 55,
+    "versionImpact": "minor"
+  },
+  "issues": []
+}
