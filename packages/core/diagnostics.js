@@ -717,8 +717,8 @@ function createStructuredCacheEvidence({
         platform,
         cacheKey: sourceCommit,
         cacheRoot:
-          sourceCheckout.policy?.referenceRepository ||
-          sourceCheckout.policy?.mirror ||
+          sourceCheckout.policy?.referenceRepository?.display ||
+          sourceCheckout.policy?.mirror?.display ||
           `transport:${cache.transport || "unknown"}`,
         outcome,
         bindings,
