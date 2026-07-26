@@ -242,7 +242,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:1a7ab71556fa0c42a9d2c3b4a8613903ee830035a385d487aaa751c4c81b2809",
+      "digest": "sha256:680a821f732f3da344c0ecc7a6c8f4178ac268694c43890f677e4c05ad5c3a7e",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
