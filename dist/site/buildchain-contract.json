@@ -212,7 +212,7 @@
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix"
       ],
       "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
-      "auditDigest": "sha256:e7d185bca91ebc65d7c42f6bbe72e1466c3be2b651143d75af6af08711f51b8c"
+      "auditDigest": "sha256:ebaa6498187915d82a24d6cd633df3925fab1cf0c54d00c74c8c5c7ba45f4d4e"
     },
     {
       "contractVersion": 1,
@@ -601,7 +601,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:c9cc2c172d70619e814e10a4cef551b93e52c3b35ae27d288c87d3c7f323eb51"
+      "auditDigest": "sha256:05b297b8f0480c0b41f62107df9df15c3bc6aad447a845ab0eed917299ef0604"
     },
     {
       "contractVersion": 1,
@@ -713,7 +713,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:8f22ca61a4569c22388182994b26527132998dc57f5e4801fe64fafe8f72e08b"
+      "auditDigest": "sha256:811f791d07b3cdd0299c33da38143b28677ec17fa1f42d177c5e764b17a3be79"
     },
     {
       "contractVersion": 1,
@@ -3063,7 +3063,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:e7d185bca91ebc65d7c42f6bbe72e1466c3be2b651143d75af6af08711f51b8c"
+      "auditDigest": "sha256:ebaa6498187915d82a24d6cd633df3925fab1cf0c54d00c74c8c5c7ba45f4d4e"
     },
     {
       "contractVersion": 1,
@@ -3261,5 +3261,5 @@
     }
   ],
   "compatibilityDigest": "sha256:008b1c5a90a787cf30106829ac7aca68ab501f6d9c375e415d9c5c6b89039f46",
-  "contractDigest": "sha256:ed6073765c768437b1175921b8079b92d55996ef0f256bb91ba6f89a5b75eda0"
+  "contractDigest": "sha256:86f4768cbaefc6b67cb293e2d22b1c8af448f89b73bd063427371232c959ab6f"
 }

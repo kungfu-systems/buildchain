@@ -227,10 +227,21 @@ test("alpha router coerces string job output before forwarding a boolean input",
 test("promotion router contains no native build job and delegates candidate reuse to the advanced shell", () => {
   const router = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
+  const bindingVerifier = fs.readFileSync(
+    path.join(root, "scripts/verify-promotion-router-binding.sh"),
+    "utf8",
+  );
   assert.doesNotMatch(router, /matrix:|Build native|pnpm run build/);
   assert.match(advanced, /Resolve PR-stage release candidate/);
   assert.match(advanced, /release-candidate-resolver\.mjs/);
   assert.match(advanced, /CALLED_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
-  assert.match(advanced, /\[\[ "\$\{CALLED_WORKFLOW_SHA\}" = "\$\{SHELL_SHA\}" \]\]/);
+  assert.match(
+    advanced,
+    /bash \.buildchain\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
+  );
+  assert.match(
+    bindingVerifier,
+    /\[\[ "\$\{CALLED_WORKFLOW_SHA\}" = "\$\{SHELL_SHA\}" \]\]/,
+  );
   assert.doesNotMatch(advanced, /strategy:\n\s+matrix:/);
 });
