@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "3.0.1-alpha.5",
+  "version": "3.0.1-alpha.6",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -21,6 +21,7 @@
     "./buildchain-contract": "./packages/core/buildchain-contract.js",
     "./candidate-timeline": "./packages/core/candidate-timeline.js",
     "./channel-candidate": "./packages/core/channel-candidate.js",
+    "./cache-evidence": "./packages/core/cache-evidence.js",
     "./controller-evidence": "./packages/core/controller-evidence.js",
     "./diagnostics": "./packages/core/diagnostics.js",
     "./homebrew": "./packages/core/homebrew.js",

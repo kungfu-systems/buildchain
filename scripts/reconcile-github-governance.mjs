@@ -90,6 +90,12 @@ function readJson(filePath, label) {
   }
 }
 
+function writeJson(filePath, value) {
+  const target = path.resolve(filePath);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, `${JSON.stringify(value, null, 2)}\n`);
+}
+
 function githubApi(route, { method = "GET", body } = {}) {
   const args = [
     "api",
@@ -140,6 +146,42 @@ function readRuleset(repository, rulesetId) {
   const response = githubApi(rulesetEndpoint(repository, rulesetId));
   if (!response.exists) throw new Error("GitHub ruleset is absent");
   return normalizeGithubRulesetSnapshot(response.data);
+}
+
+function readMatchingRulesetEntries(repository, branch) {
+  const response = githubApi(
+    `repos/${repository}/rulesets?includes_parents=false&per_page=100`,
+  );
+  const include = `refs/heads/${branch}`;
+  return (response.data || [])
+    .map((entry) => ({
+      id: Number(entry.id),
+      ruleset: readRuleset(repository, entry.id),
+    }))
+    .filter(({ ruleset }) => {
+      const refName = ruleset.conditions?.ref_name || {};
+      return (
+        ruleset.target === "branch" &&
+        (refName.include || []).length === 1 &&
+        refName.include[0] === include &&
+        (refName.exclude || []).length === 0
+      );
+    })
+    .sort((left, right) => left.ruleset.name.localeCompare(right.ruleset.name));
+}
+
+function readMatchingRulesets(repository, branch) {
+  return readMatchingRulesetEntries(repository, branch).map(
+    ({ ruleset }) => ruleset,
+  );
+}
+
+function rulesetInventory(repository, branch) {
+  return {
+    repository,
+    targetRef: branch,
+    matchingRulesets: readMatchingRulesets(repository, branch),
+  };
 }
 
 function snapshotCore(repository, branch, protection) {
@@ -200,8 +242,8 @@ function rulesetPlan(args) {
     ...planCore,
     planRoot: githubGovernanceDigest(planCore),
   };
-  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshot, null, 2)}\n`);
-  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  writeJson(snapshotOutput, snapshot);
+  writeJson(planOutput, finalPlan);
   return finalPlan;
 }
 
@@ -209,13 +251,45 @@ function rulesetPolicyPlan(args) {
   const repository = required(flag(args, "repository"), "--repository");
   const branch = required(flag(args, "branch"), "--branch")
     .replace(/^refs\/heads\//, "");
-  const rulesetId = Number(required(flag(args, "ruleset-id"), "--ruleset-id"));
-  if (!Number.isInteger(rulesetId) || rulesetId <= 0) {
-    throw new Error("--ruleset-id must be a positive integer");
-  }
+  const requestedRulesetId = flag(args, "ruleset-id");
+  const rulesetName = required(flag(args, "ruleset-name"), "--ruleset-name");
   const snapshotOutput = required(flag(args, "snapshot-output"), "--snapshot-output");
   const planOutput = required(flag(args, "plan-output"), "--plan-output");
-  const before = readRuleset(repository, rulesetId);
+  const matchingEntries = readMatchingRulesetEntries(repository, branch);
+  const inventory = {
+    repository,
+    targetRef: branch,
+    matchingRulesets: matchingEntries.map(({ ruleset }) => ruleset),
+  };
+  let rulesetId = null;
+  let before = null;
+  if (requestedRulesetId) {
+    rulesetId = Number(requestedRulesetId);
+    if (!Number.isInteger(rulesetId) || rulesetId <= 0) {
+      throw new Error("--ruleset-id must be a positive integer");
+    }
+    before = readRuleset(repository, rulesetId);
+    if (
+      !inventory.matchingRulesets.some(
+        (ruleset) =>
+          githubGovernanceDigest(ruleset) === githubGovernanceDigest(before),
+      )
+    ) {
+      throw new Error("--ruleset-id does not target the exact requested branch");
+    }
+  } else if (matchingEntries.length === 1) {
+    before = matchingEntries[0].ruleset;
+    rulesetId = matchingEntries[0].id;
+    if (!Number.isInteger(rulesetId) || rulesetId <= 0) {
+      throw new Error("matching ruleset id could not be resolved");
+    }
+  } else if (inventory.matchingRulesets.length > 1) {
+    throw new Error("multiple exact-target rulesets are ambiguous");
+  } else if (!hasFlag(args, "create-if-missing")) {
+    throw new Error(
+      "exact-target ruleset is absent; pass --create-if-missing to plan creation",
+    );
+  }
   const targetPolicy = resolveGithubGovernanceTargetPolicy({
     repository,
     targetRef: branch,
@@ -225,6 +299,7 @@ function rulesetPolicyPlan(args) {
     contract: "kungfu-buildchain-github-governance-ruleset-rollback-snapshot",
     repository,
     targetRef: branch,
+    rulesetExists: Boolean(before),
     rulesetId,
     ruleset: before,
   };
@@ -236,13 +311,16 @@ function rulesetPolicyPlan(args) {
     repository,
     targetRef: branch,
     rulesetId,
-    inventory: before,
+    rulesetName,
+    inventory,
     rollbackSnapshot: before,
     desiredProtection: {
       strictRequiredChecks: targetPolicy.strictRequiredChecks,
       requiredCheckBindings: targetPolicy.requiredCheckBindings,
       requiredApprovals: targetPolicy.requiredApprovals,
       rulesetBypassActors: [],
+      blockDeletions: hasFlag(args, "block-deletions"),
+      blockNonFastForward: hasFlag(args, "block-non-fast-forward"),
     },
   });
   const boundCore = {
@@ -255,8 +333,8 @@ function rulesetPolicyPlan(args) {
     ...planCore,
     planRoot: githubGovernanceDigest(planCore),
   };
-  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshot, null, 2)}\n`);
-  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  writeJson(snapshotOutput, snapshot);
+  writeJson(planOutput, finalPlan);
   return finalPlan;
 }
 
@@ -276,20 +354,29 @@ function rulesetApply(args) {
       snapshotRoot !== githubGovernanceDigest(snapshotCore)) {
     throw new Error("ruleset rollback snapshot root mismatch");
   }
-  const current = readRuleset(rollout.repository, rollout.rulesetId);
-  if (githubGovernanceDigest(current) !== rollout.inventoryRoot) {
+  const currentInventory = rulesetInventory(
+    rollout.repository,
+    rollout.targetRef,
+  );
+  if (githubGovernanceDigest(currentInventory) !== rollout.inventoryRoot) {
     throw new Error("live GitHub ruleset drifted after planning; apply stopped");
   }
-  githubApi(rollout.operations[0].endpoint, {
+  const result = githubApi(rollout.operations[0].endpoint, {
     method: rollout.operations[0].method,
     body: rollout.operations[0].body,
   });
-  const after = readRuleset(rollout.repository, rollout.rulesetId);
+  const rulesetId =
+    rollout.rulesetId ||
+    Number(result.data?.id || 0);
+  if (!Number.isInteger(rulesetId) || rulesetId <= 0) {
+    throw new Error("GitHub did not return the created ruleset id");
+  }
+  const after = readRuleset(rollout.repository, rulesetId);
   const afterRoot = githubGovernanceDigest(after);
   if (afterRoot !== rollout.expectedObservation.rulesetRoot) {
     throw new Error("post-change GitHub ruleset read-back does not match the rollout plan");
   }
-  return {
+  const receiptCore = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-github-governance-ruleset-rollout-receipt",
     status: "applied",
@@ -297,7 +384,21 @@ function rulesetApply(args) {
     snapshotRoot: rollout.snapshotRoot,
     afterRoot,
     repository: rollout.repository,
-    rulesetId: rollout.rulesetId,
+    targetRef: rollout.targetRef,
+    rulesetId,
+    rollback:
+      rollout.action === "create"
+        ? {
+            method: "DELETE",
+            endpoint: rulesetEndpoint(rollout.repository, rulesetId),
+            body: null,
+            preconditionRoot: afterRoot,
+          }
+        : rollout.rollback[0],
+  };
+  return {
+    ...receiptCore,
+    receiptRoot: githubGovernanceDigest(receiptCore),
   };
 }
 
@@ -311,14 +412,46 @@ function rulesetRollback(args) {
   if (rollout.snapshotRoot !== confirmed) {
     throw new Error("--confirm-rollback-root does not match the frozen ruleset snapshot");
   }
-  const operation = rollout.rollback[0];
+  let rulesetId = rollout.rulesetId;
+  let operation = rollout.rollback[0];
+  if (operation.requiresApplyReceipt) {
+    const receipt = readJson(
+      required(flag(args, "apply-receipt"), "--apply-receipt"),
+      "ruleset apply receipt",
+    );
+    const { receiptRoot, ...receiptCore } = receipt;
+    if (
+      receiptRoot !== githubGovernanceDigest(receiptCore) ||
+      receipt.planRoot !== rollout.planRoot ||
+      receipt.repository !== rollout.repository ||
+      receipt.targetRef !== rollout.targetRef
+    ) {
+      throw new Error("ruleset apply receipt does not match the rollout plan");
+    }
+    rulesetId = Number(receipt.rulesetId);
+    operation = receipt.rollback;
+    const current = readRuleset(rollout.repository, rulesetId);
+    if (githubGovernanceDigest(current) !== operation.preconditionRoot) {
+      throw new Error("created ruleset drifted after apply; rollback stopped");
+    }
+  }
   githubApi(operation.endpoint, {
     method: operation.method,
     body: operation.body,
   });
-  const restored = readRuleset(rollout.repository, rollout.rulesetId);
-  if (githubGovernanceDigest(restored) !== operation.preconditionRoot) {
-    throw new Error("ruleset rollback read-back does not match the frozen snapshot");
+  if (operation.method === "DELETE") {
+    const remaining = readMatchingRulesets(
+      rollout.repository,
+      rollout.targetRef,
+    );
+    if (remaining.length !== 0) {
+      throw new Error("created ruleset remains after rollback");
+    }
+  } else {
+    const restored = readRuleset(rollout.repository, rulesetId);
+    if (githubGovernanceDigest(restored) !== operation.preconditionRoot) {
+      throw new Error("ruleset rollback read-back does not match the frozen snapshot");
+    }
   }
   return {
     schemaVersion: 1,
@@ -327,7 +460,7 @@ function rulesetRollback(args) {
     planRoot: rollout.planRoot,
     snapshotRoot: rollout.snapshotRoot,
     repository: rollout.repository,
-    rulesetId: rollout.rulesetId,
+    rulesetId,
   };
 }
 
@@ -368,8 +501,8 @@ function protectionPolicyPlan(args) {
     ...boundCore,
     planRoot: githubGovernanceDigest(boundCore),
   };
-  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshotWithRoot, null, 2)}\n`);
-  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  writeJson(snapshotOutput, snapshotWithRoot);
+  writeJson(planOutput, finalPlan);
   return finalPlan;
 }
 
@@ -419,8 +552,8 @@ function plan(args) {
     ...boundCore,
     planRoot: githubGovernanceDigest(boundCore),
   };
-  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshotWithRoot, null, 2)}\n`);
-  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  writeJson(snapshotOutput, snapshotWithRoot);
+  writeJson(planOutput, finalPlan);
   return finalPlan;
 }
 

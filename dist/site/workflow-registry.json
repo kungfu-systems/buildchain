@@ -92,6 +92,9 @@
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
+        "cache-dependency-lock-root",
+        "cache-policy-root",
+        "cache-toolchain-root",
         "cargo-registry-index",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
@@ -141,7 +144,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 66,
+      "inputCount": 69,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -913,6 +916,9 @@
         "buildchain-ref",
         "buildchain-repository",
         "buildchain-stable-contract-lock-path",
+        "cache-dependency-lock-root",
+        "cache-policy-root",
+        "cache-toolchain-root",
         "cargo-registry-index",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
@@ -962,7 +968,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 69,
+      "inputCount": 72,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

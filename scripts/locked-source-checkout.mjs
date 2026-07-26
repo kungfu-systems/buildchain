@@ -177,6 +177,21 @@ function gitObjectDirectory(referencePath) {
   return candidates.find((candidate) => fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) || "";
 }
 
+function directoryBytes(directory) {
+  if (!fs.existsSync(directory)) return 0;
+  let bytes = 0;
+  const pending = [directory];
+  while (pending.length) {
+    const current = pending.pop();
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const child = path.join(current, entry.name);
+      if (entry.isDirectory()) pending.push(child);
+      else if (entry.isFile()) bytes += fs.statSync(child).size;
+    }
+  }
+  return bytes;
+}
+
 function writeAlternates(targetPath, referencePath) {
   const objectDirectory = gitObjectDirectory(referencePath);
   if (!objectDirectory) {
@@ -413,6 +428,13 @@ export function lockedSourceCheckout({
       fallbackUsed: normalizedMode === "off",
       fallbackReason: normalizedMode === "off" ? "cache disabled" : "",
       githubFetchAttempts: 0,
+      lookupDurationMs: 0,
+      restoreDurationMs: 0,
+      githubFetchDurationMs: 0,
+      restoredBytes: null,
+      restoredBytesStatus:
+        normalizedMode === "off" ? "not-applicable" : "unavailable",
+      restoredBytesMethod: "",
     },
     verification: {
       head: "",
@@ -425,8 +447,13 @@ export function lockedSourceCheckout({
   let checkoutError;
   let checkoutSha = sha;
   if (normalizedMode !== "off") {
+    const cacheAttemptStartedAt = Date.now();
+    const objectBytesBefore = directoryBytes(
+      path.join(targetPath, ".git", "objects"),
+    );
     try {
       if (renderedReferenceRepository) {
+        const lookupStartedAt = Date.now();
         const alternates = writeAlternates(targetPath, renderedReferenceRepository);
         evidence.cache.transport = "reference-repository";
         evidence.cache.referenceAvailable = alternates;
@@ -436,9 +463,13 @@ export function lockedSourceCheckout({
         if (!hasCommit(targetPath, sha, timeoutMs)) {
           throw new Error("reference repository does not contain source commit");
         }
+        evidence.cache.lookupDurationMs = Date.now() - lookupStartedAt;
+        const restoreStartedAt = Date.now();
         checkoutFetchedCommit(targetPath, sha, timeoutMs);
+        evidence.cache.restoreDurationMs = Date.now() - restoreStartedAt;
       } else if (renderedMirrorUrl) {
         evidence.cache.transport = "mirror-url";
+        const restoreStartedAt = Date.now();
         const fetchResult = fetchSourceCommit({
           targetPath,
           remoteName: "buildchain-cache",
@@ -452,15 +483,29 @@ export function lockedSourceCheckout({
         evidence.cache.fetchMode = fetchResult.fetchMode;
         checkoutSha = fetchResult.checkoutSha || sha;
         checkoutFetchedCommit(targetPath, checkoutSha, timeoutMs);
+        evidence.cache.restoreDurationMs = Date.now() - restoreStartedAt;
       } else {
         throw new Error("checkout cache is enabled but no mirror URL or reference repository template was provided");
       }
       evidence.cache.hit = true;
       evidence.cache.fallbackUsed = false;
+      evidence.cache.restoredBytes = Math.max(
+        0,
+        directoryBytes(path.join(targetPath, ".git", "objects")) -
+          objectBytesBefore,
+      );
+      evidence.cache.restoredBytesStatus = "observed";
+      evidence.cache.restoredBytesMethod = "git-object-store-delta";
     } catch (error) {
       checkoutError = error;
       evidence.cache.hit = false;
       evidence.cache.fallbackReason = error.message;
+      if (
+        evidence.cache.lookupDurationMs === 0 &&
+        evidence.cache.restoreDurationMs === 0
+      ) {
+        evidence.cache.lookupDurationMs = Date.now() - cacheAttemptStartedAt;
+      }
       if (normalizedMode === "require" || normalizedFallback === "fail") {
         evidence.durationMs = Date.now() - startedAt;
         writeEvidence(path.resolve(workspace, diagnosticsPath), evidence);
@@ -477,6 +522,7 @@ export function lockedSourceCheckout({
       evidence.cache.fallbackReason = checkoutError.message;
     }
     try {
+      const githubFetchStartedAt = Date.now();
       const fetchResult = runBoundedFetch({
         attempts: normalizedFetchAttempts,
         fetch: () => fetchSourceCommit({
@@ -496,6 +542,8 @@ export function lockedSourceCheckout({
       evidence.cache.githubFetchAttempts = fetchResult.attempts;
       evidence.cache.fetchMode = fetchResult.value.fetchMode;
       checkoutSha = fetchResult.value.checkoutSha || sha;
+      evidence.cache.githubFetchDurationMs =
+        Date.now() - githubFetchStartedAt;
     } catch (error) {
       evidence.durationMs = Date.now() - startedAt;
       writeEvidence(path.resolve(workspace, diagnosticsPath), evidence);

@@ -577,6 +577,9 @@
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
+          "cache-dependency-lock-root",
+          "cache-policy-root",
+          "cache-toolchain-root",
           "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
@@ -626,7 +629,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 66,
+        "inputCount": 69,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1341,6 +1344,9 @@
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
+          "cache-dependency-lock-root",
+          "cache-policy-root",
+          "cache-toolchain-root",
           "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
@@ -1390,7 +1396,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 69,
+        "inputCount": 72,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -4111,7 +4117,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a1c10dd6977d85a7bc793054baa549108b46d6d18098de109733e01b9151a024",
-    "workflowRegistryDigest": "027f3a6220bbd118f8d00dfe4c54547f05bf2eb7f666984624e22d51247acd39",
+    "workflowRegistryDigest": "adbf4d0f0f67aab550735fac44b544cb5eeeaa94d1604c18953d7e81d3cb0136",
     "pageRegistryDigest": "39008acb63c81d36e08b4b4e3c035626169dc53f954867ea59940342a0cfd295"
   },
   "comparison": {

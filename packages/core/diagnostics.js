@@ -19,6 +19,11 @@ import {
   readBuildchainLogEvents,
   summarizeBuildchainLogEvents,
 } from "./logging.js";
+import {
+  cacheEvidenceDigest,
+  createCacheEvidenceSet,
+  createCacheOperationReceipt,
+} from "./cache-evidence.js";
 
 export const BUILDCHAIN_DIAGNOSTICS_CONTRACT = "kungfu-buildchain-diagnostics";
 export const BUILDCHAIN_LIFECYCLE_OBSERVABILITY_CONTRACT =
@@ -568,18 +573,37 @@ function collectCompilerCacheTool({ command, attempts, cwd, runCommand }) {
 export function collectCompilerCacheDiagnostics({
   cwd = process.cwd(),
   runCommand = defaultDiagnosticCommandRunner,
+  env = process.env,
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
+  const ccache = collectCompilerCacheTool({
+    command: "ccache",
+    attempts: [
+      { args: ["--show-stats", "--json"], format: "json" },
+      { args: ["--show-stats"], format: "text" },
+    ],
+    cwd: resolvedCwd,
+    runCommand,
+  });
+  ccache.logStats = env.CCACHE_STATSLOG
+    ? collectCompilerCacheTool({
+        command: "ccache",
+        attempts: [
+          {
+            args: ["--print-log-stats", "--format", "json"],
+            format: "json",
+          },
+        ],
+        cwd: resolvedCwd,
+        runCommand,
+      })
+    : {
+        available: false,
+        command: "ccache",
+        error: "CCACHE_STATSLOG is not configured",
+      };
   return {
-    ccache: collectCompilerCacheTool({
-      command: "ccache",
-      attempts: [
-        { args: ["--show-stats", "--json"], format: "json" },
-        { args: ["--show-stats"], format: "text" },
-      ],
-      cwd: resolvedCwd,
-      runCommand,
-    }),
+    ccache,
     sccache: collectCompilerCacheTool({
       command: "sccache",
       attempts: [
@@ -589,6 +613,238 @@ export function collectCompilerCacheDiagnostics({
       runCommand,
     }),
   };
+}
+
+function unavailableMetric(unit, reason, source = null, evidenceRoot = null) {
+  return {
+    status: "unavailable",
+    unit,
+    value: null,
+    source,
+    reason,
+    evidenceRoot,
+  };
+}
+
+function notApplicableMetric(unit, reason) {
+  return {
+    status: "not-applicable",
+    unit,
+    value: null,
+    reason,
+  };
+}
+
+function observedMetric(unit, value, source, evidenceRoot) {
+  return {
+    status: "observed",
+    unit,
+    value: Number(value),
+    source,
+    evidenceRoot,
+  };
+}
+
+function cacheStatsCount(stats, names) {
+  return names.reduce((sum, name) => sum + Number(stats?.[name] || 0), 0);
+}
+
+function compilerCacheOutcome(compilerCaches) {
+  const logStats = compilerCaches?.ccache?.logStats;
+  if (!logStats?.available || !logStats.stats) return "unavailable";
+  const hits = cacheStatsCount(logStats.stats, [
+    "direct_cache_hit",
+    "preprocessed_cache_hit",
+  ]);
+  const misses = cacheStatsCount(logStats.stats, ["cache_miss"]);
+  if (hits > 0 && misses > 0) return "partial";
+  if (hits > 0) return "hit";
+  if (misses > 0) return "miss";
+  return "bypassed";
+}
+
+function createStructuredCacheEvidence({
+  sourceCheckout,
+  compilerCaches,
+  platform,
+  env = process.env,
+}) {
+  const repository = env.GITHUB_REPOSITORY || sourceCheckout?.repository || "unknown/unknown";
+  const sourceCommit =
+    env.BUILDCHAIN_SOURCE_SHA ||
+    sourceCheckout?.source?.sha ||
+    sourceCheckout?.verification?.head ||
+    "unknown";
+  const sourceTree =
+    env.BUILDCHAIN_SOURCE_TREE_SHA ||
+    sourceCheckout?.source?.treeSha ||
+    sourceCheckout?.verification?.tree ||
+    "";
+  const runtimeCommit = env.BUILDCHAIN_RUNTIME_SHA || "";
+  const policyRoot = env.SHIFU_CACHE_PROFILE_DIGEST || "";
+  const bindings = {
+    sourceCommit,
+    ...(sourceTree ? { sourceTree } : {}),
+    ...(runtimeCommit ? { runtimeCommit } : {}),
+    ...(env.BUILDCHAIN_DEPENDENCY_LOCK_ROOT
+      ? { dependencyLockRoot: env.BUILDCHAIN_DEPENDENCY_LOCK_ROOT }
+      : {}),
+    ...(env.BUILDCHAIN_TOOLCHAIN_ROOT
+      ? { toolchainRoot: env.BUILDCHAIN_TOOLCHAIN_ROOT }
+      : {}),
+    ...(env.BUILDCHAIN_CACHE_POLICY_ROOT
+      ? { policyRoot: env.BUILDCHAIN_CACHE_POLICY_ROOT }
+      : {}),
+    ...(policyRoot ? { cacheProfileRoot: policyRoot } : {}),
+  };
+  const operations = [];
+  if (sourceCheckout) {
+    const evidenceRoot = cacheEvidenceDigest(sourceCheckout);
+    const cache = sourceCheckout.cache || {};
+    const outcome = cache.hit
+      ? "hit"
+      : cache.attempted === false || sourceCheckout.policy?.mode === "off"
+        ? "bypassed"
+        : cache.fallbackUsed
+          ? "miss"
+          : "unavailable";
+    operations.push(
+      createCacheOperationReceipt({
+        operationId: `source-checkout:${platform}`,
+        operation: "restore",
+        provider: `git-${cache.transport || "unknown"}`,
+        producer: "kungfu-systems/buildchain",
+        platform,
+        cacheKey: sourceCommit,
+        cacheRoot:
+          sourceCheckout.policy?.referenceRepository?.display ||
+          sourceCheckout.policy?.mirror?.display ||
+          `transport:${cache.transport || "unknown"}`,
+        outcome,
+        bindings,
+        metrics: {
+          lookupDuration:
+            cache.attempted === false
+              ? notApplicableMetric("ms", "source checkout cache was disabled")
+              : observedMetric(
+                  "ms",
+                  cache.lookupDurationMs || 0,
+                  "locked-source-checkout",
+                  evidenceRoot,
+                ),
+          restoreDuration: cache.hit
+            ? observedMetric(
+                "ms",
+                cache.restoreDurationMs || 0,
+                "locked-source-checkout",
+                evidenceRoot,
+              )
+            : notApplicableMetric(
+                "ms",
+                "no cache payload was admitted for restore",
+              ),
+          saveDuration: notApplicableMetric(
+            "ms",
+            "locked source checkout does not save cache state",
+          ),
+          restoredBytes:
+            cache.restoredBytesStatus === "observed"
+              ? observedMetric(
+                  "bytes",
+                  cache.restoredBytes || 0,
+                  cache.restoredBytesMethod || "git-object-store-delta",
+                  evidenceRoot,
+                )
+              : unavailableMetric(
+                  "bytes",
+                  "checkout provider did not expose restored byte evidence",
+                  "locked-source-checkout",
+                  evidenceRoot,
+                ),
+          writtenBytes: notApplicableMetric(
+            "bytes",
+            "locked source checkout does not save cache state",
+          ),
+          savedTime: unavailableMetric(
+            "ms",
+            "checkout provider did not report a measured cold-path comparison",
+            "locked-source-checkout",
+            evidenceRoot,
+          ),
+        },
+        evidence: {
+          kind: "locked-source-checkout",
+          root: evidenceRoot,
+          locator: ".buildchain/diagnostics/source-checkout.json",
+        },
+      }),
+    );
+  }
+  const compilerEvidenceRoot = cacheEvidenceDigest(compilerCaches || {});
+  operations.push(
+    createCacheOperationReceipt({
+      operationId: `compiler-cache:${platform}`,
+      operation: "restore",
+      provider: compilerCaches?.ccache?.available ? "ccache" : "compiler-cache",
+      producer: compilerCaches?.ccache?.available ? "ccache" : "unavailable",
+      platform,
+      cacheKey: policyRoot || null,
+      cacheRoot: policyRoot || null,
+      outcome: compilerCacheOutcome(compilerCaches),
+      bindings,
+      metrics: {
+        lookupDuration: unavailableMetric(
+          "ms",
+          "ccache stats log exposes outcomes but not lookup duration",
+          "ccache-stats-log",
+          compilerEvidenceRoot,
+        ),
+        restoreDuration: unavailableMetric(
+          "ms",
+          "ccache stats log exposes outcomes but not transfer duration",
+          "ccache-stats-log",
+          compilerEvidenceRoot,
+        ),
+        saveDuration: unavailableMetric(
+          "ms",
+          "ccache stats log exposes writes but not save duration",
+          "ccache-stats-log",
+          compilerEvidenceRoot,
+        ),
+        restoredBytes: unavailableMetric(
+          "bytes",
+          "ccache does not expose per-run restored bytes",
+          "ccache-stats-log",
+          compilerEvidenceRoot,
+        ),
+        writtenBytes: unavailableMetric(
+          "bytes",
+          "ccache does not expose per-run written bytes",
+          "ccache-stats-log",
+          compilerEvidenceRoot,
+        ),
+        savedTime: unavailableMetric(
+          "ms",
+          "ccache does not report evidence-backed compile time saved",
+          "ccache-stats-log",
+          compilerEvidenceRoot,
+        ),
+      },
+      evidence: {
+        kind: "compiler-cache-diagnostics",
+        root: compilerEvidenceRoot,
+        locator: ".buildchain/artifacts/<platform>/diagnostics.json#compilerCaches",
+      },
+    }),
+  );
+  return createCacheEvidenceSet({
+    repository,
+    sourceCommit,
+    sourceTree,
+    runtimeCommit,
+    platform,
+    operations,
+  });
 }
 
 export function collectCacheDiagnostics({ cwd = process.cwd(), cacheDirs = [], runCommand = defaultDiagnosticCommandRunner } = {}) {
@@ -1095,6 +1351,11 @@ export function createDiagnosticsArtifact({
   const nativeProfile = getNativeDiagnosticsProfile(loadedConfig);
   const native = collectNativeDiagnostics({ cwd: resolvedCwd, profile: nativeProfile });
   const cache = collectCacheDiagnostics({ cwd: resolvedCwd, cacheDirs });
+  const compilerCaches = native.compilerCaches || cache.compilerCaches || {};
+  const platform =
+    links.platformId ||
+    process.env.BUILDCHAIN_PLATFORM_ID ||
+    `${process.env.RUNNER_OS || os.platform()}-${process.env.RUNNER_ARCH || os.arch()}`;
   return {
     schemaVersion: 1,
     contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
@@ -1105,7 +1366,12 @@ export function createDiagnosticsArtifact({
     tools: collectToolDiagnostics({ cwd: resolvedCwd }),
     cache,
     native,
-    compilerCaches: native.compilerCaches || cache.compilerCaches || {},
+    compilerCaches,
+    cacheEvidence: createStructuredCacheEvidence({
+      sourceCheckout,
+      compilerCaches,
+      platform,
+    }),
     nativeCacheDirs: native.cacheDirs || [],
     git: collectGitDiagnostics({ cwd: resolvedCwd }),
     lifecycleObservability: lifecycleObservability || summarizeLifecycleObservability({ events, logPath }),
