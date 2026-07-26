@@ -661,6 +661,13 @@
           "artifact-retention-days",
           "buildchain-ref",
           "buildchain-repository",
+          "checkout-cache-fallback",
+          "checkout-cache-fetch-attempts",
+          "checkout-cache-github-timeout-seconds",
+          "checkout-cache-mirror-url-template",
+          "checkout-cache-mode",
+          "checkout-cache-reference-repository-template",
+          "checkout-cache-timeout-seconds",
           "gate-command-json",
           "gate-environment-json",
           "gate-plan-command-json",
@@ -677,7 +684,7 @@
           "untrusted-policy",
           "working-directory"
         ],
-        "inputCount": 19,
+        "inputCount": 26,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -3961,7 +3968,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "254dd835780fc8ee3cf59b8b9e5d6806c5cf831aa54cb1efed8a8340387b016f",
+    "workflowRegistryDigest": "a1322ce3fb8600459c136c7e6dec7c7e0005f51d114b80d660047e3068ecc7e1",
     "pageRegistryDigest": "91dcb302decbe07ebb402c3571f59b5d624feb28e4ac90ef11678050a2c73c67"
   },
   "comparison": {

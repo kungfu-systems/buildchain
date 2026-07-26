@@ -801,6 +801,34 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "checkout-cache-fallback": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-fetch-attempts": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-github-timeout-seconds": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-mirror-url-template": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-mode": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-reference-repository-template": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-timeout-seconds": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "gate-command-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -886,7 +914,7 @@
         ]
       },
       "semanticBoundary": "References the Shifu aggregate digest and status without copying project Gate identifiers or Gate policy.",
-      "digest": "sha256:29569f4b754595792a16742d1c4c63838b54601674a2cb6c96261a72c962dece"
+      "digest": "sha256:bd2d12e2cda0802ab00d8964b4bd36f1630442b8d1bff83865840acd2d74f428"
     },
     {
       "schemaVersion": 1,
@@ -2056,5 +2084,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:e75263bcd78615c4dc58832728b769d7d29dfb1335e8757bcbf2e02f15f036c4"
+  "digest": "sha256:c50e39b38608d27d4010c66989b32a5afc194d5e4a161bce0f30620e1f0a72d9"
 }
