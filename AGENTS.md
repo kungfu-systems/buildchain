@@ -20,14 +20,14 @@ to `auto`; repositories only add channel configuration when they intentionally
 override that policy:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
 ```
 
 During the v2.12 alpha evaluation window, canaries call the same router through
 the matching prerelease ref:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2-alpha
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3-alpha
 ```
 
 The default policy selects `vN-alpha` for pull requests, development, nightly,
@@ -48,7 +48,7 @@ and [`docs/reusable-build-surface.md`](docs/reusable-build-surface.md) for the
 consumer contract.
 
 For temporary validation of an unreleased Buildchain runtime, keep the committed
-workflow ref on `@v2` and use the trusted `workflow_dispatch` `buildchain-ref`
+workflow ref on `@v3` and use the trusted `workflow_dispatch` `buildchain-ref`
 pass-through. See [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
 
 ## Building this repo

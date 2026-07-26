@@ -25,5 +25,5 @@ jobs:
       - name: Elastic Beanstalk release workflow retired
         run: |
           echo "::error::The workflows v2 Elastic Beanstalk release path is retired."
-          echo "::error::Do not use .release-elastic-beanstalk.yml; use a project lifecycle.publish command behind release-candidate-promote.yml@v2 so publish-gate source-lock enforcement applies."
+          echo "::error::Do not use .release-elastic-beanstalk.yml; use a project lifecycle.publish command behind release-candidate-promote.yml@v3 so publish-gate source-lock enforcement applies."
           exit 1

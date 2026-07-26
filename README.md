@@ -168,7 +168,7 @@ Consumers can report Buildchain-owned workflow failures directly to the
 Buildchain repository with a scoped issue-write token:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
+- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v3
   if: failure()
   with:
     token: ${{ steps.buildchain-issue-token.outputs.token }}
@@ -245,15 +245,15 @@ Stable consumers should reference actions and workflows through floating major
 refs after reviewing the exact release passport:
 
 ```yaml
-uses: kungfu-systems/buildchain/actions/validate-config@v2
+uses: kungfu-systems/buildchain/actions/validate-config@v3
 ```
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
 ```
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
+uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3
 ```
 
 ## Release Model

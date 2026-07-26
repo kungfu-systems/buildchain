@@ -288,7 +288,7 @@ current source/artifact hashes and generates:
   surfaces.
 
 The generated claim set covers Buildchain's KFD release passport support,
-agent-first single source of truth, floating `@v2` contract drift protection,
+agent-first single source of truth, floating `@v3` contract drift protection,
 semver GitHub Release evidence publication, channel-preserving release
 propagation, and npm publish evidence/finalization. Buildchain self promotion
 passes those files into `promote-buildchain-ref`; `verifyReleasePassport()` then
@@ -391,7 +391,7 @@ and compares it before heavy build or publish work begins.
 
 Compatible drift, such as optional inputs or extra diagnostics, continues and
 creates a consumer-local issue for review. Breaking drift fails fast. This means
-consumers can use `@v2` without silently accepting incompatible changes, while
+consumers can use `@v3` without silently accepting incompatible changes, while
 Buildchain maintainers can still ship compatible improvements under the same
 major floating tag.
 
