@@ -206,6 +206,10 @@ test("reusable build workflow exposes the required surface contract", () => {
     path.join(root, ".github/workflows/.build.yml"),
     "utf8",
   );
+  const summarizeJob = workflow.slice(
+    workflow.indexOf("  summarize:"),
+    workflow.indexOf("\n  controller-receipt:", workflow.indexOf("  summarize:")),
+  );
   assert.match(workflow, /workflow_call:/);
   assert.match(
     workflow,
@@ -262,20 +266,20 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(workflow, /node "\$\{\{ steps\.anchored-verifier\.outputs\.path \}\}"/);
   assert.match(
-    workflow,
+    summarizeJob,
     /name: Checkout Buildchain workflow shell for aggregate compatibility[\s\S]*?ref: \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-sha \}\}[\s\S]*?path: \.buildchain\/workflow-shell/,
   );
   assert.match(
-    workflow,
+    summarizeJob,
     /binder=\.buildchain\/runtime\/scripts\/resolve-artifact-coordinates\.mjs/,
   );
   assert.match(
-    workflow,
+    summarizeJob,
     /binder=\.buildchain\/workflow-shell\/scripts\/resolve-artifact-coordinates\.mjs/,
     "new workflow shells must retain producer artifact coordinates when the selected stable runtime predates the binder",
   );
   assert.match(
-    workflow,
+    summarizeJob,
     /node "\$\{\{ steps\.artifact-coordinate-binder\.outputs\.path \}\}"/,
   );
   assert.match(workflow, /kind":"anchored-version-material"/);

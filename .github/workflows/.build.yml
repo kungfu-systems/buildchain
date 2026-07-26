@@ -863,14 +863,6 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
-      - name: Checkout Buildchain workflow shell for aggregate compatibility
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
-
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
@@ -2018,6 +2010,14 @@ jobs:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Checkout Buildchain workflow shell for aggregate compatibility
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/workflow-shell
           persist-credentials: false
 
       - name: Install Buildchain runtime dependencies
