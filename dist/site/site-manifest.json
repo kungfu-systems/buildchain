@@ -69,7 +69,7 @@
       "path": "docs/install.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1879849c01f82b8820f2d9aeb09faed0931954cb7fe6939176a5eb69110cee59"
+      "digest": "sha256:570bf79189925ae0dfc040a83804a71149cda122c033d5aa763672b2a137072a"
     },
     {
       "id": "release-passport",
@@ -77,7 +77,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:220e4c249ef9277d220390f4da1f4fa1a37befbec6356572880abb4f1c35eeb1"
+      "digest": "sha256:c7f096af40224efb53b2e0e8b7e1ceedc3aafeb341c476a7cce7e5974004a775"
     },
     {
       "id": "controller-evidence",
@@ -117,7 +117,7 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0e2909991b810f4174e1ae437da3bf7fb6e71cc2fdfbe098113d70f950de91ca"
+      "digest": "sha256:b7d2deef7d50fc412aa21c7ef1019c4c2bd8b0392b9b323356b1c0b1fc2596b6"
     },
     {
       "id": "readme-badges",
@@ -133,7 +133,7 @@
       "path": "docs/homebrew.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
+      "digest": "sha256:e690ea465d4289f2246d93765776b057c6aca1c68dc290abcee94c947e5d5c47"
     },
     {
       "id": "binary-distribution",
@@ -205,7 +205,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:d32f4822475ffd2d041a743fe28eed50092937f05918b490b8ade0c157089d0b"
+      "digest": "sha256:f4518193026571d1e84bc245725a9f83e842b2e4b4dfaa072c8207021fa89cd1"
     },
     {
       "id": "build-facts",
@@ -245,7 +245,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:c6c8e3f0b602bd71380e494a48633467a3fac0ff2208c28b4543cfba8c37b1e5"
+      "digest": "sha256:fe73561e8f038e73624bc776f7c527efe59bab105e1208bbaa5af6ebeade6216"
     },
     {
       "id": "publish-transaction",
@@ -277,7 +277,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:86b4c17a3a0bc3e7d24d88c771177e3f979c1922c9f5e19cff2a99d2c7b5ab30"
+      "digest": "sha256:1315fe264d0e22215183122fc05e287be974751a78268642076898b689e435e6"
     },
     {
       "id": "versioning",
@@ -293,7 +293,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:00d328b606464ea834b0e1eb4a03b8541f7f6b596bd7dfc4c661e601992e7520"
+      "digest": "sha256:ed4ff02dcb6f66118a29084784f25d8008ca472f59005b2e014133524706a9c5"
     }
   ],
   "facts": [

@@ -18,7 +18,7 @@ identifies the caller workflow during reusable calls.
 A train ref is a branch in the Buildchain repository:
 
 ```text
-train/v2/v2.3/<capability>
+train/v3/v3.0/<capability>
 ```
 
 It is a validation pointer, not a release channel:
@@ -41,15 +41,15 @@ When a Buildchain change needs downstream validation before stable refs move,
 publish a train ref before asking consumers to test it:
 
 ```sh
-git push origin HEAD:refs/heads/train/v2/v2.3/<capability>
+git push origin HEAD:refs/heads/train/v3/v3.0/<capability>
 ```
 
 Use a capability slug that names the behavior being validated, for example:
 
 ```text
-train/v2/v2.3/runtime-loader
-train/v2/v2.3/toolkit-diagnostics
-train/v2/v2.3/site-source-of-truth
+train/v3/v3.0/runtime-loader
+train/v3/v3.0/toolkit-diagnostics
+train/v3/v3.0/site-source-of-truth
 ```
 
 The pull request or validation request should include the train ref, the exact
@@ -101,7 +101,7 @@ consumers that do not have it should add it once before validating a train.
 Use this short request when a train is ready:
 
 ```text
-Buildchain train ready: buildchain-ref=train/v2/v2.3/<capability>.
+Buildchain train ready: buildchain-ref=train/v3/v3.0/<capability>.
 Keep uses: ...@v3; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
 ```
 

@@ -477,7 +477,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:d32f4822475ffd2d041a743fe28eed50092937f05918b490b8ade0c157089d0b"
+      "digest": "sha256:f4518193026571d1e84bc245725a9f83e842b2e4b4dfaa072c8207021fa89cd1"
     },
     {
       "id": "build-facts",
@@ -497,7 +497,7 @@
     {
       "id": "homebrew",
       "path": "docs/homebrew.md",
-      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
+      "digest": "sha256:e690ea465d4289f2246d93765776b057c6aca1c68dc290abcee94c947e5d5c47"
     },
     {
       "id": "site-bundle-contract",

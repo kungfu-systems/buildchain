@@ -7,7 +7,7 @@
     "workflowCount": 53,
     "actionCount": 5,
     "sitePageCount": 56,
-    "docCommandRefCount": 276,
+    "docCommandRefCount": 275,
     "failureCount": 0
   },
   "enumerated": {
@@ -3938,11 +3938,6 @@
         "command": "buildchain verify release-passport"
       },
       {
-        "id": "verify-release-passport",
-        "path": "README.md",
-        "command": "buildchain verify release-passport buildchain"
-      },
-      {
         "id": "version",
         "path": "docs/install.md",
         "command": "buildchain version npx buildchain"
@@ -3965,7 +3960,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
     "workflowRegistryDigest": "4a627dcf07131d07095d5e6bf0a3373e55c62cf325b3f81bb156c43d31367d62",
-    "pageRegistryDigest": "e2dda62b0e27e15de375519fabefc6d283fd8d374bb11491caaf28866fe29596"
+    "pageRegistryDigest": "752b9d4f725f90f731f4b83a599905fbfb50f6d668b220e085c4b5bddbc2fb5e"
   },
   "comparison": {
     "missingCliRegistry": [],

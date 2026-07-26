@@ -176,12 +176,12 @@ jobs:
   propagate-site:
     uses: kungfu-systems/buildchain/.github/workflows/release-propagation.yml@v3
     with:
-      buildchain-ref: v2
+      buildchain-ref: v3
       graph-json: ${{ needs.release.outputs.propagation-graph-json }}
       upstream-release-json: ${{ needs.release.outputs.upstream-release-json }}
       downstream-target: site-libkungfu-dev
       downstream-repository: kungfu-systems/site-libkungfu-dev
-      downstream-base-ref: dev/v2/v2.7
+      downstream-base-ref: main
       downstream-prepare-command: pnpm install --frozen-lockfile --ignore-scripts
       downstream-verify-command: pnpm run check
       dry-run: false

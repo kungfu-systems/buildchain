@@ -31,7 +31,7 @@ Consumers should pin the exact Buildchain version that was validated in their
 repository. When dogfooding a fresh Buildchain release immediately after it is
 published, pnpm may block the install through a minimum release-age policy. In
 that case, add a temporary package/version-specific `minimumReleaseAgeExclude`
-entry, such as `@kungfu-tech/buildchain@2.2.5`, and remove it once the package
+entry, such as `@kungfu-tech/buildchain@3.0.0`, and remove it once the package
 has aged past the normal policy window. Do not replace that with a broad
 registry or scope-wide exclude.
 
@@ -561,7 +561,7 @@ Generate or check Homebrew tap projections from upstream release passports:
 ```bash
 buildchain homebrew update-formula \
   --package buildchain \
-  --release-passport https://github.com/kungfu-systems/buildchain/releases/download/v2.8.15/buildchain.release.json \
+  --release-passport https://github.com/kungfu-systems/buildchain/releases/download/v3.0.0/buildchain.release.json \
   --write
 
 buildchain homebrew check --json
@@ -577,7 +577,7 @@ GitHub Release assets or a local asset directory:
 
 ```bash
 buildchain collect github-release \
-  --tag v2.2.0 \
+  --tag v3.0.0 \
   --repository kungfu-systems/buildchain \
   --assets-dir dist \
   --output-dir .buildchain/release-passport
@@ -595,11 +595,11 @@ asset summary:
 
 ```bash
 buildchain collect github-release \
-  --tag v2.3.2 \
+  --tag v3.0.0 \
   --repository kungfu-systems/buildchain \
   --assets-dir dist \
-  --publish-evidence-json .buildchain/release-evidence/v2.3.2/evidence.json \
-  --transaction-json .buildchain/release-state/v2.3.2/state.json \
+  --publish-evidence-json .buildchain/release-evidence/v3.0.0/evidence.json \
+  --transaction-json .buildchain/release-state/v3.0.0/state.json \
   --package-set-json package-set.json \
   --impact-json impact.json \
   --trusted-publishing-json trusted-publishing.json \
@@ -608,7 +608,7 @@ buildchain collect github-release \
   --platform-manifest-json .buildchain/artifacts/linux-x64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
-  --dist-tag-evidence-json .buildchain/release-evidence/v2.3.2/dist-tag-evidence.json \
+  --dist-tag-evidence-json .buildchain/release-evidence/v3.0.0/dist-tag-evidence.json \
   --kfd-1-witness-json .buildchain/kfd/kfd-1/contract-world.witness.json \
   --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
   --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
@@ -819,10 +819,10 @@ even when the bundle hash has been refreshed.
 maintainer opens or merges a channel PR:
 
 ```bash
-buildchain release --dry-run --target-ref alpha/v2/v2.2
-buildchain release --dry-run --target-ref release/v2/v2.2 --sha <verified-sha>
-buildchain release dry-run --target-ref publish-gate/major --source-ref release/v2/v2.2
-buildchain release explain --target-ref alpha/v2/v2.1 --json
+buildchain release --dry-run --target-ref alpha/v3/v3.0
+buildchain release --dry-run --target-ref release/v3/v3.0 --sha <verified-sha>
+buildchain release dry-run --target-ref publish-gate/major --source-ref release/v3/v3.0
+buildchain release explain --target-ref alpha/v3/v3.0 --json
 ```
 
 This is a Buildchain-level dry-run, not an npm dry-run. It explains the legal
@@ -837,7 +837,7 @@ Pass `--json` for a machine-readable plan.
 for the publish transaction state:
 
 ```bash
-buildchain transaction inspect --version v2.1.0-alpha.0
+buildchain transaction inspect --version v3.0.1-alpha.2
 ```
 
 It reads or locally initializes the durable transaction record and validates

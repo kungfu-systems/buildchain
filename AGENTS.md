@@ -40,7 +40,7 @@ For new repositories, prefer the CLI:
 ```sh
 npx @kungfu-tech/buildchain init --type package
 npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.2
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
 ```
 
 See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-protocol.md),
@@ -72,7 +72,7 @@ handoff in
 
 - Open pull requests against the relevant `dev/*` channel branch.
 - If a Buildchain change needs downstream validation before stable refs move,
-  publish a `train/v2/v2.3/<capability>` ref and include the validation request
+  publish a `train/v3/v3.0/<capability>` ref and include the validation request
   described in [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
   After validation succeeds, do not leave the train as a pending merge item:
   merge the pull request into the active `dev/*` mainline and run the requested
