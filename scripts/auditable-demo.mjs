@@ -164,7 +164,18 @@ function validateScene(value) {
   for (const key of ["background", "accent"]) {
     if (value[key] !== undefined) invariant(/^#[0-9a-fA-F]{6}$/.test(value[key]), `scene.${key} is invalid`);
   }
-  return value;
+  return {
+    schema: value.schema,
+    id: value.id,
+    width: value.width,
+    height: value.height,
+    fps: value.fps,
+    durationMs: value.durationMs,
+    title: value.title,
+    commandLabel: value.commandLabel ?? "",
+    background: (value.background ?? "#10151f").toLowerCase(),
+    accent: (value.accent ?? "#67e8a5").toLowerCase(),
+  };
 }
 
 function validateProjection(value, scene, transcriptLineCount) {
@@ -190,7 +201,17 @@ function validateProjection(value, scene, transcriptLineCount) {
     }
     if (cue.annotation !== undefined) text(cue.annotation, 0, 200, `projection.cues[${index}].annotation`);
   }
-  return value;
+  return {
+    schema: value.schema,
+    evidenceClass: value.evidenceClass,
+    claimBoundary: value.claimBoundary,
+    cues: value.cues.map((cue) => ({
+      startMs: cue.startMs,
+      endMs: cue.endMs,
+      transcriptLines: cue.transcriptLines,
+      annotation: cue.annotation ?? "",
+    })),
+  };
 }
 
 function validateSourceCoordinate(value) {
@@ -427,7 +448,9 @@ function finalizeGate(values) {
   const sourceCoordinate = validateSourceCoordinate(readJson(sourceCoordinatePath, "source artifact coordinate"));
   invariant(sourceCoordinate.sourceSha === sourceSha, "source artifact coordinate SHA mismatch");
   ensureEmptyDirectory(output, "gate bundle");
-  for (const name of REQUIRED_ADAPTER_FILES) copyFile(path.join(adapterOutput, name), path.join(output, name));
+  fs.writeFileSync(path.join(output, "complete-transcript.txt"), normalized.transcript);
+  writeJson(path.join(output, "scene.json"), normalized.scene);
+  writeJson(path.join(output, "public-projection.json"), normalized.projection);
   copyFile(sourceCoordinatePath, path.join(output, "source-artifact.json"));
   copyFile(path.join(diagnostics, "adapter.json"), path.join(output, "adapter.json"));
   for (const name of listFiles(smokeOutput)) {
@@ -454,9 +477,9 @@ function finalizeGate(values) {
       smokeManifestRoot: sha256(readRegular(path.join(smokeOutput, "manifest.json"), "smoke manifest")),
     },
     qualifiedInputs: {
-      transcript: sha256(readRegular(path.join(adapterOutput, "complete-transcript.txt"), "transcript")),
-      projection: sha256(readRegular(path.join(adapterOutput, "public-projection.json"), "projection")),
-      scene: sha256(readRegular(path.join(adapterOutput, "scene.json"), "scene")),
+      transcript: sha256(readRegular(path.join(output, "complete-transcript.txt"), "transcript")),
+      projection: sha256(readRegular(path.join(output, "public-projection.json"), "projection")),
+      scene: sha256(readRegular(path.join(output, "scene.json"), "scene")),
       evidenceClass: normalized.projection.evidenceClass,
       claimBoundary: normalized.projection.claimBoundary,
     },

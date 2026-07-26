@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -9,6 +10,7 @@ import {
   sha256,
 } from "../scripts/gate-profile-core.mjs";
 import {
+  commandSpawnOptions,
   prepareGateExecutionFiles,
   windowsBatchInvocation,
 } from "../scripts/shifu-gate-profile.mjs";
@@ -48,10 +50,106 @@ test("Gate execution removes only managed receipt files before a new run", () =>
   );
   const preserved = path.join(root, "diagnostics.log");
   try {
-    for (const file of [...managed, preserved]) fs.writeFileSync(file, "stale\n");
+    for (const file of [...managed, preserved])
+      fs.writeFileSync(file, "stale\n");
     prepareGateExecutionFiles(managed);
-    assert.deepEqual(managed.map((file) => fs.existsSync(file)), [false, false, false]);
+    assert.deepEqual(
+      managed.map((file) => fs.existsSync(file)),
+      [false, false, false],
+    );
     assert.equal(fs.readFileSync(preserved, "utf8"), "stale\n");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("long Gate execution streams output while JSON commands stay bounded", () => {
+  const env = { BUILDCHAIN_GATE_PROFILE: "dev-patrol" };
+  assert.deepEqual(
+    commandSpawnOptions({ cwd: "/source", env, streamOutput: true }),
+    {
+      cwd: "/source",
+      env,
+      stdio: "inherit",
+    },
+  );
+  assert.deepEqual(commandSpawnOptions({ cwd: "/source", env }), {
+    cwd: "/source",
+    env,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  });
+});
+
+test("Gate execution survives output above the bounded JSON capture limit", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-gate-stream-"),
+  );
+  const fakeShifu = path.join(root, "fake-shifu.mjs");
+  const outputRoot = path.join(root, "execution");
+  try {
+    fs.writeFileSync(
+      fakeShifu,
+      `
+        import fs from "node:fs";
+        import path from "node:path";
+        const args = process.argv.slice(2);
+        if (args[0] === "gate" && args[1] === "run") {
+          const receiptPath = args[args.indexOf("--receipt") + 1];
+          fs.mkdirSync(path.dirname(receiptPath), { recursive: true });
+          fs.writeFileSync(receiptPath, '{"qualifying":true}\\n');
+          process.stdout.write("x".repeat(17 * 1024 * 1024));
+        } else if (args[0] === "gate" && args[1] === "receipt") {
+          process.stdout.write('{"qualifying":true}\\n');
+        } else {
+          process.exitCode = 2;
+        }
+      `,
+    );
+    const result = spawnSync(
+      process.execPath,
+      [
+        path.join(import.meta.dirname, "../scripts/shifu-gate-profile.mjs"),
+        "--mode",
+        "run",
+      ],
+      {
+        env: {
+          ...process.env,
+          BUILDCHAIN_GATE_MATRIX_ENTRY_JSON: JSON.stringify({
+            id: "windows-x64",
+            platform: "windows",
+            profile: "dev-patrol",
+            includeAdvisory: false,
+            capabilities: [],
+          }),
+          BUILDCHAIN_GATE_COMMAND_JSON: JSON.stringify([
+            process.execPath,
+            fakeShifu,
+          ]),
+          BUILDCHAIN_GATE_SOURCE_CWD: root,
+          BUILDCHAIN_GATE_OUTPUT_ROOT: outputRoot,
+        },
+        stdio: ["ignore", "ignore", "pipe"],
+        timeout: 30_000,
+      },
+    );
+    assert.equal(result.status, 0, result.stderr?.toString());
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(outputRoot, "receipt.json")))
+        .qualifying,
+      true,
+    );
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(outputRoot, "validation.json")))
+        .qualifying,
+      true,
+    );
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(outputRoot, "execution.json")))
+        .runStatus,
+      0,
+    );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

@@ -212,7 +212,18 @@ test("reusable build workflow exposes the required surface contract", () => {
     workflow.indexOf("  summarize:"),
     workflow.indexOf("\n  controller-receipt:", workflow.indexOf("  summarize:")),
   );
+  const artifactDownloads =
+    workflow.match(/uses: actions\/download-artifact@v7\.0\.0/g) || [];
+  const authenticatedArtifactDownloads =
+    workflow.match(
+      /uses: actions\/download-artifact@v7\.0\.0\n\s+with:\n\s+github-token: \$\{\{ github\.token \}\}/g,
+    ) || [];
   assert.match(workflow, /workflow_call:/);
+  assert.equal(
+    authenticatedArtifactDownloads.length,
+    artifactDownloads.length,
+    "every reusable-build artifact download must use the REST-backed token path so failed-job reruns can consume prior-attempt evidence",
+  );
   assert.match(
     workflow,
     /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
