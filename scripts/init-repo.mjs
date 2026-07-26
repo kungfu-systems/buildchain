@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 import { BUILDCHAIN_CONFIG_PATH } from "../packages/core/buildchain-layout.js";
 import { detectPackageManager, assertPackageManager } from "../packages/core/package-manager.js";
 
-const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v2";
+const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v3";
 const DEFAULT_PUBLICATION_LATEX_IMAGE = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder";
 const DEFAULT_PUBLICATION_LATEX_DIGEST = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8";
 const DEFAULT_PUBLICATION_LATEX_COMMAND = "latexmk -pdf -outdir=_build paper/main.tex";
@@ -349,7 +349,7 @@ permissions:
 
 jobs:
   publication:
-    uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v3
     with:
       buildchain-ref: \${{ inputs.buildchain-ref || '' }}
       toolchain-type: config

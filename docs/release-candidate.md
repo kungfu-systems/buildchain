@@ -14,7 +14,7 @@ Enable it on the reusable build workflow:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     with:
       artifact-name: libnode
       release-candidate: true
@@ -44,7 +44,7 @@ contains:
 Promotion workflows that should not rebuild artifacts can enable:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
+- uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v3
   with:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
     sha: ${{ needs.build.outputs.publish-source-sha }}
@@ -72,7 +72,7 @@ generates one before calling `promote-buildchain-ref`. Before that call, the
 wrapper creates or updates `publish-gate/{alpha,release,major}` to the
 promotion channel commit and passes that ref, target SHA, and `locked=true` to
 the promote action with `require-publish-source-lock: "true"`. Consumers using
-floating `@v2` therefore get publish-side source-lock drift protection without
+floating `@v3` therefore get publish-side source-lock drift protection without
 copying resolver or promote YAML. The default npm path
 generates that requirement list from the downloaded `.tgz` payloads themselves:
 Buildchain reads `package/package.json` inside each tarball for the real scoped
@@ -135,7 +135,7 @@ pre-build/artifact evidence into the wrapper:
 ```yaml
 jobs:
   promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3
     with:
       buildchain-channel: auto
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json

@@ -187,7 +187,7 @@ git diff --check
 `lifecycle.check` is the repository-owned source-acceptance gate. It should
 validate the checked-out source revision without entering the build, artifact,
 or release lifecycle. Consumers can run it on GitHub-hosted Linux through
-`.github/workflows/check.yml@v2` with `mode: source`; the reusable workflow runs
+`.github/workflows/check.yml@v3` with `mode: source`; the reusable workflow runs
 only `lifecycle.install` and `lifecycle.check`. The default `mode: verify`
 continues to run `lifecycle.install` and `lifecycle.verify` for existing callers.
 Both executed stages receive `BUILDCHAIN_CHECK_MODE=source` or
@@ -343,7 +343,7 @@ build and the first migration milestone is to prove the release metadata and
 lifecycle protocol without consuming build runners.
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/validate-config@v2
+- uses: kungfu-systems/buildchain/actions/validate-config@v3
   with:
     require-version-state: "true"
     require-lifecycle-stages: "install,build,verify"
@@ -353,7 +353,7 @@ Web-surface repositories can use the same action without requiring version
 state:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/validate-config@v2
+- uses: kungfu-systems/buildchain/actions/validate-config@v3
   with:
     require-lifecycle-stages: "build,verify"
 ```

@@ -136,7 +136,7 @@ continue from the same SHA without another native build or an administrator
 merge bypass.
 
 Repositories may also expose a small caller workflow around
-`.github/workflows/release-governance-reconcile.yml@v2`. Pass `branch`,
+`.github/workflows/release-governance-reconcile.yml@v3`. Pass `branch`,
 `candidate-sha`, and `apply`, and provide `governance-token` through the caller's
 secrets. The reusable workflow uploads the JSON reconciliation receipt.
 
@@ -181,14 +181,14 @@ This is why Buildchain maintains both exact and floating refs:
 - `v2` is the selected stable major-line entrypoint;
 - `v2.0.3-alpha.0` is immutable alpha evidence;
 - `v2.0-alpha` is the latest test channel for the `2.0` line.
-- `v2-alpha` is the latest test channel on the highest published alpha minor in major `2`.
+- `v3-alpha` is the latest test channel on the highest published alpha minor in major `2`.
 
 A release does not mean "minor is complete." It means "this patch on this minor
 line is now production."
 
 GitHub repository rules must preserve that distinction. Exact tags such as
 `v2.0.2` and `v2.0.3-alpha.0` should be immutable. Floating channel tags such as
-`v2`, `v2.0`, `v2.0-alpha`, and `v2-alpha` must remain movable by the Buildchain promotion
+`v2`, `v2.0`, `v2.0-alpha`, and `v3-alpha` must remain movable by the Buildchain promotion
 token after governance checks and publish evidence pass. A tag ruleset that
 protects every `refs/tags/v*` ref is too broad because it also locks the
 floating channel tags that Buildchain is required to update. Prefer exact-tag
@@ -221,7 +221,7 @@ line-specific dist-tag `vX.Y-alpha` so they cannot roll the global `alpha`
 channel backward. Exact prerelease versions remain installable directly.
 
 This keeps the test channel self-describing. If a consumer checks out
-`v2.0-alpha` or `v2-alpha`, the manifests and exact alpha tag agree. The major
+`v2.0-alpha` or `v3-alpha`, the manifests and exact alpha tag agree. The major
 alpha ref removes routine consumer edits when Buildchain opens a newer minor,
 while exact tags and SHAs remain the reproducible audit choice.
 
@@ -229,8 +229,8 @@ while exact tags and SHAs remain the reproducible audit choice.
 
 Buildchain continuously consumes its own current major alpha through
 `.github/workflows/buildchain-alpha-self-dogfood.yml`. Both lanes call the
-released channel router at `build.yml@v2-alpha`. The auto lane must resolve
-`v2-alpha`; the explicit stable lane must resolve `v2`. Both execute the same
+released channel router at `build.yml@v3-alpha`. The auto lane must resolve
+`v3-alpha`; the explicit stable lane must resolve `v2`. Both execute the same
 declared install, build, and verify fixture, proving that a single consumer
 surface routes to distinct released runtimes without duplicating lifecycle
 configuration in the consumer.
@@ -246,7 +246,7 @@ reviewed alpha SHA and compatibility digest; it does not replace the stable
 consumer lock. A later alpha with only compatible additive drift continues,
 while a changed breaking digest fails until the new alpha contract is reviewed.
 
-The evidence job resolves `v2-alpha` and `v2` through the GitHub refs API,
+The evidence job resolves `v3-alpha` and `v2` through the GitHub refs API,
 compares those immutable SHAs with the reusable workflow outputs, verifies the
 `alpha` and `stable` classifications, and uploads a JSON evidence artifact.
 The canary runs after successful Buildchain ref promotion, on a daily fallback
@@ -545,7 +545,7 @@ command = "cargo test --workspace --locked"
 ```
 
 Consumers that want Buildchain to own the check wrapper can call
-`.github/workflows/check.yml@v2`. The wrapper runs the declared
+`.github/workflows/check.yml@v3`. The wrapper runs the declared
 `lifecycle.install` and `lifecycle.verify` stages and fails the `check` job when
 either declaration is missing or the command exits non-zero.
 
@@ -572,7 +572,7 @@ on:
 
 jobs:
   merge-dev:
-    uses: kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v3
     permissions:
       contents: write
       pull-requests: write
@@ -633,7 +633,7 @@ on:
 
 jobs:
   patrol:
-    uses: kungfu-systems/buildchain/.github/workflows/patrol-daily.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/patrol-daily.yml@v3
     with:
       dry-run: false
       max-actions: 1
@@ -644,7 +644,7 @@ Weekly and monthly callers use the matching wrapper:
 ```yaml
 jobs:
   patrol:
-    uses: kungfu-systems/buildchain/.github/workflows/patrol-weekly.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/patrol-weekly.yml@v3
     with:
       dry-run: true
 ```
@@ -753,7 +753,7 @@ When the loop succeeds, maintainers and consumers can rely on these facts:
   not a hidden manual button;
 - every test channel has an exact alpha tag such as `v2.0.3-alpha.0`;
 - every alpha minor line has a floating tag such as `v2.0-alpha`;
-- every major with a published alpha has a cross-minor floating tag such as `v2-alpha`, owned by its highest published alpha minor;
+- every major with a published alpha has a cross-minor floating tag such as `v3-alpha`, owned by its highest published alpha minor;
 - version manifests match the tag visible from the same commit;
 - production releases are derived from the alpha tree that was tested;
 - manual non-dry-run promotion cannot bypass PR review and verification;
@@ -794,7 +794,7 @@ collision discovered after registry publication to recover without republishing.
 
 Every Buildchain publish model that can run registry side effects must bind the
 publish entrypoint to an immutable `publish-gate/*` source lock. The reusable
-`release-candidate-promote.yml@v2` wrapper creates or updates that gate ref and
+`release-candidate-promote.yml@v3` wrapper creates or updates that gate ref and
 passes `require-publish-source-lock`, `publish-source-ref`,
 `publish-source-sha`, and `publish-source-locked` to
 `promote-buildchain-ref`. Direct action callers must pass the same four inputs

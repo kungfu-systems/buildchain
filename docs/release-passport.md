@@ -127,11 +127,11 @@ Generate a local release passport bundle from release assets:
 
 ```bash
 buildchain collect github-release \
-  --tag v2.2.0 \
+  --tag v3.0.0 \
   --repository kungfu-systems/buildchain \
   --assets-dir dist \
-  --publish-evidence-json .buildchain/release-evidence/v2.2.0/evidence.json \
-  --transaction-json .buildchain/release-state/v2.2.0/state.json \
+  --publish-evidence-json .buildchain/release-evidence/v3.0.0/evidence.json \
+  --transaction-json .buildchain/release-state/v3.0.0/state.json \
   --package-set-json package-set.json \
   --anchor-manifest-json libnode.release.json \
   --build-summary-json .buildchain/artifacts/build-summary.json \
@@ -140,7 +140,7 @@ buildchain collect github-release \
   --platform-manifest-json .buildchain/artifacts/linux-x64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
-  --dist-tag-evidence-json .buildchain/release-evidence/v2.2.0/dist-tag-evidence.json \
+  --dist-tag-evidence-json .buildchain/release-evidence/v3.0.0/dist-tag-evidence.json \
   --kfd-1-witness-json .buildchain/kfd/kfd-1/contract-world.witness.json \
   --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
   --invariant-passport-json product/release/qualification/invariant-passport.json \
@@ -288,7 +288,7 @@ current source/artifact hashes and generates:
   surfaces.
 
 The generated claim set covers Buildchain's KFD release passport support,
-agent-first single source of truth, floating `@v2` contract drift protection,
+agent-first single source of truth, floating `@v3` contract drift protection,
 semver GitHub Release evidence publication, channel-preserving release
 propagation, and npm publish evidence/finalization. Buildchain self promotion
 passes those files into `promote-buildchain-ref`; `verifyReleasePassport()` then
@@ -391,7 +391,7 @@ and compares it before heavy build or publish work begins.
 
 Compatible drift, such as optional inputs or extra diagnostics, continues and
 creates a consumer-local issue for review. Breaking drift fails fast. This means
-consumers can use `@v2` without silently accepting incompatible changes, while
+consumers can use `@v3` without silently accepting incompatible changes, while
 Buildchain maintainers can still ship compatible improvements under the same
 major floating tag.
 

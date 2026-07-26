@@ -20,14 +20,14 @@ to `auto`; repositories only add channel configuration when they intentionally
 override that policy:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
 ```
 
 During the v2.12 alpha evaluation window, canaries call the same router through
 the matching prerelease ref:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2-alpha
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3-alpha
 ```
 
 The default policy selects `vN-alpha` for pull requests, development, nightly,
@@ -40,7 +40,7 @@ For new repositories, prefer the CLI:
 ```sh
 npx @kungfu-tech/buildchain init --type package
 npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.2
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
 ```
 
 See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-protocol.md),
@@ -48,7 +48,7 @@ and [`docs/reusable-build-surface.md`](docs/reusable-build-surface.md) for the
 consumer contract.
 
 For temporary validation of an unreleased Buildchain runtime, keep the committed
-workflow ref on `@v2` and use the trusted `workflow_dispatch` `buildchain-ref`
+workflow ref on `@v3` and use the trusted `workflow_dispatch` `buildchain-ref`
 pass-through. See [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
 
 ## Building this repo
@@ -72,7 +72,7 @@ handoff in
 
 - Open pull requests against the relevant `dev/*` channel branch.
 - If a Buildchain change needs downstream validation before stable refs move,
-  publish a `train/v2/v2.3/<capability>` ref and include the validation request
+  publish a `train/v3/v3.0/<capability>` ref and include the validation request
   described in [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
   After validation succeeds, do not leave the train as a pending merge item:
   merge the pull request into the active `dev/*` mainline and run the requested

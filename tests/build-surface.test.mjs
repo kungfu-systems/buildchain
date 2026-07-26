@@ -157,7 +157,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(
     libnodeConsumer,
-    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v2/,
+    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v3/,
   );
 
   const reusableBuild = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
@@ -651,7 +651,7 @@ test("paper release workflow publishes declared npm package with source lock and
   );
   assert.match(workflow, /cannot read branch protection before publication build/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.match(docs, /paper-release-sealed\.yml@v2/);
+  assert.match(docs, /paper-release-sealed\.yml@v3/);
   assert.match(docs, /does not use a long-lived token for npm publication/);
   assert.match(docs, /only for machine-generated[\s\S]*version-state updates/);
   assert.match(workflow, /default: true/);
@@ -1085,7 +1085,7 @@ test("legacy release workflows fail closed instead of bypassing publish-gate sou
       "utf8",
     );
     assert.match(workflow, /release path is retired/);
-    assert.match(workflow, /release-candidate-promote\.yml@v2/);
+    assert.match(workflow, /release-candidate-promote\.yml@v3/);
     assert.match(workflow, /publish-gate source-lock enforcement/);
     assert.doesNotMatch(workflow, /npm publish --access=public/);
     assert.doesNotMatch(workflow, /actions\/publish-prebuilt@v2/);
@@ -1207,7 +1207,7 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
   assert.match(dogfoodDaily, /required-status-checks: check/);
-  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
   assert.match(dogfoodDaily, /landing-mode: queue/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
@@ -1262,7 +1262,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(ledger, /publish-gate\/release/);
   assert.match(implementation, /BUILDCHAIN_STABLE_RELEASE_NOW/);
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
-  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
   assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(
     dogfood,
@@ -2628,8 +2628,10 @@ test("reusable build exposes runner-local tools before lifecycle execution", () 
 
   assert.match(workflow, /name: Expose Windows runner user toolchain/);
   assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
+  assert.match(workflow, /Join-Path \$HOME "\.cargo\\bin"/);
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
+  assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
   const nativeBuild = workflow.slice(workflow.indexOf("  build-native:"));
   assert.ok(
     nativeBuild.indexOf("name: Expose Windows runner user toolchain") <
@@ -2649,6 +2651,9 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /gate-environment-json:/);
   assert.match(workflow, /shifu-cache-profile-ref:/);
   assert.match(workflow, /platforms-json:/);
+  assert.match(workflow, /checkout-cache-mode:/);
+  assert.match(workflow, /checkout-cache-fallback:/);
+  assert.match(workflow, /checkout-cache-fetch-attempts:/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode plan/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode run/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode aggregate/);
@@ -2662,8 +2667,21 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /refusing to clean Gate source outside GITHUB_WORKSPACE/);
   assert.match(workflow, /name: Expose Windows runner user toolchain/);
   assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
+  assert.match(workflow, /Join-Path \$HOME "\.cargo\\bin"/);
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
+  assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
+  assert.match(workflow, /name: Upload Buildchain runtime checkout bootstrap/);
+  assert.match(workflow, /name: Download Buildchain runtime checkout bootstrap/);
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH:/g) || []).length,
+    2,
+  );
+  assert.match(workflow, /name: Upload locked checkout diagnostics/);
   assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 

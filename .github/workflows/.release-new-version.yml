@@ -134,5 +134,5 @@ jobs:
       - name: Legacy release workflow retired
         run: |
           echo "::error::The legacy .release-new-version.yml release path is retired."
-          echo "::error::Use release-candidate-promote.yml@v2 with lifecycle.publish and publish-gate source-lock enforcement."
+          echo "::error::Use release-candidate-promote.yml@v3 with lifecycle.publish and publish-gate source-lock enforcement."
           exit 1

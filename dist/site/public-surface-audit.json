@@ -7,7 +7,7 @@
     "workflowCount": 53,
     "actionCount": 5,
     "sitePageCount": 56,
-    "docCommandRefCount": 276,
+    "docCommandRefCount": 275,
     "failureCount": 0
   },
   "enumerated": {
@@ -660,6 +660,13 @@
           "artifact-retention-days",
           "buildchain-ref",
           "buildchain-repository",
+          "checkout-cache-fallback",
+          "checkout-cache-fetch-attempts",
+          "checkout-cache-github-timeout-seconds",
+          "checkout-cache-mirror-url-template",
+          "checkout-cache-mode",
+          "checkout-cache-reference-repository-template",
+          "checkout-cache-timeout-seconds",
           "gate-command-json",
           "gate-environment-json",
           "gate-plan-command-json",
@@ -676,7 +683,7 @@
           "untrusted-policy",
           "working-directory"
         ],
-        "inputCount": 19,
+        "inputCount": 26,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -3938,11 +3945,6 @@
         "command": "buildchain verify release-passport"
       },
       {
-        "id": "verify-release-passport",
-        "path": "README.md",
-        "command": "buildchain verify release-passport buildchain"
-      },
-      {
         "id": "version",
         "path": "docs/install.md",
         "command": "buildchain version npx buildchain"
@@ -3964,8 +3966,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "4a627dcf07131d07095d5e6bf0a3373e55c62cf325b3f81bb156c43d31367d62",
-    "pageRegistryDigest": "7e69864afd479bdd5e0bfd5c6daef328625b10f6a50cb4821a74aeaa62b11d48"
+    "workflowRegistryDigest": "1ae515aa9c38a443aaac1ea21f92ecd53e0e0d771c949bf157e1c29c036ddc6e",
+    "pageRegistryDigest": "752b9d4f725f90f731f4b83a599905fbfb50f6d668b220e085c4b5bddbc2fb5e"
   },
   "comparison": {
     "missingCliRegistry": [],

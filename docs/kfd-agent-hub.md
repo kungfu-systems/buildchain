@@ -83,7 +83,7 @@ not KFD certification, a security assessment, or production-fitness evidence.
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
     with:
       kfd-agent-hub: auto
 ```
