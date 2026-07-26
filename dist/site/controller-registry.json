@@ -222,6 +222,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "control-runner-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "credential-island-caller-owned": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -423,7 +427,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:a06607b6ebd3fb00b77519098c81d6fb5e9943ec268aebb1e5fdbefef6e598ad"
+      "digest": "sha256:79920272446ddef3cc1e28c23f9efc4192e51d603fb5bf3ab1060b15342980c8"
     },
     {
       "schemaVersion": 1,
@@ -580,6 +584,10 @@
           "source": "workflow-call-input"
         },
         "checkout-cache-timeout-seconds": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "control-runner-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -765,7 +773,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:4fc6c33bf5b429f8087ac752d5cf2a19f4a1cc30db01aae927a28cee1cf924f0"
+      "digest": "sha256:af7d22d385b6993a2039de602ce1f9d27efdad62bb2b37998a89cbaf7257c127"
     },
     {
       "schemaVersion": 1,
@@ -791,6 +799,38 @@
         },
         "buildchain-repository": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "cargo-registry-index": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-fallback": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-fetch-attempts": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-github-timeout-seconds": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-mirror-url-template": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-mode": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-reference-repository-template": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "checkout-cache-timeout-seconds": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "gate-command-json": {
@@ -831,6 +871,18 @@
         },
         "runner-preset": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "rust-toolchain": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "rustup-dist-server": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "rustup-update-root": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "shifu-cache-profile-digest": {
@@ -878,7 +930,7 @@
         ]
       },
       "semanticBoundary": "References the Shifu aggregate digest and status without copying project Gate identifiers or Gate policy.",
-      "digest": "sha256:29569f4b754595792a16742d1c4c63838b54601674a2cb6c96261a72c962dece"
+      "digest": "sha256:8e42956a2c10fa109500e72b97994f06b3d22a19cc63a46f66410b2e81706e9d"
     },
     {
       "schemaVersion": 1,
@@ -1006,6 +1058,10 @@
           "classification": "redacted",
           "source": "workflow-call-input"
         },
+        "production-source-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "publication-admission-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1098,7 +1154,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:65cc01e6d2b622277d67237e4811e82d24d2289d55c2f7d2dfb72325c610b2ea"
+      "digest": "sha256:c5274b37f04d0054559fdc8698c51bd0f0d8ae470baf163e9caa7699aa970575"
     },
     {
       "schemaVersion": 1,
@@ -1722,6 +1778,14 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-activation-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-activation-receipt-set-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-candidate-workflow-file": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1736,6 +1800,14 @@
         },
         "release-passport-buildchain-self-kfd": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-passport-evidence-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-passport-evidence-path": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "release-passport-impact-json": {
@@ -1852,7 +1924,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:0fcfcb36cad335e6ffe50b087d17f8bce9d6bd711e285740b28ce05bf9be7c6e"
+      "digest": "sha256:2bae7310eb27f48a3afc6b7f993872d6b6121cf3f67ad4d6e2da35b254c4d047"
     },
     {
       "schemaVersion": 1,
@@ -2028,5 +2100,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:5dc72042c6cd7d50fc4b77d186e14b676b48be0ac8c88ee85eb54ea1b428e144"
+  "digest": "sha256:becd8aae765ed9ac3dd0fd737d0d4ce4d7b5b4dff3ec31355bce5b2cf6493c6c"
 }

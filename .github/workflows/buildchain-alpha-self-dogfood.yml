@@ -1,6 +1,6 @@
 name: Buildchain Alpha Self-Dogfood
 
-run-name: Buildchain v2-alpha self-dogfood
+run-name: Buildchain v3-alpha self-dogfood
 
 on:
   workflow_run:
@@ -11,6 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   issues: write
   id-token: write
@@ -22,8 +23,9 @@ concurrency:
 jobs:
   alpha-consumer:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3-alpha
     permissions:
+      actions: read
       contents: read
       issues: write
       id-token: write
@@ -34,7 +36,7 @@ jobs:
       runner-preset: custom
       platforms-json: >-
         [{"id":"linux-x64","name":"Linux x64","runner":"[\"ubuntu-24.04\"]"}]
-      artifact-name: buildchain-v2-alpha-self-dogfood
+      artifact-name: buildchain-v3-alpha-self-dogfood
       artifact-name-template: "{artifact}-{platform}-{shortSha}"
       artifact-paths: fixtures/libnode-shaped/dist
       require-install: true
@@ -43,8 +45,9 @@ jobs:
 
   stable-consumer:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3-alpha
     permissions:
+      actions: read
       contents: read
       issues: write
       id-token: write
@@ -55,7 +58,7 @@ jobs:
       runner-preset: custom
       platforms-json: >-
         [{"id":"linux-x64","name":"Linux x64","runner":"[\"ubuntu-24.04\"]"}]
-      artifact-name: buildchain-v2-stable-self-dogfood
+      artifact-name: buildchain-v3-stable-self-dogfood
       artifact-name-template: "{artifact}-{platform}-{shortSha}"
       artifact-paths: fixtures/libnode-shaped/dist
       require-install: true
@@ -81,8 +84,8 @@ jobs:
         with:
           script: |
             const fs = require("node:fs");
-            const alphaRef = "v2-alpha";
-            const stableRef = "v2";
+            const alphaRef = "v3-alpha";
+            const stableRef = "v3";
             const resolveTag = async (tag) => {
               const response = await github.rest.git.getRef({
                 owner: context.repo.owner,
@@ -131,8 +134,8 @@ jobs:
             );
             await core.summary
               .addHeading("Buildchain floating ref self-dogfood")
-              .addRaw(`- v2-alpha: \`${observed.alpha.sha}\` (${observed.alpha.class})\n`)
-              .addRaw(`- v2: \`${observed.stable.sha}\` (${observed.stable.class})\n`)
+              .addRaw(`- v3-alpha: \`${observed.alpha.sha}\` (${observed.alpha.class})\n`)
+              .addRaw(`- v3: \`${observed.stable.sha}\` (${observed.stable.class})\n`)
               .addRaw(`- status: \`${evidence.status}\`\n`)
               .write();
             if (failures.length > 0) {
@@ -143,7 +146,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: buildchain-v2-alpha-self-dogfood-evidence
+          name: buildchain-v3-alpha-self-dogfood-evidence
           path: .buildchain/self-dogfood/evidence.json
           if-no-files-found: error
           retention-days: 14

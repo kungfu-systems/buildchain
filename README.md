@@ -48,21 +48,19 @@ or protocol evidence through the repository issue tracker.
 
 ## Install and Verify
 
-For standalone use, install a platform archive from a GitHub Release and verify
-the release passport before trusting the binary:
+For v3, use the published npm package and verify the release passport before
+trusting release evidence:
 
 ```bash
-# Example for Linux x64. Use the archive that matches your platform.
-curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v2.2.1/buildchain-x86_64-unknown-linux-gnu.tar.gz
-curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v2.2.1/buildchain.release.json
-curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v2.2.1/artifact-evidence.json
-npx @kungfu-tech/buildchain verify release-passport buildchain.release.json
-tar -xzf buildchain-x86_64-unknown-linux-gnu.tar.gz
-./buildchain version
+curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v3.0.0/buildchain.release.json
+curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v3.0.0/artifact-evidence.json
+npx @kungfu-tech/buildchain@3.0.0 verify release-passport buildchain.release.json
+npx @kungfu-tech/buildchain@3.0.0 version
 ```
 
-Release pages publish platform archives, checksums, release passport files, and
-a single evidence bundle:
+The v3.0.0 release publishes evidence assets but no standalone platform archives.
+The names below describe the optional archive contract used by legacy release
+lines:
 
 - `buildchain-x86_64-unknown-linux-gnu.tar.gz`
 - `buildchain-aarch64-apple-darwin.tar.gz`
@@ -168,13 +166,13 @@ Consumers can report Buildchain-owned workflow failures directly to the
 Buildchain repository with a scoped issue-write token:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
+- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v3
   if: failure()
   with:
     token: ${{ steps.buildchain-issue-token.outputs.token }}
     summary: "Reusable build failed before artifact finalization"
     failure-code: reusable-build-failed
-    buildchain-ref: v2
+    buildchain-ref: v3
     diagnostics-path: .buildchain/artifacts/diagnostics.json
 ```
 
@@ -190,7 +188,7 @@ Bootstrap a repository:
 ```bash
 npx @kungfu-tech/buildchain init --type package --package-manager pnpm
 npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.2
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
 ```
 
 Buildchain supports package and non-package projects through
@@ -224,6 +222,9 @@ The active reusable workflow surfaces are:
 - `.github/workflows/.gate-profile.yml` for project-neutral Shifu Gate profile
   planning, capability-aware runner dispatch, receipt validation, and one
   stable aggregate check;
+- `.github/workflows/.auditable-demo.yml` for exact-artifact demo
+  qualification, transcript-bound renderer smoke, and optional media rendering
+  from the exact passing Gate bundle;
 - `.github/workflows/.build.yml` for deterministic multi-platform build and
   artifact contracts;
 - `.github/workflows/build.yml` for the single-config channel router that uses
@@ -242,15 +243,15 @@ Stable consumers should reference actions and workflows through floating major
 refs after reviewing the exact release passport:
 
 ```yaml
-uses: kungfu-systems/buildchain/actions/validate-config@v2
+uses: kungfu-systems/buildchain/actions/validate-config@v3
 ```
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
 ```
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
+uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3
 ```
 
 ## Release Model

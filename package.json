@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "3.0.0",
+  "version": "3.0.1-alpha.6",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -44,6 +44,7 @@
     "./release-passport": "./packages/core/release-passport.js",
     "./release-passport-contract": "./packages/core/release-passport-contract.js",
     "./release-propagation": "./packages/core/release-propagation.js",
+    "./release-activation-transaction": "./packages/core/release-activation-transaction.js",
     "./surface-manifest": "./packages/core/surface-manifest.js",
     "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
     "./site/buildchain-site.json": "./dist/site/buildchain-site.json",

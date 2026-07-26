@@ -327,8 +327,10 @@ const manualMetaById = new Map(Object.entries({
   "publication-authority": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 105 },
   "github-governance-authority": { capabilityGroup: "governance-versioning", audience: ["maintainer", "release-operator", "agent"], maturity: "preview", order: 106 },
   "controller-evidence": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator", "agent"], maturity: "draft", order: 205 },
+  "auditable-demo": { capabilityGroup: "reusable-build", audience: ["consumer", "agent"], maturity: "preview", order: 207 },
   "binary-distribution": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 110 },
   "publish-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator"], maturity: "stable", order: 120 },
+  "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
@@ -519,6 +521,7 @@ function nodeApiMeta(exportName) {
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
     "./stable-candidate-ledger": { group: "governance-versioning", summary: "Immutable alpha candidate ledger, qualification, revocation, selection, and exact stable source-lock APIs." },
     "./release-propagation": { group: "site-and-propagation", summary: "Release propagation graph, plan, and exact upstream lock APIs." },
+    "./release-activation-transaction": { group: "release-passport-trust", summary: "Ordered cross-repository activation, exact receipt-set binding, retry, abort, rollback, and shadow-rehearsal APIs." },
     "./release-line-bootstrap": { group: "governance-versioning", summary: "Semver release-line bootstrap planning and version-state APIs." },
     "./buildchain-contract": { group: "governance-versioning", summary: "Runtime contract world and compatibility digest APIs for floating-ref drift checks." },
     "./controller-evidence": { group: "reusable-build", summary: "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs." },
@@ -866,6 +869,7 @@ function buildSiteBundle() {
       const surfaceById = new Map([
         ["build", "channel-build-router"],
         [".build", "reusable-build"],
+        [".auditable-demo", "auditable-demo"],
         ["web-surface", "site-app-deployment"],
         ["buildchain-ref-promotion", "release-governance"],
         ["release-line-bootstrap", "release-governance"],
@@ -889,6 +893,7 @@ function buildSiteBundle() {
         ["patrol-observed-evidence", "repository-patrol"],
       ]);
       const statusById = new Map([
+        [".auditable-demo", "preview"],
         ["release-propagation", "preview"],
         ["candidate-lab", "repository-internal"],
         ["build-surface-fixture", "repository-internal"],

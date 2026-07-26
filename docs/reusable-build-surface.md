@@ -14,7 +14,7 @@ development and stable release work:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
     permissions:
       contents: read
       issues: write
@@ -56,8 +56,8 @@ with:
 ```
 
 During the v2.12 prerelease evaluation window, canaries use
-`build.yml@v2-alpha`. The same router then selects `v2-alpha` or stable `v2` as
-the runtime. Production consumers should adopt `build.yml@v2` after the router
+`build.yml@v3-alpha`. The same router then selects `v3-alpha` or stable `v2` as
+the runtime. Production consumers should adopt `build.yml@v3` after the router
 has reached stable; this keeps the routing shell itself on a stable ref.
 
 The router is generated from `.build.yml`'s input/output surface. Run
@@ -72,7 +72,7 @@ surface:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     with:
       working-directory: .
       artifact-name: libnode
@@ -136,7 +136,7 @@ Python, uv, and fnm, but do not need native compilation:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     with:
       runner-preset: kungfu-v4-self-hosted
       linux-container-preset: kungfu-verify
@@ -217,7 +217,7 @@ on a host runner until their image contract is explicit.
 ## Buildchain Runtime Override
 
 Stable consumers should keep the reusable workflow pinned to stable refs such as
-`@v2`. The optional `buildchain-ref` input is empty by default; empty means
+`@v3`. The optional `buildchain-ref` input is empty by default; empty means
 Buildchain resolves and executes the stable runtime selected by the workflow
 shell. The full train validation protocol is documented in
 [`runtime-train-validation.md`](runtime-train-validation.md).
@@ -236,7 +236,7 @@ on:
 
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || '' }}
 ```
@@ -245,8 +245,8 @@ Allowed override refs are deliberately narrow:
 
 | Ref form | Meaning |
 | --- | --- |
-| `train/v2/v2.3/<capability>` | Temporary capability train under the active minor line |
-| `refs/heads/train/v2/v2.3/<capability>` | Explicit branch ref for the same train |
+| `train/v3/v3.0/<capability>` | Temporary capability train under the active minor line |
+| `refs/heads/train/v3/v3.0/<capability>` | Explicit branch ref for the same train |
 | `<40-character SHA>` | Exact immutable Buildchain runtime commit |
 
 Override requests fail closed unless the event is `workflow_dispatch` and the
@@ -270,7 +270,7 @@ workflow path or a temporary explicit workflow ref.
 
 ## Floating Ref Contract Lock
 
-Stable consumers should use floating major refs such as `@v2`, but a floating
+Stable consumers should use floating major refs such as `@v3`, but a floating
 ref is not blind trust. Each released Buildchain ref carries a package-owned
 runtime contract world in `dist/site/buildchain-contract.json`. Consumers may
 keep a small lock file, `.buildchain/contract-lock.json`, recording the
@@ -295,7 +295,7 @@ the default `major-compatible` policy.
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     permissions:
       contents: read
       issues: write
@@ -323,13 +323,13 @@ Advanced alpha-channel consumers select the matching workflow shell:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3-alpha
     with:
       buildchain-contract-lock-path: .buildchain/contract-lock.json
 ```
 
 The runtime follows the called workflow through `job.workflow_ref`. Callers may
-also pass `buildchain-ref: v2-alpha` explicitly; official floating refs are
+also pass `buildchain-ref: v3-alpha` explicitly; official floating refs are
 ordinary channel selections and are allowed on pull requests and pushes. Train
 refs and exact SHAs remain trusted manual overrides.
 
@@ -345,7 +345,7 @@ semantics remain owned by the consumer's pinned Shifu implementation.
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
     with:
       shifu-cache-profile-ref: ${{ vars.SHIFU_CACHE_PROFILE_REF }}
       shifu-cache-profile-digest: ${{ vars.SHIFU_CACHE_PROFILE_DIGEST }}
@@ -377,7 +377,7 @@ lifecycle commands run.
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     with:
       runner-preset: kungfu-v4-self-hosted
       checkout-cache-mode: auto
@@ -445,8 +445,8 @@ When a Buildchain maintainer asks for downstream validation, the expected
 request is:
 
 ```text
-Buildchain train ready: buildchain-ref=train/v2/v2.3/<capability>.
-Keep uses: ...@v2; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
+Buildchain train ready: buildchain-ref=train/v3/v3.0/<capability>.
+Keep uses: ...@v3; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
 ```
 
 After validation succeeds, the Buildchain change should continue through the
@@ -591,7 +591,7 @@ Large self-hosted native builds can opt into the first-class S3 relay path:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     with:
       runner-preset: kungfu-v4-self-hosted
       artifact-transfer-mode: s3-to-github-artifacts
@@ -670,7 +670,7 @@ Use `publish-channel` to request a channel:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     with:
       publish-channel: release
 
@@ -796,7 +796,7 @@ calls `actions/promote-buildchain-ref` with
 `promote-only-release-candidate: "true"` and
 `require-publish-source-lock: "true"`. The wrapper passes the created
 `publish-gate/*` ref, target SHA, and `locked=true` into the promote action, so
-floating `@v2` consumers receive publish-side source-lock drift protection by
+floating `@v3` consumers receive publish-side source-lock drift protection by
 default. It also defaults `branch-protection-bypass-apps` to `github-actions`
 so the workflow automation can apply generated version-state and channel
 bookkeeping on protected `dev`/`alpha`/`release` branches after the reviewed
@@ -840,7 +840,7 @@ candidate passport, and the final release passport record these identities.
 ```yaml
 jobs:
   promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3
     secrets:
       buildchain-issue-app-id: ${{ secrets.BUILDCHAIN_ISSUE_APP_ID }}
       buildchain-issue-app-private-key: ${{ secrets.BUILDCHAIN_ISSUE_APP_PRIVATE_KEY }}
@@ -939,7 +939,7 @@ publish side effect:
 
 ```yaml
 - name: Promote release ref and publish npm package set
-  uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
+  uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v3
   with:
     sha: ${{ needs.build.outputs.publish-source-sha }}
     target-ref: release/v22/v22.22
@@ -1042,7 +1042,7 @@ sampler path as optional during verify; an explicitly supplied
 For custom workflows, use the action directly:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/run-lifecycle@v2
+- uses: kungfu-systems/buildchain/actions/run-lifecycle@v3
   with:
     stage: build
     required: "true"
@@ -1150,6 +1150,24 @@ with:
 
 Do not set `require-trusted-event: false` for workflows that use self-hosted
 runners or secrets.
+
+The build matrix and the workflow control plane are routed independently. The
+matrix continues to use `runner-preset` and `platforms-json`. Consumers with a
+governed runner may also move channel resolution, trust evaluation, contract
+resolution, controller evidence, artifact transfer, and aggregation off the
+default GitHub-hosted runner:
+
+```yaml
+with:
+  control-runner-json: '["self-hosted","agent-120"]'
+  runner-preset: custom
+  platforms-json: '[{"id":"linux-x64","name":"Linux x64","runner":"[\"self-hosted\",\"agent-120\"]"}]'
+```
+
+`control-runner-json` is additive and defaults to `["ubuntu-24.04"]`. Keep
+`require-trusted-event: true` whenever either runner input selects
+`self-hosted`; a self-hosted control plane must not be exposed to untrusted fork
+events or arbitrary caller-controlled workflow code.
 
 `require-trusted-event` controls access to build runners. It does not override
 the publish gate: pull requests remain non-publishing events.

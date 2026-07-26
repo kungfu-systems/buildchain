@@ -1,20 +1,22 @@
 {
   "schemaVersion": 1,
-  "major": 2,
+  "major": 3,
   "alpha": {
-    "logicalRef": "v2-alpha",
-    "callRef": "v2-alpha",
+    "logicalRef": "v3-alpha",
+    "callRef": "v3-alpha",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true
   },
   "stable": {
-    "logicalRef": "v2",
-    "callRef": "725592ae025003071b8d33fdb49e0157842fe76c",
+    "logicalRef": "v3",
+    "callRef": "v3",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true,
     "unsupportedInputs": [
-      "standalone-binary-distribution",
-      "publish-rematerialize-on-resume"
+      "release-activation-command",
+      "release-activation-receipt-set-path",
+      "release-passport-evidence-command",
+      "release-passport-evidence-path"
     ]
   }
 }

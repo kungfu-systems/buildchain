@@ -97,7 +97,7 @@ per-gate evidence pointers, omissions, and issues.
 ```yaml
 jobs:
   gates:
-    uses: kungfu-systems/buildchain/.github/workflows/.gate-profile.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.gate-profile.yml@v3
     with:
       gate-profile: alpha-pr
       runner-preset: kungfu-v4-self-hosted
@@ -105,7 +105,7 @@ jobs:
 
   build:
     needs: gates
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
     with:
       release-candidate: true
       gate-profile-aggregate-json: ${{ needs.gates.outputs.gate-aggregate-json }}

@@ -5,7 +5,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+import {
+  createBuildchainLogger,
+  recordBuildchainControlPlaneOutcome,
+  summarizeBuildchainControlPlaneEvents,
+} from "@kungfu-tech/buildchain/logging";
 import {
   BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_CONTRACT,
@@ -265,7 +269,7 @@ test("init publication-artifact creates a paper artifact scaffold", () => {
   assert.match(toml, /image = "ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder"/);
   assert.match(toml, /digest = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"/);
   const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
-  assert.match(workflow, /publication-artifact\.yml@v2/);
+  assert.match(workflow, /publication-artifact\.yml@v3/);
   assert.match(workflow, /toolchain-type: config/);
   assert.match(workflow, /verify-command: make check/);
 });
@@ -810,6 +814,48 @@ test("CLI logging writes redacted JSONL events and summaries", () => {
   assert.equal(summary.sources.user.count, 1);
   assert.equal(summary.phases.configure.count, 1);
   assert.equal(summary.components.fixture.count, 1);
+});
+
+test("control-plane observability reports incident reuse and release-intent suppression", () => {
+  const cwd = tempDir("control-plane-observability");
+  const logPath = path.join(cwd, ".buildchain", "logs", "events.jsonl");
+  const options = { cwd, path: logPath, console: false };
+  recordBuildchainControlPlaneOutcome({
+    domain: "workflow-friction",
+    action: "created",
+    outcome: "created",
+    attributes: { fingerprint: "incident-a" },
+  }, options);
+  recordBuildchainControlPlaneOutcome({
+    domain: "workflow-friction",
+    action: "commented",
+    outcome: "reused",
+    attributes: { fingerprint: "incident-a" },
+  }, options);
+  recordBuildchainControlPlaneOutcome({
+    domain: "release-intent",
+    action: "created",
+    outcome: "created",
+  }, options);
+  recordBuildchainControlPlaneOutcome({
+    domain: "release-intent",
+    action: "suppressed-merged-release-pr",
+    outcome: "suppressed",
+    reason: "source-commit-already-has-qualifying-merged-release-pr",
+  }, options);
+
+  const direct = summarizeBuildchainControlPlaneEvents(logPath);
+  assert.equal(direct.contract, "kungfu-buildchain-control-plane-summary");
+  assert.equal(direct.workflowFriction.incidentReuseRate, 0.5);
+  assert.equal(direct.releaseIntent.suppressionRate, 0.5);
+  assert.deepEqual(direct.releaseIntent.suppressionReasons, {
+    "source-commit-already-has-qualifying-merged-release-pr": 1,
+  });
+
+  const summary = JSON.parse(runBuildchain(["log", "summary", "--path", logPath, "--json"], { cwd }));
+  assert.equal(summary.events["control-plane.workflow-friction.outcome"].count, 2);
+  assert.equal(summary.events["control-plane.release-intent.outcome"].count, 2);
+  assert.deepEqual(summary.controlPlane, direct);
 });
 
 test("logging SDK supports sync spans and spawn wrappers", () => {

@@ -19,7 +19,7 @@ organization.
     owner: kungfu-systems
     repositories: buildchain
 
-- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
+- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v3
   if: failure()
   with:
     token: ${{ steps.buildchain-issue-token.outputs.token }}
@@ -66,7 +66,7 @@ steps:
       owner: kungfu-systems
       repositories: buildchain
 
-  - uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
+  - uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v3
     if: failure()
     with:
       token: ${{ steps.buildchain-issue-token.outputs.token || secrets.BUILDCHAIN_ISSUE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}

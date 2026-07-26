@@ -19,6 +19,28 @@ import {
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
 const commonJsSourcePattern = /\b(require\s*\(|module\.exports|exports\.|require\.main|createRequire)\b/;
+
+function assertSelfReleaseImpactContract(impact, { expectedVersion = "" } = {}) {
+  if (!impact || typeof impact !== "object" || Array.isArray(impact)) {
+    throw new Error("Buildchain self release impact must be a JSON object");
+  }
+  const version = String(impact.release?.version || "").trim();
+  const versionMatch = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/);
+  if (!versionMatch) throw new Error("Buildchain self release impact release.version must be a semantic version");
+  if (expectedVersion && version !== expectedVersion) {
+    throw new Error("Buildchain self release impact version must match package.json version");
+  }
+  const expectedLine = `v${versionMatch[1]}.${versionMatch[2]}`;
+  const line = String(impact.release?.line || "").trim();
+  if (line !== expectedLine) {
+    throw new Error(`Buildchain self release impact line must be ${expectedLine} for release.version ${version}`);
+  }
+  const summary = String(impact.summary || "").trim();
+  if (!summary.startsWith(`Buildchain ${line} `)) {
+    throw new Error(`Buildchain self release impact summary must describe the current ${line} line`);
+  }
+}
+
 const requiredPaths = [
   "AGENTS.md",
   "CONTRIBUTING.md",
@@ -47,6 +69,7 @@ const requiredPaths = [
   "docs/readme-badges.md",
   "docs/release-passport.md",
   "docs/shifu-gate-profiles.md",
+  "docs/auditable-demo.md",
   "docs/release-propagation.md",
   "docs/site-bundle-contract.md",
   "docs/toolkit-observability.md",
@@ -66,6 +89,8 @@ const requiredPaths = [
   "scripts/generate-release-candidate-passport.mjs",
   "scripts/seal-macos-credential-input.mjs",
   "scripts/shifu-gate-profile.mjs",
+  "scripts/auditable-demo.mjs",
+  "scripts/resolve-artifact-coordinates.mjs",
   "scripts/artifact-relay-s3.mjs",
   "scripts/anchored-version-material.mjs",
   "scripts/npm-publish-dry-run.mjs",
@@ -112,6 +137,7 @@ const requiredPaths = [
   ".github/workflows/verify.yml",
   ".github/workflows/.build.yml",
   ".github/workflows/.gate-profile.yml",
+  ".github/workflows/.auditable-demo.yml",
   ".github/workflows/build.yml",
   ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
@@ -703,7 +729,7 @@ for (const requiredSnippet of [
 for (const requiredSnippet of [
   "Capability Coverage",
   "KFD-1 / KFD-2 / KFD-3",
-  "floating `@v2`",
+  "floating `@v3`",
   "npm publish transactions",
   "Git/source/version/module/product build facts",
   "GitHub Release",
@@ -774,7 +800,7 @@ for (const requiredSnippet of [
 for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
   for (const requiredSnippet of [
     "minimumReleaseAgeExclude",
-    "@kungfu-tech/buildchain@2.2.5",
+    "@kungfu-tech/buildchain@3.0.0",
     "package/version-specific",
   ]) {
     if (!docSource.includes(requiredSnippet)) {
@@ -840,19 +866,16 @@ const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/w
 const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
 const npmPublishTransactionScript = fs.readFileSync(path.join(root, "scripts/npm-publish-transaction.mjs"), "utf8");
 const rootPackageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
-const selfReleaseImpact = JSON.parse(fs.readFileSync(path.join(root, ".buildchain/release-impact.json"), "utf8"));
-const selfReleaseLineMatch = String(rootPackageJson.version || "").match(/^(\d+)\.(\d+)\./);
-const expectedSelfReleaseLine = selfReleaseLineMatch ? `v${selfReleaseLineMatch[1]}.${selfReleaseLineMatch[2]}` : "";
-if (selfReleaseImpact.release?.version !== rootPackageJson.version) {
-  throw new Error("Buildchain self release impact version must match package.json version");
-}
-if (!expectedSelfReleaseLine || selfReleaseImpact.release?.line !== expectedSelfReleaseLine) {
-  throw new Error("Buildchain self release impact line must match package.json major/minor line");
-}
+const selfReleaseImpactPath = path.resolve(
+  root,
+  process.env.BUILDCHAIN_SELF_RELEASE_IMPACT_PATH || ".buildchain/release-impact.json",
+);
+const selfReleaseImpact = JSON.parse(fs.readFileSync(selfReleaseImpactPath, "utf8"));
+assertSelfReleaseImpactContract(selfReleaseImpact, { expectedVersion: rootPackageJson.version });
 if (!["patch", "minor", "major"].includes(selfReleaseImpact.classification)) {
   throw new Error("Buildchain self release impact classification must be patch, minor, or major");
 }
-if (!String(selfReleaseImpact.summary || "").trim() || !Array.isArray(selfReleaseImpact.surfaceImpacts) || selfReleaseImpact.surfaceImpacts.length === 0) {
+if (!Array.isArray(selfReleaseImpact.surfaceImpacts) || selfReleaseImpact.surfaceImpacts.length === 0) {
   throw new Error("Buildchain self release impact requires a summary and surfaceImpacts[]");
 }
 for (const requiredSnippet of [
@@ -965,7 +988,7 @@ for (const retiredWorkflow of [
   const retiredSource = fs.readFileSync(path.join(workflowDir, retiredWorkflow), "utf8");
   for (const requiredSnippet of [
     "release path is retired",
-    "release-candidate-promote.yml@v2",
+    "release-candidate-promote.yml@v3",
     "publish-gate source-lock enforcement",
   ]) {
     if (!retiredSource.includes(requiredSnippet)) {
@@ -1111,12 +1134,12 @@ if (inventory.release !== "buildchain-v2") {
   throw new Error("inventory release must be buildchain-v2");
 }
 
-if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v2") {
-  throw new Error("inventory stable action ref must point at @v2");
+if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v3") {
+  throw new Error("inventory stable action ref must point at @v3");
 }
 
-if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2") {
-  throw new Error("inventory stable workflow ref must point at @v2");
+if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3") {
+  throw new Error("inventory stable workflow ref must point at @v3");
 }
 if (inventory.safety?.releasePassport?.line !== "v2.2") {
   throw new Error("release passport inventory must be registered as a v2.2 surface");

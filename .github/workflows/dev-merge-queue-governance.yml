@@ -30,7 +30,7 @@ jobs:
     name: Reconcile declared dev merge queue
     runs-on: ubuntu-24.04
     env:
-      GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+      GH_TOKEN: ${{ secrets.BUILDCHAIN_GOVERNANCE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
       BUILDCHAIN_TARGET_BRANCH: ${{ inputs.branch || github.ref_name }}
       BUILDCHAIN_APPLY: ${{ github.event_name == 'push' || inputs.apply }}
     steps:

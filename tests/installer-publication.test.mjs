@@ -129,6 +129,39 @@ test("installer publication rejects an unbound friendly URL", () => {
   }
 });
 
+test("installer publication rejects symlinks and MIME drift", () => {
+  const value = fixture();
+  try {
+    const target = path.join(value.root, "install.sh");
+    fs.rmSync(target);
+    fs.symlinkSync("install.ps1", target);
+    assert.throws(
+      () =>
+        validateInstallerPublication({
+          publication: value.publication,
+          artifactRoot: value.root,
+        }),
+      /non-symlink/,
+    );
+
+    fs.rmSync(target);
+    fs.writeFileSync(target, value.contents["install.sh"]);
+    value.publication.assets.find(
+      (asset) => asset.name === "install.sh",
+    ).contentType = "text/plain";
+    assert.throws(
+      () =>
+        validateInstallerPublication({
+          publication: value.publication,
+          artifactRoot: value.root,
+        }),
+      /contentType is invalid/,
+    );
+  } finally {
+    fs.rmSync(value.root, { recursive: true, force: true });
+  }
+});
+
 test("public read-back checks bytes, content type, and cache policy", async () => {
   const value = fixture();
   try {

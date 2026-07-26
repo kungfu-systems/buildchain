@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:b1cccdca930eb1ab2be006b8fabc795966f61fafdb4933758a42a7bf3c3bf6cd",
+      "digest": "sha256:7f1f3ce6c862e556dc73a0b3b7fe96b8c6772b96de3e677a77eed87c8a03047f",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:b1cccdca930eb1ab2be006b8fabc795966f61fafdb4933758a42a7bf3c3bf6cd",
+      "digest": "sha256:7f1f3ce6c862e556dc73a0b3b7fe96b8c6772b96de3e677a77eed87c8a03047f",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -99,7 +99,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:cf08a6c4fd2a56dff45e4a97d1c470ce94e453ab613a304bd86b3fe9d298a153",
+      "digest": "sha256:5772ad10d66e8fbbc07c06f4df521c7d60b631b0505b47540ce05804bcb576b0",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -164,7 +164,7 @@
       "specifier": "@kungfu-tech/buildchain/issue-reporting",
       "export": "./issue-reporting",
       "target": "./packages/core/issue-reporting.js",
-      "digest": "sha256:2e6fb7f8b3d15b9c93e9bec952fbb70d7dc466311b7d8f94e654e145eb29ec49",
+      "digest": "sha256:4e6807067b14db5cf78b7de7596bf27ce23b211ae9b24f5ae36bed4fb568d56b",
       "summary": "Buildchain-owned issue reporting API for workflow friction feedback.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -255,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/logging",
       "export": "./logging",
       "target": "./packages/core/logging.js",
-      "digest": "sha256:8cc29b88dc7968de3b43d495b54c0b53f90984beb85883705d764c40d4da1b4e",
+      "digest": "sha256:36d8aaea7db446d02fb0a1d7d7e6d5d34cc10cff19156596bb8dfbd1a1ff2382",
       "summary": "Buildchain JSONL logging, span, summary, and verification APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -333,7 +333,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:46484b94389d78a2092c9ae60399020930d879abc847234ffe7cb69ec4f61161",
+      "digest": "sha256:85f524a61cfc9931cae24158f8ff718ef0eae3a2a839670ab01744cbdfdd10c3",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -346,7 +346,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:045e129994f654fabb87bdc594c9fcd09b837fdf26cac8b90403bc2fd5074f91",
+      "digest": "sha256:63f3ce1520edf99e4f877b1dd28afa33d85150266940cd60f82c2aadba38c50d",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -434,6 +434,19 @@
       "maturity": "stable"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/release-activation-transaction",
+      "export": "./release-activation-transaction",
+      "target": "./packages/core/release-activation-transaction.js",
+      "digest": "sha256:a37ecb18d123febc53503184fe725d6f5cb1ac85d522846b5112bd21f52ff8ac",
+      "summary": "Ordered cross-repository activation, exact receipt-set binding, retry, abort, rollback, and shadow-rehearsal APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/surface-manifest",
       "export": "./surface-manifest",
       "target": "./packages/core/surface-manifest.js",
@@ -450,7 +463,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:fc916f55d366db8eb7270389fdaf6ac02e18bcd4fe5f1fdbdb1283e5fc4c9929",
+      "digest": "sha256:f3a719c64881e650a6ef68e3e0d4acd40878722b0eb76b88d30081db77ad92c8",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -464,7 +477,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:758625143a51d0fe66871220c52273ceaf5c7a47fc1a99bda4608e3ad587ae81"
+      "digest": "sha256:f4518193026571d1e84bc245725a9f83e842b2e4b4dfaa072c8207021fa89cd1"
     },
     {
       "id": "build-facts",
@@ -484,12 +497,12 @@
     {
       "id": "homebrew",
       "path": "docs/homebrew.md",
-      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
+      "digest": "sha256:e690ea465d4289f2246d93765776b057c6aca1c68dc290abcee94c947e5d5c47"
     },
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f"
+      "digest": "sha256:40831ce35dca6ac2a3a81d54a83fb0e5ab064137829a4f7844e5d80ba61aa65c"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."

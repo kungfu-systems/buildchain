@@ -2,15 +2,29 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "3.0.0",
+    "version": "3.0.1-alpha.6",
     "line": "v3.0"
   },
   "versionImpact": {
     "final": "minor",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v2.14 adds compatible release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
+    "rationale": "Buildchain v3.0 converges compatible v2.14 release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
   },
   "surfaceImpacts": [
+    {
+      "id": "configurable-build-control-runner",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "The channel router and reusable build expose an additive control-runner-json input so trusted consumers can route control-plane and lifecycle jobs to the same governed self-hosted runner while existing callers retain the GitHub-hosted default.",
+      "source": ".github/workflows/build.yml"
+    },
+    {
+      "id": "auditable-demo-artifact-gate",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "A new consumer-neutral reusable workflow binds an exact same-run GitHub Artifact to a checked-in adapter, immutable network-disabled renderer evidence, a content-addressed required Gate bundle, and optional media rendered only from that exact passing Gate; the reusable build exports producer-owned id, name, digest, URL, and expiry coordinates for every resolved platform.",
+      "source": ".github/workflows/.auditable-demo.yml"
+    },
     {
       "id": "promotion-floating-ref-single-resolution",
       "impact": "patch",
@@ -362,6 +376,20 @@
       "source": "packages/core/issue-reporting.js"
     },
     {
+      "id": "workflow-friction-stable-incident-identity",
+      "impact": "patch",
+      "class": "observability-diagnostics",
+      "rationale": "Workflow-friction reports keep one incident identity per target, repository, workflow, channel, and friction class while preserving release intent, source ref, source SHA, and run facts as occurrence comments.",
+      "source": "packages/core/issue-reporting.js"
+    },
+    {
+      "id": "web-surface-release-pr-replay-suppression",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "The production release handoff suppresses a new release intent when the source commit is already associated with one qualifying merged same-repository release PR, while ordinary main pushes retain the existing create-or-update path.",
+      "source": "scripts/web-surface-production-release-pr.mjs"
+    },
+    {
       "id": "same-repository-pr-head-runtime-trust",
       "impact": "patch",
       "class": "release-governance",
@@ -373,5 +401,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.14 extends sealed evidence and release governance with anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
+  "summary": "Buildchain v3.0 extends sealed evidence and release governance with configurable trusted control runners, anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
 }

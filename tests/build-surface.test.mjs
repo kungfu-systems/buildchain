@@ -35,6 +35,8 @@ import {
 import {
   compactProductionReleasePrSummary,
   createProductionReleasePrHandoff,
+  openProductionReleasePr,
+  recordProductionReleasePrOutcome,
   releaseBranchName,
   readStagingReleasePrSummary,
   renderProductionReleasePrBody,
@@ -155,7 +157,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(
     libnodeConsumer,
-    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v2/,
+    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v3/,
   );
 
   const reusableBuild = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
@@ -206,7 +208,19 @@ test("reusable build workflow exposes the required surface contract", () => {
     path.join(root, ".github/workflows/.build.yml"),
     "utf8",
   );
+  const summarizeJob = workflow.slice(
+    workflow.indexOf("  summarize:"),
+    workflow.indexOf("\n  controller-receipt:", workflow.indexOf("  summarize:")),
+  );
   assert.match(workflow, /workflow_call:/);
+  assert.match(
+    workflow,
+    /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
+  );
+  assert.equal(
+    (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
+    9,
+  );
   assert.match(
     workflow,
     /fail-fast:\n\s+description: "Cancel sibling platform lanes[\s\S]*?default: false[\s\S]*?type: boolean/,
@@ -261,6 +275,23 @@ test("reusable build workflow exposes the required surface contract", () => {
     /install --dir \.buildchain\/workflow-shell --prod --frozen-lockfile --ignore-scripts/,
   );
   assert.match(workflow, /node "\$\{\{ steps\.anchored-verifier\.outputs\.path \}\}"/);
+  assert.match(
+    summarizeJob,
+    /name: Checkout Buildchain workflow shell for aggregate compatibility[\s\S]*?ref: \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-sha \}\}[\s\S]*?path: \.buildchain\/workflow-shell/,
+  );
+  assert.match(
+    summarizeJob,
+    /binder=\.buildchain\/runtime\/scripts\/resolve-artifact-coordinates\.mjs/,
+  );
+  assert.match(
+    summarizeJob,
+    /binder=\.buildchain\/workflow-shell\/scripts\/resolve-artifact-coordinates\.mjs/,
+    "new workflow shells must retain producer artifact coordinates when the selected stable runtime predates the binder",
+  );
+  assert.match(
+    summarizeJob,
+    /node "\$\{\{ steps\.artifact-coordinate-binder\.outputs\.path \}\}"/,
+  );
   assert.match(workflow, /kind":"anchored-version-material"/);
   assert.match(workflow, /target_ref="release\/\$\{BUILDCHAIN_TARGET_LINE\}"/);
   assert.ok(
@@ -628,7 +659,7 @@ test("paper release workflow publishes declared npm package with source lock and
   );
   assert.match(workflow, /cannot read branch protection before publication build/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.match(docs, /paper-release-sealed\.yml@v2/);
+  assert.match(docs, /paper-release-sealed\.yml@v3/);
   assert.match(docs, /does not use a long-lived token for npm publication/);
   assert.match(docs, /only for machine-generated[\s\S]*version-state updates/);
   assert.match(workflow, /default: true/);
@@ -1062,7 +1093,7 @@ test("legacy release workflows fail closed instead of bypassing publish-gate sou
       "utf8",
     );
     assert.match(workflow, /release path is retired/);
-    assert.match(workflow, /release-candidate-promote\.yml@v2/);
+    assert.match(workflow, /release-candidate-promote\.yml@v3/);
     assert.match(workflow, /publish-gate source-lock enforcement/);
     assert.doesNotMatch(workflow, /npm publish --access=public/);
     assert.doesNotMatch(workflow, /actions\/publish-prebuilt@v2/);
@@ -1118,7 +1149,10 @@ test("declared merge queue governance reconciles automatically on dev changes", 
   );
   assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
   assert.match(workflow, /\.buildchain\/buildchain\.toml/);
-  assert.match(workflow, /BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_GOVERNANCE_TOKEN \|\| secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/,
+  );
   assert.match(workflow, /--from-config/);
   assert.match(workflow, /github\.event_name == 'push' \|\| inputs\.apply/);
 });
@@ -1181,7 +1215,7 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
   assert.match(dogfoodDaily, /required-status-checks: check/);
-  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
   assert.match(dogfoodDaily, /landing-mode: queue/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
@@ -1236,7 +1270,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(ledger, /publish-gate\/release/);
   assert.match(implementation, /BUILDCHAIN_STABLE_RELEASE_NOW/);
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
-  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
   assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(
     dogfood,
@@ -1644,6 +1678,114 @@ test("web-surface production release PR handoff renders manual command facts", (
   assert.match(handoff.manualCommand, /--body-file \.buildchain\/production-release-pr\/body\.md/);
 });
 
+test("web-surface production release PR suppresses a duplicate for a merged release push", async () => {
+  const previousFetch = globalThis.fetch;
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes(`/commits/${sourceSha}/pulls?`)) {
+      return new Response(JSON.stringify([{
+        number: 42,
+        html_url: "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
+        merged_at: "2026-07-26T00:00:00Z",
+        base: { ref: "main" },
+        head: {
+          ref: "release/production-abcdef123456",
+          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+        },
+        labels: [{ name: "buildchain-release" }],
+      }]), { status: 200 });
+    }
+    throw new Error(`unexpected fetch: ${options.method || "GET"} ${url}`);
+  };
+  try {
+    const result = await openProductionReleasePr({
+      token: "token",
+      repository: "kungfu-systems/site-libkungfu-dev",
+      sourceSha,
+      stagingResult: { channel: "staging", status: "applied" },
+    });
+    assert.equal(result.status, "suppressed-merged-release-pr");
+    assert.equal(result.pullNumber, 42);
+    assert.equal(calls.length, 1);
+    assert.equal(calls.some((call) => call.method === "POST"), false);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test("web-surface production release PR finds a merged intent by deterministic head", async () => {
+  const previousFetch = globalThis.fetch;
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes(`/commits/${sourceSha}/pulls?`)) {
+      return new Response(JSON.stringify([{
+        number: 41,
+        merged_at: "2026-07-25T23:59:00Z",
+        base: { ref: "main" },
+        head: {
+          ref: "fix/preceding-source-change",
+          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+        },
+        labels: [],
+      }]), { status: 200 });
+    }
+    if (String(url).includes("/pulls?state=closed&base=main&head=kungfu-systems%3Arelease%2Fproduction-abcdef123456")) {
+      return new Response(JSON.stringify([{
+        number: 42,
+        html_url: "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
+        merged_at: "2026-07-26T00:00:00Z",
+        base: { ref: "main" },
+        head: {
+          ref: "release/production-abcdef123456",
+          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+        },
+        labels: [{ name: "buildchain-release" }],
+      }]), { status: 200 });
+    }
+    throw new Error(`unexpected fetch: ${options.method || "GET"} ${url}`);
+  };
+  try {
+    const result = await openProductionReleasePr({
+      token: "token",
+      repository: "kungfu-systems/site-libkungfu-dev",
+      sourceSha,
+      stagingResult: { channel: "staging", status: "applied" },
+    });
+    assert.equal(result.status, "suppressed-merged-release-pr");
+    assert.equal(result.pullNumber, 42);
+    assert.equal(calls.length, 2);
+    assert.equal(calls.every((call) => call.method === "GET"), true);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test("web-surface release-intent suppression records a durable control-plane outcome", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-suppression-event-"));
+  const logPath = path.join(workspace, ".buildchain", "logs", "events.jsonl");
+  recordProductionReleasePrOutcome({
+    action: "suppressed-merged-release-pr",
+    status: "suppressed-merged-release-pr",
+    suppressionReason: "source-commit-already-has-qualifying-merged-release-pr",
+    repository: "kungfu-systems/site-libkungfu-dev",
+    productionReleaseChannel: "production",
+    pullNumber: 42,
+    sourceSha: "abcdef1234567890abcdef1234567890abcdef12",
+  }, { BUILDCHAIN_LOG_PATH: logPath });
+
+  const event = JSON.parse(fs.readFileSync(logPath, "utf8").trim());
+  assert.equal(event.event, "control-plane.release-intent.outcome");
+  assert.equal(event.attributes.outcome, "suppressed");
+  assert.equal(
+    event.attributes.reason,
+    "source-commit-already-has-qualifying-merged-release-pr",
+  );
+});
+
 test("web-surface production release PR permission-denied is a non-fatal handoff", async () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-permission-"));
   const previousCwd = process.cwd();
@@ -1652,6 +1794,7 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
   const summaryPath = path.join(workspace, "staging-summary.json");
   const outputPath = path.join(workspace, "github-output.txt");
   const stepSummaryPath = path.join(workspace, "step-summary.md");
+  const logPath = path.join(workspace, ".buildchain", "logs", "events.jsonl");
   fs.writeFileSync(
     summaryPath,
     `${JSON.stringify({
@@ -1665,6 +1808,8 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
   const calls = [];
   globalThis.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes(`/commits/${sourceSha}/pulls?`)) return new Response("[]", { status: 200 });
+    if (String(url).includes("/pulls?state=closed")) return new Response("[]", { status: 200 });
     if (String(url).includes("/pulls?state=open")) return new Response("[]", { status: 200 });
     if (String(url).endsWith(`/git/commits/${sourceSha}`)) {
       return new Response(JSON.stringify({ tree: { sha: "tree-sha" } }), { status: 200 });
@@ -1699,6 +1844,7 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
       FAIL_ON_RELEASE_PR_ERROR: "false",
       PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
       PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+      BUILDCHAIN_LOG_PATH: logPath,
     });
     assert.equal(result.status, "permission-denied");
     assert.match(fs.readFileSync(outputPath, "utf8"), /release-pr-status=permission-denied/);
@@ -1708,6 +1854,10 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
     assert.equal(handoff.status, "permission-denied");
     assert.equal(handoff.error.status, 403);
     assert.equal(handoff.tokenSource, "github-token");
+    const event = JSON.parse(fs.readFileSync(logPath, "utf8").trim());
+    assert.equal(event.event, "control-plane.release-intent.outcome");
+    assert.equal(event.attributes.outcome, "failed");
+    assert.equal(event.attributes.action, "permission-denied");
     assert.ok(calls.some((call) => call.method === "POST" && call.url.endsWith("/pulls")));
   } finally {
     process.chdir(previousCwd);
@@ -2486,8 +2636,10 @@ test("reusable build exposes runner-local tools before lifecycle execution", () 
 
   assert.match(workflow, /name: Expose Windows runner user toolchain/);
   assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
+  assert.match(workflow, /Join-Path \$HOME "\.cargo\\bin"/);
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
+  assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
   const nativeBuild = workflow.slice(workflow.indexOf("  build-native:"));
   assert.ok(
     nativeBuild.indexOf("name: Expose Windows runner user toolchain") <
@@ -2507,6 +2659,13 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /gate-environment-json:/);
   assert.match(workflow, /shifu-cache-profile-ref:/);
   assert.match(workflow, /platforms-json:/);
+  assert.match(workflow, /checkout-cache-mode:/);
+  assert.match(workflow, /checkout-cache-fallback:/);
+  assert.match(workflow, /checkout-cache-fetch-attempts:/);
+  assert.match(workflow, /rust-toolchain:/);
+  assert.match(workflow, /rustup-dist-server:/);
+  assert.match(workflow, /rustup-update-root:/);
+  assert.match(workflow, /cargo-registry-index:/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode plan/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode run/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode aggregate/);
@@ -2520,8 +2679,26 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /refusing to clean Gate source outside GITHUB_WORKSPACE/);
   assert.match(workflow, /name: Expose Windows runner user toolchain/);
   assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
+  assert.match(workflow, /Join-Path \$HOME "\.cargo\\bin"/);
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
+  assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
+  assert.match(workflow, /name: Setup Rust toolchain on Windows/);
+  assert.match(workflow, /contains\(matrix\.gate\.capabilities, 'rust'\)/);
+  assert.match(workflow, /buildchain-gate-cargo-/);
+  assert.match(workflow, /name: Setup Rust toolchain/);
+  assert.match(workflow, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
+  assert.match(workflow, /name: Upload Buildchain runtime checkout bootstrap/);
+  assert.match(workflow, /name: Download Buildchain runtime checkout bootstrap/);
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH:/g) || []).length,
+    2,
+  );
+  assert.match(workflow, /name: Upload locked checkout diagnostics/);
   assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
@@ -2600,6 +2777,10 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /body-file: \$\{\{ steps\.friction\.outputs\.body-file \}\}/);
   assert.match(implementation, /Copyable issue body/);
   assert.match(implementation, /buildWorkflowFrictionIssueReport/);
+  assert.match(implementation, /recordBuildchainControlPlaneOutcome/);
+  assert.match(action, /observability-log-path:/);
+  assert.match(workflow, /Upload Buildchain control-plane observability/);
+  assert.match(workflow, /\.buildchain\/logs\/events\.jsonl/);
 
   const promoteAction = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),
@@ -3538,9 +3719,15 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /workflow_run:/);
   assert.match(workflow, /workflows: \["Buildchain Ref Promotion"\]/);
   assert.match(workflow, /schedule:/);
+  assert.match(workflow, /permissions:\n  actions: read\n  contents: read/);
+  assert.equal(
+    workflow.match(/^\s{6}actions: read$/gmu)?.length,
+    2,
+    "both self-dogfood reusable-workflow call jobs must propagate artifact read permission",
+  );
   assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
   assert.match(workflow, /cancel-in-progress: false/);
-  assert.match(workflow, /build\.yml@v2-alpha/);
+  assert.match(workflow, /build\.yml@v3-alpha/);
   assert.match(workflow, /buildchain-channel: auto/);
   assert.match(workflow, /buildchain-channel: stable/);
   assert.match(workflow, /ALPHA_RUNTIME_SHA: \$\{\{ needs\.alpha-consumer\.outputs\.buildchain-runtime-sha \}\}/);
@@ -3549,18 +3736,29 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /kungfu-buildchain-alpha-self-dogfood/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
-  assert.doesNotMatch(workflow, /\.build\.yml@v2\n/);
+  assert.doesNotMatch(workflow, /\.build\.yml@v3\n/);
   assert.doesNotMatch(workflow, /buildchain-contract-lock-path:/);
 
   const alphaLock = JSON.parse(
     fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
   );
+  const stableLock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain/contract-lock.json"), "utf8"),
+  );
   const currentContract = JSON.parse(
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
-  assert.equal(alphaLock.buildchain.ref, "v2-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "dfed5c87558b009c1f60ab549e592ea0c38e8989");
+  assert.equal(alphaLock.buildchain.ref, "v3-alpha");
+  assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
+  assert.equal(stableLock.buildchain.ref, "v3");
+  assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
+  assert.equal(stableLock.buildchain.majorLine, "v3");
+  assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
+  assert.equal(
+    stableLock.buildchain.compatibilityDigest,
+    alphaLock.buildchain.compatibilityDigest,
+  );
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),
   ).version;
@@ -3575,7 +3773,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
       currentContract,
       majorResolution,
     }),
-    runtimeRef: "v2-alpha",
+    runtimeRef: "v3-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
   });
@@ -3667,21 +3865,21 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   const majorResolution = resolveSelfDogfoodMajor({
-    packageVersion: "3.0.0",
-    alphaRef: "v2-alpha",
+    packageVersion: "4.0.0",
+    alphaRef: "v3-alpha",
     majorBootstrap: true,
   });
-  const nextMajorContract = { ...currentContract, majorLine: "v3" };
+  const nextMajorContract = { ...currentContract, majorLine: "v4" };
   const bootstrapContract = contractForSelfDogfoodEvaluation({
     currentContract: nextMajorContract,
     majorResolution,
   });
-  assert.equal(bootstrapContract.majorLine, "v2");
-  assert.equal(nextMajorContract.majorLine, "v3");
+  assert.equal(bootstrapContract.majorLine, "v3");
+  assert.equal(nextMajorContract.majorLine, "v4");
   const bootstrapEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
     current: bootstrapContract,
-    runtimeRef: "v2-alpha",
+    runtimeRef: "v3-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
   });
@@ -3700,7 +3898,7 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
   const breakingEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
     current: breakingContract,
-    runtimeRef: "v2-alpha",
+    runtimeRef: "v3-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
   });

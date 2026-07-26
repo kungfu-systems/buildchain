@@ -73,8 +73,8 @@ function qualifyingInput(overrides = {}) {
     contexts: ["check"],
   };
   const effectivePolicy = compileEffectiveGithubGovernancePolicy({
-    branch: "dev/v2/v2.14",
-    defaultBranch: "dev/v2/v2.14",
+    branch: "dev/v3/v3.0",
+    defaultBranch: "dev/v3/v3.0",
     protectedBranch: true,
     protection,
   });
@@ -83,7 +83,7 @@ function qualifyingInput(overrides = {}) {
       fullName: "kungfu-systems/buildchain",
       visibility: "public",
     },
-    targetRef: "dev/v2/v2.14",
+    targetRef: "dev/v3/v3.0",
     organizationPlan: "free",
     codeowners: evaluateCodeownersAuthority({
       source: CODEOWNERS,
@@ -145,8 +145,8 @@ test("CODEOWNERS last-match authority protects the authority file and verifier s
 
 test("classic protection compiles to one effective fail-closed policy", () => {
   const policy = compileEffectiveGithubGovernancePolicy({
-    branch: "dev/v2/v2.14",
-    defaultBranch: "dev/v2/v2.14",
+    branch: "dev/v3/v3.0",
+    defaultBranch: "dev/v3/v3.0",
     protectedBranch: true,
     protection: classicProtection(),
   });
@@ -170,8 +170,8 @@ test("classic status checks prefer App-bound checks over legacy duplicate contex
     contexts: ["check"],
   };
   const policy = compileEffectiveGithubGovernancePolicy({
-    branch: "dev/v2/v2.14",
-    defaultBranch: "dev/v2/v2.14",
+    branch: "dev/v3/v3.0",
+    defaultBranch: "dev/v3/v3.0",
     protectedBranch: true,
     protection,
   });
@@ -192,8 +192,8 @@ test("classic branch-protection bypass allowances are effective bypass actors", 
     apps: [],
   };
   const policy = compileEffectiveGithubGovernancePolicy({
-    branch: "dev/v2/v2.14",
-    defaultBranch: "dev/v2/v2.14",
+    branch: "dev/v3/v3.0",
+    defaultBranch: "dev/v3/v3.0",
     protectedBranch: true,
     protection,
   });
@@ -292,7 +292,7 @@ test("qualifying receipt binds policy, ownership, effective rules, authority, an
     verifyGithubGovernanceReceipt(receipt, {
       expectedOrganization: "kungfu-systems",
       expectedRepository: "kungfu-systems/buildchain",
-      expectedTargetRef: "dev/v2/v2.14",
+      expectedTargetRef: "dev/v3/v3.0",
       expectedPolicyRoot: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.policyRoot,
       expectedVerifierSourceRevision: "0123456789abcdef0123456789abcdef01234567",
       now: "2026-07-24T01:10:00Z",
@@ -340,7 +340,7 @@ test("private admission uses a policy-independent provider identity root and sea
   const identityRoot = descriptor.repositoryAdmission.privateRepositoryIdentities[0].identityRoot;
   const requiredCheckBindings = [{ context: "check", appId: 15368 }];
   descriptor.repositoryAdmission.privateRepositoryIdentities[0].requiredCheckPolicies = {
-    "dev/v2/v2.14": {
+    "dev/v3/v3.0": {
       requiredCheckBindingRoot: githubGovernanceDigest(requiredCheckBindings),
       strictRequiredChecks: false,
     },
@@ -363,7 +363,7 @@ test("private admission uses a policy-independent provider identity root and sea
       fullName: "kungfu-systems/private-control",
       visibility: "private",
       identityRoot,
-      defaultBranch: "dev/v2/v2.14",
+      defaultBranch: "dev/v3/v3.0",
     },
     organizationPlan: "team",
   });
@@ -383,9 +383,9 @@ test("authoritative target registry detects default drift and constrains private
       defaultBranch: "dev/v2/v2.15",
     },
   });
-  assert.ok(publicTargets.includes("dev/v2/v2.14"));
-  assert.ok(publicTargets.includes("alpha/v2/v2.14"));
-  assert.ok(publicTargets.includes("release/v2/v2.14"));
+  assert.ok(publicTargets.includes("dev/v3/v3.0"));
+  assert.ok(publicTargets.includes("alpha/v3/v3.0"));
+  assert.ok(publicTargets.includes("release/v3/v3.0"));
   assert.ok(publicTargets.includes("publish-gate/major"));
   assert.ok(publicTargets.includes("dev/v2/v2.15"));
 
@@ -470,12 +470,12 @@ test("latest-push review, Code Owner self-protection, bypass, and provider-read 
 test("rollout plan requires frozen inventory and carries exact rollback", () => {
   assert.throws(() => createGithubGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
-    targetRef: "dev/v2/v2.14",
+    targetRef: "dev/v3/v3.0",
   }), /inventory and frozen rollback/);
   const rollbackSnapshot = classicProtection();
   const plan = createGithubGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
-    targetRef: "dev/v2/v2.14",
+    targetRef: "dev/v3/v3.0",
     inventory: { repository: "kungfu-systems/buildchain", observedAt: "2026-07-24T01:00:00Z" },
     rollbackSnapshot,
     desiredProtection: {
@@ -504,7 +504,7 @@ test("rollout plan requires frozen inventory and carries exact rollback", () => 
 test("rollout plan rejects invalid required-check app bindings", () => {
   assert.throws(() => createGithubGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
-    targetRef: "dev/v2/v2.14",
+    targetRef: "dev/v3/v3.0",
     inventory: {},
     rollbackSnapshot: {},
     desiredProtection: {
@@ -585,7 +585,7 @@ test("provider branch protection normalizes into an exact reversible write body"
 
 test("ruleset bypass rollout preserves rules and carries an exact inverse", () => {
   const before = normalizeGithubRulesetSnapshot({
-    name: "Buildchain dev merge queue: dev/v2/v2.14",
+    name: "Buildchain dev merge queue: dev/v3/v3.0",
     target: "branch",
     enforcement: "active",
     bypass_actors: [{
@@ -595,7 +595,7 @@ test("ruleset bypass rollout preserves rules and carries an exact inverse", () =
     }],
     conditions: {
       ref_name: {
-        include: ["refs/heads/dev/v2/v2.14"],
+        include: ["refs/heads/dev/v3/v3.0"],
         exclude: [],
       },
     },
@@ -626,7 +626,7 @@ test("ruleset bypass rollout preserves rules and carries an exact inverse", () =
 test("ruleset policy rollout compiles the exact target descriptor with rollback", () => {
   const targetPolicy = resolveGithubGovernanceTargetPolicy({
     repository: "kungfu-systems/buildchain",
-    targetRef: "alpha/v2/v2.14",
+    targetRef: "alpha/v3/v3.0",
   });
   assert.deepEqual(targetPolicy.requiredCheckBindings, [
     { context: "check", appId: 15368 },
@@ -640,7 +640,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
     bypassMode: "always",
   }]);
   const before = normalizeGithubRulesetSnapshot({
-    name: "Buildchain alpha publication authority: alpha/v2/v2.14",
+    name: "Buildchain alpha publication authority: alpha/v3/v3.0",
     target: "branch",
     enforcement: "active",
     bypass_actors: [{
@@ -650,7 +650,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
     }],
     conditions: {
       ref_name: {
-        include: ["refs/heads/alpha/v2/v2.14"],
+        include: ["refs/heads/alpha/v3/v3.0"],
         exclude: [],
       },
     },
@@ -683,7 +683,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
   });
   const plan = createGithubRulesetGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
-    targetRef: "alpha/v2/v2.14",
+    targetRef: "alpha/v3/v3.0",
     rulesetId: 19518955,
     inventory: before,
     rollbackSnapshot: before,
@@ -737,13 +737,13 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
   );
 
   const mergeQueueOnly = normalizeGithubRulesetSnapshot({
-    name: "Buildchain dev merge queue: dev/v2/v2.14",
+    name: "Buildchain dev merge queue: dev/v3/v3.0",
     target: "branch",
     enforcement: "active",
     bypass_actors: [],
     conditions: {
       ref_name: {
-        include: ["refs/heads/dev/v2/v2.14"],
+        include: ["refs/heads/dev/v3/v3.0"],
         exclude: [],
       },
     },
@@ -757,7 +757,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
   });
   const canonicalPlan = createGithubRulesetGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
-    targetRef: "dev/v2/v2.14",
+    targetRef: "dev/v3/v3.0",
     rulesetId: 19076734,
     inventory: mergeQueueOnly,
     rollbackSnapshot: mergeQueueOnly,
@@ -797,7 +797,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
 
   const installedAppPlan = createGithubRulesetGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
-    targetRef: "alpha/v2/v2.14",
+    targetRef: "alpha/v3/v3.0",
     rulesetId: 19518955,
     inventory: before,
     rollbackSnapshot: before,

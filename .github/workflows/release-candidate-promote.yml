@@ -143,6 +143,26 @@ on:
         default: ".buildchain/publication-commit/evidence.json"
         type: string
         required: false
+      release-activation-command:
+        description: "Optional consumer command that completes exact site publication/readback and writes the authoritative activation receipt set"
+        default: ""
+        type: string
+        required: false
+      release-activation-receipt-set-path:
+        description: "Consumer activation receipt set written under .buildchain/"
+        default: ".buildchain/release-activation/receipt-set.json"
+        type: string
+        required: false
+      release-passport-evidence-command:
+        description: "Optional consumer command that synthesizes released evidence only from the validated activation receipt set"
+        default: ""
+        type: string
+        required: false
+      release-passport-evidence-path:
+        description: "Released evidence JSON written by release-passport-evidence-command under .buildchain/"
+        default: ".buildchain/release-evidence/product-released-evidence.json"
+        type: string
+        required: false
       standalone-binary-distribution:
         description: "Dispatch binary-distribution.yml after promotion; enable only when the caller repository provides that workflow"
         default: false
@@ -574,10 +594,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           CHANNEL: ${{ steps.route.outputs.channel }}
           SELECTED_SHELL_REF: ${{ steps.route.outputs.shell-ref }}
-          ALPHA_SHELL_REF: v2-alpha
-          ALPHA_SHELL_CALL_REF: v2-alpha
-          STABLE_SHELL_REF: v2
-          STABLE_SHELL_CALL_REF: 725592ae025003071b8d33fdb49e0157842fe76c
+          ALPHA_SHELL_REF: v3-alpha
+          ALPHA_SHELL_CALL_REF: v3-alpha
+          STABLE_SHELL_REF: v3
+          STABLE_SHELL_CALL_REF: v3
         run: |
           set -euo pipefail
           if [[ "${CHANNEL}" = "alpha" ]]; then
@@ -669,7 +689,7 @@ jobs:
     name: Promote with alpha workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v2-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3-alpha
     permissions:
       actions: write
       checks: write
@@ -714,6 +734,10 @@ jobs:
       github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
       publication-commit-command: ${{ inputs.publication-commit-command }}
       publication-commit-evidence-path: ${{ inputs.publication-commit-evidence-path }}
+      release-activation-command: ${{ inputs.release-activation-command }}
+      release-activation-receipt-set-path: ${{ inputs.release-activation-receipt-set-path }}
+      release-passport-evidence-command: ${{ inputs.release-passport-evidence-command }}
+      release-passport-evidence-path: ${{ inputs.release-passport-evidence-path }}
       standalone-binary-distribution: ${{ inputs.standalone-binary-distribution }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
@@ -763,7 +787,7 @@ jobs:
     name: Promote with stable workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@725592ae025003071b8d33fdb49e0157842fe76c
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3
     permissions:
       actions: write
       checks: write
@@ -808,9 +832,11 @@ jobs:
       github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
       publication-commit-command: ${{ inputs.publication-commit-command }}
       publication-commit-evidence-path: ${{ inputs.publication-commit-evidence-path }}
+      standalone-binary-distribution: ${{ inputs.standalone-binary-distribution }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
       publish-command: ${{ inputs.publish-command }}
+      publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
       publish-transaction-override: ${{ inputs.publish-transaction-override }}
       publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
       publish-artifact-kind: ${{ inputs.publish-artifact-kind }}

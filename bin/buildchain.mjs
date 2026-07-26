@@ -296,15 +296,15 @@ Examples:
   buildchain validate --require-version-state --require-lifecycle-stages build,verify
   buildchain lifecycle run build --artifact-path dist --artifact-name "{repo}-{version}-{platform}"
   buildchain npm dry-run --json
-  buildchain release --dry-run --target-ref alpha/v2/v2.0
-  buildchain release line open --major 2 --minor 10 --source-ref release/v2/v2.9 --json
+  buildchain release --dry-run --target-ref alpha/v3/v3.0
+  buildchain release line open --major 3 --minor 1 --source-ref release/v3/v3.0 --json
   buildchain span --event native.build -- cmake --build build
-  buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
+  buildchain collect github-release --tag v3.0.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain create publication-admission --input-json admission-input.json --output admission.json
   buildchain create runner-provenance --input-json runner-input.json --output runner.json
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
   buildchain verify publication-admission admission.json --registry-json publication-authority-registry.json --runner-json runner.json --control-plane-audit-json control-plane.json --expected-json expected.json --json
-  buildchain audit publication-control-plane --repository kungfu-systems/buildchain --branch release/v2/v2.12
+  buildchain audit publication-control-plane --repository kungfu-systems/buildchain --branch release/v3/v3.0
   buildchain verify artifact ./dist/buildchain-x86_64-unknown-linux-gnu.tar.gz --passport .buildchain/release-passport/buildchain.release.json
   buildchain verify artifact-envelope .buildchain/kfx/artifact-verification-envelope.json --json
   buildchain project kfx-admission .buildchain/kfx/artifact-verification-envelope.json --json
@@ -1542,6 +1542,13 @@ async function main(argv = process.argv.slice(2)) {
         process.stdout.write(`buildchain log summary: ${summary.eventCount} events\n`);
         process.stdout.write(`sources: ${Object.keys(summary.sources).join(", ") || "none"}\n`);
         process.stdout.write(`phases: ${Object.keys(summary.phases).join(", ") || "none"}\n`);
+        if (summary.controlPlane.eventCount > 0) {
+          process.stdout.write(
+            `control plane: ${summary.controlPlane.eventCount} events, ` +
+            `incident reuse ${summary.controlPlane.workflowFriction.incidentReuseRate ?? "n/a"}, ` +
+            `release-intent suppression ${summary.controlPlane.releaseIntent.suppressionRate ?? "n/a"}\n`,
+          );
+        }
       }
       return;
     }

@@ -45,7 +45,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | KFD-3 public surface reverse audit | `dist/site/public-surface-audit.json`, `dist/site/cli-registry.json`, `dist/site/workflow-registry.json`, `dist/site/page-registry.json` | [`cli.md`](cli.md), [`site-bundle-contract.md`](site-bundle-contract.md) |
 | KFD-1 / KFD-2 / KFD-3 first-class CLI and Node API | `.buildchain/kfd/kfd-3/surfaces.json`, `dist/site/kfd-claims.json`, `buildchain.release.json`, KFD schemas from `@kungfu-tech/kfd` | [`kfd-support.md`](kfd-support.md), [`cli.md`](cli.md#commands) |
 | Declarative KFD Agent Hub adapter conformance and Passport evidence | `.buildchain/kfd/agent-hub.json`, `.buildchain/artifacts/kfd-agent-hub/evidence.json`, `buildchain.release.json#kfdAgentHub` | [`kfd-agent-hub.md`](kfd-agent-hub.md) |
-| Floating `@v2` drift detection and compatibility issues | `dist/site/buildchain-contract.json` | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) |
+| Floating `@v3` drift detection and compatibility issues | `dist/site/buildchain-contract.json` | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) |
 | npm publish transactions, evidence, dist-tags, and recovery | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`publish-transaction.md`](publish-transaction.md) |
 | Git/source/version/module/product build facts | `dist/site/node-api-registry.json`, `dist/site/cli-registry.json`, `kungfu-buildchain-module-build-facts`, `kungfu-buildchain-product-build-facts` | [`build-facts.md`](build-facts.md) |
 | GitHub Release passport/evidence publication | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`release-governance.md`](release-governance.md), [`release-candidate.md`](release-candidate.md) |
@@ -93,7 +93,7 @@ replace them.
 | How do I gate KFD-3 collaboration-interface releases? | [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I detect, register, audit, witness, or query KFD-3 product surfaces? | [`kfd-support.md`](kfd-support.md) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I adopt the KFD Agent Hub profile with one declaration and one adapter? | [`kfd-agent-hub.md`](kfd-agent-hub.md) | verify/use | preview |
-| How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
+| How do I keep `@v3` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
 | How do reusable workflows bind controller intent, source/runtime identity, outcomes, and receipt evidence? | [`controller-evidence.md`](controller-evidence.md) | verify/use | draft |
 | How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
 | How do paper or report repositories publish PDFs, metadata, source bundles, site-consumable manifests, npm packages, and GitHub Releases? | [`publication-artifacts.md`](publication-artifacts.md) | use | stable |
@@ -105,11 +105,12 @@ replace them.
 | What package-owned facts should buildchain.libkungfu.dev render? | [`site-bundle-contract.md`](site-bundle-contract.md) | use | stable |
 | How do I call the reusable build workflow? | [`reusable-build-surface.md`](reusable-build-surface.md) | use | stable |
 | How does Buildchain schedule and aggregate a project-owned Shifu Gate profile? | [`shifu-gate-profiles.md`](shifu-gate-profiles.md) | use/verify | draft |
+| How do exact build artifacts become qualified, transcript-traceable demo media? | [`auditable-demo.md`](auditable-demo.md) | use/verify | draft |
 | How do I use one build job that follows alpha during development and stable for releases? | [`reusable-build-surface.md`](reusable-build-surface.md#automatic-channel-router) | use | preview |
 | How do self-hosted runners relay large artifacts through S3 before GitHub artifacts? | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay) | use | stable |
 | How do self-hosted runners reuse local Git checkout caches without weakening source locks? | [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache) | use | stable |
 | How do ephemeral GitHub-hosted runners share exact dependency or compiler caches without fixed-runner affinity? | [`cli.md`](cli.md#commands) | use/verify | preview |
-| How do I validate an unreleased Buildchain runtime train while keeping `@v2`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
+| How do I validate an unreleased Buildchain runtime train while keeping `@v3`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
 | How do I automatically qualify alpha candidates and publish the newest non-revoked qualified candidate at a fixed window? | [`stable-candidate-patrol.md`](stable-candidate-patrol.md) | use | preview |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
@@ -124,7 +125,7 @@ replace them.
 
 - **ABV / old workflows / old action repositories** -> [`release-governance.md`](release-governance.md)
   and [`migration-inventory.md`](migration-inventory.md).
-- **v2 / v2-alpha / v2.0 / v2.0-alpha / exact tags / floating tags** ->
+- **v2 / v3-alpha / v2.0 / v2.0-alpha / exact tags / floating tags** ->
   [`release-governance.md`](release-governance.md) and
   [`release-flow.md`](release-flow.md).
 - **Buildchain self-dogfood / released alpha canary / stable compatibility lane** ->
@@ -180,7 +181,7 @@ replace them.
   [`release-passport.md`](release-passport.md#kfd-2-release-trust-passport-audit).
 - **KFD-3 collaboration-interface / agent-facing control surface closure** ->
   [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate).
-- **floating `@v2` / contract lock / compatible drift issue** ->
+- **floating `@v3` / contract lock / compatible drift issue** ->
   [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock).
 - **GitHub Release passport / binary assets / artifact evidence / agent release checks** ->
   [`release-passport.md`](release-passport.md),
