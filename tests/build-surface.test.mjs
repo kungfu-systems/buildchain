@@ -2651,6 +2651,9 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /gate-environment-json:/);
   assert.match(workflow, /shifu-cache-profile-ref:/);
   assert.match(workflow, /platforms-json:/);
+  assert.match(workflow, /checkout-cache-mode:/);
+  assert.match(workflow, /checkout-cache-fallback:/);
+  assert.match(workflow, /checkout-cache-fetch-attempts:/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode plan/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode run/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode aggregate/);
@@ -2668,6 +2671,17 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
   assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
+  assert.match(workflow, /name: Upload Buildchain runtime checkout bootstrap/);
+  assert.match(workflow, /name: Download Buildchain runtime checkout bootstrap/);
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH:/g) || []).length,
+    2,
+  );
+  assert.match(workflow, /name: Upload locked checkout diagnostics/);
   assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
