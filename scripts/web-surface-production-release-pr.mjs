@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import {
+  defaultBuildchainLogPath,
+  recordBuildchainControlPlaneOutcome,
+} from "../packages/core/logging.js";
 
 function requiredString(value, name) {
   const normalized = String(value || "").trim();
@@ -68,6 +72,34 @@ function writeTextFile(filePath, value) {
 function runUrl({ serverUrl = "", repository = "", runId = "" } = {}) {
   if (!serverUrl || !repository || !runId) return "";
   return `${serverUrl.replace(/\/$/, "")}/${repository}/actions/runs/${runId}`;
+}
+
+export function recordProductionReleasePrOutcome(result, env = process.env) {
+  const outcome = result.action === "created"
+    ? "created"
+    : result.action === "updated"
+      ? "reused"
+      : result.action === "suppressed-merged-release-pr"
+        ? "suppressed"
+        : ["permission-denied", "app-token-unavailable", "failed"].includes(result.action)
+          ? "failed"
+          : "skipped";
+  return recordBuildchainControlPlaneOutcome({
+    domain: "release-intent",
+    action: result.action,
+    outcome,
+    reason: result.suppressionReason || result.status,
+    attributes: {
+      repository: result.repository,
+      channel: result.productionReleaseChannel,
+      pullNumber: result.pullNumber,
+      sourceSha: result.sourceSha,
+    },
+  }, {
+    path: optionalString(env.BUILDCHAIN_LOG_PATH) ||
+      (env.GITHUB_ACTIONS === "true" ? defaultBuildchainLogPath() : false),
+    console: false,
+  });
 }
 
 function urlsFromResult(result = {}) {
@@ -574,6 +606,7 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
       if (failOnReleasePrError) {
         writeJsonFile(summaryPath, result);
         if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));
+        recordProductionReleasePrOutcome(result, env);
         throw new Error(result.error.message);
       }
     } else {
@@ -612,12 +645,14 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
         if (status !== "permission-denied" || failOnReleasePrError) {
           writeJsonFile(summaryPath, result);
           if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));
+          recordProductionReleasePrOutcome(result, env);
           throw error;
         }
       }
     }
   }
 
+  recordProductionReleasePrOutcome(result, env);
   writeJsonFile(summaryPath, result);
   if (env.GITHUB_STEP_SUMMARY) {
     fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));

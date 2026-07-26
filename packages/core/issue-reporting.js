@@ -276,6 +276,10 @@ export function buildWorkflowFrictionIssueReport(options = {}) {
   return {
     contract: BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT,
     targetRepository: target.fullName,
+    repository,
+    workflow,
+    channel,
+    frictionClass,
     fingerprint,
     marker,
     title,

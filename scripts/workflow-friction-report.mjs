@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { recordBuildchainControlPlaneOutcome } from "../packages/core/logging.js";
 import { pathToFileURL } from "node:url";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
@@ -346,6 +347,15 @@ export async function workflowFrictionReportCli() {
     })}\n`);
     console.error(`::warning::${diagnosis.replace(/\r?\n/g, "%0A")}`);
   }
+  recordBuildchainControlPlaneOutcome({
+    domain: "workflow-friction",
+    action: "classified",
+    outcome: "classified",
+    attributes: {
+      frictionClass: result.frictionClass,
+      pullRequest: result.pullRequest,
+    },
+  });
   writeGitHubOutputs({
     "friction-class": result.frictionClass,
     summary: result.summary,

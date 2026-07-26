@@ -206,7 +206,7 @@
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "digest": "sha256:b2ffc3b2520ca7879309b7607b2eaa1aceb647503e893887159a6916de14e2d7",
+      "digest": "sha256:d7f4179c3912d7bbc5940bfba69e674fb03d020a740063c0b877a171bd5789e3",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
@@ -275,7 +275,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:758625143a51d0fe66871220c52273ceaf5c7a47fc1a99bda4608e3ad587ae81",
+      "digest": "sha256:f7a27ef72c0ffe3e18ad5d4d0520e14d8f343a55a417182c5da74a150b8f58fc",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

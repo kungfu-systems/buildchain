@@ -371,6 +371,12 @@ and have those events grouped into the same lifecycle summary.
 is missing, has too few events, contains error events, or does not include
 required phases, components, or event names.
 
+The JSON summary also includes an additive `controlPlane` block. It counts
+workflow-friction incident outcomes and production release-intent outcomes,
+including incident reuse rate, release-intent suppression rate, and suppression
+reasons. Buildchain writes those outcome events locally; it does not send
+telemetry outside the runner.
+
 The event protocol is JSONL and is also available from the SDK:
 
 ```js

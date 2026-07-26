@@ -164,7 +164,7 @@
       "specifier": "@kungfu-tech/buildchain/issue-reporting",
       "export": "./issue-reporting",
       "target": "./packages/core/issue-reporting.js",
-      "digest": "sha256:a42caf54c8b47f4802705d58636fcebf911b20cbbbdd87986c354de8c8e752e6",
+      "digest": "sha256:4e6807067b14db5cf78b7de7596bf27ce23b211ae9b24f5ae36bed4fb568d56b",
       "summary": "Buildchain-owned issue reporting API for workflow friction feedback.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -255,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/logging",
       "export": "./logging",
       "target": "./packages/core/logging.js",
-      "digest": "sha256:8cc29b88dc7968de3b43d495b54c0b53f90984beb85883705d764c40d4da1b4e",
+      "digest": "sha256:36d8aaea7db446d02fb0a1d7d7e6d5d34cc10cff19156596bb8dfbd1a1ff2382",
       "summary": "Buildchain JSONL logging, span, summary, and verification APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -477,7 +477,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:758625143a51d0fe66871220c52273ceaf5c7a47fc1a99bda4608e3ad587ae81"
+      "digest": "sha256:f7a27ef72c0ffe3e18ad5d4d0520e14d8f343a55a417182c5da74a150b8f58fc"
     },
     {
       "id": "build-facts",

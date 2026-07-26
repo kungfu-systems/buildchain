@@ -5,6 +5,13 @@ import path from "node:path";
 
 export const BUILDCHAIN_LOG_EVENT_CONTRACT = "kungfu-buildchain-log-event";
 export const BUILDCHAIN_LOG_SUMMARY_CONTRACT = "kungfu-buildchain-log-summary";
+export const BUILDCHAIN_CONTROL_PLANE_SUMMARY_CONTRACT =
+  "kungfu-buildchain-control-plane-summary";
+
+const CONTROL_PLANE_EVENT_NAMES = {
+  "workflow-friction": "control-plane.workflow-friction.outcome",
+  "release-intent": "control-plane.release-intent.outcome",
+};
 
 const SECRET_KEY_PATTERN =
   /(authorization|cookie|credential|password|passwd|private[_-]?key|secret|token|api[_-]?key)/i;
@@ -90,6 +97,98 @@ function groupSummary(events, field) {
   );
 }
 
+function countOutcomes(events) {
+  const counts = {};
+  for (const event of events) {
+    const outcome = String(event.attributes?.outcome || "unknown");
+    counts[outcome] = (counts[outcome] || 0) + 1;
+  }
+  return Object.fromEntries(
+    Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
+function ratio(numerator, denominator) {
+  return denominator > 0 ? Number((numerator / denominator).toFixed(4)) : null;
+}
+
+export function summarizeBuildchainControlPlaneEvents(input = {}) {
+  const events = Array.isArray(input)
+    ? input
+    : typeof input === "string"
+      ? readBuildchainLogEvents(input)
+      : readBuildchainLogEvents(input.path);
+  const workflowFrictionEvents = events.filter(
+    (event) => event.event === CONTROL_PLANE_EVENT_NAMES["workflow-friction"],
+  );
+  const releaseIntentEvents = events.filter(
+    (event) => event.event === CONTROL_PLANE_EVENT_NAMES["release-intent"],
+  );
+  const workflowFriction = countOutcomes(workflowFrictionEvents);
+  const releaseIntent = countOutcomes(releaseIntentEvents);
+  const incidentDecisions = Number(workflowFriction.created || 0) + Number(workflowFriction.reused || 0);
+  const releaseIntentDecisions =
+    Number(releaseIntent.created || 0) +
+    Number(releaseIntent.reused || 0) +
+    Number(releaseIntent.suppressed || 0);
+  const suppressionReasons = {};
+  for (const event of releaseIntentEvents) {
+    if (event.attributes?.outcome !== "suppressed") continue;
+    const reason = String(event.attributes?.reason || "unknown");
+    suppressionReasons[reason] = (suppressionReasons[reason] || 0) + 1;
+  }
+  return {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_CONTROL_PLANE_SUMMARY_CONTRACT,
+    eventCount: workflowFrictionEvents.length + releaseIntentEvents.length,
+    workflowFriction: {
+      eventCount: workflowFrictionEvents.length,
+      outcomes: workflowFriction,
+      incidentReuseRate: ratio(Number(workflowFriction.reused || 0), incidentDecisions),
+    },
+    releaseIntent: {
+      eventCount: releaseIntentEvents.length,
+      outcomes: releaseIntent,
+      suppressionRate: ratio(Number(releaseIntent.suppressed || 0), releaseIntentDecisions),
+      suppressionReasons: Object.fromEntries(
+        Object.entries(suppressionReasons).sort(([left], [right]) => left.localeCompare(right)),
+      ),
+    },
+  };
+}
+
+export function recordBuildchainControlPlaneOutcome({
+  domain,
+  action = "",
+  outcome = "",
+  reason = "",
+  attributes = {},
+} = {}, options = {}) {
+  if (!Object.hasOwn(CONTROL_PLANE_EVENT_NAMES, domain)) {
+    throw new Error(`unsupported Buildchain control-plane domain: ${domain || "<empty>"}`);
+  }
+  const logger = options.logger || createBuildchainLogger({
+    cwd: options.cwd,
+    path: options.path,
+    console: options.console ?? false,
+    source: "buildchain",
+    component: "control-plane",
+    phase: domain,
+  });
+  const normalizedOutcome = outcome || action || "unknown";
+  const details = {
+    attributes: {
+      ...attributes,
+      action,
+      outcome: normalizedOutcome,
+      reason,
+    },
+  };
+  return ["failed", "error"].includes(normalizedOutcome)
+    ? logger.warn(CONTROL_PLANE_EVENT_NAMES[domain], details)
+    : logger.info(CONTROL_PLANE_EVENT_NAMES[domain], details);
+}
+
 export function summarizeBuildchainLogEvents(input = {}) {
   const events = Array.isArray(input)
     ? input
@@ -109,6 +208,8 @@ export function summarizeBuildchainLogEvents(input = {}) {
     sources: groupSummary(events, "source"),
     phases: groupSummary(events, "phase"),
     components: groupSummary(events, "component"),
+    events: groupSummary(events, "event"),
+    controlPlane: summarizeBuildchainControlPlaneEvents(events),
   };
 }
 

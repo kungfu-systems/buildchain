@@ -1,10 +1,15 @@
 import * as core from "@actions/core";
 import {
+  BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT,
   buildConsumerIssueReport,
   buildWorkflowFrictionIssueReport,
   readOptionalIssueBodyFile,
   reportBuildchainIssue,
 } from "../../packages/core/issue-reporting.js";
+import {
+  defaultBuildchainLogPath,
+  recordBuildchainControlPlaneOutcome,
+} from "../../packages/core/logging.js";
 
 function input(name) {
   return core.getInput(name);
@@ -22,6 +27,32 @@ function setResultOutputs(result) {
   core.setOutput("created", String(result.created === true));
   core.setOutput("commented", String(result.commented === true));
   core.setOutput("fingerprint", result.fingerprint || "");
+  core.setOutput(
+    "observability-log-path",
+    process.env.BUILDCHAIN_LOG_PATH || defaultBuildchainLogPath(),
+  );
+}
+
+function recordWorkflowFrictionOutcome(result) {
+  if (fallbackReport?.contract !== BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT) return;
+  const outcome = result.action === "created"
+    ? "created"
+    : ["commented", "cooldown", "found"].includes(result.action)
+      ? "reused"
+      : result.action === "failed"
+        ? "failed"
+        : result.action || "unknown";
+  recordBuildchainControlPlaneOutcome({
+    domain: "workflow-friction",
+    action: result.action,
+    outcome,
+    attributes: {
+      fingerprint: result.fingerprint,
+      frictionClass: fallbackReport.frictionClass,
+      issueNumber: result.issueNumber,
+      targetRepository: fallbackReport.targetRepository,
+    },
+  });
 }
 
 function parseJsonArrayInput(name) {
@@ -103,6 +134,7 @@ async function main() {
     report: fallbackReport,
   });
   setResultOutputs(result);
+  recordWorkflowFrictionOutcome(result);
   await core.summary
     .addHeading("Buildchain issue report")
     .addTable([
@@ -126,6 +158,11 @@ main().catch(async (error) => {
     issueUrl: "",
     created: false,
     commented: false,
+    fingerprint: report?.fingerprint || "",
+  });
+  recordWorkflowFrictionOutcome({
+    action: "failed",
+    issueNumber: "",
     fingerprint: report?.fingerprint || "",
   });
   if (boolInput("fail-on-error")) {
