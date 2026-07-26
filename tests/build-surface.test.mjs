@@ -1707,6 +1707,55 @@ test("web-surface production release PR suppresses a duplicate for a merged rele
   }
 });
 
+test("web-surface production release PR finds a merged intent by deterministic head", async () => {
+  const previousFetch = globalThis.fetch;
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes(`/commits/${sourceSha}/pulls?`)) {
+      return new Response(JSON.stringify([{
+        number: 41,
+        merged_at: "2026-07-25T23:59:00Z",
+        base: { ref: "main" },
+        head: {
+          ref: "fix/preceding-source-change",
+          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+        },
+        labels: [],
+      }]), { status: 200 });
+    }
+    if (String(url).includes("/pulls?state=closed&base=main&head=kungfu-systems%3Arelease%2Fproduction-abcdef123456")) {
+      return new Response(JSON.stringify([{
+        number: 42,
+        html_url: "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
+        merged_at: "2026-07-26T00:00:00Z",
+        base: { ref: "main" },
+        head: {
+          ref: "release/production-abcdef123456",
+          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+        },
+        labels: [{ name: "buildchain-release" }],
+      }]), { status: 200 });
+    }
+    throw new Error(`unexpected fetch: ${options.method || "GET"} ${url}`);
+  };
+  try {
+    const result = await openProductionReleasePr({
+      token: "token",
+      repository: "kungfu-systems/site-libkungfu-dev",
+      sourceSha,
+      stagingResult: { channel: "staging", status: "applied" },
+    });
+    assert.equal(result.status, "suppressed-merged-release-pr");
+    assert.equal(result.pullNumber, 42);
+    assert.equal(calls.length, 2);
+    assert.equal(calls.every((call) => call.method === "GET"), true);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
 test("web-surface release-intent suppression records a durable control-plane outcome", () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-suppression-event-"));
   const logPath = path.join(workspace, ".buildchain", "logs", "events.jsonl");
@@ -1752,6 +1801,7 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
   globalThis.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: options.method || "GET" });
     if (String(url).includes(`/commits/${sourceSha}/pulls?`)) return new Response("[]", { status: 200 });
+    if (String(url).includes("/pulls?state=closed")) return new Response("[]", { status: 200 });
     if (String(url).includes("/pulls?state=open")) return new Response("[]", { status: 200 });
     if (String(url).endsWith(`/git/commits/${sourceSha}`)) {
       return new Response(JSON.stringify({ tree: { sha: "tree-sha" } }), { status: 200 });
