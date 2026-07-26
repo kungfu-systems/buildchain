@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "2f613c3130fd7f36b514b3016aac61b300d489f403506468084c63f83dab04d1",
+    "sha256": "bb7ace4c0abba72ecc320e36339956b0d38577b9f4ed0d764e790919732c1b28",
     "summary": {
       "cliCommandCount": 87,
       "workflowCount": 53,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "2f613c3130fd7f36b514b3016aac61b300d489f403506468084c63f83dab04d1",
+      "sha256": "bb7ace4c0abba72ecc320e36339956b0d38577b9f4ed0d764e790919732c1b28",
       "summary": {
         "cliCommandCount": 87,
         "workflowCount": 53,
@@ -2805,7 +2805,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 65,
+          "inputCount": 66,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2833,6 +2833,7 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "control-runner-json",
             "credential-island-caller-owned",
             "credential-island-environment",
             "credential-island-macos-app-path",
@@ -3443,7 +3444,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 68,
+          "inputCount": 69,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3474,6 +3475,7 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "control-runner-json",
             "credential-island-caller-owned",
             "credential-island-environment",
             "credential-island-macos-app-path",

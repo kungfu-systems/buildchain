@@ -41,6 +41,11 @@ on:
         default: ""
         type: string
         required: false
+      control-runner-json:
+        description: "JSON runner-label array for trusted control-plane jobs"
+        default: '["ubuntu-24.04"]'
+        type: string
+        required: false
       fail-fast:
         description: "Cancel sibling platform lanes after a required matrix failure; false retains all-platform diagnostics"
         default: false
@@ -470,7 +475,7 @@ permissions:
 jobs:
   trust-gate:
     name: Trust gate
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       trusted: ${{ steps.trust.outputs.trusted }}
       trusted-event: ${{ steps.publish.outputs.trusted-event }}
@@ -832,7 +837,7 @@ jobs:
 
   resolve-source:
     name: Resolve publish source
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
     if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
@@ -895,7 +900,7 @@ jobs:
 
   anchored-release-preflight:
     name: Verify anchored release material
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
       - resolve-source
@@ -987,7 +992,7 @@ jobs:
 
   resolve-contract:
     name: Resolve reusable contract
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
     outputs:
@@ -1023,7 +1028,7 @@ jobs:
 
   controller-plan:
     name: Plan build controller evidence
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
       - resolve-source
@@ -1073,7 +1078,7 @@ jobs:
 
   artifact-transfer:
     name: Resolve artifact transfer
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
     if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
@@ -1792,7 +1797,7 @@ jobs:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -1996,7 +2001,7 @@ jobs:
       - relay-artifacts
       - credential-island-macos
     if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || (inputs.credential-island-caller-owned && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success') }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
       diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
@@ -2250,7 +2255,7 @@ jobs:
 
   controller-receipt:
     name: Finalize build controller evidence
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
       - resolve-source

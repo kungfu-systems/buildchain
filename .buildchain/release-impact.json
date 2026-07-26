@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "3.0.1-alpha.4",
+    "version": "3.0.1-alpha.5",
     "line": "v3.0"
   },
   "versionImpact": {
@@ -11,6 +11,13 @@
     "rationale": "Buildchain v3.0 converges compatible v2.14 release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
   },
   "surfaceImpacts": [
+    {
+      "id": "configurable-build-control-runner",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "The channel router and reusable build expose an additive control-runner-json input so trusted consumers can route control-plane and lifecycle jobs to the same governed self-hosted runner while existing callers retain the GitHub-hosted default.",
+      "source": ".github/workflows/build.yml"
+    },
     {
       "id": "auditable-demo-artifact-gate",
       "impact": "minor",
@@ -394,5 +401,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence and release governance with anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
+  "summary": "Buildchain v3.0 extends sealed evidence and release governance with configurable trusted control runners, anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
 }
