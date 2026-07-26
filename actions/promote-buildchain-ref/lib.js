@@ -1456,6 +1456,8 @@ async function collectAndPersistReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  kfdSupportMatrixJson = "",
+  kfdProductGateJsons = [],
   invariantPassportJsons = [],
   invariantPassportCommand = "",
   buildchainSelfKfd = false,
@@ -1560,6 +1562,8 @@ async function collectAndPersistReleasePassport({
     kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
     kfd3ArtifactWitnessJsons: resolvedKfd3ArtifactWitnessJsons,
     kfd3ArtifactVerifyCommand,
+    kfdSupportMatrixJson,
+    kfdProductGateJsons,
     invariantPassportJsons,
     invariantPassportCommand,
     buildSummaryJson,
@@ -2783,6 +2787,8 @@ async function promoteBuildchainRefs({
   releasePassportKfd3PrebuildWitnessJsons = "",
   releasePassportKfd3ArtifactWitnessJsons = "",
   releasePassportKfd3ArtifactVerifyCommand = "",
+  releasePassportKfdSupportMatrixJson = "",
+  releasePassportKfdProductGateJsons = "",
   releasePassportInvariantPassportJsons = "",
   releasePassportInvariantPassportCommand = "",
   releasePassportBuildchainSelfKfd = false,
@@ -4461,6 +4467,8 @@ async function promoteBuildchainRefs({
     passportKfd2ClaimJsons = splitPathList(releasePassportKfd2ClaimJsons),
     passportKfd3PrebuildWitnessJsons = splitPathList(releasePassportKfd3PrebuildWitnessJsons),
     passportKfd3ArtifactWitnessJsons = splitPathList(releasePassportKfd3ArtifactWitnessJsons),
+    passportKfdSupportMatrixJson = releasePassportKfdSupportMatrixJson,
+    passportKfdProductGateJsons = splitPathList(releasePassportKfdProductGateJsons),
     passportInvariantPassportJsons = splitPathList(releasePassportInvariantPassportJsons),
     passportReleaseCandidateValidation = releaseCandidateValidation,
   } = {}) => {
@@ -4489,6 +4497,8 @@ async function promoteBuildchainRefs({
       kfd3PrebuildWitnessJsons: passportKfd3PrebuildWitnessJsons,
       kfd3ArtifactWitnessJsons: passportKfd3ArtifactWitnessJsons,
       kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
+      kfdSupportMatrixJson: passportKfdSupportMatrixJson,
+      kfdProductGateJsons: passportKfdProductGateJsons,
       invariantPassportJsons: passportInvariantPassportJsons,
       invariantPassportCommand: releasePassportInvariantPassportCommand,
       buildchainSelfKfd: Boolean(releasePassportBuildchainSelfKfd),
@@ -4810,6 +4820,8 @@ async function promoteBuildchainRefs({
             passportPromotionRoutingJson: "",
             passportKfd1WitnessJsons: [],
             passportKfd2ClaimJsons: [],
+            passportKfdSupportMatrixJson: "",
+            passportKfdProductGateJsons: [],
             passportKfd3PrebuildWitnessJsons: [],
             passportKfd3ArtifactWitnessJsons: [],
             passportInvariantPassportJsons: [],
@@ -5133,6 +5145,8 @@ async function promoteBuildchainRefs({
           passportKfd2ClaimJsons: [],
           passportKfd3PrebuildWitnessJsons: [],
           passportKfd3ArtifactWitnessJsons: [],
+          passportKfdSupportMatrixJson: "",
+          passportKfdProductGateJsons: [],
           passportInvariantPassportJsons: [],
           passportReleaseCandidateValidation: null,
         });
@@ -5451,7 +5465,7 @@ async function promoteBuildchainRefs({
   const currentReleaseContainsPublishedMaterial =
     currentRelease &&
     currentReleaseTransaction &&
-    ["published", "finalizing"].includes(currentReleaseTransaction.state || "") &&
+    ["published", "finalizing", "complete"].includes(currentReleaseTransaction.state || "") &&
     transactionHasPublishedMaterial(currentReleaseTransaction) &&
     currentRelease.version === currentReleaseTransaction.version &&
     currentRelease.tag === currentReleaseTransaction.exact_tag &&

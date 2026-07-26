@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "KFD-13",
-  "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates passed",
+  "message": "KFD-13 passed",
   "color": "2ea44f",
   "logoPolicy": {
     "contract": "kungfu-buildchain-badge-logo-policy",

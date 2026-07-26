@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "KFD-12",
-  "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation failed",
+  "message": "KFD-12 failed",
   "color": "cf222e",
   "logoPolicy": {
     "contract": "kungfu-buildchain-badge-logo-policy",

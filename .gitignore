@@ -1,4 +1,5 @@
 .DS_Store
+.kungfu/
 node_modules/
 .buildchain/artifacts/
 .buildchain/diagnostics/

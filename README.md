@@ -206,9 +206,11 @@ readable, but new consumers should keep Buildchain-owned files under
 Lifecycle commands can call pnpm, npm, yarn, pip, Conan, CMake, Make, custom
 scripts, or any other command that can run in the repository checkout.
 
-The KFD entrypoint is `buildchain kfd`. Buildchain currently provides concrete
-KFD-1 contract-world, KFD-2 trust-claim, and KFD-3 collaboration-surface
-workflows; KFD-4 is exposed as schema-only until a verification protocol exists.
+The KFD entrypoint is `buildchain kfd`. Buildchain provides concrete KFD-1
+contract-world, KFD-2 trust-claim, and KFD-3 collaboration-surface workflows,
+plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
+gates preserve product-owned qualification and support decisions; they do not
+turn a schema-valid record into certification or shipped support.
 
 Buildchain's active GitHub Action surface is deliberately small:
 

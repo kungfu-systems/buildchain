@@ -16,6 +16,10 @@ import {
 } from "../packages/core/kfd.js";
 import { KFD_AGENT_HUB_ADOPTION_SCHEMA } from "../packages/core/kfd-agent-hub.js";
 import {
+  KFD_PRODUCT_GATE_INPUT_SCHEMA,
+  KFD_SUPPORT_PROJECTION_SCHEMA,
+} from "../packages/core/kfd-product-gates.js";
+import {
   createReadmeBadgeEndpointRegistry,
 } from "../packages/core/readme-badges.js";
 import {
@@ -445,6 +449,15 @@ function cliCommandMeta(id) {
     "kfd-3-register": { group: "kfd-trust", purpose: "Declare detected KFD-3 public surfaces into a product-owned surface registry." },
     "kfd-3-witness": { group: "kfd-trust", purpose: "Generate release-passport-compatible KFD-3 surface witnesses from a product registry." },
     "kfd-4-schema": { group: "kfd-trust", purpose: "Print the default KFD-4 schema exposed by the KFD package standards metadata." },
+    "kfd-4-gate": { group: "kfd-trust", purpose: "Evaluate source-bound KFD-4 observer-perspective and contrastive-replay product evidence." },
+    "kfd-4-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-4 product-gate result without widening product support." },
+    "kfd-5-schema": { group: "kfd-trust", purpose: "Print the default KFD-5 schema exposed by the KFD package standards metadata." },
+    "kfd-5-gate": { group: "kfd-trust", purpose: "Evaluate source-bound KFD-5 Primitive discovery qualification evidence." },
+    "kfd-5-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-5 product-gate result without widening product support." },
+    "kfd-7-schema": { group: "kfd-trust", purpose: "Print the default KFD-7 schema exposed by the KFD package standards metadata." },
+    "kfd-7-gate": { group: "kfd-trust", purpose: "Evaluate a source-bound KFD-7 Domain Profile, evidence obligations, and independent review." },
+    "kfd-7-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-7 product-gate result without widening product support." },
+    "kfd-support": { group: "kfd-trust", purpose: "Project and verify a product-owned KFD-1 through KFD-13 support matrix against KFD-4/5/7 gates." },
     "kfd-aggregate": { group: "kfd-trust", purpose: "Return a product KFD view that combines own KFD status with upstream KFD aggregate facts." },
     "kfd-upstream": { group: "kfd-trust", purpose: "Inspect KFD upstream aggregate command families." },
     "kfd-upstream-check": { group: "kfd-trust", purpose: "Validate a KFD upstream aggregate document and fail closed on missing evidence." },
@@ -530,6 +543,7 @@ function nodeApiMeta(exportName) {
     "./issue-reporting": { group: "observability-diagnostics", summary: "Buildchain-owned issue reporting API for workflow friction feedback." },
     "./buildchain-layout": { group: "kfd-trust", summary: "Versioned Buildchain repository-layout discovery contract plus canonical .buildchain path resolution and migration APIs." },
     "./kfd": { group: "kfd-trust", summary: "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers." },
+    "./kfd-product-gates": { group: "kfd-trust", summary: "Fail-closed KFD-4, KFD-5, and KFD-7 product evidence gates plus non-widening KFD support-matrix release projections." },
     "./public-surface-audit": { group: "kfd-trust", summary: "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces." },
     "./kfd-gate": { group: "kfd-trust", summary: "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs." },
     "./buildchain-kfd-claims": { group: "kfd-trust", summary: "Buildchain self KFD claim registry, witnesses, and public claim APIs." },
@@ -994,6 +1008,9 @@ function buildSiteBundle() {
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
+      "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/kfd-support-projection-v1.schema.json",
+      "kfd-support.json",
       "artifact-evidence.json",
       "product-mechanism.json",
       "impact.json",
@@ -1022,6 +1039,8 @@ function buildSiteBundle() {
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
+      "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/kfd-support-projection-v1.schema.json",
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1151,6 +1170,8 @@ function buildSiteBundle() {
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
+      "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/kfd-support-projection-v1.schema.json",
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1324,6 +1345,8 @@ function buildSiteBundle() {
     "release-passport-check-manifest.json": createReleasePassportCheckManifest(),
     "schemas/release-passport-v1.schema.json": RELEASE_PASSPORT_SCHEMA,
     "schemas/kfd-agent-hub-adoption.schema.json": KFD_AGENT_HUB_ADOPTION_SCHEMA,
+    "schemas/kfd-product-gate-input-v1.schema.json": KFD_PRODUCT_GATE_INPUT_SCHEMA,
+    "schemas/kfd-support-projection-v1.schema.json": KFD_SUPPORT_PROJECTION_SCHEMA,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),

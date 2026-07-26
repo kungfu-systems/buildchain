@@ -381,6 +381,23 @@ export {
 } from "./kfd-agent-hub.js";
 
 export {
+  KFD_PRODUCT_GATE_CONTRACT,
+  KFD_PRODUCT_GATE_INPUT_CONTRACT,
+  KFD_PRODUCT_GATE_INPUT_SCHEMA,
+  KFD_PRODUCT_GATE_INPUT_SCHEMA_ID,
+  KFD_SUPPORT_PROJECTION_CONTRACT,
+  KFD_SUPPORT_PROJECTION_SCHEMA,
+  KFD_SUPPORT_PROJECTION_SCHEMA_ID,
+  createKfdSupportProjection,
+  evaluateKfdProductGate,
+  kfdProductGateDigest,
+  kfdProductGates,
+  validateKfdProductGateResult,
+  validateKfdSupportProjection,
+  verifyKfdRecord,
+} from "./kfd-product-gates.js";
+
+export {
   RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT,
   RELEASE_PASSPORT_SCHEMA,
   RELEASE_PASSPORT_SCHEMA_ID,
