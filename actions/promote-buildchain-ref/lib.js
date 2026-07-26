@@ -5465,7 +5465,7 @@ async function promoteBuildchainRefs({
   const currentReleaseContainsPublishedMaterial =
     currentRelease &&
     currentReleaseTransaction &&
-    ["published", "finalizing"].includes(currentReleaseTransaction.state || "") &&
+    ["published", "finalizing", "complete"].includes(currentReleaseTransaction.state || "") &&
     transactionHasPublishedMaterial(currentReleaseTransaction) &&
     currentRelease.version === currentReleaseTransaction.version &&
     currentRelease.tag === currentReleaseTransaction.exact_tag &&
