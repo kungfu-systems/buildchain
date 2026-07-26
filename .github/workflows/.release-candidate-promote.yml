@@ -1826,6 +1826,15 @@ jobs:
           comment-cooldown-hours: "24"
           fail-on-error: "false"
 
+      - name: Upload Buildchain control-plane observability
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-control-plane-observability-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/logs/events.jsonl
+          include-hidden-files: true
+          if-no-files-found: ignore
+
   controller-receipt:
     name: Record release-candidate promotion controller receipt
     needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote]

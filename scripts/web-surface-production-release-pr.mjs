@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import {
+  defaultBuildchainLogPath,
+  recordBuildchainControlPlaneOutcome,
+} from "../packages/core/logging.js";
 
 function requiredString(value, name) {
   const normalized = String(value || "").trim();
@@ -68,6 +72,34 @@ function writeTextFile(filePath, value) {
 function runUrl({ serverUrl = "", repository = "", runId = "" } = {}) {
   if (!serverUrl || !repository || !runId) return "";
   return `${serverUrl.replace(/\/$/, "")}/${repository}/actions/runs/${runId}`;
+}
+
+export function recordProductionReleasePrOutcome(result, env = process.env) {
+  const outcome = result.action === "created"
+    ? "created"
+    : result.action === "updated"
+      ? "reused"
+      : result.action === "suppressed-merged-release-pr"
+        ? "suppressed"
+        : ["permission-denied", "app-token-unavailable", "failed"].includes(result.action)
+          ? "failed"
+          : "skipped";
+  return recordBuildchainControlPlaneOutcome({
+    domain: "release-intent",
+    action: result.action,
+    outcome,
+    reason: result.suppressionReason || result.status,
+    attributes: {
+      repository: result.repository,
+      channel: result.productionReleaseChannel,
+      pullNumber: result.pullNumber,
+      sourceSha: result.sourceSha,
+    },
+  }, {
+    path: optionalString(env.BUILDCHAIN_LOG_PATH) ||
+      (env.GITHUB_ACTIONS === "true" ? defaultBuildchainLogPath() : false),
+    console: false,
+  });
 }
 
 function urlsFromResult(result = {}) {
@@ -374,6 +406,33 @@ async function createOrUpdateBranch({ apiUrl, token, owner, repo, branchName, so
   return createdCommit.sha;
 }
 
+function findMergedProductionReleasePr({
+  pullRequests = [],
+  repository,
+  productionReleaseLabel = "buildchain-release",
+  productionReleaseHeadPrefix = "release/",
+  base = "main",
+} = {}) {
+  const fullName = requiredString(repository, "repository");
+  const label = requiredString(productionReleaseLabel, "productionReleaseLabel");
+  const headPrefix = optionalString(productionReleaseHeadPrefix);
+  const candidates = (Array.isArray(pullRequests) ? pullRequests : []).filter((pull) => {
+    const labels = Array.isArray(pull?.labels) ? pull.labels.map((entry) => entry?.name || entry) : [];
+    const headRef = optionalString(pull?.head?.ref);
+    return Boolean(pull?.merged_at) &&
+      pull?.base?.ref === base &&
+      pull?.head?.repo?.full_name === fullName &&
+      labels.includes(label) &&
+      (!headPrefix || headRef.startsWith(headPrefix));
+  });
+  if (candidates.length > 1) {
+    throw new Error(
+      `multiple merged production release PRs matched the source commit: ${candidates.map((pull) => `#${pull.number}`).join(", ")}`,
+    );
+  }
+  return candidates[0];
+}
+
 export async function openProductionReleasePr({
   apiUrl = "https://api.github.com",
   token,
@@ -400,6 +459,43 @@ export async function openProductionReleasePr({
   });
   const { owner, repo, branchName, title, body, head } = handoff;
   const normalizedToken = requiredString(token, "token");
+  const associated = await githubJson({
+    apiUrl,
+    token: normalizedToken,
+    path: `/repos/${owner}/${repo}/commits/${encodeURIComponent(handoff.sourceSha)}/pulls?per_page=100`,
+  });
+  let mergedReleasePull = findMergedProductionReleasePr({
+    pullRequests: associated,
+    repository,
+    productionReleaseLabel,
+    productionReleaseHeadPrefix,
+    base: handoff.base,
+  });
+  if (!mergedReleasePull) {
+    const closedByDeterministicHead = await githubJson({
+      apiUrl,
+      token: normalizedToken,
+      path: `/repos/${owner}/${repo}/pulls?state=closed&base=${encodeURIComponent(handoff.base)}&head=${encodeURIComponent(head)}&per_page=100`,
+    });
+    mergedReleasePull = findMergedProductionReleasePr({
+      pullRequests: closedByDeterministicHead,
+      repository,
+      productionReleaseLabel,
+      productionReleaseHeadPrefix,
+      base: handoff.base,
+    });
+  }
+  if (mergedReleasePull) {
+    return {
+      action: "suppressed-merged-release-pr",
+      status: "suppressed-merged-release-pr",
+      ...handoff,
+      branchName,
+      pullNumber: mergedReleasePull.number,
+      pullUrl: mergedReleasePull.html_url || mergedReleasePull.url || "",
+      suppressionReason: "source-commit-already-has-qualifying-merged-release-pr",
+    };
+  }
   const existing = await githubJson({
     apiUrl,
     token: normalizedToken,
@@ -524,6 +620,7 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
       if (failOnReleasePrError) {
         writeJsonFile(summaryPath, result);
         if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));
+        recordProductionReleasePrOutcome(result, env);
         throw new Error(result.error.message);
       }
     } else {
@@ -562,12 +659,14 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
         if (status !== "permission-denied" || failOnReleasePrError) {
           writeJsonFile(summaryPath, result);
           if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));
+          recordProductionReleasePrOutcome(result, env);
           throw error;
         }
       }
     }
   }
 
+  recordProductionReleasePrOutcome(result, env);
   writeJsonFile(summaryPath, result);
   if (env.GITHUB_STEP_SUMMARY) {
     fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));

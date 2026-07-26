@@ -413,6 +413,20 @@ buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4
 Every event records a timestamp. `span` records duration and preserves the
 wrapped command's exit code.
 
+Buildchain also records local control-plane outcome events for workflow-friction
+incident handling and production release-intent PR handling. `log summary`
+reports the observed incident reuse rate, release-intent suppression rate, and
+suppression reasons. A reused incident means an equivalent occurrence found the
+same fingerprint and was commented, cooled down, or otherwise reused; a
+suppressed release intent means Buildchain proved that the source commit already
+had a qualifying merged release PR. These are operational facts, not release
+policy inputs, and logging failure remains non-fatal by default.
+
+The reusable promotion workflow uploads `.buildchain/logs/events.jsonl` when a
+friction report is produced. The web-surface production release PR handoff
+artifact includes the same path, so a real run can falsify the P0 claim instead
+of relying only on unit tests.
+
 ## Release Gate
 
 Buildchain's own binary distribution lane verifies required log events before

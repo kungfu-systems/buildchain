@@ -212,7 +212,7 @@
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix"
       ],
       "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
-      "auditDigest": "sha256:c3b618429257e3a332f0f9d0827fb17fc7762ec215c64f849f6f51874aa3a1d3"
+      "auditDigest": "sha256:e7d185bca91ebc65d7c42f6bbe72e1466c3be2b651143d75af6af08711f51b8c"
     },
     {
       "contractVersion": 1,
@@ -256,7 +256,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
-      "auditDigest": "sha256:92432be1f049d261434c986f79e55899f2097ca7b66f1261666fc5b85d685889"
+      "auditDigest": "sha256:6277559c749bcc9ae6c737b068b44c478e796377273acc9fc22ab9804be409d1"
     },
     {
       "contractVersion": 1,
@@ -468,7 +468,7 @@
         "missing issue permissions produce a copyable summary fallback"
       ],
       "breakingDigest": "sha256:575a2cb02cdb2e61bb2e84d5bbaaf64b430aa5d7936645660b592de4549d81b0",
-      "auditDigest": "sha256:512ccfeb7deedd950da87b112d25aa8667e081775b3b604f121374d25420eec1"
+      "auditDigest": "sha256:10b766e026f8089235dfd6a9356cdbfa42c5dd290ba3003e5fcfd886432a0a34"
     },
     {
       "contractVersion": 1,
@@ -601,7 +601,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:a6f8915ef3ade05f04efff98c1723f7562e2b4fc83dcdb1e7decead0e5ac7533"
+      "auditDigest": "sha256:5c6b806014d119683be0d7671a915aedbe88b87c216032d2a741a7e5b4ea07df"
     },
     {
       "contractVersion": 1,
@@ -691,7 +691,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:fb9bda6574fabd7ef1a80a14165febaf6e3da636fd409491b341b0f85382369f"
+      "auditDigest": "sha256:d942995e6cfab9063857c2f21fb8ef9fe6b07cc5c6cb3edbb585b540384ea4f2"
     },
     {
       "contractVersion": 1,
@@ -713,7 +713,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:610a259dc3ac21d1913763f24e6459bacbbf0a62feef4228353e88909052e893"
+      "auditDigest": "sha256:b0408f64aac5e5cf5164943de14f750ef9d41d422aec0963f0c04be54d0afb32"
     },
     {
       "contractVersion": 1,
@@ -2073,7 +2073,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
-      "auditDigest": "sha256:92432be1f049d261434c986f79e55899f2097ca7b66f1261666fc5b85d685889"
+      "auditDigest": "sha256:6277559c749bcc9ae6c737b068b44c478e796377273acc9fc22ab9804be409d1"
     },
     {
       "contractVersion": 1,
@@ -3008,7 +3008,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:c3b618429257e3a332f0f9d0827fb17fc7762ec215c64f849f6f51874aa3a1d3"
+      "auditDigest": "sha256:e7d185bca91ebc65d7c42f6bbe72e1466c3be2b651143d75af6af08711f51b8c"
     },
     {
       "contractVersion": 1,
@@ -3206,5 +3206,5 @@
     }
   ],
   "compatibilityDigest": "sha256:008b1c5a90a787cf30106829ac7aca68ab501f6d9c375e415d9c5c6b89039f46",
-  "contractDigest": "sha256:956fb4092387d065d20db30ec0c03e6f7575acf7c40a9304dec2b77706b54d16"
+  "contractDigest": "sha256:8246ef03f49108cbb17b1477d51d41b90c31f3c874c1e71c304a001baf3de1f5"
 }

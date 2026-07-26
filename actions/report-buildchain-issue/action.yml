@@ -146,6 +146,8 @@ outputs:
     description: "true when an existing issue was commented"
   fingerprint:
     description: "Stable dedupe fingerprint"
+  observability-log-path:
+    description: "Local JSONL path containing the control-plane outcome event"
 runs:
   using: "node24"
   main: "dist/index.js"

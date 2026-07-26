@@ -1561,6 +1561,7 @@ jobs:
           path: |
             .buildchain/production-release-pr/handoff.json
             .buildchain/production-release-pr/body.md
+            .buildchain/logs/events.jsonl
             .buildchain/staging-release-pr-summary/web-surface-staging-release-pr-summary.json
             .buildchain/staging-release-passport/web-surface-staging-release-passport.json
           include-hidden-files: true

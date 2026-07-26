@@ -35,6 +35,8 @@ import {
 import {
   compactProductionReleasePrSummary,
   createProductionReleasePrHandoff,
+  openProductionReleasePr,
+  recordProductionReleasePrOutcome,
   releaseBranchName,
   readStagingReleasePrSummary,
   renderProductionReleasePrBody,
@@ -1139,7 +1141,10 @@ test("declared merge queue governance reconciles automatically on dev changes", 
   );
   assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
   assert.match(workflow, /\.buildchain\/buildchain\.toml/);
-  assert.match(workflow, /BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_GOVERNANCE_TOKEN \|\| secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/,
+  );
   assert.match(workflow, /--from-config/);
   assert.match(workflow, /github\.event_name == 'push' \|\| inputs\.apply/);
 });
@@ -1665,6 +1670,114 @@ test("web-surface production release PR handoff renders manual command facts", (
   assert.match(handoff.manualCommand, /--body-file \.buildchain\/production-release-pr\/body\.md/);
 });
 
+test("web-surface production release PR suppresses a duplicate for a merged release push", async () => {
+  const previousFetch = globalThis.fetch;
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes(`/commits/${sourceSha}/pulls?`)) {
+      return new Response(JSON.stringify([{
+        number: 42,
+        html_url: "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
+        merged_at: "2026-07-26T00:00:00Z",
+        base: { ref: "main" },
+        head: {
+          ref: "release/production-abcdef123456",
+          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+        },
+        labels: [{ name: "buildchain-release" }],
+      }]), { status: 200 });
+    }
+    throw new Error(`unexpected fetch: ${options.method || "GET"} ${url}`);
+  };
+  try {
+    const result = await openProductionReleasePr({
+      token: "token",
+      repository: "kungfu-systems/site-libkungfu-dev",
+      sourceSha,
+      stagingResult: { channel: "staging", status: "applied" },
+    });
+    assert.equal(result.status, "suppressed-merged-release-pr");
+    assert.equal(result.pullNumber, 42);
+    assert.equal(calls.length, 1);
+    assert.equal(calls.some((call) => call.method === "POST"), false);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test("web-surface production release PR finds a merged intent by deterministic head", async () => {
+  const previousFetch = globalThis.fetch;
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes(`/commits/${sourceSha}/pulls?`)) {
+      return new Response(JSON.stringify([{
+        number: 41,
+        merged_at: "2026-07-25T23:59:00Z",
+        base: { ref: "main" },
+        head: {
+          ref: "fix/preceding-source-change",
+          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+        },
+        labels: [],
+      }]), { status: 200 });
+    }
+    if (String(url).includes("/pulls?state=closed&base=main&head=kungfu-systems%3Arelease%2Fproduction-abcdef123456")) {
+      return new Response(JSON.stringify([{
+        number: 42,
+        html_url: "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
+        merged_at: "2026-07-26T00:00:00Z",
+        base: { ref: "main" },
+        head: {
+          ref: "release/production-abcdef123456",
+          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+        },
+        labels: [{ name: "buildchain-release" }],
+      }]), { status: 200 });
+    }
+    throw new Error(`unexpected fetch: ${options.method || "GET"} ${url}`);
+  };
+  try {
+    const result = await openProductionReleasePr({
+      token: "token",
+      repository: "kungfu-systems/site-libkungfu-dev",
+      sourceSha,
+      stagingResult: { channel: "staging", status: "applied" },
+    });
+    assert.equal(result.status, "suppressed-merged-release-pr");
+    assert.equal(result.pullNumber, 42);
+    assert.equal(calls.length, 2);
+    assert.equal(calls.every((call) => call.method === "GET"), true);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test("web-surface release-intent suppression records a durable control-plane outcome", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-suppression-event-"));
+  const logPath = path.join(workspace, ".buildchain", "logs", "events.jsonl");
+  recordProductionReleasePrOutcome({
+    action: "suppressed-merged-release-pr",
+    status: "suppressed-merged-release-pr",
+    suppressionReason: "source-commit-already-has-qualifying-merged-release-pr",
+    repository: "kungfu-systems/site-libkungfu-dev",
+    productionReleaseChannel: "production",
+    pullNumber: 42,
+    sourceSha: "abcdef1234567890abcdef1234567890abcdef12",
+  }, { BUILDCHAIN_LOG_PATH: logPath });
+
+  const event = JSON.parse(fs.readFileSync(logPath, "utf8").trim());
+  assert.equal(event.event, "control-plane.release-intent.outcome");
+  assert.equal(event.attributes.outcome, "suppressed");
+  assert.equal(
+    event.attributes.reason,
+    "source-commit-already-has-qualifying-merged-release-pr",
+  );
+});
+
 test("web-surface production release PR permission-denied is a non-fatal handoff", async () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-permission-"));
   const previousCwd = process.cwd();
@@ -1673,6 +1786,7 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
   const summaryPath = path.join(workspace, "staging-summary.json");
   const outputPath = path.join(workspace, "github-output.txt");
   const stepSummaryPath = path.join(workspace, "step-summary.md");
+  const logPath = path.join(workspace, ".buildchain", "logs", "events.jsonl");
   fs.writeFileSync(
     summaryPath,
     `${JSON.stringify({
@@ -1686,6 +1800,8 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
   const calls = [];
   globalThis.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes(`/commits/${sourceSha}/pulls?`)) return new Response("[]", { status: 200 });
+    if (String(url).includes("/pulls?state=closed")) return new Response("[]", { status: 200 });
     if (String(url).includes("/pulls?state=open")) return new Response("[]", { status: 200 });
     if (String(url).endsWith(`/git/commits/${sourceSha}`)) {
       return new Response(JSON.stringify({ tree: { sha: "tree-sha" } }), { status: 200 });
@@ -1720,6 +1836,7 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
       FAIL_ON_RELEASE_PR_ERROR: "false",
       PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
       PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+      BUILDCHAIN_LOG_PATH: logPath,
     });
     assert.equal(result.status, "permission-denied");
     assert.match(fs.readFileSync(outputPath, "utf8"), /release-pr-status=permission-denied/);
@@ -1729,6 +1846,10 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
     assert.equal(handoff.status, "permission-denied");
     assert.equal(handoff.error.status, 403);
     assert.equal(handoff.tokenSource, "github-token");
+    const event = JSON.parse(fs.readFileSync(logPath, "utf8").trim());
+    assert.equal(event.event, "control-plane.release-intent.outcome");
+    assert.equal(event.attributes.outcome, "failed");
+    assert.equal(event.attributes.action, "permission-denied");
     assert.ok(calls.some((call) => call.method === "POST" && call.url.endsWith("/pulls")));
   } finally {
     process.chdir(previousCwd);
@@ -2621,6 +2742,10 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /body-file: \$\{\{ steps\.friction\.outputs\.body-file \}\}/);
   assert.match(implementation, /Copyable issue body/);
   assert.match(implementation, /buildWorkflowFrictionIssueReport/);
+  assert.match(implementation, /recordBuildchainControlPlaneOutcome/);
+  assert.match(action, /observability-log-path:/);
+  assert.match(workflow, /Upload Buildchain control-plane observability/);
+  assert.match(workflow, /\.buildchain\/logs\/events\.jsonl/);
 
   const promoteAction = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),
