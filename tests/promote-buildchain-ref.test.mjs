@@ -5649,7 +5649,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(refs.get("tags/v1.0.0"), result.sha);
 });
 
-test("publish transaction resumes partial release finalization with exact tag on release material", async () => {
+test("complete release transaction converges after its protected version-state merge", async () => {
   const oldReleaseSha = "8".repeat(40);
   const alphaSha = "9".repeat(40);
   const versionHeadSha = "1".repeat(40);
@@ -5743,8 +5743,8 @@ fs.writeFileSync(manifestPath, JSON.stringify({
       state_ref: "buildchain/release-state/1-0-0",
       state_path: statePath,
       evidence_path: "",
-      state: "finalizing",
-      previous_state: "published",
+      state: "complete",
+      previous_state: "finalizing",
       actor: "codex",
       run_id: "1",
       superseded_by: "",

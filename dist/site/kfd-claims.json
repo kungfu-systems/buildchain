@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "bb7ace4c0abba72ecc320e36339956b0d38577b9f4ed0d764e790919732c1b28",
+    "sha256": "1bd7609dcd53c17ac52bfe77e9b993ceb4dae8605f1ec792377483baba070897",
     "summary": {
-      "cliCommandCount": 87,
+      "cliCommandCount": 96,
       "workflowCount": 53,
       "actionCount": 5,
       "sitePageCount": 56,
-      "docCommandRefCount": 275,
+      "docCommandRefCount": 286,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "bb7ace4c0abba72ecc320e36339956b0d38577b9f4ed0d764e790919732c1b28",
+      "sha256": "1bd7609dcd53c17ac52bfe77e9b993ceb4dae8605f1ec792377483baba070897",
       "summary": {
-        "cliCommandCount": 87,
+        "cliCommandCount": 96,
         "workflowCount": 53,
         "actionCount": 5,
         "sitePageCount": 56,
-        "docCommandRefCount": 275,
+        "docCommandRefCount": 286,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1208,6 +1208,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./kfd"
+        },
+        {
+          "id": "export:./kfd-product-gates",
+          "name": "@kungfu-tech/buildchain/kfd-product-gates",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-product-gates.js",
+          "evidencePath": "packages/core/kfd-product-gates.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-product-gates"
         },
         {
           "id": "export:./kfd-agent-hub",
@@ -2238,8 +2250,104 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:kfd-4-gate",
+          "name": "buildchain kfd 4 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:kfd-4-schema",
           "name": "buildchain kfd 4 schema [--schema <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-4-verify",
+          "name": "buildchain kfd 4 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-5-gate",
+          "name": "buildchain kfd 5 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-5-schema",
+          "name": "buildchain kfd 5 schema [--schema <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-5-verify",
+          "name": "buildchain kfd 5 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-7-gate",
+          "name": "buildchain kfd 7 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-7-schema",
+          "name": "buildchain kfd 7 schema [--schema <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-7-verify",
+          "name": "buildchain kfd 7 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -2312,6 +2420,18 @@
         {
           "id": "cli:kfd-status",
           "name": "buildchain kfd status [--cwd <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-support",
+          "name": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>...",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -2993,7 +3113,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 83,
+          "inputCount": 85,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3068,6 +3188,8 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-product-gate-jsons",
+            "release-passport-kfd-support-matrix-json",
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
@@ -3986,7 +4108,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 75,
+          "inputCount": 77,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4053,6 +4175,8 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-product-gate-jsons",
+            "release-passport-kfd-support-matrix-json",
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
@@ -4275,7 +4399,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 64,
+          "inputCount": 66,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -4326,6 +4450,8 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-product-gate-jsons",
+            "release-passport-kfd-support-matrix-json",
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
@@ -5266,6 +5392,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 334
+    "publicSurfaceCount": 344
   }
 }

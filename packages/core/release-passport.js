@@ -14,6 +14,10 @@ import {
   validateKfd1ReleaseGateEvidence,
   validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
+import {
+  createKfdSupportProjection,
+  validateKfdSupportProjection,
+} from "./kfd-product-gates.js";
 import { createSurfaceTimestampPolicy } from "./surface-manifest.js";
 import { validatePublishEvidence as validateTransactionPublishEvidence } from "./publish-transaction.js";
 import { normalizeControllerReceiptReferences } from "./controller-evidence.js";
@@ -1155,6 +1159,8 @@ export function createReleasePassport({
   kfd1 = undefined,
   kfd2Claims = [],
   kfd3 = undefined,
+  kfdSupport = undefined,
+  kfdSupportEvidencePath = "",
   invariantPassports = undefined,
   kfdAgentHubEvidence = undefined,
   kfdAgentHubEvidencePath = "",
@@ -1183,6 +1189,16 @@ export function createReleasePassport({
   const kfd1Metadata = resolveKfd1Metadata();
   const normalizedKfd1 = kfd1?.passportSection ? kfd1 : undefined;
   const normalizedKfd3 = kfd3?.passportSection ? kfd3 : undefined;
+  const normalizedKfdSupport = kfdSupport ? structuredClone(kfdSupport) : undefined;
+  if (normalizedKfdSupport) {
+    const validation = validateKfdSupportProjection(normalizedKfdSupport, {
+      expectedSourceSha: optionalString(sourceSha),
+      checkedAt: generatedAt,
+    });
+    if (!validation.valid) {
+      throw new Error(`KFD support projection is invalid: ${validation.issues.map((entry) => `${entry.path}: ${entry.message}`).join("; ")}`);
+    }
+  }
   const normalizedKfdAgentHub = normalizeKfdAgentHubEvidence(kfdAgentHubEvidence);
   const normalizedKfd2 = createKfd2ReleaseTrustPassportAudit({
     explicitClaims: kfd2Claims,
@@ -1190,13 +1206,27 @@ export function createReleasePassport({
     kfd3Section: normalizedKfd3?.passportSection,
   });
   const builtSourceSha = optionalString(release.builtSourceSha || release.built_source_sha);
+  const builtSourceTreeSha = optionalString(
+    release.builtSourceTreeSha || release.built_source_tree_sha,
+  );
   const promotionChannelSha = optionalString(release.promotionChannelSha || release.promotion_channel_sha);
+  const promotionChannelTreeSha = optionalString(
+    release.promotionChannelTreeSha || release.promotion_channel_tree_sha,
+  );
   const treeEquivalent = release.treeEquivalent === true;
+  const recoveryTreeEquivalent = Boolean(
+    treeEquivalent &&
+    builtSourceTreeSha &&
+    promotionChannelTreeSha &&
+    builtSourceTreeSha === promotionChannelTreeSha,
+  );
   const normalizedControllerReceipts = normalizeControllerReceiptReferences({
     receipts: controllerReceipts,
     references: controllerReceiptReferences,
     expectedSourceSha: sourceSha,
-    acceptedSourceShas: treeEquivalent && promotionChannelSha === sourceSha && builtSourceSha
+    acceptedSourceShas: treeEquivalent && builtSourceSha && (
+      promotionChannelSha === sourceSha || recoveryTreeEquivalent
+    )
       ? [builtSourceSha]
       : [],
     requirePassed: true,
@@ -1279,9 +1309,9 @@ export function createReleasePassport({
       releaseSha,
       releaseMaterialSha,
       builtSourceSha: optionalString(release.builtSourceSha || release.built_source_sha),
-      builtSourceTreeSha: optionalString(release.builtSourceTreeSha || release.built_source_tree_sha),
+      builtSourceTreeSha,
       promotionChannelSha: optionalString(release.promotionChannelSha || release.promotion_channel_sha),
-      promotionChannelTreeSha: optionalString(release.promotionChannelTreeSha || release.promotion_channel_tree_sha),
+      promotionChannelTreeSha,
       treeEquivalent: release.treeEquivalent === undefined ? undefined : Boolean(release.treeEquivalent),
       publishToolingSha: optionalString(
         release.publishToolingSha ||
@@ -1326,6 +1356,7 @@ export function createReleasePassport({
     ...(normalizedKfd1 ? { [normalizedKfd1.key || kfd1Metadata.key]: normalizedKfd1.passportSection } : {}),
     ...(normalizedKfd2 ? { "kfd-2": normalizedKfd2 } : {}),
     ...(normalizedKfd3 ? { [normalizedKfd3.key || "kfd-3"]: normalizedKfd3.passportSection } : {}),
+    ...(normalizedKfdSupport ? { kfdSupport: normalizedKfdSupport } : {}),
     ...(normalizedKfdAgentHub ? { kfdAgentHub: normalizedKfdAgentHub } : {}),
     ...(invariantPassports ? { invariantPassports } : {}),
     ...(normalizedControllerReceipts.length > 0 ? { controllerReceipts: normalizedControllerReceipts } : {}),
@@ -1370,6 +1401,7 @@ export function createReleasePassport({
       kfd1: normalizedKfd1 ? `${normalizedKfd1.key || kfd1Metadata.key}` : "",
       kfd2: normalizedKfd2 ? "kfd-2" : "",
       kfd3: normalizedKfd3 ? `${normalizedKfd3.key || "kfd-3"}` : "",
+      kfdSupport: normalizedKfdSupport ? optionalString(kfdSupportEvidencePath || "kfd-support.json") : "",
       kfdAgentHub: normalizedKfdAgentHub ? optionalString(kfdAgentHubEvidencePath || "kfd-agent-hub-evidence.json") : "",
       invariantPassports: invariantPassports ? "invariantPassports" : "",
       impact: impactPath,
@@ -1412,6 +1444,8 @@ export function collectGitHubReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  kfdSupportMatrixJson = "",
+  kfdProductGateJsons = [],
   invariantPassportJsons = [],
   invariantPassportCommand = "",
   kfdAgentHubEvidenceJson = "",
@@ -1461,6 +1495,15 @@ export function collectGitHubReleasePassport({
     .filter(Boolean)
     .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined, { cwd, label: "kfd3ArtifactWitnessJsons entry" }))
     .filter((meta) => meta.value);
+  const kfdSupportMatrixMeta = parseJsonInputWithMeta(
+    kfdSupportMatrixJson,
+    undefined,
+    { cwd, label: "kfdSupportMatrixJson" },
+  );
+  const kfdProductGateMetas = (kfdProductGateJsons || [])
+    .filter(Boolean)
+    .map((gateJson) => parseJsonInputWithMeta(gateJson, undefined, { cwd, label: "kfdProductGateJsons entry" }))
+    .filter((meta) => meta.value);
   const basePassportMeta = parseJsonInputWithMeta(basePassportJson, undefined, { cwd, label: "basePassportJson" });
   const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
     command: kfd3ArtifactVerifyCommand,
@@ -1487,6 +1530,9 @@ export function collectGitHubReleasePassport({
     ...kfd3ArtifactWitnessMetas.map((meta) => meta.value),
     ...(kfd3ArtifactCommandMeta.value ? [kfd3ArtifactCommandMeta.value] : []),
   ];
+  if (!kfdSupportMatrixMeta.value && kfdProductGateMetas.length > 0) {
+    throw new Error("KFD product gate inputs require --kfd-support-matrix-json");
+  }
   const publish = parseJsonInput(publishJson, {}, { cwd, label: "publishJson" });
   const assets = [
     ...(Array.isArray(release.assets) ? release.assets : []),
@@ -1516,6 +1562,15 @@ export function collectGitHubReleasePassport({
     artifactWitnessMetas: kfd3ArtifactWitnessMetas,
     artifactCommandMeta: kfd3ArtifactCommandMeta.value ? kfd3ArtifactCommandMeta : undefined,
   });
+  const kfdSupport = kfdSupportMatrixMeta.value
+    ? createKfdSupportProjection({
+        matrix: kfdSupportMatrixMeta.value,
+        matrixRoot: kfdSupportMatrixMeta.sha256 ? `sha256:${kfdSupportMatrixMeta.sha256}` : "",
+        gateResults: kfdProductGateMetas.map((meta) => meta.value),
+        expectedSourceSha: sourceSha,
+        checkedAt: nowIso(),
+      })
+    : undefined;
   const passport = mergeAuthoritativePassportBase(createReleasePassport({
     cwd,
     repository,
@@ -1560,6 +1615,8 @@ export function collectGitHubReleasePassport({
     kfd1,
     kfd2Claims: kfd2ClaimMetas.map((meta) => meta.value),
     kfd3,
+    kfdSupport,
+    kfdSupportEvidencePath: kfdSupport ? "kfd-support.json" : "",
     invariantPassports,
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value
       ? { ...kfdAgentHubEvidenceMeta, path: "kfd-agent-hub-evidence.json" }
@@ -1581,6 +1638,7 @@ export function collectGitHubReleasePassport({
     agentIndex,
     productMechanism,
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value,
+    kfdSupportEvidence: kfdSupport,
     checkedAt: nowIso(),
   });
   const files = {
@@ -1590,6 +1648,7 @@ export function collectGitHubReleasePassport({
     "impact.json": impact,
     "agent-index.json": agentIndex,
     ...(kfdAgentHubEvidenceMeta.value ? { "kfd-agent-hub-evidence.json": kfdAgentHubEvidenceMeta.value } : {}),
+    ...(kfdSupport ? { "kfd-support.json": kfdSupport } : {}),
     "buildchain.release.json": passport,
     "check-report.json": checkReport,
   };
@@ -1884,6 +1943,7 @@ export function createReleaseCheckReport({
   agentIndex,
   productMechanism,
   kfdAgentHubEvidence,
+  kfdSupportEvidence,
   checkedAt = nowIso(),
 } = {}) {
   const issues = [];
@@ -1893,6 +1953,24 @@ export function createReleaseCheckReport({
   validateContract(agentIndex, AGENT_INDEX_CONTRACT, "agentIndex", issues);
   validateContract(productMechanism, PRODUCT_MECHANISM_CONTRACT, "productMechanism", issues);
   validateKfdAgentHubReleaseEvidence(passport?.kfdAgentHub, kfdAgentHubEvidence, issues);
+  if (passport?.kfdSupport) {
+    const validation = validateKfdSupportProjection(passport.kfdSupport, {
+      expectedSourceSha: optionalString(passport?.release?.sourceSha),
+      checkedAt,
+    });
+    for (const entry of validation.issues) {
+      issues.push(issue("error", `kfdSupport.${entry.path || entry.code}`, entry.message, entry));
+    }
+    if (!kfdSupportEvidence || stableJson(kfdSupportEvidence) !== stableJson(passport.kfdSupport)) {
+      issues.push(issue(
+        "error",
+        "kfdSupport.evidence",
+        "release passport KFD support projection must exactly match its sibling evidence",
+      ));
+    }
+  } else if (kfdSupportEvidence) {
+    issues.push(issue("error", "kfdSupport.section", "KFD support evidence is present without a release-passport projection"));
+  }
 
   const tag = passport?.release?.tag || "";
   if (!tag) {
@@ -2343,6 +2421,7 @@ export async function verifyReleasePassport({
   agentIndexLocation = "",
   productMechanismLocation = "",
   kfdAgentHubEvidenceLocation = "",
+  kfdSupportEvidenceLocation = "",
 } = {}) {
   const passport = await readJsonFromLocation(passportLocation);
   const basePath = /^https?:\/\//.test(passportLocation) ? passportLocation : path.resolve(passportLocation);
@@ -2370,6 +2449,10 @@ export async function verifyReleasePassport({
     kfdAgentHubEvidenceLocation
       ? await readJsonFromLocation(kfdAgentHubEvidenceLocation)
       : await resolveSiblingJson(basePath, passport.evidence?.kfdAgentHub) || undefined;
+  const kfdSupportEvidence =
+    kfdSupportEvidenceLocation
+      ? await readJsonFromLocation(kfdSupportEvidenceLocation)
+      : await resolveSiblingJson(basePath, passport.evidence?.kfdSupport) || undefined;
   return createReleaseCheckReport({
     passport,
     artifactEvidence,
@@ -2378,6 +2461,7 @@ export async function verifyReleasePassport({
     agentIndex,
     productMechanism,
     kfdAgentHubEvidence,
+    kfdSupportEvidence,
   });
 }
 

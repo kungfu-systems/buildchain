@@ -85,6 +85,11 @@ function commandId(first = "", second = "", third = "") {
 
 export function enumerateCliCommandsFromBin({ root = process.cwd(), binPath = "bin/buildchain.mjs" } = {}) {
   const source = readText(root, binPath);
+  const dispatchSource = [
+    source,
+    ...listFiles(root, "bin/internal", (name) => name.endsWith(".mjs"))
+      .map((relPath) => readText(root, relPath)),
+  ].join("\n");
   const usageMatch = source.match(/return `Usage:\n([\s\S]*?)`;\n}/);
   const usage = usageMatch?.[1] || "";
   const usageCommands = [];
@@ -96,7 +101,7 @@ export function enumerateCliCommandsFromBin({ root = process.cwd(), binPath = "b
       usage: line.trim().replace(/\s+/g, " "),
     });
   }
-  const dispatchCommands = [...source.matchAll(/if\s*\(\s*command\s*===\s*"([^"]+)"/g)]
+  const dispatchCommands = [...dispatchSource.matchAll(/if\s*\(\s*command\s*===\s*"([^"]+)"/g)]
     .map((match) => commandId(match[1]));
   return uniqueSorted([
     ...usageCommands.map((entry) => entry.id),

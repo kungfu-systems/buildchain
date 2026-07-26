@@ -133,6 +133,55 @@ test("KFD-3 CLI is aligned with the Node API", () => {
   assert.equal(query.capabilities.length, register.registrySurfaceCount);
 });
 
+test("KFD-3 query accepts a product-owned custom registry without fallback warnings", async () => {
+  const cwd = tempDir("product-declared-query");
+  fs.mkdirSync(path.join(cwd, "src"), { recursive: true });
+  fs.mkdirSync(path.join(cwd, "evidence"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, "src", "app.ts"), "export const app = true;\n");
+  writeJson(path.join(cwd, "evidence", "app.json"), { status: "shipped" });
+  writeJson(path.join(cwd, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH), {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-kfd-3-surface-registry",
+    product: { id: "fixture", name: "Fixture" },
+    policy: {
+      sourceOfTruth: BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+      customSurfaceDetection: "scripts/product-owned-kfd3-evidence.mjs",
+      detectedButUnregistered: "product-specific-audit",
+      declaredButMissing: "fail",
+      artifactPublicButUnclassified: "fail",
+    },
+    surfaces: [{
+      id: "fixture.app",
+      name: "Fixture App",
+      kind: "gui",
+      state: "declared",
+      availability: "shipped",
+      visibility: "public",
+      participantFacing: true,
+      public: true,
+      sourcePath: "src/app.ts",
+      evidencePath: "evidence/app.json",
+      artifactPath: "evidence/app.json",
+      distribution: {
+        registrar: "shifu",
+        tasks: ["package"],
+        artifacts: [
+          { kind: "app", platform: "macos-arm64", pathGlob: "dist/Fixture.app" },
+          { kind: "installer", platform: "windows-x64", pathGlob: "dist/Fixture.exe" },
+          { kind: "appimage", platform: "linux-x64", pathGlob: "dist/Fixture.AppImage" },
+        ],
+      },
+    }],
+  });
+
+  const query = await kfd3.queryCapabilities({ cwd, product: "fixture" });
+  assert.equal(query.status, "passed");
+  assert.equal(query.warning, undefined);
+  assert.equal(query.source.type, "surface-registry");
+  assert.equal(query.verificationMode, "product-declared-registry");
+  assert.equal(query.capabilities.length, 1);
+});
+
 test("Buildchain layout migration unifies KFD outputs under .buildchain/kfd", () => {
   const cwd = tempDir("layout-migration");
   const legacyRegistryPath = ".buildchain/kfd/kfd-3-surfaces.json";
@@ -194,6 +243,20 @@ test("KFD-3 distribution declarations require artifact kind, platform, and pathG
   }, { surfaceId: "distribution:buildchain-standalone" });
   assert.equal(declaration.artifacts[0].kind, "binary");
   assert.equal(declaration.artifacts[0].platform, "linux");
+  assert.deepEqual(
+    normalizeKfd3DistributionDeclaration({
+      registrar: "shifu",
+      tasks: ["package"],
+      artifacts: [
+        { kind: "app", platform: "macos", pathGlob: "dist/Fixture.app" },
+        { kind: "installer", platform: "windows", pathGlob: "dist/Fixture.exe" },
+        { kind: "appimage", platform: "linux", pathGlob: "dist/Fixture.AppImage" },
+      ],
+    }, { surfaceId: "app-aliases" }).artifacts.map((artifact) => artifact.kind),
+    ["app", "installer", "appimage"],
+  );
+  const appDetection = kfd3.detectSurfaces({ cwd: createFixtureRepo(), kinds: ["app"] });
+  assert.ok(appDetection.surfaces.some((entry) => entry.kind === "binary"));
   assert.throws(
     () => normalizeKfd3DistributionDeclaration({
       registrar: "shifu",
@@ -308,12 +371,16 @@ test("KFD CLI exposes all KFD standards through the unified schema namespace", (
   assert.ok(kfd4Schemas.schemas.some((entry) => entry.name === "observerPerspective"));
 });
 
-test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () => {
+test("Buildchain reports concrete gates and explicit KFD-1 through KFD-13 barriers", async () => {
   const status = collectKfdStatus({ cwd: root });
   assert.deepEqual(status.support["kfd-1"], ["schema", "witness", "gate", "verify"]);
   assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "product-claims", "trust-claims", "trust-assessment", "upstream"]);
   assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query", "aggregate"]);
-  assert.deepEqual(status.support["kfd-4"], ["schema"]);
+  assert.deepEqual(status.support["kfd-4"], ["schema", "product-gate", "verify", "support-projection"]);
+  assert.deepEqual(status.support["kfd-5"], ["schema", "product-gate", "verify", "support-projection"]);
+  assert.deepEqual(status.support["kfd-6"], ["schema", "unsupported-claim-barrier"]);
+  assert.deepEqual(status.support["kfd-7"], ["schema", "product-gate", "verify", "support-projection"]);
+  assert.deepEqual(status.support["kfd-13"], ["schema", "draft-claim-barrier"]);
   assert.equal(status.paths.kfd2ProductClaimsRegistry.path, ".buildchain/kfd/kfd-2/registry.json");
   assert.equal(status.paths.kfd3SurfaceRegistry.path, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH);
 
@@ -446,6 +513,15 @@ test("KFD upstream auto-discovery reads devDependencies without consumer role or
     kfd2: "declared",
     kfd3: "declared",
     kfd4: "declared",
+    kfd5: "declared",
+    kfd6: "declared",
+    kfd7: "declared",
+    kfd8: "declared",
+    kfd9: "declared",
+    kfd10: "declared",
+    kfd11: "declared",
+    kfd12: "declared",
+    kfd13: "declared",
   });
 
   const check = checkKfdUpstreamFacts(upstream);
