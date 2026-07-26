@@ -464,13 +464,27 @@ export async function openProductionReleasePr({
     token: normalizedToken,
     path: `/repos/${owner}/${repo}/commits/${encodeURIComponent(handoff.sourceSha)}/pulls?per_page=100`,
   });
-  const mergedReleasePull = findMergedProductionReleasePr({
+  let mergedReleasePull = findMergedProductionReleasePr({
     pullRequests: associated,
     repository,
     productionReleaseLabel,
     productionReleaseHeadPrefix,
     base: handoff.base,
   });
+  if (!mergedReleasePull) {
+    const closedByDeterministicHead = await githubJson({
+      apiUrl,
+      token: normalizedToken,
+      path: `/repos/${owner}/${repo}/pulls?state=closed&base=${encodeURIComponent(handoff.base)}&head=${encodeURIComponent(head)}&per_page=100`,
+    });
+    mergedReleasePull = findMergedProductionReleasePr({
+      pullRequests: closedByDeterministicHead,
+      repository,
+      productionReleaseLabel,
+      productionReleaseHeadPrefix,
+      base: handoff.base,
+    });
+  }
   if (mergedReleasePull) {
     return {
       action: "suppressed-merged-release-pr",
