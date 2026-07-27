@@ -17,11 +17,13 @@ import {
   loadCredentialInput,
   parseIdentityListing,
   parseNotaryResult,
+  parseNotarySubmission,
   safeArtifactName,
   safeArtifactStem,
   safePlatformId,
   sha256File,
   signingOptionsForFile,
+  summarizeNotaryLog,
 } from "../actions/macos-credential-island/lib.js";
 
 const SOURCE_SHA = "1".repeat(40);
@@ -163,6 +165,64 @@ test("identity and notarization parsing fail closed", () => {
         "app",
       ),
     /not accepted/,
+  );
+  assert.deepEqual(
+    parseNotarySubmission(
+      JSON.stringify({
+        id: "11111111-2222-3333-4444-555555555555",
+        status: "Invalid",
+      }),
+      "app",
+    ),
+    { id: "11111111-2222-3333-4444-555555555555", status: "Invalid" },
+  );
+  assert.throws(
+    () => parseNotarySubmission('{"status":"Invalid"}', "app"),
+    /submission id/,
+  );
+});
+
+test("notarization rejection diagnostics are allowlisted, bounded, and redacted", () => {
+  const summary = summarizeNotaryLog(
+    JSON.stringify({
+      jobId: "ignored",
+      developerEmail: "private@example.com",
+      status: "Invalid",
+      statusCode: 4000,
+      statusSummary: "Archive contains critical validation errors",
+      issues: [
+        {
+          severity: "error",
+          code: 4000,
+          path: "/Users/private/Example.app/Contents/MacOS/example",
+          message:
+            "Contact private@example.com; api_key=do-not-print; signature invalid",
+          architecture: "arm64",
+          docUrl: "https://developer.apple.com/private",
+          unknown: "do-not-include",
+        },
+      ],
+    }),
+    "app",
+  );
+  assert.deepEqual(summary, {
+    status: "Invalid",
+    statusCode: "4000",
+    statusSummary: "Archive contains critical validation errors",
+    issues: [
+      {
+        severity: "error",
+        code: "4000",
+        path: "<home>/Example.app/Contents/MacOS/example",
+        message: "Contact <email>; api_key=<redacted>; signature invalid",
+        architecture: "arm64",
+      },
+    ],
+  });
+  assert.doesNotMatch(JSON.stringify(summary), /private|do-not-print|docUrl/u);
+  assert.throws(
+    () => summarizeNotaryLog("not-json", "app"),
+    /did not return JSON/,
   );
 });
 
