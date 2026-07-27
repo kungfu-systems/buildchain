@@ -2896,7 +2896,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml\n    permissions:\n      actions: write/,
+    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
