@@ -29,6 +29,7 @@ import {
   safePlatformId,
   sha256File,
   signingIgnore,
+  signingOptionsForFile,
 } from "./lib.js";
 
 function input(name, required = true) {
@@ -358,6 +359,7 @@ async function main() {
       hardenedRuntime: true,
       entitlements: entitlementsPath,
       entitlementsInherit: entitlementsPath,
+      optionsForFile: signingOptionsForFile(entitlementsPath),
       gatekeeperAssess: false,
       ignore: signingIgnore,
     });

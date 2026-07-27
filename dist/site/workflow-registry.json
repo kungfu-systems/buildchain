@@ -1214,6 +1214,38 @@
       "status": "active"
     },
     {
+      "id": "dev-alpha-candidate-patrol",
+      "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
+      "reusable": true,
+      "inputs": [
+        "alpha-workflow-path",
+        "buildchain-ref",
+        "buildchain-repository",
+        "create-pull-request",
+        "dev-workflow-path",
+        "dry-run",
+        "max-age-seconds",
+        "source-branch",
+        "target-branch"
+      ],
+      "inputCount": 9,
+      "secrets": [
+        "promotion-token"
+      ],
+      "secretCount": 1,
+      "outputs": [
+        "eligible",
+        "promotion-pr",
+        "result-path",
+        "selected-sha",
+        "source-lock-ref"
+      ],
+      "outputCount": 5,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active"
+    },
+    {
       "id": "dev-merge-queue-governance",
       "path": ".github/workflows/dev-merge-queue-governance.yml",
       "reusable": false,

@@ -336,6 +336,17 @@ export function entitlementsForProfile(profile) {
   return { name: profile, content: value, sha256: sha256Buffer(value) };
 }
 
+export function signingOptionsForFile(entitlementsPath) {
+  const resolved = String(entitlementsPath || "").trim();
+  if (!resolved) {
+    throw new Error("Buildchain-owned entitlements path is required");
+  }
+  return () => ({
+    entitlements: resolved,
+    hardenedRuntime: true,
+  });
+}
+
 export function cleanupState(state, runSecurity = () => {}) {
   const errors = [];
   if (
