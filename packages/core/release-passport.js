@@ -1170,7 +1170,7 @@ export function createReleasePassport({
   controllerReceipts = [],
   controllerReceiptReferences = [],
   githubArtifactAttestations = [],
-  generatedAt = nowIso(),
+  checkedAt = "",
 } = {}) {
   const normalizedTag = nonEmptyString(tag, "tag");
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: normalizedTag, sourceSha, workflow });
@@ -1190,6 +1190,7 @@ export function createReleasePassport({
     ? normalizeEvidenceDocument(distTagPromotionEvidence, "distTagPromotionEvidence")
     : undefined;
   const normalizedImpact = normalizeImpactLedger(impact, { tag: normalizedTag, line });
+  const generatedAt = optionalString(checkedAt) || nowIso();
   const kfd1Metadata = resolveKfd1Metadata();
   const normalizedKfd1 = kfd1?.passportSection ? kfd1 : undefined;
   const normalizedKfd3 = kfd3?.passportSection ? kfd3 : undefined;
@@ -1465,7 +1466,7 @@ export function collectGitHubReleasePassport({
   releaseJsonExtra = "",
   publishJson = "",
   workflow = {},
-  checkedAt = nowIso(),
+  checkedAt = "",
 } = {}) {
   const release = parseJsonInput(releaseJson, {}, { cwd, label: "releaseJson" });
   const releaseExtra = parseJsonInput(releaseJsonExtra, {}, { cwd, label: "releaseJsonExtra" });
@@ -1559,6 +1560,7 @@ export function collectGitHubReleasePassport({
   ];
   const resolvedTag = tag || release.tag_name || release.name || "";
   const resolvedOutputDir = path.resolve(cwd, outputDir);
+  const resolvedCheckedAt = optionalString(checkedAt) || nowIso();
   const productMechanism = defaultProductMechanism({ repository, productName });
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: resolvedTag, sourceSha, workflow });
   const bundledPublishEvidencePath = publishEvidenceMeta.value ? "evidence.json" : "";
@@ -1586,7 +1588,7 @@ export function collectGitHubReleasePassport({
         matrixRoot: kfdSupportMatrixMeta.sha256 ? `sha256:${kfdSupportMatrixMeta.sha256}` : "",
         gateResults: kfdProductGateMetas.map((meta) => meta.value),
         expectedSourceSha: sourceSha,
-        checkedAt,
+        checkedAt: resolvedCheckedAt,
       })
     : undefined;
   const passport = mergeAuthoritativePassportBase(createReleasePassport({
@@ -1646,6 +1648,7 @@ export function collectGitHubReleasePassport({
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
     workflow,
+    checkedAt: resolvedCheckedAt,
   }), basePassportMeta.value, { requireKfd: requireBaseKfd });
   if (bundledPublishEvidencePath) {
     passport.evidence.publishEvidence = bundledPublishEvidencePath;
@@ -1659,7 +1662,7 @@ export function collectGitHubReleasePassport({
     productMechanism,
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value,
     kfdSupportEvidence: kfdSupport,
-    checkedAt,
+    checkedAt: resolvedCheckedAt,
   });
   const files = {
     "product-mechanism.json": productMechanism,

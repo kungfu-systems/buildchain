@@ -175,7 +175,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
-      "auditDigest": "sha256:8b1ff8b2487980c879eec4ffbfa2a2207e54fc76c05d010b7eb4d619685caff4"
+      "auditDigest": "sha256:df3ae042d9715119eb82d0295ee9a22f1c1fb2e603f96a52ae233db8c628b5a8"
     },
     {
       "contractVersion": 1,
@@ -498,7 +498,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:a9f4d3c4620c5a72d3423e870cf435ccc727b15649cf2e7f1e5577f924a99b4d"
+      "auditDigest": "sha256:79c0101db1dc05d57baf35d1505f11b8a4a576360e31a40fd71a41e4dd243506"
     },
     {
       "contractVersion": 1,
@@ -547,7 +547,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:a9f4d3c4620c5a72d3423e870cf435ccc727b15649cf2e7f1e5577f924a99b4d"
+      "auditDigest": "sha256:79c0101db1dc05d57baf35d1505f11b8a4a576360e31a40fd71a41e4dd243506"
     },
     {
       "contractVersion": 1,
@@ -719,7 +719,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:b33d85b958d3b342fc02481d98b3dd5b0494a73ddeead7d049414a55aa6ae3f4"
+      "auditDigest": "sha256:698226299543d45af1e85221af9f4c5da7587b23e6291d282057f3a1d32996a2"
     },
     {
       "contractVersion": 1,
@@ -3362,5 +3362,5 @@
     }
   ],
   "compatibilityDigest": "sha256:008b1c5a90a787cf30106829ac7aca68ab501f6d9c375e415d9c5c6b89039f46",
-  "contractDigest": "sha256:2fce9fc746e87886dfaa18e4432a693a303b5d4789d6dc7fad876aa53a150206"
+  "contractDigest": "sha256:23126d95761e34343ab9683be3028fd1be4f56531ee0b1e394a694c581577341"
 }
