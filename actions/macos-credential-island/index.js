@@ -19,6 +19,7 @@ import {
   entitlementsForProfile,
   loadCredentialInput,
   parseIdentityListing,
+  parseNotaryLog,
   parseNotaryResult,
   requirePattern,
   requireRepository,
@@ -148,7 +149,36 @@ function submitNotary(target, credentials, label) {
     ],
     { redact: true, stdoutOnly: true },
   );
-  return parseNotaryResult(output, label);
+  try {
+    return parseNotaryResult(output, label);
+  } catch (error) {
+    const submissionId = error?.notarySubmission?.id;
+    if (!submissionId) throw error;
+    let diagnostics = `${label} notarization diagnostics unavailable`;
+    try {
+      const logOutput = runFile(
+        "/usr/bin/xcrun",
+        [
+          "notarytool",
+          "log",
+          submissionId,
+          "--key",
+          credentials.keyPath,
+          "--key-id",
+          credentials.keyId,
+          "--issuer",
+          credentials.issuer,
+          "--output-format",
+          "json",
+        ],
+        { redact: true, stdoutOnly: true },
+      );
+      diagnostics = parseNotaryLog(logOutput, label);
+    } catch (diagnosticError) {
+      diagnostics = `${diagnostics}: ${String(diagnosticError?.message || diagnosticError).slice(0, 300)}`;
+    }
+    throw new Error(`${error.message}; ${diagnostics}`);
+  }
 }
 
 function staple(target) {

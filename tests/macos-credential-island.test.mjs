@@ -16,6 +16,7 @@ import {
   entitlementsForProfile,
   loadCredentialInput,
   parseIdentityListing,
+  parseNotaryLog,
   parseNotaryResult,
   safeArtifactName,
   safeArtifactStem,
@@ -153,16 +154,48 @@ test("identity and notarization parsing fail closed", () => {
     ),
     { id: "11111111-2222-3333-4444-555555555555", status: "Accepted" },
   );
+  let rejected;
   assert.throws(
-    () =>
-      parseNotaryResult(
+    () => {
+      try {
+        parseNotaryResult(
         JSON.stringify({
           id: "11111111-2222-3333-4444-555555555555",
           status: "Invalid",
         }),
         "app",
-      ),
+        );
+      } catch (error) {
+        rejected = error;
+        throw error;
+      }
+    },
     /not accepted/,
+  );
+  assert.deepEqual(rejected.notarySubmission, {
+    id: "11111111-2222-3333-4444-555555555555",
+    status: "Invalid",
+  });
+  assert.match(
+    parseNotaryLog(
+      JSON.stringify({
+        issues: [
+          {
+            severity: "error",
+            code: "invalid-signature",
+            architecture: "arm64",
+            path: "Kungfu Episodes.app/Contents/MacOS/Kungfu Episodes",
+            message: "The signature is invalid.\nCredential-like output is not retained.",
+          },
+        ],
+      }),
+      "app",
+    ),
+    /issue 1 severity=error code=invalid-signature arch=arm64.*signature is invalid\. Credential-like output/,
+  );
+  assert.equal(
+    parseNotaryLog(JSON.stringify({ issues: [] }), "app"),
+    "app notarization reported no issues",
   );
 });
 

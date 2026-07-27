@@ -322,9 +322,55 @@ export function parseNotaryResult(output, label) {
     value.status !== "Accepted" ||
     !/^[0-9a-f-]{36}$/iu.test(String(value.id || ""))
   ) {
-    throw new Error(`${label} notarization was not accepted`);
+    const id = /^[0-9a-f-]{36}$/iu.test(String(value.id || ""))
+      ? String(value.id)
+      : "";
+    const status = String(value.status || "unknown")
+      .replace(/[^A-Za-z0-9._-]+/gu, "-")
+      .slice(0, 64);
+    const error = new Error(
+      `${label} notarization was not accepted (status=${status}${id ? `, id=${id}` : ""})`,
+    );
+    error.notarySubmission = { id, status };
+    throw error;
   }
   return { id: value.id, status: value.status };
+}
+
+export function parseNotaryLog(output, label) {
+  let value;
+  try {
+    value = JSON.parse(String(output || ""));
+  } catch {
+    return `${label} notarization diagnostics did not return JSON`;
+  }
+  const issues = Array.isArray(value.issues) ? value.issues.slice(0, 12) : [];
+  if (issues.length === 0) return `${label} notarization reported no issues`;
+  const safe = (input, limit) =>
+    String(input ?? "")
+      .replace(/[\u0000-\u001f\u007f]+/gu, " ")
+      .replace(/\s+/gu, " ")
+      .trim()
+      .slice(0, limit);
+  return issues
+    .map((issue, index) => {
+      const severity = safe(issue.severity || "error", 24);
+      const code = safe(issue.code || "unknown", 64);
+      const architecture = safe(issue.architecture || "", 32);
+      const path = safe(issue.path || "", 240);
+      const message = safe(issue.message || "unspecified notarization issue", 500);
+      return [
+        `${label} issue ${index + 1}`,
+        `severity=${severity}`,
+        `code=${code}`,
+        architecture ? `arch=${architecture}` : "",
+        path ? `path=${path}` : "",
+        `message=${message}`,
+      ]
+        .filter(Boolean)
+        .join(" ");
+    })
+    .join("; ");
 }
 
 export function entitlementsForProfile(profile) {
