@@ -357,6 +357,7 @@ test("release passport binds the exact support projection and detects sibling ta
     kfdProductGateJsons: gatePaths,
     checkedAt,
   });
+  assert.equal(output.passport.generatedAt, checkedAt);
   assert.equal(output.passport.kfdSupport.status, "passed");
   assert.deepEqual(
     output.passport.kfdSupport,
@@ -365,7 +366,8 @@ test("release passport binds the exact support projection and detects sibling ta
   assert.equal(output.checkReport.ok, true, JSON.stringify(output.checkReport.issues));
 
   const passportPath = path.join(cwd, "release-passport/buildchain.release.json");
-  assert.equal((await verifyReleasePassport({ passportLocation: passportPath, checkedAt })).ok, true);
+  const verification = await verifyReleasePassport({ passportLocation: passportPath, checkedAt });
+  assert.equal(verification.ok, true, JSON.stringify(verification.issues));
   const siblingPath = path.join(cwd, "release-passport/kfd-support.json");
   const sibling = JSON.parse(fs.readFileSync(siblingPath, "utf8"));
   sibling.rows.find((row) => row.id === "KFD-4").supportStatus = "source-supported";
