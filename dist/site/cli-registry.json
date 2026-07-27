@@ -1086,6 +1086,18 @@
       "maturity": "stable"
     },
     {
+      "id": "verify-github-artifact-attestation",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify github-artifact-attestation <artifact>",
+      "purpose": "Verify GitHub keyless attestation identity plus local artifact, manifest, Passport, predicate, bundle, and evidence bindings.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "verify-infra-contract-evidence-bundle",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify infra-contract-evidence-bundle <file> [--json]",

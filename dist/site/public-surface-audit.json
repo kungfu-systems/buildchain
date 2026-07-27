@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 96,
-    "workflowCount": 54,
-    "actionCount": 5,
-    "sitePageCount": 57,
-    "docCommandRefCount": 286,
+    "cliCommandCount": 97,
+    "workflowCount": 55,
+    "actionCount": 6,
+    "sitePageCount": 59,
+    "docCommandRefCount": 291,
     "failureCount": 0
   },
   "enumerated": {
@@ -463,6 +463,11 @@
         "usage": "buildchain verify artifact-envelope <file-or-json> [--assessment-time <epoch>]"
       },
       {
+        "id": "verify-github-artifact-attestation",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify github-artifact-attestation <artifact>"
+      },
+      {
         "id": "verify-infra-contract-evidence-bundle",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain verify infra-contract-evidence-bundle <file> [--json]"
@@ -596,6 +601,9 @@
           "expected-artifacts-json",
           "fail-fast",
           "gate-profile-aggregate-json",
+          "github-artifact-attestation-platform-id",
+          "github-artifact-attestation-signer-sha",
+          "github-artifact-attestation-subject-path",
           "install-command",
           "kfd-agent-hub",
           "lifecycle-timeout-minutes",
@@ -629,7 +637,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 69,
+        "inputCount": 72,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -828,6 +836,9 @@
           "buildchain-repository",
           "channel",
           "dry-run",
+          "github-artifact-attestation-environment",
+          "github-artifact-attestation-policy-json",
+          "github-artifact-attestation-retention-days",
           "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
@@ -901,7 +912,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 85,
+        "inputCount": 88,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -924,6 +935,10 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "github-artifact-attestation-evidence-root",
+          "github-artifact-attestation-id",
+          "github-artifact-attestation-publication-receipt-digest",
+          "github-artifact-attestation-url",
           "promoted-sha",
           "publication-capability-digest",
           "publication-commit-evidence-digest",
@@ -932,7 +947,7 @@
           "publication-commit-url",
           "release-candidate-artifact"
         ],
-        "outputCount": 15
+        "outputCount": 19
       },
       {
         "id": ".release-docker",
@@ -1363,6 +1378,9 @@
           "expected-artifacts-json",
           "fail-fast",
           "gate-profile-aggregate-json",
+          "github-artifact-attestation-platform-id",
+          "github-artifact-attestation-signer-sha",
+          "github-artifact-attestation-subject-path",
           "install-command",
           "kfd-agent-hub",
           "lifecycle-timeout-minutes",
@@ -1396,7 +1414,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 72,
+        "inputCount": 75,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1681,6 +1699,37 @@
           "skipped-count"
         ],
         "outputCount": 6
+      },
+      {
+        "id": "github-artifact-attestation",
+        "path": ".github/workflows/github-artifact-attestation.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "environment",
+          "evidence-artifact-name",
+          "evidence-run-id",
+          "platform-manifest-artifact-name",
+          "platform-manifest-relative-path",
+          "policy-json",
+          "release-passport-artifact-name",
+          "release-passport-relative-path",
+          "retention-days",
+          "source-sha",
+          "subject-artifact-name",
+          "subject-relative-path"
+        ],
+        "inputCount": 13,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "attestation-id",
+          "attestation-url",
+          "bundle-digest",
+          "evidence-artifact-name",
+          "evidence-root"
+        ],
+        "outputCount": 5
       },
       {
         "id": "github-governance-audit",
@@ -1991,6 +2040,9 @@
           "buildchain-stable-contract-lock-path",
           "channel",
           "dry-run",
+          "github-artifact-attestation-environment",
+          "github-artifact-attestation-policy-json",
+          "github-artifact-attestation-retention-days",
           "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
@@ -2053,7 +2105,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 77,
+        "inputCount": 80,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2077,6 +2129,10 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "github-artifact-attestation-evidence-root",
+          "github-artifact-attestation-id",
+          "github-artifact-attestation-publication-receipt-digest",
+          "github-artifact-attestation-url",
           "promoted-sha",
           "promotion-contract-lock-digest",
           "promotion-contract-lock-path",
@@ -2096,7 +2152,7 @@
           "publication-commit-url",
           "release-candidate-artifact"
         ],
-        "outputCount": 27
+        "outputCount": 31
       },
       {
         "id": "release-governance-reconcile",
@@ -2261,6 +2317,26 @@
     ],
     "actionInputs": [
       {
+        "id": "github-artifact-attestation",
+        "path": "actions/github-artifact-attestation/action.yml",
+        "inputs": [
+          "attestation-id",
+          "attestation-url",
+          "bundle-path",
+          "expected-buildchain-ref",
+          "expected-caller-repository",
+          "expected-source-sha",
+          "mode",
+          "output-dir",
+          "platform-manifest-path",
+          "policy-json",
+          "preparation-json",
+          "release-passport-path",
+          "subject-path"
+        ],
+        "inputCount": 13
+      },
+      {
         "id": "macos-credential-island",
         "path": "actions/macos-credential-island/action.yml",
         "inputs": [
@@ -2332,6 +2408,7 @@
           "release-passport",
           "release-passport-build-summary-path",
           "release-passport-buildchain-self-kfd",
+          "release-passport-github-artifact-attestation-policy-jsons",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
           "release-passport-invariant-passport-jsons",
@@ -2358,7 +2435,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 66
+        "inputCount": 67
       },
       {
         "id": "report-buildchain-issue",
@@ -2450,6 +2527,10 @@
       }
     ],
     "sitePages": [
+      {
+        "id": "action:github-artifact-attestation",
+        "category": "action"
+      },
       {
         "id": "action:macos-credential-island",
         "category": "action"
@@ -2552,6 +2633,10 @@
       },
       {
         "id": "manual:dev-alpha-candidate-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:github-artifact-attestation",
         "category": "manual"
       },
       {
@@ -2912,6 +2997,11 @@
       },
       {
         "id": "collect-github-release",
+        "path": "docs/github-artifact-attestation.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
         "path": "docs/kfd-agent-hub.md",
         "command": "buildchain collect github-release"
       },
@@ -2924,6 +3014,16 @@
         "id": "collect-github-release",
         "path": "docs/release-passport.md",
         "command": "buildchain collect github-release"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli.md",
+        "command": "buildchain create github-artifact-attestation-policy"
+      },
+      {
+        "id": "create",
+        "path": "docs/github-artifact-attestation.md",
+        "command": "buildchain create github-artifact-attestation-policy"
       },
       {
         "id": "dev",
@@ -4006,6 +4106,16 @@
         "command": "buildchain verify artifact"
       },
       {
+        "id": "verify-github-artifact-attestation",
+        "path": "docs/cli.md",
+        "command": "buildchain verify github-artifact-attestation"
+      },
+      {
+        "id": "verify-github-artifact-attestation",
+        "path": "docs/github-artifact-attestation.md",
+        "command": "buildchain verify github-artifact-attestation"
+      },
+      {
         "id": "verify-infra-contract-evidence-bundle",
         "path": "docs/cli.md",
         "command": "buildchain verify infra-contract-evidence-bundle"
@@ -4116,9 +4226,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "a1c10dd6977d85a7bc793054baa549108b46d6d18098de109733e01b9151a024",
-    "workflowRegistryDigest": "adbf4d0f0f67aab550735fac44b544cb5eeeaa94d1604c18953d7e81d3cb0136",
-    "pageRegistryDigest": "d0af91a01b205954540fe4388cc08dcfaa9182f4eb6cfb162bb0c987fc33eef2"
+    "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
+    "workflowRegistryDigest": "f199eeb327027cf62d35f6c9591a6dadc16142bbecce14c562b435dc4ff2f47e",
+    "pageRegistryDigest": "962ba466e4a22e5113f8f795c76c49da66359a7fdb303ab7f9abb07b865cfa06"
   },
   "comparison": {
     "missingCliRegistry": [],

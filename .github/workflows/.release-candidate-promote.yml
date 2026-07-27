@@ -332,6 +332,21 @@ on:
         default: false
         type: boolean
         required: false
+      github-artifact-attestation-policy-json:
+        description: "One GitHub artifact attestation policy JSON path from the sealed release candidate; empty disables attestation"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-environment:
+        description: "Caller-repository protected environment governing the keyless attestation"
+        default: "buildchain-artifact-attestation"
+        type: string
+        required: false
+      github-artifact-attestation-retention-days:
+        description: "Retention for offline GitHub/Sigstore evidence artifacts"
+        default: 90
+        type: number
+        required: false
       release-passport-platform-manifest-paths:
         description: "Optional platform manifest paths for release passport; defaults to downloaded PR-stage payload manifests"
         default: ""
@@ -489,6 +504,18 @@ on:
       publication-capability-digest:
         description: "Sealed publication capability receipt digest"
         value: ${{ jobs.publication-authority.outputs.capability-digest }}
+      github-artifact-attestation-id:
+        description: "GitHub keyless attestation id for the declared Linux release artifact"
+        value: ${{ jobs.github-artifact-attestation.outputs.attestation-id }}
+      github-artifact-attestation-url:
+        description: "GitHub keyless attestation URL"
+        value: ${{ jobs.github-artifact-attestation.outputs.attestation-url }}
+      github-artifact-attestation-evidence-root:
+        description: "Verified Buildchain attestation evidence root published with the GitHub Release"
+        value: ${{ jobs.publish-github-artifact-attestation-evidence.outputs.evidence-root }}
+      github-artifact-attestation-publication-receipt-digest:
+        description: "Read-back verified GitHub Release evidence publication receipt digest"
+        value: ${{ jobs.publish-github-artifact-attestation-evidence.outputs.publication-receipt-digest }}
       controller-receipt-artifact:
         description: "Controller receipt artifact name"
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
@@ -524,6 +551,19 @@ jobs:
       current-sha: ${{ steps.intent.outputs.current-sha }}
       comparison-status: ${{ steps.intent.outputs.comparison-status }}
     steps:
+      - name: Validate GitHub artifact attestation topology
+        if: ${{ inputs.github-artifact-attestation-policy-json != '' }}
+        env:
+          RELEASE_PASSPORT: ${{ inputs.release-passport }}
+          GITHUB_RELEASE: ${{ inputs.github-release }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$RELEASE_PASSPORT" != "true" ] || [ "$GITHUB_RELEASE" != "true" ]; then
+            echo "::error::GitHub artifact attestation requires release-passport=true and github-release=true"
+            exit 1
+          fi
+
       - name: Revalidate queued promotion intent
         id: intent
         uses: actions/github-script@v8
@@ -1037,6 +1077,16 @@ jobs:
       publication-commit-evidence-digest: ${{ steps.publication-commit.outputs.evidence-digest }}
       publication-commit-url: ${{ steps.publication-commit.outputs.public-url }}
       publication-commit-payload-root: ${{ steps.publication-commit.outputs.payload-root }}
+      github-artifact-attestation-input-artifact: ${{ steps.attestation-input.outputs.input-artifact-name }}
+      github-artifact-attestation-policy-json: ${{ steps.attestation-input.outputs.policy-json }}
+      github-artifact-attestation-subject-relative-path: ${{ steps.attestation-input.outputs.subject-relative-path }}
+      github-artifact-attestation-platform-manifest-relative-path: ${{ steps.attestation-input.outputs.platform-manifest-relative-path }}
+      github-artifact-attestation-release-passport-relative-path: ${{ steps.attestation-input.outputs.release-passport-relative-path }}
+      github-artifact-attestation-buildchain-ref: ${{ steps.buildchain-runtime.outputs.sha }}
+      github-artifact-attestation-signer-ref: ${{ steps.attestation-input.outputs.signer-sha }}
+      github-artifact-attestation-source-sha: ${{ steps.attestation-input.outputs.source-sha }}
+      github-artifact-attestation-public-release-tag: ${{ steps.promote.outputs.public-release-tag }}
+      github-artifact-attestation-github-release-url: ${{ steps.promote.outputs.github-release-url }}
     steps:
       - name: Download release-candidate-promotion controller plan
         uses: actions/download-artifact@v7.0.0
@@ -1261,6 +1311,30 @@ jobs:
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
           BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
 
+      - name: Resolve GitHub artifact attestation policy
+        id: attestation-policy
+        if: ${{ inputs.github-artifact-attestation-policy-json != '' }}
+        env:
+          REQUESTED_POLICY: ${{ inputs.github-artifact-attestation-policy-json }}
+          DISCOVERED_POLICIES: ${{ steps.rc.outputs.release-candidate-github-artifact-attestation-policy-paths }}
+          DISCOVERED_POLICY_COUNT: ${{ steps.rc.outputs.release-candidate-github-artifact-attestation-policy-count }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          policy="$REQUESTED_POLICY"
+          if [ "$policy" = "auto" ]; then
+            if [ "$DISCOVERED_POLICY_COUNT" != "1" ]; then
+              echo "::error::github-artifact-attestation-policy-json=auto requires exactly one discovered policy, found ${DISCOVERED_POLICY_COUNT:-0}"
+              exit 1
+            fi
+            policy="$DISCOVERED_POLICIES"
+          fi
+          if [ ! -f "$policy" ]; then
+            echo "::error::GitHub artifact attestation policy is not a downloaded release-candidate file: $policy"
+            exit 1
+          fi
+          echo "path=$policy" >> "$GITHUB_OUTPUT"
+
       - name: Record promotion routing evidence
         id: routing-evidence
         if: ${{ inputs.promotion-router-ref != '' }}
@@ -1466,6 +1540,7 @@ jobs:
           release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
           release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
+          release-passport-github-artifact-attestation-policy-jsons: ${{ steps.attestation-policy.outputs.path }}
           github-release: ${{ inputs.github-release }}
           github-release-artifact-paths: ${{ steps.rc.outputs.release-candidate-github-release-artifact-paths }}
           github-release-title: ${{ inputs.github-release-title }}
@@ -1474,6 +1549,36 @@ jobs:
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
+
+      - name: Stage sealed GitHub artifact attestation inputs
+        id: attestation-input
+        if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && steps.promote.outcome == 'success' }}
+        env:
+          ATTESTATION_POLICY: ${{ steps.attestation-policy.outputs.path }}
+          ATTESTATION_SUBJECT_ROOTS: ${{ steps.rc.outputs.release-candidate-payload-dir }}
+          ATTESTATION_PLATFORM_MANIFESTS: ${{ inputs.release-passport-platform-manifest-paths || steps.rc.outputs.release-candidate-platform-manifest-paths }}
+          ATTESTATION_RELEASE_PASSPORT: ${{ steps.promote.outputs.release-passport-path }}
+          ATTESTATION_OUTPUT_DIR: .buildchain/github-artifact-attestation-input
+          ATTESTATION_INPUT_ARTIFACT: buildchain-github-attestation-input-${{ needs.preflight.outputs.requested-sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/stage-github-artifact-attestation-inputs.mjs \
+            --policy "$ATTESTATION_POLICY" \
+            --subject-roots "$ATTESTATION_SUBJECT_ROOTS" \
+            --platform-manifests "$ATTESTATION_PLATFORM_MANIFESTS" \
+            --release-passport "$ATTESTATION_RELEASE_PASSPORT" \
+            --output-dir "$ATTESTATION_OUTPUT_DIR"
+          echo "input-artifact-name=$ATTESTATION_INPUT_ARTIFACT" >> "$GITHUB_OUTPUT"
+
+      - name: Upload sealed GitHub artifact attestation inputs
+        if: ${{ steps.attestation-input.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.attestation-input.outputs.input-artifact-name }}
+          path: ${{ steps.attestation-input.outputs.input-dir }}/
+          retention-days: ${{ inputs.github-artifact-attestation-retention-days }}
+          if-no-files-found: error
 
       - name: Dispatch standalone binary distribution for the exact public tag
         if: ${{ inputs.standalone-binary-distribution && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' && steps.promote.outputs.public-release-tag != '' }}
@@ -1784,9 +1889,101 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
 
+  github-artifact-attestation:
+    name: Sign Linux release artifact with GitHub OIDC
+    needs: [promote]
+    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && needs.promote.result == 'success' }}
+    permissions:
+      actions: read
+      artifact-metadata: write
+      attestations: write
+      contents: read
+      id-token: write
+    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@ad57ae0fee5072a1de7a0b0182f70c0c41e45abb
+    with:
+      buildchain-ref: ${{ needs.promote.outputs.github-artifact-attestation-signer-ref }}
+      evidence-run-id: ${{ github.run_id }}
+      source-sha: ${{ needs.promote.outputs.github-artifact-attestation-source-sha }}
+      subject-artifact-name: ${{ needs.promote.outputs.github-artifact-attestation-input-artifact }}
+      subject-relative-path: ${{ needs.promote.outputs.github-artifact-attestation-subject-relative-path }}
+      platform-manifest-artifact-name: ${{ needs.promote.outputs.github-artifact-attestation-input-artifact }}
+      platform-manifest-relative-path: ${{ needs.promote.outputs.github-artifact-attestation-platform-manifest-relative-path }}
+      release-passport-artifact-name: ${{ needs.promote.outputs.github-artifact-attestation-input-artifact }}
+      release-passport-relative-path: ${{ needs.promote.outputs.github-artifact-attestation-release-passport-relative-path }}
+      policy-json: ${{ needs.promote.outputs.github-artifact-attestation-policy-json }}
+      evidence-artifact-name: buildchain-github-attestation-evidence-${{ needs.promote.outputs.github-artifact-attestation-source-sha }}
+      environment: ${{ inputs.github-artifact-attestation-environment }}
+      retention-days: ${{ inputs.github-artifact-attestation-retention-days }}
+
+  publish-github-artifact-attestation-evidence:
+    name: Publish verified attestation evidence to GitHub Release
+    needs: [promote, github-artifact-attestation]
+    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && needs.github-artifact-attestation.result == 'success' }}
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.github-artifact-attestation-environment }}
+    permissions:
+      actions: read
+      contents: write
+    outputs:
+      evidence-root: ${{ steps.publish.outputs.evidence-root }}
+      publication-receipt-digest: ${{ steps.publish.outputs.publication-receipt-digest }}
+      release-url: ${{ steps.publish.outputs.release-url }}
+    steps:
+      - name: Load exact Buildchain v3 evidence publisher
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ needs.promote.outputs.github-artifact-attestation-buildchain-ref }}
+          path: .buildchain/publisher-runtime
+          persist-credentials: false
+          sparse-checkout: |
+            packages/core
+            scripts/publish-github-artifact-attestation-evidence.mjs
+
+      - name: Download sealed attestation inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.promote.outputs.github-artifact-attestation-input-artifact }}
+          path: .buildchain/attestation-input
+
+      - name: Download GitHub/Sigstore attestation evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.github-artifact-attestation.outputs.evidence-artifact-name }}
+          path: .buildchain/attestation-evidence
+
+      - name: Verify and publish immutable evidence assets
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .buildchain/publisher-runtime/scripts/publish-github-artifact-attestation-evidence.mjs \
+            --repository "${{ github.repository }}" \
+            --tag "${{ needs.promote.outputs.github-artifact-attestation-public-release-tag }}" \
+            --subject ".buildchain/attestation-input/${{ needs.promote.outputs.github-artifact-attestation-subject-relative-path }}" \
+            --manifest ".buildchain/attestation-input/${{ needs.promote.outputs.github-artifact-attestation-platform-manifest-relative-path }}" \
+            --passport ".buildchain/attestation-input/${{ needs.promote.outputs.github-artifact-attestation-release-passport-relative-path }}" \
+            --bundle .buildchain/attestation-evidence/sigstore-bundle.json \
+            --evidence .buildchain/attestation-evidence/github-artifact-attestation-evidence.json \
+            --predicate .buildchain/attestation-evidence/predicate.json \
+            --provider-verification .buildchain/attestation-evidence/provider-verification.json \
+            --receipt .buildchain/attestation-publication/publication.json
+
+      - name: Retain attestation publication receipt
+        if: ${{ always() && steps.publish.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: buildchain-github-attestation-publication-${{ needs.promote.outputs.github-artifact-attestation-source-sha }}
+          path: .buildchain/attestation-publication/publication.json
+          retention-days: ${{ inputs.github-artifact-attestation-retention-days }}
+          if-no-files-found: error
+
   controller-receipt:
     name: Record release-candidate promotion controller receipt
-    needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote, github-artifact-attestation, publish-github-artifact-attestation-evidence]
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -1818,6 +2015,13 @@ jobs:
         with:
           name: buildchain-release-promotion-controller-evidence-${{ needs.preflight.outputs.requested-sha }}
           path: .buildchain/controller/promotion-evidence
+
+      - name: Download GitHub artifact attestation publication receipt
+        if: ${{ inputs.github-artifact-attestation-policy-json != '' && needs.publish-github-artifact-attestation-evidence.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-github-attestation-publication-${{ needs.promote.outputs.github-artifact-attestation-source-sha }}
+          path: .buildchain/controller/attestation-publication
 
       - name: Create release-candidate-promotion controller receipt
         id: controller-receipt

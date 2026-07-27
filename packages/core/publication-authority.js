@@ -106,7 +106,7 @@ export function detectPublicationAuthoritySignals(workflowText = "") {
   const signals = [];
   const rules = [
     ["write-all", /permissions\s*:\s*write-all|permissions\s*:\s*\{[^}]*write-all/i],
-    ["write-permission", /^\s*(?:contents|packages|deployments|checks|issues|pull-requests|actions)\s*:\s*write\s*$/im],
+    ["write-permission", /^\s*(?:contents|packages|deployments|checks|issues|pull-requests|actions|attestations|artifact-metadata)\s*:\s*write\s*$/im],
     ["oidc", /^\s*id-token\s*:\s*write\s*$/im],
     ["environment", /^\s*environment\s*:/im],
     ["npm-publish", /\bnpm\s+(?:stage\s+)?publish\b/i],

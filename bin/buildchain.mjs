@@ -164,13 +164,18 @@ function usage() {
                                     [--kfd-product-gate-json <json-or-path>]...
                                     [--invariant-passport-json <json-or-path>]...
                                     [--invariant-passport-cmd <command>]
+                                    [--github-artifact-attestation-policy-json <json-or-path>]...
                                     [--kfd-agent-hub-evidence-json <json-or-path>]
                                     [--base-passport-json <json-or-path>] [--require-base-kfd]
                                     [--release-extra-json <json-or-path>]
                                     [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain create publication-admission --input-json <file-or-json> [--output <file>] [--json]
   buildchain create runner-provenance --input-json <file-or-json> [--output <file>] [--json]
+  buildchain create github-artifact-attestation-policy --input-json <file-or-json> [--output <file>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
+  buildchain verify github-artifact-attestation <artifact>
+                          --evidence <file> --bundle <file>
+                          --platform-manifest <file> --release-passport <file> [--json]
   buildchain verify publication-admission <file-or-json>
                           --registry-json <file-or-json>
                           --runner-json <file-or-json>

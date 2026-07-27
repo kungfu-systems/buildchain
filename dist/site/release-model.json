@@ -45,7 +45,8 @@
     "evidenceAssets": [
       "publish evidence JSON",
       "buildchain.release.json",
-      "release passport assets"
+      "release passport assets",
+      "GitHub artifact attestation Sigstore bundle and Buildchain evidence JSON"
     ],
     "owner": "promote-buildchain-ref"
   },

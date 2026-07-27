@@ -68,6 +68,7 @@ const requiredPaths = [
   "docs/product-mechanism.md",
   "docs/readme-badges.md",
   "docs/release-passport.md",
+  "docs/github-artifact-attestation.md",
   "docs/shifu-gate-profiles.md",
   "docs/auditable-demo.md",
   "docs/release-propagation.md",
@@ -357,6 +358,9 @@ if (rootPackage.exports?.["./kfd-gate"] !== "./packages/core/kfd-gate.js") {
 }
 if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-passport.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport");
+}
+if (rootPackage.exports?.["./github-artifact-attestation"] !== "./packages/core/github-artifact-attestation.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/github-artifact-attestation");
 }
 if (rootPackage.exports?.["./release-passport-contract"] !== "./packages/core/release-passport-contract.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport-contract");

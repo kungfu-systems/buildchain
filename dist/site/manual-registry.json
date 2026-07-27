@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:fc8f7c63b8427e513f9524b8e22e4b0dcd8981fcc724417a29b942fe237fc0a9",
+      "digest": "sha256:23158252e5d2bd09b9b54dc08a0a452562e4b3a6ec3861b991632a34199d9820",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -50,7 +50,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:ed29d25882cbf4ec062abc21e7d069a6377eaf7e3171c24642dfe08da2e4c05b",
+      "digest": "sha256:d698078075700e60bafb9677bc4c35d49970136b98caaecfc51d38344285cdd5",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -58,6 +58,20 @@
       ],
       "maturity": "stable",
       "order": 100
+    },
+    {
+      "id": "github-artifact-attestation",
+      "title": "GitHub-native Linux artifact attestation",
+      "path": "docs/github-artifact-attestation.md",
+      "plane": "verify",
+      "digest": "sha256:afdb8172bc41b9a20c0d18f4ddcc55ee287ac56db05e67e55d12de1843b724e1",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 108
     },
     {
       "id": "controller-evidence",
@@ -164,7 +178,7 @@
       "title": "Binary distribution contract",
       "path": "docs/binary-distribution.md",
       "plane": "verify",
-      "digest": "sha256:ae0f8e6cafbb4c39732e6a7252d46b523b0a69e8e05d3ce7ee0b51a916b1b027",
+      "digest": "sha256:b1611dcf0e6825e53921e4c9d31d1afe16fca81e6868360bfad1902587cd52ef",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -275,7 +289,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:47be88f5e5fd14124d03510b807722215034d34eefcebdfe2599a310350b7697",
+      "digest": "sha256:49da688f9f8b726a9169a3e4b246cb6ef07c6c626ea15c22f0b26ba1a37a58b4",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -346,7 +360,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:cd1c110cd44d475f3ef0406626f710f0d075013db3a8b15718b1e76676e4b5f5",
+      "digest": "sha256:5d46d0f5e6e03541c187ffea154dcce703ef78e59d16bd0e4fa7c175da940480",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",

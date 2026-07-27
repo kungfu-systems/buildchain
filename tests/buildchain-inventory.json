@@ -44,6 +44,13 @@
       "runtime": "node24",
       "build": "tsup",
       "bundle": "actions/validate-config/dist/index.js"
+    },
+    {
+      "path": "actions/github-artifact-attestation",
+      "disposition": "github-keyless-linux-artifact-attestation",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/github-artifact-attestation/dist/index.js"
     }
   ],
   "retiredActionsExcluded": [
@@ -147,6 +154,15 @@
         "productionRunnerDefault": "github-hosted",
         "selfHostedRole": "compatibility-fixture",
         "heavyPackageManagersDeferred": true
+      },
+      "githubArtifactAttestation": {
+        "workflow": "github-artifact-attestation.yml",
+        "action": "actions/github-artifact-attestation",
+        "signerRunner": "ubuntu-24.04",
+        "compilerIdentityPreserved": true,
+        "consumerSourceExecutedBySigner": false,
+        "keylessProvider": "github-oidc-sigstore",
+        "selfHostedSignerDenied": true
       }
     }
   }

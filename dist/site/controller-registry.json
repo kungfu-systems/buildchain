@@ -266,6 +266,18 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "github-artifact-attestation-platform-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-signer-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-subject-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "install-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -439,7 +451,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:7ab36c233a4a448f3894e19c3e6a3b5f765095d2a8628cbbe421e4b82fe3e4b9"
+      "digest": "sha256:16c0a2506088fc5a4e3337c7c23f5cc7d14f30e9cde23c1d39fc335d05b4a4f9"
     },
     {
       "schemaVersion": 1,
@@ -643,6 +655,18 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "github-artifact-attestation-platform-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-signer-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-subject-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "install-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -797,7 +821,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:9e5d5244c54d6613024beb43613afcae8d9cfb5cae7799c7a83a2799034ad64f"
+      "digest": "sha256:529f68186a49a8df1f2012fc4a38058548d1cc93eb06b6bed35befddd72519ef"
     },
     {
       "schemaVersion": 1,
@@ -1626,6 +1650,18 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "github-artifact-attestation-environment": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-policy-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-retention-days": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "github-governance-receipt-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1956,7 +1992,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:4bd94f0bb1790c87af758b71aa592a3e22fdcd84a9851931d252e3f60cba8d40"
+      "digest": "sha256:00baae93d9ed75129fdaed6fcc33285e515b8c7de84816831a39e660941dd7ae"
     },
     {
       "schemaVersion": 1,
@@ -2132,5 +2168,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:fcd7a66644c922460625b5bce0b3ceaa20bc84e87681bf949e807bd8c358fcf4"
+  "digest": "sha256:2d022091ac72303cc5fab5888de3dfd5aecfc8520281f753d963ac7208828d6f"
 }
