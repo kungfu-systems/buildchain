@@ -2483,6 +2483,8 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /branch-protection-bypass-apps: \$\{\{ inputs\.branch-protection-bypass-apps \}\}/);
   assert.match(wrapper, /checks: write/);
   assert.match(wrapper, /pull-requests: write/);
+  assert.equal(publicWrapper.match(/artifact-metadata: write/g)?.length, 3);
+  assert.equal(publicWrapper.match(/attestations: write/g)?.length, 3);
   assert.equal(publicWrapper.match(/pull-requests: write/g)?.length, 3);
   assert.match(wrapper, /token: \$\{\{ github\.token \}\}/);
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
