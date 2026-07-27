@@ -1889,6 +1889,98 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
 
+  github-artifact-attestation:
+    name: Sign Linux release artifact with GitHub OIDC
+    needs: [promote]
+    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && needs.promote.result == 'success' }}
+    permissions:
+      actions: read
+      artifact-metadata: write
+      attestations: write
+      contents: read
+      id-token: write
+    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@ad57ae0fee5072a1de7a0b0182f70c0c41e45abb
+    with:
+      buildchain-ref: ${{ needs.promote.outputs.github-artifact-attestation-signer-ref }}
+      evidence-run-id: ${{ github.run_id }}
+      source-sha: ${{ needs.promote.outputs.github-artifact-attestation-source-sha }}
+      subject-artifact-name: ${{ needs.promote.outputs.github-artifact-attestation-input-artifact }}
+      subject-relative-path: ${{ needs.promote.outputs.github-artifact-attestation-subject-relative-path }}
+      platform-manifest-artifact-name: ${{ needs.promote.outputs.github-artifact-attestation-input-artifact }}
+      platform-manifest-relative-path: ${{ needs.promote.outputs.github-artifact-attestation-platform-manifest-relative-path }}
+      release-passport-artifact-name: ${{ needs.promote.outputs.github-artifact-attestation-input-artifact }}
+      release-passport-relative-path: ${{ needs.promote.outputs.github-artifact-attestation-release-passport-relative-path }}
+      policy-json: ${{ needs.promote.outputs.github-artifact-attestation-policy-json }}
+      evidence-artifact-name: buildchain-github-attestation-evidence-${{ needs.promote.outputs.github-artifact-attestation-source-sha }}
+      environment: ${{ inputs.github-artifact-attestation-environment }}
+      retention-days: ${{ inputs.github-artifact-attestation-retention-days }}
+
+  publish-github-artifact-attestation-evidence:
+    name: Publish verified attestation evidence to GitHub Release
+    needs: [promote, github-artifact-attestation]
+    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && needs.github-artifact-attestation.result == 'success' }}
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.github-artifact-attestation-environment }}
+    permissions:
+      actions: read
+      contents: write
+    outputs:
+      evidence-root: ${{ steps.publish.outputs.evidence-root }}
+      publication-receipt-digest: ${{ steps.publish.outputs.publication-receipt-digest }}
+      release-url: ${{ steps.publish.outputs.release-url }}
+    steps:
+      - name: Load exact Buildchain v3 evidence publisher
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ needs.promote.outputs.github-artifact-attestation-buildchain-ref }}
+          path: .buildchain/publisher-runtime
+          persist-credentials: false
+          sparse-checkout: |
+            packages/core
+            scripts/publish-github-artifact-attestation-evidence.mjs
+
+      - name: Download sealed attestation inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.promote.outputs.github-artifact-attestation-input-artifact }}
+          path: .buildchain/attestation-input
+
+      - name: Download GitHub/Sigstore attestation evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.github-artifact-attestation.outputs.evidence-artifact-name }}
+          path: .buildchain/attestation-evidence
+
+      - name: Verify and publish immutable evidence assets
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .buildchain/publisher-runtime/scripts/publish-github-artifact-attestation-evidence.mjs \
+            --repository "${{ github.repository }}" \
+            --tag "${{ needs.promote.outputs.github-artifact-attestation-public-release-tag }}" \
+            --subject ".buildchain/attestation-input/${{ needs.promote.outputs.github-artifact-attestation-subject-relative-path }}" \
+            --manifest ".buildchain/attestation-input/${{ needs.promote.outputs.github-artifact-attestation-platform-manifest-relative-path }}" \
+            --passport ".buildchain/attestation-input/${{ needs.promote.outputs.github-artifact-attestation-release-passport-relative-path }}" \
+            --bundle .buildchain/attestation-evidence/sigstore-bundle.json \
+            --evidence .buildchain/attestation-evidence/github-artifact-attestation-evidence.json \
+            --predicate .buildchain/attestation-evidence/predicate.json \
+            --provider-verification .buildchain/attestation-evidence/provider-verification.json \
+            --receipt .buildchain/attestation-publication/publication.json
+
+      - name: Retain attestation publication receipt
+        if: ${{ always() && steps.publish.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: buildchain-github-attestation-publication-${{ needs.promote.outputs.github-artifact-attestation-source-sha }}
+          path: .buildchain/attestation-publication/publication.json
+          retention-days: ${{ inputs.github-artifact-attestation-retention-days }}
+          if-no-files-found: error
+
   controller-receipt:
     name: Record release-candidate promotion controller receipt
     needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote, github-artifact-attestation, publish-github-artifact-attestation-evidence]

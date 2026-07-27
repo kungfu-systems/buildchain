@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "ef5ce46ab398bd64e8ddaf9916d6f107baea6ddd91f21eb904470f14ff4926dd",
+    "sha256": "cfabd951fad28fb421abe155733557a50c4ec5fa4ce932b8edb427388596f717",
     "summary": {
-      "cliCommandCount": 96,
-      "workflowCount": 54,
-      "actionCount": 5,
-      "sitePageCount": 57,
-      "docCommandRefCount": 286,
+      "cliCommandCount": 97,
+      "workflowCount": 55,
+      "actionCount": 6,
+      "sitePageCount": 59,
+      "docCommandRefCount": 291,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "ef5ce46ab398bd64e8ddaf9916d6f107baea6ddd91f21eb904470f14ff4926dd",
+      "sha256": "cfabd951fad28fb421abe155733557a50c4ec5fa4ce932b8edb427388596f717",
       "summary": {
-        "cliCommandCount": 96,
-        "workflowCount": 54,
-        "actionCount": 5,
-        "sitePageCount": 57,
-        "docCommandRefCount": 286,
+        "cliCommandCount": 97,
+        "workflowCount": 55,
+        "actionCount": 6,
+        "sitePageCount": 59,
+        "docCommandRefCount": 291,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -259,6 +259,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:actions/github-artifact-attestation/README.md",
+          "name": "actions/github-artifact-attestation/README.md",
+          "kind": "documentation",
+          "sourcePath": "actions/github-artifact-attestation/README.md",
+          "evidencePath": "actions/github-artifact-attestation/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
         },
         {
           "id": "doc:actions/macos-credential-island/README.md",
@@ -398,6 +410,18 @@
           "kind": "documentation",
           "sourcePath": "docs/controller-evidence.md",
           "evidencePath": "docs/controller-evidence.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:docs/github-artifact-attestation.md",
+          "name": "GitHub-native Linux artifact attestation",
+          "kind": "documentation",
+          "sourcePath": "docs/github-artifact-attestation.md",
+          "evidencePath": "docs/github-artifact-attestation.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -873,6 +897,17 @@
           "public": true
         },
         {
+          "id": "schema:packages/core/github-artifact-attestation.js",
+          "name": "schema:packages/core/github-artifact-attestation.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/github-artifact-attestation.js",
+          "evidencePath": "packages/core/github-artifact-attestation.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "schema:packages/core/buildchain-contract.js",
           "name": "schema:packages/core/buildchain-contract.js",
           "kind": "schema",
@@ -1112,6 +1147,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./artifact-verification-envelope"
+        },
+        {
+          "id": "export:./github-artifact-attestation",
+          "name": "@kungfu-tech/buildchain/github-artifact-attestation",
+          "kind": "package-export",
+          "sourcePath": "packages/core/github-artifact-attestation.js",
+          "evidencePath": "packages/core/github-artifact-attestation.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./github-artifact-attestation"
         },
         {
           "id": "export:./anchored-version-material",
@@ -2814,6 +2861,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:verify-github-artifact-attestation",
+          "name": "buildchain verify github-artifact-attestation <artifact>",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:verify-infra-contract-evidence-bundle",
           "name": "buildchain verify infra-contract-evidence-bundle <file> [--json]",
           "kind": "cli-command",
@@ -2949,7 +3008,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 69,
+          "inputCount": 72,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3143,7 +3202,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 85,
+          "inputCount": 88,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3599,7 +3658,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 72,
+          "inputCount": 75,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3911,6 +3970,34 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:github-artifact-attestation",
+          "name": "workflow:github-artifact-attestation",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/github-artifact-attestation.yml",
+          "evidencePath": ".github/workflows/github-artifact-attestation.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 13,
+          "inputs": [
+            "buildchain-ref",
+            "environment",
+            "evidence-artifact-name",
+            "evidence-run-id",
+            "platform-manifest-artifact-name",
+            "platform-manifest-relative-path",
+            "policy-json",
+            "release-passport-artifact-name",
+            "release-passport-relative-path",
+            "retention-days",
+            "source-sha",
+            "subject-artifact-name",
+            "subject-relative-path"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:github-governance-audit",
           "name": "workflow:github-governance-audit",
           "kind": "workflow",
@@ -4171,7 +4258,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 77,
+          "inputCount": 80,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4421,6 +4508,34 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "action:github-artifact-attestation",
+          "name": "action:github-artifact-attestation",
+          "kind": "action",
+          "sourcePath": "actions/github-artifact-attestation/action.yml",
+          "evidencePath": "actions/github-artifact-attestation/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 13,
+          "inputs": [
+            "attestation-id",
+            "attestation-url",
+            "bundle-path",
+            "expected-buildchain-ref",
+            "expected-caller-repository",
+            "expected-source-sha",
+            "mode",
+            "output-dir",
+            "platform-manifest-path",
+            "policy-json",
+            "preparation-json",
+            "release-passport-path",
+            "subject-path"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:macos-credential-island",
           "name": "action:macos-credential-island",
           "kind": "action",
@@ -4465,7 +4580,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 66,
+          "inputCount": 67,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -4648,6 +4763,18 @@
             "require-version-state"
           ],
           "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "site-page:action:github-artifact-attestation",
+          "name": "site-page:action:github-artifact-attestation",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
           "id": "site-page:action:macos-credential-island",
@@ -4952,6 +5079,18 @@
         {
           "id": "site-page:manual:dev-alpha-candidate-patrol",
           "name": "site-page:manual:dev-alpha-candidate-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:github-artifact-attestation",
+          "name": "site-page:manual:github-artifact-attestation",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -5381,6 +5520,39 @@
         "public": true
       },
       {
+        "id": "control:.github/workflows/github-artifact-attestation.yml",
+        "name": "control:.github/workflows/github-artifact-attestation.yml",
+        "kind": "workflow",
+        "sourcePath": ".github/workflows/github-artifact-attestation.yml",
+        "evidencePath": ".github/workflows/github-artifact-attestation.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:actions/github-artifact-attestation/action.yml",
+        "name": "control:actions/github-artifact-attestation/action.yml",
+        "kind": "action",
+        "sourcePath": "actions/github-artifact-attestation/action.yml",
+        "evidencePath": "actions/github-artifact-attestation/action.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:actions/github-artifact-attestation/index.js",
+        "name": "control:actions/github-artifact-attestation/index.js",
+        "kind": "action",
+        "sourcePath": "actions/github-artifact-attestation/index.js",
+        "evidencePath": "actions/github-artifact-attestation/index.js",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
         "id": "control:.github/workflows/release-propagation.yml",
         "name": "control:.github/workflows/release-propagation.yml",
         "kind": "workflow",
@@ -5471,6 +5643,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 348
+    "publicSurfaceCount": 360
   }
 }

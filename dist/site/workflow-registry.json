@@ -147,7 +147,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 69,
+      "inputCount": 72,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -434,7 +434,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 85,
+      "inputCount": 88,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -981,7 +981,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 72,
+      "inputCount": 75,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1307,6 +1307,40 @@
       "outputCount": 6,
       "surface": "dev-governance",
       "capabilityGroup": "governance-versioning",
+      "status": "active"
+    },
+    {
+      "id": "github-artifact-attestation",
+      "path": ".github/workflows/github-artifact-attestation.yml",
+      "reusable": true,
+      "inputs": [
+        "buildchain-ref",
+        "environment",
+        "evidence-artifact-name",
+        "evidence-run-id",
+        "platform-manifest-artifact-name",
+        "platform-manifest-relative-path",
+        "policy-json",
+        "release-passport-artifact-name",
+        "release-passport-relative-path",
+        "retention-days",
+        "source-sha",
+        "subject-artifact-name",
+        "subject-relative-path"
+      ],
+      "inputCount": 13,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [
+        "attestation-id",
+        "attestation-url",
+        "bundle-digest",
+        "evidence-artifact-name",
+        "evidence-root"
+      ],
+      "outputCount": 5,
+      "surface": "release-passport",
+      "capabilityGroup": "release-passport-trust",
       "status": "active"
     },
     {
@@ -1710,7 +1744,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 77,
+      "inputCount": 80,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1953,6 +1987,28 @@
   "actionSource": "actions/*/action.yml reverse input enumeration",
   "actions": [
     {
+      "id": "github-artifact-attestation",
+      "path": "actions/github-artifact-attestation/action.yml",
+      "inputs": [
+        "attestation-id",
+        "attestation-url",
+        "bundle-path",
+        "expected-buildchain-ref",
+        "expected-caller-repository",
+        "expected-source-sha",
+        "mode",
+        "output-dir",
+        "platform-manifest-path",
+        "policy-json",
+        "preparation-json",
+        "release-passport-path",
+        "subject-path"
+      ],
+      "inputCount": 13,
+      "capabilityGroup": "release-passport-trust",
+      "status": "active"
+    },
+    {
       "id": "macos-credential-island",
       "path": "actions/macos-credential-island/action.yml",
       "inputs": [
@@ -2053,7 +2109,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 66,
+      "inputCount": 67,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

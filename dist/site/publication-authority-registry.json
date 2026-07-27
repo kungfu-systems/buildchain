@@ -350,6 +350,21 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/github-artifact-attestation.yml",
+      "authorityClass": "evidence-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "github-artifact-attestation"
+      ],
+      "credentialMode": "oidc",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/github-artifact-attestation.yml",
+      "environment": "consumer-defined",
+      "environmentMode": "caller-bound",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/github-governance-audit.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -779,6 +794,15 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/github-artifact-attestation.yml",
+      "signals": [
+        "write-permission",
+        "oidc",
+        "environment"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/github-governance-audit.yml",
       "signals": [
         "write-permission"
@@ -909,5 +933,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "63da1d278191895989a87b3dc6b4eda344c1e9cefd97fcdcb114438b9371e57b"
+  "registryDigest": "26c309e610d1d8885cfd7d78fb7a574be903bf9085d5db929f9b41005c4f682b"
 }
