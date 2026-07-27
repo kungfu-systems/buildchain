@@ -34,28 +34,40 @@ function required(value, name) {
 
 function sha(value, name) {
   const normalized = required(value, name).toLowerCase();
-  if (!SHA.test(normalized)) throw new Error(`${name} must be an exact 40-character SHA`);
+  if (!SHA.test(normalized))
+    throw new Error(`${name} must be an exact 40-character SHA`);
   return normalized;
 }
 
 function qualifyWorkflow(row, { sourceSha, now, maxAgeSeconds }) {
-  if (!row || typeof row !== "object") throw new Error("workflow evidence is required");
+  if (!row || typeof row !== "object")
+    throw new Error("workflow evidence is required");
   const workflowPath = required(row.workflowPath, "workflowPath");
   if (sha(row.headSha, `${workflowPath} headSha`) !== sourceSha) {
-    throw new Error(`${workflowPath} evidence does not bind source SHA ${sourceSha}`);
+    throw new Error(
+      `${workflowPath} evidence does not bind source SHA ${sourceSha}`,
+    );
   }
   if (row.status !== "completed" || row.conclusion !== "success") {
     throw new Error(`${workflowPath} is not a completed successful run`);
   }
   const completedAt = required(row.completedAt, `${workflowPath} completedAt`);
   const ageSeconds = (Date.parse(now) - Date.parse(completedAt)) / 1000;
-  if (!Number.isFinite(ageSeconds) || ageSeconds < 0 || ageSeconds > maxAgeSeconds) {
-    throw new Error(`${workflowPath} evidence is stale or has an invalid completion time`);
+  if (
+    !Number.isFinite(ageSeconds) ||
+    ageSeconds < 0 ||
+    ageSeconds > maxAgeSeconds
+  ) {
+    throw new Error(
+      `${workflowPath} evidence is stale or has an invalid completion time`,
+    );
   }
   const runId = Number(row.runId);
   const runAttempt = Number(row.runAttempt || 1);
-  if (!Number.isSafeInteger(runId) || runId <= 0) throw new Error(`${workflowPath} runId is invalid`);
-  if (!Number.isSafeInteger(runAttempt) || runAttempt <= 0) throw new Error(`${workflowPath} runAttempt is invalid`);
+  if (!Number.isSafeInteger(runId) || runId <= 0)
+    throw new Error(`${workflowPath} runId is invalid`);
+  if (!Number.isSafeInteger(runAttempt) || runAttempt <= 0)
+    throw new Error(`${workflowPath} runAttempt is invalid`);
   return {
     workflowPath,
     workflowName: required(row.workflowName, `${workflowPath} workflowName`),
@@ -79,9 +91,31 @@ export function decideChannelCandidate(input) {
   const repository = required(input.repository, "repository");
   const sourceBranch = required(input.sourceBranch, "sourceBranch");
   const targetBranch = required(input.targetBranch, "targetBranch");
-  if (sourceBranch === targetBranch) throw new Error("sourceBranch and targetBranch must differ");
+  if (sourceBranch === targetBranch)
+    throw new Error("sourceBranch and targetBranch must differ");
   const sourceSha = sha(input.sourceSha, "sourceSha");
   const targetSha = sha(input.targetSha, "targetSha");
+  const selection = input.selection
+    ? {
+        mode: required(input.selection.mode, "selection.mode"),
+        observedSourceHeadSha: sha(
+          input.selection.observedSourceHeadSha,
+          "selection.observedSourceHeadSha",
+        ),
+        skippedNewerCommitCount: Number(
+          input.selection.skippedNewerCommitCount || 0,
+        ),
+      }
+    : undefined;
+  if (
+    selection &&
+    (!Number.isSafeInteger(selection.skippedNewerCommitCount) ||
+      selection.skippedNewerCommitCount < 0)
+  ) {
+    throw new Error(
+      "selection.skippedNewerCommitCount must be a non-negative integer",
+    );
+  }
   const now = required(input.now || new Date().toISOString(), "now");
   const maxAgeSeconds = Number(input.maxAgeSeconds ?? 7 * 24 * 60 * 60);
   if (!Number.isSafeInteger(maxAgeSeconds) || maxAgeSeconds <= 0) {
@@ -89,7 +123,10 @@ export function decideChannelCandidate(input) {
   }
   const comparison = input.comparison || {};
   if (comparison.status !== "ahead" || Number(comparison.aheadBy) <= 0) {
-    const reason = comparison.status === "identical" ? "target-already-current" : "source-does-not-lead-target";
+    const reason =
+      comparison.status === "identical"
+        ? "target-already-current"
+        : "source-does-not-lead-target";
     return {
       schema: CHANNEL_CANDIDATE_DECISION_SCHEMA,
       eligible: false,
@@ -97,15 +134,25 @@ export function decideChannelCandidate(input) {
       repository,
       source: { branch: sourceBranch, sha: sourceSha },
       target: { branch: targetBranch, sha: targetSha },
-      comparison: { status: String(comparison.status || "unknown"), aheadBy: Number(comparison.aheadBy || 0) },
+      comparison: {
+        status: String(comparison.status || "unknown"),
+        aheadBy: Number(comparison.aheadBy || 0),
+      },
       decidedAt: now,
     };
   }
-  const rows = Array.isArray(input.workflowEvidence) ? input.workflowEvidence : [];
-  const expectedPaths = [...new Set((input.requiredWorkflowPaths || []).map(String))];
-  if (expectedPaths.length === 0) throw new Error("requiredWorkflowPaths must not be empty");
+  const rows = Array.isArray(input.workflowEvidence)
+    ? input.workflowEvidence
+    : [];
+  const expectedPaths = [
+    ...new Set((input.requiredWorkflowPaths || []).map(String)),
+  ];
+  if (expectedPaths.length === 0)
+    throw new Error("requiredWorkflowPaths must not be empty");
   if (rows.length !== expectedPaths.length) {
-    throw new Error(`expected exactly ${expectedPaths.length} workflow evidence rows, got ${rows.length}`);
+    throw new Error(
+      `expected exactly ${expectedPaths.length} workflow evidence rows, got ${rows.length}`,
+    );
   }
   const byPath = new Map();
   for (const row of rows) {
@@ -116,7 +163,8 @@ export function decideChannelCandidate(input) {
     byPath.set(qualified.workflowPath, qualified);
   }
   for (const workflowPath of expectedPaths) {
-    if (!byPath.has(workflowPath)) throw new Error(`missing workflow evidence: ${workflowPath}`);
+    if (!byPath.has(workflowPath))
+      throw new Error(`missing workflow evidence: ${workflowPath}`);
   }
   const body = {
     schema: CHANNEL_CANDIDATE_DECISION_SCHEMA,
@@ -126,8 +174,11 @@ export function decideChannelCandidate(input) {
     source: { branch: sourceBranch, sha: sourceSha },
     target: { branch: targetBranch, sha: targetSha },
     comparison: { status: "ahead", aheadBy: Number(comparison.aheadBy) },
+    ...(selection ? { selection } : {}),
     sourceLockRef: channelCandidateSourceLockRef(targetBranch, sourceSha),
-    workflowEvidence: expectedPaths.map((workflowPath) => byPath.get(workflowPath)),
+    workflowEvidence: expectedPaths.map((workflowPath) =>
+      byPath.get(workflowPath),
+    ),
     policy: { maxAgeSeconds, requiredWorkflowPaths: expectedPaths },
     decidedAt: now,
   };

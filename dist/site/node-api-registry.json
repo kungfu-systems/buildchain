@@ -125,7 +125,7 @@
       "specifier": "@kungfu-tech/buildchain/channel-candidate",
       "export": "./channel-candidate",
       "target": "./packages/core/channel-candidate.js",
-      "digest": "sha256:fe37b5319563d16d5f4f2009c2fc097fe41f0630429c5291fb3e18ae7e7b5ee5",
+      "digest": "sha256:4f667440dc1d3df1663fba13afe68358aa3fc0c9316d1393e760bd932cec8a45",
       "summary": "Exact-source channel candidate decisions, same-SHA workflow evidence validation, and deterministic source-lock reference APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
