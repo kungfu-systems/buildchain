@@ -31,6 +31,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/dev-merge-queue-governance.yml", "governance-write"],
   [".github/workflows/dev-pr-auto-merge.yml", "governance-write"],
   [".github/workflows/github-governance-audit.yml", "governance-write"],
+  [".github/workflows/github-artifact-attestation.yml", "evidence-publication", true, ["github-artifact-attestation"], "oidc", "consumer-defined", "caller-bound", "caller-bound"],
   [".github/workflows/npm-publish.yml", "dry-run-only"],
   [".github/workflows/paper-release-sealed.yml", "product-publication", true, ["npm-publish", "github-release"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/paper-release.yml", "product-publication", true, ["npm-publish", "github-release"], "trusted-publishing", "none", "fixed", "caller-bound"],

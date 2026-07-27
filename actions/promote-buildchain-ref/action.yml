@@ -176,6 +176,9 @@ inputs:
   release-passport-buildchain-self-kfd:
     description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
     default: "false"
+  release-passport-github-artifact-attestation-policy-jsons:
+    description: "Newline- or comma-separated GitHub artifact attestation policy JSON paths bound into the Release Passport"
+    default: ""
   github-release:
     description: "Create/update the public GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
     default: "false"

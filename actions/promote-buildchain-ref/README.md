@@ -357,6 +357,13 @@ inside the final version-state workspace, after the release transaction has
 materialized generated files such as `package.json` and `dist/site/*`. This
 keeps self-hosted KFD witness hashes bound to the exact published package
 instead of to a pre-promotion checkout.
+Set `release-passport-github-artifact-attestation-policy-jsons` to one or more
+newline-separated `buildchain.github-artifact-attestation-policy/v1` paths when
+the Release Passport must require GitHub keyless provenance for Linux release
+artifacts. The higher-level v3 promotion workflow exposes the single-artifact
+`github-artifact-attestation-policy-json` input and owns staging, signing,
+provider verification, immutable GitHub Release evidence upload, and read-back;
+direct action callers own those post-Passport steps themselves.
 When present, the passport includes the aggregate build summary, platform
 artifact manifests, npm publish evidence, dist-tag promotion evidence, the
 release-state ref, trusted publishing metadata, and the Buildchain transaction

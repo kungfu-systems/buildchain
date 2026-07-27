@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:8b43d8ebf67d4705ab9fd92d78f908a57c65a78ea97be688011b2b5e2f7d992d",
+      "digest": "sha256:204601094084ab5e9a6d6738d64bf3f89f97fc23567a79d2c5dcc718d281555a",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:8b43d8ebf67d4705ab9fd92d78f908a57c65a78ea97be688011b2b5e2f7d992d",
+      "digest": "sha256:204601094084ab5e9a6d6738d64bf3f89f97fc23567a79d2c5dcc718d281555a",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -83,6 +83,19 @@
       "maturity": "stable"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/github-artifact-attestation",
+      "export": "./github-artifact-attestation",
+      "target": "./packages/core/github-artifact-attestation.js",
+      "digest": "sha256:f71887cd7d73e11a763153720c6242e700ce49e66a6e5ca01ea6cf488948e265",
+      "summary": "GitHub keyless artifact attestation policy, predicate, provider evidence, and fail-closed verification APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/anchored-version-material",
       "export": "./anchored-version-material",
       "target": "./packages/core/anchored-version-material.js",
@@ -99,7 +112,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:5772ad10d66e8fbbc07c06f4df521c7d60b631b0505b47540ce05804bcb576b0",
+      "digest": "sha256:415c04c33c1ba957420866943603f2b642751386cf55ac650d86884cad1842a1",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -346,7 +359,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication-authority.js",
-      "digest": "sha256:10a33dae7768c9fced757c7d75c673adbd016b149064dce39d9f42df5c84073e",
+      "digest": "sha256:c1b9e696669d4e6ee661ec0528244509b6b0f832ec4fad16386344b90ad91367",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -372,7 +385,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:e177e79526dd098b50d8677446a814072cb618947ff296ecb8853fe9352d371b",
+      "digest": "sha256:ae2d9310b0276c21715020d7cb43ea180e555740ac8ef1c073a88206d2f74b39",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -437,7 +450,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:842f7f1e60a8de253225ada03cf238948ce527481eb640bc6f14c6cc0ef38880",
+      "digest": "sha256:09b0794b6d0e4bc3638f52e8d58e2eb6d6ab7efd2a2f90247c48c8fa68beda16",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -450,7 +463,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport-contract",
       "export": "./release-passport-contract",
       "target": "./packages/core/release-passport-contract.js",
-      "digest": "sha256:5623da00b6355cfafc7564deb9206d36f7b2dafb24e29fec77c35deee5de5f6b",
+      "digest": "sha256:d633f8037d43db2c72662186f797d0914471540077d7163368c22779aae7eee9",
       "summary": "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -502,7 +515,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:f3a719c64881e650a6ef68e3e0d4acd40878722b0eb76b88d30081db77ad92c8",
+      "digest": "sha256:14c595f8ab51f64c2fcde3c46729fe3ba6e7b20fcd89159780aa55e341013f75",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -516,7 +529,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:47be88f5e5fd14124d03510b807722215034d34eefcebdfe2599a310350b7697"
+      "digest": "sha256:49da688f9f8b726a9169a3e4b246cb6ef07c6c626ea15c22f0b26ba1a37a58b4"
     },
     {
       "id": "build-facts",

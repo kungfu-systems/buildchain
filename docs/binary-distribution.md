@@ -47,6 +47,13 @@ Each archive is accompanied by:
 - `buildchain-release-bundle.tar.gz`;
 - `buildchain-release-bundle.json`.
 
+Linux archives may also be accompanied by a GitHub/Sigstore bundle and
+`buildchain.github-artifact-attestation-evidence/v1`. These prove the exact
+GitHub signer workflow and source digest while preserving the original compiler
+runner in the platform manifest. The GitHub-hosted signer does not rebuild or
+execute consumer source. See
+[`github-artifact-attestation.md`](github-artifact-attestation.md).
+
 ## KFD-3 Distribution Declaration
 
 Buildchain self-describes this release lane in `dist/site/kfd-claims.json` as
