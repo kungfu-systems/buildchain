@@ -16,13 +16,18 @@ function bool(value, fallback = false) {
 
 function repository(value) {
   const normalized = text(value);
-  if (!/^[^/\s]+\/[^/\s]+$/.test(normalized)) throw new Error(`repository must be owner/repo, got ${value || "<empty>"}`);
+  if (!/^[^/\s]+\/[^/\s]+$/.test(normalized))
+    throw new Error(`repository must be owner/repo, got ${value || "<empty>"}`);
   return normalized;
 }
 
 function branch(value, name) {
   const normalized = text(value).replace(/^refs\/heads\//, "");
-  if (!normalized || normalized.startsWith("-") || /[\s~^:?*[\\]/.test(normalized)) {
+  if (
+    !normalized ||
+    normalized.startsWith("-") ||
+    /[\s~^:?*[\\]/.test(normalized)
+  ) {
     throw new Error(`${name} is not a valid branch name`);
   }
   return normalized;
@@ -43,24 +48,69 @@ function integer(value, fallback) {
 
 export function normalizeDevAlphaPatrolOptions(options = {}) {
   return {
-    repository: repository(options.repository ?? process.env.BUILDCHAIN_CHANNEL_PATROL_REPOSITORY ?? process.env.GITHUB_REPOSITORY),
-    sourceBranch: branch(options.sourceBranch ?? process.env.BUILDCHAIN_CHANNEL_PATROL_SOURCE_BRANCH ?? "dev/v4/v4.0", "sourceBranch"),
-    targetBranch: branch(options.targetBranch ?? process.env.BUILDCHAIN_CHANNEL_PATROL_TARGET_BRANCH ?? "alpha/v4/v4.0", "targetBranch"),
-    devWorkflowPath: workflowPath(options.devWorkflowPath ?? process.env.BUILDCHAIN_CHANNEL_PATROL_DEV_WORKFLOW ?? ".github/workflows/dev-verify-patrol.yml", "devWorkflowPath"),
-    alphaWorkflowPath: workflowPath(options.alphaWorkflowPath ?? process.env.BUILDCHAIN_CHANNEL_PATROL_ALPHA_WORKFLOW ?? ".github/workflows/alpha-promotion-preflight.yml", "alphaWorkflowPath"),
-    maxAgeSeconds: integer(options.maxAgeSeconds ?? process.env.BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS, 7 * 24 * 60 * 60),
-    createPullRequest: bool(options.createPullRequest ?? process.env.BUILDCHAIN_CHANNEL_PATROL_CREATE_PR, false),
-    dryRun: bool(options.dryRun ?? process.env.BUILDCHAIN_CHANNEL_PATROL_DRY_RUN, true),
-    now: text(options.now ?? process.env.BUILDCHAIN_CHANNEL_PATROL_NOW) || new Date().toISOString(),
-    outputPath: text(options.outputPath ?? process.env.BUILDCHAIN_CHANNEL_PATROL_OUTPUT_PATH) || ".buildchain/patrol/dev-alpha-candidate.json",
+    repository: repository(
+      options.repository ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_REPOSITORY ??
+        process.env.GITHUB_REPOSITORY,
+    ),
+    sourceBranch: branch(
+      options.sourceBranch ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_SOURCE_BRANCH ??
+        "dev/v4/v4.0",
+      "sourceBranch",
+    ),
+    targetBranch: branch(
+      options.targetBranch ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_TARGET_BRANCH ??
+        "alpha/v4/v4.0",
+      "targetBranch",
+    ),
+    devWorkflowPath: workflowPath(
+      options.devWorkflowPath ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_DEV_WORKFLOW ??
+        ".github/workflows/dev-verify-patrol.yml",
+      "devWorkflowPath",
+    ),
+    alphaWorkflowPath: workflowPath(
+      options.alphaWorkflowPath ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_ALPHA_WORKFLOW ??
+        ".github/workflows/alpha-promotion-preflight.yml",
+      "alphaWorkflowPath",
+    ),
+    maxAgeSeconds: integer(
+      options.maxAgeSeconds ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS,
+      7 * 24 * 60 * 60,
+    ),
+    createPullRequest: bool(
+      options.createPullRequest ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_CREATE_PR,
+      false,
+    ),
+    dryRun: bool(
+      options.dryRun ?? process.env.BUILDCHAIN_CHANNEL_PATROL_DRY_RUN,
+      true,
+    ),
+    now:
+      text(options.now ?? process.env.BUILDCHAIN_CHANNEL_PATROL_NOW) ||
+      new Date().toISOString(),
+    outputPath:
+      text(
+        options.outputPath ?? process.env.BUILDCHAIN_CHANNEL_PATROL_OUTPUT_PATH,
+      ) || ".buildchain/patrol/dev-alpha-candidate.json",
   };
 }
 
 function latestWorkflowEvidence(runs, workflowPathValue, sourceSha) {
   const matching = runs
-    .filter((run) => run.path === workflowPathValue && run.head_sha === sourceSha)
+    .filter(
+      (run) => run.path === workflowPathValue && run.head_sha === sourceSha,
+    )
     .sort((left, right) => Number(right.id) - Number(left.id));
-  if (matching.length === 0) throw new Error(`missing completed same-SHA workflow run: ${workflowPathValue}`);
+  if (matching.length === 0)
+    throw new Error(
+      `missing completed same-SHA workflow run: ${workflowPathValue}`,
+    );
   const run = matching[0];
   return {
     workflowPath: workflowPathValue,
@@ -75,25 +125,122 @@ function latestWorkflowEvidence(runs, workflowPathValue, sourceSha) {
   };
 }
 
-export async function runDevAlphaCandidatePatrol(optionsInput = {}, clientInput) {
+function workflowEvidenceIsFreshAndSuccessful(run, { now, maxAgeSeconds }) {
+  const completedAt = Date.parse(run.updated_at);
+  const ageSeconds = (Date.parse(now) - completedAt) / 1000;
+  return (
+    run.status === "completed" &&
+    run.conclusion === "success" &&
+    Number.isFinite(ageSeconds) &&
+    ageSeconds >= 0 &&
+    ageSeconds <= maxAgeSeconds
+  );
+}
+
+function latestRunsBySha(runs, workflowPathValue) {
+  const latest = new Map();
+  for (const run of runs.filter((row) => row.path === workflowPathValue)) {
+    const current = latest.get(run.head_sha);
+    if (!current || Number(run.id) > Number(current.id))
+      latest.set(run.head_sha, run);
+  }
+  return latest;
+}
+
+export function selectLatestQualifiedSource({
+  sourceHistory,
+  workflowRunsByPath,
+  requiredWorkflowPaths,
+  now,
+  maxAgeSeconds,
+}) {
+  const latestByPath = new Map(
+    requiredWorkflowPaths.map((workflow) => [
+      workflow,
+      latestRunsBySha(workflowRunsByPath.get(workflow) || [], workflow),
+    ]),
+  );
+  for (let index = 0; index < sourceHistory.length; index += 1) {
+    const sourceSha = sourceHistory[index];
+    const rows = requiredWorkflowPaths.map((workflow) =>
+      latestByPath.get(workflow).get(sourceSha),
+    );
+    if (
+      rows.every((run) =>
+        workflowEvidenceIsFreshAndSuccessful(run || {}, { now, maxAgeSeconds }),
+      )
+    ) {
+      return {
+        sourceSha,
+        skippedNewerCommitCount: index,
+        workflowEvidence: requiredWorkflowPaths.map((workflow) =>
+          latestWorkflowEvidence(
+            workflowRunsByPath.get(workflow) || [],
+            workflow,
+            sourceSha,
+          ),
+        ),
+      };
+    }
+  }
+  throw new Error(
+    "no source commit ahead of target has fresh completed successful same-SHA workflow evidence",
+  );
+}
+
+export async function runDevAlphaCandidatePatrol(
+  optionsInput = {},
+  clientInput,
+) {
   const options = normalizeDevAlphaPatrolOptions(optionsInput);
-  if (options.sourceBranch === options.targetBranch) throw new Error("source and target branches must differ");
-  const client = clientInput || createGitHubChannelCandidateClient({
-    repository: options.repository,
-    token: process.env.GITHUB_TOKEN,
-  });
-  const [sourceSha, targetSha] = await Promise.all([
+  if (options.sourceBranch === options.targetBranch)
+    throw new Error("source and target branches must differ");
+  const client =
+    clientInput ||
+    createGitHubChannelCandidateClient({
+      repository: options.repository,
+      token: process.env.GITHUB_TOKEN,
+    });
+  const [observedSourceHeadSha, targetSha] = await Promise.all([
     client.resolveBranch(options.sourceBranch),
     client.resolveBranch(options.targetBranch),
   ]);
-  const comparison = await client.compare(targetSha, sourceSha);
-  const requiredWorkflowPaths = [options.devWorkflowPath, options.alphaWorkflowPath];
+  const headComparison = await client.compare(targetSha, observedSourceHeadSha);
+  const requiredWorkflowPaths = [
+    options.devWorkflowPath,
+    options.alphaWorkflowPath,
+  ];
+  let sourceSha = observedSourceHeadSha;
+  let comparison = headComparison;
   let workflowEvidence = [];
-  if (comparison.status === "ahead" && Number(comparison.ahead_by) > 0) {
-    const runs = await client.listCompletedRuns(sourceSha);
-    workflowEvidence = requiredWorkflowPaths.map((workflow) =>
-      latestWorkflowEvidence(runs, workflow, sourceSha),
-    );
+  let skippedNewerCommitCount = 0;
+  if (
+    headComparison.status === "ahead" &&
+    Number(headComparison.ahead_by) > 0
+  ) {
+    const [sourceHistory, ...workflowRunSets] = await Promise.all([
+      client.listBranchHistory(options.sourceBranch, targetSha),
+      ...requiredWorkflowPaths.map((workflow) =>
+        client.listCompletedWorkflowRuns(workflow, options.sourceBranch),
+      ),
+    ]);
+    const selected = selectLatestQualifiedSource({
+      sourceHistory,
+      workflowRunsByPath: new Map(
+        requiredWorkflowPaths.map((workflow, index) => [
+          workflow,
+          workflowRunSets[index],
+        ]),
+      ),
+      requiredWorkflowPaths,
+      now: options.now,
+      maxAgeSeconds: options.maxAgeSeconds,
+    });
+    sourceSha = selected.sourceSha;
+    skippedNewerCommitCount = selected.skippedNewerCommitCount;
+    workflowEvidence = selected.workflowEvidence;
+    if (sourceSha !== observedSourceHeadSha)
+      comparison = await client.compare(targetSha, sourceSha);
   }
   const decision = decideChannelCandidate({
     repository: options.repository,
@@ -102,6 +249,11 @@ export async function runDevAlphaCandidatePatrol(optionsInput = {}, clientInput)
     sourceSha,
     targetSha,
     comparison: { status: comparison.status, aheadBy: comparison.ahead_by },
+    selection: {
+      mode: "latest-qualified-source-ancestor",
+      observedSourceHeadSha,
+      skippedNewerCommitCount,
+    },
     workflowEvidence,
     requiredWorkflowPaths,
     maxAgeSeconds: options.maxAgeSeconds,
@@ -118,11 +270,14 @@ export async function runDevAlphaCandidatePatrol(optionsInput = {}, clientInput)
         "Buildchain exact-source channel candidate.",
         "",
         `- Source branch: \`${options.sourceBranch}\``,
+        `- Observed source HEAD: \`${observedSourceHeadSha}\``,
         `- Source SHA: \`${sourceSha}\``,
+        `- Skipped newer unqualified commits: \`${skippedNewerCommitCount}\``,
         `- Target branch/head: \`${options.targetBranch}\` / \`${targetSha}\``,
         `- Decision root: \`${decision.decisionRoot}\``,
         ...decision.workflowEvidence.map(
-          (row) => `- ${row.workflowName}: [run ${row.runId} attempt ${row.runAttempt}](${row.url})`,
+          (row) =>
+            `- ${row.workflowName}: [run ${row.runId} attempt ${row.runAttempt}](${row.url})`,
         ),
         "",
         "The source-lock branch must continue to point at the exact source SHA. This patrol never merges the PR, publishes a package, creates a tag, or creates a release.",
@@ -142,7 +297,11 @@ function encodeRef(value) {
   return value.split("/").map(encodeURIComponent).join("/");
 }
 
-export function createGitHubChannelCandidateClient({ repository: repositoryInput, token, fetchImpl = globalThis.fetch }) {
+export function createGitHubChannelCandidateClient({
+  repository: repositoryInput,
+  token,
+  fetchImpl = globalThis.fetch,
+}) {
   const [owner, repo] = repository(repositoryInput).split("/");
   const headers = {
     accept: "application/vnd.github+json",
@@ -150,34 +309,74 @@ export function createGitHubChannelCandidateClient({ repository: repositoryInput
     "user-agent": "buildchain-dev-alpha-candidate-patrol",
     "x-github-api-version": "2022-11-28",
   };
-  async function api(requestPath, { method = "GET", body, allow404 = false } = {}) {
+  async function api(
+    requestPath,
+    { method = "GET", body, allow404 = false } = {},
+  ) {
     const response = await fetchImpl(`https://api.github.com${requestPath}`, {
       method,
-      headers: Object.fromEntries(Object.entries(headers).filter(([, value]) => value)),
+      headers: Object.fromEntries(
+        Object.entries(headers).filter(([, value]) => value),
+      ),
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const raw = await response.text();
     const payload = raw ? JSON.parse(raw) : undefined;
     if (allow404 && response.status === 404) return undefined;
-    if (!response.ok) throw new Error(`GitHub API ${method} ${requestPath} failed with ${response.status}: ${payload?.message || raw}`);
+    if (!response.ok)
+      throw new Error(
+        `GitHub API ${method} ${requestPath} failed with ${response.status}: ${payload?.message || raw}`,
+      );
     return payload;
   }
   return {
     async resolveBranch(ref) {
-      const payload = await api(`/repos/${owner}/${repo}/git/ref/heads/${encodeRef(ref)}`);
+      const payload = await api(
+        `/repos/${owner}/${repo}/git/ref/heads/${encodeRef(ref)}`,
+      );
       return text(payload.object?.sha);
     },
     async compare(baseSha, headSha) {
       return api(`/repos/${owner}/${repo}/compare/${baseSha}...${headSha}`);
     },
-    async listCompletedRuns(headSha) {
-      const payload = await api(`/repos/${owner}/${repo}/actions/runs?head_sha=${encodeURIComponent(headSha)}&status=completed&per_page=100`);
-      return payload.workflow_runs || [];
+    async listCompletedWorkflowRuns(workflowPathValue, sourceBranch) {
+      const runs = [];
+      for (let page = 1; page <= 10; page += 1) {
+        const payload = await api(
+          `/repos/${owner}/${repo}/actions/workflows/${encodeURIComponent(workflowPathValue)}/runs?branch=${encodeURIComponent(sourceBranch)}&status=completed&per_page=100&page=${page}`,
+        );
+        const rows = payload.workflow_runs || [];
+        runs.push(...rows);
+        if (rows.length < 100) return runs;
+      }
+      throw new Error(
+        `${workflowPathValue} completed workflow history exceeds 1000 runs`,
+      );
+    },
+    async listBranchHistory(sourceBranch, targetSha) {
+      const commits = [];
+      for (let page = 1; page <= 10; page += 1) {
+        const rows = await api(
+          `/repos/${owner}/${repo}/commits?sha=${encodeURIComponent(sourceBranch)}&per_page=100&page=${page}`,
+        );
+        for (const commit of rows) {
+          const commitSha = text(commit.sha);
+          if (commitSha === targetSha) return commits;
+          commits.push(commitSha);
+        }
+        if (rows.length < 100) return commits;
+      }
+      return commits;
     },
     async ensureImmutableBranch(ref, sourceSha) {
-      const current = await api(`/repos/${owner}/${repo}/git/ref/heads/${encodeRef(ref)}`, { allow404: true });
+      const current = await api(
+        `/repos/${owner}/${repo}/git/ref/heads/${encodeRef(ref)}`,
+        { allow404: true },
+      );
       if (current && current.object?.sha !== sourceSha) {
-        throw new Error(`source-lock branch ${ref} points to ${current.object?.sha}, not ${sourceSha}`);
+        throw new Error(
+          `source-lock branch ${ref} points to ${current.object?.sha}, not ${sourceSha}`,
+        );
       }
       if (current) return current;
       return api(`/repos/${owner}/${repo}/git/refs`, {
@@ -186,11 +385,16 @@ export function createGitHubChannelCandidateClient({ repository: repositoryInput
       });
     },
     async ensurePullRequest({ head, base, title, body }) {
-      const open = await api(`/repos/${owner}/${repo}/pulls?state=open&head=${encodeURIComponent(`${owner}:${head}`)}&base=${encodeURIComponent(base)}&per_page=20`);
-      return open[0] || api(`/repos/${owner}/${repo}/pulls`, {
-        method: "POST",
-        body: { head, base, title, body },
-      });
+      const open = await api(
+        `/repos/${owner}/${repo}/pulls?state=open&head=${encodeURIComponent(`${owner}:${head}`)}&base=${encodeURIComponent(base)}&per_page=20`,
+      );
+      return (
+        open[0] ||
+        api(`/repos/${owner}/${repo}/pulls`, {
+          method: "POST",
+          body: { head, base, title, body },
+        })
+      );
     },
   };
 }
@@ -214,7 +418,8 @@ async function main() {
   fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
   fs.writeFileSync(options.outputPath, `${JSON.stringify(result, null, 2)}\n`);
   const summary = markdown(result);
-  if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+  if (process.env.GITHUB_STEP_SUMMARY)
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
   else process.stdout.write(summary);
   if (process.env.GITHUB_OUTPUT) {
     const outputs = {
@@ -224,7 +429,12 @@ async function main() {
       "source-lock-ref": result.decision.sourceLockRef || "",
       "promotion-pr": result.pullRequest?.html_url || "",
     };
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `${Object.entries(outputs).map(([key, value]) => `${key}=${value}`).join("\n")}\n`);
+    fs.appendFileSync(
+      process.env.GITHUB_OUTPUT,
+      `${Object.entries(outputs)
+        .map(([key, value]) => `${key}=${value}`)
+        .join("\n")}\n`,
+    );
   }
 }
 
