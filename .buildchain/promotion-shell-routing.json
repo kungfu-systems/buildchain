@@ -16,7 +16,9 @@
       "release-activation-command",
       "release-activation-receipt-set-path",
       "release-passport-evidence-command",
-      "release-passport-evidence-path"
+      "release-passport-evidence-path",
+      "release-passport-kfd-support-matrix-json",
+      "release-passport-kfd-product-gate-jsons"
     ]
   }
 }
