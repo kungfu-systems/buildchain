@@ -124,6 +124,7 @@ const BUILDCHAIN_AGGREGATION_FIELDS = [
   "distTagPromotion",
   "controllerReceipts",
   "kfdSupport",
+  "githubArtifactAttestations",
   "artifacts",
   "evidence",
   "recovery",

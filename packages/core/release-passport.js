@@ -1990,6 +1990,39 @@ export function createReleaseCheckReport({
     issues.push(issue("error", "kfdSupport.section", "KFD support evidence is present without a release-passport projection"));
   }
 
+  for (const [index, value] of (passport?.githubArtifactAttestations || []).entries()) {
+    try {
+      const policy = normalizeGitHubArtifactAttestationPolicy(value);
+      if (policy.caller.sourceSha !== String(passport?.release?.sourceSha || "").toLowerCase()) {
+        issues.push(issue(
+          "error",
+          `githubArtifactAttestations[${index}].caller.sourceSha`,
+          "attestation policy source SHA must match passport.release.sourceSha",
+        ));
+      }
+      const artifact = (passport?.artifacts || []).find((entry) => entry.name === policy.subject.name);
+      if (!artifact) {
+        issues.push(issue(
+          "error",
+          `githubArtifactAttestations[${index}].subject.name`,
+          `attestation subject ${policy.subject.name} is absent from the Release Passport artifacts`,
+        ));
+      } else if (artifact.sha256 !== policy.subject.digest.sha256) {
+        issues.push(issue(
+          "error",
+          `githubArtifactAttestations[${index}].subject.digest`,
+          `attestation subject ${policy.subject.name} digest differs from the Release Passport artifact`,
+        ));
+      }
+    } catch (error) {
+      issues.push(issue(
+        "error",
+        `githubArtifactAttestations[${index}]`,
+        error.message,
+      ));
+    }
+  }
+
   const tag = passport?.release?.tag || "";
   if (!tag) {
     issues.push(issue("error", "release.tag", "release.tag is required"));
