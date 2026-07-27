@@ -168,6 +168,9 @@ test("stable route calls the hidden advanced workflow through the current major 
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
     unsupportedInputs: [
+      "github-artifact-attestation-environment",
+      "github-artifact-attestation-policy-json",
+      "github-artifact-attestation-retention-days",
       "release-activation-command",
       "release-activation-receipt-set-path",
       "release-passport-evidence-command",
@@ -200,6 +203,9 @@ test("stable route forwards only inputs supported by the current workflow shell"
   }
   assert.doesNotMatch(stableBlock, /^      release-passport-kfd-support-matrix-json:/m);
   assert.doesNotMatch(stableBlock, /^      release-passport-kfd-product-gate-jsons:/m);
+  assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-policy-json:/m);
+  assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-environment:/m);
+  assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-retention-days:/m);
   assert.match(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(stableBlock, /^      publish-rematerialize-on-resume:/m);
   assert.match(
