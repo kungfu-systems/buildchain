@@ -311,20 +311,76 @@ export function parseIdentityListing(output, expectedSha1) {
   return selected[0];
 }
 
-export function parseNotaryResult(output, label) {
+export function parseNotarySubmission(output, label) {
   let value;
   try {
     value = JSON.parse(String(output || ""));
   } catch {
     throw new Error(`${label} notarization did not return JSON`);
   }
-  if (
-    value.status !== "Accepted" ||
-    !/^[0-9a-f-]{36}$/iu.test(String(value.id || ""))
-  ) {
-    throw new Error(`${label} notarization was not accepted`);
+  if (!/^[0-9a-f-]{36}$/iu.test(String(value.id || ""))) {
+    throw new Error(`${label} notarization did not return a submission id`);
+  }
+  if (!/^[A-Za-z][A-Za-z -]{0,63}$/u.test(String(value.status || ""))) {
+    throw new Error(`${label} notarization did not return a bounded status`);
   }
   return { id: value.id, status: value.status };
+}
+
+export function parseNotaryResult(output, label) {
+  const result = parseNotarySubmission(output, label);
+  if (result.status !== "Accepted") {
+    throw new Error(`${label} notarization was not accepted`);
+  }
+  return result;
+}
+
+function boundedNotaryText(value, maxLength) {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .replace(/[\u0000-\u001f\u007f]+/gu, " ")
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/giu, "<email>")
+    .replace(
+      /(?:[A-Za-z]:\\Users\\|\/Users\/|\/home\/)[^/\\\s]+[/\\]/gu,
+      "<home>/",
+    )
+    .replace(
+      /\b(token|secret|password|api[-_ ]?key)\s*[:=]\s*[^\s,;]+/giu,
+      "$1=<redacted>",
+    )
+    .replace(/\s+/gu, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+export function summarizeNotaryLog(output, label) {
+  let value;
+  try {
+    value = JSON.parse(String(output || ""));
+  } catch {
+    throw new Error(`${label} notarization log did not return JSON`);
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} notarization log did not return an object`);
+  }
+  const issues = (Array.isArray(value.issues) ? value.issues : [])
+    .filter(
+      (issue) => issue && typeof issue === "object" && !Array.isArray(issue),
+    )
+    .slice(0, 5)
+    .map((issue) => ({
+      severity: boundedNotaryText(issue.severity, 32),
+      code: boundedNotaryText(issue.code, 64),
+      path: boundedNotaryText(issue.path, 240),
+      message: boundedNotaryText(issue.message, 400),
+      architecture: boundedNotaryText(issue.architecture, 32),
+    }));
+  return {
+    status: boundedNotaryText(value.status, 64),
+    statusCode: boundedNotaryText(value.statusCode, 64),
+    statusSummary: boundedNotaryText(value.statusSummary, 400),
+    issues,
+  };
 }
 
 export function entitlementsForProfile(profile) {

@@ -19,7 +19,7 @@ import {
   entitlementsForProfile,
   loadCredentialInput,
   parseIdentityListing,
-  parseNotaryResult,
+  parseNotarySubmission,
   requirePattern,
   requireRepository,
   requireSha,
@@ -30,6 +30,7 @@ import {
   sha256File,
   signingIgnore,
   signingOptionsForFile,
+  summarizeNotaryLog,
 } from "./lib.js";
 
 function input(name, required = true) {
@@ -148,7 +149,47 @@ function submitNotary(target, credentials, label) {
     ],
     { redact: true, stdoutOnly: true },
   );
-  return parseNotaryResult(output, label);
+  const submission = parseNotarySubmission(output, label);
+  if (submission.status === "Accepted") return submission;
+
+  let diagnostics = {
+    status: submission.status,
+    statusCode: "",
+    statusSummary: "sanitized notarization log unavailable",
+    issues: [],
+  };
+  try {
+    const log = runFile(
+      "/usr/bin/xcrun",
+      [
+        "notarytool",
+        "log",
+        submission.id,
+        "--key",
+        credentials.keyPath,
+        "--key-id",
+        credentials.keyId,
+        "--issuer",
+        credentials.issuer,
+        "--output-format",
+        "json",
+      ],
+      { redact: true, stdoutOnly: true },
+    );
+    const summary = summarizeNotaryLog(log, label);
+    diagnostics = {
+      ...summary,
+      status: summary.status || submission.status,
+    };
+  } catch {
+    // The submission identity and status remain useful without exposing command output.
+  }
+  throw new Error(
+    `${label} notarization was not accepted: ${JSON.stringify({
+      submissionId: submission.id,
+      ...diagnostics,
+    }).slice(0, 4000)}`,
+  );
 }
 
 function staple(target) {
