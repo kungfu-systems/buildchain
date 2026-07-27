@@ -21,13 +21,25 @@ ai_provenance:
 
 Buildchain provides a reusable observation and PR controller for repositories
 that promote a development branch into a protected Alpha branch. It does not
-publish Alpha. The controller reads the exact heads of both branches and accepts
-the development head only when:
+publish Alpha. The controller reads the exact heads of both branches, walks the
+bounded development history from newest to oldest (stopping early at the Alpha
+head), and selects the newest commit that satisfies all of these conditions:
 
 - the source is strictly ahead of the recorded target head;
-- the latest completed Dev Patrol for that exact source SHA succeeded;
-- the latest completed Alpha preflight for the same SHA succeeded; and
+- the latest completed Dev Patrol for that exact commit SHA succeeded;
+- the latest completed Alpha preflight for the same commit SHA succeeded; and
 - both runs are within the caller's evidence age limit.
+
+The selected commit can be behind the observed development head when newer
+commits have not completed both workflows yet. The decision binds the observed
+head, selected SHA, and count of skipped newer commits. This makes a slow native
+verification lane live under continuous development without silently treating
+an unqualified head as releasable.
+
+History discovery is bounded to the newest 1000 development commits. The
+controller then compares the selected SHA to the exact Alpha head before it can
+be eligible, so a bounded scan cannot turn a commit outside the promotion
+ancestry into a candidate.
 
 The decision is `kungfu-buildchain-channel-candidate-decision/v1`. It records the
 source and target branches and SHAs, comparison distance, workflow paths, run
