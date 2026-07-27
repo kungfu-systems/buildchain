@@ -111,6 +111,8 @@ jobs:
     uses: ./.github/workflows/.release-candidate-promote.yml
     permissions:
       actions: write
+      artifact-metadata: write
+      attestations: write
       checks: write
       contents: write
       id-token: write
