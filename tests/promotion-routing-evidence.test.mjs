@@ -58,6 +58,16 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
     path.resolve(".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
+  const promoteJob = workflow.slice(
+    workflow.indexOf("\n  promote:"),
+    workflow.indexOf("\n  github-artifact-attestation:"),
+  );
+  const checkoutShell = promoteJob.indexOf(
+    "path: .buildchain/promotion-shell",
+  );
+  const recordRouting = promoteJob.indexOf(
+    "node .buildchain/promotion-shell/scripts/promotion-routing-evidence.mjs",
+  );
   assert.match(
     workflow,
     /bash \.buildchain\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
@@ -65,6 +75,11 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
   assert.match(
     workflow,
     /node \.buildchain\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs/,
+  );
+  assert.ok(checkoutShell >= 0, "promote job must checkout the selected shell");
+  assert.ok(
+    checkoutShell < recordRouting,
+    "promote job must checkout the selected shell before using its helper",
   );
   assert.doesNotMatch(workflow, /node <<'NODE'[\s\S]*buildchain\.promotion-routing\/v1/);
 });
