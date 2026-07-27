@@ -1908,7 +1908,7 @@ jobs:
       attestations: write
       contents: read
       id-token: write
-    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@ad57ae0fee5072a1de7a0b0182f70c0c41e45abb
+    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@375b2d4b8a904776453773a33b4c4e4556c8c999
     with:
       buildchain-ref: ${{ needs.promote.outputs.github-artifact-attestation-signer-ref }}
       evidence-run-id: ${{ github.run_id }}
