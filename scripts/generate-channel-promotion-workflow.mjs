@@ -205,6 +205,8 @@ ${publicOutputs(outputs)}
 
 permissions:
   actions: write
+  artifact-metadata: write
+  attestations: write
   checks: write
   contents: write
   id-token: write
@@ -406,6 +408,8 @@ jobs:
     uses: kungfu-systems/buildchain/${alphaRoute.workflowPath}@${alphaRoute.callRef}
     permissions:
       actions: write
+      artifact-metadata: write
+      attestations: write
       checks: write
       contents: write
       id-token: write
@@ -422,6 +426,8 @@ ${alphaForwarded}
     uses: kungfu-systems/buildchain/${stableRoute.workflowPath}@${stableRoute.callRef}
     permissions:
       actions: write
+      artifact-metadata: write
+      attestations: write
       checks: write
       contents: write
       id-token: write

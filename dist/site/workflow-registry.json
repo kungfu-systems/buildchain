@@ -1238,22 +1238,27 @@
         "dev-workflow-path",
         "dry-run",
         "max-age-seconds",
+        "settlement-authorized",
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 9,
+      "inputCount": 10,
       "secrets": [
         "promotion-token"
       ],
       "secretCount": 1,
       "outputs": [
+        "active-candidate-pr",
+        "controller-state",
         "eligible",
+        "next-candidate-sha",
         "promotion-pr",
         "result-path",
         "selected-sha",
+        "settlement-action",
         "source-lock-ref"
       ],
-      "outputCount": 5,
+      "outputCount": 9,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
       "status": "active"
