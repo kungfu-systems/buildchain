@@ -447,6 +447,7 @@
     "docs/reusable-build-surface.md",
     "docs/release-candidate.md",
     "docs/stable-candidate-patrol.md",
+    "docs/dev-alpha-candidate-patrol.md",
     "docs/observed-evidence-patrol.md",
     "docs/release-governance.md",
     "docs/release-passport.md",

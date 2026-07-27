@@ -1,0 +1,122 @@
+name: Buildchain Dev to Alpha Candidate Patrol
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        description: Buildchain runtime repository
+        default: kungfu-systems/buildchain
+        required: false
+        type: string
+      buildchain-ref:
+        description: Buildchain runtime ref
+        default: v3-alpha
+        required: false
+        type: string
+      source-branch:
+        description: Development source branch
+        required: true
+        type: string
+      target-branch:
+        description: Alpha target branch
+        required: true
+        type: string
+      dev-workflow-path:
+        description: Repository path of the Dev Patrol workflow
+        default: .github/workflows/dev-verify-patrol.yml
+        required: false
+        type: string
+      alpha-workflow-path:
+        description: Repository path of the Alpha preflight workflow
+        default: .github/workflows/alpha-promotion-preflight.yml
+        required: false
+        type: string
+      max-age-seconds:
+        description: Maximum age of each same-SHA workflow result
+        default: 604800
+        required: false
+        type: number
+      create-pull-request:
+        description: Create or reuse the immutable source-lock candidate PR
+        default: false
+        required: false
+        type: boolean
+      dry-run:
+        description: Evaluate without creating a branch or pull request
+        default: true
+        required: false
+        type: boolean
+    secrets:
+      promotion-token:
+        description: Repository-owned token for source-lock branch and PR writes
+        required: false
+    outputs:
+      result-path:
+        value: ${{ jobs.patrol.outputs.result-path }}
+      eligible:
+        value: ${{ jobs.patrol.outputs.eligible }}
+      selected-sha:
+        value: ${{ jobs.patrol.outputs.selected-sha }}
+      source-lock-ref:
+        value: ${{ jobs.patrol.outputs.source-lock-ref }}
+      promotion-pr:
+        value: ${{ jobs.patrol.outputs.promotion-pr }}
+
+permissions:
+  actions: read
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: buildchain-dev-alpha-candidate-${{ github.repository }}-${{ inputs.target-branch }}
+  cancel-in-progress: false
+
+jobs:
+  patrol:
+    runs-on: ubuntu-24.04
+    outputs:
+      result-path: ${{ steps.patrol.outputs.result-path }}
+      eligible: ${{ steps.patrol.outputs.eligible }}
+      selected-sha: ${{ steps.patrol.outputs.selected-sha }}
+      source-lock-ref: ${{ steps.patrol.outputs.source-lock-ref }}
+      promotion-pr: ${{ steps.patrol.outputs.promotion-pr }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install Buildchain runtime
+        run: |
+          corepack prepare pnpm@11.7.0 --activate
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile
+
+      - name: Evaluate exact-source candidate
+        id: patrol
+        run: node .buildchain/runtime/scripts/dev-alpha-candidate-patrol.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.promotion-token || github.token }}
+          BUILDCHAIN_CHANNEL_PATROL_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CHANNEL_PATROL_SOURCE_BRANCH: ${{ inputs.source-branch }}
+          BUILDCHAIN_CHANNEL_PATROL_TARGET_BRANCH: ${{ inputs.target-branch }}
+          BUILDCHAIN_CHANNEL_PATROL_DEV_WORKFLOW: ${{ inputs.dev-workflow-path }}
+          BUILDCHAIN_CHANNEL_PATROL_ALPHA_WORKFLOW: ${{ inputs.alpha-workflow-path }}
+          BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS: ${{ inputs.max-age-seconds }}
+          BUILDCHAIN_CHANNEL_PATROL_CREATE_PR: ${{ inputs.create-pull-request }}
+          BUILDCHAIN_CHANNEL_PATROL_DRY_RUN: ${{ inputs.dry-run }}
+          BUILDCHAIN_CHANNEL_PATROL_OUTPUT_PATH: .buildchain/patrol/dev-alpha-candidate.json
+
+      - name: Upload exact-source decision
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-dev-alpha-candidate-${{ steps.patrol.outputs.selected-sha }}
+          path: ${{ steps.patrol.outputs.result-path }}
+          if-no-files-found: error
+          retention-days: 30
