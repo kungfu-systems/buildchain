@@ -10,6 +10,9 @@ import {
   decideChannelCandidate,
 } from "../packages/core/channel-candidate.js";
 import {
+  createGitHubChannelCandidateClient,
+  managedCandidateFromPullRequest,
+  parseCandidateStateMarker,
   runDevAlphaCandidatePatrol,
   selectLatestQualifiedSource,
 } from "../scripts/dev-alpha-candidate-patrol.mjs";
@@ -17,6 +20,7 @@ import {
 const SOURCE_SHA = "a".repeat(40);
 const TARGET_SHA = "b".repeat(40);
 const OBSERVED_SHA = "c".repeat(40);
+const ACTIVE_SHA = "d".repeat(40);
 const NOW = "2026-07-26T22:00:00.000Z";
 const DEV = ".github/workflows/dev-verify-patrol.yml";
 const ALPHA = ".github/workflows/alpha-promotion-preflight.yml";
@@ -154,6 +158,7 @@ test("patrol exits cleanly without workflow evidence when target is already curr
         "source history must not be queried for an identical target",
       );
     },
+    listOpenPullRequests: async () => [],
   };
   const result = await runDevAlphaCandidatePatrol(
     { ...patrolOptions, createPullRequest: false, dryRun: true },
@@ -188,6 +193,7 @@ function client({
   sourceHistory = [SOURCE_SHA],
   runs = [apiRun(DEV), apiRun(ALPHA)],
   comparison = { status: "ahead", ahead_by: 4 },
+  openPullRequests = [],
 } = {}) {
   const calls = [];
   return {
@@ -198,11 +204,14 @@ function client({
     listBranchHistory: async () => sourceHistory,
     listCompletedWorkflowRuns: async (workflowPath) =>
       runs.filter((run) => run.path === workflowPath),
+    listOpenPullRequests: async () => openPullRequests,
     ensureImmutableBranch: async (ref, sha) => calls.push(["branch", ref, sha]),
     ensurePullRequest: async (request) => {
       calls.push(["pr", request]);
-      return { html_url: "https://example.invalid/pull/9" };
+      return { number: 9, html_url: "https://example.invalid/pull/9" };
     },
+    updatePullRequestBody: async (number, body) =>
+      calls.push(["update-pr", number, body]),
   };
 }
 
@@ -215,6 +224,28 @@ const patrolOptions = {
   now: NOW,
   maxAgeSeconds: 86400,
 };
+
+function candidatePullRequest({
+  sourceSha = ACTIVE_SHA,
+  number = 17,
+  body,
+} = {}) {
+  return {
+    number,
+    html_url: `https://example.invalid/pull/${number}`,
+    body:
+      body ||
+      [
+        "Buildchain exact-source channel candidate.",
+        "",
+        `- Source SHA: \`${sourceSha}\``,
+      ].join("\n"),
+    head: {
+      ref: `buildchain/candidate/alpha-v4-v4.0/${sourceSha.slice(0, 12)}`,
+    },
+    base: { ref: "alpha/v4/v4.0" },
+  };
+}
 
 test("dry-run emits an exact decision without GitHub writes", async () => {
   const fake = client();
@@ -279,11 +310,14 @@ test("a failed latest rerun excludes that SHA and falls back to the next qualifi
 
 test("patrol fails closed when no source ancestor has the complete evidence pair", async () => {
   const fake = client({ runs: [apiRun(ALPHA)] });
-  await assert.rejects(
-    runDevAlphaCandidatePatrol(
-      { ...patrolOptions, createPullRequest: false, dryRun: true },
-      fake,
-    ),
+  const result = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, createPullRequest: false, dryRun: true },
+    fake,
+  );
+  assert.equal(result.decision.eligible, false);
+  assert.equal(result.controller.state, "blocked");
+  assert.match(
+    result.decision.blockReason,
     /no source commit ahead of target has fresh completed successful same-SHA workflow evidence/u,
   );
 });
@@ -305,6 +339,246 @@ test("candidate mode creates only an immutable branch and protected PR request",
   assert.doesNotMatch(
     fake.calls[1][1].body,
     /auto-merge|publish npm|create release/iu,
+  );
+  assert.equal(result.controller.state, "active");
+  assert.equal(result.controller.settlementAction, "create-active-candidate");
+  assert.equal(
+    parseCandidateStateMarker(fake.calls[1][1].body).activeCandidate.sourceSha,
+    SOURCE_SHA,
+  );
+});
+
+test("read-only observation retains the newest qualified SHA behind one active candidate", async () => {
+  const fake = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA, SOURCE_SHA],
+    runs: [
+      apiRun(DEV),
+      apiRun(ALPHA),
+      apiRun(DEV, { id: 303, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 404, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest()],
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: false,
+      createPullRequest: false,
+      dryRun: true,
+    },
+    fake,
+  );
+  assert.equal(result.controller.state, "retained-next");
+  assert.equal(result.controller.activeCandidate.sourceSha, ACTIVE_SHA);
+  assert.equal(result.controller.nextCandidate.sourceSha, OBSERVED_SHA);
+  assert.deepEqual(fake.calls, []);
+});
+
+test("settlement coalesces next_candidate into the active PR without creating a branch or PR", async () => {
+  const fake = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA, SOURCE_SHA],
+    runs: [
+      apiRun(DEV),
+      apiRun(ALPHA),
+      apiRun(DEV, { id: 303, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 404, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest()],
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: true,
+      createPullRequest: true,
+      dryRun: false,
+    },
+    fake,
+  );
+  assert.equal(result.controller.state, "retained-next");
+  assert.equal(result.controller.settlementAction, "retain-next-candidate");
+  assert.equal(fake.calls.length, 1);
+  assert.equal(fake.calls[0][0], "update-pr");
+  assert.equal(
+    parseCandidateStateMarker(fake.calls[0][2]).nextCandidate.sourceSha,
+    OBSERVED_SHA,
+  );
+});
+
+test("duplicate qualification events are idempotent after next_candidate is persisted", async () => {
+  const first = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA],
+    runs: [
+      apiRun(DEV, { id: 303, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 404, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest()],
+  });
+  await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    first,
+  );
+  const persistedBody = first.calls[0][2];
+  const duplicate = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA],
+    runs: [
+      apiRun(DEV, { id: 303, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 404, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest({ body: persistedBody })],
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    duplicate,
+  );
+  assert.equal(result.controller.state, "retained-next");
+  assert.equal(result.controller.settlementAction, "none");
+  assert.deepEqual(duplicate.calls, []);
+});
+
+test("a newer qualified SHA explicitly supersedes the previously retained next candidate", async () => {
+  const first = client({
+    sourceHistory: [SOURCE_SHA],
+    openPullRequests: [candidatePullRequest()],
+  });
+  await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    first,
+  );
+  const second = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA, SOURCE_SHA],
+    runs: [
+      apiRun(DEV),
+      apiRun(ALPHA),
+      apiRun(DEV, { id: 303, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 404, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [
+      candidatePullRequest({
+        body: first.calls[0][2],
+      }),
+    ],
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    second,
+  );
+  assert.equal(result.controller.settlementAction, "supersede-next-candidate");
+  assert.equal(result.controller.nextCandidate.sourceSha, OBSERVED_SHA);
+  assert.equal(result.controller.supersededCandidate.sourceSha, SOURCE_SHA);
+  assert.equal(second.calls[0][0], "update-pr");
+});
+
+test("foreign Alpha PRs are ignored and multiple managed candidates fail closed", async () => {
+  const foreign = {
+    number: 88,
+    html_url: "https://example.invalid/pull/88",
+    body: "Human-authored Alpha change",
+    head: { ref: "feature/human-alpha-change" },
+    base: { ref: "alpha/v4/v4.0" },
+  };
+  const allowed = client({ openPullRequests: [foreign] });
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: false,
+      dryRun: true,
+    },
+    allowed,
+  );
+  assert.equal(result.controller.state, "eligible-for-settlement");
+  await assert.rejects(
+    runDevAlphaCandidatePatrol(
+      {
+        ...patrolOptions,
+        settlementAuthorized: false,
+        dryRun: true,
+      },
+      client({
+        openPullRequests: [
+          candidatePullRequest({ number: 17 }),
+          candidatePullRequest({ number: 18, sourceSha: SOURCE_SHA }),
+        ],
+      }),
+    ),
+    /multiple open Buildchain candidate PRs/u,
+  );
+});
+
+test("stale exact-SHA evidence is observable but cannot settle", async () => {
+  const staleRuns = [
+    apiRun(DEV, { updated_at: "2026-07-20T00:00:00.000Z" }),
+    apiRun(ALPHA, { updated_at: "2026-07-20T00:00:00.000Z" }),
+  ];
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    client({ runs: staleRuns }),
+  );
+  assert.equal(result.controller.state, "stale");
+  assert.equal(result.controller.settlementAction, "none");
+  assert.match(result.decision.decisionRoot, /^sha256:[0-9a-f]{64}$/u);
+});
+
+test("GitHub metadata reads retry bounded transient API failures", async () => {
+  const statuses = [503, 200];
+  const sleeps = [];
+  const github = createGitHubChannelCandidateClient({
+    repository: "kungfu-systems/kungfu",
+    token: "not-a-real-token",
+    sleepImpl: async (milliseconds) => sleeps.push(milliseconds),
+    fetchImpl: async () => {
+      const status = statuses.shift();
+      return {
+        status,
+        ok: status === 200,
+        headers: { get: () => null },
+        text: async () =>
+          status === 200
+            ? JSON.stringify({ object: { sha: SOURCE_SHA } })
+            : JSON.stringify({ message: "temporary outage" }),
+      };
+    },
+  });
+  assert.equal(await github.resolveBranch("dev/v4/v4.0"), SOURCE_SHA);
+  assert.deepEqual(sleeps, [250]);
+});
+
+test("managed candidate parsing accepts the legacy PR and rejects a target mismatch", () => {
+  const legacy = candidatePullRequest({ sourceSha: SOURCE_SHA });
+  assert.equal(
+    managedCandidateFromPullRequest(legacy, "alpha/v4/v4.0").sourceSha,
+    SOURCE_SHA,
+  );
+  assert.equal(
+    managedCandidateFromPullRequest(
+      { ...legacy, base: { ref: "alpha/v5/v5.0" } },
+      "alpha/v4/v4.0",
+    ),
+    undefined,
   );
 });
 

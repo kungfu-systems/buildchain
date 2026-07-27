@@ -1638,22 +1638,27 @@
           "dev-workflow-path",
           "dry-run",
           "max-age-seconds",
+          "settlement-authorized",
           "source-branch",
           "target-branch"
         ],
-        "inputCount": 9,
+        "inputCount": 10,
         "secrets": [
           "promotion-token"
         ],
         "secretCount": 1,
         "outputs": [
+          "active-candidate-pr",
+          "controller-state",
           "eligible",
+          "next-candidate-sha",
           "promotion-pr",
           "result-path",
           "selected-sha",
+          "settlement-action",
           "source-lock-ref"
         ],
-        "outputCount": 5
+        "outputCount": 9
       },
       {
         "id": "dev-merge-queue-governance",
@@ -4227,8 +4232,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "f199eeb327027cf62d35f6c9591a6dadc16142bbecce14c562b435dc4ff2f47e",
-    "pageRegistryDigest": "962ba466e4a22e5113f8f795c76c49da66359a7fdb303ab7f9abb07b865cfa06"
+    "workflowRegistryDigest": "18405fac6ddfebd647c2ba7d3927ec666e6d43dc1913043b0334c91e2bf143f1",
+    "pageRegistryDigest": "b453877a28760e2446d5b58ee2bcbb3edd1059731a4046166ce1a4fc6649624b"
   },
   "comparison": {
     "missingCliRegistry": [],
