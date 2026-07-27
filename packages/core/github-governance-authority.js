@@ -65,6 +65,11 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
       check("signoff"),
       check("validate"),
     ], true),
+    target("release/v4/v4.0", [
+      check("build", null),
+      check("signoff"),
+      check("validate"),
+    ], true),
   ],
   libnode: [
     target("dev/v22/v22.22", [check("build")], true),
