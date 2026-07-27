@@ -94,9 +94,10 @@ jobs:
 
 | Preset                  | Platforms                                                                |
 | ----------------------- | ------------------------------------------------------------------------ |
-| `github-hosted`         | `ubuntu-24.04`, `macos-latest`, `windows-2022`                           |
-| `kungfu-v4-self-hosted` | Kungfu Linux x64, macOS ARM64, and Windows x64 self-hosted runner labels |
-| `custom`                | Requires `platforms-json`                                                |
+| `github-hosted`         | `ubuntu-24.04`, `macos-latest`, `windows-2022`                                                              |
+| `kungfu-v4-self-hosted` | Kungfu Linux x64, macOS ARM64, and Windows x64 self-hosted runner labels                                    |
+| `kungfu-v4-native`      | Kungfu Linux x64, Linux ARM64, macOS ARM64, and Windows x64; Linux ARM64 uses GitHub-hosted `ubuntu-24.04-arm` |
+| `custom`                | Requires `platforms-json`                                                                                   |
 
 Callers can still provide a custom matrix with `platforms-json`. Each platform
 object has:

@@ -21,6 +21,7 @@ import {
   safeArtifactStem,
   safePlatformId,
   sha256File,
+  signingOptionsForFile,
 } from "../actions/macos-credential-island/lib.js";
 
 const SOURCE_SHA = "1".repeat(40);
@@ -182,6 +183,19 @@ test("entitlements and output names are Buildchain owned", () => {
   assert.throws(() => safeArtifactStem("../"), /unsafe/);
   assert.throws(() => safePlatformId("../macos"), /safe Buildchain/);
   assert.throws(() => safeArtifactName("macos/credential"), /safe Buildchain/);
+});
+
+test("every nested code object uses the Buildchain-owned entitlements file", () => {
+  const optionsForFile = signingOptionsForFile("/tmp/buildchain/entitlements.plist");
+  assert.deepEqual(optionsForFile("Example.app/Contents/MacOS/Example"), {
+    entitlements: "/tmp/buildchain/entitlements.plist",
+    hardenedRuntime: true,
+  });
+  assert.deepEqual(optionsForFile("Example.app/Contents/Frameworks/addon.node"), {
+    entitlements: "/tmp/buildchain/entitlements.plist",
+    hardenedRuntime: true,
+  });
+  assert.throws(() => signingOptionsForFile(""), /entitlements path is required/);
 });
 
 test("signed payload manifest binds exact credential outputs", () => {

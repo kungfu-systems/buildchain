@@ -3013,6 +3013,16 @@ test("runner presets resolve to explicit matrices", () => {
   );
   assert.match(kungfu.platforms[0].runner, /kungfu-build-v4-linux-x64/);
 
+  const kungfuNative = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-native" });
+  assert.equal(kungfuNative.runnerPreset, "kungfu-v4-native");
+  assert.equal(kungfuNative.nativePlatformCount, 4);
+  assert.equal(kungfuNative.containerPlatformCount, 0);
+  assert.deepEqual(
+    kungfuNative.platforms.map((platform) => platform.id),
+    ["linux-x64", "linux-arm64", "macos-arm64", "windows-x64"],
+  );
+  assert.equal(kungfuNative.platforms[1].runner, '["ubuntu-24.04-arm"]');
+
   const custom = resolveRunnerMatrix({
     platformsJson:
       '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',

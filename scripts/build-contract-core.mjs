@@ -31,6 +31,36 @@ export const RUNNER_PRESETS = Object.freeze({
       capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
     },
   ],
+  "kungfu-v4-native": [
+    {
+      id: "linux-x64",
+      name: "Linux x64",
+      platform: "linux",
+      runner: '["self-hosted","Linux","X64","kungfu-build-v4-linux-x64"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+    {
+      id: "linux-arm64",
+      name: "Linux ARM64",
+      platform: "linux",
+      runner: '["ubuntu-24.04-arm"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+    {
+      id: "macos-arm64",
+      name: "macOS ARM64",
+      platform: "macos",
+      runner: '["self-hosted","macOS","ARM64","kungfu-build-v4-macos-arm64"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+    {
+      id: "windows-x64",
+      name: "Windows x64",
+      platform: "windows",
+      runner: '["self-hosted","Windows","X64","kungfu-build-v4-windows-x64"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+  ],
 });
 
 export const LINUX_CONTAINER_PRESETS = Object.freeze({
@@ -46,6 +76,7 @@ const RUNNER_PRESET_ALIASES = Object.freeze({
   kungfu: "kungfu-v4-self-hosted",
   "kungfu-self-hosted": "kungfu-v4-self-hosted",
   "kungfu-v4": "kungfu-v4-self-hosted",
+  "kungfu-v4-four-platform": "kungfu-v4-native",
 });
 
 const LINUX_CONTAINER_PRESET_ALIASES = Object.freeze({
