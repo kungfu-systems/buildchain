@@ -172,6 +172,8 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-activation-receipt-set-path",
       "release-passport-evidence-command",
       "release-passport-evidence-path",
+      "release-passport-kfd-support-matrix-json",
+      "release-passport-kfd-product-gate-jsons",
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v3/);
@@ -196,6 +198,8 @@ test("stable route forwards only inputs supported by the current workflow shell"
   for (const name of shellRouting.stable.unsupportedInputs) {
     assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
+  assert.doesNotMatch(stableBlock, /^      release-passport-kfd-support-matrix-json:/m);
+  assert.doesNotMatch(stableBlock, /^      release-passport-kfd-product-gate-jsons:/m);
   assert.match(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(stableBlock, /^      publish-rematerialize-on-resume:/m);
   assert.match(
