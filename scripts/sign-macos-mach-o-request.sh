@@ -40,6 +40,7 @@ security unlock-keychain -p "${keychain_password}" "${keychain_path}"
 security import "${certificate_path}" -k "${keychain_path}" -P "${BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD}" -T /usr/bin/codesign -T /usr/bin/security
 echo "Buildchain macOS authority: configure imported private-key access"
 security set-key-partition-list -S apple-tool:,apple:,codesign: -k "${keychain_password}" "${keychain_path}" >/dev/null
+security list-keychains -d user -s "${keychain_path}"
 echo "Buildchain macOS authority: verify requested signing identity"
 security find-identity -v -p codesigning "${keychain_path}" | grep -Fqi "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" || {
   echo "configured Developer ID identity was not imported" >&2
