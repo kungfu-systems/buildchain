@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "c274fd418ffe5bc422489a80cf58d87136d7e25c4ad610c72b46098617291c52",
+    "sha256": "87fbed4408b70e04ef8dea9ef46bb4467c968be6e68ff3ed478b3bf00e2d6618",
     "summary": {
       "cliCommandCount": 97,
       "workflowCount": 57,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "c274fd418ffe5bc422489a80cf58d87136d7e25c4ad610c72b46098617291c52",
+      "sha256": "87fbed4408b70e04ef8dea9ef46bb4467c968be6e68ff3ed478b3bf00e2d6618",
       "summary": {
         "cliCommandCount": 97,
         "workflowCount": 57,

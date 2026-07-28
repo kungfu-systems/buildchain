@@ -260,6 +260,13 @@ Developer ID, Windows Authenticode, and detached cryptographic signatures share
 the request/receipt model, while each profile retains its honest platform
 semantics and fail-closed verification requirements.
 
+The central `buildchain-artifact-signing` environment reuses the established
+macOS Credential Island names (`BUILDCHAIN_MACOS_CERTIFICATE_*`,
+`BUILDCHAIN_MACOS_NOTARY_API_*`, and
+`BUILDCHAIN_MACOS_EXPECTED_TEAM_ID`). Those authority-only values are never
+declared by or forwarded through a consumer repository. Windows and detached
+providers follow the same central-environment boundary.
+
 The reusable build trust gate reads `job.workflow_ref`, which identifies the
 called workflow and its selected ref. It does not infer the runtime from
 `github.workflow_ref`, because GitHub defines that context as the caller
