@@ -53,6 +53,14 @@ The CodeBuild project is:
 - forbidden from receiving signing, notarization, package publication, release,
   deploy, static AWS, long-lived GitHub, or SSH credentials.
 
+The AWS-managed Amazon Linux 2023 image intentionally remains the immutable
+base. Before a native lifecycle starts, Buildchain installs the distribution's
+namespaced `gcc14` and `gcc14-c++` packages, exposes only per-job `gcc`/`g++`
+aliases, and downloads the pinned Kitware CMake 3.31.6 archive after verifying
+its reviewed SHA256. The resolved versions and CMake source digest are retained
+as `aws-native-toolchain.json`; no toolchain state survives the ephemeral
+CodeBuild execution.
+
 ## Cost and kill-switch envelope
 
 The 2026-07-28 AWS Price List entry for

@@ -1088,6 +1088,12 @@ jobs:
           BUILDCHAIN_BURST_RUN_ATTEMPT: ${{ github.run_attempt }}
           BUILDCHAIN_BURST_JOB: ${{ github.job }}
 
+      - name: Prepare AWS CodeBuild native toolchain
+        if: ${{ matrix.platform.provider == 'aws-codebuild' }}
+        run: node .buildchain/runtime/scripts/aws-codebuild-toolchain.mjs prepare
+        env:
+          BUILDCHAIN_BURST_TOOLCHAIN_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
+
       - name: Resolve artifact contract
         id: artifact-contract
         run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
@@ -1275,7 +1281,9 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-aws-runner-burst-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
