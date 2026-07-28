@@ -21,8 +21,10 @@ keychain_password="$(openssl rand -hex 32)"
 certificate_path="${authority_tmp}/certificate.p12"
 notary_key_path="${authority_tmp}/AuthKey_${BUILDCHAIN_APPLE_NOTARY_KEY_ID}.p8"
 notary_archive="${authority_tmp}/notary-submission.zip"
+notary_submission="${authority_tmp}/notary-submission.json"
 notary_result="${authority_tmp}/notary-result.json"
 signature_details="${authority_tmp}/codesign-details.txt"
+notary_timeout="${BUILDCHAIN_APPLE_NOTARY_TIMEOUT:-55m}"
 
 cleanup() {
   security delete-keychain "${keychain_path}" >/dev/null 2>&1 || true
@@ -61,8 +63,12 @@ grep -Fq "Runtime Version" "${signature_details}" || {
 }
 
 /usr/bin/ditto -c -k --keepParent "${BUILDCHAIN_SIGNED_PAYLOAD}" "${notary_archive}"
-xcrun notarytool submit "${notary_archive}" --key "${notary_key_path}" --key-id "${BUILDCHAIN_APPLE_NOTARY_KEY_ID}" --issuer "${BUILDCHAIN_APPLE_NOTARY_ISSUER}" --wait --output-format json > "${notary_result}"
-node -e 'const fs=require("fs");const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(value.status!=="Accepted"||!value.id)throw new Error("Apple notarization was not accepted")' "${notary_result}"
+echo "Buildchain macOS authority: submit exact signed Mach-O for notarization"
+xcrun notarytool submit "${notary_archive}" --key "${notary_key_path}" --key-id "${BUILDCHAIN_APPLE_NOTARY_KEY_ID}" --issuer "${BUILDCHAIN_APPLE_NOTARY_ISSUER}" --output-format json > "${notary_submission}"
+notary_id="$(node -e 'const fs=require("fs");const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(!value.id)throw new Error("Apple notarization submission did not return an id");process.stdout.write(value.id)' "${notary_submission}")"
+echo "Buildchain macOS authority: notarization submission ${notary_id}; wait up to ${notary_timeout}"
+xcrun notarytool wait "${notary_id}" --key "${notary_key_path}" --key-id "${BUILDCHAIN_APPLE_NOTARY_KEY_ID}" --issuer "${BUILDCHAIN_APPLE_NOTARY_ISSUER}" --timeout "${notary_timeout}" --output-format json > "${notary_result}"
+node -e 'const fs=require("fs");const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(value.status!=="Accepted"||value.id!==process.argv[2])throw new Error("Apple notarization was not accepted for the submitted artifact")' "${notary_result}" "${notary_id}"
 spctl --assess --type execute --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}"
 
 node - "${notary_result}" "${BUILDCHAIN_SIGNING_EVIDENCE}" "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" "${BUILDCHAIN_APPLE_TEAM_ID}" <<'NODE'

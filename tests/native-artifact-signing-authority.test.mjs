@@ -136,6 +136,9 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(macos, /Buildchain macOS authority: sign exact Mach-O payload/);
   assert.match(macos, /codesign --verify --strict/);
   assert.match(macos, /notarytool submit/);
+  assert.doesNotMatch(macos, /notarytool submit[^\n]+--wait/);
+  assert.match(macos, /notarytool wait "\$\{notary_id\}"[^\n]+--timeout "\$\{notary_timeout\}"/);
+  assert.match(macos, /notarization submission \$\{notary_id\}; wait up to \$\{notary_timeout\}/);
   assert.match(macos, /spctl --assess --type execute/);
   assert.match(macos, /standalone Mach-O executables do not support stapled/);
   assert.match(windows, /signtool verify \/pa \/all \/v/);
