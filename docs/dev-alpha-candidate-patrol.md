@@ -76,6 +76,15 @@ exact same-SHA evidence, it may set `settlement-authorized: true` and
 `dry-run: false`. The older `create-pull-request` input remains a compatibility
 alias for settlement authorization.
 
+Repositories whose promotion policy requires a machine-readable PR declaration
+can pass it through `pull-request-body-prefix`. Buildchain prepends that trusted,
+repository-owned text only when it creates the candidate PR and preserves it
+when later controller observations update the managed state marker. Keep the
+declaration source-controlled in the caller workflow and update it whenever the
+qualified development delta changes its release or architecture settlement.
+Buildchain rejects a prefix that attempts to inject its managed controller
+marker.
+
 The separately permissioned `settle` job re-runs the exact observation before
 any write. With no active managed candidate, it creates one branch named from
 the target branch and the first 12 characters of the full source SHA. An
