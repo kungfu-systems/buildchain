@@ -112,7 +112,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:415c04c33c1ba957420866943603f2b642751386cf55ac650d86884cad1842a1",
+      "digest": "sha256:0355eb07f5da5fa1cd1fac091a383ae4b40d1f494ae26f23877e311d395e83d3",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [

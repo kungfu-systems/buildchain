@@ -1,0 +1,128 @@
+{
+  "schema": "buildchain.auditable-demo-media-profiles/v1",
+  "profiles": {
+    "archive-v1": {
+      "mode": "archive",
+      "renditions": [
+        {
+          "path": "demo.gif",
+          "role": "readme-compatibility",
+          "mimeType": "image/gif"
+        },
+        {
+          "path": "demo.mp4",
+          "role": "archive-video",
+          "mimeType": "video/mp4"
+        },
+        {
+          "path": "demo.webm",
+          "role": "archive-video-alternate",
+          "mimeType": "video/webm"
+        },
+        {
+          "path": "poster.png",
+          "role": "evidence-poster",
+          "mimeType": "image/png"
+        }
+      ],
+      "singletonRoles": [
+        "evidence-poster",
+        "readme-compatibility"
+      ]
+    },
+    "web-delivery-v1": {
+      "extends": "archive-v1",
+      "mode": "web-delivery",
+      "renditions": [
+        {
+          "path": "demo.gif",
+          "role": "readme-compatibility",
+          "mimeType": "image/gif",
+          "container": "gif",
+          "videoCodec": "gif",
+          "audioStreams": 0,
+          "maximumBytes": 67108864
+        },
+        {
+          "path": "demo.mp4",
+          "role": "primary-video",
+          "mimeType": "video/mp4",
+          "container": "mp4",
+          "videoCodec": "h264",
+          "pixelFormat": "yuv420p",
+          "audioStreams": 0,
+          "maximumBytes": 8388608,
+          "progressiveDownload": "moov-before-mdat",
+          "frameRatePolicy": "scene-exact"
+        },
+        {
+          "path": "demo.webm",
+          "role": "alternate-video",
+          "mimeType": "video/webm",
+          "container": "webm",
+          "videoCodec": "vp9",
+          "pixelFormat": "yuv420p",
+          "audioStreams": 0,
+          "maximumBytes": 8388608,
+          "frameRatePolicy": "scene-exact"
+        },
+        {
+          "path": "poster.png",
+          "role": "evidence-poster",
+          "mimeType": "image/png",
+          "container": "png",
+          "videoCodec": "png",
+          "audioStreams": 0,
+          "maximumBytes": 8388608
+        }
+      ],
+      "singletonRoles": [
+        "primary-video",
+        "alternate-video",
+        "evidence-poster",
+        "readme-compatibility",
+        "browser-poster"
+      ],
+      "additionalRenditions": {
+        "allowedRoles": [
+          "primary-video",
+          "responsive-video",
+          "browser-poster"
+        ],
+        "allowedMimeTypes": [
+          "video/mp4",
+          "video/webm",
+          "image/webp",
+          "image/avif"
+        ],
+        "maximumBytesCeiling": 8388608
+      }
+    },
+    "site-hero-v1": {
+      "extends": "web-delivery-v1",
+      "mode": "web-delivery",
+      "renditions": [
+        {
+          "path": "poster.webp",
+          "role": "browser-poster",
+          "mimeType": "image/webp",
+          "container": "webp",
+          "videoCodec": "webp",
+          "audioStreams": 0,
+          "maximumBytes": 2097152
+        }
+      ]
+    }
+  },
+  "qualification": {
+    "dimensions": "exact-scene",
+    "durationToleranceMs": 600,
+    "memberRootAlgorithm": "sha256",
+    "nonClaims": [
+      "browser-playback-success",
+      "responsive-layout",
+      "reduced-motion-behavior",
+      "production-site-deployment"
+    ]
+  }
+}

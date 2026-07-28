@@ -230,6 +230,22 @@ test("contract world exposes web-surface floating contract lock gate", () => {
   assert.match(surface.guarantees.join("\n"), /breaking contract drift fails closed/);
 });
 
+test("contract world exposes auditable-demo media qualification coordinates", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "3.0.2-alpha.4" },
+  });
+  const surface = contract.surfaces.find((entry) => entry.id === "auditable-demo");
+
+  assert.ok(surface);
+  assert.ok(surface.optionalInputs.includes("media-profile"));
+  assert.ok(surface.requiredOutputs.includes("media-profile"));
+  assert.ok(surface.requiredOutputs.includes("media-qualification-root"));
+  assert.equal(surface.breakingDefaults.mediaProfileDefault, "archive-v1");
+  assert.match(surface.guarantees.join("\n"), /independently verify codec/);
+  assert.match(surface.guarantees.join("\n"), /without requiring consumers to infer roles/);
+});
+
 test("contract world exposes additive post-publish artifact provenance schema", () => {
   const contract = createBuildchainContractWorld({
     root: path.resolve(import.meta.dirname, ".."),

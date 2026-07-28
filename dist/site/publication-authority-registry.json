@@ -678,6 +678,11 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/binary-distribution.yml",
       "signals": [
         "write-permission"
@@ -933,5 +938,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "26c309e610d1d8885cfd7d78fb7a574be903bf9085d5db929f9b41005c4f682b"
+  "registryDigest": "b9e329937c6172b00255f532da94d9b8509862bae6f288ad4afb6639f894b4b5"
 }

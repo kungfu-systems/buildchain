@@ -14,17 +14,17 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:008b1c5a90a787cf30106829ac7aca68ab501f6d9c375e415d9c5c6b89039f46",
+    "compatibilityDigest": "sha256:f82205029cce481de1bc3ef0475d2773815cc1d89aed3ada77410b4acc38e59c",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6d778d2a4d04a1b93ed21622719e08b3fa1e149af2941e09675c66582a3ebcdd",
+    "sha256": "7365990ba5b6a3c6fbbdf3bd625af6985d7c47a7d51bb8641baf9eb31ea7be7b",
     "summary": {
       "cliCommandCount": 97,
-      "workflowCount": 55,
+      "workflowCount": 56,
       "actionCount": 6,
       "sitePageCount": 59,
       "docCommandRefCount": 291,
@@ -228,10 +228,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6d778d2a4d04a1b93ed21622719e08b3fa1e149af2941e09675c66582a3ebcdd",
+      "sha256": "7365990ba5b6a3c6fbbdf3bd625af6985d7c47a7d51bb8641baf9eb31ea7be7b",
       "summary": {
         "cliCommandCount": 97,
-        "workflowCount": 55,
+        "workflowCount": 56,
         "actionCount": 6,
         "sitePageCount": 59,
         "docCommandRefCount": 291,
@@ -2954,11 +2954,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 9,
+          "inputCount": 10,
           "inputs": [
             "adapter-path",
             "artifact-retention-days",
             "buildchain-repository",
+            "media-profile",
             "render-media",
             "renderer-image",
             "require-trusted-event",
@@ -3604,6 +3605,20 @@
             "node-version",
             "preview-files"
           ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:auditable-demo-media-profile-qualification",
+          "name": "workflow:auditable-demo-media-profile-qualification",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+          "evidencePath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -5644,6 +5659,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 360
+    "publicSurfaceCount": 361
   }
 }

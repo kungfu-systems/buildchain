@@ -288,11 +288,14 @@
         "media-artifact-id",
         "media-artifact-digest",
         "media-artifact-url",
-        "media-root"
+        "media-root",
+        "media-profile",
+        "media-qualification-root"
       ],
       "breakingDefaults": {
         "trustedEventRequired": true,
         "renderMediaDefault": false,
+        "mediaProfileDefault": "archive-v1",
         "artifactRetentionDaysDefault": 14,
         "gatePolicy": "required-before-selective-render"
       },
@@ -300,6 +303,7 @@
         "buildchain-repository",
         "source-ref",
         "render-media",
+        "media-profile",
         "artifact-retention-days",
         "require-trusted-event"
       ],
@@ -308,10 +312,12 @@
         "the checked-in consumer adapter runs from the exact consumer source with a disposable home and reduced environment",
         "every invocation runs an immutable network-disabled renderer smoke before emitting a qualified Gate bundle",
         "complete media rendering is optional and consumes only an exact passing Gate bundle",
-        "Gate and media bundles expose both GitHub Artifact archive coordinates and deterministic member roots"
+        "Gate and media bundles expose both GitHub Artifact archive coordinates and deterministic member roots",
+        "explicit web-delivery profiles independently verify codec, container, audio, dimensions, duration, byte budgets, rendition roles, and MP4 fast-start evidence",
+        "media receipts expose content-addressed rendition facts without requiring consumers to infer roles from filenames"
       ],
-      "breakingDigest": "sha256:a68f34d3dc24e0e0cd0040f978c174b62bf29a0472cebe1c43751e62408e6af6",
-      "auditDigest": "sha256:1969981087ee484411daae60797430d0f762d3a328c438dc723f2794d6d41f51"
+      "breakingDigest": "sha256:3826401223ed3d955f41bbe5c73c0881e38213a8d1511dbc2192fd6c5c4f3214",
+      "auditDigest": "sha256:d043897d3d2bd242a83a362fccac408b4bd38e1e2fb50e7cae6a2145a6c0bd51"
     },
     {
       "contractVersion": 1,
@@ -697,7 +703,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:8bb23e95ad68832eb554145905a29242a06875baf22ac62c4e7302e447872f3c"
+      "auditDigest": "sha256:45b4116c359ee260f485304f99f55fe1e5ec06545c3a827dc78fe95d8aa94924"
     },
     {
       "contractVersion": 1,
@@ -719,7 +725,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:bec0f2740a18cc83cd75693bcfc32ea7ea97661028c9f9c7ee1f41223803769f"
+      "auditDigest": "sha256:4423af6cd78eecbcfe1bb317c67373100b381cbad7391db9b162ad070ea18f19"
     },
     {
       "contractVersion": 1,
@@ -3361,6 +3367,6 @@
       "auditDigest": "sha256:e07a5db56a71bd0ac79c81f12619938055361bf0a0ed8e5891f88ca1c51f1c93"
     }
   ],
-  "compatibilityDigest": "sha256:008b1c5a90a787cf30106829ac7aca68ab501f6d9c375e415d9c5c6b89039f46",
-  "contractDigest": "sha256:d3424c629dc01e50075de01a76b75ce71e755baedb6a10c54fd11b9e1c55e5ce"
+  "compatibilityDigest": "sha256:f82205029cce481de1bc3ef0475d2773815cc1d89aed3ada77410b4acc38e59c",
+  "contractDigest": "sha256:ffd24efa2121484dbc8c2236508ec9c62705cf748673d38178a940fb4e6e3a8f"
 }

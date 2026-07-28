@@ -71,6 +71,7 @@ const requiredPaths = [
   "docs/github-artifact-attestation.md",
   "docs/shifu-gate-profiles.md",
   "docs/auditable-demo.md",
+  "contracts/auditable-demo-media-profiles-v1.json",
   "docs/release-propagation.md",
   "docs/site-bundle-contract.md",
   "docs/toolkit-observability.md",

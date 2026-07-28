@@ -82,6 +82,7 @@
     "AGENTS.md",
     "bin/",
     "CONTRIBUTING.md",
+    "contracts/",
     "LICENSE-POLICY.md",
     "scripts/*.mjs",
     "packages/core/",
