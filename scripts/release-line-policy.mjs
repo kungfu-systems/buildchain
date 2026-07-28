@@ -70,6 +70,18 @@ export function parsePublishGateChannelRef(ref) {
   };
 }
 
+export function parseAuthorityRef(ref) {
+  const normalizedRef = normalizeRef(ref);
+  const match = normalizedRef.match(/^authority\/v(\d+)\/v(\d+\.\d+)\/[A-Za-z0-9._/-]+$/);
+  if (!match) return undefined;
+  return {
+    major: Number(match[1]),
+    loose: Number(match[2]),
+    normalizedRef,
+    lineSuffix: `/v${match[1]}/v${match[2]}`,
+  };
+}
+
 export function getChannel(ref) {
   const versionStateTarget = parseVersionStateRef(ref);
   if (versionStateTarget) return versionStateTarget.channel;
@@ -116,6 +128,7 @@ export function getBumpKeyword({ cwd = process.cwd(), headRef, baseRef, loose = 
   const versionStateTarget = parseVersionStateRef(headRef);
   const releaseLineRecoveryTarget = parseReleaseLineRecoveryRef(headRef);
   const publishGateTarget = parsePublishGateChannelRef(headRef);
+  const authorityTarget = parseAuthorityRef(baseRef);
   const headChannel = getChannel(headRef);
   const baseChannel = getChannel(baseRef);
   const key = `${headChannel}->${baseChannel}`;
@@ -129,6 +142,20 @@ export function getBumpKeyword({ cwd = process.cwd(), headRef, baseRef, loose = 
   const lts = baseChannel === "release" && normalizeRef(baseRef).split("/").pop() === "lts";
   const preminor = headChannel === "release" && lts;
   const majorGate = headChannel === "release" && baseChannel === MAJOR_GATE_CHANNEL;
+
+  if (authorityTarget) {
+    const headMatch = normalizeRef(headRef).match(/^dev\/v(\d+)\/v(\d+\.\d+)$/);
+    if (
+      !headMatch ||
+      Number(headMatch[1]) !== authorityTarget.major ||
+      Number(headMatch[2]) !== authorityTarget.loose ||
+      version.major !== authorityTarget.major ||
+      looseVersionNumber !== authorityTarget.loose
+    ) {
+      throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
+    }
+    return "none";
+  }
 
   if (releaseLineRecoveryTarget) {
     if (baseChannel !== "release" || releaseLineRecoveryTarget.normalizedRef !== normalizeRef(baseRef)) {

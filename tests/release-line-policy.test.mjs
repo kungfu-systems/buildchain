@@ -70,6 +70,28 @@ test("publish-gate release PRs are valid verify-only release candidates", () => 
   });
 });
 
+test("dev PRs promote the same version line to a protected authority without a version bump", () => {
+  withPackageVersion("3.0.0-alpha.0", (cwd) => {
+    assert.equal(
+      getBumpKeyword({
+        cwd,
+        headRef: "dev/v3/v3.0",
+        baseRef: "authority/v3/v3.0/artifact-signing",
+      }),
+      "none",
+    );
+    assert.throws(
+      () =>
+        getBumpKeyword({
+          cwd,
+          headRef: "dev/v3/v3.1",
+          baseRef: "authority/v3/v3.0/artifact-signing",
+        }),
+      /Versions not match/,
+    );
+  });
+});
+
 test("publish-gate PRs must target the same channel release line", () => {
   withPackageVersion("1.0.5", (cwd) => {
     assert.throws(
