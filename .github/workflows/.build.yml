@@ -1397,7 +1397,20 @@ jobs:
 
       - name: Seal declared artifact signing requests
         id: signing-requests
-        run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          signing_sealer=".buildchain/runtime/scripts/seal-artifact-signing-requests.mjs"
+          if [ ! -f "${signing_sealer}" ]; then
+            {
+              echo "request-count=0"
+              echo "request-index="
+              echo "request-root="
+            } >> "${GITHUB_OUTPUT}"
+            echo "Artifact signing request sealing is unavailable in the resolved legacy runtime; continuing with its validated contract."
+            exit 0
+          fi
+          node "${signing_sealer}"
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
           BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
@@ -1409,6 +1422,7 @@ jobs:
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
 
       - name: Publish Buildchain-owned artifact signing request
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -1786,7 +1800,20 @@ jobs:
 
       - name: Seal declared artifact signing requests
         id: signing-requests
-        run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          signing_sealer=".buildchain/runtime/scripts/seal-artifact-signing-requests.mjs"
+          if [ ! -f "${signing_sealer}" ]; then
+            {
+              echo "request-count=0"
+              echo "request-index="
+              echo "request-root="
+            } >> "${GITHUB_OUTPUT}"
+            echo "Artifact signing request sealing is unavailable in the resolved legacy runtime; continuing with its validated contract."
+            exit 0
+          fi
+          node "${signing_sealer}"
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
           BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
@@ -1798,6 +1825,7 @@ jobs:
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
 
       - name: Publish Buildchain-owned artifact signing request
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
