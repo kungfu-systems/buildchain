@@ -41,7 +41,14 @@
           "container": "gif",
           "videoCodec": "gif",
           "audioStreams": 0,
-          "maximumBytes": 67108864
+          "maximumBytes": 1048576,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "demo.gif",
+            "observedBytes": 40826,
+            "multiplier": 16,
+            "rounding": "next-power-of-two"
+          }
         },
         {
           "path": "demo.mp4",
@@ -51,7 +58,14 @@
           "videoCodec": "h264",
           "pixelFormat": "yuv420p",
           "audioStreams": 0,
-          "maximumBytes": 8388608,
+          "maximumBytes": 524288,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "demo.mp4",
+            "observedBytes": 27038,
+            "multiplier": 16,
+            "rounding": "next-power-of-two"
+          },
           "progressiveDownload": "moov-before-mdat",
           "frameRatePolicy": "scene-exact"
         },
@@ -63,7 +77,14 @@
           "videoCodec": "vp9",
           "pixelFormat": "yuv420p",
           "audioStreams": 0,
-          "maximumBytes": 8388608,
+          "maximumBytes": 524288,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "demo.webm",
+            "observedBytes": 23383,
+            "multiplier": 16,
+            "rounding": "next-power-of-two"
+          },
           "frameRatePolicy": "scene-exact"
         },
         {
@@ -73,7 +94,14 @@
           "container": "png",
           "videoCodec": "png",
           "audioStreams": 0,
-          "maximumBytes": 8388608
+          "maximumBytes": 1048576,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "poster.png",
+            "observedBytes": 34769,
+            "multiplier": 16,
+            "rounding": "next-power-of-two"
+          }
         }
       ],
       "singletonRoles": [
@@ -95,7 +123,12 @@
           "image/webp",
           "image/avif"
         ],
-        "maximumBytesCeiling": 8388608
+        "maximumBytesByMimeType": {
+          "video/mp4": 524288,
+          "video/webm": 524288,
+          "image/webp": 524288,
+          "image/avif": 524288
+        }
       }
     },
     "site-hero-v1": {
@@ -109,7 +142,14 @@
           "container": "webp",
           "videoCodec": "webp",
           "audioStreams": 0,
-          "maximumBytes": 2097152
+          "maximumBytes": 524288,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "poster.png",
+            "observedBytes": 34769,
+            "multiplier": 8,
+            "rounding": "next-power-of-two"
+          }
         }
       ]
     }

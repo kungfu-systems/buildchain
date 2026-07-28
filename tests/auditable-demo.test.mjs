@@ -444,6 +444,10 @@ test("web-delivery qualification binds independently inspected rendition facts",
   );
   assert.equal(result.qualification.renditions[1].videoCodec, "h264");
   assert.equal(result.qualification.renditions[1].progressiveDownload, "moov-before-mdat");
+  assert.deepEqual(
+    result.qualification.renditions.map((entry) => entry.maximumBytes),
+    [1048576, 524288, 524288, 1048576],
+  );
 });
 
 test("web-delivery qualification rejects false or incomplete media claims", (t) => {
@@ -499,7 +503,7 @@ test("web-delivery qualification rejects budgets, unbound outputs, and duplicate
   const mp4Path = path.join(output, "demo.mp4");
   const originalMp4 = fs.readFileSync(mp4Path);
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-  fs.writeFileSync(mp4Path, Buffer.alloc(8 * 1024 * 1024 + 1));
+  fs.writeFileSync(mp4Path, Buffer.alloc(512 * 1024 + 1));
   manifest.outputs["demo.mp4"] = {
     root: sha256(fs.readFileSync(mp4Path)),
     bytes: fs.statSync(mp4Path).size,
@@ -534,6 +538,20 @@ test("web-delivery qualification rejects budgets, unbound outputs, and duplicate
   manifest.webDelivery = {
     schema: "build-images.auditable-demo-web-delivery/v1",
     renditions: [{ path: "extra.mp4", role: "primary-video", mimeType: "video/mp4", maximumBytes: 1024 }],
+  };
+  fs.writeFileSync(manifestPath, stableJson(manifest));
+  writeChecksums(output);
+  assert.throws(
+    () => verifyRendererOutput(output, RENDERER_IMAGE, expectedInputs, {
+      mediaProfile: "web-delivery-v1",
+      inspectMedia: mediaInspection(),
+    }),
+    /maximumBytes is not declared/,
+  );
+
+  manifest.webDelivery = {
+    schema: "build-images.auditable-demo-web-delivery/v1",
+    renditions: [{ path: "extra.mp4", role: "primary-video", mimeType: "video/mp4" }],
   };
   fs.writeFileSync(manifestPath, stableJson(manifest));
   writeChecksums(output);

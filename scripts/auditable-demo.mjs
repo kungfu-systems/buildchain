@@ -405,6 +405,30 @@ function semanticRoot(value) {
   return sha256(Buffer.from(stableJson(value)));
 }
 
+function validateBudgetBasis(entry, label) {
+  exactKeys(
+    entry.budgetBasis,
+    ["evidence", "observedPath", "observedBytes", "multiplier", "rounding"],
+    [],
+    `${label}.budgetBasis`,
+  );
+  invariant(
+    entry.budgetBasis.evidence === "contracts/evidence/auditable-demo-web-delivery-v1.json",
+    `${label}.budgetBasis.evidence is unsupported`,
+  );
+  text(entry.budgetBasis.observedPath, 1, 128, `${label}.budgetBasis.observedPath`);
+  const observedBytes = integer(
+    entry.budgetBasis.observedBytes,
+    1,
+    MAX_BUNDLE_MEMBER_BYTES,
+    `${label}.budgetBasis.observedBytes`,
+  );
+  const multiplier = integer(entry.budgetBasis.multiplier, 1, 64, `${label}.budgetBasis.multiplier`);
+  invariant(entry.budgetBasis.rounding === "next-power-of-two", `${label}.budgetBasis.rounding is unsupported`);
+  const expected = 2 ** Math.ceil(Math.log2(observedBytes * multiplier));
+  invariant(entry.maximumBytes === expected, `${label}.maximumBytes does not match its measured budget basis`);
+}
+
 function loadMediaProfile(profileId) {
   const catalog = readJson(MEDIA_PROFILE_CATALOG, "auditable demo media profile catalog");
   invariant(
@@ -439,6 +463,12 @@ function loadMediaProfile(profileId) {
   };
   const resolved = resolve(profileId);
   const profile = { id: profileId, ...resolved };
+  for (const [index, entry] of profile.renditions.entries()) {
+    if (profile.mode === "web-delivery") {
+      invariant(entry.budgetBasis, `${profileId}.renditions[${index}].budgetBasis is required`);
+      validateBudgetBasis(entry, `${profileId}.renditions[${index}]`);
+    }
+  }
   return {
     catalog,
     catalogRoot: semanticRoot(catalog),
@@ -675,12 +705,12 @@ function loadMediaInspection(filePath, renderOutput, rendererImage) {
   };
 }
 
-function constraintsForAdditionalRendition(entry) {
+function constraintsForAdditionalRendition(entry, policy) {
   const common = {
     path: entry.path,
     role: entry.role,
     mimeType: entry.mimeType,
-    maximumBytes: entry.maximumBytes,
+    maximumBytes: policy.maximumBytesByMimeType[entry.mimeType],
     audioStreams: 0,
   };
   if (entry.mimeType === "video/mp4") {
@@ -709,14 +739,15 @@ function qualifyRendererOutput(renderOutput, manifest, scene, profileId, inspect
     );
     invariant(Array.isArray(declaration.renditions), "manifest.webDelivery.renditions must be an array");
     for (const [index, entry] of declaration.renditions.entries()) {
-      exactKeys(entry, ["path", "role", "mimeType", "maximumBytes"], [], `manifest.webDelivery.renditions[${index}]`);
+      exactKeys(entry, ["path", "role", "mimeType"], [], `manifest.webDelivery.renditions[${index}]`);
       invariant(!knownPaths.has(entry.path), `renderer web-delivery path is already profile-owned: ${entry.path}`);
       const policy = profile.additionalRenditions;
       invariant(policy, `media profile ${profileId} does not admit additional renditions`);
       invariant(policy.allowedRoles.includes(entry.role), `additional rendition role is not allowed: ${entry.role}`);
       invariant(policy.allowedMimeTypes.includes(entry.mimeType), `additional rendition MIME type is not allowed: ${entry.mimeType}`);
-      integer(entry.maximumBytes, 1, policy.maximumBytesCeiling, `manifest.webDelivery.renditions[${index}].maximumBytes`);
-      rules.push(constraintsForAdditionalRendition(entry));
+      const maximumBytes = policy.maximumBytesByMimeType?.[entry.mimeType];
+      integer(maximumBytes, 1, MAX_BUNDLE_MEMBER_BYTES, `media profile ${profileId} additional ${entry.mimeType} budget`);
+      rules.push(constraintsForAdditionalRendition(entry, policy));
       knownPaths.add(entry.path);
     }
   }

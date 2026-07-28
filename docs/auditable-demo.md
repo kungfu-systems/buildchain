@@ -134,10 +134,19 @@ site builds select `primary-video`,
 `alternate-video`, `browser-poster`, or evidence-only roles from that receipt;
 they do not infer semantics from extensions or filenames. Additional responsive
 renditions are accepted only when the immutable renderer manifest declares the
-bounded `build-images.auditable-demo-web-delivery/v1` metadata and the selected
-Buildchain profile admits its role, MIME type, and byte ceiling. Unbound outputs,
+bounded `build-images.auditable-demo-web-delivery/v1` role and MIME metadata and
+the selected Buildchain profile supplies the byte ceiling; producer metadata
+cannot raise that ceiling. Unbound outputs,
 duplicate singleton roles, unknown profiles, or unsupported required versions
 fail closed.
+
+Initial byte ceilings are derived from the checked-in
+`auditable-demo-web-delivery-v1` fixture rendered by Build Images
+`v1.3.0-alpha.16` at its exact source SHA and image digest. GIF, MP4, WebM, and
+PNG ceilings are the next power of two above sixteen times the measured member
+bytes. The not-yet-produced WebP poster uses eight times the measured lossless
+PNG as its conservative proxy. The path-scoped qualification workflow
+regenerates the content-addressed evidence and fails on any byte or fact drift.
 
 ## Consumer Example
 
