@@ -266,6 +266,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-evidence-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "requested-parallelism": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -370,7 +374,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:c24cfda74cf848b52a6829bc7749f2af9a85a35ac8107f32285963fd93917fb3"
+      "digest": "sha256:5fe0ffdadd8a23f64db7ae38c9422ccf6a3144ab5ade4f302323d166a6b752f2"
     },
     {
       "schemaVersion": 1,
@@ -574,6 +578,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-evidence-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "requested-parallelism": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -668,7 +676,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:747e9fe29b878f1e105fe271a508b45e533d45c7fb7c7a01a92b72cc6fe56c79"
+      "digest": "sha256:4c306a374bdb5c53d99082ef71c425418d37b2ee8be3bf9f61329fc0729d664b"
     },
     {
       "schemaVersion": 1,
@@ -1521,6 +1529,22 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-assignment-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-evidence-required": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-evidence-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-initiative-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "release-candidate-workflow-file": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1655,7 +1679,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:55f7eef0174ec8acdd2f3ec646182c59e265bc4d647f7166949cfa8fdf9ac283"
+      "digest": "sha256:dac29eb8437c759d5979918e682df85c696cd94038c81f6d6c3787d91125384b"
     },
     {
       "schemaVersion": 1,
@@ -1761,5 +1785,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:0746d41890670418d9ab0c03ed4806626dd3a995209696cfa76c9eaba2b7efdd"
+  "digest": "sha256:57e6373d9af24651e611c9dd30a94d61725763ddbe5095cccc3fd3d5cde08a1e"
 }

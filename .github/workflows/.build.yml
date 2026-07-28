@@ -167,6 +167,11 @@ on:
         default: false
         type: boolean
         required: false
+      release-candidate-family-evidence-json:
+        description: "Optional exact Initiative-family release evidence JSON embedded in the release-candidate passport"
+        default: ""
+        type: string
+        required: false
       expected-artifacts-json:
         description: "Optional JSON expectation contract for final artifact files"
         default: ""
@@ -1797,6 +1802,7 @@ jobs:
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ inputs.gate-profile-aggregate-json }}
+          BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON: ${{ inputs.release-candidate-family-evidence-json }}
           BUILDCHAIN_CONTROLLER_RECEIPT_JSON: ${{ steps.release-candidate-controller-receipt.outputs.controller-receipt-json }}
           BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}

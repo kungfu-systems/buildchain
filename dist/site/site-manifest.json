@@ -93,7 +93,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:6a20c6e3e483327d5ccbe70271f7fb4752731bd0523eeddb96f27b2b6ebf1cf8"
+      "digest": "sha256:b81ad26bc51e4d11149a3137d172c2d8aa3bfefd3b06ab7eb27dfc936cfda7cd"
     },
     {
       "id": "release-propagation",
