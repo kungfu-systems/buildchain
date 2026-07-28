@@ -1271,11 +1271,12 @@
         "dev-workflow-path",
         "dry-run",
         "max-age-seconds",
+        "pull-request-body-prefix",
         "settlement-authorized",
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 10,
+      "inputCount": 11,
       "secrets": [
         "promotion-token"
       ],
