@@ -52,6 +52,7 @@ jobs:
             --volume "${GITHUB_WORKSPACE}/contracts/fixtures/auditable-demo-web-delivery-v1:/input:ro" \
             --volume "${GITHUB_WORKSPACE}/.buildchain/media-profile/render:/output" \
             "${RENDERER_IMAGE}" \
+            demo-renderer \
             --scene /input/scene.json \
             --transcript /input/complete-transcript.txt \
             --projection /input/public-projection.json \
