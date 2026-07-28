@@ -34,6 +34,11 @@ on:
         default: false
         type: boolean
         required: false
+      media-profile:
+        description: "Buildchain-owned qualification profile: archive-v1, web-delivery-v1, or site-hero-v1"
+        default: "archive-v1"
+        type: string
+        required: false
       artifact-retention-days:
         default: 14
         type: number
@@ -76,6 +81,12 @@ on:
       media-root:
         description: "Deterministic member root of the rendered media bundle"
         value: ${{ jobs.render.outputs.media-root }}
+      media-profile:
+        description: "Exact Buildchain media qualification profile applied to the rendered bundle"
+        value: ${{ jobs.render.outputs.media-profile }}
+      media-qualification-root:
+        description: "Content root of independently verified rendition facts and role mappings"
+        value: ${{ jobs.render.outputs.media-qualification-root }}
 
 permissions:
   actions: read
@@ -298,6 +309,8 @@ jobs:
       media-artifact-digest: ${{ steps.upload.outputs.artifact-digest }}
       media-artifact-url: ${{ steps.upload.outputs.artifact-url }}
       media-root: ${{ steps.finalize.outputs.media-root }}
+      media-profile: ${{ steps.finalize.outputs.media-profile }}
+      media-qualification-root: ${{ steps.finalize.outputs.media-qualification-root }}
     steps:
       - name: Checkout exact Buildchain workflow runtime
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -350,6 +363,27 @@ jobs:
             --output /output \
             --renderer-image "${RENDERER_IMAGE}"
 
+      - name: Independently inspect web-delivery media
+        if: ${{ inputs.media-profile != 'archive-v1' }}
+        shell: bash
+        env:
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+        run: |
+          set -euo pipefail
+          mkdir -p render-inspection
+          chmod 0777 render-inspection
+          docker run --rm --network none --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+            --volume "${GITHUB_WORKSPACE}/.buildchain/runtime:/buildchain:ro" \
+            --volume "${GITHUB_WORKSPACE}/render-work:/media:ro" \
+            --volume "${GITHUB_WORKSPACE}/render-inspection:/inspection" \
+            --entrypoint node \
+            "${RENDERER_IMAGE}" \
+            /buildchain/scripts/auditable-demo.mjs inspect-media \
+            --render-output /media \
+            --renderer-image "${RENDERER_IMAGE}" \
+            --output /inspection/media-inspection.json
+
       - name: Finalize content-addressed media bundle
         id: finalize
         shell: bash
@@ -357,14 +391,21 @@ jobs:
           GATE_ROOT: ${{ needs.gate.outputs.gate-root }}
           RENDERER_IMAGE: ${{ inputs.renderer-image }}
           SOURCE_SHA: ${{ needs.gate.outputs.source-sha }}
+          MEDIA_PROFILE: ${{ inputs.media-profile }}
         run: |
           set -euo pipefail
+          inspection_args=()
+          if [ -f "${GITHUB_WORKSPACE}/render-inspection/media-inspection.json" ]; then
+            inspection_args=(--media-inspection "${GITHUB_WORKSPACE}/render-inspection/media-inspection.json")
+          fi
           node .buildchain/runtime/scripts/auditable-demo.mjs finalize-media \
             --gate-bundle "${GITHUB_WORKSPACE}/gate-bundle" \
             --gate-root "${GATE_ROOT}" \
             --render-output "${GITHUB_WORKSPACE}/render-work" \
             --renderer-image "${RENDERER_IMAGE}" \
             --source-sha "${SOURCE_SHA}" \
+            --media-profile "${MEDIA_PROFILE}" \
+            "${inspection_args[@]}" \
             --output "${GITHUB_WORKSPACE}/media-bundle" \
             --github-output "${GITHUB_OUTPUT}"
 

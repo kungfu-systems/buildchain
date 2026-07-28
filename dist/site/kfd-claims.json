@@ -14,17 +14,17 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:008b1c5a90a787cf30106829ac7aca68ab501f6d9c375e415d9c5c6b89039f46",
+    "compatibilityDigest": "sha256:9770baa99ba374e9dbd743ca9624a72137513b8c4e65af1fbf2160cb3ef51d9d",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "20c7857dabfa899fb7ef1d2322c75135aa000364b1f38a359eaebede920285fc",
+    "sha256": "c274fd418ffe5bc422489a80cf58d87136d7e25c4ad610c72b46098617291c52",
     "summary": {
       "cliCommandCount": 97,
-      "workflowCount": 56,
+      "workflowCount": 57,
       "actionCount": 6,
       "sitePageCount": 59,
       "docCommandRefCount": 291,
@@ -228,10 +228,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "20c7857dabfa899fb7ef1d2322c75135aa000364b1f38a359eaebede920285fc",
+      "sha256": "c274fd418ffe5bc422489a80cf58d87136d7e25c4ad610c72b46098617291c52",
       "summary": {
         "cliCommandCount": 97,
-        "workflowCount": 56,
+        "workflowCount": 57,
         "actionCount": 6,
         "sitePageCount": 59,
         "docCommandRefCount": 291,
@@ -2990,11 +2990,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 9,
+          "inputCount": 10,
           "inputs": [
             "adapter-path",
             "artifact-retention-days",
             "buildchain-repository",
+            "media-profile",
             "render-media",
             "renderer-image",
             "require-trusted-event",
@@ -3648,6 +3649,20 @@
           "kind": "workflow",
           "sourcePath": ".github/workflows/artifact-signing-authority.yml",
           "evidencePath": ".github/workflows/artifact-signing-authority.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:auditable-demo-media-profile-qualification",
+          "name": "workflow:auditable-demo-media-profile-qualification",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+          "evidencePath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -5694,6 +5709,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 364
+    "publicSurfaceCount": 365
   }
 }

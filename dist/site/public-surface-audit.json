@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 97,
-    "workflowCount": 56,
+    "workflowCount": 57,
     "actionCount": 6,
     "sitePageCount": 59,
     "docCommandRefCount": 291,
@@ -507,6 +507,7 @@
           "adapter-path",
           "artifact-retention-days",
           "buildchain-repository",
+          "media-profile",
           "render-media",
           "renderer-image",
           "require-trusted-event",
@@ -514,7 +515,7 @@
           "source-artifact-name",
           "source-ref"
         ],
-        "inputCount": 9,
+        "inputCount": 10,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -527,10 +528,12 @@
           "media-artifact-id",
           "media-artifact-name",
           "media-artifact-url",
+          "media-profile",
+          "media-qualification-root",
           "media-root",
           "source-sha"
         ],
-        "outputCount": 11
+        "outputCount": 13
       },
       {
         "id": ".binary-release-assets",
@@ -1304,6 +1307,17 @@
       {
         "id": "artifact-signing-authority",
         "path": ".github/workflows/artifact-signing-authority.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "auditable-demo-media-profile-qualification",
+        "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -4245,8 +4259,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "597678cd36be205362cb9d93313eb0d05a67d5c0f24b7da2de0bbcd41a765949",
-    "pageRegistryDigest": "9617811df34d5bf51a67373231df01618810640c796255f28cee55f8d878d8ed"
+    "workflowRegistryDigest": "9f7ec872f7ae4ec2dbbf751425441deba8a1badaa1ce578997b3ba953f1f5ece",
+    "pageRegistryDigest": "a5e8faa72f8bf5a6b9fe359f30d7bc7c3163a3bdd69c1bf2d68ae5a3eb2d4561"
   },
   "comparison": {
     "missingCliRegistry": [],

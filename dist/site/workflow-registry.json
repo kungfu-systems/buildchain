@@ -11,6 +11,7 @@
         "adapter-path",
         "artifact-retention-days",
         "buildchain-repository",
+        "media-profile",
         "render-media",
         "renderer-image",
         "require-trusted-event",
@@ -18,7 +19,7 @@
         "source-artifact-name",
         "source-ref"
       ],
-      "inputCount": 9,
+      "inputCount": 10,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -31,10 +32,12 @@
         "media-artifact-id",
         "media-artifact-name",
         "media-artifact-url",
+        "media-profile",
+        "media-qualification-root",
         "media-root",
         "source-sha"
       ],
-      "outputCount": 11,
+      "outputCount": 13,
       "surface": "auditable-demo",
       "capabilityGroup": "api-cli-reference",
       "status": "preview"
@@ -862,6 +865,20 @@
     {
       "id": "artifact-signing-authority",
       "path": ".github/workflows/artifact-signing-authority.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
+      "id": "auditable-demo-media-profile-qualification",
+      "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
       "reusable": false,
       "inputs": [],
       "inputCount": 0,

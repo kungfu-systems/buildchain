@@ -26,6 +26,13 @@
       "source": ".github/workflows/.auditable-demo.yml"
     },
     {
+      "id": "auditable-demo-web-delivery-profile",
+      "impact": "minor",
+      "class": "evidence-contract",
+      "rationale": "The auditable-demo workflow adds opt-in archive, web-delivery, and site-hero qualification profiles, a Buildchain-controlled immutable media-inspection witness, explicit rendition roles and byte ceilings, and a content-addressed v2 media receipt while preserving archive-v1 as the default.",
+      "source": "contracts/auditable-demo-media-profiles-v1.json"
+    },
+    {
       "id": "promotion-floating-ref-single-resolution",
       "impact": "patch",
       "class": "source-integrity",
@@ -401,5 +408,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence and release governance with configurable trusted control runners, anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
+  "summary": "Buildchain v3.0 extends sealed evidence and release governance with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
 }

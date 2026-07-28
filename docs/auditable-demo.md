@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-25
+last_reviewed: 2026-07-28
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -100,8 +100,53 @@ the exact source SHA and renderer digest, and only then renders the complete
 qualified scene.
 
 The media bundle contains MP4, WebM, GIF, poster, probe, renderer manifest,
-renderer checksums, passed Gate receipt, media receipt, and distribution
-checksums. `render-media: false` does not weaken or skip the Gate.
+renderer checksums, passed Gate receipt, a versioned media receipt, and
+distribution checksums. A web-delivery profile also retains
+`media-inspection.json`, whose content root is bound into the receipt.
+`render-media: false` does not weaken or skip the Gate.
+
+## Media Qualification Profiles
+
+The single machine-readable source is
+`contracts/auditable-demo-media-profiles-v1.json`. Callers select one reviewed
+profile through `media-profile`; they cannot pass ffmpeg commands, codec flags,
+shell fragments, arbitrary profile paths, or transcoding instructions.
+
+| Profile | Meaning |
+| --- | --- |
+| `archive-v1` | Default compatibility contract. Retains the exact renderer outputs and classifies GIF as README compatibility evidence without making a browser-delivery claim. |
+| `web-delivery-v1` | Independently qualifies H.264 MP4 and VP9 WebM playback sources, forbids audio, requires exact scene dimensions and bounded duration/frame-rate drift, checks per-rendition byte ceilings, and proves MP4 `moov` precedes `mdat`. PNG remains the lossless evidence poster. |
+| `site-hero-v1` | Extends `web-delivery-v1` and additionally requires a qualified WebP browser poster. The current Build Images v1 renderer does not emit that member, so selecting this profile fails closed until the producer adds it. |
+
+For web-delivery profiles, Buildchain runs its own fixed `ffprobe` invocation
+inside the same immutable, network-disabled renderer image. That command is
+Buildchain-controlled; the producer cannot inject flags. The resulting witness
+records exact roots and byte counts plus container, codec, pixel format,
+dimensions, duration, frame rate, audio stream count, and progressive-download
+evidence. Finalization re-hashes the retained bytes, rechecks the witness root,
+and parses MP4 top-level boxes itself. The producer's `media-probe.json.passed`
+field remains supporting evidence, never sufficient authority.
+
+The default `archive-v1` path preserves the existing v1 media receipt exactly.
+An explicitly selected web-delivery profile emits a v2 media receipt with a
+content-addressed rendition list and explicit roles and MIME types. Agents and
+site builds select `primary-video`,
+`alternate-video`, `browser-poster`, or evidence-only roles from that receipt;
+they do not infer semantics from extensions or filenames. Additional responsive
+renditions are accepted only when the immutable renderer manifest declares the
+bounded `build-images.auditable-demo-web-delivery/v1` role and MIME metadata and
+the selected Buildchain profile supplies the byte ceiling; producer metadata
+cannot raise that ceiling. Unbound outputs,
+duplicate singleton roles, unknown profiles, or unsupported required versions
+fail closed.
+
+Initial byte ceilings are derived from the checked-in
+`auditable-demo-web-delivery-v1` fixture rendered by Build Images
+`v1.3.0-alpha.16` at its exact source SHA and image digest. GIF, MP4, WebM, and
+PNG ceilings are the next power of two above sixteen times the measured member
+bytes. The not-yet-produced WebP poster uses eight times the measured lossless
+PNG as its conservative proxy. The path-scoped qualification workflow
+regenerates the content-addressed evidence and fails on any byte or fact drift.
 
 ## Consumer Example
 
@@ -140,11 +185,18 @@ jobs:
       adapter-path: scripts/auditable-demo-adapter
       renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:RENDERER_DIGEST
       render-media: false
+      media-profile: archive-v1
 ```
 
 Replace both placeholders with reviewed immutable SHAs or digests. An eligible
 build should always call the reusable workflow. Selection policy changes only
 `render-media`; it must never condition away the Gate job.
+
+Use `web-delivery-v1` only when the rendered bundle is intended to become a
+qualified web-delivery source. Use `site-hero-v1` when an optimized browser
+poster is also required. Profile qualification does not prove browser playback,
+responsive layout, reduced-motion behavior, accessibility, or production
+deployment; those remain site responsibilities.
 
 ## Failure Evidence
 

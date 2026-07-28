@@ -23,7 +23,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:cff9786d4de098c84ea7e494b523627d6431909f15c82940e2193dbda1ef10e9",
+      "digest": "sha256:0e8cf2162c2e1f83cfe3a6171e3055f494cab5f03fdcbec3854e1793678e6908",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -429,7 +429,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:f3665f2f173bdcb287cf8aa509035164e818b20088849f4a2bce098951c84ea3",
+      "digest": "sha256:4b40cb8675c111b7588297102a61cb241630f2b707a67a0384a6df7527b2c64c",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
