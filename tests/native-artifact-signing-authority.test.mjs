@@ -13,6 +13,8 @@ import { importArtifactSigningResults } from "../scripts/import-artifact-signing
 import { materializeArtifactSigningRequest } from "../scripts/materialize-artifact-signing-request.mjs";
 import { verifyArtifactSigningResults } from "../scripts/verify-artifact-signing-results.mjs";
 
+const FORMAL_AUTHORITY_REF = "authority/v3/v3.0/artifact-signing";
+
 function digest(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
 }
@@ -121,9 +123,13 @@ test("authority intake routes native profiles without accepting source substitut
 test("Buildchain authority owns native credentials and performs provider verification", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/artifact-signing-authority.yml"), "utf8");
+  const releaseVerify = fs.readFileSync(path.join(root, ".github/workflows/release-verify.yml"), "utf8");
+  const reusableDocs = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
   const macos = fs.readFileSync(path.join(root, "scripts/sign-macos-mach-o-request.sh"), "utf8");
   const windows = fs.readFileSync(path.join(root, "scripts/sign-windows-authenticode-request.ps1"), "utf8");
   assert.match(workflow, /environment: buildchain-artifact-signing/);
+  assert.match(releaseVerify, /authority\/\*\/\*\/artifact-signing/);
+  assert.match(reusableDocs, new RegExp(FORMAL_AUTHORITY_REF.replaceAll("/", "\\/")));
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64/);
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64/);
   assert.match(workflow, /vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID/);
@@ -169,7 +175,7 @@ test("authority polling retries transient GET transport failures without replayi
     () => githubRequest("/repos/kungfu-systems/buildchain/actions/workflows/artifact-signing-authority.yml/dispatches", {
       token: "test-token",
       method: "POST",
-      body: { ref: "train/v3/v3.0/artifact-signing-authority" },
+      body: { ref: FORMAL_AUTHORITY_REF },
       fetchImpl: async () => {
         postAttempts += 1;
         throw new TypeError("fetch failed");

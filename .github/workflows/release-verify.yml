@@ -6,6 +6,7 @@ on:
     branches:
       - alpha/*/*
       - release/*/*
+      - authority/*/*/artifact-signing
       - publish-gate/major
       - major-gate
 
