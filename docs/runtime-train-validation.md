@@ -64,6 +64,27 @@ item that still needs to be merged; it is only a temporary fast-use,
 diagnostic, and rollback channel for initiating repositories. Retained trains
 are cleaned up by a separate periodic Buildchain cleanup task.
 
+## Formal artifact-signing authority ref
+
+Artifact signing uses a durable, channel-neutral authority ref after its
+runtime has passed downstream validation:
+
+```text
+authority/v3/v3.0/artifact-signing
+```
+
+Unlike a train, this ref is a protected execution boundary. Alpha and stable
+release intent use the same authority ref and the same
+`buildchain-artifact-signing` environment; channel promotion never selects a
+different certificate environment. Updates to the authority ref require a
+reviewed pull request, the normal `check` and `verify` status contexts, and a
+fast-forward-safe protected branch policy. Deletion and non-fast-forward
+updates are forbidden.
+
+The temporary `train/v3/v3.0/artifact-signing-authority` ref remains a bounded
+rollback and diagnostic pointer during migration. It is not the production
+identity and must not regain credential ownership.
+
 ## Consumer workflow requirement
 
 Consumers keep their reusable workflow pinned to the stable shell:

@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:23158252e5d2bd09b9b54dc08a0a452562e4b3a6ec3861b991632a34199d9820"
+      "digest": "sha256:cc32692e8d04816e8de94f208e43c2d5c5c7a8425cec8b32edc73ab78591fbbf"
     },
     {
       "id": "auditable-demo",
@@ -61,7 +61,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:cff9786d4de098c84ea7e494b523627d6431909f15c82940e2193dbda1ef10e9"
+      "digest": "sha256:0e8cf2162c2e1f83cfe3a6171e3055f494cab5f03fdcbec3854e1793678e6908"
     },
     {
       "id": "install",
@@ -85,7 +85,7 @@
       "path": "docs/github-artifact-attestation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:afdb8172bc41b9a20c0d18f4ddcc55ee287ac56db05e67e55d12de1843b724e1"
+      "digest": "sha256:51f28b0b01fae4e3f80a7433f6c491d0c795bd091bff64ca1264c5cc0819c545"
     },
     {
       "id": "controller-evidence",
@@ -253,7 +253,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:5d46d0f5e6e03541c187ffea154dcce703ef78e59d16bd0e4fa7c175da940480"
+      "digest": "sha256:ea36ec722f811f5156735aa7471ed080cdc7e87d71c20c300243b226e233e675"
     },
     {
       "id": "publish-transaction",
@@ -269,7 +269,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:a77c2bb1d2245e1ee2318f650ad64ada6c8cdd3292a62a028e3ccc7517fb4e12"
+      "digest": "sha256:42a45f51db7ea11658431718835e1a430959db2a5cc80fc4651681502fe6fb7c"
     },
     {
       "id": "release-flow",
@@ -285,7 +285,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1315fe264d0e22215183122fc05e287be974751a78268642076898b689e435e6"
+      "digest": "sha256:c9ebf451294f92a2be3aa2ac4b2ec7afb3cc17bbeae2ece7879b800c0f274a40"
     },
     {
       "id": "versioning",
@@ -293,7 +293,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:f3665f2f173bdcb287cf8aa509035164e818b20088849f4a2bce098951c84ea3"
+      "digest": "sha256:4b40cb8675c111b7588297102a61cb241630f2b707a67a0384a6df7527b2c64c"
     },
     {
       "id": "web-surface-deployments",

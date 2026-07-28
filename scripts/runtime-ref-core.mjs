@@ -1,5 +1,6 @@
 const EXACT_SHA_RE = /^[0-9a-f]{40}$/i;
 const TRAIN_REF_RE = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+const AUTHORITY_REF_RE = /^authority\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
 const OFFICIAL_CHANNEL_REF_RE = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
 
 export function parseWorkflowShellRef(workflowRef = "", fallback = "v2", buildchainRepository = "kungfu-systems/buildchain") {
@@ -19,6 +20,9 @@ export function classifyBuildchainRuntimeRef(ref = "") {
   }
   if (TRAIN_REF_RE.test(value)) {
     return "train";
+  }
+  if (AUTHORITY_REF_RE.test(value)) {
+    return "authority";
   }
   if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) {
     return "stable";
@@ -58,16 +62,16 @@ export function normalizeRequestedRuntimeRef(requestedRef = "") {
       officialChannel: false,
     };
   }
-  const trainRef = requested.replace(/^refs\/heads\//, "");
-  if (!TRAIN_REF_RE.test(trainRef)) {
+  const protectedRef = requested.replace(/^refs\/heads\//, "");
+  if (!TRAIN_REF_RE.test(protectedRef) && !AUTHORITY_REF_RE.test(protectedRef)) {
     throw new Error(
-      "buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA",
+      "buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, authority/vN/vN.M/<capability>, refs/heads/authority/vN/vN.M/<capability>, or an exact 40-character SHA",
     );
   }
   return {
-    ref: trainRef,
-    fullRef: `refs/heads/${trainRef}`,
-    class: "train",
+    ref: protectedRef,
+    fullRef: `refs/heads/${protectedRef}`,
+    class: AUTHORITY_REF_RE.test(protectedRef) ? "authority" : "train",
     exactSha: false,
     officialChannel: false,
   };

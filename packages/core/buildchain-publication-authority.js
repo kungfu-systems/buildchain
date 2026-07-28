@@ -18,6 +18,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/.binary-release-assets.yml", "product-publication", true, ["github-release"], "github-token", "buildchain-release-assets"],
   [".github/workflows/binary-distribution.yml", "evidence-publication"],
   [".github/workflows/binary-release-assets.yml", "governance-write"],
+  [".github/workflows/artifact-signing-authority.yml", "evidence-publication"],
   [".github/workflows/build-surface-fixture.yml", "non-publication-oidc"],
   [".github/workflows/build.yml", "non-publication-oidc"],
   [".github/workflows/buildchain-alpha-self-dogfood.yml", "non-publication-oidc"],

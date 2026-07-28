@@ -1,0 +1,110 @@
+name: Auditable Demo Media Profile Qualification
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/.auditable-demo.yml"
+      - ".github/workflows/auditable-demo-media-profile-qualification.yml"
+      - "contracts/auditable-demo-media-profiles-v1.json"
+      - "contracts/evidence/auditable-demo-web-delivery-v1.json"
+      - "contracts/fixtures/auditable-demo-web-delivery-v1/**"
+      - "scripts/auditable-demo.mjs"
+  push:
+    branches:
+      - "dev/v*/v*"
+    paths:
+      - ".github/workflows/.auditable-demo.yml"
+      - ".github/workflows/auditable-demo-media-profile-qualification.yml"
+      - "contracts/auditable-demo-media-profiles-v1.json"
+      - "contracts/evidence/auditable-demo-web-delivery-v1.json"
+      - "contracts/fixtures/auditable-demo-web-delivery-v1/**"
+      - "scripts/auditable-demo.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RENDERER_IMAGE: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:cb5e1dec368d21c7d4e8baded99ac75f12f7eff0d19505751888cf974086efa6
+  RENDERER_SOURCE_REPOSITORY: kungfu-systems/build-images
+  RENDERER_SOURCE_REF: refs/tags/v1.3.0-alpha.16
+  RENDERER_SOURCE_SHA: 999b370743f3e64e4f0b634d5131bd1d3d6b83ba
+
+jobs:
+  qualify:
+    name: qualify-web-delivery-v1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Render the fixed qualification fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/media-profile/render
+          chmod 0777 .buildchain/media-profile/render
+          docker run --rm --network none --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=512m \
+            --volume "${GITHUB_WORKSPACE}/contracts/fixtures/auditable-demo-web-delivery-v1:/input:ro" \
+            --volume "${GITHUB_WORKSPACE}/.buildchain/media-profile/render:/output" \
+            "${RENDERER_IMAGE}" \
+            demo-renderer \
+            --scene /input/scene.json \
+            --transcript /input/complete-transcript.txt \
+            --projection /input/public-projection.json \
+            --output /output \
+            --renderer-image "${RENDERER_IMAGE}"
+
+      - name: Inspect rendered bytes with the fixed Buildchain command
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/media-profile/inspection
+          chmod 0777 .buildchain/media-profile/inspection
+          docker run --rm --network none --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+            --volume "${GITHUB_WORKSPACE}:/buildchain:ro" \
+            --volume "${GITHUB_WORKSPACE}/.buildchain/media-profile/render:/media:ro" \
+            --volume "${GITHUB_WORKSPACE}/.buildchain/media-profile/inspection:/inspection" \
+            --entrypoint node \
+            "${RENDERER_IMAGE}" \
+            /buildchain/scripts/auditable-demo.mjs inspect-media \
+            --render-output /media \
+            --renderer-image "${RENDERER_IMAGE}" \
+            --output /inspection/media-inspection.json
+
+      - name: Produce content-addressed fixture evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/auditable-demo.mjs qualify-media-fixture \
+            --render-output .buildchain/media-profile/render \
+            --media-inspection .buildchain/media-profile/inspection/media-inspection.json \
+            --media-profile web-delivery-v1 \
+            --renderer-image "${RENDERER_IMAGE}" \
+            --renderer-source-repository "${RENDERER_SOURCE_REPOSITORY}" \
+            --renderer-source-ref "${RENDERER_SOURCE_REF}" \
+            --renderer-source-sha "${RENDERER_SOURCE_SHA}" \
+            --output .buildchain/media-profile/evidence.json
+          jq '.qualification.renditions | map({path, role, root, bytes, maximumBytes})' \
+            .buildchain/media-profile/evidence.json
+
+      - name: Verify the checked-in measurement baseline
+        if: ${{ hashFiles('contracts/evidence/auditable-demo-web-delivery-v1.json') != '' }}
+        run: diff -u contracts/evidence/auditable-demo-web-delivery-v1.json .buildchain/media-profile/evidence.json
+
+      - name: Upload qualification evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: auditable-demo-web-delivery-v1-${{ github.sha }}
+          path: |
+            .buildchain/media-profile/evidence.json
+            .buildchain/media-profile/inspection/media-inspection.json
+            .buildchain/media-profile/render/manifest.json
+          if-no-files-found: error
+          retention-days: 14

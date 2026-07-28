@@ -36,6 +36,11 @@ on:
         default: 604800
         required: false
         type: number
+      pull-request-body-prefix:
+        description: Repository-owned declaration prepended when a candidate PR is created
+        default: ""
+        required: false
+        type: string
       create-pull-request:
         description: Backward-compatible alias for settlement-authorized
         default: false
@@ -128,6 +133,7 @@ jobs:
           BUILDCHAIN_CHANNEL_PATROL_DEV_WORKFLOW: ${{ inputs.dev-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_ALPHA_WORKFLOW: ${{ inputs.alpha-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS: ${{ inputs.max-age-seconds }}
+          BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: ${{ inputs.pull-request-body-prefix }}
           BUILDCHAIN_CHANNEL_PATROL_CREATE_PR: "false"
           BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED: "false"
           BUILDCHAIN_CHANNEL_PATROL_DRY_RUN: "true"
@@ -189,6 +195,7 @@ jobs:
           BUILDCHAIN_CHANNEL_PATROL_DEV_WORKFLOW: ${{ inputs.dev-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_ALPHA_WORKFLOW: ${{ inputs.alpha-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS: ${{ inputs.max-age-seconds }}
+          BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: ${{ inputs.pull-request-body-prefix }}
           BUILDCHAIN_CHANNEL_PATROL_CREATE_PR: "true"
           BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED: "true"
           BUILDCHAIN_CHANNEL_PATROL_DRY_RUN: "false"

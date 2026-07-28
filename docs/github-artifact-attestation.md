@@ -198,7 +198,7 @@ created the build and release evidence.
 
 ```bash
 buildchain verify github-artifact-attestation \
-  --artifact libnode-linux-x64.tar.gz \
+  libnode-linux-x64.tar.gz \
   --platform-manifest manifest.json \
   --release-passport buildchain.release.json \
   --bundle attestation.sigstore.json \

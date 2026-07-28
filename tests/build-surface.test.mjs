@@ -216,7 +216,7 @@ test("reusable build workflow exposes the required surface contract", () => {
     workflow.match(/uses: actions\/download-artifact@v7\.0\.0/g) || [];
   const authenticatedArtifactDownloads =
     workflow.match(
-      /uses: actions\/download-artifact@v7\.0\.0\n\s+with:\n\s+github-token: \$\{\{ github\.token \}\}/g,
+      /uses: actions\/download-artifact@v7\.0\.0\n\s+with:\n\s+github-token: \$\{\{ (?:github\.token|secrets\.BUILDCHAIN_PROMOTION_TOKEN) \}\}/g,
     ) || [];
   assert.match(workflow, /workflow_call:/);
   assert.equal(
@@ -407,6 +407,15 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /artifact-name:/);
   assert.match(workflow, /artifact-name-template:/);
   assert.match(workflow, /expected-artifacts-json:/);
+  assert.equal((workflow.match(/Seal declared artifact signing requests/g) || []).length, 2);
+  assert.equal((workflow.match(/Publish Buildchain-owned artifact signing request/g) || []).length, 2);
+  assert.equal((workflow.match(/Dispatch and await Buildchain signing authority/g) || []).length, 2);
+  assert.equal((workflow.match(/Verify and import final signed bytes/g) || []).length, 2);
+  const firstBuild = workflow.indexOf("      - name: Run build lifecycle");
+  const firstSeal = workflow.indexOf("      - name: Seal declared artifact signing requests");
+  const firstVerify = workflow.indexOf("      - name: Run verify lifecycle");
+  assert.ok(firstBuild < firstSeal && firstSeal < firstVerify, "signed bytes must be imported between build and verify");
+  assert.match(workflow, /signing-request-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
   assert.match(workflow, /process-summary-path:/);
   assert.match(workflow, /sample-process-tree:/);
   assert.match(workflow, /process-sample-interval-ms:/);
@@ -2330,6 +2339,11 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     "train/v2/v2.3/runtime-loader",
   );
   assert.equal(classifyBuildchainRuntimeRef("train/v2/v2.3/runtime-loader"), "train");
+  assert.equal(
+    normalizeRequestedRuntimeRef("refs/heads/authority/v3/v3.0/artifact-signing").ref,
+    "authority/v3/v3.0/artifact-signing",
+  );
+  assert.equal(classifyBuildchainRuntimeRef("authority/v3/v3.0/artifact-signing"), "authority");
   assert.equal(classifyBuildchainRuntimeRef("a".repeat(40)), "exact-sha");
   assert.throws(
     () => normalizeRequestedRuntimeRef("release/v2/v2.3"),
@@ -2368,6 +2382,14 @@ test("runtime selection accepts official channels and gates train or SHA overrid
   assert.equal(
     validateRuntimeOverrideTrust({
       requestedRef: "train/v2/v2.3/runtime-loader",
+      eventName: "workflow_dispatch",
+      actorPermission: "write",
+    }).decision,
+    "override-accepted",
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "authority/v3/v3.0/artifact-signing",
       eventName: "workflow_dispatch",
       actorPermission: "write",
     }).decision,

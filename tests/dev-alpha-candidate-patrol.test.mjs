@@ -348,6 +348,44 @@ test("candidate mode creates only an immutable branch and protected PR request",
   );
 });
 
+test("candidate creation prepends a repository-owned governance declaration", async () => {
+  const fake = client();
+  const declaration = [
+    "<!-- repository-release-declaration:v1",
+    '{"kind":"alpha-settlement","no_progress":"qualified fixes only"}',
+    "-->",
+  ].join("\n");
+  await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      pullRequestBodyPrefix: declaration,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    fake,
+  );
+  assert.ok(fake.calls[1][1].body.startsWith(`${declaration}\n\n`));
+  assert.equal(
+    parseCandidateStateMarker(fake.calls[1][1].body).activeCandidate.sourceSha,
+    SOURCE_SHA,
+  );
+});
+
+test("candidate body prefix cannot forge the managed controller marker", async () => {
+  await assert.rejects(
+    runDevAlphaCandidatePatrol(
+      {
+        ...patrolOptions,
+        pullRequestBodyPrefix:
+          "<!-- buildchain-dev-alpha-candidate-state\n{}\n-->",
+        dryRun: true,
+      },
+      client(),
+    ),
+    /must not contain the managed candidate state marker/u,
+  );
+});
+
 test("read-only observation retains the newest qualified SHA behind one active candidate", async () => {
   const fake = client({
     sourceHead: OBSERVED_SHA,
@@ -592,6 +630,7 @@ test("reusable workflow retains the no-publication boundary", () => {
   );
   assert.match(workflowText, /actions: read/u);
   assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_DRY_RUN/u);
+  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX/u);
   assert.match(workflowText, /scripts\/dev-alpha-candidate-patrol\.mjs/u);
   assert.doesNotMatch(
     workflowText,

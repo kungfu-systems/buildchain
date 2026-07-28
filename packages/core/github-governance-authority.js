@@ -49,6 +49,7 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
     target("dev/v3/v3.0", [check("check")], false),
     target("alpha/v3/v3.0", [check("check"), check("verify")], false),
     target("release/v3/v3.0", [check("check")], true),
+    target("authority/v3/v3.0/artifact-signing", [check("check"), check("verify")], true),
     target("publish-gate/major", [check("check")], true),
   ],
   "homebrew-tap": [
@@ -61,6 +62,11 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   kungfu: [
     target("dev/v4/v4.0", [check("affected-native / linux")], false),
     target("alpha/v4/v4.0", [
+      check("build", null),
+      check("signoff"),
+      check("validate"),
+    ], true),
+    target("release/v4/v4.0", [
       check("build", null),
       check("signoff"),
       check("validate"),
