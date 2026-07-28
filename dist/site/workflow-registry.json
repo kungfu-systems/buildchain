@@ -62,6 +62,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
         "node-version",
@@ -93,7 +94,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 60,
+      "inputCount": 61,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -720,6 +721,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
         "node-version",
@@ -751,7 +753,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 63,
+      "inputCount": 64,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

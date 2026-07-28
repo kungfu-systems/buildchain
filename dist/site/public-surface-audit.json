@@ -465,6 +465,7 @@
           "expected-artifacts-json",
           "gate-profile-aggregate-json",
           "install-command",
+          "lifecycle-timeout-minutes",
           "linux-container-image",
           "linux-container-preset",
           "node-version",
@@ -496,7 +497,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 60,
+        "inputCount": 61,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1069,6 +1070,7 @@
           "expected-artifacts-json",
           "gate-profile-aggregate-json",
           "install-command",
+          "lifecycle-timeout-minutes",
           "linux-container-image",
           "linux-container-preset",
           "node-version",
@@ -1100,7 +1102,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 63,
+        "inputCount": 64,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -3434,7 +3436,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "00c0e3df91c929933ae4e503bd20b625d5531330b387372141333e1eaeb63477",
+    "workflowRegistryDigest": "bea6fab6698288e889327afc49d73705f5ee3ee41199dc4aab5b5f5d8cf55a49",
     "pageRegistryDigest": "d187a612da675deb2c19e3f71c8f7280cbb0f8a9b6c300e762917ab7efacf713"
   },
   "comparison": {

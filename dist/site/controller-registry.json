@@ -218,6 +218,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "lifecycle-timeout-minutes": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "linux-container-image": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -374,7 +378,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:5fe0ffdadd8a23f64db7ae38c9422ccf6a3144ab5ade4f302323d166a6b752f2"
+      "digest": "sha256:c1cb58b018947b187ddf1dd870dbe9d43faba75ea31ca87babba76c2ada949cc"
     },
     {
       "schemaVersion": 1,
@@ -530,6 +534,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "lifecycle-timeout-minutes": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "linux-container-image": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -676,7 +684,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:4c306a374bdb5c53d99082ef71c425418d37b2ee8be3bf9f61329fc0729d664b"
+      "digest": "sha256:a9852223d2cd081d3790b4e245e727fa4e0c93ae5731d887ee622fb270612ffa"
     },
     {
       "schemaVersion": 1,
@@ -1785,5 +1793,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:57e6373d9af24651e611c9dd30a94d61725763ddbe5095cccc3fd3d5cde08a1e"
+  "digest": "sha256:e98b74ca4734811ffc92ebc6b9bed8b33bd9f1433b6a632422b1d440d1d333f5"
 }
