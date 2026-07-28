@@ -1,0 +1,103 @@
+{
+  "evidenceRoot": "sha256:451adc20c423fbf680caeb14dcc4850990a3317dd5a77f94ee451a7a26edf3fb",
+  "inputs": {
+    "complete-transcript.txt": "sha256:f3723a3eda614134ab724ce9fbe1e0e5f916d809a8a3096f5e37c1458cb3656c",
+    "public-projection.json": "sha256:127f9877f9750a85eada4338f088bee5460c5c71a83302652d3321667002c3c7",
+    "scene.json": "sha256:ea65ec39177aac7e5341d330d61e81fcd523c9f2c7a7d4dd5ac43fb457a51977"
+  },
+  "qualification": {
+    "inspectionRoot": "sha256:3cf9f7c710f4fcbd307b116cf279675a37210905d6d0fc7459d11933e98e6ea4",
+    "nonClaims": [
+      "browser-playback-success",
+      "responsive-layout",
+      "reduced-motion-behavior",
+      "production-site-deployment"
+    ],
+    "profile": {
+      "catalogRoot": "sha256:b2cf52c7b087be73ea852bbbe574e1a50bb7d64d26b8bc211a2c7d53e2ff9cae",
+      "id": "web-delivery-v1",
+      "mode": "web-delivery",
+      "profileRoot": "sha256:b6fb0a83414d03a7222fc50429e60ed68b6d47758b86ceaa316ecc659a01ae2b"
+    },
+    "qualificationRoot": "sha256:f2133bab4a3a5937ec3863972049d0a7247a8e108681d4bd247f47d766c461ae",
+    "renditions": [
+      {
+        "audioStreams": 0,
+        "bytes": 40826,
+        "container": "gif",
+        "durationMs": 2500,
+        "frameRate": 12.5,
+        "height": 720,
+        "maximumBytes": 1048576,
+        "mimeType": "image/gif",
+        "path": "demo.gif",
+        "pixelFormat": "bgra",
+        "progressiveDownload": "not-applicable",
+        "role": "readme-compatibility",
+        "root": "sha256:d835fbd3068f672b3aaffc904d1488540f661c48e0429c8887397d1ae531880f",
+        "videoCodec": "gif",
+        "width": 1280
+      },
+      {
+        "audioStreams": 0,
+        "bytes": 27038,
+        "container": "mp4",
+        "durationMs": 2533,
+        "frameRate": 15,
+        "height": 720,
+        "maximumBytes": 524288,
+        "mimeType": "video/mp4",
+        "path": "demo.mp4",
+        "pixelFormat": "yuv420p",
+        "progressiveDownload": "moov-before-mdat",
+        "role": "primary-video",
+        "root": "sha256:a82c3ed61b101528a07689227dc8af65e8c809aa6de2b749fd53915d97c99ac9",
+        "videoCodec": "h264",
+        "width": 1280
+      },
+      {
+        "audioStreams": 0,
+        "bytes": 23383,
+        "container": "webm",
+        "durationMs": 2534,
+        "frameRate": 15,
+        "height": 720,
+        "maximumBytes": 524288,
+        "mimeType": "video/webm",
+        "path": "demo.webm",
+        "pixelFormat": "yuv420p",
+        "progressiveDownload": "not-applicable",
+        "role": "alternate-video",
+        "root": "sha256:935deb66eb4734371b21c2fc8c55acd596e79c832a9a7963ab0922b3925564c3",
+        "videoCodec": "vp9",
+        "width": 1280
+      },
+      {
+        "audioStreams": 0,
+        "bytes": 34769,
+        "container": "png",
+        "durationMs": 0,
+        "frameRate": 25,
+        "height": 720,
+        "maximumBytes": 1048576,
+        "mimeType": "image/png",
+        "path": "poster.png",
+        "pixelFormat": "rgb24",
+        "progressiveDownload": "not-applicable",
+        "role": "evidence-poster",
+        "root": "sha256:7141a41c2b84d074477844d9c8d12e6f44173074829796cefdf8119b21be2de9",
+        "videoCodec": "png",
+        "width": 1280
+      }
+    ],
+    "schema": "buildchain.auditable-demo-media-qualification/v1"
+  },
+  "renderer": {
+    "image": "ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:cb5e1dec368d21c7d4e8baded99ac75f12f7eff0d19505751888cf974086efa6",
+    "sourceRef": "refs/tags/v1.3.0-alpha.16",
+    "sourceRepository": "kungfu-systems/build-images",
+    "sourceSha": "999b370743f3e64e4f0b634d5131bd1d3d6b83ba"
+  },
+  "rendererManifestRoot": "sha256:2d3e4e2fcdfd17419e866e99d5e29cef65166b594cc5a5bdf2e5d9454cfb3a49",
+  "schema": "buildchain.auditable-demo-media-profile-fixture/v1"
+}

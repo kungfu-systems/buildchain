@@ -450,6 +450,31 @@ test("web-delivery qualification binds independently inspected rendition facts",
   );
 });
 
+test("checked-in media evidence binds measured byte budgets", () => {
+  const catalog = JSON.parse(fs.readFileSync(
+    new URL("../contracts/auditable-demo-media-profiles-v1.json", import.meta.url),
+    "utf8",
+  ));
+  const evidence = JSON.parse(fs.readFileSync(
+    new URL("../contracts/evidence/auditable-demo-web-delivery-v1.json", import.meta.url),
+    "utf8",
+  ));
+  const { evidenceRoot, ...body } = evidence;
+  assert.equal(evidenceRoot, sha256(Buffer.from(stableJson(body))));
+  assert.equal(evidence.qualification.profile.catalogRoot, sha256(Buffer.from(stableJson(catalog))));
+  const observed = new Map(evidence.qualification.renditions.map((entry) => [entry.path, entry.bytes]));
+  for (const profileId of ["web-delivery-v1", "site-hero-v1"]) {
+    for (const rendition of catalog.profiles[profileId].renditions) {
+      assert.equal(rendition.budgetBasis.evidence, "contracts/evidence/auditable-demo-web-delivery-v1.json");
+      assert.equal(rendition.budgetBasis.observedBytes, observed.get(rendition.budgetBasis.observedPath));
+      assert.equal(
+        rendition.maximumBytes,
+        2 ** Math.ceil(Math.log2(rendition.budgetBasis.observedBytes * rendition.budgetBasis.multiplier)),
+      );
+    }
+  }
+});
+
 test("web-delivery qualification rejects false or incomplete media claims", (t) => {
   const root = temporaryDirectory(t);
   const input = path.join(root, "input");
