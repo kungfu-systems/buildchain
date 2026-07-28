@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
 const DIGEST_PATTERN = /^sha256:[0-9a-f]{64}$/;
-const MAX_BUNDLE_MEMBER_BYTES = 128 * 1024 * 1024;
+const MAX_BUNDLE_MEMBER_BYTES = 8 * 1024 * 1024;
 const SCRIPT_DIRECTORY = path.dirname(fileURLToPath(import.meta.url));
 const MEDIA_PROFILE_CATALOG = path.resolve(
   SCRIPT_DIRECTORY,
