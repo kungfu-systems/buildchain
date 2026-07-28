@@ -11,6 +11,20 @@ export const AWS_CODEBUILD_TOOLCHAIN = Object.freeze({
   gccPackages: ["gcc14", "gcc14-c++"],
   gcc: "gcc14-gcc",
   gxx: "gcc14-g++",
+  compilerProfiles: Object.freeze({
+    amazonLinux2023: Object.freeze({
+      packageManager: "dnf",
+      packages: ["gcc14", "gcc14-c++"],
+      gcc: "gcc14-gcc",
+      gxx: "gcc14-g++",
+    }),
+    ubuntu2404: Object.freeze({
+      packageManager: "apt-get",
+      packages: ["gcc-14", "g++-14"],
+      gcc: "gcc-14",
+      gxx: "g++-14",
+    }),
+  }),
   cmakeVersion: "3.31.6",
   cmakeArchive: "cmake-3.31.6-linux-x86_64.tar.gz",
   cmakeSha256:
@@ -30,6 +44,66 @@ function commandPath(command) {
   return run("bash", ["-lc", `command -v ${command}`], {
     capture: true,
   }).trim();
+}
+
+function commandExists(command) {
+  try {
+    return Boolean(commandPath(command));
+  } catch {
+    return false;
+  }
+}
+
+export function selectAwsCodeBuildCompiler({
+  hasDnf = false,
+  hasAptGet = false,
+} = {}) {
+  if (hasDnf) return AWS_CODEBUILD_TOOLCHAIN.compilerProfiles.amazonLinux2023;
+  if (hasAptGet) return AWS_CODEBUILD_TOOLCHAIN.compilerProfiles.ubuntu2404;
+  throw new Error(
+    "AWS CodeBuild toolchain requires a supported package manager (dnf or apt-get)",
+  );
+}
+
+function installCompiler(profile, elevated) {
+  if (profile.packageManager === "dnf") {
+    const command = elevated ? "dnf" : "sudo";
+    const args = elevated
+      ? ["install", "-y", ...profile.packages]
+      : ["dnf", "install", "-y", ...profile.packages];
+    run(command, args);
+    return;
+  }
+
+  if (profile.packageManager === "apt-get") {
+    run(
+      elevated ? "apt-get" : "sudo",
+      elevated ? ["update"] : ["apt-get", "update"],
+    );
+    const command = elevated ? "env" : "sudo";
+    const args = elevated
+      ? [
+          "DEBIAN_FRONTEND=noninteractive",
+          "apt-get",
+          "install",
+          "-y",
+          ...profile.packages,
+        ]
+      : [
+          "env",
+          "DEBIAN_FRONTEND=noninteractive",
+          "apt-get",
+          "install",
+          "-y",
+          ...profile.packages,
+        ];
+    run(command, args);
+    return;
+  }
+
+  throw new Error(
+    `unsupported AWS CodeBuild package manager: ${profile.packageManager}`,
+  );
 }
 
 function appendGitHubPath(entry) {
@@ -93,16 +167,16 @@ export function prepareAwsCodeBuildToolchain({
 
   const elevated =
     typeof process.getuid === "function" && process.getuid() === 0;
-  const installCommand = elevated ? "dnf" : "sudo";
-  const installArgs = elevated
-    ? ["install", "-y", ...AWS_CODEBUILD_TOOLCHAIN.gccPackages]
-    : ["dnf", "install", "-y", ...AWS_CODEBUILD_TOOLCHAIN.gccPackages];
-  run(installCommand, installArgs);
+  const compiler = selectAwsCodeBuildCompiler({
+    hasDnf: commandExists("dnf"),
+    hasAptGet: commandExists("apt-get"),
+  });
+  installCompiler(compiler, elevated);
 
   const aliasDirectory = path.join(runnerTemp, "buildchain-gcc14", "bin");
   fs.mkdirSync(aliasDirectory, { recursive: true });
-  const gccPath = commandPath(AWS_CODEBUILD_TOOLCHAIN.gcc);
-  const gxxPath = commandPath(AWS_CODEBUILD_TOOLCHAIN.gxx);
+  const gccPath = commandPath(compiler.gcc);
+  const gxxPath = commandPath(compiler.gxx);
   ensureAlias(aliasDirectory, "cc", gccPath);
   ensureAlias(aliasDirectory, "gcc", gccPath);
   ensureAlias(aliasDirectory, "c++", gxxPath);
@@ -164,13 +238,14 @@ export function prepareAwsCodeBuildToolchain({
     buildId: process.env.CODEBUILD_BUILD_ID,
     os: process.platform,
     architecture: process.arch,
+    packageManager: compiler.packageManager,
     gcc: {
-      packages: AWS_CODEBUILD_TOOLCHAIN.gccPackages,
-      executable: AWS_CODEBUILD_TOOLCHAIN.gcc,
+      packages: compiler.packages,
+      executable: compiler.gcc,
       version: gccVersion.split("\n")[0],
     },
     gxx: {
-      executable: AWS_CODEBUILD_TOOLCHAIN.gxx,
+      executable: compiler.gxx,
       version: gxxVersion.split("\n")[0],
     },
     cmake: {
