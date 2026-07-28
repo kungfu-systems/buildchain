@@ -22,6 +22,7 @@ import {
 } from "../packages/core/github-governance-authority.js";
 import { resolveVerifierSourceRevision } from "../scripts/audit-github-governance.mjs";
 import {
+  githubApiFailureIsAbsence,
   resolveGithubProtectionTargetPolicy,
   resolveRequiredCheckBindings,
 } from "../scripts/reconcile-github-governance.mjs";
@@ -548,6 +549,18 @@ test("rollout CLI preserves observed check apps and requires explicit new bindin
     ),
     /must preserve an observed app_id or declare/,
   );
+});
+
+test("GitHub API 404 is absence only for read operations", () => {
+  const notFound = "gh: Not Found (HTTP 404)";
+  assert.equal(githubApiFailureIsAbsence("GET", notFound), true);
+  for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+    assert.equal(
+      githubApiFailureIsAbsence(method, notFound),
+      false,
+      `${method} 404 must remain a fail-closed mutation error`,
+    );
+  }
 });
 
 test("protection policy plan preserves descriptor-bound and unbound checks", () => {
