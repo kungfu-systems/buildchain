@@ -8,7 +8,7 @@ on:
         type: string
         required: false
       buildchain-ref:
-        description: "Official floating Buildchain channel, or a temporary train/SHA for trusted manual validation."
+        description: "Official floating Buildchain channel, protected authority, or a temporary train/SHA for trusted manual validation."
         default: ""
         type: string
         required: false
@@ -427,10 +427,10 @@ on:
         description: "Resolved immutable Buildchain runtime SHA"
         value: ${{ jobs.trust-gate.outputs.buildchain-runtime-sha }}
       buildchain-runtime-class:
-        description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
+        description: "Runtime stability class: stable, alpha, authority, train, exact-sha, or development"
         value: ${{ jobs.trust-gate.outputs.buildchain-runtime-class }}
       buildchain-runtime-override:
-        description: "Whether a train or exact-SHA buildchain-ref override was used"
+        description: "Whether an authority, train, or exact-SHA buildchain-ref override was used"
         value: ${{ jobs.trust-gate.outputs.buildchain-runtime-override }}
       buildchain-runtime-trust-decision:
         description: "Runtime override trust decision"
@@ -554,6 +554,7 @@ jobs:
             }
             const exactSha = /^[0-9a-f]{40}$/i;
             const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const authorityRef = /^authority\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
             const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
@@ -575,6 +576,7 @@ jobs:
               const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
               if (exactSha.test(value)) return "exact-sha";
               if (trainRef.test(value)) return "train";
+              if (authorityRef.test(value)) return "authority";
               if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
               if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
               return "development";
@@ -610,11 +612,11 @@ jobs:
                 runtimeClass = "exact-sha";
               } else {
                 runtimeRef = requested.replace(/^refs\/heads\//, "");
-                if (!trainRef.test(runtimeRef)) {
-                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                if (!trainRef.test(runtimeRef) && !authorityRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, authority/vN/vN.M/<capability>, refs/heads/authority/vN/vN.M/<capability>, or an exact 40-character SHA");
                 }
                 runtimeFullRef = `refs/heads/${runtimeRef}`;
-                runtimeClass = "train";
+                runtimeClass = authorityRef.test(runtimeRef) ? "authority" : "train";
               }
               trustDecision = trustedSameRepositoryPullRequestHead
                 ? "same-repository-pr-head"

@@ -9,6 +9,7 @@ const STABLE_PUBLISH_CHANNELS = new Set(["release", "major"]);
 const OFFICIAL_REF = /^v(\d+)(?:\.\d+)?(?:-alpha)?$/;
 const EXACT_SHA = /^[0-9a-f]{40}$/i;
 const TRAIN_REF = /^(?:refs\/heads\/)?train\/v(\d+)\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+const AUTHORITY_REF = /^(?:refs\/heads\/)?authority\/v(\d+)\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
 const SEMVER_TAG = /^refs\/tags\/v?\d+\.\d+\.\d+(?:-([0-9A-Za-z.-]+))?$/;
 
 function normalized(value) {
@@ -36,6 +37,8 @@ function majorFrom(value) {
   if (official) return Number(official[1]);
   const train = text.match(TRAIN_REF);
   if (train) return Number(train[1]);
+  const authority = text.match(AUTHORITY_REF);
+  if (authority) return Number(authority[1]);
   const embedded = text.match(/(?:^|\/)v(\d+)(?:$|[./-])/);
   if (embedded) return Number(embedded[1]);
   const version = text.match(/^(\d+)\.\d+\.\d+/);
@@ -57,6 +60,9 @@ function classifyRequestedRef(value) {
   if (TRAIN_REF.test(value) || TRAIN_REF.test(ref)) {
     return { kind: "override", ref: normalized(value).replace(/^refs\/heads\//, "") };
   }
+  if (AUTHORITY_REF.test(value) || AUTHORITY_REF.test(ref)) {
+    return { kind: "override", ref: normalized(value).replace(/^refs\/heads\//, "") };
+  }
   const official = ref.match(OFFICIAL_REF);
   if (official) {
     return {
@@ -65,7 +71,7 @@ function classifyRequestedRef(value) {
       major: Number(official[1]),
     };
   }
-  throw new Error("buildchain-ref must be an official vN/vN.M channel, a train ref, or an exact 40-character SHA");
+  throw new Error("buildchain-ref must be an official vN/vN.M channel, a train ref, an authority ref, or an exact 40-character SHA");
 }
 
 function selected(channel, major, source, reason) {
@@ -100,7 +106,7 @@ export function resolveBuildchainChannel({
       throw new Error(`buildchain-channel=${channel} conflicts with buildchain-ref=${explicitRef.ref}`);
     }
     if (channel !== "auto" && explicitRef.kind === "override") {
-      throw new Error("train and exact-SHA buildchain-ref overrides require buildchain-channel=auto");
+      throw new Error("train, authority, and exact-SHA buildchain-ref overrides require buildchain-channel=auto");
     }
     return {
       channel: explicitRef.kind,
