@@ -31,6 +31,16 @@ export const RUNNER_PRESETS = Object.freeze({
       capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
     },
   ],
+  "aws-us-codebuild-linux": [
+    {
+      id: "linux-x64",
+      name: "Linux x64 (AWS CodeBuild burst)",
+      platform: "linux",
+      provider: "aws-codebuild",
+      runner: '["aws-codebuild-dynamic"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+  ],
 });
 
 export const LINUX_CONTAINER_PRESETS = Object.freeze({
@@ -728,6 +738,8 @@ function normalizePlatform(platform, index) {
   }
   const normalized = { id, name, runner };
   if (platform?.platform !== undefined) normalized.platform = String(platform.platform || "").trim();
+  if (platform?.provider !== undefined) normalized.provider = String(platform.provider || "").trim();
+  if (platform?.project !== undefined) normalized.project = String(platform.project || "").trim();
   normalized.capabilities = capabilities.sort();
   if (platform?.required === false) normalized.required = false;
   return normalized;
@@ -736,6 +748,7 @@ function normalizePlatform(platform, index) {
 export function resolveRunnerMatrix({
   runnerPreset = "github-hosted",
   platformsJson = "",
+  awsCodeBuildProject = "",
   linuxContainerPreset = "",
   linuxContainerImage = "",
 } = {}) {
@@ -781,18 +794,28 @@ export function resolveRunnerMatrix({
   if (!platforms) {
     throw new Error(`unsupported runner-preset: ${preset}`);
   }
+  let resolvedPlatforms = platforms;
+  if (preset === "aws-us-codebuild-linux") {
+    const project = String(awsCodeBuildProject || "").trim();
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{1,149}$/.test(project)) {
+      throw new Error(
+        "runner-preset=aws-us-codebuild-linux requires a valid aws-codebuild-project",
+      );
+    }
+    resolvedPlatforms = platforms.map((platform) => ({ ...platform, project }));
+  }
   const containerPlatforms = linuxContainer.enabled
-    ? platforms.filter(platformIsLinux)
+    ? resolvedPlatforms.filter(platformIsLinux)
     : [];
   const nativePlatforms = linuxContainer.enabled
-    ? platforms.filter((platform) => !platformIsLinux(platform))
-    : platforms;
+    ? resolvedPlatforms.filter((platform) => !platformIsLinux(platform))
+    : resolvedPlatforms;
   return {
     source: "runner-preset",
     runnerPreset: preset,
-    platforms,
-    platformsJson: JSON.stringify(platforms),
-    platformCount: platforms.length,
+    platforms: resolvedPlatforms,
+    platformsJson: JSON.stringify(resolvedPlatforms),
+    platformCount: resolvedPlatforms.length,
     nativePlatforms,
     nativePlatformsJson: JSON.stringify(nativePlatforms),
     nativePlatformCount: nativePlatforms.length,

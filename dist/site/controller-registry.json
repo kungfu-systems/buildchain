@@ -146,6 +146,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "aws-codebuild-project": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "build-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -366,7 +370,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:ce2ada5daf86cbe6e58327c190fdfe07510952cc8820cf445eb4342daae4da18"
+      "digest": "sha256:c24cfda74cf848b52a6829bc7749f2af9a85a35ac8107f32285963fd93917fb3"
     },
     {
       "schemaVersion": 1,
@@ -435,6 +439,10 @@
           "source": "workflow-call-input"
         },
         "artifact-transfer-mode": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "aws-codebuild-project": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -660,7 +668,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:0ed17d03e410ca1b7726422716522a5e9096eee7badb197401291d53198518ea"
+      "digest": "sha256:747e9fe29b878f1e105fe271a508b45e533d45c7fb7c7a01a92b72cc6fe56c79"
     },
     {
       "schemaVersion": 1,
@@ -1753,5 +1761,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:3e2d56d393cb2baf146d47f85acfbbee560bf750910d88eda059b68f2f0b6e3e"
+  "digest": "sha256:0746d41890670418d9ab0c03ed4806626dd3a995209696cfa76c9eaba2b7efdd"
 }

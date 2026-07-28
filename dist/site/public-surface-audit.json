@@ -6,7 +6,7 @@
     "cliCommandCount": 79,
     "workflowCount": 47,
     "actionCount": 4,
-    "sitePageCount": 50,
+    "sitePageCount": 51,
     "docCommandRefCount": 249,
     "failureCount": 0
   },
@@ -447,6 +447,7 @@
           "artifact-relay-s3-upload-role-arn",
           "artifact-retention-days",
           "artifact-transfer-mode",
+          "aws-codebuild-project",
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
@@ -494,7 +495,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 58,
+        "inputCount": 59,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1046,6 +1047,7 @@
           "artifact-relay-s3-upload-role-arn",
           "artifact-retention-days",
           "artifact-transfer-mode",
+          "aws-codebuild-project",
           "build-command",
           "buildchain-alpha-contract-lock-path",
           "buildchain-channel",
@@ -1096,7 +1098,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 61,
+        "inputCount": 62,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2035,6 +2037,10 @@
       {
         "id": "fixture:web-surface-shaped",
         "category": "fixture"
+      },
+      {
+        "id": "manual:aws-us-elastic-runner-burst-plane",
+        "category": "manual"
       },
       {
         "id": "manual:binary-distribution",
@@ -3418,8 +3424,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "f0209b7a1a371d5815481864f6a12cc6f1ca365d51c67ef11e10542bb6a14a80",
-    "pageRegistryDigest": "ee2ef148f4dd7279fc13a98f810133646d9047432d8b98882f198df2a732b173"
+    "workflowRegistryDigest": "49ec95aee0b80951285bd64b6cac529f6b3b95d8e13416af4b2a749ab364de6e",
+    "pageRegistryDigest": "936a8199ef4dcf753fa1ff016a7d4c88c7d6cff6f09feb33f4cb21076c53e380"
   },
   "comparison": {
     "missingCliRegistry": [],

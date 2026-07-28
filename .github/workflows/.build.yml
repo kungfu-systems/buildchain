@@ -32,8 +32,13 @@ on:
         type: string
         required: false
       runner-preset:
-        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, or custom with platforms-json"
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, aws-us-codebuild-linux, or custom with platforms-json"
         default: "github-hosted"
+        type: string
+        required: false
+      aws-codebuild-project:
+        description: "Required CodeBuild project name for the explicit aws-us-codebuild-linux burst preset"
+        default: ""
         type: string
         required: false
       platforms-json:
@@ -805,6 +810,7 @@ jobs:
         env:
           BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
           BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
+          BUILDCHAIN_AWS_CODEBUILD_PROJECT: ${{ inputs.aws-codebuild-project }}
           BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
           BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
@@ -959,7 +965,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
-    runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    runs-on: ${{ matrix.platform.provider == 'aws-codebuild' && format('codebuild-{0}-{1}-{2}', matrix.platform.project, github.run_id, github.run_attempt) || fromJSON(matrix.platform.runner) }}
     env:
       CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
     steps:
@@ -1061,6 +1067,20 @@ jobs:
 
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Record AWS burst runner provenance
+        if: ${{ matrix.platform.provider == 'aws-codebuild' }}
+        run: node .buildchain/runtime/scripts/aws-runner-burst.mjs evidence
+        env:
+          BUILDCHAIN_BURST_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
+          BUILDCHAIN_BURST_PROVIDER: ${{ matrix.platform.provider }}
+          BUILDCHAIN_BURST_PROJECT: ${{ matrix.platform.project }}
+          BUILDCHAIN_BURST_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_BURST_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_BURST_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_BURST_RUN_ID: ${{ github.run_id }}
+          BUILDCHAIN_BURST_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILDCHAIN_BURST_JOB: ${{ github.job }}
 
       - name: Resolve artifact contract
         id: artifact-contract
@@ -1238,6 +1258,15 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload AWS burst runner provenance
+        if: ${{ always() && matrix.platform.provider == 'aws-codebuild' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-aws-runner-burst-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 

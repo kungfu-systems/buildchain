@@ -48,8 +48,13 @@ on:
         type: string
         required: false
       runner-preset:
-        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, or custom with platforms-json"
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, aws-us-codebuild-linux, or custom with platforms-json"
         default: "github-hosted"
+        type: string
+        required: false
+      aws-codebuild-project:
+        description: "Required CodeBuild project name for the explicit aws-us-codebuild-linux burst preset"
+        default: ""
         type: string
         required: false
       platforms-json:
@@ -596,6 +601,7 @@ jobs:
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
+      aws-codebuild-project: ${{ inputs.aws-codebuild-project }}
       platforms-json: ${{ inputs.platforms-json }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
       linux-container-image: ${{ inputs.linux-container-image }}

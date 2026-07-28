@@ -44,6 +44,7 @@
         "artifact-relay-s3-upload-role-arn",
         "artifact-retention-days",
         "artifact-transfer-mode",
+        "aws-codebuild-project",
         "build-command",
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
@@ -91,7 +92,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 58,
+      "inputCount": 59,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -697,6 +698,7 @@
         "artifact-relay-s3-upload-role-arn",
         "artifact-retention-days",
         "artifact-transfer-mode",
+        "aws-codebuild-project",
         "build-command",
         "buildchain-alpha-contract-lock-path",
         "buildchain-channel",
@@ -747,7 +749,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 61,
+      "inputCount": 62,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "7faaae41a4b31d38dd30a48ba2a59364a4e6b24feb58d6e0981759478545cd34",
+    "sha256": "b36f7d6a938c0508809abcbc3c5185635729dbd5f8b5cbe300eef3b243248b09",
     "summary": {
       "cliCommandCount": 79,
       "workflowCount": 47,
       "actionCount": 4,
-      "sitePageCount": 50,
+      "sitePageCount": 51,
       "docCommandRefCount": 249,
       "failureCount": 0
     },
@@ -227,12 +227,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "7faaae41a4b31d38dd30a48ba2a59364a4e6b24feb58d6e0981759478545cd34",
+      "sha256": "b36f7d6a938c0508809abcbc3c5185635729dbd5f8b5cbe300eef3b243248b09",
       "summary": {
         "cliCommandCount": 79,
         "workflowCount": 47,
         "actionCount": 4,
-        "sitePageCount": 50,
+        "sitePageCount": 51,
         "docCommandRefCount": 249,
         "failureCount": 0
       },
@@ -2593,7 +2593,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 58,
+          "inputCount": 59,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2607,6 +2607,7 @@
             "artifact-relay-s3-upload-role-arn",
             "artifact-retention-days",
             "artifact-transfer-mode",
+            "aws-codebuild-project",
             "build-command",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
@@ -3108,7 +3109,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 61,
+          "inputCount": 62,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3122,6 +3123,7 @@
             "artifact-relay-s3-upload-role-arn",
             "artifact-retention-days",
             "artifact-transfer-mode",
+            "aws-codebuild-project",
             "build-command",
             "buildchain-alpha-contract-lock-path",
             "buildchain-channel",
@@ -4190,6 +4192,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:aws-us-elastic-runner-burst-plane",
+          "name": "site-page:manual:aws-us-elastic-runner-burst-plane",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:binary-distribution",
           "name": "site-page:manual:binary-distribution",
           "kind": "site-page",
@@ -4678,6 +4692,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 303
+    "publicSurfaceCount": 304
   }
 }
