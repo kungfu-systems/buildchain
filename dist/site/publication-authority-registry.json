@@ -473,8 +473,6 @@
     {
       "path": ".github/workflows/.build.yml",
       "signals": [
-        "write-permission",
-        "oidc",
         "cloud-credential"
       ],
       "classified": true
@@ -774,5 +772,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "760215fb39e6c85890c925e924c538a766d78abd6319794c8799fb47c23dec3d"
+  "registryDigest": "03ed934824d45a3c8b0e6a0062a5d3979f1767d2c42fceecfae1f65bd6c6cd96"
 }

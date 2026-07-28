@@ -206,7 +206,7 @@ function routerControllerReceiptJob() {
 function generateChannelBuildWorkflowBase(source) {
   const inputs = blockBetween(source, "    inputs:\n", "    secrets:\n");
   const secrets = blockBetween(source, "    secrets:\n", "    outputs:\n");
-  const outputs = blockBetween(source, "    outputs:\n", "\npermissions:\n");
+  const outputs = blockBetween(source, "    outputs:\n", "\njobs:\n");
   const names = inputNames(inputs);
   if (!names.includes("buildchain-ref") || !names.includes("publish-channel")) {
     throw new Error("source build workflow is missing channel-router inputs");

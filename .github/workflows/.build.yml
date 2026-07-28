@@ -417,11 +417,6 @@ on:
         description: "Final build-lifecycle controller status"
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
-permissions:
-  contents: read
-  issues: write
-  id-token: write
-
 jobs:
   trust-gate:
     name: Trust gate

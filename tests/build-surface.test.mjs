@@ -374,7 +374,8 @@ test("reusable build workflow exposes the required surface contract", () => {
     (workflow.match(/\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/source-checkout\.json/g) || []).length,
     4,
   );
-  assert.match(workflow, /id-token: write/);
+  const reusableHeader = workflow.slice(0, workflow.indexOf("\njobs:"));
+  assert.doesNotMatch(reusableHeader, /\npermissions:/);
   assert.match(workflow, /artifact-transfer:/);
   assert.match(workflow, /artifact-relay-s3\.mjs upload/);
   assert.match(workflow, /artifact-relay-s3\.mjs download/);
