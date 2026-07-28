@@ -81,6 +81,31 @@ test("auto profile covers arbitrary non-native binary artifacts honestly", () =>
   );
 });
 
+test("auto profile requires native Authenticode for Windows PE artifacts", () => {
+  const value = request({
+    artifact: {
+      id: "windows-cli",
+      path: "dist/buildchain.exe",
+      kind: "pe",
+      platform: "windows",
+      bytes: 4096,
+      digest: INPUT_DIGEST,
+    },
+  });
+  assert.equal(value.signature.profile, "windows-authenticode");
+  assert.equal(value.signature.provider, "microsoft-authenticode");
+  assert.equal(value.signature.semantics, "native-platform-signature");
+  assert.throws(
+    () =>
+      resolveArtifactSigningProfile({
+        profile: "detached-signature-v1",
+        platform: "windows",
+        artifactKind: "pe",
+      }),
+    /does not support artifact kind pe/,
+  );
+});
+
 test("native profiles fail closed for incompatible artifacts and platforms", () => {
   assert.throws(
     () =>

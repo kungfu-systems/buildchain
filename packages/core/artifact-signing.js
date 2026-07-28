@@ -29,6 +29,13 @@ const PROFILE_REGISTRY = Object.freeze({
       "dmg",
     ],
   }),
+  "windows-authenticode": Object.freeze({
+    id: "windows-authenticode",
+    provider: "microsoft-authenticode",
+    semantics: "native-platform-signature",
+    platforms: ["windows"],
+    artifactKinds: ["pe", "binary"],
+  }),
   "detached-signature-v1": Object.freeze({
     id: "detached-signature-v1",
     provider: "buildchain-detached",
@@ -117,11 +124,21 @@ export function resolveArtifactSigningProfile({
     .toLowerCase();
   if (profileId === "auto") {
     const apple = PROFILE_REGISTRY["apple-developer-id"];
-    profileId =
+    if (
       normalizedPlatform === "macos" &&
       apple.artifactKinds.includes(normalizedKind)
-        ? apple.id
-        : "detached-signature-v1";
+    ) {
+      profileId = apple.id;
+    } else if (
+      normalizedPlatform === "windows" &&
+      PROFILE_REGISTRY["windows-authenticode"].artifactKinds.includes(
+        normalizedKind,
+      )
+    ) {
+      profileId = "windows-authenticode";
+    } else {
+      profileId = "detached-signature-v1";
+    }
   }
   const resolved = PROFILE_REGISTRY[profileId];
   if (!resolved)

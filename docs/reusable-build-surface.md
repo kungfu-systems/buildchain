@@ -557,8 +557,8 @@ kind = "mach-o"
 platforms = ["macos-arm64", "macos-x64"]
 ```
 
-Every native and container build lane reads this declaration after lifecycle
-verification. Buildchain binds the exact artifact bytes or directory tree to
+Every native and container build lane reads this declaration after the build
+lifecycle and before verification. Buildchain binds the exact artifact bytes or directory tree to
 the caller repository, source commit, source tree, immutable runtime, platform,
 and requested signature semantics, then publishes a deterministic
 `<artifact>-signing-request-<platform>-<source-sha>` request. No consumer
@@ -566,8 +566,10 @@ workflow step is required.
 
 `profile = "auto"` resolves signable Apple artifacts such as Mach-O files,
 `.dylib`, `.framework`, `.app`, `.xpc`, `.plugin`, `.pkg`, and `.dmg` to the
-native `apple-developer-id` provider. Other binary files, archives, blobs, and
-directories resolve to `detached-signature-v1`. Buildchain records that as a
+native `apple-developer-id` provider. Windows `pe` and `binary` artifacts
+resolve to timestamped native `windows-authenticode`; Windows PE never falls
+back to a detached signature. Linux and other non-native binary files,
+archives, blobs, and directories resolve to `detached-signature-v1`. Buildchain records that as a
 detached cryptographic signature and never misrepresents it as an operating
 system code signature. Explicit incompatible provider/kind/platform
 combinations fail closed.
@@ -577,7 +579,12 @@ Buildchain-owned signing authority is responsible for credential selection,
 native signing, notarization where applicable, immutable result delivery, and a
 receipt bound to the request digest, runtime SHA, output digest, and signature
 evidence. Consumer repositories neither receive nor duplicate credential-island
-material.
+material. The reusable workflow dispatches the sealed request to the
+Buildchain repository, waits for its protected authority workflow, verifies the
+immutable result, replaces only the declared artifact with the returned final
+bytes, and then runs the consumer's normal verification. Platform manifests,
+KFD evidence, checksums, and Release Passport inputs therefore observe the
+final signed artifact rather than the pre-signing build output.
 
 The older `credential-island-macos-*` reusable-workflow inputs remain a
 compatibility surface while existing callers migrate. They are not the target

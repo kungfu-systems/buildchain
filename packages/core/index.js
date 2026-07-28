@@ -276,6 +276,14 @@ export {
 } from "./artifact-signing.js";
 
 export {
+  ARTIFACT_SIGNING_RESULT_CONTRACT,
+  artifactSigningEvidenceDigest,
+  createArtifactSigningResult,
+  validateArtifactSigningResult,
+  verifyArtifactSigningResultFiles,
+} from "./artifact-signing-result.js";
+
+export {
   DETACHED_ARTIFACT_SIGNATURE_CONTRACT,
   signDetachedArtifactRequest,
   verifyDetachedArtifactSignature,

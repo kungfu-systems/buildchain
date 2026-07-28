@@ -5,6 +5,7 @@ import {
   createArtifactSigningReceipt,
   validateArtifactSigningRequest,
 } from "./artifact-signing.js";
+import { artifactSigningEvidenceDigest } from "./artifact-signing-result.js";
 
 export const DETACHED_ARTIFACT_SIGNATURE_CONTRACT =
   "kungfu-buildchain-detached-artifact-signature/v1";
@@ -60,7 +61,13 @@ export function signDetachedArtifactRequest({
     authority,
     result: {
       artifactDigest: request.artifact.digest,
-      evidenceDigest: artifactSigningDigest(basis),
+      evidenceDigest: artifactSigningEvidenceDigest([
+        {
+          kind: "ed25519-detached",
+          path: "signature.json",
+          digest: envelope.digest,
+        },
+      ]),
     },
     signatures: [
       {

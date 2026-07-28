@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d68ca6077cd8bdf94bdefc77185a576792b2845276ea2aa62c8c29526b5b7184",
+      "digest": "sha256:d9ae3dea43788f32b8a65bcc50044bb29fb268a354b5b1fe3558cb4250e2b83b",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d68ca6077cd8bdf94bdefc77185a576792b2845276ea2aa62c8c29526b5b7184",
+      "digest": "sha256:d9ae3dea43788f32b8a65bcc50044bb29fb268a354b5b1fe3558cb4250e2b83b",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -99,9 +99,22 @@
       "specifier": "@kungfu-tech/buildchain/artifact-signing",
       "export": "./artifact-signing",
       "target": "./packages/core/artifact-signing.js",
-      "digest": "sha256:90e1a397c7c36facfd7ed29f06fdd7379b1d5d5c8f810f869d7d9b13e9119b86",
+      "digest": "sha256:2314a3858214ea7f573510208b97042545931d4b6c505575f62bc46168de757c",
       "summary": "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs.",
       "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/artifact-signing-result",
+      "export": "./artifact-signing-result",
+      "target": "./packages/core/artifact-signing-result.js",
+      "digest": "sha256:6ae646862ccddb717f59d29549e518ca698cb56dc68556775b6bb49ae4b0435c",
+      "summary": "Immutable signed-result, final-payload, receipt, evidence-root, and provider-verification binding APIs.",
+      "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
@@ -112,7 +125,7 @@
       "specifier": "@kungfu-tech/buildchain/detached-artifact-signature",
       "export": "./detached-artifact-signature",
       "target": "./packages/core/detached-artifact-signature.js",
-      "digest": "sha256:91d6cec70ec23531d3b8b6229da70f9135ee2d417ea4741bfd691e120a21a00f",
+      "digest": "sha256:336bc9e1386b2252ade7ce91af21eb2e53072768db4cb8f20c4e79b23c4fd945",
       "summary": "Buildchain-authority Ed25519 detached signature and verification APIs for arbitrary binary artifacts.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -411,7 +424,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:ae2d9310b0276c21715020d7cb43ea180e555740ac8ef1c073a88206d2f74b39",
+      "digest": "sha256:0e5db6d66ed48d5eb57be1e4f1c3de92a2fc4c72a70b5764df6b21f78026a731",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

@@ -368,6 +368,9 @@ on:
         required: false
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
         required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
+        required: false
     outputs:
       runner-preset:
         description: "Resolved runner preset name"
@@ -1390,6 +1393,60 @@ jobs:
           requested-parallelism: ${{ inputs.requested-parallelism }}
           process-summary-required: ${{ inputs.require-build }}
 
+      - name: Seal declared artifact signing requests
+        id: signing-requests
+        run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
+          BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Publish Buildchain-owned artifact signing request
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.signing-requests.outputs.request-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Dispatch and await Buildchain signing authority
+        id: signing-authority
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/dispatch-artifact-signing-authority.mjs
+        env:
+          BUILDCHAIN_AUTHORITY_DISPATCH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ inputs.artifact-name }}-signing-result-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          BUILDCHAIN_SIGNING_TIMEOUT_SECONDS: 7200
+
+      - name: Download immutable signed result
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          repository: ${{ inputs.buildchain-repository }}
+          run-id: ${{ steps.signing-authority.outputs.authority-run-id }}
+          name: ${{ steps.signing-authority.outputs.result-artifact }}
+          path: .buildchain/signing/results/${{ matrix.platform.id }}
+
+      - name: Verify and import final signed bytes
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/import-artifact-signing-results.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/signing/results/${{ matrix.platform.id }}
+          BUILDCHAIN_SIGNING_IMPORTED_EVIDENCE_ROOT: .buildchain/artifacts/signing/${{ matrix.platform.id }}
+
       - name: Run verify lifecycle
         id: verify-lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -1414,34 +1471,14 @@ jobs:
           diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
-          artifact-paths: ${{ inputs.artifact-paths }}
+          artifact-paths: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/signing
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
-
-      - name: Seal declared artifact signing requests
-        id: signing-requests
-        run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
-        env:
-          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
-          BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
-          BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-
-      - name: Publish Buildchain-owned artifact signing request
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: ${{ steps.signing-requests.outputs.request-root }}
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Seal macOS credential-island input
         if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
@@ -1487,12 +1524,6 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA: ${{ inputs.github-artifact-attestation-signer-sha }}
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA: ${{ inputs.github-artifact-attestation-signer-sha }}
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
 
       - name: Upload GitHub artifact attestation policy
         if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
@@ -1502,8 +1533,7 @@ jobs:
           path: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
-          if-no-files-found: error
-          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}
         run: >-
@@ -1752,6 +1782,60 @@ jobs:
           requested-parallelism: ${{ inputs.requested-parallelism }}
           process-summary-required: ${{ inputs.require-build }}
 
+      - name: Seal declared artifact signing requests
+        id: signing-requests
+        run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
+          BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Publish Buildchain-owned artifact signing request
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.signing-requests.outputs.request-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Dispatch and await Buildchain signing authority
+        id: signing-authority
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/dispatch-artifact-signing-authority.mjs
+        env:
+          BUILDCHAIN_AUTHORITY_DISPATCH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ inputs.artifact-name }}-signing-result-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          BUILDCHAIN_SIGNING_TIMEOUT_SECONDS: 7200
+
+      - name: Download immutable signed result
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          repository: ${{ inputs.buildchain-repository }}
+          run-id: ${{ steps.signing-authority.outputs.authority-run-id }}
+          name: ${{ steps.signing-authority.outputs.result-artifact }}
+          path: .buildchain/signing/results/${{ matrix.platform.id }}
+
+      - name: Verify and import final signed bytes
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/import-artifact-signing-results.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/signing/results/${{ matrix.platform.id }}
+          BUILDCHAIN_SIGNING_IMPORTED_EVIDENCE_ROOT: .buildchain/artifacts/signing/${{ matrix.platform.id }}
+
       - name: Run verify lifecycle
         id: verify-lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -1771,7 +1855,9 @@ jobs:
           diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
-          artifact-paths: ${{ inputs.artifact-paths }}
+          artifact-paths: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/signing
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
@@ -1787,34 +1873,12 @@ jobs:
           BUILDCHAIN_GITHUB_ATTESTATION_PLATFORM_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           BUILDCHAIN_GITHUB_ATTESTATION_POLICY_OUTPUT: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
 
-      - name: Seal declared artifact signing requests
-        id: signing-requests
-        run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
-        env:
-          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
-          BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
-          BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-
       - name: Upload GitHub artifact attestation policy
         if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-attestation-policy-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
-
-      - name: Publish Buildchain-owned artifact signing request
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: ${{ steps.signing-requests.outputs.request-root }}
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}

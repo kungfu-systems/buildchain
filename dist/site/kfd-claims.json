@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "92ba5a2c87d457897cc984eacb0aa4f0579ed25170796c1cccf3505fc22c1274",
+    "sha256": "20c7857dabfa899fb7ef1d2322c75135aa000364b1f38a359eaebede920285fc",
     "summary": {
       "cliCommandCount": 97,
-      "workflowCount": 55,
+      "workflowCount": 56,
       "actionCount": 6,
       "sitePageCount": 59,
       "docCommandRefCount": 291,
@@ -228,10 +228,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "92ba5a2c87d457897cc984eacb0aa4f0579ed25170796c1cccf3505fc22c1274",
+      "sha256": "20c7857dabfa899fb7ef1d2322c75135aa000364b1f38a359eaebede920285fc",
       "summary": {
         "cliCommandCount": 97,
-        "workflowCount": 55,
+        "workflowCount": 56,
         "actionCount": 6,
         "sitePageCount": 59,
         "docCommandRefCount": 291,
@@ -1171,6 +1171,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./artifact-signing"
+        },
+        {
+          "id": "export:./artifact-signing-result",
+          "name": "@kungfu-tech/buildchain/artifact-signing-result",
+          "kind": "package-export",
+          "sourcePath": "packages/core/artifact-signing-result.js",
+          "evidencePath": "packages/core/artifact-signing-result.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./artifact-signing-result"
         },
         {
           "id": "export:./detached-artifact-signature",
@@ -3631,6 +3643,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:artifact-signing-authority",
+          "name": "workflow:artifact-signing-authority",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/artifact-signing-authority.yml",
+          "evidencePath": ".github/workflows/artifact-signing-authority.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:binary-distribution",
           "name": "workflow:binary-distribution",
           "kind": "workflow",
@@ -5668,6 +5694,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 362
+    "publicSurfaceCount": 364
   }
 }

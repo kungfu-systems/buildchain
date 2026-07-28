@@ -156,9 +156,10 @@
         "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
         "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+        "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 8,
+      "secretCount": 9,
       "outputs": [
         "artifact-coordinates-json",
         "build-diagnostics-summary-artifact",
@@ -859,6 +860,20 @@
       "status": "active"
     },
     {
+      "id": "artifact-signing-authority",
+      "path": ".github/workflows/artifact-signing-authority.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "binary-distribution",
       "path": ".github/workflows/binary-distribution.yml",
       "reusable": false,
@@ -990,9 +1005,10 @@
         "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
         "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+        "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 8,
+      "secretCount": 9,
       "outputs": [
         "artifact-coordinates-json",
         "build-diagnostics-summary-artifact",

@@ -55,10 +55,16 @@ const SUPPORTED_INFRA_APPLY_MODES = new Set(["disabled", "manual-approval", "env
 const SUPPORTED_FACT_VERSION_SOURCE_TYPES = new Set(["static", "json", "toml", "regex", "command"]);
 const SUPPORTED_FACT_LEGACY_PROJECTIONS = new Set(["kungfu-buildinfo"]);
 const SUPPORTED_PUBLICATION_TOOLCHAINS = new Set(["custom-command", "latex-docker"]);
-const SUPPORTED_SIGNING_PROFILES = new Set(["auto", "apple-developer-id", "detached-signature-v1"]);
+const SUPPORTED_SIGNING_PROFILES = new Set([
+  "auto",
+  "apple-developer-id",
+  "windows-authenticode",
+  "detached-signature-v1",
+]);
 const SUPPORTED_SIGNING_ARTIFACT_KINDS = new Set([
   "auto", "binary", "archive", "blob", "directory", "mach-o", "app-bundle",
   "framework-bundle", "plugin-bundle", "xpc-bundle", "dylib", "pkg", "dmg",
+  "pe",
 ]);
 
 function posixPath(value) {
@@ -365,7 +371,7 @@ function normalizeSigningSection(signing) {
     const artifactPath = posixPath(assertString(artifact.path, `${label}.path`));
     const profile = artifact.profile === undefined ? "auto" : assertString(artifact.profile, `${label}.profile`);
     if (!SUPPORTED_SIGNING_PROFILES.has(profile)) {
-      throw new Error(`${label}.profile must be one of auto, apple-developer-id, or detached-signature-v1`);
+      throw new Error(`${label}.profile must be one of auto, apple-developer-id, windows-authenticode, or detached-signature-v1`);
     }
     const kind = artifact.kind === undefined ? "auto" : assertString(artifact.kind, `${label}.kind`);
     if (!SUPPORTED_SIGNING_ARTIFACT_KINDS.has(kind)) {

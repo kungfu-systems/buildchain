@@ -8,6 +8,7 @@ import test from "node:test";
 import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
 import { verifyDetachedArtifactSignature } from "../packages/core/detached-artifact-signature.js";
 import { signDetachedArtifactRequests } from "../scripts/sign-detached-artifact-requests.mjs";
+import { verifyArtifactSigningResults } from "../scripts/verify-artifact-signing-results.mjs";
 
 function digest(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
@@ -79,6 +80,22 @@ test("detached authority signs only the exact sealed binary payload", () => {
     assert.equal(
       verifyDetachedArtifactSignature({ request, envelope, publicKey }).ok,
       true,
+    );
+    const verification = verifyArtifactSigningResults({
+      requestRoot: inputRoot,
+      resultRoot: outputRoot,
+    });
+    assert.equal(verification.ok, true);
+    const copiedPayload = path.join(outputRoot, result.results[0].payload);
+    assert.deepEqual(fs.readFileSync(copiedPayload), payload);
+    fs.appendFileSync(copiedPayload, "result-tamper");
+    assert.throws(
+      () =>
+        verifyArtifactSigningResults({
+          requestRoot: inputRoot,
+          resultRoot: outputRoot,
+        }),
+      /result payload byte count mismatch|result payload digest mismatch/,
     );
 
     fs.appendFileSync(payloadPath, "tamper");

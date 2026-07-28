@@ -4,7 +4,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { validateArtifactSigningRequest } from "../packages/core/artifact-signing.js";
+import {
+  createArtifactSigningReceipt,
+  validateArtifactSigningRequest,
+} from "../packages/core/artifact-signing.js";
+import {
+  artifactSigningEvidenceDigest,
+  createArtifactSigningResult,
+} from "../packages/core/artifact-signing-result.js";
 import { signDetachedArtifactRequest } from "../packages/core/detached-artifact-signature.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
@@ -54,6 +61,7 @@ export function signDetachedArtifactRequests({
   outputRoot = process.env.BUILDCHAIN_SIGNING_RESULT_ROOT,
   privateKeyBase64 = process.env.BUILDCHAIN_DETACHED_PRIVATE_KEY_PKCS8_BASE64,
   keyId = process.env.BUILDCHAIN_DETACHED_KEY_ID,
+  artifactId = process.env.BUILDCHAIN_SIGNING_ARTIFACT_ID,
 } = {}) {
   const resolvedInput = path.resolve(
     required(inputRoot, "signing request root"),
@@ -86,6 +94,7 @@ export function signDetachedArtifactRequests({
       );
     if (request.digest !== entry.digest)
       throw new Error("signing request index digest mismatch");
+    if (artifactId && request.artifact.id !== artifactId) continue;
     if (request.signature.profile !== "detached-signature-v1") continue;
     const transport = request.artifact.transport;
     if (transport?.format !== "exact-file") {
@@ -118,17 +127,70 @@ export function signDetachedArtifactRequests({
     fs.mkdirSync(resultDirectory, { recursive: true });
     const envelopePath = path.join(resultDirectory, "signature.json");
     const receiptPath = path.join(resultDirectory, "receipt.json");
-    fs.writeFileSync(
-      envelopePath,
-      `${JSON.stringify(signed.envelope, null, 2)}\n`,
-    );
+    const envelopeText = `${JSON.stringify(signed.envelope, null, 2)}\n`;
+    fs.writeFileSync(envelopePath, envelopeText);
+    const evidence = [
+      {
+        kind: "ed25519-detached",
+        path: "signature.json",
+        digest: sha256File(envelopePath),
+      },
+    ];
+    const receipt = createArtifactSigningReceipt({
+      request,
+      authority: { runtimeSha: request.runtime.sha },
+      result: {
+        artifactDigest: request.artifact.digest,
+        evidenceDigest: artifactSigningEvidenceDigest(evidence),
+      },
+      signatures: [
+        {
+          kind: "ed25519-detached",
+          digest: signed.envelope.digest,
+        },
+      ],
+    });
     fs.writeFileSync(
       receiptPath,
-      `${JSON.stringify(signed.receipt, null, 2)}\n`,
+      `${JSON.stringify(receipt, null, 2)}\n`,
     );
+    const payloadDirectory = path.join(resultDirectory, "payload");
+    fs.mkdirSync(payloadDirectory, { recursive: true });
+    const payloadOutputPath = path.join(
+      payloadDirectory,
+      path.basename(payloadPath),
+    );
+    fs.copyFileSync(payloadPath, payloadOutputPath, fs.constants.COPYFILE_EXCL);
+    const result = createArtifactSigningResult({
+      request,
+      receipt,
+      receiptPath: "receipt.json",
+      payload: {
+        path: `payload/${path.basename(payloadOutputPath)}`,
+        bytes,
+        digest,
+      },
+      evidence,
+      verification: {
+        status: "passed",
+        provider: request.signature.provider,
+        checks: ["sealed-payload-digest", "ed25519-signature-created"],
+      },
+    });
+    const resultPath = path.join(resultDirectory, "result.json");
+    fs.writeFileSync(resultPath, `${JSON.stringify(result, null, 2)}\n`);
     results.push({
       id: entry.id,
       requestDigest: request.digest,
+      resultDigest: result.digest,
+      result: path
+        .relative(resolvedOutput, resultPath)
+        .split(path.sep)
+        .join("/"),
+      payload: path
+        .relative(resolvedOutput, payloadOutputPath)
+        .split(path.sep)
+        .join("/"),
       envelope: path
         .relative(resolvedOutput, envelopePath)
         .split(path.sep)
@@ -144,6 +206,9 @@ export function signDetachedArtifactRequests({
     contract: "kungfu-buildchain-artifact-signing-result-index/v1",
     results,
   };
+  if (artifactId && results.length !== 1) {
+    throw new Error(`expected one detached signing request for ${artifactId}`);
+  }
   const resultIndexPath = path.join(resolvedOutput, "index.json");
   fs.writeFileSync(
     resultIndexPath,

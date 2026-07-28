@@ -337,6 +337,9 @@ export function sealArtifactSigningRequests({
       id: declaration.id,
       digest: request.digest,
       path: toPosix(path.relative(resolvedOutputRoot, requestPath)),
+      required: request.signature.required,
+      profile: request.signature.profile,
+      platform: request.artifact.platform,
     });
   }
   const index = { schemaVersion: 1, contract: INDEX_CONTRACT, requests };

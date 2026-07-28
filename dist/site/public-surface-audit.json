@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 97,
-    "workflowCount": 55,
+    "workflowCount": 56,
     "actionCount": 6,
     "sitePageCount": 59,
     "docCommandRefCount": 291,
@@ -646,9 +646,10 @@
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
           "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
           "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+          "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 8,
+        "secretCount": 9,
         "outputs": [
           "artifact-coordinates-json",
           "build-diagnostics-summary-artifact",
@@ -1301,6 +1302,17 @@
         "outputCount": 0
       },
       {
+        "id": "artifact-signing-authority",
+        "path": ".github/workflows/artifact-signing-authority.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "binary-distribution",
         "path": ".github/workflows/binary-distribution.yml",
         "reusable": false,
@@ -1423,9 +1435,10 @@
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
           "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
           "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+          "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 8,
+        "secretCount": 9,
         "outputs": [
           "artifact-coordinates-json",
           "build-diagnostics-summary-artifact",
@@ -4232,8 +4245,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "18405fac6ddfebd647c2ba7d3927ec666e6d43dc1913043b0334c91e2bf143f1",
-    "pageRegistryDigest": "e18faa9365779988a57fbabca7ad6565e5282471474d1015d2bb0460b9209520"
+    "workflowRegistryDigest": "597678cd36be205362cb9d93313eb0d05a67d5c0f24b7da2de0bbcd41a765949",
+    "pageRegistryDigest": "9617811df34d5bf51a67373231df01618810640c796255f28cee55f8d878d8ed"
   },
   "comparison": {
     "missingCliRegistry": [],
