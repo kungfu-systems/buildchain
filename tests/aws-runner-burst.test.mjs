@@ -116,8 +116,8 @@ test("CodeBuild stack is credential-free, bounded, and fail closed", () => {
   assert.match(template, /ConcurrentBuildLimit: 2/);
   assert.match(template, /TimeoutInMinutes: 120/);
   assert.match(template, /ComputeType: BUILD_GENERAL1_LARGE/);
-  assert.match(template, /Webhook: false/);
-  assert.match(template, /Pattern: WORKFLOW_JOB_QUEUED/);
+  assert.match(template, /Triggers:\n\s+Webhook: false\n\s+Tags:/);
+  assert.doesNotMatch(template, /Webhook: false\n\s+FilterGroups:/);
   assert.match(template, /codebuild\.delete_webhook/);
   assert.match(template, /cost-telemetry-missing/);
   assert.match(template, /dynamodb\.transact_write_items/);
