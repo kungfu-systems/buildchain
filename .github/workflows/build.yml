@@ -183,6 +183,11 @@ on:
         default: false
         type: boolean
         required: false
+      release-candidate-family-evidence-json:
+        description: "Optional exact Initiative-family release evidence JSON embedded in the release-candidate passport"
+        default: ""
+        type: string
+        required: false
       expected-artifacts-json:
         description: "Optional JSON expectation contract for final artifact files"
         default: ""
@@ -629,6 +634,7 @@ jobs:
       artifact-name-template: ${{ inputs.artifact-name-template }}
       artifact-paths: ${{ inputs.artifact-paths }}
       release-candidate: ${{ inputs.release-candidate }}
+      release-candidate-family-evidence-json: ${{ inputs.release-candidate-family-evidence-json }}
       expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
       process-summary-path: ${{ inputs.process-summary-path }}
       sample-process-tree: ${{ inputs.sample-process-tree }}

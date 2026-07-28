@@ -786,6 +786,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
+  assert.match(workflow, /release-candidate-family-evidence-required:/);
+  assert.match(workflow, /release-candidate-family-evidence-root:/);
+  assert.match(workflow, /release-candidate-family-initiative-id:/);
+  assert.match(workflow, /release-candidate-family-assignment-id:/);
   assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
   assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
   assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \|\| steps\.rc\.outputs\.publish-required-artifacts-json \}\}/);
@@ -1995,6 +1999,7 @@ test("reusable build exposes release-candidate passport outputs", () => {
   );
 
   assert.match(workflow, /release-candidate:/);
+  assert.match(workflow, /release-candidate-family-evidence-json:/);
   assert.match(workflow, /publish-source-tree-sha:/);
   assert.match(workflow, /Resolve source tree SHA/);
   assert.match(workflow, /Generate release candidate passport/);
@@ -2003,6 +2008,7 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /release-candidate-passport-json/);
   assert.match(workflow, /gate-profile-aggregate-json:/);
   assert.match(workflow, /BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON/);
+  assert.match(workflow, /BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON/);
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
 });
 
@@ -2149,6 +2155,10 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /reconciliation-workspace:/);
   assert.match(action, /release-candidate-passport-path:/);
   assert.match(action, /release-candidate-build-summary-path:/);
+  assert.match(action, /release-candidate-family-evidence-required:/);
+  assert.match(action, /release-candidate-family-evidence-root:/);
+  assert.match(action, /release-candidate-family-initiative-id:/);
+  assert.match(action, /release-candidate-family-assignment-id:/);
   assert.match(action, /release-passport-kfd-1-witness-jsons:/);
   assert.match(action, /release-passport-kfd-2-claim-jsons:/);
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
@@ -2160,6 +2170,10 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-evidence-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
+  assert.match(implementation, /releaseCandidateFamilyEvidenceRequired/);
+  assert.match(implementation, /releaseCandidateFamilyEvidenceRoot/);
+  assert.match(implementation, /releaseCandidateFamilyInitiativeId/);
+  assert.match(implementation, /releaseCandidateFamilyAssignmentId/);
   assert.match(implementation, /reconciliationWorkspace/);
   assert.match(implementation, /releasePassportKfd1WitnessJsons/);
   assert.match(implementation, /releasePassportKfd2ClaimJsons/);
@@ -2172,6 +2186,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportEvidenceCommand/);
   assert.match(implementation, /releasePassportBuildchainSelfKfd/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
+  assert.match(docs, /release-candidate-family-evidence-required: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);

@@ -41,6 +41,27 @@ contains:
 - normalized platform matrix and artifact summaries;
 - the hash of the aggregate `build-summary.json`.
 
+Release-class Initiative children can additionally pass
+`release-candidate-family-evidence-json` to the reusable build. Buildchain then
+embeds the optional
+`kungfu-buildchain-initiative-family-release-evidence/v1` envelope in the
+passport and includes it in `candidateHash`. The envelope binds:
+
+- exact Initiative, family-state, child Assignment, work-definition, and
+  `release` delivery-class identities;
+- source commit/tree and source root;
+- qualifying proof and qualification roots;
+- a `merged` or `continued` terminal root and its complete evidence-root set;
+- artifact and downstream release roots;
+- for `continued`, one exact residual successor plus the completed evidence
+  roots it inherits;
+- an explicit clear invalidation state and a deterministic envelope root.
+
+Family evidence fails closed when its content root, source ancestry,
+qualification, terminal state, continuation, artifact/release roots, or
+invalidation state does not verify. Non-family passports remain valid without
+this optional envelope.
+
 Promotion workflows that should not rebuild artifacts can enable:
 
 ```yaml
@@ -52,6 +73,10 @@ Promotion workflows that should not rebuild artifacts can enable:
     promote-only-release-candidate: "true"
     release-candidate-passport-path: .buildchain/artifacts/release-candidate-passport.json
     release-candidate-build-summary-path: .buildchain/artifacts/build-summary.json
+    release-candidate-family-evidence-required: "true"
+    release-candidate-family-evidence-root: sha256:<exact-envelope-root>
+    release-candidate-family-initiative-id: initiative-id
+    release-candidate-family-assignment-id: child-assignment-id
 ```
 
 With `promote-only-release-candidate: "true"`, promotion fails before
@@ -81,6 +106,14 @@ tarball bytes, marks `publish-package-main` as `role: main`, and marks every
 other package as `role: platform`. Consumer workflows therefore stay
 declarative and do not need their own artifact download or publish-evidence
 generation scripts.
+
+When any expected family coordinate is supplied to the promotion action (or
+`release-candidate-family-evidence-required` is enabled), a passport without
+family evidence is rejected before publish-gate, version-state, publication,
+tag, or protected-ref mutation. The Buildchain-owned promotion wrapper forwards
+the expected envelope root and Initiative/Assignment identities unchanged;
+protected review, `Release - Verify`, branch protection, and publication
+authority remain independent required controls.
 
 By default, the wrapper forwards GitHub Release publication to the underlying
 `promote-buildchain-ref` semver model. Once the release transaction is complete,

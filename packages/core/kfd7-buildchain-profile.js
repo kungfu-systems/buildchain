@@ -164,6 +164,9 @@ export function createBuildchainKfd7ProfileSnapshot({
       ...(candidatePassport.gateProfileEvidence
         ? { gateProfileEvidence: candidatePassport.gateProfileEvidence }
         : {}),
+      ...(candidatePassport.familyEvidence
+        ? { familyEvidence: candidatePassport.familyEvidence }
+        : {}),
       ...(candidatePassport.controllerReceipts
         ? { controllerReceipts: candidatePassport.controllerReceipts }
         : {}),

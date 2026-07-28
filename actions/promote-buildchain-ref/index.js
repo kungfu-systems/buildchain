@@ -271,6 +271,10 @@ async function main() {
   const releaseCandidatePassportPath = core.getInput("release-candidate-passport-path");
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
   const releaseCandidateVersion = core.getInput("release-candidate-version");
+  const releaseCandidateFamilyEvidenceRequired = core.getBooleanInput("release-candidate-family-evidence-required");
+  const releaseCandidateFamilyEvidenceRoot = core.getInput("release-candidate-family-evidence-root");
+  const releaseCandidateFamilyInitiativeId = core.getInput("release-candidate-family-initiative-id");
+  const releaseCandidateFamilyAssignmentId = core.getInput("release-candidate-family-assignment-id");
   const octokit = github.getOctokit(token);
   const statusCheckOctokit =
     generatedStatusCheckToken === token ? octokit : github.getOctokit(generatedStatusCheckToken);
@@ -348,6 +352,10 @@ async function main() {
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,
     releaseCandidateVersion,
+    releaseCandidateFamilyEvidenceRequired,
+    releaseCandidateFamilyEvidenceRoot,
+    releaseCandidateFamilyInitiativeId,
+    releaseCandidateFamilyAssignmentId,
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
     publishTransactionOverride,

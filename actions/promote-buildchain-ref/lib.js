@@ -828,6 +828,10 @@ function validatePromotionReleaseCandidate({
   sourceHeadSha,
   sourceTreeSha = "",
   requirePlatforms = true,
+  requireFamilyEvidence = false,
+  familyEvidenceRoot = "",
+  familyInitiativeId = "",
+  familyAssignmentId = "",
 }) {
   const resolvedPassportPath = resolveMaybeRelative(cwd, passportPath);
   if (!fs.existsSync(resolvedPassportPath)) {
@@ -847,6 +851,10 @@ function validatePromotionReleaseCandidate({
     version,
     buildSummary,
     requirePlatforms,
+    requireFamilyEvidence,
+    familyEvidenceRoot,
+    familyInitiativeId,
+    familyAssignmentId,
   });
   const acceptedSourceShas = [
     passport.source?.headSha,
@@ -872,6 +880,7 @@ function validatePromotionReleaseCandidate({
     platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
     gateProfileEvidence: passport.gateProfileEvidence,
     controllerReceipts: passport.controllerReceipts || [],
+    familyEvidence: passport.familyEvidence,
     builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
     builtSourceTreeSha: passport.source?.treeHash || "",
     promotionChannelSha: sourceHeadSha || "",
@@ -3488,6 +3497,10 @@ async function promoteBuildchainRefs({
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releaseCandidateVersion = "",
+  releaseCandidateFamilyEvidenceRequired = false,
+  releaseCandidateFamilyEvidenceRoot = "",
+  releaseCandidateFamilyInitiativeId = "",
+  releaseCandidateFamilyAssignmentId = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
   runId = process.env.GITHUB_RUN_ID || "",
   publishTransactionOverride = false,
@@ -3555,6 +3568,10 @@ async function promoteBuildchainRefs({
       repository: `${owner}/${repo}`,
       targetChannel: rule.channel,
       version: releaseCandidateVersion,
+      requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
+      familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
+      familyInitiativeId: releaseCandidateFamilyInitiativeId,
+      familyAssignmentId: releaseCandidateFamilyAssignmentId,
       sourceHeadSha: sha,
       sourceTreeSha: targetCommitInfo.treeSha,
     });
