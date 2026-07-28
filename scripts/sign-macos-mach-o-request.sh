@@ -37,8 +37,8 @@ chmod 600 "${certificate_path}" "${notary_key_path}"
 security create-keychain -p "${keychain_password}" "${keychain_path}"
 security set-keychain-settings -lut 21600 "${keychain_path}"
 security unlock-keychain -p "${keychain_password}" "${keychain_path}"
-security import "${certificate_path}" -k "${keychain_path}" -P "${BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD}" -T /usr/bin/codesign
-security set-key-partition-list -S apple-tool:,apple: -s -k "${keychain_password}" "${keychain_path}" >/dev/null
+security import "${certificate_path}" -k "${keychain_path}" -P "${BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD}" -T /usr/bin/codesign -T /usr/bin/security
+security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${keychain_password}" "${keychain_path}" >/dev/null
 security find-identity -v -p codesigning "${keychain_path}" | grep -Fqi "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" || {
   echo "configured Developer ID identity was not imported" >&2
   exit 1
