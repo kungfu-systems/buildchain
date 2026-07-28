@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
+import { githubRequest } from "../scripts/dispatch-artifact-signing-authority.mjs";
 import { finalizeNativeArtifactSigningResult } from "../scripts/finalize-native-artifact-signing-result.mjs";
 import { inspectArtifactSigningRequests } from "../scripts/inspect-artifact-signing-requests.mjs";
 import { importArtifactSigningResults } from "../scripts/import-artifact-signing-results.mjs";
@@ -140,4 +141,41 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(windows, /signtool verify \/pa \/all \/v/);
   assert.match(windows, /TimeStamperCertificate/);
   assert.match(windows, /SignatureStatus\]::Valid/);
+});
+
+test("authority polling retries transient GET transport failures without replaying dispatch POSTs", async () => {
+  let getAttempts = 0;
+  const delays = [];
+  const result = await githubRequest("/repos/kungfu-systems/buildchain/actions/workflows/artifact-signing-authority.yml/runs", {
+    token: "test-token",
+    fetchImpl: async () => {
+      getAttempts += 1;
+      if (getAttempts === 1) throw new TypeError("fetch failed");
+      return { ok: true, status: 200, json: async () => ({ workflow_runs: [] }) };
+    },
+    delayImpl: async (milliseconds) => delays.push(milliseconds),
+    maxAttempts: 3,
+    warnImpl: () => {},
+  });
+  assert.deepEqual(result, { workflow_runs: [] });
+  assert.equal(getAttempts, 2);
+  assert.deepEqual(delays, [1_000]);
+
+  let postAttempts = 0;
+  await assert.rejects(
+    () => githubRequest("/repos/kungfu-systems/buildchain/actions/workflows/artifact-signing-authority.yml/dispatches", {
+      token: "test-token",
+      method: "POST",
+      body: { ref: "train/v3/v3.0/artifact-signing-authority" },
+      fetchImpl: async () => {
+        postAttempts += 1;
+        throw new TypeError("fetch failed");
+      },
+      delayImpl: async () => assert.fail("dispatch POST must not be retried"),
+      maxAttempts: 5,
+      warnImpl: () => {},
+    }),
+    /fetch failed/,
+  );
+  assert.equal(postAttempts, 1);
 });
