@@ -53,7 +53,7 @@ jobs:
 
 `buildchain-channel` defaults to `auto`. Selection uses this precedence:
 
-1. an explicit `buildchain-ref` train, SHA, or official channel;
+1. an explicit `buildchain-ref` protected authority, train, SHA, or official channel;
 2. an explicit `buildchain-channel: alpha|stable`;
 3. `publish-channel: alpha|release|major`;
 4. GitHub release prerelease metadata;
@@ -500,8 +500,8 @@ The reusable workflow exposes the resolved contract:
 | `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
 | `buildchain-runtime-ref`          | Runtime ref selected after applying the empty-default or override policy        |
 | `buildchain-runtime-sha`          | Immutable Buildchain runtime commit used by all runtime checkouts               |
-| `buildchain-runtime-class`        | `stable`, `alpha`, `train`, `exact-sha`, or `development`                       |
-| `buildchain-runtime-override`     | `true` when a train or exact-SHA `buildchain-ref` override was accepted          |
+| `buildchain-runtime-class`        | `stable`, `alpha`, `authority`, `train`, `exact-sha`, or `development`          |
+| `buildchain-runtime-override`     | `true` when an authority, train, or exact-SHA `buildchain-ref` override was accepted |
 | `buildchain-runtime-trust-decision` | Runtime override trust decision                                               |
 | `buildchain-contract-lock-status` | `unchanged`, `compatible-drift`, `breaking-drift`, `missing-lock`, `non-floating-runtime`, or first-release `runtime-contract-unavailable` |
 | `buildchain-contract-lock-drift`  | `true` when the floating runtime SHA or contract digest changed                 |
