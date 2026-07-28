@@ -121,7 +121,7 @@ burst_profile=us
 burst_region=us-east-1
 burst_stack=kungfu-buildchain-linux-burst-poc
 burst_project=kungfu-buildchain-linux-burst-poc
-burst_connection_name=kungfu-buildchain-linux-burst-poc
+burst_connection_name=kungfu-linux-burst-poc
 burst_change_set=phase1-linux-codebuild-poc
 
 aws --profile "$burst_profile" --region "$burst_region" \
@@ -131,6 +131,10 @@ aws --profile "$burst_profile" --region "$burst_region" \
   --tags Key=kungfu:owner,Value=buildchain \
     Key=kungfu:plane,Value=aws-us-elastic-runner-burst
 ```
+
+CodeConnections limits connection names to 32 characters. Keep the shorter
+connection name above distinct from the longer CloudFormation stack and
+CodeBuild project names.
 
 The returned connection is `PENDING` until an operator completes the GitHub App
 handshake in AWS. Read back `ConnectionStatus=AVAILABLE` before creating the
