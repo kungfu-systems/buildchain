@@ -19,10 +19,10 @@ test("Linux CodeBuild plan has a strict sub-USD-49 worst-case envelope", () => {
   const plan = linuxCodeBuildPlan();
   assert.equal(plan.config.maxConcurrentBuilds, 2);
   assert.equal(plan.config.minimumAcceptedJobs, 10);
-  assert.equal(plan.config.maxAcceptedBuilds, 17);
-  assert.equal(plan.costEnvelope.maximumCommittedComputeUsd, 40.8);
-  assert.equal(plan.costEnvelope.maximumRaceStopUsd, 4.8);
-  assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 45.6);
+  assert.equal(plan.config.maxAcceptedBuilds, 12);
+  assert.equal(plan.costEnvelope.maximumCommittedComputeUsd, 38.4);
+  assert.equal(plan.costEnvelope.maximumRaceStopUsd, 6.4);
+  assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 44.8);
   assert.ok(plan.costEnvelope.maximumBoundedSpendUsd < 49);
   assert.equal(plan.invariants.staleOrMissingCostTelemetryFailsClosed, true);
 });
@@ -181,8 +181,9 @@ test("CodeBuild stack is credential-free, bounded, and fail closed", () => {
   );
   assert.match(template, /Type: CODECONNECTIONS/);
   assert.match(template, /ConcurrentBuildLimit: 2/);
-  assert.match(template, /TimeoutInMinutes: 120/);
-  assert.match(template, /ComputeType: BUILD_GENERAL1_LARGE/);
+  assert.match(template, /TimeoutInMinutes: 40/);
+  assert.match(template, /ComputeType: BUILD_GENERAL1_XLARGE/);
+  assert.match(template, /Image: aws\/codebuild\/standard:8\.0/);
   assert.match(template, /Triggers:\n\s+Webhook: false\n\s+Tags:/);
   assert.doesNotMatch(template, /Webhook: false\n\s+FilterGroups:/);
   assert.match(template, /codebuild\.delete_webhook/);
