@@ -168,6 +168,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/artifact-signing-authority.yml",
+      "authorityClass": "evidence-publication",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/artifact-signing-authority.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/binary-distribution.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -678,6 +691,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/artifact-signing-authority.yml",
+      "signals": [
+        "environment"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/binary-distribution.yml",
       "signals": [
         "write-permission"
@@ -933,5 +953,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "26c309e610d1d8885cfd7d78fb7a574be903bf9085d5db929f9b41005c4f682b"
+  "registryDigest": "e7588216b2cf0107451f2d2333b860ec7e9f2af424e7708b0b3991e28dcc5ac4"
 }

@@ -1,3 +1,21 @@
+---
+status: draft
+period: ongoing
+theme: buildchain-reusable-build
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-27
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-27
+  invisible_context: not asserted
+---
+
 # Reusable Build Surface
 
 Buildchain v2 provides a reusable build workflow for repositories that need
@@ -523,65 +541,54 @@ release jobs can detect drifting diagnostics JSON contracts and missing or
 drifting diagnostics sidecar manifests without downloading the per-platform
 diagnostics artifacts first.
 
-## macOS Credential Island
+## Artifact Signing Authority
 
-Alpha consumers can ask the build controller to seal one exact macOS app and
-hand it to a separate protected signing job. The built-in mode is suitable
-when the protected environment belongs to the repository that defines the
-reusable workflow:
+Artifact signing is a Buildchain capability, not a macOS application workflow.
+Consumers declare desired signature state next to their artifact facts; they do
+not configure certificates, Team IDs, notary credentials, protected
+environments, authority roles, or signing jobs:
 
-```yaml
-with:
-  credential-island-macos-app-path: product/dist/desktop/mac-arm64/Kungfu Episodes.app
-  credential-island-environment: alpha-macos-signing
-  credential-island-macos-platform-id: macos-arm64
+```toml
+[[signing.artifacts]]
+id = "native-engine"
+path = "dist/kungfu-engine"
+profile = "auto"
+kind = "mach-o"
+platforms = ["macos-arm64", "macos-x64"]
 ```
 
-For a cross-repository reusable workflow, keep the credentials in the consumer
-repository and select caller-owned mode:
+Every native and container build lane reads this declaration after the build
+lifecycle and before verification. Buildchain binds the exact artifact bytes or directory tree to
+the caller repository, source commit, source tree, immutable runtime, platform,
+and requested signature semantics, then publishes a deterministic
+`<artifact>-signing-request-<platform>-<source-sha>` request. No consumer
+workflow step is required.
 
-```yaml
-with:
-  credential-island-macos-app-path: product/dist/desktop/mac-arm64/Kungfu Episodes.app
-  credential-island-caller-owned: true
-  credential-island-macos-platform-id: macos-arm64
-```
+`profile = "auto"` resolves signable Apple artifacts such as Mach-O files,
+`.dylib`, `.framework`, `.app`, `.xpc`, `.plugin`, `.pkg`, and `.dmg` to the
+native `apple-developer-id` provider. Windows `pe` and `binary` artifacts
+resolve to timestamped native `windows-authenticode`; Windows PE never falls
+back to a detached signature. Linux and other non-native binary files,
+archives, blobs, and directories resolve to `detached-signature-v1`. Buildchain records that as a
+detached cryptographic signature and never misrepresents it as an operating
+system code signature. Explicit incompatible provider/kind/platform
+combinations fail closed.
 
-The caller then runs its own no-checkout macOS job after the reusable build,
-binds the consumer-owned protected environment on that job, and downloads the
-source-bound input plus immutable action runtime from the same workflow run.
-This is required for cross-repository callers because environment credentials
-must never be widened into repository secrets merely to cross a reusable
-workflow boundary.
+The request schema rejects credential and authority-infrastructure fields. The
+Buildchain-owned signing authority is responsible for credential selection,
+native signing, notarization where applicable, immutable result delivery, and a
+receipt bound to the request digest, runtime SHA, output digest, and signature
+evidence. Consumer repositories neither receive nor duplicate credential-island
+material. The reusable workflow dispatches the sealed request to the
+Buildchain repository, waits for its protected authority workflow, verifies the
+immutable result, replaces only the declared artifact with the returned final
+bytes, and then runs the consumer's normal verification. Platform manifests,
+KFD evidence, checksums, and Release Passport inputs therefore observe the
+final signed artifact rather than the pre-signing build output.
 
-The ordinary matrix uploads
-`credential-island-input-<platform>-<source-sha>`, containing a `ditto`
-archive and a manifest bound to the caller repository, source commit, source
-tree, bundle identity, version, size, and digest. The pinned reusable workflow
-either starts its built-in GitHub-hosted macOS job or leaves that job to the
-caller. In both modes the credential-bearing job has no source checkout or
-package-manager step: it downloads the immutable Buildchain action runtime plus
-the sealed app and never invokes consumer code.
-
-The protected environment supplies these non-secret variables:
-
-- `BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID`
-- `BUILDCHAIN_MACOS_EXPECTED_TEAM_ID`
-- `BUILDCHAIN_MACOS_CERTIFICATE_SHA1`
-
-and these secrets:
-
-- `BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64`
-- `BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD`
-- `BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64`
-- `BUILDCHAIN_MACOS_NOTARY_API_KEY_ID`
-- `BUILDCHAIN_MACOS_NOTARY_API_ISSUER`
-
-The signed DMG, signed app ZIP, credential evidence, and their source-bound
-platform manifest form one additional release-candidate platform. Reviewers can
-therefore verify the exact caller source and immutable Buildchain runtime that
-entered the credential island before admitting or publishing the signed
-artifacts.
+The older `credential-island-macos-*` reusable-workflow inputs remain a
+compatibility surface while existing callers migrate. They are not the target
+consumer contract and must not be used to design new integrations.
 
 ## Artifact Transfer Relay
 
