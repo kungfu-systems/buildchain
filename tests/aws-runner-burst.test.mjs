@@ -104,6 +104,30 @@ test("workflow keeps trust ahead of dynamic CodeBuild runner selection", () => {
   assert.match(nativeBlock, /aws-runner-burst\.mjs evidence/);
 });
 
+test("workflow bounds CodeBuild jobs and lifecycle stages with the caller timeout", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
+  const action = fs.readFileSync(
+    path.join(root, "actions/run-lifecycle/action.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /lifecycle-timeout-minutes:\n\s+description: "Maximum minutes for the build matrix job and fallback timeout for each lifecycle stage"\n\s+default: 120\n\s+type: number/,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /timeout-minutes: \$\{\{ inputs\.lifecycle-timeout-minutes \}\}/g,
+      ) || []
+    ).length,
+    8,
+  );
+  assert.match(action, /timeout-minutes:[\s\S]*?default: "120"/);
+});
+
 test("CodeBuild stack is credential-free, bounded, and fail closed", () => {
   const template = fs.readFileSync(
     path.join(

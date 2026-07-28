@@ -465,6 +465,7 @@
           "expected-artifacts-json",
           "gate-profile-aggregate-json",
           "install-command",
+          "lifecycle-timeout-minutes",
           "linux-container-image",
           "linux-container-preset",
           "node-version",
@@ -496,7 +497,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 60,
+        "inputCount": 61,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1069,6 +1070,7 @@
           "expected-artifacts-json",
           "gate-profile-aggregate-json",
           "install-command",
+          "lifecycle-timeout-minutes",
           "linux-container-image",
           "linux-container-preset",
           "node-version",
@@ -1100,7 +1102,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 63,
+        "inputCount": 64,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1960,9 +1962,10 @@
           "required",
           "sample-process-tree",
           "stage",
-          "summary-path"
+          "summary-path",
+          "timeout-minutes"
         ],
-        "inputCount": 20
+        "inputCount": 21
       },
       {
         "id": "validate-config",
@@ -3434,8 +3437,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "00c0e3df91c929933ae4e503bd20b625d5531330b387372141333e1eaeb63477",
-    "pageRegistryDigest": "d187a612da675deb2c19e3f71c8f7280cbb0f8a9b6c300e762917ab7efacf713"
+    "workflowRegistryDigest": "74e9711f381c5207078b9f8f7fc108602fbf0ffc02f8a6a0c81179a2c408bdf5",
+    "pageRegistryDigest": "7d63b7f9eeb94d963004cbe0333a6a97c0bd778d5dc88f0e0cdb97aa85d8b568"
   },
   "comparison": {
     "missingCliRegistry": [],

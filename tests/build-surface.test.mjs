@@ -3345,6 +3345,43 @@ test("runLifecycle command override inherits declared stage shell and lifecycle 
   }
 });
 
+test("runLifecycle applies a clear fallback timeout to commands and configured stages", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-lifecycle-timeout-"));
+  const fixture = path.join(workspace, "fixture");
+  fs.mkdirSync(fixture, { recursive: true });
+  fs.writeFileSync(
+    path.join(fixture, "buildchain.toml"),
+    'schema = 1\n\n[lifecycle.verify]\ncommand = "node -e \\\"setTimeout(() => {}, 1000)\\\""\n',
+  );
+  try {
+    assert.throws(
+      () => runLifecycle({
+        cwd: fixture,
+        stageName: "verify",
+        command: 'node -e "setTimeout(() => {}, 1000)"',
+        timeoutMinutes: 0.001,
+        platformId: "linux-x64",
+        platformName: "Linux x64",
+        workspace,
+      }),
+      /lifecycle verify timed out after 0\.001 minute\(s\) on Linux x64 \(linux-x64\)/,
+    );
+    assert.throws(
+      () => runLifecycle({
+        cwd: fixture,
+        stageName: "verify",
+        timeoutMinutes: 0.001,
+        platformId: "linux-x64",
+        platformName: "Linux x64",
+        workspace,
+      }),
+      /lifecycle verify timed out after 0\.001 minute\(s\) on Linux x64 \(linux-x64\)/,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("runLifecycle samples a configured lifecycle stage", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-sampled-lifecycle-"),

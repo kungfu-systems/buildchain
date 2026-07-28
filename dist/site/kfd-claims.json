@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "7f5ebeaceb727766e54980a0d4a2a4066012356485082dae1294d36dd4984b1b",
+    "sha256": "6db7b1379c0c70c75e7ff333e8abf653cb255f5d331e66f4539ba5bbd87c3672",
     "summary": {
       "cliCommandCount": 79,
       "workflowCount": 47,
@@ -227,7 +227,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "7f5ebeaceb727766e54980a0d4a2a4066012356485082dae1294d36dd4984b1b",
+      "sha256": "6db7b1379c0c70c75e7ff333e8abf653cb255f5d331e66f4539ba5bbd87c3672",
       "summary": {
         "cliCommandCount": 79,
         "workflowCount": 47,
@@ -2593,7 +2593,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 60,
+          "inputCount": 61,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2625,6 +2625,7 @@
             "expected-artifacts-json",
             "gate-profile-aggregate-json",
             "install-command",
+            "lifecycle-timeout-minutes",
             "linux-container-image",
             "linux-container-preset",
             "node-version",
@@ -3110,7 +3111,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 63,
+          "inputCount": 64,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3145,6 +3146,7 @@
             "expected-artifacts-json",
             "gate-profile-aggregate-json",
             "install-command",
+            "lifecycle-timeout-minutes",
             "linux-container-image",
             "linux-container-preset",
             "node-version",
@@ -3942,7 +3944,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 20,
+          "inputCount": 21,
           "inputs": [
             "artifact-name",
             "artifact-paths",
@@ -3963,7 +3965,8 @@
             "required",
             "sample-process-tree",
             "stage",
-            "summary-path"
+            "summary-path",
+            "timeout-minutes"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },

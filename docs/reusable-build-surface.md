@@ -903,6 +903,18 @@ with:
   verify-command: ctest --test-dir build --output-on-failure
 ```
 
+Every native and container matrix job is bounded by
+`lifecycle-timeout-minutes`, which defaults to 120 minutes. The same input is
+the fallback deadline for each install, build, and verify action, so a hung
+command fails with the lifecycle name and matrix platform before it can occupy
+a self-hosted runner indefinitely. A stage-level `timeout_minutes` in
+`buildchain.toml` remains the more specific override for that stage.
+
+```yaml
+with:
+  lifecycle-timeout-minutes: 90
+```
+
 The reusable build workflow samples the build lifecycle by default and carries
 the generated summary into the final verify diagnostics. Callers can override
 the sidecar path or disable sampling:
@@ -932,6 +944,7 @@ For custom workflows, use the action directly:
   with:
     stage: build
     required: "true"
+    timeout-minutes: "90"
     artifact-name: libnode-linux-x64-${{ github.sha }}
     artifact-paths: |
       dist
