@@ -586,6 +586,14 @@ bytes, and then runs the consumer's normal verification. Platform manifests,
 KFD evidence, checksums, and Release Passport inputs therefore observe the
 final signed artifact rather than the pre-signing build output.
 
+The durable v3 authority runtime is
+`authority/v3/v3.0/artifact-signing`. It is channel-neutral: alpha and stable
+release work use the same protected `buildchain-artifact-signing` environment
+and provider identities. The authority ref is protected independently from
+release channels and can advance only through reviewed, checked changes; the
+temporary `train/v3/v3.0/artifact-signing-authority` ref is retained only as a
+bounded migration rollback.
+
 The older `credential-island-macos-*` reusable-workflow inputs remain a
 compatibility surface while existing callers migrate. They are not the target
 consumer contract and must not be used to design new integrations.

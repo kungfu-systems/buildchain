@@ -253,7 +253,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7d04d3d34ec02a54cec8435e457cec3a1fddebca919828fc64a1b2a4443bb278"
+      "digest": "sha256:a5d858ae87a77b5398ddfb60ac58570128ccf0a9a7fd57216ff200bb3003e341"
     },
     {
       "id": "publish-transaction",
@@ -285,7 +285,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1315fe264d0e22215183122fc05e287be974751a78268642076898b689e435e6"
+      "digest": "sha256:c9ebf451294f92a2be3aa2ac4b2ec7afb3cc17bbeae2ece7879b800c0f274a40"
     },
     {
       "id": "versioning",
