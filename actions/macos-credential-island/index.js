@@ -154,6 +154,40 @@ function verifySignedMachO(filePath, expectedTeamId) {
   }
 }
 
+function signAndVerifyContainer(
+  filePath,
+  { certificateSha1, keychainPath, expectedTeamId },
+) {
+  runFile("/usr/bin/codesign", [
+    "--force",
+    "--sign",
+    certificateSha1,
+    "--keychain",
+    keychainPath,
+    "--timestamp",
+    filePath,
+  ]);
+  runFile("/usr/bin/codesign", [
+    "--verify",
+    "--strict",
+    "--verbose=2",
+    filePath,
+  ]);
+  const detail = runFile("/usr/bin/codesign", ["-d", "--verbose=4", filePath]);
+  if (!detail.includes("Authority=Developer ID Application:")) {
+    throw new Error(
+      "signed container does not expose a Developer ID Application authority",
+    );
+  }
+  if (!/^Timestamp=.+$/imu.test(detail)) {
+    throw new Error("signed container does not expose a secure timestamp");
+  }
+  const teamMatch = detail.match(/TeamIdentifier=([A-Z0-9]{10})/u);
+  if (!teamMatch || teamMatch[1] !== expectedTeamId) {
+    throw new Error("signed container team identifier mismatch");
+  }
+}
+
 function sealEmbeddedWheelCode(
   appPath,
   temporaryRoot,
@@ -554,6 +588,11 @@ async function main() {
       "UDZO",
       dmgPath,
     ]);
+    signAndVerifyContainer(dmgPath, {
+      certificateSha1,
+      keychainPath,
+      expectedTeamId,
+    });
     const dmgNotary = submitNotary(
       dmgPath,
       { keyPath: apiKeyPath, keyId: apiKeyId, issuer: apiIssuer },
@@ -614,6 +653,7 @@ async function main() {
         embeddedWheelMachOCount: embeddedWheelCode.signedFileCount,
         appStaple: true,
         appGatekeeper: true,
+        dmgCodesign: true,
         dmgStaple: true,
         dmgGatekeeper: true,
       },

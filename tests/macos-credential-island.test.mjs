@@ -122,14 +122,20 @@ test("credential input rejects source and path substitution", () => {
 });
 
 test("macOS authority consumes the generic artifact signing request", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-generic-apple-signing-"));
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-generic-apple-signing-"),
+  );
   try {
     const requestRoot = path.join(root, "app");
     fs.mkdirSync(requestRoot, { recursive: true });
     const archivePath = path.join(requestRoot, "subject.ditto.zip");
     fs.writeFileSync(archivePath, "sealed-app");
     const request = createArtifactSigningRequest({
-      source: { repository: "kungfu-systems/kungfu", sha: SOURCE_SHA, treeSha: TREE_SHA },
+      source: {
+        repository: "kungfu-systems/kungfu",
+        sha: SOURCE_SHA,
+        treeSha: TREE_SHA,
+      },
       runtime: { sha: "3".repeat(40) },
       artifact: {
         id: "kungfu-app",
@@ -147,7 +153,10 @@ test("macOS authority consumes the generic artifact signing request", () => {
         },
       },
     });
-    fs.writeFileSync(path.join(requestRoot, "request.json"), `${JSON.stringify(request)}\n`);
+    fs.writeFileSync(
+      path.join(requestRoot, "request.json"),
+      `${JSON.stringify(request)}\n`,
+    );
     const loaded = loadArtifactSigningInput(root, {
       repository: "kungfu-systems/kungfu",
       sourceSha: SOURCE_SHA,
@@ -296,16 +305,24 @@ test("entitlements and output names are Buildchain owned", () => {
 });
 
 test("every nested code object uses the Buildchain-owned entitlements file", () => {
-  const optionsForFile = signingOptionsForFile("/tmp/buildchain/entitlements.plist");
+  const optionsForFile = signingOptionsForFile(
+    "/tmp/buildchain/entitlements.plist",
+  );
   assert.deepEqual(optionsForFile("Example.app/Contents/MacOS/Example"), {
     entitlements: "/tmp/buildchain/entitlements.plist",
     hardenedRuntime: true,
   });
-  assert.deepEqual(optionsForFile("Example.app/Contents/Frameworks/addon.node"), {
-    entitlements: "/tmp/buildchain/entitlements.plist",
-    hardenedRuntime: true,
-  });
-  assert.throws(() => signingOptionsForFile(""), /entitlements path is required/);
+  assert.deepEqual(
+    optionsForFile("Example.app/Contents/Frameworks/addon.node"),
+    {
+      entitlements: "/tmp/buildchain/entitlements.plist",
+      hardenedRuntime: true,
+    },
+  );
+  assert.throws(
+    () => signingOptionsForFile(""),
+    /entitlements path is required/,
+  );
 });
 
 test("embedded wheel archive paths fail closed before extraction", () => {
@@ -551,16 +568,12 @@ test("credential island bundle loads before validating runner inputs", () => {
     "actions/macos-credential-island/dist/index.js",
   );
   const bundle = fs.readFileSync(bundlePath, "utf8");
-  const result = spawnSync(
-    process.execPath,
-    [bundlePath],
-    {
-      encoding: "utf8",
-      env: {
-        PATH: process.env.PATH || "",
-      },
+  const result = spawnSync(process.execPath, [bundlePath], {
+    encoding: "utf8",
+    env: {
+      PATH: process.env.PATH || "",
     },
-  );
+  });
   const output = `${result.stdout || ""}${result.stderr || ""}`;
   assert.equal(result.status, 1);
   assert.match(
@@ -611,6 +624,11 @@ test("public action and workflow keep credentials outside the build matrix", () 
   ]) {
     assert.match(implementation, new RegExp(`failureLabel: "${label}"`, "u"));
   }
+  assert.match(
+    implementation,
+    /signAndVerifyContainer\(dmgPath,[\s\S]*?certificateSha1,[\s\S]*?keychainPath,[\s\S]*?expectedTeamId[\s\S]*?const dmgNotary = submitNotary\([\s\S]*?staple\(dmgPath\)[\s\S]*?context:primary-signature/,
+  );
+  assert.match(implementation, /dmgCodesign: true/);
   for (const caller of [workflow, publicWorkflow, fixtureWorkflow]) {
     assert.match(caller, /permissions:\n  actions: read\n  contents: read/);
   }
