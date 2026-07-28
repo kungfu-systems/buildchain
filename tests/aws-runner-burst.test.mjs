@@ -8,7 +8,10 @@ import {
   linuxCodeBuildPlan,
   verifyLinuxCodeBuildQualification,
 } from "../scripts/aws-runner-burst-core.mjs";
-import { AWS_CODEBUILD_TOOLCHAIN } from "../scripts/aws-codebuild-toolchain.mjs";
+import {
+  AWS_CODEBUILD_TOOLCHAIN,
+  selectAwsCodeBuildCompiler,
+} from "../scripts/aws-codebuild-toolchain.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -116,6 +119,31 @@ test("CodeBuild native toolchain uses reviewed compiler and CMake pins", () => {
   assert.match(
     AWS_CODEBUILD_TOOLCHAIN.cmakeBaseUrl,
     /^https:\/\/github\.com\/Kitware\/CMake\/releases\/download\//,
+  );
+});
+
+test("CodeBuild native toolchain selects Amazon Linux GCC 14 packages", () => {
+  assert.deepEqual(
+    selectAwsCodeBuildCompiler({ hasDnf: true, hasAptGet: false }),
+    AWS_CODEBUILD_TOOLCHAIN.compilerProfiles.amazonLinux2023,
+  );
+});
+
+test("CodeBuild native toolchain selects Ubuntu 24.04 GCC 14 packages", () => {
+  assert.deepEqual(
+    selectAwsCodeBuildCompiler({ hasDnf: false, hasAptGet: true }),
+    AWS_CODEBUILD_TOOLCHAIN.compilerProfiles.ubuntu2404,
+  );
+  assert.deepEqual(
+    AWS_CODEBUILD_TOOLCHAIN.compilerProfiles.ubuntu2404.packages,
+    ["gcc-14", "g++-14"],
+  );
+});
+
+test("CodeBuild native toolchain rejects unsupported Linux images", () => {
+  assert.throws(
+    () => selectAwsCodeBuildCompiler(),
+    /requires a supported package manager/,
   );
 });
 
