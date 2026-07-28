@@ -130,6 +130,8 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(workflow, /secrets\.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64/);
   assert.match(macos, /-T \/usr\/bin\/codesign -T \/usr\/bin\/security/);
   assert.match(macos, /set-key-partition-list -S apple-tool:,apple:,codesign:/);
+  assert.doesNotMatch(macos, /set-key-partition-list[^\n]+ -s /);
+  assert.match(macos, /Buildchain macOS authority: sign exact Mach-O payload/);
   assert.match(macos, /codesign --verify --strict/);
   assert.match(macos, /notarytool submit/);
   assert.match(macos, /spctl --assess --type execute/);

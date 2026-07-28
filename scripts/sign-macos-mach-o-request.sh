@@ -38,12 +38,15 @@ security create-keychain -p "${keychain_password}" "${keychain_path}"
 security set-keychain-settings -lut 21600 "${keychain_path}"
 security unlock-keychain -p "${keychain_password}" "${keychain_path}"
 security import "${certificate_path}" -k "${keychain_path}" -P "${BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD}" -T /usr/bin/codesign -T /usr/bin/security
-security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${keychain_password}" "${keychain_path}" >/dev/null
+echo "Buildchain macOS authority: configure imported private-key access"
+security set-key-partition-list -S apple-tool:,apple:,codesign: -k "${keychain_password}" "${keychain_path}" >/dev/null
+echo "Buildchain macOS authority: verify requested signing identity"
 security find-identity -v -p codesigning "${keychain_path}" | grep -Fqi "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" || {
   echo "configured Developer ID identity was not imported" >&2
   exit 1
 }
 
+echo "Buildchain macOS authority: sign exact Mach-O payload"
 codesign --force --options runtime --timestamp --keychain "${keychain_path}" --sign "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" "${BUILDCHAIN_SIGNED_PAYLOAD}"
 codesign --verify --strict --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}"
 codesign --display --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}" 2> "${signature_details}"
