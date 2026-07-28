@@ -411,6 +411,30 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/Publish Buildchain-owned artifact signing request/g) || []).length, 2);
   assert.equal((workflow.match(/Dispatch and await Buildchain signing authority/g) || []).length, 2);
   assert.equal((workflow.match(/Verify and import final signed bytes/g) || []).length, 2);
+  assert.equal(
+    (
+      workflow.match(
+        /if \[ ! -f "\$\{signing_sealer\}" \]; then/g,
+      ) || []
+    ).length,
+    2,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /if: \$\{\{ steps\.signing-requests\.outputs\.request-count != '0' \}\}/g,
+      ) || []
+    ).length,
+    8,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /Artifact signing request sealing is unavailable in the resolved legacy runtime/g,
+      ) || []
+    ).length,
+    2,
+  );
   const firstBuild = workflow.indexOf("      - name: Run build lifecycle");
   const firstSeal = workflow.indexOf("      - name: Seal declared artifact signing requests");
   const firstVerify = workflow.indexOf("      - name: Run verify lifecycle");
