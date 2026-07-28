@@ -1,3 +1,21 @@
+---
+status: draft
+period: ongoing
+theme: buildchain-release-governance
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-27
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-27
+  invisible_context: not asserted
+---
+
 # Release Governance
 
 Buildchain v2 preserves the release semantics of the older ABV workflow while
@@ -234,6 +252,13 @@ released channel router at `build.yml@v3-alpha`. The auto lane must resolve
 declared install, build, and verify fixture, proving that a single consumer
 surface routes to distinct released runtimes without duplicating lifecycle
 configuration in the consumer.
+
+Buildchain's generic artifact-signing contract seals source-, tree-, runtime-,
+platform-, and digest-bound requests from ordinary credential-free build jobs.
+Provider-specific authority jobs consume only those sealed payloads. Apple
+Developer ID, Windows Authenticode, and detached cryptographic signatures share
+the request/receipt model, while each profile retains its honest platform
+semantics and fail-closed verification requirements.
 
 The reusable build trust gate reads `job.workflow_ref`, which identifies the
 called workflow and its selected ref. It does not infer the runtime from

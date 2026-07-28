@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:23158252e5d2bd09b9b54dc08a0a452562e4b3a6ec3861b991632a34199d9820"
+      "digest": "sha256:cc32692e8d04816e8de94f208e43c2d5c5c7a8425cec8b32edc73ab78591fbbf"
     },
     {
       "id": "auditable-demo",
@@ -253,7 +253,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:5d46d0f5e6e03541c187ffea154dcce703ef78e59d16bd0e4fa7c175da940480"
+      "digest": "sha256:7d04d3d34ec02a54cec8435e457cec3a1fddebca919828fc64a1b2a4443bb278"
     },
     {
       "id": "publish-transaction",
@@ -269,7 +269,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:a77c2bb1d2245e1ee2318f650ad64ada6c8cdd3292a62a028e3ccc7517fb4e12"
+      "digest": "sha256:c3efafc2601f526c5884a8d14f62c2721bfb582a20d2abea513da954d7897540"
     },
     {
       "id": "release-flow",

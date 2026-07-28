@@ -384,6 +384,9 @@ on:
         required: false
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
         required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
+        required: false
     outputs:
       buildchain-channel:
         description: "Resolved Buildchain channel: alpha, stable, or override"

@@ -118,6 +118,10 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "BUILDCHAIN_PROMOTION_TOKEN": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -451,7 +455,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:16c0a2506088fc5a4e3337c7c23f5cc7d14f30e9cde23c1d39fc335d05b4a4f9"
+      "digest": "sha256:146718143cc50e48ac57154aade4a4b06a8df4e036708a150233098d3c1cb6f7"
     },
     {
       "schemaVersion": 1,
@@ -492,6 +496,10 @@
           "source": "workflow-call-secret"
         },
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_PROMOTION_TOKEN": {
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
@@ -821,7 +829,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:529f68186a49a8df1f2012fc4a38058548d1cc93eb06b6bed35befddd72519ef"
+      "digest": "sha256:55b3189412e7da7769a8de60bd1ba4cf52d726d8b79c0a720598e49742aa72a0"
     },
     {
       "schemaVersion": 1,
@@ -2168,5 +2176,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:2d022091ac72303cc5fab5888de3dfd5aecfc8520281f753d963ac7208828d6f"
+  "digest": "sha256:c637b908f2be506f3bd56a7e41995450c4d7011f3badc232712884e4fb7039b4"
 }

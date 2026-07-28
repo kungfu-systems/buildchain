@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 97,
-    "workflowCount": 56,
+    "workflowCount": 57,
     "actionCount": 6,
     "sitePageCount": 59,
     "docCommandRefCount": 291,
@@ -649,9 +649,10 @@
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
           "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
           "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+          "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 8,
+        "secretCount": 9,
         "outputs": [
           "artifact-coordinates-json",
           "build-diagnostics-summary-artifact",
@@ -1304,6 +1305,17 @@
         "outputCount": 0
       },
       {
+        "id": "artifact-signing-authority",
+        "path": ".github/workflows/artifact-signing-authority.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "auditable-demo-media-profile-qualification",
         "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
         "reusable": false,
@@ -1437,9 +1449,10 @@
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
           "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
           "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+          "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 8,
+        "secretCount": 9,
         "outputs": [
           "artifact-coordinates-json",
           "build-diagnostics-summary-artifact",
@@ -4246,8 +4259,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "bf48cde41ca828f0e4c9e1880102505f22c02c9cc1ff53c8d7574dd4ce13be4c",
-    "pageRegistryDigest": "bd02b66bb22456db1d62a298601e9891777cb825862325b6aa7a2d640cc2d1a7"
+    "workflowRegistryDigest": "9f7ec872f7ae4ec2dbbf751425441deba8a1badaa1ce578997b3ba953f1f5ece",
+    "pageRegistryDigest": "a5e8faa72f8bf5a6b9fe359f30d7bc7c3163a3bdd69c1bf2d68ae5a3eb2d4561"
   },
   "comparison": {
     "missingCliRegistry": [],

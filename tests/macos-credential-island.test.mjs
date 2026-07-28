@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
+
 import {
   EVIDENCE_CONTRACT,
   INPUT_CONTRACT,
@@ -14,6 +16,7 @@ import {
   createCredentialArtifactManifest,
   decodeBase64Secret,
   entitlementsForProfile,
+  loadArtifactSigningInput,
   loadCredentialInput,
   parseIdentityListing,
   parseNotaryResult,
@@ -110,6 +113,48 @@ test("credential input rejects source and path substitution", () => {
     assert.throws(() => loadCredentialInput(value.root), /parent traversal/);
   } finally {
     fs.rmSync(value.root, { recursive: true, force: true });
+  }
+});
+
+test("macOS authority consumes the generic artifact signing request", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-generic-apple-signing-"));
+  try {
+    const requestRoot = path.join(root, "app");
+    fs.mkdirSync(requestRoot, { recursive: true });
+    const archivePath = path.join(requestRoot, "subject.ditto.zip");
+    fs.writeFileSync(archivePath, "sealed-app");
+    const request = createArtifactSigningRequest({
+      source: { repository: "kungfu-systems/kungfu", sha: SOURCE_SHA, treeSha: TREE_SHA },
+      runtime: { sha: "3".repeat(40) },
+      artifact: {
+        id: "kungfu-app",
+        path: "dist/Kungfu Episodes.app",
+        kind: "app-bundle",
+        platform: "macos",
+        arch: "arm64",
+        bytes: 100,
+        digest: `sha256:${"4".repeat(64)}`,
+        transport: {
+          file: "app/subject.ditto.zip",
+          format: "ditto-zip",
+          bytes: fs.statSync(archivePath).size,
+          digest: sha256File(archivePath),
+        },
+      },
+    });
+    fs.writeFileSync(path.join(requestRoot, "request.json"), `${JSON.stringify(request)}\n`);
+    const loaded = loadArtifactSigningInput(root, {
+      repository: "kungfu-systems/kungfu",
+      sourceSha: SOURCE_SHA,
+      sourceTreeSha: TREE_SHA,
+      runtimeSha: "3".repeat(40),
+      platformId: "macos-arm64",
+    });
+    assert.equal(loaded.request.digest, request.digest);
+    assert.equal(loaded.manifest.app.archivePath, "Kungfu Episodes.app");
+    assert.equal(loaded.manifest.platform.arch, "arm64");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
 

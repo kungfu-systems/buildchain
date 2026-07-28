@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8bf424c2ea09e86b7ca4d7e72939d32781bec97bf220ad620a395100161b2fc2",
+    "sha256": "c274fd418ffe5bc422489a80cf58d87136d7e25c4ad610c72b46098617291c52",
     "summary": {
       "cliCommandCount": 97,
-      "workflowCount": 56,
+      "workflowCount": 57,
       "actionCount": 6,
       "sitePageCount": 59,
       "docCommandRefCount": 291,
@@ -228,10 +228,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8bf424c2ea09e86b7ca4d7e72939d32781bec97bf220ad620a395100161b2fc2",
+      "sha256": "c274fd418ffe5bc422489a80cf58d87136d7e25c4ad610c72b46098617291c52",
       "summary": {
         "cliCommandCount": 97,
-        "workflowCount": 56,
+        "workflowCount": 57,
         "actionCount": 6,
         "sitePageCount": 59,
         "docCommandRefCount": 291,
@@ -1159,6 +1159,42 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./github-artifact-attestation"
+        },
+        {
+          "id": "export:./artifact-signing",
+          "name": "@kungfu-tech/buildchain/artifact-signing",
+          "kind": "package-export",
+          "sourcePath": "packages/core/artifact-signing.js",
+          "evidencePath": "packages/core/artifact-signing.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./artifact-signing"
+        },
+        {
+          "id": "export:./artifact-signing-result",
+          "name": "@kungfu-tech/buildchain/artifact-signing-result",
+          "kind": "package-export",
+          "sourcePath": "packages/core/artifact-signing-result.js",
+          "evidencePath": "packages/core/artifact-signing-result.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./artifact-signing-result"
+        },
+        {
+          "id": "export:./detached-artifact-signature",
+          "name": "@kungfu-tech/buildchain/detached-artifact-signature",
+          "kind": "package-export",
+          "sourcePath": "packages/core/detached-artifact-signature.js",
+          "evidencePath": "packages/core/detached-artifact-signature.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./detached-artifact-signature"
         },
         {
           "id": "export:./anchored-version-material",
@@ -3608,6 +3644,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:artifact-signing-authority",
+          "name": "workflow:artifact-signing-authority",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/artifact-signing-authority.yml",
+          "evidencePath": ".github/workflows/artifact-signing-authority.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:auditable-demo-media-profile-qualification",
           "name": "workflow:auditable-demo-media-profile-qualification",
           "kind": "workflow",
@@ -5659,6 +5709,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 361
+    "publicSurfaceCount": 365
   }
 }

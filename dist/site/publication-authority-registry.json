@@ -168,6 +168,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/artifact-signing-authority.yml",
+      "authorityClass": "evidence-publication",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/artifact-signing-authority.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/binary-distribution.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -678,6 +691,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/artifact-signing-authority.yml",
+      "signals": [
+        "environment"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
       "signals": [],
       "classified": false
@@ -938,5 +958,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "b9e329937c6172b00255f532da94d9b8509862bae6f288ad4afb6639f894b4b5"
+  "registryDigest": "0f4705fb7b2afcb72e9136dac44eac7fc47d9440330aa3c72a8ae8bd8f3339c3"
 }
