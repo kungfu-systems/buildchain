@@ -54,6 +54,7 @@ const COMMIT_IDENTITY = {
   name: "Keren Dong",
   email: "keren.dong@kungfu.link",
 };
+const COMMIT_SIGN_OFF = `Signed-off-by: ${COMMIT_IDENTITY.name} <${COMMIT_IDENTITY.email}>`;
 const MAJOR_GATE_REF = "publish-gate/major";
 const LEGACY_MAJOR_GATE_REF = "major-gate";
 const GITHUB_ACTIONS_APP_ID = 15368;
@@ -63,6 +64,14 @@ const RELEASE_LINE_RECOVERY_PATHS = [
   "tests/promote-buildchain-ref.test.mjs",
   "tests/release-line-policy.test.mjs",
 ];
+
+function signedGeneratedCommitMessage(message) {
+  const normalized = String(message || "").trimEnd();
+  if (normalized.split("\n").some((line) => line.trim() === COMMIT_SIGN_OFF)) {
+    return normalized;
+  }
+  return `${normalized}\n\n${COMMIT_SIGN_OFF}`;
+}
 
 function parseTags(input) {
   const tags = String(input || "")
@@ -3935,11 +3944,12 @@ async function promoteBuildchainRefs({
         () => octokit.rest.git.createCommit({
           owner,
           repo,
-          message:
+          message: signedGeneratedCommitMessage(
             protectedUpdate?.mergeMessage ||
-            `${protectedUpdate?.title || "Apply generated version-state"}\n\n` +
-              `Buildchain generated this merge commit to fast-forward ${branch} after ` +
-              "the channel had diverged only by generated version-state files.",
+              `${protectedUpdate?.title || "Apply generated version-state"}\n\n` +
+                `Buildchain generated this merge commit to fast-forward ${branch} after ` +
+                "the channel had diverged only by generated version-state files.",
+          ),
           tree: mergedTree.sha,
           parents: [currentSha, branchSha],
           author: COMMIT_IDENTITY,
@@ -4566,7 +4576,7 @@ async function promoteBuildchainRefs({
       const { data: nextCommit } = await octokit.rest.git.createCommit({
         owner,
         repo,
-        message,
+        message: signedGeneratedCommitMessage(message),
         tree: nextTree.sha,
         parents,
         author: COMMIT_IDENTITY,

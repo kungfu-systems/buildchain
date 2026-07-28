@@ -35,6 +35,9 @@ const {
   validatePromotionReleaseCandidate,
 } = await import("../actions/promote-buildchain-ref/lib.js");
 
+const GENERATED_COMMIT_SIGN_OFF = "Signed-off-by: Keren Dong <keren.dong@kungfu.link>";
+const signedGeneratedCommitMessage = (message) => `${message}\n\n${GENERATED_COMMIT_SIGN_OFF}`;
+
 test("product release evidence command receives final coordinates and returns retained files", () => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-evidence-command-"));
   try {
@@ -1758,8 +1761,8 @@ test("release promotion creates source version commits and points refs at them",
   assert.deepEqual(
     commits.map((commit) => [commit.message, commit.parents]),
     [
-      ["chore(release): release v1.0.0", [SHA]],
-      ["chore(release): prepare v1.0.1-alpha.0", [releaseSha]],
+      [signedGeneratedCommitMessage("chore(release): release v1.0.0"), [SHA]],
+      [signedGeneratedCommitMessage("chore(release): prepare v1.0.1-alpha.0"), [releaseSha]],
     ],
   );
   assert.equal(blobs.length, 4);
@@ -4513,10 +4516,10 @@ assert.deepEqual(contract.capabilities, [feature.capability]);
   });
 
   const releaseVersionCommit = commitLog.find((commit) =>
-    commit.message === "chore(release): release v1.0.0",
+    commit.message === signedGeneratedCommitMessage("chore(release): release v1.0.0"),
   );
   const nextAlphaCommit = commitLog.find((commit) =>
-    commit.message === "chore(release): prepare v1.0.1-alpha.0",
+    commit.message === signedGeneratedCommitMessage("chore(release): prepare v1.0.1-alpha.0"),
   );
   const devMergeCommit = commitLog.find((commit) =>
     commit.parents.length === 2 &&
@@ -4526,6 +4529,7 @@ assert.deepEqual(contract.capabilities, [feature.capability]);
   assert.ok(releaseVersionCommit);
   assert.ok(nextAlphaCommit);
   assert.ok(devMergeCommit);
+  assert.match(devMergeCommit.message, new RegExp(`${GENERATED_COMMIT_SIGN_OFF}$`));
   const reconciledContractEntry = trees.get(devMergeCommit.tree).find(
     (entry) => entry.path === "dist/site/buildchain-contract.json",
   );
@@ -4760,10 +4764,10 @@ test("release finalization merges release ancestry into generated next-alpha", a
   });
 
   const releaseVersionCommit = commitLog.find((commit) =>
-    commit.message === "chore(release): release v1.0.0",
+    commit.message === signedGeneratedCommitMessage("chore(release): release v1.0.0"),
   );
   const nextAlphaCommit = commitLog.find((commit) =>
-    commit.message === "chore(release): prepare v1.0.1-alpha.0",
+    commit.message === signedGeneratedCommitMessage("chore(release): prepare v1.0.1-alpha.0"),
   );
   const alphaMergeCommit = commitLog.find((commit) =>
     commit.parents.length === 2 &&
@@ -4773,6 +4777,7 @@ test("release finalization merges release ancestry into generated next-alpha", a
   assert.ok(releaseVersionCommit);
   assert.ok(nextAlphaCommit);
   assert.ok(alphaMergeCommit);
+  assert.match(alphaMergeCommit.message, new RegExp(`${GENERATED_COMMIT_SIGN_OFF}$`));
   assert.equal(nextAlphaCommit.parents[0], releaseVersionCommit.sha);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), alphaMergeCommit.sha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), alphaMergeCommit.sha);
@@ -5913,8 +5918,8 @@ test("publish-gate/major promotion publishes next major production and prepares 
   assert.deepEqual(
     commits.map((commit) => [commit.message, commit.parents]),
     [
-      ["chore(release): release v2.0.0", [SHA]],
-      ["chore(release): prepare v2.0.1-alpha.0", [releaseSha]],
+      [signedGeneratedCommitMessage("chore(release): release v2.0.0"), [SHA]],
+      [signedGeneratedCommitMessage("chore(release): prepare v2.0.1-alpha.0"), [releaseSha]],
     ],
   );
   assert(
