@@ -2308,12 +2308,39 @@ test("runner presets resolve to explicit matrices", () => {
   );
   assert.match(kungfu.platforms[0].runner, /kungfu-build-v4-linux-x64/);
 
+  const codebuild = resolveRunnerMatrix({
+    runnerPreset: "aws-us-codebuild-linux",
+    awsCodeBuildProject: "kungfu-buildchain-linux-burst-poc",
+  });
+  assert.equal(codebuild.runnerPreset, "aws-us-codebuild-linux");
+  assert.equal(codebuild.platformCount, 1);
+  assert.equal(codebuild.platforms[0].provider, "aws-codebuild");
+  assert.equal(
+    codebuild.platforms[0].project,
+    "kungfu-buildchain-linux-burst-poc",
+  );
+
   const custom = resolveRunnerMatrix({
     platformsJson:
       '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',
   });
   assert.equal(custom.runnerPreset, "custom");
   assert.equal(custom.platformCount, 1);
+});
+
+test("AWS CodeBuild runner preset fails closed without an exact project", () => {
+  assert.throws(
+    () => resolveRunnerMatrix({ runnerPreset: "aws-us-codebuild-linux" }),
+    /requires a valid aws-codebuild-project/,
+  );
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        runnerPreset: "aws-us-codebuild-linux",
+        awsCodeBuildProject: "not valid",
+      }),
+    /requires a valid aws-codebuild-project/,
+  );
 });
 
 test("linux container preset routes only Linux platforms into the container matrix", () => {

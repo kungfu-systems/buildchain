@@ -23,6 +23,8 @@ export function resolveBuildContractCli() {
     const resolved = resolveRunnerMatrix({
       runnerPreset: process.env.BUILDCHAIN_RUNNER_PRESET || "github-hosted",
       platformsJson: process.env.BUILDCHAIN_PLATFORMS_JSON || "",
+      awsCodeBuildProject:
+        process.env.BUILDCHAIN_AWS_CODEBUILD_PROJECT || "",
       linuxContainerPreset: process.env.BUILDCHAIN_LINUX_CONTAINER_PRESET || "",
       linuxContainerImage: process.env.BUILDCHAIN_LINUX_CONTAINER_IMAGE || "",
     });
