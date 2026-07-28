@@ -8,6 +8,7 @@ import {
   linuxCodeBuildPlan,
   verifyLinuxCodeBuildQualification,
 } from "../scripts/aws-runner-burst-core.mjs";
+import { AWS_CODEBUILD_TOOLCHAIN } from "../scripts/aws-codebuild-toolchain.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -92,16 +93,30 @@ test("workflow keeps trust ahead of dynamic CodeBuild runner selection", () => {
   const trust = workflow.indexOf("  trust-gate:");
   const native = workflow.indexOf("  build-native:");
   assert.ok(trust >= 0 && native > trust);
-  const nativeBlock = workflow.slice(native, workflow.indexOf("\n  build-linux-container:", native));
+  const nativeBlock = workflow.slice(
+    native,
+    workflow.indexOf("\n  build-linux-container:", native),
+  );
   assert.match(
     nativeBlock,
     /if: \$\{\{ needs\.trust-gate\.outputs\.trusted == 'true'/,
   );
-  assert.match(
-    nativeBlock,
-    /codebuild-\{0\}-\{1\}-\{2\}/,
-  );
+  assert.match(nativeBlock, /codebuild-\{0\}-\{1\}-\{2\}/);
   assert.match(nativeBlock, /aws-runner-burst\.mjs evidence/);
+  assert.match(nativeBlock, /aws-codebuild-toolchain\.mjs prepare/);
+  assert.match(nativeBlock, /aws-native-toolchain\.json/);
+});
+
+test("CodeBuild native toolchain uses reviewed compiler and CMake pins", () => {
+  assert.deepEqual(AWS_CODEBUILD_TOOLCHAIN.gccPackages, ["gcc14", "gcc14-c++"]);
+  assert.equal(AWS_CODEBUILD_TOOLCHAIN.gcc, "gcc14-gcc");
+  assert.equal(AWS_CODEBUILD_TOOLCHAIN.gxx, "gcc14-g++");
+  assert.equal(AWS_CODEBUILD_TOOLCHAIN.cmakeVersion, "3.31.6");
+  assert.match(AWS_CODEBUILD_TOOLCHAIN.cmakeSha256, /^[0-9a-f]{64}$/);
+  assert.match(
+    AWS_CODEBUILD_TOOLCHAIN.cmakeBaseUrl,
+    /^https:\/\/github\.com\/Kitware\/CMake\/releases\/download\//,
+  );
 });
 
 test("workflow bounds CodeBuild jobs and lifecycle stages with the caller timeout", () => {
