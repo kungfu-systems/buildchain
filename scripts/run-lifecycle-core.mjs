@@ -97,6 +97,28 @@ function lifecycleErrorAttributes(error, extra = {}) {
   return attributes;
 }
 
+function describeLifecycleTimeout(error, {
+  timeoutMinutes,
+  stageName,
+  platformId,
+  platformName,
+}) {
+  if (
+    !timeoutMinutes ||
+    (error?.code !== "ETIMEDOUT" && error?.signal !== "SIGTERM")
+  ) {
+    return error;
+  }
+  const timeoutError = new Error(
+    `lifecycle ${stageName || "command"} timed out after ${timeoutMinutes} minute(s) on ${platformName} (${platformId})`,
+    { cause: error },
+  );
+  timeoutError.name = "LifecycleTimeoutError";
+  timeoutError.code = "ETIMEDOUT";
+  timeoutError.signal = error?.signal || "";
+  return timeoutError;
+}
+
 function collectArtifactFiles(root, patterns) {
   const files = new Set();
   for (const pattern of patterns) {
@@ -245,9 +267,10 @@ function runLifecycleStageWithSampler({
   processSamplesPath,
   processSampleIntervalMs,
   requestedParallelism,
+  timeoutMinutes,
 }) {
   if (!sampleProcessTree) {
-    return runLifecycleStage({ cwd, loadedConfig, name, env });
+    return runLifecycleStage({ cwd, loadedConfig, name, env, timeoutMinutes });
   }
   const lifecycle = loadedConfig?.config?.lifecycle || {};
   const stage = lifecycle[name];
@@ -260,7 +283,8 @@ function runLifecycleStageWithSampler({
     ...(stage.env || {}),
     ...(env || {}),
   };
-  const timeout = stage.timeoutMinutes ? stage.timeoutMinutes * 60_000 : undefined;
+  const effectiveTimeoutMinutes = stage.timeoutMinutes ?? timeoutMinutes;
+  const timeout = effectiveTimeoutMinutes ? effectiveTimeoutMinutes * 60_000 : undefined;
   let lastError;
   for (let attempt = 1; attempt <= stage.retries; attempt += 1) {
     try {
@@ -362,6 +386,7 @@ export function runLifecycle({
   stageName = "",
   command = "",
   required = false,
+  timeoutMinutes,
   manifestPath = ".buildchain/artifacts/manifest.json",
   summaryPath = ".buildchain/artifacts/summary.json",
   diagnosticsPath = "",
@@ -381,6 +406,9 @@ export function runLifecycle({
   requestedParallelism = 0,
   processSummaryRequired = true,
 } = {}) {
+  if (timeoutMinutes !== undefined && (!Number.isFinite(timeoutMinutes) || timeoutMinutes <= 0)) {
+    throw new Error("lifecycle timeoutMinutes must be a positive number");
+  }
   const resolvedCwd = path.resolve(cwd);
   const resolvedWorkspace = path.resolve(workspace);
   const resolvedManifestPath = path.resolve(resolvedWorkspace, manifestPath);
@@ -449,6 +477,7 @@ export function runLifecycle({
     const lifecycle = loadedConfig?.config?.lifecycle || {};
     const configuredStage = stageName ? lifecycle[stageName] : undefined;
     const commandShell = configuredStage?.shell || true;
+    const effectiveCommandTimeoutMinutes = configuredStage?.timeoutMinutes ?? timeoutMinutes;
     const startedAt = Date.now();
     userLog.info("lifecycle.command.start", {
       attributes: {
@@ -480,6 +509,7 @@ export function runLifecycle({
           processSamplesPath: resolvedProcessSamplesPath,
           processSampleIntervalMs,
           requestedParallelism,
+          timeout: effectiveCommandTimeoutMinutes ? effectiveCommandTimeoutMinutes * 60_000 : undefined,
         });
       } else {
         execSync(command, {
@@ -487,6 +517,7 @@ export function runLifecycle({
           env: commandEnv,
           shell: commandShell,
           stdio: "inherit",
+          timeout: effectiveCommandTimeoutMinutes ? effectiveCommandTimeoutMinutes * 60_000 : undefined,
         });
       }
       executed = true;
@@ -498,16 +529,22 @@ export function runLifecycle({
         },
       });
     } catch (error) {
+      const lifecycleError = describeLifecycleTimeout(error, {
+        timeoutMinutes: effectiveCommandTimeoutMinutes,
+        stageName,
+        platformId,
+        platformName,
+      });
       userLog.error("lifecycle.command.error", {
         durationMs: Date.now() - startedAt,
         message: "lifecycle command failed",
-        attributes: lifecycleErrorAttributes(error, {
+        attributes: lifecycleErrorAttributes(lifecycleError, {
           commandSource,
           stage: stageName || "command",
           sampleProcessTree,
         }),
       });
-      throw error;
+      throw lifecycleError;
     }
   } else if (stageName) {
     commandSource = "buildchain.toml";
@@ -535,6 +572,7 @@ export function runLifecycle({
         processSamplesPath: resolvedProcessSamplesPath,
         processSampleIntervalMs,
         requestedParallelism,
+        timeoutMinutes,
       });
       userLog.info("lifecycle.stage.end", {
         durationMs: Date.now() - startedAt,
@@ -545,16 +583,22 @@ export function runLifecycle({
         },
       });
     } catch (error) {
+      const lifecycleError = describeLifecycleTimeout(error, {
+        timeoutMinutes: loadedConfig?.config?.lifecycle?.[stageName]?.timeoutMinutes ?? timeoutMinutes,
+        stageName,
+        platformId,
+        platformName,
+      });
       userLog.error("lifecycle.stage.error", {
         durationMs: Date.now() - startedAt,
         message: "lifecycle stage failed",
-        attributes: lifecycleErrorAttributes(error, {
+        attributes: lifecycleErrorAttributes(lifecycleError, {
           commandSource,
           stage: stageName,
           sampleProcessTree,
         }),
       });
-      throw error;
+      throw lifecycleError;
     }
   }
 

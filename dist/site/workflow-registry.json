@@ -1702,9 +1702,10 @@
         "required",
         "sample-process-tree",
         "stage",
-        "summary-path"
+        "summary-path",
+        "timeout-minutes"
       ],
-      "inputCount": 20,
+      "inputCount": 21,
       "capabilityGroup": "reusable-build",
       "status": "active"
     },

@@ -17,6 +17,10 @@ inputs:
     description: "Fail when neither command nor configured stage ran"
     required: false
     default: "true"
+  timeout-minutes:
+    description: "Fallback timeout for this lifecycle stage when buildchain.toml does not declare timeout_minutes"
+    required: false
+    default: "120"
   artifact-name:
     description: "Deterministic artifact name"
     required: false
