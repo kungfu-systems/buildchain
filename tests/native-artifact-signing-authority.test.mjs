@@ -123,7 +123,10 @@ test("Buildchain authority owns native credentials and performs provider verific
   const macos = fs.readFileSync(path.join(root, "scripts/sign-macos-mach-o-request.sh"), "utf8");
   const windows = fs.readFileSync(path.join(root, "scripts/sign-windows-authenticode-request.ps1"), "utf8");
   assert.match(workflow, /environment: buildchain-artifact-signing/);
-  assert.match(workflow, /secrets\.BUILDCHAIN_APPLE_CERTIFICATE_P12_BASE64/);
+  assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64/);
+  assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64/);
+  assert.match(workflow, /vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID/);
+  assert.doesNotMatch(workflow, /secrets\.BUILDCHAIN_APPLE_/);
   assert.match(workflow, /secrets\.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64/);
   assert.match(macos, /codesign --verify --strict/);
   assert.match(macos, /notarytool submit/);
