@@ -136,11 +136,6 @@ Resources:
           Status: DISABLED
       Triggers:
         Webhook: false
-        FilterGroups:
-          - - Type: EVENT
-              Pattern: WORKFLOW_JOB_QUEUED
-            - Type: WORKFLOW_NAME
-              Pattern: !Ref AllowedWorkflowNamePattern
       Tags:
         - Key: kungfu:owner
           Value: buildchain
