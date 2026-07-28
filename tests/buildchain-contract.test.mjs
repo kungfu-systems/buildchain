@@ -244,6 +244,9 @@ test("contract world exposes auditable-demo media qualification coordinates", ()
   assert.equal(surface.breakingDefaults.mediaProfileDefault, "archive-v1");
   assert.match(surface.guarantees.join("\n"), /independently verify codec/);
   assert.match(surface.guarantees.join("\n"), /without requiring consumers to infer roles/);
+  assert.match(surface.guarantees.join("\n"), /Build Images owns encoding/);
+  assert.match(surface.guarantees.join("\n"), /does not claim browser playback/);
+  assert.doesNotMatch(surface.optionalInputs.join("\n"), /ffmpeg|codec|shell|transcod/i);
 });
 
 test("contract world exposes additive post-publish artifact provenance schema", () => {

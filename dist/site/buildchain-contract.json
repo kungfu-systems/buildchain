@@ -314,9 +314,11 @@
         "complete media rendering is optional and consumes only an exact passing Gate bundle",
         "Gate and media bundles expose both GitHub Artifact archive coordinates and deterministic member roots",
         "explicit web-delivery profiles independently verify codec, container, audio, dimensions, duration, byte budgets, rendition roles, and MP4 fast-start evidence",
-        "media receipts expose content-addressed rendition facts without requiring consumers to infer roles from filenames"
+        "media receipts expose content-addressed rendition facts without requiring consumers to infer roles from filenames",
+        "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
+        "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment"
       ],
-      "breakingDigest": "sha256:3826401223ed3d955f41bbe5c73c0881e38213a8d1511dbc2192fd6c5c4f3214",
+      "breakingDigest": "sha256:425f8d3d1ba205dd6fe35a20f1dc6dad7d7c563872283e3af79fea4d5c475692",
       "auditDigest": "sha256:d043897d3d2bd242a83a362fccac408b4bd38e1e2fb50e7cae6a2145a6c0bd51"
     },
     {
@@ -725,7 +727,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:4423af6cd78eecbcfe1bb317c67373100b381cbad7391db9b162ad070ea18f19"
+      "auditDigest": "sha256:2f187c525e9e5eb98b58c78059d25d74ffd722c5b15d93b4195ffc1960c50954"
     },
     {
       "contractVersion": 1,
@@ -3367,6 +3369,6 @@
       "auditDigest": "sha256:e07a5db56a71bd0ac79c81f12619938055361bf0a0ed8e5891f88ca1c51f1c93"
     }
   ],
-  "compatibilityDigest": "sha256:f82205029cce481de1bc3ef0475d2773815cc1d89aed3ada77410b4acc38e59c",
-  "contractDigest": "sha256:0c5ec3f91996940e8397fb793a2f554b6bd262f67d716dc3dfeb89f320c923fc"
+  "compatibilityDigest": "sha256:9770baa99ba374e9dbd743ca9624a72137513b8c4e65af1fbf2160cb3ef51d9d",
+  "contractDigest": "sha256:c27be7be47c7ea0586727e14a96593795045c004ab1afbbdd7f53651506a642d"
 }

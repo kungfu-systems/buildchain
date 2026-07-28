@@ -444,6 +444,18 @@ test("web-delivery qualification binds independently inspected rendition facts",
   );
   assert.equal(result.qualification.renditions[1].videoCodec, "h264");
   assert.equal(result.qualification.renditions[1].progressiveDownload, "moov-before-mdat");
+  assert.equal(result.qualification.renditions[1].pixelFormat, "yuv420p");
+  assert.equal(result.qualification.renditions[1].width, 1280);
+  assert.equal(result.qualification.renditions[1].height, 720);
+  assert.equal(result.qualification.renditions[1].durationMs, 2500);
+  assert.equal(result.qualification.renditions[1].frameRate, 15);
+  assert.equal(result.qualification.renditions[1].audioStreams, 0);
+  assert.deepEqual(result.qualification.nonClaims, [
+    "browser-playback-success",
+    "responsive-layout",
+    "reduced-motion-behavior",
+    "production-site-deployment",
+  ]);
   assert.deepEqual(
     result.qualification.renditions.map((entry) => entry.maximumBytes),
     [1048576, 524288, 524288, 1048576],
@@ -500,6 +512,10 @@ test("web-delivery qualification rejects false or incomplete media claims", (t) 
   assert.throws(() => qualify({ "demo.mp4": { videoCodec: "vp9" } }), /demo\.mp4 video codec/);
   assert.throws(() => qualify({ "demo.webm": { container: "mp4" } }), /demo\.webm container/);
   assert.throws(() => qualify({ "demo.mp4": { audioStreams: 1 } }), /demo\.mp4 audio/);
+  assert.throws(() => qualify({ "demo.mp4": { pixelFormat: "yuv444p" } }), /demo\.mp4 pixel format/);
+  assert.throws(() => qualify({ "demo.mp4": { width: 640 } }), /demo\.mp4 dimensions/);
+  assert.throws(() => qualify({ "demo.mp4": { durationMs: 4000 } }), /demo\.mp4 duration/);
+  assert.throws(() => qualify({ "demo.mp4": { frameRate: 30 } }), /demo\.mp4 frame rate/);
   assert.throws(
     () => qualify({ "demo.mp4": { progressiveDownload: "mdat-before-moov" } }),
     /demo\.mp4 progressive download/,

@@ -355,6 +355,8 @@ export function createBuildchainContractWorld({
         "Gate and media bundles expose both GitHub Artifact archive coordinates and deterministic member roots",
         "explicit web-delivery profiles independently verify codec, container, audio, dimensions, duration, byte budgets, rendition roles, and MP4 fast-start evidence",
         "media receipts expose content-addressed rendition facts without requiring consumers to infer roles from filenames",
+        "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
+        "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment",
       ],
     }),
     surface(root, {
