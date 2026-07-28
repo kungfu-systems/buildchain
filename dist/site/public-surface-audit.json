@@ -3425,7 +3425,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
     "workflowRegistryDigest": "49ec95aee0b80951285bd64b6cac529f6b3b95d8e13416af4b2a749ab364de6e",
-    "pageRegistryDigest": "936a8199ef4dcf753fa1ff016a7d4c88c7d6cff6f09feb33f4cb21076c53e380"
+    "pageRegistryDigest": "8a8877ec078dea53a21f4201cfcc6d16abf9c083c212af14bbc316473bb538c8"
   },
   "comparison": {
     "missingCliRegistry": [],
