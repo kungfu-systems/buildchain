@@ -2339,6 +2339,11 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     "train/v2/v2.3/runtime-loader",
   );
   assert.equal(classifyBuildchainRuntimeRef("train/v2/v2.3/runtime-loader"), "train");
+  assert.equal(
+    normalizeRequestedRuntimeRef("refs/heads/authority/v3/v3.0/artifact-signing").ref,
+    "authority/v3/v3.0/artifact-signing",
+  );
+  assert.equal(classifyBuildchainRuntimeRef("authority/v3/v3.0/artifact-signing"), "authority");
   assert.equal(classifyBuildchainRuntimeRef("a".repeat(40)), "exact-sha");
   assert.throws(
     () => normalizeRequestedRuntimeRef("release/v2/v2.3"),
@@ -2377,6 +2382,14 @@ test("runtime selection accepts official channels and gates train or SHA overrid
   assert.equal(
     validateRuntimeOverrideTrust({
       requestedRef: "train/v2/v2.3/runtime-loader",
+      eventName: "workflow_dispatch",
+      actorPermission: "write",
+    }).decision,
+    "override-accepted",
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "authority/v3/v3.0/artifact-signing",
       eventName: "workflow_dispatch",
       actorPermission: "write",
     }).decision,

@@ -56,12 +56,26 @@ test("explicit channel and runtime overrides take precedence with conflict check
     resolveBuildchainChannel({ ...base, requestedRef: "train/v2/v2.3/channel-router" }).channel,
     "override",
   );
+  assert.deepEqual(
+    resolveBuildchainChannel({ ...base, requestedRef: "authority/v2/v2.3/artifact-signing" }),
+    {
+      channel: "override",
+      major: 2,
+      buildchainRef: "authority/v2/v2.3/artifact-signing",
+      selectionSource: "explicit-buildchain-ref",
+      reason: "explicit Buildchain runtime ref authority/v2/v2.3/artifact-signing",
+    },
+  );
   assert.throws(
     () => resolveBuildchainChannel({ ...base, requestedChannel: "stable", requestedRef: "v2-alpha" }),
     /conflicts/,
   );
   assert.throws(
     () => resolveBuildchainChannel({ ...base, requestedChannel: "alpha", requestedRef: "a".repeat(40) }),
+    /require buildchain-channel=auto/,
+  );
+  assert.throws(
+    () => resolveBuildchainChannel({ ...base, requestedChannel: "stable", requestedRef: "authority/v2/v2.3/artifact-signing" }),
     /require buildchain-channel=auto/,
   );
 });
