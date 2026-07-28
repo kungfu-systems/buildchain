@@ -62,7 +62,7 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   kungfu: [
     target("dev/v4/v4.0", [check("affected-native / linux")], false),
     target("alpha/v4/v4.0", [
-      check("build", null),
+      check("build / Finalize build controller evidence"),
       check("signoff"),
       check("validate"),
     ], true),

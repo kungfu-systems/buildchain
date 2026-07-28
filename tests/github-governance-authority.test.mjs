@@ -551,24 +551,55 @@ test("rollout CLI preserves observed check apps and requires explicit new bindin
 });
 
 test("protection policy plan preserves descriptor-bound and unbound checks", () => {
-  const expected = {
-    strictRequiredChecks: true,
-    requiredCheckBindings: [
-      { context: "build", app_id: null },
-      { context: "signoff", app_id: 15368 },
-      { context: "validate", app_id: 15368 },
-    ],
-    requiredApprovals: 1,
-  };
-  for (const targetRef of ["alpha/v4/v4.0", "release/v4/v4.0"]) {
-    assert.deepEqual(
-      resolveGithubProtectionTargetPolicy({
-        repository: "kungfu-systems/kungfu",
-        targetRef,
-      }),
-      expected,
-    );
-  }
+  assert.deepEqual(
+    resolveGithubProtectionTargetPolicy({
+      repository: "kungfu-systems/kungfu",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    {
+      strictRequiredChecks: true,
+      requiredCheckBindings: [
+        {
+          context: "build / Finalize build controller evidence",
+          app_id: 15368,
+        },
+        { context: "signoff", app_id: 15368 },
+        { context: "validate", app_id: 15368 },
+      ],
+      requiredApprovals: 1,
+    },
+  );
+  assert.deepEqual(
+    resolveGithubProtectionTargetPolicy({
+      repository: "kungfu-systems/kungfu",
+      targetRef: "release/v4/v4.0",
+    }),
+    {
+      strictRequiredChecks: true,
+      requiredCheckBindings: [
+        { context: "build", app_id: null },
+        { context: "signoff", app_id: 15368 },
+        { context: "validate", app_id: 15368 },
+      ],
+      requiredApprovals: 1,
+    },
+  );
+});
+
+test("ruleset authority binds Kungfu Alpha to final build controller evidence", () => {
+  const policy = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/kungfu",
+    targetRef: "alpha/v4/v4.0",
+  });
+  assert.deepEqual(policy.requiredCheckBindings, [
+    {
+      context: "build / Finalize build controller evidence",
+      appId: 15368,
+    },
+    { context: "signoff", appId: 15368 },
+    { context: "validate", appId: 15368 },
+  ]);
+  assert.equal(policy.strictRequiredChecks, true);
 });
 
 test("ruleset authority admits Kungfu stable with exact independent checks", () => {
