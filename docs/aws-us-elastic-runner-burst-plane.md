@@ -46,31 +46,33 @@ The CodeBuild project is:
 - one ephemeral runner and one GitHub job per CodeBuild build;
 - outside a VPC, with no idle VM, NAT gateway, public ingress, SSH, or persistent
   workspace;
-- limited to two concurrent builds, 15 queued minutes, and 120 execution
+- limited to two concurrent builds, 15 queued minutes, and 40 execution
   minutes;
 - allowed to write only its dedicated CloudWatch log group and request a token
   from its dedicated GitHub App connection;
 - forbidden from receiving signing, notarization, package publication, release,
   deploy, static AWS, long-lived GitHub, or SSH credentials.
 
-The AWS-managed Amazon Linux 2023 image intentionally remains the immutable
-base. Before a native lifecycle starts, Buildchain installs the distribution's
-namespaced `gcc14` and `gcc14-c++` packages, exposes only per-job `gcc`/`g++`
-aliases, and downloads the pinned Kitware CMake 3.31.6 archive after verifying
-its reviewed SHA256. The resolved versions and CMake source digest are retained
-as `aws-native-toolchain.json`; no toolchain state survives the ephemeral
-CodeBuild execution.
+The AWS-managed Ubuntu 24.04 standard image is the immutable base. Before a
+native lifecycle starts, Buildchain installs the distribution's `gcc-14` and
+`g++-14` packages, exposes only per-job `gcc`/`g++` aliases, and downloads the
+pinned Kitware CMake 3.31.6 archive after verifying its reviewed SHA256. The
+resolved package manager, versions, and CMake source digest are retained as
+`aws-native-toolchain.json`; no toolchain state survives the ephemeral
+CodeBuild execution. The toolchain adapter also retains the reviewed Amazon
+Linux 2023 `gcc14` path for compatible projects.
 
 ## Cost and kill-switch envelope
 
 The 2026-07-28 AWS Price List entry for
-`BUILD_GENERAL1_LARGE` Linux in `us-east-1` is USD 0.02 per build minute.
-Seventeen fully timed-out accepted builds reserve at most USD 40.80. At project
-concurrency two, the fail-closed controller can see at most two over-cap builds.
-The envelope conservatively charges both race builds for their complete
-120-minute timeout rather than assuming fast EventBridge delivery. The bounded
-CodeBuild maximum is therefore USD 45.60, below the dedicated USD 49 budget and
-leaving USD 3.40 for the small controller, state, notification, and log charges.
+`BUILD_GENERAL1_XLARGE` Linux in `us-east-1` is USD 0.0798 per build minute.
+The contract rounds that rate up to USD 0.08. Twelve fully timed-out accepted
+builds reserve at most USD 38.40. At project concurrency two, the fail-closed
+controller can see at most two over-cap builds. The envelope conservatively
+charges both race builds for their complete 40-minute timeout rather than
+assuming fast EventBridge delivery. The bounded CodeBuild maximum is therefore
+USD 44.80, below the dedicated USD 49 budget and leaving USD 4.20 for the small
+controller, state, notification, and log charges.
 
 The controller stores an idempotent build-id ledger, an atomic accepted-build
 counter, and worst-case reservation in DynamoDB. Duplicate EventBridge delivery
