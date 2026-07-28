@@ -24,7 +24,7 @@ on:
         type: string
         required: false
       buildchain-ref:
-        description: "Official floating Buildchain channel, or a temporary train/SHA for trusted manual validation."
+        description: "Official floating Buildchain channel, protected authority, or a temporary train/SHA for trusted manual validation."
         default: ""
         type: string
         required: false
@@ -384,6 +384,9 @@ on:
         required: false
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
         required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
+        required: false
     outputs:
       buildchain-channel:
         description: "Resolved Buildchain channel: alpha, stable, or override"
@@ -449,10 +452,10 @@ on:
         description: "Resolved immutable Buildchain runtime SHA"
         value: ${{ jobs.build.outputs.buildchain-runtime-sha }}
       buildchain-runtime-class:
-        description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
+        description: "Runtime stability class: stable, alpha, authority, train, exact-sha, or development"
         value: ${{ jobs.build.outputs.buildchain-runtime-class }}
       buildchain-runtime-override:
-        description: "Whether a train or exact-SHA buildchain-ref override was used"
+        description: "Whether an authority, train, or exact-SHA buildchain-ref override was used"
         value: ${{ jobs.build.outputs.buildchain-runtime-override }}
       buildchain-runtime-trust-decision:
         description: "Runtime override trust decision"

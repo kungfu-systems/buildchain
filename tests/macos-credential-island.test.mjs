@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
+
 import {
   EVIDENCE_CONTRACT,
   INPUT_CONTRACT,
@@ -14,16 +16,22 @@ import {
   createCredentialArtifactManifest,
   decodeBase64Secret,
   entitlementsForProfile,
+  findEmbeddedWheels,
+  inspectExtractedWheel,
+  loadArtifactSigningInput,
   loadCredentialInput,
   parseIdentityListing,
   parseNotaryResult,
   parseNotarySubmission,
+  rewriteWheelRecord,
   safeArtifactName,
   safeArtifactStem,
   safePlatformId,
   sha256File,
   signingOptionsForFile,
   summarizeNotaryLog,
+  validateWheelEntryListing,
+  validateWheelMetadata,
 } from "../actions/macos-credential-island/lib.js";
 
 const SOURCE_SHA = "1".repeat(40);
@@ -110,6 +118,57 @@ test("credential input rejects source and path substitution", () => {
     assert.throws(() => loadCredentialInput(value.root), /parent traversal/);
   } finally {
     fs.rmSync(value.root, { recursive: true, force: true });
+  }
+});
+
+test("macOS authority consumes the generic artifact signing request", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-generic-apple-signing-"),
+  );
+  try {
+    const requestRoot = path.join(root, "app");
+    fs.mkdirSync(requestRoot, { recursive: true });
+    const archivePath = path.join(requestRoot, "subject.ditto.zip");
+    fs.writeFileSync(archivePath, "sealed-app");
+    const request = createArtifactSigningRequest({
+      source: {
+        repository: "kungfu-systems/kungfu",
+        sha: SOURCE_SHA,
+        treeSha: TREE_SHA,
+      },
+      runtime: { sha: "3".repeat(40) },
+      artifact: {
+        id: "kungfu-app",
+        path: "dist/Kungfu Episodes.app",
+        kind: "app-bundle",
+        platform: "macos",
+        arch: "arm64",
+        bytes: 100,
+        digest: `sha256:${"4".repeat(64)}`,
+        transport: {
+          file: "app/subject.ditto.zip",
+          format: "ditto-zip",
+          bytes: fs.statSync(archivePath).size,
+          digest: sha256File(archivePath),
+        },
+      },
+    });
+    fs.writeFileSync(
+      path.join(requestRoot, "request.json"),
+      `${JSON.stringify(request)}\n`,
+    );
+    const loaded = loadArtifactSigningInput(root, {
+      repository: "kungfu-systems/kungfu",
+      sourceSha: SOURCE_SHA,
+      sourceTreeSha: TREE_SHA,
+      runtimeSha: "3".repeat(40),
+      platformId: "macos-arm64",
+    });
+    assert.equal(loaded.request.digest, request.digest);
+    assert.equal(loaded.manifest.app.archivePath, "Kungfu Episodes.app");
+    assert.equal(loaded.manifest.platform.arch, "arm64");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
 
@@ -246,16 +305,150 @@ test("entitlements and output names are Buildchain owned", () => {
 });
 
 test("every nested code object uses the Buildchain-owned entitlements file", () => {
-  const optionsForFile = signingOptionsForFile("/tmp/buildchain/entitlements.plist");
+  const optionsForFile = signingOptionsForFile(
+    "/tmp/buildchain/entitlements.plist",
+  );
   assert.deepEqual(optionsForFile("Example.app/Contents/MacOS/Example"), {
     entitlements: "/tmp/buildchain/entitlements.plist",
     hardenedRuntime: true,
   });
-  assert.deepEqual(optionsForFile("Example.app/Contents/Frameworks/addon.node"), {
-    entitlements: "/tmp/buildchain/entitlements.plist",
-    hardenedRuntime: true,
-  });
-  assert.throws(() => signingOptionsForFile(""), /entitlements path is required/);
+  assert.deepEqual(
+    optionsForFile("Example.app/Contents/Frameworks/addon.node"),
+    {
+      entitlements: "/tmp/buildchain/entitlements.plist",
+      hardenedRuntime: true,
+    },
+  );
+  assert.throws(
+    () => signingOptionsForFile(""),
+    /entitlements path is required/,
+  );
+});
+
+test("embedded wheel archive paths fail closed before extraction", () => {
+  assert.deepEqual(
+    validateWheelEntryListing(
+      "kungfu/__init__.py\nkungfu-4.0.0.dist-info/RECORD\n",
+    ),
+    ["kungfu/__init__.py", "kungfu-4.0.0.dist-info/RECORD"],
+  );
+  for (const listing of [
+    "../escape\n",
+    "/absolute\n",
+    "pkg\\native.dylib\n",
+    "pkg/file\nPKG/FILE\n",
+    "pkg/../escape\n",
+  ]) {
+    assert.throws(
+      () => validateWheelEntryListing(listing),
+      /unsafe archive path|colliding archive paths/,
+    );
+  }
+});
+
+test("embedded wheel metadata rejects symlinks and listing drift", () => {
+  const regular =
+    "-rw-r--r--  3.0 unx        4 tx        4 stor 26-Jul-28 17:30 pkg/a";
+  const directory =
+    "drwxr-xr-x  3.0 unx        0 bx        0 stor 26-Jul-28 17:30 pkg/";
+  const symlink =
+    "lrwxr-xr-x  3.0 unx       13 bx       13 stor 26-Jul-28 17:30 pkg/link";
+  assert.deepEqual(validateWheelMetadata(`${directory}\n${regular}\n`, 2), [
+    directory,
+    regular,
+  ]);
+  assert.throws(
+    () => validateWheelMetadata(`${directory}\n${symlink}\n`, 2),
+    /only regular files and directories/,
+  );
+  assert.throws(
+    () => validateWheelMetadata(`${directory}\n${regular}\n`, 3),
+    /does not match its entry listing/,
+  );
+});
+
+test("embedded wheel discovery rejects wheel symlinks", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-wheel-discovery-"),
+  );
+  try {
+    const wheel = path.join(root, "kungfu.whl");
+    fs.writeFileSync(wheel, "wheel");
+    assert.deepEqual(findEmbeddedWheels(root), [wheel]);
+    fs.renameSync(wheel, path.join(root, "payload"));
+    fs.symlinkSync("payload", wheel);
+    assert.throws(
+      () => findEmbeddedWheels(root),
+      /must not be a symbolic link/,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("embedded wheel RECORD is rebuilt from signed payload bytes", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-wheel-record-"),
+  );
+  try {
+    const packageRoot = path.join(root, "kungfu");
+    const distInfo = path.join(root, "kungfu-4.0.0.dist-info");
+    fs.mkdirSync(packageRoot);
+    fs.mkdirSync(distInfo);
+    const nativePath = path.join(packageRoot, "libkungfu.dylib");
+    fs.writeFileSync(
+      nativePath,
+      Buffer.from([0xfe, 0xed, 0xfa, 0xcf, 0x73, 0x69, 0x67, 0x6e]),
+    );
+    fs.writeFileSync(path.join(packageRoot, "metadata,part.txt"), "metadata");
+    const recordPath = path.join(distInfo, "RECORD");
+    fs.writeFileSync(recordPath, "stale,sha256=stale,1\n");
+
+    const inspected = inspectExtractedWheel(root);
+    assert.deepEqual(inspected.machOFiles, [nativePath]);
+    const rewritten = rewriteWheelRecord(root);
+    assert.equal(rewritten.fileCount, 3);
+    const record = fs.readFileSync(recordPath, "utf8");
+    assert.match(
+      record,
+      /^kungfu\/libkungfu\.dylib,sha256=[A-Za-z0-9_-]{43},8$/mu,
+    );
+    assert.match(
+      record,
+      /^"kungfu\/metadata,part\.txt",sha256=[A-Za-z0-9_-]{43},8$/mu,
+    );
+    assert.match(record, /^kungfu-4\.0\.0\.dist-info\/RECORD,,$/mu);
+    assert.doesNotMatch(record, /stale/u);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("embedded wheel inspection rejects ambiguous RECORD and symlinks", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-wheel-invalid-"),
+  );
+  try {
+    fs.mkdirSync(path.join(root, "one.dist-info"));
+    fs.mkdirSync(path.join(root, "two.dist-info"));
+    fs.writeFileSync(path.join(root, "one.dist-info", "RECORD"), "");
+    fs.writeFileSync(path.join(root, "two.dist-info", "RECORD"), "");
+    assert.throws(
+      () => inspectExtractedWheel(root),
+      /exactly one top-level dist-info RECORD/,
+    );
+    fs.rmSync(path.join(root, "two.dist-info"), {
+      recursive: true,
+      force: true,
+    });
+    fs.symlinkSync("one.dist-info/RECORD", path.join(root, "linked-record"));
+    assert.throws(
+      () => inspectExtractedWheel(root),
+      /must not contain symbolic links/,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test("signed payload manifest binds exact credential outputs", () => {
@@ -375,16 +568,12 @@ test("credential island bundle loads before validating runner inputs", () => {
     "actions/macos-credential-island/dist/index.js",
   );
   const bundle = fs.readFileSync(bundlePath, "utf8");
-  const result = spawnSync(
-    process.execPath,
-    [bundlePath],
-    {
-      encoding: "utf8",
-      env: {
-        PATH: process.env.PATH || "",
-      },
+  const result = spawnSync(process.execPath, [bundlePath], {
+    encoding: "utf8",
+    env: {
+      PATH: process.env.PATH || "",
     },
-  );
+  });
   const output = `${result.stdout || ""}${result.stderr || ""}`;
   assert.equal(result.status, 1);
   assert.match(
@@ -435,6 +624,11 @@ test("public action and workflow keep credentials outside the build matrix", () 
   ]) {
     assert.match(implementation, new RegExp(`failureLabel: "${label}"`, "u"));
   }
+  assert.match(
+    implementation,
+    /signAndVerifyContainer\(dmgPath,[\s\S]*?certificateSha1,[\s\S]*?keychainPath,[\s\S]*?expectedTeamId[\s\S]*?const dmgNotary = submitNotary\([\s\S]*?staple\(dmgPath\)[\s\S]*?context:primary-signature/,
+  );
+  assert.match(implementation, /dmgCodesign: true/);
   for (const caller of [workflow, publicWorkflow, fixtureWorkflow]) {
     assert.match(caller, /permissions:\n  actions: read\n  contents: read/);
   }

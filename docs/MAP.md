@@ -43,6 +43,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | KFD-1 / KFD-2 / KFD-3 release-passport gates | `dist/site/kfd-claims.json`, `dist/site/buildchain-contract.json`, `dist/site/artifact-schemas.json` | [`release-passport.md`](release-passport.md) |
 | Product invariant Passport release gate | `buildchain.release.json#invariantPassports`, `dist/site/buildchain-contract.json` | [`release-passport.md`](release-passport.md) |
 | GitHub keyless Linux artifact attestation | `buildchain.release.json#githubArtifactAttestations`, `dist/site/workflow-registry.json`, `dist/site/artifact-schemas.json` | [`github-artifact-attestation.md`](github-artifact-attestation.md) |
+| Declarative cross-platform artifact signing | `kungfu-buildchain-artifact-signing-request/v1`, `kungfu-buildchain-artifact-signing-result/v1` | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-signing-authority) |
 | KFD-3 public surface reverse audit | `dist/site/public-surface-audit.json`, `dist/site/cli-registry.json`, `dist/site/workflow-registry.json`, `dist/site/page-registry.json` | [`cli.md`](cli.md), [`site-bundle-contract.md`](site-bundle-contract.md) |
 | KFD-1 / KFD-2 / KFD-3 first-class CLI and Node API | `.buildchain/kfd/kfd-3/surfaces.json`, `dist/site/kfd-claims.json`, `buildchain.release.json`, KFD schemas from `@kungfu-tech/kfd` | [`kfd-support.md`](kfd-support.md), [`cli.md`](cli.md#commands) |
 | Declarative KFD Agent Hub adapter conformance and Passport evidence | `.buildchain/kfd/agent-hub.json`, `.buildchain/artifacts/kfd-agent-hub/evidence.json`, `buildchain.release.json#kfdAgentHub` | [`kfd-agent-hub.md`](kfd-agent-hub.md) |
@@ -87,6 +88,7 @@ replace them.
 | How do I collect and verify module/product build facts from Git source, version files, and outputs? | [`build-facts.md`](build-facts.md) + [`cli.md`](cli.md) | use/verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
 | How do I keylessly attest Linux release artifacts with GitHub and bind them to a Release Passport? | [`github-artifact-attestation.md`](github-artifact-attestation.md) | verify/use | preview |
+| How do I request detached, Developer ID, or Authenticode signing without consumer credentials? | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-signing-authority) | verify/use | preview |
 | How do I seal exact artifact, identity, lifecycle, and KFD assessment roots for KFX admission? | [`artifact-verification-envelope.md`](artifact-verification-envelope.md) | verify/use | preview |
 | How is product publication authority sealed to an exact workflow, runner, control plane, nonce, and artifact? | [`publication-authority.md`](publication-authority.md) | verify | preview |
 | How are GitHub ownership, independent review, effective protection, and plan capability audited fail-closed? | [`github-governance-authority.md`](github-governance-authority.md) | verify | preview |

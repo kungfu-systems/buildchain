@@ -11,6 +11,7 @@
         "adapter-path",
         "artifact-retention-days",
         "buildchain-repository",
+        "media-profile",
         "render-media",
         "renderer-image",
         "require-trusted-event",
@@ -18,7 +19,7 @@
         "source-artifact-name",
         "source-ref"
       ],
-      "inputCount": 9,
+      "inputCount": 10,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -31,10 +32,12 @@
         "media-artifact-id",
         "media-artifact-name",
         "media-artifact-url",
+        "media-profile",
+        "media-qualification-root",
         "media-root",
         "source-sha"
       ],
-      "outputCount": 11,
+      "outputCount": 13,
       "surface": "auditable-demo",
       "capabilityGroup": "api-cli-reference",
       "status": "preview"
@@ -156,9 +159,10 @@
         "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
         "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+        "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 8,
+      "secretCount": 9,
       "outputs": [
         "artifact-coordinates-json",
         "build-diagnostics-summary-artifact",
@@ -859,6 +863,34 @@
       "status": "active"
     },
     {
+      "id": "artifact-signing-authority",
+      "path": ".github/workflows/artifact-signing-authority.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
+      "id": "auditable-demo-media-profile-qualification",
+      "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "binary-distribution",
       "path": ".github/workflows/binary-distribution.yml",
       "reusable": false,
@@ -990,9 +1022,10 @@
         "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
         "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+        "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 8,
+      "secretCount": 9,
       "outputs": [
         "artifact-coordinates-json",
         "build-diagnostics-summary-artifact",
@@ -1238,11 +1271,12 @@
         "dev-workflow-path",
         "dry-run",
         "max-age-seconds",
+        "pull-request-body-prefix",
         "settlement-authorized",
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 10,
+      "inputCount": 11,
       "secrets": [
         "promotion-token"
       ],

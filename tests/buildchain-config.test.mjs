@@ -598,6 +598,55 @@ compiler_cache = "compiler-cache"
   );
 });
 
+test("buildchain.toml declares signing intent without credential configuration", () => {
+  withTempRepo({
+    "buildchain.toml": `
+schema = 1
+
+[[signing.artifacts]]
+id = "native-engine"
+path = "dist/kungfu-engine"
+profile = "auto"
+kind = "mach-o"
+platforms = ["macos-arm64", "macos-x64"]
+`,
+  }, (dir) => {
+    const loaded = loadBuildchainConfig(dir);
+    assert.deepEqual(loaded.config.signing, {
+      artifacts: [{
+        id: "native-engine",
+        path: "dist/kungfu-engine",
+        profile: "auto",
+        kind: "mach-o",
+        platforms: ["macos-arm64", "macos-x64"],
+        required: true,
+      }],
+    });
+  });
+});
+
+test("buildchain.toml signing declarations reject credentials and authority config", () => {
+  assert.throws(
+    () => normalizeBuildchainConfig({
+      schema: 1,
+      signing: {
+        environment: "consumer-signing",
+        artifacts: [{ path: "dist/app", kind: "app-bundle" }],
+      },
+    }),
+    /cannot configure credentials or authority infrastructure/,
+  );
+  assert.throws(
+    () => normalizeBuildchainConfig({
+      schema: 1,
+      signing: {
+        artifacts: [{ path: "dist/app", kind: "app-bundle", certificate: "consumer-owned" }],
+      },
+    }),
+    /declare desired signature state only/,
+  );
+});
+
 test("buildchain.toml rejects dist-tag promotion without npm token auth", () => {
   assert.throws(
     () =>
