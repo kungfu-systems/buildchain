@@ -527,6 +527,153 @@ export function signingOptionsForFile(entitlementsPath) {
   });
 }
 
+function wheelRelativePath(root, filePath) {
+  return path.relative(root, filePath).split(path.sep).join("/");
+}
+
+function recordField(value) {
+  const text = String(value);
+  return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+export function validateWheelEntryListing(output) {
+  const entries = String(output || "")
+    .split(/\r?\n/u)
+    .filter(Boolean);
+  if (entries.length === 0) {
+    throw new Error("embedded wheel is empty");
+  }
+  const seen = new Set();
+  for (const entry of entries) {
+    const normalized = entry.normalize("NFC");
+    const segments = normalized.replace(/\/+$/u, "").split("/");
+    if (
+      !normalized ||
+      normalized.includes("\\") ||
+      normalized.includes("\0") ||
+      normalized.startsWith("/") ||
+      segments.some(
+        (segment) => !segment || segment === "." || segment === "..",
+      )
+    ) {
+      throw new Error("embedded wheel contains an unsafe archive path");
+    }
+    const collisionKey = normalized.replace(/\/+$/u, "").toLowerCase();
+    if (seen.has(collisionKey)) {
+      throw new Error("embedded wheel contains colliding archive paths");
+    }
+    seen.add(collisionKey);
+  }
+  return entries;
+}
+
+export function validateWheelMetadata(output, expectedEntryCount) {
+  const entries = String(output || "")
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter((line) => /^\S+\s+\d+\.\d+\s+\S+\s+/u.test(line));
+  if (
+    !Number.isSafeInteger(expectedEntryCount) ||
+    expectedEntryCount < 1 ||
+    entries.length !== expectedEntryCount
+  ) {
+    throw new Error("embedded wheel metadata does not match its entry listing");
+  }
+  if (entries.some((line) => !["-", "d"].includes(line[0]))) {
+    throw new Error(
+      "embedded wheel must contain only regular files and directories",
+    );
+  }
+  return entries;
+}
+
+export function findEmbeddedWheels(appPath) {
+  const wheels = [];
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) {
+        if (entry.name.toLowerCase().endsWith(".whl")) {
+          throw new Error("embedded wheel must not be a symbolic link");
+        }
+      } else if (entry.isDirectory()) {
+        visit(target);
+      } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".whl")) {
+        wheels.push(target);
+      }
+    }
+  };
+  visit(path.resolve(appPath));
+  return wheels.sort();
+}
+
+export function inspectExtractedWheel(root) {
+  const files = [];
+  const machOFiles = [];
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) {
+        throw new Error("embedded wheel must not contain symbolic links");
+      }
+      if (entry.isDirectory()) {
+        visit(target);
+        continue;
+      }
+      if (!entry.isFile()) {
+        throw new Error("embedded wheel must contain only regular files");
+      }
+      files.push(target);
+      if (isMacCodeArtifact(target)) machOFiles.push(target);
+    }
+  };
+  const absoluteRoot = path.resolve(root);
+  visit(absoluteRoot);
+  const records = files.filter((filePath) =>
+    /^[^/]+\.dist-info\/RECORD$/u.test(
+      wheelRelativePath(absoluteRoot, filePath),
+    ),
+  );
+  if (records.length !== 1) {
+    throw new Error(
+      `embedded wheel must contain exactly one top-level dist-info RECORD, found ${records.length}`,
+    );
+  }
+  return {
+    files: files.sort(),
+    machOFiles: machOFiles.sort(),
+    recordPath: records[0],
+  };
+}
+
+export function rewriteWheelRecord(root) {
+  const absoluteRoot = path.resolve(root);
+  const inspected = inspectExtractedWheel(absoluteRoot);
+  const rows = inspected.files
+    .filter((filePath) => filePath !== inspected.recordPath)
+    .map((filePath) => {
+      const bytes = fs.readFileSync(filePath);
+      const digest = crypto
+        .createHash("sha256")
+        .update(bytes)
+        .digest("base64url");
+      return [
+        recordField(wheelRelativePath(absoluteRoot, filePath)),
+        `sha256=${digest}`,
+        String(bytes.length),
+      ].join(",");
+    });
+  rows.push(
+    `${recordField(wheelRelativePath(absoluteRoot, inspected.recordPath))},,`,
+  );
+  fs.writeFileSync(inspected.recordPath, `${rows.join("\n")}\n`);
+  return {
+    fileCount: inspected.files.length,
+    machOFiles: inspected.machOFiles,
+    recordPath: inspected.recordPath,
+  };
+}
+
 export function cleanupState(state, runSecurity = () => {}) {
   const errors = [];
   if (
