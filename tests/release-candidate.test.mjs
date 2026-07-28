@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  FAMILY_RELEASE_EVIDENCE_CONTRACT,
   RELEASE_CANDIDATE_PASSPORT_CONTRACT,
   createReleaseCandidatePassport,
   sha256Json,
@@ -31,6 +32,60 @@ import {
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
 
+function root(character) {
+  return `sha256:${character.repeat(64)}`;
+}
+
+function sampleFamilyEvidence({ state = "merged", invalidationRoots = [] } = {}) {
+  const sourceRoot = root("5");
+  const qualificationRoot = root("6");
+  const artifactRoot = root("7");
+  const releaseRoot = root("8");
+  const evidence = {
+    contract: FAMILY_RELEASE_EVIDENCE_CONTRACT,
+    initiative: {
+      initiativeId: "initiative-family-fixture",
+      versionRoot: root("1"),
+      familyStateRoot: root("2"),
+    },
+    child: {
+      assignmentId: "family-child-release",
+      workDefinitionRoot: root("3"),
+      deliveryClass: "release",
+    },
+    source: {
+      commitSha: SOURCE_SHA,
+      treeSha: "4".repeat(40),
+      sourceRoot,
+    },
+    qualification: {
+      status: "qualified",
+      proofRoot: root("4"),
+      qualificationRoot,
+    },
+    terminal: {
+      state,
+      terminalRoot: root("9"),
+      evidenceRoots: [sourceRoot, root("4"), qualificationRoot, artifactRoot, releaseRoot].sort(),
+    },
+    continuation: state === "continued"
+      ? {
+          successorAssignmentId: "family-child-release-continuation",
+          requestRoot: root("a"),
+          completedEvidenceRoots: [artifactRoot, releaseRoot].sort(),
+          residualResponsibilityRoot: root("b"),
+        }
+      : null,
+    artifact: { artifactRoot },
+    release: { releaseRoot },
+    invalidation: {
+      status: invalidationRoots.length > 0 ? "invalidated" : "clear",
+      roots: [...invalidationRoots].sort(),
+    },
+  };
+  return { ...evidence, evidenceRoot: `sha256:${sha256Json(evidence)}` };
+}
+
 test("release candidate resolver makes metadata-only preflight explicit", () => {
   assert.equal(releaseCandidateDownloadEnabled("false"), false);
   assert.equal(releaseCandidateDownloadEnabled("FALSE"), false);
@@ -55,7 +110,7 @@ function sampleBuildSummary() {
     git: {
       repository: "kungfu-systems/libnode",
       sha: SOURCE_SHA,
-      treeSha: "tree-source",
+      treeSha: "4".repeat(40),
       ref: "refs/pull/42/merge",
       runId: "123",
       runAttempt: "1",
@@ -108,9 +163,128 @@ test("release candidate passport records source lock, platform matrix, and build
   assert.equal(passport.target.channel, "alpha");
   assert.equal(passport.target.version, "22.22.3-kf.3-alpha.7");
   assert.equal(passport.source.headSha, SOURCE_SHA);
-  assert.equal(passport.source.treeHash, "tree-source");
+  assert.equal(passport.source.treeHash, "4".repeat(40));
   assert.equal(passport.platformMatrix.length, 1);
   assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
+});
+
+test("release candidate passport binds deterministic terminal Initiative-family evidence", () => {
+  const buildSummary = sampleBuildSummary();
+  const familyEvidence = sampleFamilyEvidence();
+  const create = () => createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    targetChannel: "alpha",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+    familyEvidence,
+    createdAt: "2026-07-28T00:00:00.000Z",
+  });
+  const first = create();
+  const second = create();
+
+  assert.deepEqual(first.familyEvidence, familyEvidence);
+  assert.equal(first.candidateHash, second.candidateHash);
+  assert.equal(validateReleaseCandidatePassport({
+    passport: first,
+    buildSummary,
+    requireFamilyEvidence: true,
+    familyEvidenceRoot: familyEvidence.evidenceRoot,
+    familyInitiativeId: familyEvidence.initiative.initiativeId,
+    familyAssignmentId: familyEvidence.child.assignmentId,
+  }).ok, true);
+});
+
+test("release candidate family continuation carries completed release roots and only one residual successor", () => {
+  const buildSummary = sampleBuildSummary();
+  const familyEvidence = sampleFamilyEvidence({ state: "continued" });
+  const passport = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    targetChannel: "alpha",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+    familyEvidence,
+  });
+  assert.equal(passport.familyEvidence.terminal.state, "continued");
+  assert.equal(passport.familyEvidence.continuation.successorAssignmentId, "family-child-release-continuation");
+  assert.equal(validateReleaseCandidatePassport({ passport, requireFamilyEvidence: true }).ok, true);
+});
+
+test("release candidate family validation fails closed on absence, mismatch, ancestry drift, and invalidation", () => {
+  const buildSummary = sampleBuildSummary();
+  const legacy = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    targetChannel: "alpha",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+  });
+  assert.match(
+    validateReleaseCandidatePassport({ passport: legacy, requireFamilyEvidence: true }).errors.join("; "),
+    /family evidence is required/,
+  );
+
+  const familyEvidence = sampleFamilyEvidence();
+  const passport = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    targetChannel: "alpha",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+    familyEvidence,
+  });
+  assert.match(
+    validateReleaseCandidatePassport({
+      passport,
+      familyEvidenceRoot: root("f"),
+      familyAssignmentId: "different-child",
+    }).errors.join("; "),
+    /family evidence root mismatch.*family assignment mismatch/,
+  );
+
+  const withRecomputedFamilyRoot = (mutate) => {
+    const drifted = structuredClone(passport);
+    mutate(drifted.familyEvidence.source);
+    const { evidenceRoot: ignoredEvidenceRoot, ...driftedFamilyBody } = drifted.familyEvidence;
+    assert.ok(ignoredEvidenceRoot);
+    drifted.familyEvidence.evidenceRoot = `sha256:${sha256Json(driftedFamilyBody)}`;
+    drifted.candidateHash = sha256Json({
+      repository: drifted.repository,
+      target: drifted.target,
+      source: drifted.source,
+      platformMatrix: drifted.platformMatrix,
+      buildchain: drifted.buildchain,
+      familyEvidence: drifted.familyEvidence,
+    });
+    return drifted;
+  };
+  const commitDrifted = withRecomputedFamilyRoot((source) => {
+    source.commitSha = "e".repeat(40);
+  });
+  assert.match(
+    validateReleaseCandidatePassport({ passport: commitDrifted }).errors.join("; "),
+    /source commit/,
+  );
+  const treeDrifted = withRecomputedFamilyRoot((source) => {
+    source.treeSha = "d".repeat(40);
+  });
+  assert.match(
+    validateReleaseCandidatePassport({ passport: treeDrifted }).errors.join("; "),
+    /source tree/,
+  );
+
+  assert.throws(
+    () => createReleaseCandidatePassport({
+      repository: "kungfu-systems/libnode",
+      targetChannel: "alpha",
+      version: "22.22.3-kf.3-alpha.7",
+      sourceHeadSha: SOURCE_SHA,
+      buildSummary,
+      familyEvidence: sampleFamilyEvidence({ invalidationRoots: [root("c")] }),
+    }),
+    /must not contain invalidated evidence/,
+  );
 });
 
 test("release candidate passport binds controller receipts to source and runtime", () => {

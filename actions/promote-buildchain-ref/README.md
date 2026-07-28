@@ -199,6 +199,10 @@ and fail before publish-gate side effects if it no longer matches:
     promote-only-release-candidate: "true"
     release-candidate-passport-path: .buildchain/artifacts/release-candidate-passport.json
     release-candidate-build-summary-path: .buildchain/artifacts/build-summary.json
+    release-candidate-family-evidence-required: "true"
+    release-candidate-family-evidence-root: sha256:<exact-envelope-root>
+    release-candidate-family-initiative-id: initiative-id
+    release-candidate-family-assignment-id: child-assignment-id
 ```
 
 The action validates repository, channel, source identity, platform matrix, and
@@ -208,6 +212,13 @@ identity accepts the exact source SHA, the PR merge ref SHA, or the promoted
 channel HEAD's Git tree SHA matching the passport tree hash. If validation
 fails, run or attach the verified channel PR build first instead of promoting a
 stale or unproven artifact set.
+
+If family evidence is required, the action additionally verifies the exact
+Initiative and child Assignment identities, release delivery class, source
+ancestry, qualification and terminal roots, artifact/release roots,
+continuation successor, clear invalidation state, envelope root, and candidate
+hash. Existing non-family release candidates remain compatible when none of
+the family expectation inputs are set.
 
 When enabled, the action creates or resumes a release transaction keyed by
 repository, version, source SHA, and target ref. It persists that transaction to

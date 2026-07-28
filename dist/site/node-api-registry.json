@@ -242,7 +242,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication-authority.js",
-      "digest": "sha256:3c95bd9d7abc5048fb7b456e411c08f2875fe1cf65940fa3e50689acb6781a0c",
+      "digest": "sha256:631187fd200ae4af177c85f2ae1bc61d3e367cd39bcca37d9c9451b97b229e83",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -307,7 +307,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd7-buildchain-profile",
       "export": "./kfd7-buildchain-profile",
       "target": "./packages/core/kfd7-buildchain-profile.js",
-      "digest": "sha256:60b9f844fe2f4887d5c34fe7bf8f4c9f6cb68e4a55f18d9848e3d5aefb5932e2",
+      "digest": "sha256:57513b87a7706b73ca073d549a854c33fd4cd0b89d9b2af11c8947a22fec018d",
       "summary": "Buildchain's read-only KFD-7 release-transaction Profile projection and validation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -333,7 +333,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release-candidate.js",
-      "digest": "sha256:8d47b3dc103be8056fd2c4adec637efc663896dfd55d27a4642d0ee49ad0ded2",
+      "digest": "sha256:08f0a0ee33479b4c91b2a7007f2a3e237e3937d6033c2f2437224614f13f0de9",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [

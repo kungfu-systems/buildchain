@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { normalizeControllerReceiptReferences, validateControllerReceiptReference } from "./controller-evidence.js";
 
 export const RELEASE_CANDIDATE_PASSPORT_CONTRACT = "kungfu-buildchain-release-candidate-passport";
+export const FAMILY_RELEASE_EVIDENCE_CONTRACT = "kungfu-buildchain-initiative-family-release-evidence/v1";
 
 function nowIso() {
   return new Date().toISOString();
@@ -17,6 +18,45 @@ function nonEmptyString(value, label) {
     throw new Error(`${label} must be a non-empty string`);
   }
   return normalized;
+}
+
+function sha256Root(value, label) {
+  const normalized = nonEmptyString(value, label).toLowerCase();
+  if (!/^sha256:[0-9a-f]{64}$/.test(normalized)) {
+    throw new Error(`${label} must be a sha256 content root`);
+  }
+  return normalized;
+}
+
+function gitSha(value, label) {
+  const normalized = nonEmptyString(value, label).toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(normalized)) {
+    throw new Error(`${label} must be a 40-character Git SHA`);
+  }
+  return normalized;
+}
+
+function sortedUniqueRoots(value, label, { allowEmpty = false } = {}) {
+  if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
+    throw new Error(`${label} must be ${allowEmpty ? "an" : "a non-empty"} array`);
+  }
+  const roots = value.map((root, index) => sha256Root(root, `${label}[${index}]`));
+  const expected = [...new Set(roots)].sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+  if (roots.length !== expected.length || roots.some((root, index) => root !== expected[index])) {
+    throw new Error(`${label} must be sorted and duplicate-free`);
+  }
+  return roots;
+}
+
+function requireExactKeys(value, keys, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be an object`);
+  }
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  if (actual.length !== expected.length || actual.some((key, index) => key !== expected[index])) {
+    throw new Error(`${label} has an invalid field set`);
+  }
 }
 
 function normalizeTargetChannel(value) {
@@ -131,6 +171,142 @@ function normalizeGateProfileEvidence(gateAggregate = undefined) {
   };
 }
 
+function normalizeFamilyReleaseEvidence(value = undefined) {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("familyEvidence must be an object");
+  }
+  if (value.contract !== FAMILY_RELEASE_EVIDENCE_CONTRACT) {
+    throw new Error(`familyEvidence.contract must be ${FAMILY_RELEASE_EVIDENCE_CONTRACT}`);
+  }
+  requireExactKeys(
+    value,
+    ["contract", "initiative", "child", "source", "qualification", "terminal", "continuation", "artifact", "release", "invalidation", "evidenceRoot"],
+    "familyEvidence",
+  );
+  requireExactKeys(value.initiative, ["initiativeId", "versionRoot", "familyStateRoot"], "familyEvidence.initiative");
+  requireExactKeys(value.child, ["assignmentId", "workDefinitionRoot", "deliveryClass"], "familyEvidence.child");
+  requireExactKeys(value.source, ["commitSha", "treeSha", "sourceRoot"], "familyEvidence.source");
+  requireExactKeys(value.qualification, ["status", "proofRoot", "qualificationRoot"], "familyEvidence.qualification");
+  requireExactKeys(value.terminal, ["state", "terminalRoot", "evidenceRoots"], "familyEvidence.terminal");
+  requireExactKeys(value.artifact, ["artifactRoot"], "familyEvidence.artifact");
+  requireExactKeys(value.release, ["releaseRoot"], "familyEvidence.release");
+  requireExactKeys(value.invalidation, ["status", "roots"], "familyEvidence.invalidation");
+  const terminalState = nonEmptyString(value.terminal?.state, "familyEvidence.terminal.state");
+  if (!["merged", "continued"].includes(terminalState)) {
+    throw new Error("familyEvidence.terminal.state must be merged or continued");
+  }
+  const deliveryClass = nonEmptyString(value.child?.deliveryClass, "familyEvidence.child.deliveryClass");
+  if (deliveryClass !== "release") {
+    throw new Error("familyEvidence.child.deliveryClass must be release");
+  }
+  const continuation = value.continuation === null || value.continuation === undefined
+    ? null
+    : {
+        successorAssignmentId: nonEmptyString(
+          value.continuation.successorAssignmentId,
+          "familyEvidence.continuation.successorAssignmentId",
+        ),
+        requestRoot: sha256Root(value.continuation.requestRoot, "familyEvidence.continuation.requestRoot"),
+        completedEvidenceRoots: sortedUniqueRoots(
+          value.continuation.completedEvidenceRoots,
+          "familyEvidence.continuation.completedEvidenceRoots",
+        ),
+        residualResponsibilityRoot: sha256Root(
+          value.continuation.residualResponsibilityRoot,
+          "familyEvidence.continuation.residualResponsibilityRoot",
+        ),
+      };
+  if (value.continuation !== null) {
+    requireExactKeys(
+      value.continuation,
+      ["successorAssignmentId", "requestRoot", "completedEvidenceRoots", "residualResponsibilityRoot"],
+      "familyEvidence.continuation",
+    );
+  }
+  if (terminalState === "continued" && !continuation) {
+    throw new Error("continued family evidence requires an exact residual successor");
+  }
+  if (terminalState === "merged" && continuation) {
+    throw new Error("merged family evidence must not declare a residual successor");
+  }
+  const normalized = {
+    contract: FAMILY_RELEASE_EVIDENCE_CONTRACT,
+    initiative: {
+      initiativeId: nonEmptyString(value.initiative?.initiativeId, "familyEvidence.initiative.initiativeId"),
+      versionRoot: sha256Root(value.initiative?.versionRoot, "familyEvidence.initiative.versionRoot"),
+      familyStateRoot: sha256Root(value.initiative?.familyStateRoot, "familyEvidence.initiative.familyStateRoot"),
+    },
+    child: {
+      assignmentId: nonEmptyString(value.child?.assignmentId, "familyEvidence.child.assignmentId"),
+      workDefinitionRoot: sha256Root(value.child?.workDefinitionRoot, "familyEvidence.child.workDefinitionRoot"),
+      deliveryClass,
+    },
+    source: {
+      commitSha: gitSha(value.source?.commitSha, "familyEvidence.source.commitSha"),
+      treeSha: gitSha(value.source?.treeSha, "familyEvidence.source.treeSha"),
+      sourceRoot: sha256Root(value.source?.sourceRoot, "familyEvidence.source.sourceRoot"),
+    },
+    qualification: {
+      status: nonEmptyString(value.qualification?.status, "familyEvidence.qualification.status"),
+      proofRoot: sha256Root(value.qualification?.proofRoot, "familyEvidence.qualification.proofRoot"),
+      qualificationRoot: sha256Root(
+        value.qualification?.qualificationRoot,
+        "familyEvidence.qualification.qualificationRoot",
+      ),
+    },
+    terminal: {
+      state: terminalState,
+      terminalRoot: sha256Root(value.terminal?.terminalRoot, "familyEvidence.terminal.terminalRoot"),
+      evidenceRoots: sortedUniqueRoots(
+        value.terminal?.evidenceRoots,
+        "familyEvidence.terminal.evidenceRoots",
+      ),
+    },
+    continuation,
+    artifact: {
+      artifactRoot: sha256Root(value.artifact?.artifactRoot, "familyEvidence.artifact.artifactRoot"),
+    },
+    release: {
+      releaseRoot: sha256Root(value.release?.releaseRoot, "familyEvidence.release.releaseRoot"),
+    },
+    invalidation: {
+      status: nonEmptyString(value.invalidation?.status, "familyEvidence.invalidation.status"),
+      roots: sortedUniqueRoots(value.invalidation?.roots, "familyEvidence.invalidation.roots", { allowEmpty: true }),
+    },
+  };
+  if (normalized.qualification.status !== "qualified") {
+    throw new Error("familyEvidence.qualification.status must be qualified");
+  }
+  if (normalized.invalidation.status !== "clear" || normalized.invalidation.roots.length > 0) {
+    throw new Error("familyEvidence must not contain invalidated evidence");
+  }
+  const requiredTerminalRoots = [
+    normalized.source.sourceRoot,
+    normalized.qualification.proofRoot,
+    normalized.qualification.qualificationRoot,
+    normalized.artifact.artifactRoot,
+    normalized.release.releaseRoot,
+  ];
+  for (const root of requiredTerminalRoots) {
+    if (!normalized.terminal.evidenceRoots.includes(root)) {
+      throw new Error(`familyEvidence.terminal.evidenceRoots is missing ${root}`);
+    }
+  }
+  if (continuation) {
+    for (const root of [normalized.artifact.artifactRoot, normalized.release.releaseRoot]) {
+      if (!continuation.completedEvidenceRoots.includes(root)) {
+        throw new Error(`familyEvidence.continuation.completedEvidenceRoots is missing ${root}`);
+      }
+    }
+  }
+  const evidenceRoot = `sha256:${sha256Json(normalized)}`;
+  if (sha256Root(value.evidenceRoot, "familyEvidence.evidenceRoot") !== evidenceRoot) {
+    throw new Error("familyEvidence.evidenceRoot does not match its content");
+  }
+  return { ...normalized, evidenceRoot };
+}
+
 export function createReleaseCandidatePassport({
   repository = "",
   pullRequest = {},
@@ -143,6 +319,7 @@ export function createReleaseCandidatePassport({
   buildSummary = {},
   buildchain = {},
   gateAggregate = undefined,
+  familyEvidence = undefined,
   controllerReceipts = [],
   controllerReceiptReferences = [],
   workflow = {},
@@ -157,6 +334,7 @@ export function createReleaseCandidatePassport({
     || normalizeTargetChannel(pullRequest.baseRef);
   const resolvedVersion = version || normalizedSummary.publishSource?.consumerVersion || inferVersionFromReleaseManifest(normalizedSummary);
   const gateProfileEvidence = normalizeGateProfileEvidence(gateAggregate);
+  const normalizedFamilyEvidence = normalizeFamilyReleaseEvidence(familyEvidence);
   const controllerReceiptEvidence = normalizeControllerReceiptReferences({
     receipts: controllerReceipts,
     references: controllerReceiptReferences,
@@ -207,6 +385,7 @@ export function createReleaseCandidatePassport({
       buildSummaryHash: sha256Json(normalizedSummary),
     },
     ...(gateProfileEvidence ? { gateProfileEvidence } : {}),
+    ...(normalizedFamilyEvidence ? { familyEvidence: normalizedFamilyEvidence } : {}),
     ...(controllerReceiptEvidence.length > 0 ? { controllerReceipts: controllerReceiptEvidence } : {}),
   };
   candidate.candidateHash = sha256Json({
@@ -216,6 +395,7 @@ export function createReleaseCandidatePassport({
     platformMatrix: candidate.platformMatrix,
     buildchain: candidate.buildchain,
     ...(candidate.gateProfileEvidence ? { gateProfileEvidence: candidate.gateProfileEvidence } : {}),
+    ...(candidate.familyEvidence ? { familyEvidence: candidate.familyEvidence } : {}),
     ...(candidate.controllerReceipts ? { controllerReceipts: candidate.controllerReceipts } : {}),
   });
   return candidate;
@@ -229,6 +409,10 @@ export function validateReleaseCandidatePassport({
   sourceHeadSha = "",
   buildSummary = undefined,
   requirePlatforms = true,
+  requireFamilyEvidence = false,
+  familyEvidenceRoot = "",
+  familyInitiativeId = "",
+  familyAssignmentId = "",
 } = {}) {
   const errors = [];
   const check = (condition, message) => {
@@ -279,6 +463,43 @@ export function validateReleaseCandidatePassport({
     check(Boolean(passport.gateProfileEvidence.digest), "gate profile evidence digest is required");
     check(Boolean(passport.gateProfileEvidence.matrixDigest), "gate profile matrix digest is required");
   }
+  if (requireFamilyEvidence || familyEvidenceRoot || familyInitiativeId || familyAssignmentId) {
+    check(Boolean(passport.familyEvidence), "family evidence is required");
+  }
+  if (passport.familyEvidence) {
+    try {
+      const normalized = normalizeFamilyReleaseEvidence(passport.familyEvidence);
+      check(
+        normalized.source.commitSha === passport.source?.headSha
+          || normalized.source.commitSha === passport.source?.mergeRefSha,
+        "family evidence source commit does not match the release candidate",
+      );
+      check(
+        normalized.source.treeSha === passport.source?.treeHash,
+        "family evidence source tree does not match the release candidate",
+      );
+      if (familyEvidenceRoot) {
+        check(
+          normalized.evidenceRoot === familyEvidenceRoot,
+          `family evidence root mismatch: expected ${familyEvidenceRoot}, got ${normalized.evidenceRoot}`,
+        );
+      }
+      if (familyInitiativeId) {
+        check(
+          normalized.initiative.initiativeId === familyInitiativeId,
+          `family initiative mismatch: expected ${familyInitiativeId}, got ${normalized.initiative.initiativeId}`,
+        );
+      }
+      if (familyAssignmentId) {
+        check(
+          normalized.child.assignmentId === familyAssignmentId,
+          `family assignment mismatch: expected ${familyAssignmentId}, got ${normalized.child.assignmentId}`,
+        );
+      }
+    } catch (error) {
+      check(false, `family evidence invalid: ${error.message || error}`);
+    }
+  }
   if (passport.controllerReceipts !== undefined) {
     check(Array.isArray(passport.controllerReceipts), "controllerReceipts must be an array");
     const controllerIds = new Set();
@@ -292,6 +513,19 @@ export function validateReleaseCandidatePassport({
       check(!controllerIds.has(reference.controllerId), `controllerReceipts[${index}]: duplicate controller id ${reference.controllerId}`);
       controllerIds.add(reference.controllerId);
     }
+  }
+  if (passport.familyEvidence) {
+    const expectedCandidateHash = sha256Json({
+      repository: passport.repository,
+      target: passport.target,
+      source: passport.source,
+      platformMatrix: passport.platformMatrix,
+      buildchain: passport.buildchain,
+      ...(passport.gateProfileEvidence ? { gateProfileEvidence: passport.gateProfileEvidence } : {}),
+      ...(passport.familyEvidence ? { familyEvidence: passport.familyEvidence } : {}),
+      ...(passport.controllerReceipts ? { controllerReceipts: passport.controllerReceipts } : {}),
+    });
+    check(passport.candidateHash === expectedCandidateHash, "candidate hash mismatch");
   }
   return { ok: errors.length === 0, errors };
 }
