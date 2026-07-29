@@ -564,6 +564,14 @@ and requested signature semantics, then publishes a deterministic
 `<artifact>-signing-request-<platform>-<source-sha>` request. No consumer
 workflow step is required.
 
+The request root is a Buildchain-owned generated output. After the declaration,
+lifecycle manifest, and source paths pass validation, sealing replaces that root
+before materializing the current request set. This keeps repeated jobs on a
+self-hosted runner idempotent and prevents stale requests from an earlier run
+from entering the uploaded request artifact. An output root that contains the
+workspace, working directory, lifecycle manifest, or any declared subject is
+rejected before cleanup.
+
 `profile = "auto"` resolves signable Apple artifacts such as Mach-O files,
 `.dylib`, `.framework`, `.app`, `.xpc`, `.plugin`, `.pkg`, `.dmg`, and macOS
 archives containing native code to the native `apple-developer-id` provider.

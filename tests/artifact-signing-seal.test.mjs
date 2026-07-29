@@ -93,6 +93,100 @@ kind = "binary"
   }
 });
 
+test("signing request sealing replaces stale generated output on a reused workspace", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-signing-reused-workspace-"),
+  );
+  try {
+    const artifact = path.join(workspace, "dist", "consumer-cli.tar.gz");
+    fs.mkdirSync(path.dirname(artifact), { recursive: true });
+    fs.writeFileSync(
+      path.join(workspace, "buildchain.toml"),
+      `schema = 1
+
+[[signing.artifacts]]
+id = "consumer-cli"
+path = "dist/consumer-cli.tar.gz"
+kind = "archive"
+`,
+    );
+    const manifestPath = path.join(workspace, "manifest.json");
+    const outputRoot = path.join(
+      workspace,
+      ".buildchain",
+      "signing",
+      "requests",
+    );
+    const seal = (contents) => {
+      fs.writeFileSync(artifact, contents);
+      fs.writeFileSync(
+        manifestPath,
+        `${JSON.stringify({
+          platform: { id: "macos-arm64", os: "macos", arch: "arm64" },
+          files: [
+            {
+              path: "dist/consumer-cli.tar.gz",
+              size: fs.statSync(artifact).size,
+              sha256: sha256(artifact),
+            },
+          ],
+        })}\n`,
+      );
+      return sealArtifactSigningRequests({
+        workspace,
+        manifestPath: "manifest.json",
+        outputRoot,
+        repository: "kungfu-systems/consumer",
+        sourceSha: SOURCE_SHA,
+        sourceTreeSha: TREE_SHA,
+        runtimeSha: RUNTIME_SHA,
+        platformId: "macos-arm64",
+      });
+    };
+
+    seal("first archive\n");
+    const stalePath = path.join(outputRoot, "stale-request", "payload.bin");
+    fs.mkdirSync(path.dirname(stalePath), { recursive: true });
+    fs.writeFileSync(stalePath, "stale\n");
+
+    const second = seal("second archive\n");
+    const request = JSON.parse(
+      fs.readFileSync(path.join(outputRoot, second.requests[0].path), "utf8"),
+    );
+    assert.equal(fs.existsSync(stalePath), false);
+    assert.equal(
+      fs.readFileSync(
+        path.join(outputRoot, request.artifact.transport.file),
+        "utf8",
+      ),
+      "second archive\n",
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("signing request sealing refuses an output root that contains sources", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-signing-unsafe-output-"),
+  );
+  try {
+    fs.writeFileSync(path.join(workspace, "buildchain.toml"), "schema = 1\n");
+    assert.throws(
+      () =>
+        sealArtifactSigningRequests({
+          workspace,
+          outputRoot: ".",
+          platformId: "linux-x64",
+        }),
+      /must not contain the workspace/,
+    );
+    assert.equal(fs.existsSync(path.join(workspace, "buildchain.toml")), true);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("signing request sealing fails when lifecycle evidence is stale", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-signing-stale-"),
