@@ -7,7 +7,7 @@ import test from "node:test";
 import { spawnSync } from "node:child_process";
 
 import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
-import { githubRequest } from "../scripts/dispatch-artifact-signing-authority.mjs";
+import { githubRequest, resolveAuthorityDispatchRef } from "../scripts/dispatch-artifact-signing-authority.mjs";
 import { finalizeNativeArtifactSigningResult } from "../scripts/finalize-native-artifact-signing-result.mjs";
 import { inspectArtifactSigningRequests } from "../scripts/inspect-artifact-signing-requests.mjs";
 import { importArtifactSigningResults } from "../scripts/import-artifact-signing-results.mjs";
@@ -15,6 +15,11 @@ import { materializeArtifactSigningRequest } from "../scripts/materialize-artifa
 import { verifyArtifactSigningResults } from "../scripts/verify-artifact-signing-results.mjs";
 
 const FORMAL_AUTHORITY_REF = "authority/v3/v3.0/artifact-signing";
+
+test("exact runtime pins dispatch through the formal protected authority ref", () => {
+  assert.equal(resolveAuthorityDispatchRef("4".repeat(40)), FORMAL_AUTHORITY_REF);
+  assert.equal(resolveAuthorityDispatchRef(FORMAL_AUTHORITY_REF), FORMAL_AUTHORITY_REF);
+});
 
 function digest(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
