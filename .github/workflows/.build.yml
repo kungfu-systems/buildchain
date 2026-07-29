@@ -32,12 +32,17 @@ on:
         type: string
         required: false
       runner-preset:
-        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, aws-us-codebuild-linux, or custom with platforms-json"
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, aws-us-codebuild-linux, aws-us-ec2-windows-jit, or custom with platforms-json"
         default: "github-hosted"
         type: string
         required: false
       aws-codebuild-project:
         description: "Required CodeBuild project name for the explicit aws-us-codebuild-linux burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-windows-runner-label:
+        description: "Required unique card-scoped JIT label for the explicit aws-us-ec2-windows-jit burst preset"
         default: ""
         type: string
         required: false
@@ -816,6 +821,7 @@ jobs:
           BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
           BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
           BUILDCHAIN_AWS_CODEBUILD_PROJECT: ${{ inputs.aws-codebuild-project }}
+          BUILDCHAIN_AWS_EC2_WINDOWS_RUNNER_LABEL: ${{ inputs.aws-ec2-windows-runner-label }}
           BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
           BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
@@ -1088,6 +1094,14 @@ jobs:
           BUILDCHAIN_BURST_RUN_ATTEMPT: ${{ github.run_attempt }}
           BUILDCHAIN_BURST_JOB: ${{ github.job }}
 
+      - name: Record AWS Windows JIT runner provenance
+        if: ${{ matrix.platform.provider == 'aws-ec2-windows-jit' }}
+        shell: pwsh
+        run: node .buildchain/runtime/scripts/aws-windows-jit.mjs evidence
+        env:
+          BUILDCHAIN_WINDOWS_JIT_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-windows-jit.json
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+
       - name: Prepare AWS CodeBuild native toolchain
         if: ${{ matrix.platform.provider == 'aws-codebuild' }}
         run: node .buildchain/runtime/scripts/aws-codebuild-toolchain.mjs prepare
@@ -1284,6 +1298,15 @@ jobs:
           path: |
             .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
             .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload AWS Windows JIT runner provenance
+        if: ${{ always() && matrix.platform.provider == 'aws-ec2-windows-jit' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-aws-windows-jit-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-windows-jit.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 

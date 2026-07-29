@@ -134,6 +134,49 @@ The source-bound evidence and deterministic phase receipt are:
 - `evidence/aws-us-elastic-runner-burst-plane/linux-codebuild-qualification-input.json`
 - `evidence/aws-us-elastic-runner-burst-plane/linux-codebuild-qualification-receipt.json`
 
+## Phase 2 contract
+
+The Windows phase uses the explicit `aws-us-ec2-windows-jit` runner preset.
+Its caller supplies one bounded label under
+`aws-us-ec2-windows-jit-<qualification-id>`, and Buildchain resolves exactly
+one Windows x64 native lane. The reusable trust gate still runs on a
+GitHub-hosted runner before the JIT label can select EC2.
+
+The provider creates repository-level GitHub JIT configuration for
+`kungfu-systems/kungfu`. The encoded configuration is never placed in EC2 user
+data, a tag, a command log, or an artifact. The operator writes it to a
+card-scoped SSM SecureString under `/kungfu/burst/windows/`; the instance role
+can read and delete only that prefix. Bootstrap reads the value once, deletes
+the parameter immediately, and passes it only to the pinned runner process.
+
+Each runner uses:
+
+- Amazon's current Windows Server 2025 Full Base AMI, resolved through the
+  public SSM AMI parameter and retained by exact AMI id and name;
+- `c7i.4xlarge`, one instance and one JIT runner per job;
+- GitHub Actions Runner 2.336.0 with the official Windows x64 SHA256;
+- pinned PortableGit 2.55.0.3 with its GitHub release SHA256;
+- a Microsoft Authenticode-verified Visual Studio 2022 Build Tools bootstrap;
+- IMDSv2, an encrypted root volume with delete-on-termination, no inbound
+  security-group rule, no key pair, and no warm Auto Scaling capacity.
+
+Runner diagnostics and a redacted lifecycle record are uploaded to the
+provider's encrypted, private evidence bucket. The runner process exits after
+one job, Windows shuts down, and EC2's instance-initiated shutdown behavior is
+set to `terminate`. A five-minute reaper terminates card-owned stopped or
+three-hour-old instances and deletes only their dedicated JIT parameter.
+
+At the 2026-07-29 AWS Price List rate of USD 1.45 per Windows
+`c7i.4xlarge` hour, six accepted three-hour instances reserve USD 26.10. The
+two-instance race envelope reserves another USD 8.70, producing a USD 34.80
+worst case below the dedicated USD 40 budget. Budget notifications at 80% and
+95% invoke the same card-scoped global kill switch.
+
+Qualification requires one runner-profile smoke, three trusted exact-source
+full Windows jobs, independent cancellation and timeout cleanup exercises, and
+zero repository runner, EC2 instance, disposable volume, min capacity, and
+desired capacity within 15 minutes of the final job.
+
 ## Provider lifecycle
 
 The infrastructure template is
