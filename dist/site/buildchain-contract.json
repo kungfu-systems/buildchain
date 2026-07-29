@@ -319,7 +319,7 @@
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment"
       ],
       "breakingDigest": "sha256:425f8d3d1ba205dd6fe35a20f1dc6dad7d7c563872283e3af79fea4d5c475692",
-      "auditDigest": "sha256:d043897d3d2bd242a83a362fccac408b4bd38e1e2fb50e7cae6a2145a6c0bd51"
+      "auditDigest": "sha256:5eb6e87c04cbffd9c52682498f9c81742a22482455629cac4881263164584bf0"
     },
     {
       "contractVersion": 1,
@@ -705,7 +705,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:ced1a9c64da73b5fba35f2a9ab8e68a6883b69ce71fc77a1633a373bf72cdd1a"
+      "auditDigest": "sha256:ee8b6261e1ea590ca54fae40199c5f829519ad7fd23820153a082534fbde57d6"
     },
     {
       "contractVersion": 1,
@@ -3380,5 +3380,5 @@
     }
   ],
   "compatibilityDigest": "sha256:9770baa99ba374e9dbd743ca9624a72137513b8c4e65af1fbf2160cb3ef51d9d",
-  "contractDigest": "sha256:15468e36e1d72d9fa40cf1b1f3720696b855a86d5da3f3d55c3cda5d7f4cfe03"
+  "contractDigest": "sha256:d869d64fbedaa3f8d4ae0d7e61e54c7bfb208ded74aaabbcdae5b4899758cddc"
 }

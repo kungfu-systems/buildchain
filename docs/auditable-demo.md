@@ -41,6 +41,18 @@ public-projection.json
 scene.json
 ```
 
+It may additionally emit one declared `terminal-capture.json` using
+`kungfu.terminal-capture/v1`. The optional capture is bounded to 60 seconds,
+fixed 80-200 by 24-80 terminal cells, 10,000 events, and 4 MiB of canonical
+base64 bytes. It must contain a passed completion sentinel and an explicitly
+empty authority-grant list. Existing three-file adapters remain valid.
+
+Terminal bytes are volatile observations, not Work, Warrant, capability, or
+publication authority. First-party or System identity, KFD compliance, Product
+System metadata, package metadata, scan output, registry history, and
+standalone generation remain non-authoritative unless an exact higher-level
+contract independently admits them.
+
 The adapter must not rebuild or rerun the product. It receives:
 
 ```text
@@ -78,7 +90,8 @@ The Gate:
 - resolves and downloads one exact same-run GitHub Artifact;
 - invokes the checked-in adapter by argv, never as an evaluated shell string;
 - rejects undeclared adapter outputs, symlinks, invalid UTF-8, invalid scene or
-  projection schemas, out-of-range transcript references, and oversized input;
+  projection or terminal-capture schemas, implicit capture grants,
+  out-of-range transcript references, and oversized input;
 - derives a one-second compatibility scene from the consumer projection;
 - anonymously pulls an immutable `image@sha256:digest` renderer;
 - runs it as non-root with `--network none`, a read-only root filesystem, and a
@@ -104,6 +117,11 @@ renderer checksums, passed Gate receipt, a versioned media receipt, and
 distribution checksums. A web-delivery profile also retains
 `media-inspection.json`, whose content root is bound into the receipt.
 `render-media: false` does not weaken or skip the Gate.
+
+When the Gate bundle contains a qualified terminal capture, the render job
+passes it read-only to the immutable renderer. The renderer manifest binds the
+capture root and terminal-state-machine version, but raw capture bytes remain
+in the Gate bundle rather than being copied into the public media bundle.
 
 ## Media Qualification Profiles
 

@@ -22,6 +22,19 @@ const REQUIRED_ADAPTER_FILES = [
   "public-projection.json",
   "scene.json",
 ];
+const OPTIONAL_ADAPTER_FILES = ["terminal-capture.json"];
+const MAX_TERMINAL_CAPTURE_BYTES = 4 * 1024 * 1024;
+const MAX_TERMINAL_CAPTURE_EVENTS = 10_000;
+const TERMINAL_CAPTURE_NON_AUTHORITIES = [
+  "first-party-identity",
+  "system-identity",
+  "kfd-compliance",
+  "product-system-metadata",
+  "package-metadata",
+  "registry-history",
+  "scan-output",
+  "standalone-generation",
+];
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -155,6 +168,19 @@ function text(value, minimum, maximum, label) {
   return value;
 }
 
+function decodeBase64(value, label) {
+  invariant(
+    typeof value === "string"
+      && value.length > 0
+      && value.length <= MAX_TERMINAL_CAPTURE_BYTES * 2
+      && /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value),
+    `${label} must be canonical base64`,
+  );
+  const decoded = Buffer.from(value, "base64");
+  invariant(decoded.toString("base64") === value, `${label} must be canonical base64`);
+  return decoded;
+}
+
 function validateScene(value) {
   exactKeys(
     value,
@@ -223,6 +249,81 @@ function validateProjection(value, scene, transcriptLineCount) {
   };
 }
 
+function validateTerminalCapture(value, scene) {
+  exactKeys(
+    value,
+    [
+      "schema",
+      "command",
+      "dimensions",
+      "durationMs",
+      "encoding",
+      "events",
+      "completion",
+      "exitCode",
+      "authority",
+    ],
+    [],
+    "terminalCapture",
+  );
+  invariant(value.schema === "kungfu.terminal-capture/v1", "unsupported terminal capture schema");
+  text(value.command, 1, 160, "terminalCapture.command");
+  exactKeys(value.dimensions, ["columns", "rows"], [], "terminalCapture.dimensions");
+  integer(value.dimensions.columns, 80, 200, "terminalCapture.dimensions.columns");
+  integer(value.dimensions.rows, 24, 80, "terminalCapture.dimensions.rows");
+  const durationMs = integer(value.durationMs, 500, 60000, "terminalCapture.durationMs");
+  invariant(
+    durationMs <= scene.durationMs && scene.durationMs - durationMs <= 2000,
+    "terminal capture duration must end within two seconds of the scene",
+  );
+  invariant(value.encoding === "base64", "terminalCapture.encoding must be base64");
+  invariant(
+    Array.isArray(value.events)
+      && value.events.length > 0
+      && value.events.length <= MAX_TERMINAL_CAPTURE_EVENTS,
+    `terminalCapture.events must contain 1 through ${MAX_TERMINAL_CAPTURE_EVENTS} events`,
+  );
+  let previousAtMs = -1;
+  let totalBytes = 0;
+  for (const [index, event] of value.events.entries()) {
+    exactKeys(event, ["atMs", "data"], [], `terminalCapture.events[${index}]`);
+    const atMs = integer(event.atMs, 0, durationMs - 1, `terminalCapture.events[${index}].atMs`);
+    invariant(atMs >= previousAtMs, "terminal capture event timestamps must be monotonic");
+    invariant(index > 0 || atMs === 0, "the first terminal capture event must start at zero");
+    previousAtMs = atMs;
+    totalBytes += decodeBase64(event.data, `terminalCapture.events[${index}].data`).length;
+    invariant(totalBytes <= MAX_TERMINAL_CAPTURE_BYTES, "terminal capture exceeds the 4 MiB byte bound");
+  }
+  exactKeys(
+    value.completion,
+    ["schema", "status", "reportRoot", "eventCount"],
+    [],
+    "terminalCapture.completion",
+  );
+  invariant(
+    value.completion.schema === "kungfu.agent-work-lab.tui-autoplay/v1"
+      && value.completion.status === "passed"
+      && DIGEST_PATTERN.test(value.completion.reportRoot),
+    "terminal capture completion sentinel is not a passed Agent Work Lab autoplay",
+  );
+  integer(value.completion.eventCount, 1, 100_000, "terminalCapture.completion.eventCount");
+  invariant(value.exitCode === 0, "terminal capture exitCode must be zero");
+  exactKeys(value.authority, ["classification", "grants", "nonAuthorities"], [], "terminalCapture.authority");
+  invariant(
+    value.authority.classification === "volatile-terminal-observation",
+    "terminal capture authority classification must remain observation-only",
+  );
+  invariant(
+    Array.isArray(value.authority.grants) && value.authority.grants.length === 0,
+    "terminal capture must not grant authority",
+  );
+  invariant(
+    JSON.stringify(value.authority.nonAuthorities) === JSON.stringify(TERMINAL_CAPTURE_NON_AUTHORITIES),
+    "terminal capture must declare every identity and metadata non-authority",
+  );
+  return value;
+}
+
 function validateSourceCoordinate(value) {
   exactKeys(
     value,
@@ -276,11 +377,21 @@ function validateAdapterOutput(output, strict = true) {
     scene,
     lines.length,
   );
+  const terminalCapturePath = path.join(output, "terminal-capture.json");
+  const terminalCapture = fs.existsSync(terminalCapturePath)
+    ? validateTerminalCapture(readJson(terminalCapturePath, "terminal capture"), scene)
+    : null;
   if (strict) {
-    const allowed = new Set(REQUIRED_ADAPTER_FILES);
+    const allowed = new Set([...REQUIRED_ADAPTER_FILES, ...OPTIONAL_ADAPTER_FILES]);
     for (const member of listFiles(output)) invariant(allowed.has(member), `undeclared adapter output: ${member}`);
   }
-  return { transcript: transcript.endsWith("\n") ? transcript : `${transcript}\n`, lines, scene, projection };
+  return {
+    transcript: transcript.endsWith("\n") ? transcript : `${transcript}\n`,
+    lines,
+    scene,
+    projection,
+    terminalCapture,
+  };
 }
 
 function parseArguments(argv) {
@@ -355,6 +466,9 @@ function runAdapter(values) {
     fs.writeFileSync(path.join(output, "complete-transcript.txt"), normalized.transcript);
     writeJson(path.join(output, "scene.json"), normalized.scene);
     writeJson(path.join(output, "public-projection.json"), normalized.projection);
+    if (normalized.terminalCapture) {
+      writeJson(path.join(output, "terminal-capture.json"), normalized.terminalCapture);
+    }
     writeJson(path.join(diagnostics, "adapter.json"), {
       schema: "buildchain.auditable-demo-adapter-execution/v1",
       path: adapterRelative,
@@ -885,6 +999,12 @@ function finalizeGate(values) {
   fs.writeFileSync(path.join(output, "complete-transcript.txt"), normalized.transcript);
   writeJson(path.join(output, "scene.json"), normalized.scene);
   writeJson(path.join(output, "public-projection.json"), normalized.projection);
+  if (normalized.terminalCapture) {
+    copyFile(
+      path.join(adapterOutput, "terminal-capture.json"),
+      path.join(output, "terminal-capture.json"),
+    );
+  }
   copyFile(sourceCoordinatePath, path.join(output, "source-artifact.json"));
   copyFile(path.join(diagnostics, "adapter.json"), path.join(output, "adapter.json"));
   for (const name of listFiles(smokeOutput)) {
@@ -914,6 +1034,14 @@ function finalizeGate(values) {
       transcript: sha256(readRegular(path.join(output, "complete-transcript.txt"), "transcript")),
       projection: sha256(readRegular(path.join(output, "public-projection.json"), "projection")),
       scene: sha256(readRegular(path.join(output, "scene.json"), "scene")),
+      ...(normalized.terminalCapture
+        ? {
+          terminalCapture: {
+            schema: normalized.terminalCapture.schema,
+            root: sha256(readRegular(path.join(output, "terminal-capture.json"), "terminal capture")),
+          },
+        }
+        : {}),
       evidenceClass: normalized.projection.evidenceClass,
       claimBoundary: normalized.projection.claimBoundary,
     },
@@ -945,6 +1073,19 @@ function verifyGate(values) {
       && receipt.qualifiedInputs?.scene === sha256(readRegular(path.join(bundle, "scene.json"), "scene")),
     "gate qualified input roots mismatch",
   );
+  const qualifiedCapture = receipt.qualifiedInputs?.terminalCapture;
+  invariant(
+    Boolean(qualifiedCapture) === Boolean(normalized.terminalCapture),
+    "gate terminal capture presence drifted",
+  );
+  if (normalized.terminalCapture) {
+    invariant(
+      qualifiedCapture.schema === normalized.terminalCapture.schema
+        && qualifiedCapture.root
+          === sha256(readRegular(path.join(bundle, "terminal-capture.json"), "terminal capture")),
+      "gate terminal capture root mismatch",
+    );
+  }
   invariant(receipt.qualifiedInputs.evidenceClass === normalized.projection.evidenceClass, "gate evidence class drifted");
 }
 
@@ -973,10 +1114,14 @@ function finalizeMedia(values) {
     "--renderer-image": rendererImage,
     "--source-sha": sourceSha,
   });
+  const terminalCapturePath = path.join(gateBundle, "terminal-capture.json");
   const verifiedRenderer = verifyRendererOutput(renderOutput, rendererImage, {
     scene: path.join(gateBundle, "scene.json"),
     transcript: path.join(gateBundle, "complete-transcript.txt"),
     projection: path.join(gateBundle, "public-projection.json"),
+    ...(fs.existsSync(terminalCapturePath)
+      ? { terminalCapture: terminalCapturePath }
+      : {}),
   }, {
     mediaProfile,
     inspectMedia: mediaInspection?.inspectMedia,

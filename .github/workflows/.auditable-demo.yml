@@ -351,6 +351,10 @@ jobs:
           docker pull "${RENDERER_IMAGE}"
           mkdir -p render-work
           chmod 0777 render-work
+          capture_args=()
+          if [ -f "${GITHUB_WORKSPACE}/gate-bundle/terminal-capture.json" ]; then
+            capture_args=(--terminal-capture /input/terminal-capture.json)
+          fi
           docker run --rm --network none --read-only \
             --tmpfs /tmp:rw,noexec,nosuid,size=1g \
             --volume "${GITHUB_WORKSPACE}/gate-bundle:/input:ro" \
@@ -360,6 +364,7 @@ jobs:
             --scene /input/scene.json \
             --transcript /input/complete-transcript.txt \
             --projection /input/public-projection.json \
+            "${capture_args[@]}" \
             --output /output \
             --renderer-image "${RENDERER_IMAGE}"
 
