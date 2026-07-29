@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-29
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -585,6 +585,15 @@ immutable result, replaces only the declared artifact with the returned final
 bytes, and then runs the consumer's normal verification. Platform manifests,
 KFD evidence, checksums, and Release Passport inputs therefore observe the
 final signed artifact rather than the pre-signing build output.
+
+For a standalone Mach-O request, the authority requires strict Developer ID
+verification, the declared Team ID, hardened runtime, and an `Accepted`
+`notarytool` result for the exact submission. Apple creates the notarization
+ticket for that binary and publishes it online, but
+[standalone binaries do not support stapling](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow).
+Buildchain therefore records
+`standalone-notary-ticket-online` and does not misapply app-bundle
+`spctl --assess --type execute` semantics to the raw executable.
 
 The durable v3 authority runtime is
 `authority/v3/v3.0/artifact-signing`. It is channel-neutral: alpha and stable
