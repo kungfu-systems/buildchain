@@ -91,6 +91,11 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
     target("dev/v0/v0.1", [check("check / check")], true),
     target("alpha/v0/v0.1", [check("check / check")], true),
   ],
+  "paper-kfd-machine-life-roadmap": [
+    target("main", [check("check / check")], false),
+    target("dev/v0/v0.1", [check("check / check")], true),
+    target("alpha/v0/v0.1", [check("check / check")], true),
+  ],
   "paper-kungfu-product-white-paper": [
     target("main", [check("check / check")], false),
     target("dev/v0/v0.1", [check("check / check")], true),
@@ -501,9 +506,9 @@ export function createBuildchainGithubGovernanceAuthority() {
       privateRepositoryPolicy: "non-authoritative-until-plan-capability-qualifies",
       unknownRepositoryPolicy: "non-authoritative-until-explicit-admission",
       baseline: {
-        observedOn: "2026-07-24",
-        repositoryCount: 16,
-        publicCount: 13,
+        observedOn: "2026-07-29",
+        repositoryCount: 17,
+        publicCount: 14,
         privateCount: 3,
         authoritativePublicTargetCount: Object.values(PUBLIC_REPOSITORY_TARGETS)
           .reduce((count, targets) => count + targets.length, 0),
