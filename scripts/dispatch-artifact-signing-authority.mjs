@@ -17,6 +17,12 @@ function repository(value, label) {
 }
 
 const TRANSIENT_GITHUB_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
+const DEFAULT_ARTIFACT_SIGNING_AUTHORITY_REF = "authority/v3/v3.0/artifact-signing";
+
+export function resolveAuthorityDispatchRef(value) {
+  const ref = required(value, "authority ref");
+  return /^[0-9a-f]{40}$/u.test(ref) ? DEFAULT_ARTIFACT_SIGNING_AUTHORITY_REF : ref;
+}
 
 function retryDelayMs(attempt) {
   return Math.min(1_000 * (2 ** (attempt - 1)), 10_000);
@@ -98,7 +104,7 @@ export async function dispatchArtifactSigningAuthority({
   const authToken = required(token, "Buildchain authority dispatch token");
   const authorityRepo = repository(authorityRepository, "authority repository");
   const sourceRepo = repository(sourceRepository, "source repository");
-  const ref = required(authorityRef, "authority ref");
+  const ref = resolveAuthorityDispatchRef(authorityRef);
   const runtime = required(runtimeSha, "Buildchain runtime SHA");
   if (!/^[0-9a-f]{40}$/u.test(runtime)) throw new Error("Buildchain runtime SHA must be exact");
   const correlationId = `${required(sourceRunId, "source run ID")}-${required(sourceRunAttempt, "source run attempt")}-${runtime.slice(0, 12)}-${required(requestArtifact, "request artifact").replace(/[^A-Za-z0-9._-]+/gu, "-")}`;
