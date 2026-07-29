@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-aws-runner-burst/v1",
+  "kind": "phase-verification",
+  "phase": "linux-codebuild-poc-under-usd-50",
+  "status": "passed",
+  "qualifying": true,
+  "metrics": {
+    "acceptedJobs": 10,
+    "peakConcurrency": 2,
+    "p95QueueStartSeconds": 0.696,
+    "actualIncrementalSpendUsd": 25.798,
+    "idleBuilds": 0,
+    "activeCloudResources": 0
+  },
+  "issues": [],
+  "planDigest": "sha256:cad90ec13cc76eb9dba2fb779ec1cda7c0ed9047e5680bcee4646b314c87d17a",
+  "observedAt": "2026-07-29T00:18:00.000Z",
+  "digest": "sha256:80db1e7a8a7ef814104812dd03071f9962d96999df7df1959c784c68d2916bb8"
+}

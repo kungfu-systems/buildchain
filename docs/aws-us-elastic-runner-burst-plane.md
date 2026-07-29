@@ -7,8 +7,8 @@ source_level: local-files-and-provider-docs
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: unreviewed
-last_reviewed: 2026-07-28
+review_state: self-reviewed
+last_reviewed: 2026-07-29
 ---
 
 # AWS US elastic runner burst plane
@@ -112,6 +112,27 @@ Linux qualification requires:
 `node scripts/aws-runner-burst.mjs verify-linux --input <snapshot.json>` fails
 closed when cost telemetry is missing/stale or any acceptance predicate is
 false.
+
+### Phase 1 recorded outcome
+
+The Linux phase passed on 2026-07-29. Ten trusted exact-source Kungfu jobs
+completed successfully, including four overlapping two-job waves. The observed
+CodeBuild queue-to-start p95 was 0.696 seconds. All 16 paid executions,
+including six diagnostic runs, produced a conservative incremental compute
+upper bound of USD 25.798 by rounding every execution up to a whole minute at
+the live AWS Price List rate.
+
+The global webhook kill switch was exercised after the tenth qualifying job.
+The project then reported no webhook or in-progress build, and the card-owned
+EC2 inventory was empty. AWS Billing and Cost Explorer still reported an
+estimated zero during their provider ingestion delay; the retained
+execution-derived upper bound is therefore the immediate cost proof and must be
+reconciled with the eventual AWS line item in the final campaign report.
+
+The source-bound evidence and deterministic phase receipt are:
+
+- `evidence/aws-us-elastic-runner-burst-plane/linux-codebuild-qualification-input.json`
+- `evidence/aws-us-elastic-runner-burst-plane/linux-codebuild-qualification-receipt.json`
 
 ## Provider lifecycle
 
