@@ -115,10 +115,10 @@ function qualifyingInput(overrides = {}) {
 test("authority descriptor freezes the TCB, baseline, plan boundary, and non-claims", () => {
   const descriptor = BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY;
   assert.equal(descriptor.organization, "kungfu-systems");
-  assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 16);
-  assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 13);
+  assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 17);
+  assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 14);
   assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 3);
-  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 35);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 38);
   assert.deepEqual(descriptor.planCapability.privateRepositories, ["team", "enterprise"]);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
@@ -390,6 +390,19 @@ test("authoritative target registry detects default drift and constrains private
   assert.ok(publicTargets.includes("authority/v3/v3.0/artifact-signing"));
   assert.ok(publicTargets.includes("publish-gate/major"));
   assert.ok(publicTargets.includes("dev/v2/v2.15"));
+
+  const machineLifePaperTargets = resolveGithubGovernanceTargetRefs({
+    repository: {
+      fullName: "kungfu-systems/paper-kfd-machine-life-roadmap",
+      visibility: "public",
+      defaultBranch: "main",
+    },
+  });
+  assert.deepEqual(machineLifePaperTargets, [
+    "alpha/v0/v0.1",
+    "dev/v0/v0.1",
+    "main",
+  ]);
 
   const privateTargets = resolveGithubGovernanceTargetRefs({
     repository: {
