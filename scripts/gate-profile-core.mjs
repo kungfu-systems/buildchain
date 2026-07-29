@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 export const GATE_MATRIX_CONTRACT = "buildchain.shifu-gate-matrix/v1";
 export const GATE_AGGREGATE_CONTRACT = "buildchain.shifu-gate-aggregate/v1";
+export const GATE_JOB_CONTROL_PLANE_OVERHEAD_MINUTES = 30;
 
 function stableValue(value) {
   if (Array.isArray(value)) return value.map(stableValue);
@@ -265,7 +266,11 @@ export function createGateExecutionMatrix({
       planDigest: inspected.planDigest,
       timeoutMinutes: Math.max(
         1,
-        Math.min(360, Math.ceil(timeoutSeconds / 60)),
+        Math.min(
+          360,
+          Math.ceil(timeoutSeconds / 60) +
+            GATE_JOB_CONTROL_PLANE_OVERHEAD_MINUTES,
+        ),
       ),
       gates: inspected.gates.map((gate) => ({
         id: gate.id,
