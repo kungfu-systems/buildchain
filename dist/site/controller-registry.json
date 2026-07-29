@@ -150,6 +150,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "aws-ec2-windows-runner-label": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "build-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -378,7 +382,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:c1cb58b018947b187ddf1dd870dbe9d43faba75ea31ca87babba76c2ada949cc"
+      "digest": "sha256:8841b7e7d9cb1bf14b332515842b40b9c3109b100bbafb74920c7b188e298877"
     },
     {
       "schemaVersion": 1,
@@ -452,6 +456,10 @@
         },
         "aws-codebuild-project": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-windows-runner-label": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "build-command": {
@@ -684,7 +692,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:a9852223d2cd081d3790b4e245e727fa4e0c93ae5731d887ee622fb270612ffa"
+      "digest": "sha256:13f8a0364d3f0bd8a3c1e00523f3249df8b541c33bc42c846c315fbfe3cc619a"
     },
     {
       "schemaVersion": 1,
@@ -1793,5 +1801,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:e98b74ca4734811ffc92ebc6b9bed8b33bd9f1433b6a632422b1d440d1d333f5"
+  "digest": "sha256:b7badaede80942ce069c6c5167821eed58913de1d5fce1cdadd4c14205e7ca46"
 }

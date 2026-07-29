@@ -2336,6 +2336,15 @@ test("runner presets resolve to explicit matrices", () => {
     "kungfu-buildchain-linux-burst-poc",
   );
 
+  const windowsJit = resolveRunnerMatrix({
+    runnerPreset: "aws-us-ec2-windows-jit",
+    awsEc2WindowsRunnerLabel: "aws-us-ec2-windows-jit-full-01",
+  });
+  assert.equal(windowsJit.runnerPreset, "aws-us-ec2-windows-jit");
+  assert.equal(windowsJit.platformCount, 1);
+  assert.equal(windowsJit.platforms[0].provider, "aws-ec2-windows-jit");
+  assert.match(windowsJit.platforms[0].runner, /windows-jit-full-01/);
+
   const custom = resolveRunnerMatrix({
     platformsJson:
       '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',
@@ -2356,6 +2365,21 @@ test("AWS CodeBuild runner preset fails closed without an exact project", () => 
         awsCodeBuildProject: "not valid",
       }),
     /requires a valid aws-codebuild-project/,
+  );
+});
+
+test("AWS Windows EC2 JIT preset fails closed without a card-scoped label", () => {
+  assert.throws(
+    () => resolveRunnerMatrix({ runnerPreset: "aws-us-ec2-windows-jit" }),
+    /runner label must match/,
+  );
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        runnerPreset: "aws-us-ec2-windows-jit",
+        awsEc2WindowsRunnerLabel: "kungfu-build-v4-windows-x64",
+      }),
+    /runner label must match/,
   );
 });
 

@@ -25,6 +25,8 @@ export function resolveBuildContractCli() {
       platformsJson: process.env.BUILDCHAIN_PLATFORMS_JSON || "",
       awsCodeBuildProject:
         process.env.BUILDCHAIN_AWS_CODEBUILD_PROJECT || "",
+      awsEc2WindowsRunnerLabel:
+        process.env.BUILDCHAIN_AWS_EC2_WINDOWS_RUNNER_LABEL || "",
       linuxContainerPreset: process.env.BUILDCHAIN_LINUX_CONTAINER_PRESET || "",
       linuxContainerImage: process.env.BUILDCHAIN_LINUX_CONTAINER_IMAGE || "",
     });

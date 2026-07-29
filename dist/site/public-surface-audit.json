@@ -448,6 +448,7 @@
           "artifact-retention-days",
           "artifact-transfer-mode",
           "aws-codebuild-project",
+          "aws-ec2-windows-runner-label",
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
@@ -497,7 +498,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 61,
+        "inputCount": 62,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1050,6 +1051,7 @@
           "artifact-retention-days",
           "artifact-transfer-mode",
           "aws-codebuild-project",
+          "aws-ec2-windows-runner-label",
           "build-command",
           "buildchain-alpha-contract-lock-path",
           "buildchain-channel",
@@ -1102,7 +1104,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 64,
+        "inputCount": 65,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -3437,8 +3439,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "74e9711f381c5207078b9f8f7fc108602fbf0ffc02f8a6a0c81179a2c408bdf5",
-    "pageRegistryDigest": "eca4ee82d26656846e497447386fb0211432726fd8e49044cd148ef2af6e04fc"
+    "workflowRegistryDigest": "d763d59d9cbd5e86ebf9dbe8ef84d37d34c43fb42d86c293600c06770dd72bcf",
+    "pageRegistryDigest": "cba61166cd5882a025217d536e1a123e7cad8508ca0fc267ade705dcd681b128"
   },
   "comparison": {
     "missingCliRegistry": [],

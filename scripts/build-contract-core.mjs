@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { windowsJitRunnerLabel } from "./aws-windows-jit-core.mjs";
 
 export const RUNNER_PRESETS = Object.freeze({
   "github-hosted": [
@@ -38,6 +39,16 @@ export const RUNNER_PRESETS = Object.freeze({
       platform: "linux",
       provider: "aws-codebuild",
       runner: '["aws-codebuild-dynamic"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+  ],
+  "aws-us-ec2-windows-jit": [
+    {
+      id: "windows-x64",
+      name: "Windows x64 (AWS EC2 one-job JIT)",
+      platform: "windows",
+      provider: "aws-ec2-windows-jit",
+      runner: '["self-hosted","Windows","X64","aws-ec2-jit-dynamic"]',
       capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
     },
   ],
@@ -749,6 +760,7 @@ export function resolveRunnerMatrix({
   runnerPreset = "github-hosted",
   platformsJson = "",
   awsCodeBuildProject = "",
+  awsEc2WindowsRunnerLabel = "",
   linuxContainerPreset = "",
   linuxContainerImage = "",
 } = {}) {
@@ -803,6 +815,14 @@ export function resolveRunnerMatrix({
       );
     }
     resolvedPlatforms = platforms.map((platform) => ({ ...platform, project }));
+  }
+  if (preset === "aws-us-ec2-windows-jit") {
+    const runnerLabel = windowsJitRunnerLabel(awsEc2WindowsRunnerLabel);
+    resolvedPlatforms = platforms.map((platform) => ({
+      ...platform,
+      runnerLabel,
+      runner: JSON.stringify(["self-hosted", "Windows", "X64", runnerLabel]),
+    }));
   }
   const containerPlatforms = linuxContainer.enabled
     ? resolvedPlatforms.filter(platformIsLinux)

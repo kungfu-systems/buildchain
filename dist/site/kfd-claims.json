@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "09aab6158f97e54b363e564b7617a81fc1f20e7a0db96f7ca0a422aed7d78c96",
+    "sha256": "2f7c4a7953da20e7fda23bde335b2caf4e0dd7caab269025dfc4d3e69d08dcd8",
     "summary": {
       "cliCommandCount": 79,
       "workflowCount": 47,
@@ -227,7 +227,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "09aab6158f97e54b363e564b7617a81fc1f20e7a0db96f7ca0a422aed7d78c96",
+      "sha256": "2f7c4a7953da20e7fda23bde335b2caf4e0dd7caab269025dfc4d3e69d08dcd8",
       "summary": {
         "cliCommandCount": 79,
         "workflowCount": 47,
@@ -2593,7 +2593,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 61,
+          "inputCount": 62,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2608,6 +2608,7 @@
             "artifact-retention-days",
             "artifact-transfer-mode",
             "aws-codebuild-project",
+            "aws-ec2-windows-runner-label",
             "build-command",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
@@ -3111,7 +3112,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 64,
+          "inputCount": 65,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3126,6 +3127,7 @@
             "artifact-retention-days",
             "artifact-transfer-mode",
             "aws-codebuild-project",
+            "aws-ec2-windows-runner-label",
             "build-command",
             "buildchain-alpha-contract-lock-path",
             "buildchain-channel",
