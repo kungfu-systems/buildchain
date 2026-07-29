@@ -26,11 +26,21 @@ $Outcome = "bootstrap-failed"
 $ExitCode = 1
 
 function Import-AwsPowerShell {
+  if (
+    (Get-Module -ListAvailable -Name AWS.Tools.Common) -and
+    (Get-Module -ListAvailable -Name AWS.Tools.SimpleSystemsManagement) -and
+    (Get-Module -ListAvailable -Name AWS.Tools.S3)
+  ) {
+    Import-Module AWS.Tools.Common
+    Import-Module AWS.Tools.SimpleSystemsManagement
+    Import-Module AWS.Tools.S3
+    return
+  }
   if (Get-Module -ListAvailable -Name AWSPowerShell) {
     Import-Module AWSPowerShell
     return
   }
-  throw "AWS Windows AMI does not contain the required AWSPowerShell module"
+  throw "AWS Windows AMI does not contain the required AWS.Tools or AWSPowerShell modules"
 }
 
 function Get-ImdsDocument {
