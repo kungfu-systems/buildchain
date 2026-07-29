@@ -1,7 +1,6 @@
 import { digest } from "./aws-runner-burst-core.mjs";
 
-export const AWS_WINDOWS_JIT_CONTRACT =
-  "kungfu-buildchain-aws-windows-jit/v1";
+export const AWS_WINDOWS_JIT_CONTRACT = "kungfu-buildchain-aws-windows-jit/v1";
 
 export const WINDOWS_EC2_JIT = Object.freeze({
   phase: "windows-ec2-jit",
@@ -18,10 +17,13 @@ export const WINDOWS_EC2_JIT = Object.freeze({
   minimumFullJobs: 3,
   maximumCleanupLatencySeconds: 900,
   runnerVersion: "2.336.0",
-  runnerArchive:
-    "actions-runner-win-x64-2.336.0.zip",
+  runnerArchive: "actions-runner-win-x64-2.336.0.zip",
   runnerArchiveSha256:
     "d59123a43003e357b0805b5d0f611d0bd2f65ab67d51bd070dd4e7a0f685c162",
+  powerShellVersion: "7.6.4",
+  powerShellArchive: "PowerShell-7.6.4-win-x64.msi",
+  powerShellArchiveSha256:
+    "d11942df52fd12470169797abfa4781d9480efdc81000ba4fa55a5b921ed8dd0",
   amiSsmParameter:
     "/aws/service/ami-windows-latest/Windows_Server-2025-English-Full-Base",
   labelPrefix: "aws-us-ec2-windows-jit-",
@@ -29,7 +31,9 @@ export const WINDOWS_EC2_JIT = Object.freeze({
 });
 
 function exactSha(value, label) {
-  const normalized = String(value || "").trim().toLowerCase();
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
   if (!/^[0-9a-f]{40}$/.test(normalized)) {
     throw new Error(`${label} must be an exact 40-character Git SHA`);
   }
@@ -53,7 +57,9 @@ function iso(value, label) {
 }
 
 export function windowsJitRunnerLabel(value) {
-  const label = String(value || "").trim().toLowerCase();
+  const label = String(value || "")
+    .trim()
+    .toLowerCase();
   const pattern = new RegExp(
     `^${WINDOWS_EC2_JIT.labelPrefix}[a-z0-9][a-z0-9-]{0,31}$`,
   );
@@ -63,6 +69,10 @@ export function windowsJitRunnerLabel(value) {
     );
   }
   return label;
+}
+
+export function windowsJitRunnerLabels(value) {
+  return ["self-hosted", "Windows", "X64", windowsJitRunnerLabel(value)];
 }
 
 export function renderWindowsJitBootstrap(template, values = {}) {
@@ -84,9 +94,7 @@ export function renderWindowsJitBootstrap(template, values = {}) {
     GITHUB_RUN_ATTEMPT: String(values.githubRunAttempt || ""),
     AMI_ID: String(values.amiId || ""),
     AMI_NAME: String(values.amiName || ""),
-    INSTANCE_TYPE: String(
-      values.instanceType || WINDOWS_EC2_JIT.instanceType,
-    ),
+    INSTANCE_TYPE: String(values.instanceType || WINDOWS_EC2_JIT.instanceType),
     LAUNCHED_AT: iso(values.launchedAt, "launchedAt"),
   };
   const patterns = {
@@ -109,7 +117,9 @@ export function renderWindowsJitBootstrap(template, values = {}) {
   }
   const unresolved = rendered.match(/__[A-Z0-9_]+__/g) || [];
   if (unresolved.length) {
-    throw new Error(`bootstrap has unresolved variables: ${unresolved.join(",")}`);
+    throw new Error(
+      `bootstrap has unresolved variables: ${unresolved.join(",")}`,
+    );
   }
   if (/encoded_jit_config|github_pat_|ghp_|gho_/.test(rendered)) {
     throw new Error("bootstrap must not contain a GitHub credential");
@@ -158,6 +168,12 @@ export function windowsEc2JitPlan(overrides = {}) {
       imdsv2Required: true,
       encryptedDeleteOnTerminationRoot: true,
       jitConfigurationDeletedAfterRead: true,
+      jitConfigurationLabels: [
+        "self-hosted",
+        "Windows",
+        "X64",
+        `${config.labelPrefix}<bounded-id>`,
+      ],
       staticAwsCredentialsForbidden: true,
       signingAndPublicationCredentialsForbidden: true,
       zeroWarmCapacity: true,
