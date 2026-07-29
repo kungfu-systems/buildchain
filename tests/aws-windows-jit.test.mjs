@@ -190,6 +190,7 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
     bootstrap,
     /d11942df52fd12470169797abfa4781d9480efdc81000ba4fa55a5b921ed8dd0/,
   );
+  assert.doesNotMatch(bootstrap, /\\usr\\bin/);
   assert.match(bootstrap, /Remove-SSMParameter/);
   assert.match(bootstrap, /run\.cmd" --jitconfig \$Jit/);
   assert.match(bootstrap, /Stop-Computer -Force/);
