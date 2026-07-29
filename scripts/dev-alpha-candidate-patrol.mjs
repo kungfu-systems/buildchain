@@ -54,6 +54,17 @@ function integer(value, fallback) {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function pullRequestBodyPrefix(value) {
+  const normalized = String(value ?? "").trim();
+  if (normalized.length > 32768)
+    throw new Error("pullRequestBodyPrefix exceeds 32768 characters");
+  if (normalized.includes(STATE_MARKER_START))
+    throw new Error(
+      "pullRequestBodyPrefix must not contain the managed candidate state marker",
+    );
+  return normalized;
+}
+
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === "object") {
@@ -209,6 +220,10 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
       options.maxAgeSeconds ??
         process.env.BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS,
       7 * 24 * 60 * 60,
+    ),
+    pullRequestBodyPrefix: pullRequestBodyPrefix(
+      options.pullRequestBodyPrefix ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX,
     ),
     createPullRequest,
     settlementAuthorized: bool(
@@ -405,6 +420,9 @@ function pullRequestBody({
   state,
 }) {
   return [
+    ...(options.pullRequestBodyPrefix
+      ? [options.pullRequestBodyPrefix, ""]
+      : []),
     LEGACY_BODY_MARKER,
     "",
     `- Source branch: \`${options.sourceBranch}\``,

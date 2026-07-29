@@ -96,6 +96,11 @@ function writeJson(filePath, value) {
   fs.writeFileSync(target, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+export function githubApiFailureIsAbsence(method, output) {
+  return String(method || "GET").toUpperCase() === "GET" &&
+    /404|not found/i.test(String(output || ""));
+}
+
 function githubApi(route, { method = "GET", body } = {}) {
   const args = [
     "api",
@@ -115,7 +120,9 @@ function githubApi(route, { method = "GET", body } = {}) {
   });
   const output = `${result.stdout || ""}\n${result.stderr || ""}`;
   if (result.status !== 0) {
-    if (/404|not found/i.test(output)) return { exists: false, data: null };
+    if (githubApiFailureIsAbsence(method, output)) {
+      return { exists: false, data: null };
+    }
     throw new Error(`GitHub API ${method} ${route} failed closed`);
   }
   return {

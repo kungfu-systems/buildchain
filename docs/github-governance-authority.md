@@ -206,8 +206,8 @@ buildchain github-governance rollback \
 
 For an admitted exact target, classic branch protection can also be compiled
 directly from the authority descriptor. This mode preserves both App-bound
-checks and intentionally unbound check contexts such as Kungfu alpha's
-`build`, rather than guessing a provider App identity.
+checks and intentionally unbound check contexts such as Kungfu release's
+legacy `build`, rather than guessing a provider App identity.
 
 ```bash
 buildchain github-governance protection-policy-plan \

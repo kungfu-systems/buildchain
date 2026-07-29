@@ -85,7 +85,7 @@
       "path": "docs/github-artifact-attestation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:afdb8172bc41b9a20c0d18f4ddcc55ee287ac56db05e67e55d12de1843b724e1"
+      "digest": "sha256:51f28b0b01fae4e3f80a7433f6c491d0c795bd091bff64ca1264c5cc0819c545"
     },
     {
       "id": "controller-evidence",
@@ -109,7 +109,7 @@
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:b8c3d9ad53c2509bbd95804ccc31f6aa89989c3aadf3a2b75d9c73aef168b7e8"
+      "digest": "sha256:a8322b19ab38d72754a80950d3c7dd97f330236ec5ab62c78df76b5993491067"
     },
     {
       "id": "release-candidate",
@@ -253,7 +253,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ea36ec722f811f5156735aa7471ed080cdc7e87d71c20c300243b226e233e675"
+      "digest": "sha256:372ea28fa6deab82c34bfb8c092cba7e539ceb25f82111b75b7ee8b89c855c4f"
     },
     {
       "id": "publish-transaction",

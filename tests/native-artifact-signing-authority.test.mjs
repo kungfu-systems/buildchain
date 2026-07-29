@@ -145,8 +145,13 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.doesNotMatch(macos, /notarytool submit[^\n]+--wait/);
   assert.match(macos, /notarytool wait "\$\{notary_id\}"[^\n]+--timeout "\$\{notary_timeout\}"/);
   assert.match(macos, /notarization submission \$\{notary_id\}; wait up to \$\{notary_timeout\}/);
-  assert.match(macos, /spctl --assess --type execute/);
+  assert.match(macos, /Apple accepted notarization \$\{notary_id\}/);
+  assert.doesNotMatch(macos, /spctl --assess/);
   assert.match(macos, /standalone Mach-O executables do not support stapled/);
+  assert.match(macos, /ticketDelivery: "online"/);
+  assert.match(macos, /standalone-notary-ticket-online/);
+  assert.match(workflow, /standalone-notary-ticket-online/);
+  assert.doesNotMatch(workflow, /gatekeeper-execute/);
   assert.match(windows, /signtool verify \/pa \/all \/v/);
   assert.match(windows, /TimeStamperCertificate/);
   assert.match(windows, /SignatureStatus\]::Valid/);
