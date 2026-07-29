@@ -1272,11 +1272,12 @@
         "dry-run",
         "max-age-seconds",
         "pull-request-body-prefix",
+        "pull-request-body-prefix-renderer",
         "settlement-authorized",
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 11,
+      "inputCount": 12,
       "secrets": [
         "promotion-token"
       ],
