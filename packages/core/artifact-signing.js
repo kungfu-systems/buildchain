@@ -25,6 +25,7 @@ const PROFILE_REGISTRY = Object.freeze({
       "plugin-bundle",
       "xpc-bundle",
       "dylib",
+      "archive",
       "pkg",
       "dmg",
     ],

@@ -38,7 +38,8 @@ export function inspectArtifactSigningRequests({
 } = {}) {
   const root = path.resolve(required(inputRoot, "signing request root"));
   const indexes = walk(root, "index.json");
-  if (indexes.length === 0) throw new Error("no artifact signing request indexes found");
+  if (indexes.length === 0)
+    throw new Error("no artifact signing request indexes found");
   const seen = new Set();
   const matrices = {
     detached: [],
@@ -47,41 +48,66 @@ export function inspectArtifactSigningRequests({
   };
   for (const indexPath of indexes) {
     const index = JSON.parse(fs.readFileSync(indexPath, "utf8"));
-    if (index.contract !== "kungfu-buildchain-artifact-signing-request-index/v1") continue;
+    if (
+      index.contract !== "kungfu-buildchain-artifact-signing-request-index/v1"
+    )
+      continue;
     for (const entry of index.requests || []) {
       const requestPath = path.resolve(path.dirname(indexPath), entry.path);
       const relative = path.relative(root, requestPath);
       if (relative.startsWith("..") || path.isAbsolute(relative)) {
-        throw new Error("signing request path escapes the authority intake root");
+        throw new Error(
+          "signing request path escapes the authority intake root",
+        );
       }
       const request = JSON.parse(fs.readFileSync(requestPath, "utf8"));
       const check = validateArtifactSigningRequest(request);
       if (!check.ok || request.digest !== entry.digest) {
         throw new Error(`invalid artifact signing request: ${entry.id}`);
       }
-      if (expectedRepository && request.source.repository !== expectedRepository) {
+      if (
+        expectedRepository &&
+        request.source.repository !== expectedRepository
+      ) {
         throw new Error("signing request source repository mismatch");
       }
       if (expectedRuntimeSha && request.runtime.sha !== expectedRuntimeSha) {
         throw new Error("signing request runtime SHA mismatch");
       }
       const key = `${request.source.sha}:${request.artifact.id}:${request.artifact.platform}`;
-      if (seen.has(key)) throw new Error(`duplicate artifact signing request: ${key}`);
+      if (seen.has(key))
+        throw new Error(`duplicate artifact signing request: ${key}`);
       seen.add(key);
       const item = {
         id: request.artifact.id,
         slug: safeId(request.artifact.id),
         request: path.relative(root, requestPath).split(path.sep).join("/"),
-        directory: path.relative(root, path.dirname(requestPath)).split(path.sep).join("/"),
-        indexRoot: path.relative(root, path.dirname(indexPath)).split(path.sep).join("/") || ".",
+        directory: path
+          .relative(root, path.dirname(requestPath))
+          .split(path.sep)
+          .join("/"),
+        indexRoot:
+          path
+            .relative(root, path.dirname(indexPath))
+            .split(path.sep)
+            .join("/") || ".",
+        kind: request.artifact.kind,
+        transportFormat: request.artifact.transport?.format || "",
       };
-      if (request.signature.profile === "detached-signature-v1") matrices.detached.push(item);
-      else if (request.signature.profile === "apple-developer-id") matrices.macos.push(item);
-      else if (request.signature.profile === "windows-authenticode") matrices.windows.push(item);
-      else throw new Error(`unsupported signing authority profile: ${request.signature.profile}`);
+      if (request.signature.profile === "detached-signature-v1")
+        matrices.detached.push(item);
+      else if (request.signature.profile === "apple-developer-id")
+        matrices.macos.push(item);
+      else if (request.signature.profile === "windows-authenticode")
+        matrices.windows.push(item);
+      else
+        throw new Error(
+          `unsupported signing authority profile: ${request.signature.profile}`,
+        );
     }
   }
-  for (const entries of Object.values(matrices)) entries.sort((a, b) => a.request.localeCompare(b.request));
+  for (const entries of Object.values(matrices))
+    entries.sort((a, b) => a.request.localeCompare(b.request));
   writeGitHubOutputs({
     "detached-matrix": JSON.stringify(matrices.detached),
     "macos-matrix": JSON.stringify(matrices.macos),
@@ -91,11 +117,16 @@ export function inspectArtifactSigningRequests({
   return matrices;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   try {
     inspectArtifactSigningRequests();
   } catch (error) {
-    console.error(`::error::${String(error?.message || error).replace(/\r?\n/gu, "%0A")}`);
+    console.error(
+      `::error::${String(error?.message || error).replace(/\r?\n/gu, "%0A")}`,
+    );
     process.exitCode = 1;
   }
 }

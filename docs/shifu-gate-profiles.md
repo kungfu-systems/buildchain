@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: self-reviewed
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-29
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -53,6 +53,12 @@ host the profile fails before runner dispatch. A platform with
 matrix and aggregate. Matrix entries retain the Shifu plan digest, ordered gate
 groups, required/advisory modes, action ids, definition digests, skips, and
 unsupported selections.
+
+Each matrix job timeout reserves the sum of the selected Gate action budgets
+plus 30 minutes for Buildchain-owned checkout, toolchain setup, plan download,
+receipt validation, and artifact upload. The total remains capped at GitHub's
+six-hour job limit. This control-plane allowance does not enlarge any Shifu
+Gate's own declared action budget or change its definition digest.
 
 `github-hosted` declares only the inherent `node` capability. Projects that
 need a native compiler, product artifacts, devices, or other facilities must
