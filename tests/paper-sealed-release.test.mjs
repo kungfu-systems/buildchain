@@ -19,6 +19,10 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.match(authority, /--required-status-check "\$\{\{ inputs\.required-status-check \}\}"/);
   assert.match(workflow, /publish:\n    name: Publish admitted paper candidate/);
   assert.match(workflow, /id-token: write/);
+  assert.match(
+    workflow,
+    /name: Publish admitted paper candidate[\s\S]+?permissions:\n      actions: read\n      checks: write\n      contents: write\n      id-token: write\n      issues: write\n      pull-requests: write/,
+  );
   assert.match(workflow, /Setup trusted-publishing Node\.js/);
   assert.match(workflow, /uses: actions\/setup-node@v6\.4\.0/);
   assert.match(workflow, /node-version: "24"/);
