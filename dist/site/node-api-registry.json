@@ -99,7 +99,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-signing",
       "export": "./artifact-signing",
       "target": "./packages/core/artifact-signing.js",
-      "digest": "sha256:2314a3858214ea7f573510208b97042545931d4b6c505575f62bc46168de757c",
+      "digest": "sha256:7b4c88201125f08645092b121eeeab0390b4fdee665f0d6c949217cb6545d590",
       "summary": "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [

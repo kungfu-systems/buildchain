@@ -116,12 +116,12 @@ jobs:
 
 `runner-preset` is the stable first-class surface for known runner fleets:
 
-| Preset                  | Platforms                                                                |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `github-hosted`         | `ubuntu-24.04`, `macos-latest`, `windows-2022`                                                              |
-| `kungfu-v4-self-hosted` | Kungfu Linux x64, macOS ARM64, and Windows x64 self-hosted runner labels                                    |
+| Preset                  | Platforms                                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `github-hosted`         | `ubuntu-24.04`, `macos-latest`, `windows-2022`                                                                 |
+| `kungfu-v4-self-hosted` | Kungfu Linux x64, macOS ARM64, and Windows x64 self-hosted runner labels                                       |
 | `kungfu-v4-native`      | Kungfu Linux x64, Linux ARM64, macOS ARM64, and Windows x64; Linux ARM64 uses GitHub-hosted `ubuntu-24.04-arm` |
-| `custom`                | Requires `platforms-json`                                                                                   |
+| `custom`                | Requires `platforms-json`                                                                                      |
 
 Callers can still provide a custom matrix with `platforms-json`. Each platform
 object has:
@@ -268,11 +268,11 @@ jobs:
 
 Allowed override refs are deliberately narrow:
 
-| Ref form | Meaning |
-| --- | --- |
-| `train/v3/v3.0/<capability>` | Temporary capability train under the active minor line |
-| `refs/heads/train/v3/v3.0/<capability>` | Explicit branch ref for the same train |
-| `<40-character SHA>` | Exact immutable Buildchain runtime commit |
+| Ref form                                | Meaning                                                |
+| --------------------------------------- | ------------------------------------------------------ |
+| `train/v3/v3.0/<capability>`            | Temporary capability train under the active minor line |
+| `refs/heads/train/v3/v3.0/<capability>` | Explicit branch ref for the same train                 |
+| `<40-character SHA>`                    | Exact immutable Buildchain runtime commit              |
 
 Override requests fail closed unless the event is `workflow_dispatch` and the
 actor has write, maintain, or admin permission on the caller repository.
@@ -416,11 +416,11 @@ jobs:
 
 `checkout-cache-mode` accepts:
 
-| Mode | Behavior |
-| --- | --- |
-| `off` | Default. Buildchain fetches the locked commit from GitHub. |
-| `auto` | Try the trusted cache first; on miss, record the miss and fall back according to `checkout-cache-fallback`. |
-| `require` | Require the cache to provide the locked commit and fail before lifecycle work if unavailable. |
+| Mode      | Behavior                                                                                                    |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| `off`     | Default. Buildchain fetches the locked commit from GitHub.                                                  |
+| `auto`    | Try the trusted cache first; on miss, record the miss and fall back according to `checkout-cache-fallback`. |
+| `require` | Require the cache to provide the locked commit and fail before lifecycle work if unavailable.               |
 
 The cache can be a local/LAN mirror URL template or a runner-local bare
 reference repository template. Templates support `{owner}`, `{repo}`,
@@ -484,38 +484,38 @@ separate periodic cleanup task.
 
 The reusable workflow exposes the resolved contract:
 
-| Output                            | Meaning                                                                         |
-| --------------------------------- | ------------------------------------------------------------------------------- |
-| `runner-preset`                   | Resolved preset, or `custom` when `platforms-json` was provided                 |
-| `platforms-json`                  | Exact matrix JSON used by the build job                                         |
-| `platform-count`                  | Number of matrix platforms                                                      |
-| `linux-container-enabled`         | `true` when Linux platforms are routed through a job container                  |
-| `linux-container-image`           | Resolved digest-pinned Linux job container image                                |
-| `build-summary-artifact`          | Uploaded aggregate summary artifact name                                        |
-| `build-diagnostics-summary-artifact` | Uploaded aggregate diagnostics summary artifact name                         |
-| `release-candidate-passport-artifact` | Uploaded PR-stage release-candidate passport artifact name when `release-candidate` is enabled |
-| `release-candidate-passport-json` | Compact release-candidate passport JSON when `release-candidate` is enabled     |
-| `build-summary-json`              | Compact aggregate JSON with platform count, file count, and byte total          |
-| `build-diagnostics-summary-json`  | Compact aggregate diagnostics JSON with platform, lifecycle warning/error, diagnostics contract warning, and sidecar manifest warning totals |
-| `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
-| `buildchain-runtime-ref`          | Runtime ref selected after applying the empty-default or override policy        |
-| `buildchain-runtime-sha`          | Immutable Buildchain runtime commit used by all runtime checkouts               |
-| `buildchain-runtime-class`        | `stable`, `alpha`, `authority`, `train`, `exact-sha`, or `development`          |
-| `buildchain-runtime-override`     | `true` when an authority, train, or exact-SHA `buildchain-ref` override was accepted |
-| `buildchain-runtime-trust-decision` | Runtime override trust decision                                               |
-| `buildchain-contract-lock-status` | `unchanged`, `compatible-drift`, `breaking-drift`, `missing-lock`, `non-floating-runtime`, or first-release `runtime-contract-unavailable` |
-| `buildchain-contract-lock-drift`  | `true` when the floating runtime SHA or contract digest changed                 |
-| `buildchain-contract-digest`      | Current Buildchain runtime contract digest                                      |
-| `publish-channel`                 | Resolved publish channel requested by the caller                                |
-| `publish-allowed`                 | `true` only when this event/ref may publish after verification                  |
-| `publish-reason`                  | Human-readable reason for the publish gate decision                             |
-| `publish-source-ref`              | Gate source ref that was resolved before checkout                               |
-| `publish-source-sha`              | Exact source commit used by checkout, build, verify, and artifacts              |
-| `publish-source-locked`           | `true` when a `publish-gate/*` source ref was explicitly locked                 |
-| `publish-source-channel`          | `alpha`, `release`, `anchor`, or `major` parsed from the source ref             |
-| `publish-source-line`             | Product line parsed from source refs such as `v22/v22.22`                       |
-| `publish-source-consumer-version` | Consumer package version parsed from source refs                                |
-| `release-manifest-json`           | Resolved release manifest including source lock, version state, and anchor data |
+| Output                                | Meaning                                                                                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `runner-preset`                       | Resolved preset, or `custom` when `platforms-json` was provided                                                                              |
+| `platforms-json`                      | Exact matrix JSON used by the build job                                                                                                      |
+| `platform-count`                      | Number of matrix platforms                                                                                                                   |
+| `linux-container-enabled`             | `true` when Linux platforms are routed through a job container                                                                               |
+| `linux-container-image`               | Resolved digest-pinned Linux job container image                                                                                             |
+| `build-summary-artifact`              | Uploaded aggregate summary artifact name                                                                                                     |
+| `build-diagnostics-summary-artifact`  | Uploaded aggregate diagnostics summary artifact name                                                                                         |
+| `release-candidate-passport-artifact` | Uploaded PR-stage release-candidate passport artifact name when `release-candidate` is enabled                                               |
+| `release-candidate-passport-json`     | Compact release-candidate passport JSON when `release-candidate` is enabled                                                                  |
+| `build-summary-json`                  | Compact aggregate JSON with platform count, file count, and byte total                                                                       |
+| `build-diagnostics-summary-json`      | Compact aggregate diagnostics JSON with platform, lifecycle warning/error, diagnostics contract warning, and sidecar manifest warning totals |
+| `trusted-event`                       | `true` when the event is trusted enough to reach build runners                                                                               |
+| `buildchain-runtime-ref`              | Runtime ref selected after applying the empty-default or override policy                                                                     |
+| `buildchain-runtime-sha`              | Immutable Buildchain runtime commit used by all runtime checkouts                                                                            |
+| `buildchain-runtime-class`            | `stable`, `alpha`, `authority`, `train`, `exact-sha`, or `development`                                                                       |
+| `buildchain-runtime-override`         | `true` when an authority, train, or exact-SHA `buildchain-ref` override was accepted                                                         |
+| `buildchain-runtime-trust-decision`   | Runtime override trust decision                                                                                                              |
+| `buildchain-contract-lock-status`     | `unchanged`, `compatible-drift`, `breaking-drift`, `missing-lock`, `non-floating-runtime`, or first-release `runtime-contract-unavailable`   |
+| `buildchain-contract-lock-drift`      | `true` when the floating runtime SHA or contract digest changed                                                                              |
+| `buildchain-contract-digest`          | Current Buildchain runtime contract digest                                                                                                   |
+| `publish-channel`                     | Resolved publish channel requested by the caller                                                                                             |
+| `publish-allowed`                     | `true` only when this event/ref may publish after verification                                                                               |
+| `publish-reason`                      | Human-readable reason for the publish gate decision                                                                                          |
+| `publish-source-ref`                  | Gate source ref that was resolved before checkout                                                                                            |
+| `publish-source-sha`                  | Exact source commit used by checkout, build, verify, and artifacts                                                                           |
+| `publish-source-locked`               | `true` when a `publish-gate/*` source ref was explicitly locked                                                                              |
+| `publish-source-channel`              | `alpha`, `release`, `anchor`, or `major` parsed from the source ref                                                                          |
+| `publish-source-line`                 | Product line parsed from source refs such as `v22/v22.22`                                                                                    |
+| `publish-source-consumer-version`     | Consumer package version parsed from source refs                                                                                             |
+| `release-manifest-json`               | Resolved release manifest including source lock, version state, and anchor data                                                              |
 
 The aggregate summaries are intentionally artifacts as well as outputs. GitHub
 Actions matrix outputs are not a reliable place to carry every platform's full
@@ -565,8 +565,13 @@ and requested signature semantics, then publishes a deterministic
 workflow step is required.
 
 `profile = "auto"` resolves signable Apple artifacts such as Mach-O files,
-`.dylib`, `.framework`, `.app`, `.xpc`, `.plugin`, `.pkg`, and `.dmg` to the
-native `apple-developer-id` provider. Windows `pe` and `binary` artifacts
+`.dylib`, `.framework`, `.app`, `.xpc`, `.plugin`, `.pkg`, `.dmg`, and macOS
+archives containing native code to the native `apple-developer-id` provider.
+For a declared macOS `archive`, the authority safely extracts the sealed
+container, signs and verifies every Mach-O payload, signs Mach-O payloads inside
+embedded Python wheels, rebuilds each affected wheel's PEP 427 `RECORD`, and
+recreates the original zip or tar.gz before returning the exact final bytes.
+Windows `pe` and `binary` artifacts
 resolve to timestamped native `windows-authenticode`; Windows PE never falls
 back to a detached signature. Linux and other non-native binary files,
 archives, blobs, and directories resolve to `detached-signature-v1`. Buildchain records that as a
@@ -594,6 +599,12 @@ ticket for that binary and publishes it online, but
 Buildchain therefore records
 `standalone-notary-ticket-online` and does not misapply app-bundle
 `spctl --assess --type execute` semantics to the raw executable.
+
+For a compound archive request, the authority notarizes the complete extracted
+signed product tree and records `compound-notary-ticket-online`. A generic
+archive container cannot carry a stapled ticket and is not itself a Gatekeeper
+execution target; Gatekeeper evaluates the extracted signed code. Archive path
+and symlink validation fail closed before any payload is signed.
 
 The durable v3 authority runtime is
 `authority/v3/v3.0/artifact-signing`. It is channel-neutral: alpha and stable
@@ -652,15 +663,15 @@ The relay configuration is intentionally generic. Buildchain does not hard-code
 organization buckets, regions, or role ARNs. Callers may pass explicit inputs,
 or set repository/organization variables and secrets using these names:
 
-| Variable or secret | Meaning |
-| --- | --- |
-| `BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET` | Relay bucket name |
-| `BUILDCHAIN_ARTIFACT_RELAY_S3_REGION` | Relay bucket region |
-| `BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX` | Relay object prefix; defaults to `buildchain-artifacts` |
-| `BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN` | Shared OIDC role ARN for upload and download |
-| `BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN` | Upload OIDC role ARN for self-hosted build jobs |
-| `BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN` | Download OIDC role ARN for the GitHub-hosted relay job |
-| `BUILDCHAIN_ARTIFACT_RELAY_S3_OIDC_AUDIENCE` | Optional OIDC audience override |
+| Variable or secret                               | Meaning                                                 |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET`            | Relay bucket name                                       |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_REGION`            | Relay bucket region                                     |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX`            | Relay object prefix; defaults to `buildchain-artifacts` |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN`          | Shared OIDC role ARN for upload and download            |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN`   | Upload OIDC role ARN for self-hosted build jobs         |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN` | Download OIDC role ARN for the GitHub-hosted relay job  |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_OIDC_AUDIENCE`     | Optional OIDC audience override                         |
 
 For AWS China regions, Buildchain defaults the OIDC audience to
 `sts.amazonaws.com.cn`; other regions default to `sts.amazonaws.com`. The caller
@@ -974,7 +985,7 @@ publish side effect:
   with:
     sha: ${{ needs.build.outputs.publish-source-sha }}
     target-ref: release/v22/v22.22
-    require-publish-source-lock: 'true'
+    require-publish-source-lock: "true"
     publish-source-ref: ${{ needs.build.outputs.publish-source-ref }}
     publish-source-sha: ${{ needs.build.outputs.publish-source-sha }}
     publish-source-locked: ${{ needs.build.outputs.publish-source-locked }}
