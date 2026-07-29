@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-07-28T20:12:28.827Z"
+    "updatedAt": "2026-07-29T20:08:54.217Z"
   },
   "candidates": [
     {
@@ -311,7 +311,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -338,7 +338,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -351,7 +351,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -378,7 +378,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -391,7 +391,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -418,7 +418,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -431,7 +431,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -458,7 +458,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -471,7 +471,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -498,7 +498,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -511,7 +511,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -538,7 +538,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -551,7 +551,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -578,7 +578,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -591,7 +591,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -618,7 +618,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -631,7 +631,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -658,7 +658,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -671,7 +671,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -698,7 +698,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -711,7 +711,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-28T20:12:28.827Z",
+        "observedAt": "2026-07-29T20:08:54.217Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -738,12 +738,12 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-28T20:12:28.827Z",
+        "updatedAt": "2026-07-29T20:08:54.217Z",
         "actor": "buildchain-patrol"
       }
     }
   ],
-  "updatedAt": "2026-07-28T20:12:28.827Z",
+  "updatedAt": "2026-07-29T20:08:54.217Z",
   "stableReleases": [
     {
       "version": "3.0.1",
