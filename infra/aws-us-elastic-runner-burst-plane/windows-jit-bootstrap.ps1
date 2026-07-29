@@ -17,6 +17,8 @@ $AmiId = "__AMI_ID__"
 $AmiName = "__AMI_NAME__"
 $RunnerVersion = "2.336.0"
 $RunnerArchiveSha256 = "d59123a43003e357b0805b5d0f611d0bd2f65ab67d51bd070dd4e7a0f685c162"
+$PowerShellVersion = "7.6.4"
+$PowerShellArchiveSha256 = "d11942df52fd12470169797abfa4781d9480efdc81000ba4fa55a5b921ed8dd0"
 $GitVersion = "2.55.0.3"
 $GitArchiveSha256 = "ab00566336b5472120f9a52d34f2e79c5406535792acb0548001ffd0bd090e5d"
 $StartedAt = (Get-Date).ToUniversalTime()
@@ -74,6 +76,33 @@ function Install-PortableGit([string]$Root) {
   $env:PATH = "$Root\cmd;$Root\usr\bin;$env:PATH"
 }
 
+function Install-PowerShell {
+  $Installer = Join-Path $env:TEMP "PowerShell-$PowerShellVersion-win-x64.msi"
+  $Url = "https://github.com/PowerShell/PowerShell/releases/download/v$PowerShellVersion/PowerShell-$PowerShellVersion-win-x64.msi"
+  Invoke-WebRequest -Uri $Url -OutFile $Installer
+  Assert-Sha256 $Installer $PowerShellArchiveSha256
+  $Signature = Get-AuthenticodeSignature -FilePath $Installer
+  if (
+    $Signature.Status -ne "Valid" -or
+    $Signature.SignerCertificate.Subject -notmatch "Microsoft Corporation"
+  ) {
+    throw "PowerShell bootstrap signature is not valid Microsoft code"
+  }
+  $Process = Start-Process `
+    -FilePath "msiexec.exe" `
+    -ArgumentList "/i", $Installer, "/qn", "/norestart" `
+    -Wait `
+    -PassThru
+  if ($Process.ExitCode -notin @(0, 3010)) {
+    throw "PowerShell installation failed with exit code $($Process.ExitCode)"
+  }
+  $PowerShellRoot = "C:\Program Files\PowerShell\7"
+  if (-not (Test-Path -LiteralPath (Join-Path $PowerShellRoot "pwsh.exe"))) {
+    throw "PowerShell installation did not provide pwsh.exe"
+  }
+  $env:PATH = "$PowerShellRoot;$env:PATH"
+}
+
 function Install-MsvcBuildTools {
   $Installer = Join-Path $env:TEMP "vs_BuildTools.exe"
   Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile $Installer
@@ -117,6 +146,8 @@ function Put-Evidence([string]$InstanceId, [string]$AvailabilityZone) {
     runnerLabel = $RunnerLabel
     runnerVersion = $RunnerVersion
     runnerArchiveSha256 = $RunnerArchiveSha256
+    powerShellVersion = $PowerShellVersion
+    powerShellArchiveSha256 = $PowerShellArchiveSha256
     launchedAt = $env:AWS_EC2_LAUNCHED_AT
     bootstrapStartedAt = $StartedAt.ToString("o")
     runnerStartedAt = if ($RunnerStartedAt) { $RunnerStartedAt.ToString("o") } else { $null }
@@ -154,6 +185,7 @@ try {
   $env:BUILDCHAIN_RUNNER_LABELS_JSON = "[`"self-hosted`",`"Windows`",`"X64`",`"$RunnerLabel`"]"
 
   Install-PortableGit "C:\PortableGit"
+  Install-PowerShell
   Install-MsvcBuildTools
 
   $RunnerRoot = "C:\actions-runner"

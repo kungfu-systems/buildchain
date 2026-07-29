@@ -143,11 +143,15 @@ one Windows x64 native lane. The reusable trust gate still runs on a
 GitHub-hosted runner before the JIT label can select EC2.
 
 The provider creates repository-level GitHub JIT configuration for
-`kungfu-systems/kungfu`. The encoded configuration is never placed in EC2 user
-data, a tag, a command log, or an artifact. The operator writes it to a
-card-scoped SSM SecureString under `/kungfu/burst/windows/`; the instance role
-can read and delete only that prefix. Bootstrap reads the value once, deletes
-the parameter immediately, and passes it only to the pinned runner process.
+`kungfu-systems/kungfu`. Its `labels` request must contain all four scheduling
+labels: `self-hosted`, `Windows`, `X64`, and the card-scoped
+`aws-us-ec2-windows-jit-<qualification-id>` label. GitHub's JIT endpoint does
+not infer the default OS and architecture labels when they are omitted. The
+encoded configuration is never placed in EC2 user data, a tag, a command log,
+or an artifact. The operator writes it to a card-scoped SSM SecureString under
+`/kungfu/burst/windows/`; the instance role can read and delete only that
+prefix. Bootstrap reads the value once, deletes the parameter immediately, and
+passes it only to the pinned runner process.
 
 Each runner uses:
 
@@ -155,6 +159,8 @@ Each runner uses:
   public SSM AMI parameter and retained by exact AMI id and name;
 - `c7i.4xlarge`, one instance and one JIT runner per job;
 - GitHub Actions Runner 2.336.0 with the official Windows x64 SHA256;
+- PowerShell 7.6.4 with the official Windows x64 MSI SHA256 and Microsoft
+  Authenticode verification;
 - pinned PortableGit 2.55.0.3 with its GitHub release SHA256;
 - a Microsoft Authenticode-verified Visual Studio 2022 Build Tools bootstrap;
 - IMDSv2, an encrypted root volume with delete-on-termination, no inbound

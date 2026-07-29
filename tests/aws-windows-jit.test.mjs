@@ -9,6 +9,7 @@ import {
   verifyWindowsEc2JitQualification,
   windowsEc2JitPlan,
   windowsJitRunnerLabel,
+  windowsJitRunnerLabels,
 } from "../scripts/aws-windows-jit-core.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -41,6 +42,12 @@ test("Windows JIT runner labels are card-scoped and bounded", () => {
     () => windowsJitRunnerLabel("kungfu-build-v4-windows-x64"),
     /must match/,
   );
+  assert.deepEqual(windowsJitRunnerLabels("aws-us-ec2-windows-jit-full-01"), [
+    "self-hosted",
+    "Windows",
+    "X64",
+    "aws-us-ec2-windows-jit-full-01",
+  ]);
 });
 
 test("Windows bootstrap keeps JIT material out of user data", () => {
@@ -178,6 +185,11 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(bootstrap, /latest\/api\/token/);
   assert.match(bootstrap, /AWS\.Tools\.SimpleSystemsManagement/);
   assert.match(bootstrap, /AWS\.Tools\.S3/);
+  assert.match(bootstrap, /PowerShell-\$PowerShellVersion-win-x64\.msi/);
+  assert.match(
+    bootstrap,
+    /d11942df52fd12470169797abfa4781d9480efdc81000ba4fa55a5b921ed8dd0/,
+  );
   assert.match(bootstrap, /Remove-SSMParameter/);
   assert.match(bootstrap, /run\.cmd" --jitconfig \$Jit/);
   assert.match(bootstrap, /Stop-Computer -Force/);
