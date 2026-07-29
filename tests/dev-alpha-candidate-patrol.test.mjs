@@ -581,6 +581,24 @@ test("stale exact-SHA evidence is observable but cannot settle", async () => {
   assert.match(result.decision.decisionRoot, /^sha256:[0-9a-f]{64}$/u);
 });
 
+test("settlement fails closed when the selected source changed after observation", async () => {
+  const fake = client();
+  await assert.rejects(
+    () =>
+      runDevAlphaCandidatePatrol(
+        {
+          ...patrolOptions,
+          expectedSelectedSha: "f".repeat(40),
+          settlementAuthorized: true,
+          dryRun: false,
+        },
+        fake,
+      ),
+    /selected source changed between observation and settlement/u,
+  );
+  assert.deepEqual(fake.calls, []);
+});
+
 test("GitHub metadata reads retry bounded transient API failures", async () => {
   const statuses = [503, 200];
   const sleeps = [];
@@ -631,6 +649,25 @@ test("reusable workflow retains the no-publication boundary", () => {
   assert.match(workflowText, /actions: read/u);
   assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_DRY_RUN/u);
   assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX/u);
+  assert.match(workflowText, /pull-request-body-prefix-renderer:/u);
+  assert.match(
+    workflowText,
+    /ref: \$\{\{ steps\.observe\.outputs\.selected-sha \}\}/u,
+  );
+  assert.match(workflowText, /persist-credentials: false/u);
+  assert.match(workflowText, /run-candidate-body-prefix-renderer\.mjs/u);
+  assert.match(
+    workflowText,
+    /BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: \$\{\{ needs\.observe\.outputs\.pull-request-body-prefix \}\}/u,
+  );
+  assert.match(
+    workflowText,
+    /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA: \$\{\{ needs\.observe\.outputs\.selected-sha \}\}/u,
+  );
+  const observeJob = workflowText.split("\n  settle:")[0];
+  assert.doesNotMatch(observeJob, /secrets\.promotion-token/u);
+  const settleJob = workflowText.split("\n  settle:")[1] || "";
+  assert.doesNotMatch(settleJob, /PR_BODY_PREFIX_RENDERER/u);
   assert.match(workflowText, /scripts\/dev-alpha-candidate-patrol\.mjs/u);
   assert.doesNotMatch(
     workflowText,
