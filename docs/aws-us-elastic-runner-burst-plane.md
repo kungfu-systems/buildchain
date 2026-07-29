@@ -161,7 +161,8 @@ Each runner uses:
 - GitHub Actions Runner 2.336.0 with the official Windows x64 SHA256;
 - PowerShell 7.6.4 with the official Windows x64 MSI SHA256 and Microsoft
   Authenticode verification;
-- pinned PortableGit 2.55.0.3 with its GitHub release SHA256;
+- pinned PortableGit 2.55.0.3 with its GitHub release SHA256, exposing only its
+  `cmd` directory so POSIX compatibility tools cannot shadow Windows tools;
 - a Microsoft Authenticode-verified Visual Studio 2022 Build Tools bootstrap;
 - IMDSv2, an encrypted root volume with delete-on-termination, no inbound
   security-group rule, no key pair, and no warm Auto Scaling capacity.
