@@ -176,6 +176,8 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /ssm:GetParameter/);
   assert.match(stack, /s3:PutObject/);
   assert.match(bootstrap, /latest\/api\/token/);
+  assert.match(bootstrap, /AWS\.Tools\.SimpleSystemsManagement/);
+  assert.match(bootstrap, /AWS\.Tools\.S3/);
   assert.match(bootstrap, /Remove-SSMParameter/);
   assert.match(bootstrap, /run\.cmd" --jitconfig \$Jit/);
   assert.match(bootstrap, /Stop-Computer -Force/);
