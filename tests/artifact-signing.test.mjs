@@ -116,14 +116,22 @@ test("native profiles fail closed for incompatible artifacts and platforms", () 
       }),
     /does not support platform windows/,
   );
+  assert.equal(
+    resolveArtifactSigningProfile({
+      profile: "auto",
+      platform: "macos",
+      artifactKind: "archive",
+    }).id,
+    "apple-developer-id",
+  );
   assert.throws(
     () =>
       resolveArtifactSigningProfile({
         profile: "apple-developer-id",
         platform: "macos",
-        artifactKind: "archive",
+        artifactKind: "blob",
       }),
-    /does not support artifact kind archive/,
+    /does not support artifact kind blob/,
   );
 });
 

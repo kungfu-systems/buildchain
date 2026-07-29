@@ -24,7 +24,11 @@ notary_archive="${authority_tmp}/notary-submission.zip"
 notary_submission="${authority_tmp}/notary-submission.json"
 notary_result="${authority_tmp}/notary-result.json"
 signature_details="${authority_tmp}/codesign-details.txt"
+compound_evidence="${authority_tmp}/compound-evidence.json"
+compound_work="${authority_tmp}/compound-work"
+notary_root="${authority_tmp}/notary-root"
 notary_timeout="${BUILDCHAIN_APPLE_NOTARY_TIMEOUT:-55m}"
+artifact_kind="${BUILDCHAIN_ARTIFACT_KIND:-mach-o}"
 
 cleanup() {
   security delete-keychain "${keychain_path}" >/dev/null 2>&1 || true
@@ -49,31 +53,60 @@ security find-identity -v -p codesigning "${keychain_path}" | grep -Fqi "${BUILD
   exit 1
 }
 
-echo "Buildchain macOS authority: sign exact Mach-O payload"
-codesign --force --options runtime --timestamp --keychain "${keychain_path}" --sign "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" "${BUILDCHAIN_SIGNED_PAYLOAD}"
-codesign --verify --strict --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}"
-codesign --display --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}" 2> "${signature_details}"
-grep -Fqx "TeamIdentifier=${BUILDCHAIN_APPLE_TEAM_ID}" "${signature_details}" || {
-  echo "signed Mach-O TeamIdentifier mismatch" >&2
-  exit 1
-}
-grep -Fq "Runtime Version" "${signature_details}" || {
-  echo "signed Mach-O does not prove hardened runtime" >&2
-  exit 1
-}
-
-/usr/bin/ditto -c -k --keepParent "${BUILDCHAIN_SIGNED_PAYLOAD}" "${notary_archive}"
-echo "Buildchain macOS authority: submit exact signed Mach-O for notarization"
+case "${artifact_kind}" in
+  archive)
+    echo "Buildchain macOS authority: sign compound archive Mach-O payloads"
+    python3 scripts/sign-macos-compound-archive.py \
+      --archive "${BUILDCHAIN_SIGNED_PAYLOAD}" \
+      --work-root "${compound_work}" \
+      --notary-root "${notary_root}" \
+      --evidence "${compound_evidence}" \
+      --identity "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" \
+      --keychain "${keychain_path}" \
+      --team-id "${BUILDCHAIN_APPLE_TEAM_ID}"
+    /usr/bin/ditto -c -k --keepParent "${notary_root}" "${notary_archive}"
+    ;;
+  mach-o|binary|dylib)
+    echo "Buildchain macOS authority: sign exact Mach-O payload"
+    codesign --force --options runtime --timestamp --keychain "${keychain_path}" --sign "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" "${BUILDCHAIN_SIGNED_PAYLOAD}"
+    codesign --verify --strict --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}"
+    codesign --display --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}" 2> "${signature_details}"
+    grep -Fqx "TeamIdentifier=${BUILDCHAIN_APPLE_TEAM_ID}" "${signature_details}" || {
+      echo "signed Mach-O TeamIdentifier mismatch" >&2
+      exit 1
+    }
+    grep -Fq "Runtime Version" "${signature_details}" || {
+      echo "signed Mach-O does not prove hardened runtime" >&2
+      exit 1
+    }
+    grep -Fq "Timestamp=" "${signature_details}" || {
+      echo "signed Mach-O does not prove a secure timestamp" >&2
+      exit 1
+    }
+    /usr/bin/ditto -c -k --keepParent "${BUILDCHAIN_SIGNED_PAYLOAD}" "${notary_archive}"
+    ;;
+  *)
+    echo "unsupported Apple native artifact kind: ${artifact_kind}" >&2
+    exit 1
+    ;;
+esac
+echo "Buildchain macOS authority: submit signed ${artifact_kind} for notarization"
 xcrun notarytool submit "${notary_archive}" --key "${notary_key_path}" --key-id "${BUILDCHAIN_APPLE_NOTARY_KEY_ID}" --issuer "${BUILDCHAIN_APPLE_NOTARY_ISSUER}" --output-format json > "${notary_submission}"
 notary_id="$(node -e 'const fs=require("fs");const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(!value.id)throw new Error("Apple notarization submission did not return an id");process.stdout.write(value.id)' "${notary_submission}")"
 echo "Buildchain macOS authority: notarization submission ${notary_id}; wait up to ${notary_timeout}"
 xcrun notarytool wait "${notary_id}" --key "${notary_key_path}" --key-id "${BUILDCHAIN_APPLE_NOTARY_KEY_ID}" --issuer "${BUILDCHAIN_APPLE_NOTARY_ISSUER}" --timeout "${notary_timeout}" --output-format json > "${notary_result}"
 node -e 'const fs=require("fs");const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(value.status!=="Accepted"||value.id!==process.argv[2])throw new Error("Apple notarization was not accepted for the submitted artifact")' "${notary_result}" "${notary_id}"
-echo "Buildchain macOS authority: Apple accepted notarization ${notary_id}; standalone ticket is available online and cannot be stapled"
+echo "Buildchain macOS authority: Apple accepted notarization ${notary_id}; ${artifact_kind} ticket is available online and cannot be stapled"
 
-node - "${notary_result}" "${BUILDCHAIN_SIGNING_EVIDENCE}" "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" "${BUILDCHAIN_APPLE_TEAM_ID}" <<'NODE'
+node - "${notary_result}" "${BUILDCHAIN_SIGNING_EVIDENCE}" "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" "${BUILDCHAIN_APPLE_TEAM_ID}" "${artifact_kind}" "${compound_evidence}" <<'NODE'
 const fs = require("fs");
 const notary = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+const artifactKind = process.argv[6];
+const compound = fs.existsSync(process.argv[7])
+  ? JSON.parse(fs.readFileSync(process.argv[7], "utf8"))
+  : null;
+const checks = compound?.checks || ["codesign-strict", "developer-id-team", "hardened-runtime", "secure-timestamp"];
+checks.push("notarytool-accepted", artifactKind === "archive" ? "compound-notary-ticket-online" : "standalone-notary-ticket-online");
 const evidence = {
   schemaVersion: 1,
   contract: "kungfu-buildchain-apple-developer-id-evidence/v1",
@@ -82,9 +115,11 @@ const evidence = {
   certificateSha1: process.argv[4].toUpperCase(),
   teamId: process.argv[5],
   notarization: { id: notary.id, status: notary.status, ticketDelivery: "online" },
-  stapling: { status: "not-applicable", reason: "standalone Mach-O executables do not support stapled notarization tickets" },
-  gatekeeper: { status: "not-directly-assessable", reason: "spctl execute assessment applies app semantics and does not directly assess standalone Mach-O executables" },
-  checks: ["codesign-strict", "developer-id-team", "hardened-runtime", "notarytool-accepted", "standalone-notary-ticket-online"],
+  artifactKind,
+  ...(compound ? { compound } : {}),
+  stapling: { status: "not-applicable", reason: artifactKind === "archive" ? "generic archives do not support stapled notarization tickets" : "standalone Mach-O executables do not support stapled notarization tickets" },
+  gatekeeper: { status: "not-directly-assessable", reason: artifactKind === "archive" ? "Gatekeeper assesses the extracted signed code rather than a generic archive container" : "spctl execute assessment applies app semantics and does not directly assess standalone Mach-O executables" },
+  checks,
 };
 fs.writeFileSync(process.argv[3], `${JSON.stringify(evidence, null, 2)}\n`);
 NODE

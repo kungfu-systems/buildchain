@@ -253,7 +253,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:372ea28fa6deab82c34bfb8c092cba7e539ceb25f82111b75b7ee8b89c855c4f"
+      "digest": "sha256:771668d0ab2f8ed9fde29f7a069b213cfe464cef265d764d8e228f5ed057861a"
     },
     {
       "id": "publish-transaction",
@@ -293,7 +293,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:4b40cb8675c111b7588297102a61cb241630f2b707a67a0384a6df7527b2c64c"
+      "digest": "sha256:732f5ac5a5721937dd53619874964670d9de43ba984312151adf5f2cb6dcfa5c"
     },
     {
       "id": "web-surface-deployments",
