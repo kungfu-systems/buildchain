@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-11
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -162,15 +162,15 @@ returned a GraphQL error in the response body.
 
 ## Exact-source stable promotion
 
-For a selected `2.12.0-alpha.4`, Patrol creates the immutable source branch:
+For a selected `3.0.2-alpha.4`, Patrol creates the immutable source branch:
 
 ```text
-publish-gate/release/v2/v2.12/2.12.0-alpha.4
+publish-gate/release/v3/v3.0/3.0.2-alpha.4
 ```
 
-and opens it against `release/v2/v2.12`. This is an existing strict Buildchain
-governance path. The PR freezes the qualified candidate even if `v2.12-alpha`
-or `alpha/v2/v2.12` has already moved to alpha.5. Normal Verify,
+and opens it against `release/v3/v3.0`. This is an existing strict Buildchain
+governance path. The PR freezes the qualified candidate even if `v3.0-alpha`
+or `alpha/v3/v3.0` has already moved to alpha.5. Normal Verify,
 release-candidate resolution, source-tree equivalence, publish transaction,
 passport, registry, tag, and floating-ref checks still run.
 

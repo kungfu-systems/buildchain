@@ -289,13 +289,13 @@ jobs:
         env:
           BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
           BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
-          BUILDCHAIN_DEFAULT_REF: v2
+          BUILDCHAIN_DEFAULT_REF: v3
           BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}
         with:
           script: |
             const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
             const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
-            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v3").trim();
             const [runtimeOwner, runtimeRepo] = repository.split("/");
             if (!runtimeOwner || !runtimeRepo) {
               throw new Error(`invalid buildchain repository: ${repository}`);

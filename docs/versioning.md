@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -31,9 +31,9 @@ on.
 | Minor | New compatible welded surface: reusable workflow output, CLI command family, config protocol, published subpath, evidence file, runner contract, or agent-readable artifact. |
 | Major | Breaking semantic change, removed stable surface, changed branch/tag governance, or incompatible protocol rewrite.                                                           |
 
-Kungfu minor lines are long-lived trains. `v2.0`, `v2.1`, and `v2.2` can each
-receive many patch releases. The major ref, such as `v2`, points at the
-selected stable major entrypoint; the minor ref, such as `v2.2`, points at the
+Kungfu minor lines are long-lived trains. `v3.0`, `v3.1`, and `v3.2` can each
+receive many patch releases. The major ref, such as `v3`, points at the
+selected stable major entrypoint; the minor ref, such as `v3.2`, points at the
 latest stable production patch for that minor line.
 
 ## Welded Surfaces

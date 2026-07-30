@@ -26,7 +26,7 @@
         "release-candidate-artifact"
       ],
       "breakingDefaults": {
-        "buildchainRefDefault": "workflow-shell-ref-or-v2",
+        "buildchainRefDefault": "workflow-shell-ref-or-v3",
         "promoteOnlyHeavyBuildPolicy": "pr-stage-only"
       },
       "optionalInputs": [
@@ -51,8 +51,8 @@
         "contract drift is checked before heavy build jobs for stable floating refs",
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
-      "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:dd331456f4364ee005ea44748c00fcb993467c4bcd1fa32d66ae7c7cb80b36a0"
+      "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
+      "auditDigest": "sha256:31a755072188364b63394950a6dd48ea8e1b36ce3061ff040bd51058b7715e80"
     },
     {
       "contractVersion": 1,
@@ -235,7 +235,7 @@
         "web-surface-manifest-json"
       ],
       "breakingDefaults": {
-        "buildchainRefDefault": "workflow-shell-ref-or-v2",
+        "buildchainRefDefault": "workflow-shell-ref-or-v3",
         "contractCompatibilityPolicy": "major-compatible",
         "breakingDriftPolicy": "fail-closed-before-build"
       },
@@ -260,8 +260,8 @@
         "effective channel and preview alias are injected before caller build and verify commands",
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
-      "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
-      "auditDigest": "sha256:f0ff3395c25d10b4e93877c2fa5295101f0cadeaf15ece029be2be2e7adca111"
+      "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960",
+      "auditDigest": "sha256:b54c067c31c4c76da44d63fff8945229f7afab262f9fc9131915abeadca56e4f"
     },
     {
       "contractVersion": 1,
@@ -705,7 +705,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:9f233e352f2c6fe7c15c8caa1c11563e1939a36f15a36cd6a7d0b4505c9073f1"
+      "auditDigest": "sha256:6da0c19a787aa8523f8e2fc3384771b4ebbcf09a4720d8494b06601225ae4c01"
     },
     {
       "contractVersion": 1,
@@ -727,7 +727,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:e1be1ee22361f617aae8d50981c7e1b4ef5831f6257edcce6fd41d70e04c6492"
+      "auditDigest": "sha256:b307929debfbbbd06aa8a90ae987a93ce26277ab0c6faa8f4596b65c61a9d645"
     },
     {
       "contractVersion": 1,
@@ -1316,7 +1316,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:dd331456f4364ee005ea44748c00fcb993467c4bcd1fa32d66ae7c7cb80b36a0"
+      "auditDigest": "sha256:31a755072188364b63394950a6dd48ea8e1b36ce3061ff040bd51058b7715e80"
     },
     {
       "contractVersion": 1,
@@ -2285,7 +2285,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
-      "auditDigest": "sha256:f0ff3395c25d10b4e93877c2fa5295101f0cadeaf15ece029be2be2e7adca111"
+      "auditDigest": "sha256:b54c067c31c4c76da44d63fff8945229f7afab262f9fc9131915abeadca56e4f"
     },
     {
       "contractVersion": 1,
@@ -3444,9 +3444,9 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:7c18fdd3df180db9e1f043a2286ef3f02fae60b84e42b76cd50da9cfeb77883d",
-      "auditDigest": "sha256:e07a5db56a71bd0ac79c81f12619938055361bf0a0ed8e5891f88ca1c51f1c93"
+      "auditDigest": "sha256:d07482cd66413a2fb3781a3b76f960b8151b6231841799647fe237820de2fde6"
     }
   ],
-  "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102",
-  "contractDigest": "sha256:d31e31a21fd155ba1094832131137afd6eddce00d69412d702ad8dc5cc16c860"
+  "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
+  "contractDigest": "sha256:a0e2e0050ce6652b4bf715c9477c329acbad2ca4e7dfe5cd18d0d421ab457881"
 }

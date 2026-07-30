@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -18,7 +18,7 @@ ai_provenance:
 
 # Reusable Build Surface
 
-Buildchain v2 provides a reusable build workflow for repositories that need
+Buildchain v3 provides a reusable build workflow for repositories that need
 Buildchain's release semantics but cannot be described as a simple Node package.
 The first target shape is `libnode`: expensive native builds, multiple operating
 systems, self-hosted runner labels, and release artifacts that must be auditable.
@@ -31,9 +31,8 @@ only signs and verifies immutable data. See
 
 ## Automatic Channel Router
 
-The preferred consumer surface is one reusable workflow call. After v2.12
-reaches the stable major ref, consumers keep this configuration for both alpha
-development and stable release work:
+The preferred consumer surface is one reusable workflow call. Consumers keep
+this configuration for both alpha development and stable release work:
 
 ```yaml
 jobs:
@@ -79,10 +78,10 @@ with:
   buildchain-channel: stable
 ```
 
-During the v2.12 prerelease evaluation window, canaries use
-`build.yml@v3-alpha`. The same router then selects `v3-alpha` or stable `v2` as
-the runtime. Production consumers should adopt `build.yml@v3` after the router
-has reached stable; this keeps the routing shell itself on a stable ref.
+During v3 prerelease evaluation windows, canaries use `build.yml@v3-alpha`.
+The same router then selects `v3-alpha` or stable `v3` as the runtime.
+Production consumers use `build.yml@v3`; this keeps the routing shell itself on
+a stable ref.
 
 The router is generated from `.build.yml`'s input/output surface. Run
 `node scripts/generate-channel-build-workflow.mjs` after changing the advanced
@@ -309,7 +308,7 @@ Every run resolves the runtime ref to an immutable SHA before checkout. The job
 summary and aggregate build summary record the workflow shell ref, requested
 runtime ref, resolved runtime ref, runtime SHA, stability class, trust decision,
 and rollback ref. Train refs are development validation refs: they do not move
-`v2`, `vX.Y`, `vX.Y-alpha`, npm dist-tags, or production release refs, and they
+`v3`, `vX.Y`, `vX.Y-alpha`, npm dist-tags, or production release refs, and they
 must not be pinned as long-term production dependencies.
 
 Runtime override validates Buildchain runtime scripts, CLI code, local actions,
@@ -329,13 +328,13 @@ major line, and compatibility policy they reviewed.
 
 The reusable build trust gate checks this lock before any heavy matrix job:
 
-1. resolve the Buildchain runtime ref, for example `v2`, to an immutable SHA;
+1. resolve the Buildchain runtime ref, for example `v3`, to an immutable SHA;
 2. read `dist/site/buildchain-contract.json` from that checked-out Buildchain
    ref;
 3. read the consumer's `.buildchain/contract-lock.json`;
 4. compare the accepted contract with the current contract.
 
-SHA drift alone is not a failure. `v2` is expected to advance. Buildchain only
+SHA drift alone is not a failure. `v3` is expected to advance. Buildchain only
 fails fast when the accepted contract is no longer compatible, for example a
 required input is removed, a required output disappears, a protected behavior
 promise changes, or the major line changes. Additive changes such as optional
@@ -927,15 +926,14 @@ promotion starts:
   `vN`, and `buildchain-stable-contract-lock-path`.
 
 The generated router also owns the stable-shell layout transition through
-`.buildchain/promotion-shell-routing.json`. Stable `v2.14.13` contains the hidden
-advanced workflow, so the stable lane calls that workflow at the exact immutable
-SHA behind the released `v2` state and forwards the complete internal promotion
-identity surface. The logical shell identity remains `vN`, and the router
-retains it in the public audit outputs. The internal advanced-shell call receives
-the exact call ref selected by the routing configuration, so its called-workflow
-ref check and checkout SHA both bind to the same immutable identity. Updating the
-routing pin after a stable release does not require any consumer declaration
-change.
+`.buildchain/promotion-shell-routing.json`. The v3 stable and alpha lanes call
+the hidden advanced workflow at the exact immutable SHA behind their selected
+v3 channel state and forward the complete internal promotion identity surface.
+The logical shell identity remains `vN`, and the router retains it in the public
+audit outputs. The internal advanced-shell call receives the exact call ref
+selected by the routing configuration, so its called-workflow ref check and
+checkout SHA both bind to the same immutable identity. Updating a routing pin
+after a release does not require any consumer declaration change.
 
 The router resolves immutable SHAs and the selected lock digest before candidate
 download. The advanced shell verifies the same router, shell, runtime, lock,
@@ -1007,7 +1005,7 @@ main`, marks the rest as `role: platform`, and passes the generated
 side effect. Downloaded platform manifests are still passed into the release
 passport unless `release-passport-platform-manifest-paths` is set explicitly.
 The same Buildchain contract lock check runs before release-candidate
-resolution and before publish. A compatible `v2` drift leaves an issue in the
+resolution and before publish. A compatible `v3` drift leaves an issue in the
 consumer repository but does not trigger a second heavy build; an incompatible
 drift fails before publish side effects.
 
@@ -1172,7 +1170,7 @@ Supported placeholders are `{artifact}`, `{artifactName}`, `{platform}`,
 `{platformId}`, `{platformName}`, `{sha}`, `{shortSha}`, `{ref}`, `{runId}`,
 and `{runAttempt}`. Invalid GitHub artifact name characters are normalized to
 `-`, so `{ref}` remains deterministic even for refs such as
-`refs/heads/dev/v2/v2.0`.
+`refs/heads/dev/v3/v3.0`.
 
 Each platform also writes and uploads:
 

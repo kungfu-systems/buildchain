@@ -23,7 +23,7 @@ override that policy:
 uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
 ```
 
-During the v2.12 alpha evaluation window, canaries call the same router through
+During v3 prerelease evaluation windows, canaries call the same router through
 the matching prerelease ref:
 
 ```yaml

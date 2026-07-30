@@ -69,7 +69,7 @@ function surface(root, value) {
 
 function majorLineFromPackageVersion(version = "") {
   const match = String(version || "").match(/^(\d+)\./);
-  return match ? `v${match[1]}` : "v2";
+  return match ? `v${match[1]}` : "v3";
 }
 
 export function createBuildchainContractWorld({
@@ -113,7 +113,7 @@ export function createBuildchainContractWorld({
         "release-candidate-artifact",
       ],
       breakingDefaults: {
-        buildchainRefDefault: "workflow-shell-ref-or-v2",
+        buildchainRefDefault: "workflow-shell-ref-or-v3",
         promoteOnlyHeavyBuildPolicy: "pr-stage-only",
       },
       optionalInputs: [
@@ -280,7 +280,7 @@ export function createBuildchainContractWorld({
         "web-surface-manifest-json",
       ],
       breakingDefaults: {
-        buildchainRefDefault: "workflow-shell-ref-or-v2",
+        buildchainRefDefault: "workflow-shell-ref-or-v3",
         contractCompatibilityPolicy: "major-compatible",
         breakingDriftPolicy: "fail-closed-before-build",
       },
@@ -746,7 +746,7 @@ export function finalizeBuildchainContractWorld(contractWorld) {
 }
 
 export function createBuildchainContractLock({
-  buildchainRef = "v2",
+  buildchainRef = "v3",
   resolvedSha = "",
   contractWorld,
   compatibilityPolicy = DEFAULT_POLICY,

@@ -1,6 +1,24 @@
+---
+status: active
+period: ongoing
+theme: buildchain-release-flow
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Release Flow Diagrams
 
-This document describes the Buildchain v2 branch, tag, and version-state flow.
+This document describes the Buildchain v3 branch, tag, and version-state flow.
 See [Release governance](release-governance.md) for the design rationale.
 
 ## Architecture
@@ -46,16 +64,16 @@ for the versioned policy and evidence contract.
 
 | Ref kind | Example | Mutability | Purpose |
 | --- | --- | --- | --- |
-| Development branch | `dev/v2/v2.0` | moves | next source state for a minor line |
-| Alpha branch | `alpha/v2/v2.0` | moves | latest test state for a minor line |
-| Release branch | `release/v2/v2.0` | moves | latest production state for a minor line |
+| Development branch | `dev/v3/v3.0` | moves | next source state for a minor line |
+| Alpha branch | `alpha/v3/v3.0` | moves | latest test state for a minor line |
+| Release branch | `release/v3/v3.0` | moves | latest production state for a minor line |
 | Major gate branch | `publish-gate/major` | moves | reviewed administrator gate for publishing the next major |
-| Exact alpha tag | `v2.0.3-alpha.0` | immutable | audit ref for one tested prerelease |
-| Exact release tag | `v2.0.2` | immutable | audit ref for one production release |
-| Floating alpha tag | `v2.0-alpha` | moves | latest test channel for a minor line |
-| Floating major alpha tag | `v2-alpha` | moves | latest test channel on the highest published alpha minor for a major line |
-| Floating minor tag | `v2.0` | moves | latest production patch on a minor line |
-| Floating major tag | `v2` | moves | selected stable major entrypoint |
+| Exact alpha tag | `v3.0.3-alpha.0` | immutable | audit ref for one tested prerelease |
+| Exact release tag | `v3.0.2` | immutable | audit ref for one production release |
+| Floating alpha tag | `v3.0-alpha` | moves | latest test channel for a minor line |
+| Floating major alpha tag | `v3-alpha` | moves | latest test channel on the highest published alpha minor for a major line |
+| Floating minor tag | `v3.0` | moves | latest production patch on a minor line |
+| Floating major tag | `v3` | moves | selected stable major entrypoint |
 
 ## Ref Protection Contract
 
@@ -69,16 +87,16 @@ refs/tags/v*.*.*
 ```
 
 Do not apply immutable-tag rulesets to every `refs/tags/v*` ref. Buildchain
-must be able to update floating channel tags such as `v2`, `v2.0`, `v2.0-alpha`,
-and `v2-alpha` after the exact tag and publish evidence are valid. A ruleset that
+must be able to update floating channel tags such as `v3`, `v3.0`, `v3.0-alpha`,
+and `v3-alpha` after the exact tag and publish evidence are valid. A ruleset that
 matches all `v*` tags also matches floating tags, so release finalization can
 fail with GitHub protected-ref errors even though the exact release tag and
 published artifacts are already durable.
 
 The intended governance split is:
 
-- exact tags such as `v2.0.14` and `v2.0.15-alpha.0` are immutable audit refs;
-- floating tags such as `v2`, `v2.0`, `v2.0-alpha`, and `v2-alpha` are mutable channel refs
+- exact tags such as `v3.0.2` and `v3.0.3-alpha.0` are immutable audit refs;
+- floating tags such as `v3`, `v3.0`, `v3.0-alpha`, and `v3-alpha` are mutable channel refs
   owned by the Buildchain promotion token;
 - protected branches still require reviewed channel PRs before Buildchain can
   move any exact or floating release refs.
@@ -94,17 +112,17 @@ The workflow is backed by the CLI command:
 
 ```bash
 buildchain release line open \
-  --major 2 \
-  --minor 10 \
-  --source-ref release/v2/v2.9 \
+  --major 3 \
+  --minor 1 \
+  --source-ref release/v3/v3.0 \
   --json
 ```
 
 When the workflow is run with `apply=true`, Buildchain:
 
-- writes the initial version-state commit, such as `2.10.0-alpha.0`;
-- creates `dev/v2/v2.10` from that commit;
-- creates `alpha/v2/v2.10` and `release/v2/v2.10` from the selected source ref;
+- writes the initial version-state commit, such as `3.1.0-alpha.0`;
+- creates `dev/v3/v3.1` from that commit;
+- creates `alpha/v3/v3.1` and `release/v3/v3.1` from the selected source ref;
 - applies branch protection with one approving review and the configured
   required status check; dev starts strict, while alpha and release also require
   the pair-specific `verify` aggregate without a source-up-to-date ancestry loop;
@@ -112,7 +130,7 @@ When the workflow is run with `apply=true`, Buildchain:
   the exact queue parameters and bypass actors from the current default dev
   branch when the policy is `inherit` or absent;
 - switches the repository default branch to the new dev line when requested;
-- opens the first `dev/v2/v2.10 -> alpha/v2/v2.10` channel PR when requested.
+- opens the first `dev/v3/v3.1 -> alpha/v3/v3.1` channel PR when requested.
 
 This makes minor-line creation a single audited operation. The channel PR still
 goes through the normal verify/review/promotion path before an alpha is
@@ -229,26 +247,26 @@ The same minor line can loop through this state machine many times.
 
 ## Version Examples
 
-Assume `v2.0.2-alpha.1` has been tested and a maintainer merges
-`alpha/v2/v2.0 -> release/v2/v2.0`.
+Assume `v3.0.2-alpha.1` has been tested and a maintainer merges
+`alpha/v3/v3.0 -> release/v3/v3.0`.
 
 Buildchain should produce:
 
 ```text
-v2.0.2                  exact production tag
-v2.0                    floating minor tag
-v2                      floating major tag when v2.0 is the selected major line
-release/v2/v2.0         production channel branch
+v3.0.2                  exact production tag
+v3.0                    floating minor tag
+v3                      floating major tag when v3.0 is the selected major line
+release/v3/v3.0         production channel branch
 ```
 
 It should also prepare:
 
 ```text
-v2.0.3-alpha.0          exact next alpha tag
-v2.0-alpha              floating alpha tag
-v2-alpha                floating major alpha tag when v2.0 is the highest published alpha minor
-alpha/v2/v2.0           alpha channel branch
-dev/v2/v2.0             development channel branch
+v3.0.3-alpha.0          exact next alpha tag
+v3.0-alpha              floating alpha tag
+v3-alpha                floating major alpha tag when v3.0 is the highest published alpha minor
+alpha/v3/v3.0           alpha channel branch
+dev/v3/v3.0             development channel branch
 ```
 
 This is expected behavior. A production release closes one patch and opens the

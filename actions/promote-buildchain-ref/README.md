@@ -1,28 +1,46 @@
+---
+status: active
+period: ongoing
+theme: buildchain-ref-promotion-action
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # promote-buildchain-ref
 
 Internal buildchain action for promoting verified buildchain release-line and
 compatibility refs from buildchain release channels:
 
-- `alpha/v2/v2.0` creates or reuses the next exact prerelease tag such as
-  `v2.0.1-alpha.0`, writes that version into package version state, points the
+- `alpha/v3/v3.0` creates or reuses the next exact prerelease tag such as
+  `v3.0.3-alpha.0`, writes that version into package version state, points the
   alpha and dev channel branches at the version commit, then promotes
-  `v2.0-alpha` and, when this is the highest published alpha minor, `v3-alpha`;
-- `release/v2/v2.0` creates or reuses the next exact release tag such as
-  `v2.0.0`, writes that version into package version state, points the release
+  `v3.0-alpha` and, when this is the highest published alpha minor, `v3-alpha`;
+- `release/v3/v3.0` creates or reuses the next exact release tag such as
+  `v3.0.2`, writes that version into package version state, points the release
   channel branch and release tags at the release commit, then prepares a second
-  source commit for the next exact prerelease tag such as `v2.0.1-alpha.0` and
-  points the alpha/dev channel branches plus `v2.0-alpha` at that prerelease
-  commit, and moves `v3-alpha` only if no higher v2 minor has published an alpha;
+  source commit for the next exact prerelease tag such as `v3.0.3-alpha.0` and
+  points the alpha/dev channel branches plus `v3.0-alpha` at that prerelease
+  commit, and moves `v3-alpha` only if no higher v3 minor has published an alpha;
 - `publish-gate/major` accepts a reviewed PR from a production release line such
-  as `release/v2/v2.0`, writes the next major production version such as
-  `v3.0.0`, points `publish-gate/major`, `release/v3/v3.0`, `v3.0`, and `v3`
-  at that release commit, then prepares `v3.0.1-alpha.0` for
-  `alpha/v3/v3.0`, `dev/v3/v3.0`, `v3.0-alpha`, and `v3-alpha`. The older `major-gate`
+  as `release/v3/v3.0`, writes the next major production version such as
+  `v4.0.0`, points `publish-gate/major`, `release/v4/v4.0`, `v4.0`, and `v4`
+  at that release commit, then prepares `v4.0.1-alpha.0` for
+  `alpha/v4/v4.0`, `dev/v4/v4.0`, `v4.0-alpha`, and `v4-alpha`. The older `major-gate`
   branch name is a compatibility alias only.
 
 The release branch name defines the minor line. For example,
-`release/v2/v2.1` creates `v2.1.N`, promotes `v2.1`, and promotes `v2` only
-when the next minor tag such as `v2.2` does not already exist.
+`release/v3/v3.1` creates `v3.1.N`, promotes `v3.1`, and promotes `v3` only
+when the next minor tag such as `v3.2` does not already exist.
 
 The action updates version state in `lerna.json`, root `package.json`, and
 workspace package manifests discovered from package manager metadata
@@ -134,7 +152,7 @@ trusted channel workflow:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
     generated-ref-update-token: ${{ github.token }}
     sha: ${{ github.sha }}
-    target-ref: release/v2/v2.0
+    target-ref: release/v3/v3.0
     publish-transaction: "true"
     publish-mode: publish-final-version
     publish-auth: trusted-publishing
@@ -470,15 +488,15 @@ so the mutation path cannot widen the authority descriptor.
 
 The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
-release tags are minor/major tags such as `v2.0` and `v2`, and floating alpha
-tags are minor-line tags such as `v2.0-alpha` plus cross-minor major tags such
+release tags are minor/major tags such as `v3.0` and `v3`, and floating alpha
+tags are minor-line tags such as `v3.0-alpha` plus cross-minor major tags such
 as `v3-alpha`. A major alpha tag only moves for the highest minor in that major
 with a published alpha, so older-line maintenance cannot roll consumers back.
 Bare tags such as `1.0.0` are not
 maintained as buildchain release entrypoints.
 
 Repository rulesets should protect exact tags, not every `v*` tag. A ruleset
-such as `refs/tags/v*` also protects floating channel tags like `v2.0-alpha` and `v3-alpha`,
+such as `refs/tags/v*` also protects floating channel tags like `v3.0-alpha` and `v3-alpha`,
 which Buildchain must update after exact tags and publish evidence are durable.
 Use an exact-tag rule such as `refs/tags/v*.*.*` for immutable evidence tags and
 leave floating channel tags mutable for the promotion token.

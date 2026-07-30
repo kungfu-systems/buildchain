@@ -104,10 +104,8 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
   assert.equal(inventory.policy.unclassifiedV2TokensAllowed, false);
 
   const allowedClassifications = new Set([
-    "artifact-version-example",
     "legacy-compatibility-action",
     "legacy-compatibility-ref",
-    "public-contract-compatibility-fallback",
     "retired-input-tombstone",
     "retired-path-tombstone",
     "third-party-action-version",
@@ -4168,8 +4166,8 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(stableLock.buildchain.majorLine, "v3");
   assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.equal(
-    stableLock.buildchain.compatibilityDigest,
     alphaLock.buildchain.compatibilityDigest,
+    currentContract.compatibilityDigest,
   );
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),
