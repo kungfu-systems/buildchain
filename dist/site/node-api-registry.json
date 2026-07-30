@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:5d70d965020214d9f414eec7efc6bf84eb5aef7f8ada762bc802a1f0d80dceac",
+      "digest": "sha256:fd4fdce12e83fb2777e26c48bafe493cc011a0cb29d5a97e43379dc0a92e7c57",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:5d70d965020214d9f414eec7efc6bf84eb5aef7f8ada762bc802a1f0d80dceac",
+      "digest": "sha256:fd4fdce12e83fb2777e26c48bafe493cc011a0cb29d5a97e43379dc0a92e7c57",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -216,7 +216,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-artifact",
       "export": "./publication-artifact",
       "target": "./packages/core/publication-artifact.js",
-      "digest": "sha256:3c565ff115c1d6b161311227f99e3b2bbc0142f2be09cd95e07f35b1f168beef",
+      "digest": "sha256:475ac6390ef2834bc355a9853a23327408d53b1e63ba5710b16f79b9ad9dcc00",
       "summary": "Publication artifact manifest, source bundle, and publication passport APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -231,6 +231,19 @@
       "target": "./packages/core/publication-package.js",
       "digest": "sha256:fa37e806991e37bc8bde854c59cba760d735eb809fbdc4705f5c808e24ec2a69",
       "summary": "Publication npm package synthesis APIs for Buildchain-managed paper release presets.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-reproducibility",
+      "export": "./publication-reproducibility",
+      "target": "./packages/core/publication-reproducibility.js",
+      "digest": "sha256:68c2ded9d23fc115c9dbc2a234af44123cd53c9f3e83e6925322661eea4afa74",
+      "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
@@ -412,7 +425,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:2364ebba30f250a988173193220e2df276b2cb028bd7f6463d86d3f2dcff176a"
+      "digest": "sha256:42f9356d4480764636098fa576009d4cfb836144101c30e826319a89149a19bb"
     },
     {
       "id": "build-facts",

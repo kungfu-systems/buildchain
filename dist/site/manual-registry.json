@@ -246,7 +246,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:2364ebba30f250a988173193220e2df276b2cb028bd7f6463d86d3f2dcff176a",
+      "digest": "sha256:42f9356d4480764636098fa576009d4cfb836144101c30e826319a89149a19bb",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
