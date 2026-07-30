@@ -296,12 +296,14 @@ The `buildchain paper` command family assembles the existing publication
 primitives into a resumable operator flow:
 
 ```text
-scaffold -> preflight -> bootstrap npm -> build -> alpha -> status -> resume
+scaffold/new or migrate/existing -> preflight -> bootstrap npm -> build -> alpha -> status -> resume
 ```
 
 Each command emits a typed JSON envelope with `--json`. Dry-run is the default
 for every external mutation. `scaffold --write` is limited to no-overwrite
-local file creation; `bootstrap npm --execute`, `alpha --execute`, and
+local file creation. `migrate --write` is limited to the Buildchain-owned
+contract lock, version pin, thin workflows, and provisioning authority; paper
+content and publication configuration are preserved. `bootstrap npm --execute`, `alpha --execute`, and
 `resume --execute` cross external authority boundaries and therefore require
 explicit execution.
 

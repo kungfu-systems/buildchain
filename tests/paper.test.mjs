@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  PAPER_MIGRATION_CONTRACT,
   PAPER_NPM_BOOTSTRAP_CONTRACT,
   PAPER_PROVISIONING_CONTRACT,
   PAPER_STATE_ORDER,
@@ -16,7 +17,9 @@ import {
   createPaperAlphaPlan,
   createPaperResumePlan,
   executePaperNpmBootstrap,
+  planPaperMigration,
   planPaperScaffold,
+  writePaperMigration,
   writePaperScaffold,
 } from "../packages/core/paper.js";
 import {
@@ -195,6 +198,82 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   assert.equal(
     preflight.checks.find((entry) => entry.id === "runtime.exact-source")
       .status,
+    "pass",
+  );
+  assert.equal(
+    preflight.checks.find((entry) => entry.id === "provisioning.authority")
+      .status,
+    "pass",
+  );
+});
+
+test("paper migration converges existing repositories without rewriting content or config", () => {
+  const cwd = tempDir("migration");
+  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
+  initGit(cwd);
+  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd });
+  execFileSync("git", ["config", "user.email", "buildchain@example.test"], {
+    cwd,
+  });
+  execFileSync("git", ["add", "."], { cwd });
+  execFileSync("git", ["commit", "-q", "-m", "fixture: existing paper"], {
+    cwd,
+  });
+
+  const configPath = path.join(cwd, ".buildchain", "buildchain.toml");
+  const originalConfig = fs
+    .readFileSync(configPath, "utf8")
+    .replace(/\n\[lifecycle\.build\]\ncommand = "make pdf"\n/, "\n");
+  fs.writeFileSync(configPath, originalConfig);
+  fs.rmSync(
+    path.join(cwd, ".buildchain", "paper", "provisioning-authority.json"),
+  );
+  const runtimeSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], {
+    encoding: "utf8",
+  }).trim();
+  for (const workflow of [
+    path.join(cwd, ".github", "workflows", "build.yml"),
+    path.join(cwd, ".github", "workflows", "paper-release.yml"),
+  ]) {
+    fs.writeFileSync(
+      workflow,
+      fs.readFileSync(workflow, "utf8").replaceAll(runtimeSha, "v2"),
+    );
+  }
+  execFileSync("git", ["add", "."], { cwd });
+  execFileSync("git", ["commit", "-q", "-m", "fixture: legacy authority"], {
+    cwd,
+  });
+
+  const contentBefore = fs.readFileSync(
+    path.join(cwd, "paper", "main.tex"),
+    "utf8",
+  );
+  const configBefore = fs.readFileSync(configPath, "utf8");
+  const plan = planPaperMigration({
+    cwd,
+    buildchainRoot: root,
+    buildchainVersion: packageVersion,
+  });
+  assert.equal(plan.contract, PAPER_MIGRATION_CONTRACT);
+  assert.equal(plan.ok, true);
+  assert.equal(plan.summary.create, 1);
+  assert.ok(plan.summary.update >= 2);
+  const migrated = writePaperMigration(plan);
+  assert.equal(migrated.ok, true);
+  assert.equal(
+    fs.readFileSync(path.join(cwd, "paper", "main.tex"), "utf8"),
+    contentBefore,
+  );
+  assert.equal(fs.readFileSync(configPath, "utf8"), configBefore);
+  const preflight = collectPaperPreflight({
+    cwd,
+    buildchainRoot: root,
+    buildchainVersion: packageVersion,
+    offline: true,
+  });
+  assert.equal(
+    preflight.checks.find((entry) => entry.id === "config.publication").status,
     "pass",
   );
   assert.equal(
@@ -518,7 +597,7 @@ esac
   }
 });
 
-test("paper CLI emits stable JSON errors and all seven routes", () => {
+test("paper CLI emits stable JSON errors and all eight routes", () => {
   const failure = spawnSync(
     process.execPath,
     [bin, "paper", "scaffold", "--json"],
@@ -535,6 +614,7 @@ test("paper CLI emits stable JSON errors and all seven routes", () => {
   });
   for (const route of [
     "paper scaffold",
+    "paper migrate",
     "paper preflight",
     "paper bootstrap npm",
     "paper build",

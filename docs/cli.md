@@ -106,11 +106,12 @@ predicate, platform manifest, Passport, and Buildchain evidence locally. See
 ### Governed paper lifecycle
 
 `buildchain paper` is the unified operator surface for a paper repository. Its
-seven subcommands return versioned JSON contracts with `--json`:
+eight subcommands return versioned JSON contracts with `--json`:
 
 ```bash
 buildchain paper scaffold --package @kungfu-tech/paper-example \
   --repository kungfu-systems/paper-example
+buildchain paper migrate --json
 buildchain paper preflight --offline --json
 buildchain paper bootstrap npm --json
 buildchain paper build --json
@@ -123,6 +124,9 @@ The safety and authority boundary is explicit:
 
 - `scaffold` plans a 14-file, no-overwrite repository shape by default; add
   `--write` to create only missing files.
+- `migrate` plans the five Buildchain-owned control-file changes needed by an
+  existing paper repository. Add `--write` only after reviewing exact old and
+  new digests; paper content and publication configuration are never rewritten.
 - The scaffolded `.buildchain/paper/provisioning-authority.json` binds both
   caller workflow byte digests, their exact reusable-workflow SHA, the runtime
   SHA, contract-lock bytes, npm registry and trusted-publisher coordinates, and
@@ -158,7 +162,8 @@ The ordered evidence states are `scaffolded`, `governed`, `admitted`,
 
 The corresponding Node surface is
 `@kungfu-tech/buildchain/paper`. Planning and status functions are read-only;
-`writePaperScaffold()` is the only local scaffold writer, and
+`writePaperScaffold()` and `writePaperMigration()` are the bounded local
+writers, and
 `executePaperNpmBootstrap()` preserves the same confirmation boundary used by
 the CLI.
 

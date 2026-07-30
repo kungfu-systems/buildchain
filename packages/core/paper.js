@@ -24,6 +24,7 @@ import {
 } from "./publication-sealed-bundle.js";
 
 export const PAPER_SCAFFOLD_CONTRACT = "kungfu-buildchain-paper-scaffold";
+export const PAPER_MIGRATION_CONTRACT = "kungfu-buildchain-paper-migration";
 export const PAPER_PREFLIGHT_CONTRACT = "kungfu-buildchain-paper-preflight";
 export const PAPER_STATUS_CONTRACT = "kungfu-buildchain-paper-status";
 export const PAPER_NPM_BOOTSTRAP_CONTRACT =
@@ -349,7 +350,10 @@ command = "make check"
 `;
 }
 
-function scaffoldBuildWorkflow(buildchainSha) {
+function scaffoldBuildWorkflow(
+  buildchainSha,
+  { artifactName = "paper-publication" } = {},
+) {
   return `name: Build
 
 on:
@@ -373,11 +377,17 @@ jobs:
       buildchain-contract-lock-path: .buildchain/contract-lock.json
       toolchain-type: config
       verify-command: make check
-      artifact-name: paper-publication
+      artifact-name: ${JSON.stringify(artifactName)}
 `;
 }
 
-function scaffoldReleaseWorkflow(buildchainSha) {
+function scaffoldReleaseWorkflow(
+  buildchainSha,
+  { artifactPaths = "_build/main.pdf", releasePassportProductName = "" } = {},
+) {
+  const passportInput = releasePassportProductName
+    ? `      release-passport-product-name: ${JSON.stringify(releasePassportProductName)}\n`
+    : "";
   return `name: Paper Release
 
 on:
@@ -405,8 +415,8 @@ jobs:
       publisher-workflow-path: .github/workflows/paper-release.yml
       toolchain-type: config
       verify-command: make check
-      artifact-paths: _build/main.pdf
-    secrets:
+      artifact-paths: ${JSON.stringify(artifactPaths)}
+${passportInput}    secrets:
       BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
       BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
       BUILDCHAIN_GENERATED_WRITE_TOKEN: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
@@ -869,6 +879,253 @@ export function writePaperScaffold(plan) {
         command: `buildchain paper preflight --cwd ${JSON.stringify(resolvedCwd)} --json`,
         description:
           "Verify the generated repository before any external mutation.",
+      },
+    ],
+  };
+}
+
+function migrationFiles({
+  cwd,
+  buildchainRoot,
+  buildchainVersion,
+  buildchainSha,
+}) {
+  const configResult = paperConfig(cwd);
+  if (configResult.error) {
+    throw new Error(
+      `paper migration requires a valid publication config: ${configResult.error}`,
+    );
+  }
+  validateBuildchainConfig(cwd, { requireLifecycleStages: ["verify"] });
+  const config = configResult.loaded.config;
+  const repository = resolvePaperRepository(cwd);
+  if (!repository) {
+    throw new Error(
+      "paper migration requires an exact GitHub repository identity",
+    );
+  }
+  const packageName = normalizePackageName(
+    config.publish?.package || config.publish?.mainPackage || "",
+    "paper publish package",
+  );
+  const runtimeSha =
+    buildchainSha || runtimeGitSha(buildchainRoot, buildchainVersion);
+  if (!GIT_SHA_PATTERN.test(runtimeSha)) {
+    throw new Error("paper migration requires an exact Buildchain source SHA");
+  }
+  const runtimeIdentity = buildchainPackageIdentity(
+    buildchainRoot,
+    buildchainVersion,
+  );
+  if (!runtimeIdentity.version) {
+    throw new Error(
+      "paper migration requires an exact Buildchain package version",
+    );
+  }
+  const existingLock = readJson(
+    path.resolve(cwd, PAPER_PATHS.contractLock),
+  ).value;
+  const contractLock = createBuildchainContractLock({
+    buildchainRef: runtimeSha,
+    resolvedSha: runtimeSha,
+    contractWorld: runtimeContractWorld(buildchainRoot),
+    acceptedAt:
+      existingLock?.buildchain?.resolvedSha === runtimeSha
+        ? existingLock.buildchain.acceptedAt
+        : runtimeAcceptedAt(buildchainRoot, runtimeSha),
+  });
+  const contractLockText = jsonText(contractLock);
+  const buildWorkflow = scaffoldBuildWorkflow(runtimeSha, {
+    artifactName: config.project.name,
+  });
+  const releaseWorkflow = scaffoldReleaseWorkflow(runtimeSha, {
+    artifactPaths: config.publication.artifactPaths.join(","),
+    releasePassportProductName: config.publication.title,
+  });
+  const provisioningAuthority = createPaperProvisioningAuthority({
+    repository,
+    packageName,
+    buildchainVersion: runtimeIdentity.version,
+    buildchainSha: runtimeSha,
+    contractLock: contractLockText,
+    buildWorkflow,
+    releaseWorkflow,
+  });
+  return new Map([
+    [PAPER_PATHS.contractLock, contractLockText],
+    [PAPER_PATHS.versionPin, `${runtimeIdentity.version}\n`],
+    [PAPER_PATHS.buildWorkflow, buildWorkflow],
+    [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
+    [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
+  ]);
+}
+
+export function planPaperMigration({
+  cwd = process.cwd(),
+  buildchainRoot = process.cwd(),
+  buildchainVersion = "",
+  buildchainSha = "",
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const repositoryRoot = gitValue(resolvedCwd, [
+    "rev-parse",
+    "--show-toplevel",
+  ]);
+  if (
+    !repositoryRoot ||
+    fs.realpathSync(repositoryRoot) !== fs.realpathSync(resolvedCwd)
+  ) {
+    throw new Error("paper migration must target the exact repository root");
+  }
+  const source = {
+    head: gitValue(resolvedCwd, ["rev-parse", "HEAD"]),
+    clean: gitResult(resolvedCwd, ["status", "--porcelain"]).stdout === "",
+  };
+  if (!GIT_SHA_PATTERN.test(source.head)) {
+    throw new Error("paper migration requires a committed Git source");
+  }
+  const plannedFiles = [
+    ...migrationFiles({
+      cwd: resolvedCwd,
+      buildchainRoot,
+      buildchainVersion,
+      buildchainSha,
+    }),
+  ].map(([relativePath, content]) => {
+    const target = path.resolve(resolvedCwd, relativePath);
+    if (fs.existsSync(target) && !fs.statSync(target).isFile()) {
+      return {
+        path: relativePath,
+        action: "conflict",
+        currentSha256: "",
+        sha256: sha256Text(content),
+        content,
+      };
+    }
+    const current = fs.existsSync(target)
+      ? fs.readFileSync(target, "utf8")
+      : undefined;
+    return {
+      path: relativePath,
+      action:
+        current === undefined
+          ? "create"
+          : current === content
+            ? "unchanged"
+            : "update",
+      currentSha256: current === undefined ? "" : sha256Text(current),
+      sha256: sha256Text(content),
+      content,
+    };
+  });
+  const changes = plannedFiles.map(({ content: _content, ...entry }) => entry);
+  const conflicts = changes.filter((entry) => entry.action === "conflict");
+  const ok = source.clean && conflicts.length === 0;
+  const result = {
+    schemaVersion: 1,
+    contract: PAPER_MIGRATION_CONTRACT,
+    ok,
+    cwd: resolvedCwd,
+    dryRun: true,
+    source,
+    summary: {
+      create: changes.filter((entry) => entry.action === "create").length,
+      update: changes.filter((entry) => entry.action === "update").length,
+      unchanged: changes.filter((entry) => entry.action === "unchanged").length,
+      conflict: conflicts.length,
+    },
+    changes,
+    conflicts,
+    nextActions: !source.clean
+      ? [
+          {
+            id: "commit-source",
+            command: "git status --short",
+            description:
+              "Migration only rewrites Buildchain-owned control files from a clean committed source.",
+          },
+        ]
+      : conflicts.length > 0
+        ? [
+            {
+              id: "resolve-migration-conflicts",
+              command: "",
+              description:
+                "Resolve non-file targets; migration never replaces a directory or special path.",
+            },
+          ]
+        : [
+            {
+              id: "write-migration",
+              command: "buildchain paper migrate --write --json",
+              description:
+                "Write the reviewed Buildchain-owned control files without changing paper content or publication configuration.",
+            },
+          ],
+  };
+  Object.defineProperty(result, "_plannedFiles", {
+    value: plannedFiles,
+    enumerable: false,
+  });
+  return result;
+}
+
+export function writePaperMigration(plan) {
+  if (!plan || plan.contract !== PAPER_MIGRATION_CONTRACT) {
+    throw new Error("paper migration plan contract mismatch");
+  }
+  if (!plan.ok) {
+    return {
+      ...plan,
+      dryRun: false,
+      written: [],
+      updated: [],
+      ok: false,
+      errorCode: "paper-migration-blocked",
+    };
+  }
+  const written = [];
+  const updated = [];
+  for (const entry of plan._plannedFiles) {
+    if (entry.action === "unchanged") continue;
+    const target = path.resolve(plan.cwd, entry.path);
+    const exists = fs.existsSync(target);
+    const current =
+      exists && fs.statSync(target).isFile()
+        ? fs.readFileSync(target, "utf8")
+        : undefined;
+    const currentSha256 = current === undefined ? "" : sha256Text(current);
+    if (
+      (entry.action === "create" && exists) ||
+      (entry.action === "update" && currentSha256 !== entry.currentSha256)
+    ) {
+      throw new Error(
+        `paper migration race detected at ${entry.path}; no stale plan was applied`,
+      );
+    }
+  }
+  for (const entry of plan._plannedFiles) {
+    if (entry.action === "unchanged") continue;
+    const target = path.resolve(plan.cwd, entry.path);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, entry.content, {
+      flag: entry.action === "create" ? "wx" : "w",
+    });
+    (entry.action === "create" ? written : updated).push(entry.path);
+  }
+  return {
+    ...plan,
+    ok: true,
+    dryRun: false,
+    written,
+    updated,
+    idempotent: written.length === 0 && updated.length === 0,
+    nextActions: [
+      {
+        id: "paper-preflight",
+        command: `buildchain paper preflight --cwd ${JSON.stringify(plan.cwd)} --offline --json`,
+        description:
+          "Verify the migrated repository before any external mutation.",
       },
     ],
   };
@@ -1838,7 +2095,7 @@ export function collectPaperPreflight({
   let validationError = "";
   try {
     validation = validateBuildchainConfig(resolvedCwd, {
-      requireLifecycleStages: ["build", "verify"],
+      requireLifecycleStages: ["verify"],
     });
   } catch (error) {
     validationError = error.message;
@@ -1971,7 +2228,7 @@ export function collectPaperPreflight({
       scope: "local",
       message:
         validationError ||
-        "Publication config and build/verify lifecycle are valid.",
+        "Publication config, digest-pinned toolchain, and verify lifecycle are valid.",
     },
     {
       id: "source.exact-commit",
@@ -2137,7 +2394,7 @@ export function collectPaperPreflight({
   if (validationError) {
     nextActions.push({
       id: "repair-config",
-      command: "buildchain validate --require-lifecycle-stages build,verify",
+      command: "buildchain validate --require-lifecycle-stages verify",
       description: validationError,
     });
   }

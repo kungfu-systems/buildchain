@@ -302,6 +302,7 @@ function usage() {
                                                    [--no-toolchain-pull]
                                                    [--allow-unpinned-toolchain] [--json]
   buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]
+  buildchain paper migrate [--cwd <dir>] [--write] [--json]
   buildchain paper preflight [--cwd <dir>] [--offline] [--json]
   buildchain paper bootstrap npm [--cwd <dir>] [--execute]
                                   [--confirm-public-package <name>] [--json]
@@ -1844,7 +1845,7 @@ async function main(argv = process.argv.slice(2)) {
     await runPaperCli(args, {
       buildchainRoot: root,
       buildchainVersion: packageVersion(),
-      buildchainRef: process.env.BUILDCHAIN_RUNTIME_REF || "v2",
+      buildchainRef: process.env.BUILDCHAIN_RUNTIME_REF || "v3",
       buildchainSha:
         process.env.BUILDCHAIN_RUNTIME_SHA || embeddedSourceSha || "",
     });
