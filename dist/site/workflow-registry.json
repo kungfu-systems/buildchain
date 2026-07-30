@@ -1287,11 +1287,12 @@
         "max-age-seconds",
         "pull-request-body-prefix",
         "pull-request-body-prefix-renderer",
+        "reactivation-authorized",
         "settlement-authorized",
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 12,
+      "inputCount": 13,
       "secrets": [
         "promotion-token"
       ],
@@ -1301,13 +1302,14 @@
         "controller-state",
         "eligible",
         "next-candidate-sha",
+        "prior-state-root",
         "promotion-pr",
         "result-path",
         "selected-sha",
         "settlement-action",
         "source-lock-ref"
       ],
-      "outputCount": 9,
+      "outputCount": 10,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
       "status": "active"

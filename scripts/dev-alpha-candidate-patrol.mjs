@@ -12,6 +12,8 @@ const STATE_MARKER_START = "<!-- buildchain-dev-alpha-candidate-state";
 const STATE_MARKER_END = "-->";
 const LEGACY_BODY_MARKER = "Buildchain exact-source channel candidate.";
 const EXACT_SHA = /^[0-9a-f]{40}$/u;
+const EVIDENCE_ROOT = /^sha256:[0-9a-f]{64}$/u;
+const ABSENT_STATE_ROOT = "absent";
 
 function text(value = "") {
   return String(value ?? "").trim();
@@ -69,6 +71,18 @@ function optionalExactSha(value, name) {
   const normalized = text(value);
   if (normalized && !EXACT_SHA.test(normalized))
     throw new Error(`${name} must be an exact 40-character commit SHA`);
+  return normalized;
+}
+
+function optionalStateRoot(value, name) {
+  const normalized = text(value);
+  if (
+    normalized &&
+    normalized !== ABSENT_STATE_ROOT &&
+    !EVIDENCE_ROOT.test(normalized)
+  ) {
+    throw new Error(`${name} must be absent or an exact sha256 root`);
+  }
   return normalized;
 }
 
@@ -237,6 +251,31 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
         process.env.BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA,
       "expectedSelectedSha",
     ),
+    expectedPriorStateRoot: optionalStateRoot(
+      options.expectedPriorStateRoot ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_EXPECTED_PRIOR_STATE_ROOT,
+      "expectedPriorStateRoot",
+    ),
+    reactivationAuthorized: bool(
+      options.reactivationAuthorized ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_REACTIVATION_AUTHORIZED,
+      false,
+    ),
+    transitionAuthority: {
+      actor: text(
+        options.transitionAuthority?.actor ?? process.env.GITHUB_ACTOR,
+      ),
+      workflow: text(
+        options.transitionAuthority?.workflow ?? process.env.GITHUB_WORKFLOW,
+      ),
+      runId: text(
+        options.transitionAuthority?.runId ?? process.env.GITHUB_RUN_ID,
+      ),
+      runAttempt: text(
+        options.transitionAuthority?.runAttempt ??
+          process.env.GITHUB_RUN_ATTEMPT,
+      ),
+    },
     createPullRequest,
     settlementAuthorized: bool(
       options.settlementAuthorized ??
@@ -396,6 +435,10 @@ function candidateFromDecision(decision) {
     sourceLockRef: decision.sourceLockRef,
     decisionRoot: decision.decisionRoot,
     workflowEvidence: decision.workflowEvidence,
+    qualificationRoot: evidenceRoot({
+      sourceSha: decision.source.sha,
+      workflowEvidence: decision.workflowEvidence,
+    }),
   };
 }
 
@@ -406,6 +449,9 @@ function candidateStateBody({
   activeCandidate,
   nextCandidate,
   supersededCandidate,
+  priorStateRoot = ABSENT_STATE_ROOT,
+  generation = 1,
+  tombstones = [],
 }) {
   const body = {
     schema: DEV_ALPHA_CANDIDATE_STATE_SCHEMA,
@@ -413,13 +459,60 @@ function candidateStateBody({
     sourceBranch: options.sourceBranch,
     targetBranch: options.targetBranch,
     targetSha,
+    generation,
+    priorStateRoot,
     activeCandidate,
     nextCandidate,
+    tombstones,
     observationDecisionRoot: decision.decisionRoot || null,
     observedAt: options.now,
     ...(supersededCandidate ? { supersededCandidate } : {}),
   };
   return { ...body, stateRoot: evidenceRoot(body) };
+}
+
+function persistedStateRoot(candidate) {
+  return text(candidate?.state?.stateRoot) || ABSENT_STATE_ROOT;
+}
+
+function candidateTombstone({
+  options,
+  candidate,
+  generation,
+  priorStateRoot,
+  reason,
+  pullRequest,
+}) {
+  const body = {
+    schema: "kungfu-buildchain-dev-alpha-candidate-tombstone/v1",
+    repository: options.repository,
+    targetBranch: options.targetBranch,
+    candidateSha: candidate.sourceSha,
+    qualificationRoot:
+      candidate.qualificationRoot ||
+      evidenceRoot({
+        sourceSha: candidate.sourceSha,
+        workflowEvidence: candidate.workflowEvidence || [],
+      }),
+    generation,
+    priorStateRoot,
+    reason,
+    transitionAuthority: options.transitionAuthority,
+    pullRequest: pullRequest
+      ? {
+          number: Number(pullRequest.number),
+          url: text(pullRequest.url || pullRequest.html_url),
+        }
+      : null,
+    workflowRuns: (candidate.workflowEvidence || []).map((row) => ({
+      workflowPath: row.workflowPath,
+      runId: row.runId,
+      runAttempt: row.runAttempt,
+      url: row.url,
+    })),
+    recordedAt: options.now,
+  };
+  return { ...body, tombstoneRoot: evidenceRoot(body) };
 }
 
 function pullRequestBody({
@@ -573,9 +666,24 @@ export async function runDevAlphaCandidatePatrol(
     );
   }
   let activeCandidate = managedCandidates[0] || null;
+  const priorStateRoot = persistedStateRoot(activeCandidate);
+  if (
+    options.expectedPriorStateRoot &&
+    options.expectedPriorStateRoot !== priorStateRoot
+  ) {
+    throw new Error(
+      `candidate controller compare-and-swap failed: expected prior state root ${options.expectedPriorStateRoot}, observed ${priorStateRoot}`,
+    );
+  }
+  const priorGeneration = Number(activeCandidate?.state?.generation || 0);
+  let generation = Math.max(priorGeneration, 1);
+  const priorTombstones = Array.isArray(activeCandidate?.state?.tombstones)
+    ? activeCandidate.state.tombstones
+    : [];
   const observedCandidate = candidateFromDecision(decision);
   let nextCandidate = null;
   let supersededCandidate = null;
+  let tombstones = [...priorTombstones];
   let controllerState = decision.eligible
     ? "eligible-for-settlement"
     : qualificationError
@@ -585,43 +693,100 @@ export async function runDevAlphaCandidatePatrol(
       : "observed";
   if (activeCandidate) {
     controllerState = "active";
+    nextCandidate = activeCandidate.nextCandidate || null;
     if (
       observedCandidate &&
       observedCandidate.sourceSha !== activeCandidate.sourceSha
     ) {
-      nextCandidate = observedCandidate;
-      controllerState = "retained-next";
-    }
-    if (
-      activeCandidate.nextCandidate &&
-      activeCandidate.nextCandidate.sourceSha !== nextCandidate?.sourceSha
+      const matchingTombstone = priorTombstones.find(
+        (row) => row.candidateSha === observedCandidate.sourceSha,
+      );
+      if (matchingTombstone && !options.reactivationAuthorized) {
+        controllerState = "tombstone-blocked";
+      } else {
+        if (
+          nextCandidate &&
+          nextCandidate.sourceSha !== observedCandidate.sourceSha
+        ) {
+          supersededCandidate = nextCandidate;
+          generation = priorGeneration + 1;
+          tombstones.push(
+            candidateTombstone({
+              options,
+              candidate: supersededCandidate,
+              generation,
+              priorStateRoot,
+              reason: "newer-qualified-next-candidate",
+              pullRequest: activeCandidate,
+            }),
+          );
+        }
+        nextCandidate = observedCandidate;
+        controllerState = "retained-next";
+      }
+    } else if (
+      !decision.eligible &&
+      nextCandidate &&
+      decision.source.sha === nextCandidate.sourceSha
     ) {
-      supersededCandidate = activeCandidate.nextCandidate;
+      supersededCandidate = nextCandidate;
+      nextCandidate = null;
+      generation = priorGeneration + 1;
+      tombstones.push(
+        candidateTombstone({
+          options,
+          candidate: supersededCandidate,
+          generation,
+          priorStateRoot,
+          reason: "qualification-evidence-rejected",
+          pullRequest: activeCandidate,
+        }),
+      );
+      controllerState = "rejected-next";
     }
   }
-  let state = candidateStateBody({
-    options,
-    targetSha,
-    decision,
-    activeCandidate: activeCandidate
-      ? {
-          sourceSha: activeCandidate.sourceSha,
-          sourceLockRef: activeCandidate.sourceLockRef,
-          decisionRoot: activeCandidate.decisionRoot || null,
-          pullRequestNumber: activeCandidate.number,
-          pullRequestUrl: activeCandidate.url,
-        }
-      : null,
-    nextCandidate,
-    supersededCandidate,
-  });
+  const persistedNextSha = text(activeCandidate?.nextCandidate?.sourceSha);
+  const desiredNextSha = text(nextCandidate?.sourceSha);
+  const transitionNeeded =
+    !activeCandidate?.state ||
+    persistedNextSha !== desiredNextSha ||
+    tombstones.length !== priorTombstones.length;
+  if (transitionNeeded && activeCandidate && generation === priorGeneration) {
+    generation = priorGeneration + 1;
+  }
+  let state =
+    activeCandidate?.state && !transitionNeeded
+      ? activeCandidate.state
+      : candidateStateBody({
+          options,
+          targetSha,
+          decision,
+          activeCandidate: activeCandidate
+            ? {
+                sourceSha: activeCandidate.sourceSha,
+                sourceLockRef: activeCandidate.sourceLockRef,
+                decisionRoot: activeCandidate.decisionRoot || null,
+                pullRequestNumber: activeCandidate.number,
+                pullRequestUrl: activeCandidate.url,
+              }
+            : null,
+          nextCandidate,
+          supersededCandidate,
+          priorStateRoot,
+          generation,
+          tombstones,
+        });
   let pullRequest;
   let settlementAction = "none";
   if (options.settlementAuthorized && !options.dryRun) {
     if (activeCandidate) {
       const nextBody = replaceCandidateStateMarker(activeCandidate.body, state);
       if (nextBody !== activeCandidate.body) {
-        await client.updatePullRequestBody(activeCandidate.number, nextBody);
+        await client.updatePullRequestBody(
+          activeCandidate.number,
+          nextBody,
+          priorStateRoot,
+        );
         settlementAction = nextCandidate
           ? supersededCandidate
             ? "supersede-next-candidate"
@@ -656,15 +821,53 @@ export async function runDevAlphaCandidatePatrol(
           state,
         }),
       });
-      settlementAction = "create-active-candidate";
-      controllerState = "active";
-      activeCandidate = {
-        number: Number(pullRequest.number || 0),
-        url: text(pullRequest.html_url),
-        sourceSha,
-        sourceLockRef: decision.sourceLockRef,
-        decisionRoot: decision.decisionRoot,
-      };
+      if (pullRequest.state && pullRequest.state !== "open") {
+        const tombstone = candidateTombstone({
+          options,
+          candidate: observedCandidate,
+          generation,
+          priorStateRoot,
+          reason: pullRequest.merged_at
+            ? "candidate-pr-merged"
+            : "candidate-pr-closed",
+          pullRequest,
+        });
+        tombstones = [...priorTombstones, tombstone];
+        state = candidateStateBody({
+          options,
+          targetSha,
+          decision,
+          activeCandidate: null,
+          nextCandidate: null,
+          supersededCandidate: null,
+          priorStateRoot,
+          generation,
+          tombstones,
+        });
+        const nextBody = replaceCandidateStateMarker(pullRequest.body, state);
+        await client.updatePullRequestBody(
+          pullRequest.number,
+          nextBody,
+          persistedStateRoot({
+            state: parseCandidateStateMarker(pullRequest.body),
+          }),
+        );
+        settlementAction = "reuse-known-candidate-tombstone";
+        controllerState = "tombstoned";
+        activeCandidate = null;
+      } else {
+        settlementAction = pullRequest.reused
+          ? "reuse-active-candidate"
+          : "create-active-candidate";
+        controllerState = "active";
+        activeCandidate = {
+          number: Number(pullRequest.number || 0),
+          url: text(pullRequest.html_url),
+          sourceSha,
+          sourceLockRef: decision.sourceLockRef,
+          decisionRoot: decision.decisionRoot,
+        };
+      }
     }
   }
   return {
@@ -681,6 +884,9 @@ export async function runDevAlphaCandidatePatrol(
       supersededCandidate,
       settlementAction,
       stateRoot: state.stateRoot,
+      priorStateRoot,
+      generation: state.generation,
+      tombstones: state.tombstones || [],
     },
     pullRequest: pullRequest || null,
   };
@@ -809,18 +1015,36 @@ export function createGitHubChannelCandidateClient({
       });
     },
     async ensurePullRequest({ head, base, title, body }) {
-      const open = await api(
-        `/repos/${owner}/${repo}/pulls?state=open&head=${encodeURIComponent(`${owner}:${head}`)}&base=${encodeURIComponent(base)}&per_page=20`,
+      const known = await api(
+        `/repos/${owner}/${repo}/pulls?state=all&head=${encodeURIComponent(`${owner}:${head}`)}&base=${encodeURIComponent(base)}&per_page=20`,
       );
-      return (
-        open[0] ||
-        api(`/repos/${owner}/${repo}/pulls`, {
-          method: "POST",
-          body: { head, base, title, body },
-        })
-      );
+      if (known.length > 1) {
+        throw new Error(
+          `multiple known candidate pull requests bind ${head}: ${known
+            .map((row) => `#${row.number}`)
+            .join(", ")}`,
+        );
+      }
+      if (known[0]) return { ...known[0], reused: true };
+      return api(`/repos/${owner}/${repo}/pulls`, {
+        method: "POST",
+        body: { head, base, title, body },
+      });
     },
-    async updatePullRequestBody(number, body) {
+    async updatePullRequestBody(
+      number,
+      body,
+      expectedPriorStateRoot = ABSENT_STATE_ROOT,
+    ) {
+      const current = await api(`/repos/${owner}/${repo}/pulls/${number}`);
+      const observedPriorStateRoot = persistedStateRoot({
+        state: parseCandidateStateMarker(current.body),
+      });
+      if (observedPriorStateRoot !== expectedPriorStateRoot) {
+        throw new Error(
+          `candidate controller compare-and-swap failed: expected prior state root ${expectedPriorStateRoot}, observed ${observedPriorStateRoot}`,
+        );
+      }
       return api(`/repos/${owner}/${repo}/pulls/${number}`, {
         method: "PATCH",
         body: { body },
@@ -866,6 +1090,7 @@ async function main() {
       "active-candidate-pr": result.controller.activeCandidate?.url || "",
       "next-candidate-sha": result.controller.nextCandidate?.sourceSha || "",
       "settlement-action": result.controller.settlementAction,
+      "prior-state-root": result.controller.priorStateRoot,
     };
     fs.appendFileSync(
       process.env.GITHUB_OUTPUT,
