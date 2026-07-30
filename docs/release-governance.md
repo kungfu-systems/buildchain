@@ -260,6 +260,13 @@ Developer ID, Windows Authenticode, and detached cryptographic signatures share
 the request/receipt model, while each profile retains its honest platform
 semantics and fail-closed verification requirements.
 
+The authority verifies the complete result set on GitHub-hosted infrastructure
+before delivery. The consumer controller also performs final result verification,
+exact-byte import, manifest recomputation, and deterministic-artifact replacement
+on a GitHub-hosted lane. Self-hosted build runners do not download authority
+result payloads, and aggregate/release evidence fails closed until this
+finalization succeeds.
+
 The central `buildchain-artifact-signing` environment reuses the established
 macOS Credential Island names (`BUILDCHAIN_MACOS_CERTIFICATE_*`,
 `BUILDCHAIN_MACOS_NOTARY_API_*`, and
@@ -681,7 +688,7 @@ jobs:
       dry-run: true
 ```
 
-All three wrappers default to the `v2` floating Buildchain runtime. When
+All three wrappers default to the `v3` floating Buildchain runtime. When
 `target-branch` is omitted, the caller's current/default branch selects the
 active semver dev line, so consumers do not pin patrol to a stale minor branch.
 The separate workflow names keep consumer schedules readable and stable while

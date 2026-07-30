@@ -3,7 +3,7 @@ const TRAIN_REF_RE = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
 const AUTHORITY_REF_RE = /^authority\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
 const OFFICIAL_CHANNEL_REF_RE = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
 
-export function parseWorkflowShellRef(workflowRef = "", fallback = "v2", buildchainRepository = "kungfu-systems/buildchain") {
+export function parseWorkflowShellRef(workflowRef = "", fallback = "v3", buildchainRepository = "kungfu-systems/buildchain") {
   const value = String(workflowRef || "");
   const expectedPrefix = `${buildchainRepository}/.github/workflows/`;
   if (!value.startsWith(expectedPrefix)) {
@@ -80,7 +80,7 @@ export function normalizeRequestedRuntimeRef(requestedRef = "") {
 export function resolveRuntimeSelection({
   requestedRef = "",
   workflowRef = "",
-  defaultStableRef = "v2",
+  defaultStableRef = "v3",
   buildchainRepository = "kungfu-systems/buildchain",
 } = {}) {
   const requested = String(requestedRef || "").trim();
@@ -114,9 +114,11 @@ export function resolveRuntimeSelection({
 export function validateRuntimeOverrideTrust({
   requestedRef = "",
   eventName = "",
+  eventAction = "",
   actorPermission = "",
   sameRepositoryPullRequest = false,
   pullRequestHeadSha = "",
+  workflowShellSha = "",
 } = {}) {
   if (!String(requestedRef || "").trim()) {
     return { ok: true, decision: "stable-default" };
@@ -126,6 +128,15 @@ export function validateRuntimeOverrideTrust({
   }
   const normalizedRequested = String(requestedRef || "").trim().toLowerCase();
   const normalizedHeadSha = String(pullRequestHeadSha || "").trim().toLowerCase();
+  const normalizedWorkflowShellSha = String(workflowShellSha || "").trim().toLowerCase();
+  if (
+    eventName === "pull_request" &&
+    eventAction === "closed" &&
+    EXACT_SHA_RE.test(normalizedRequested) &&
+    normalizedRequested === normalizedWorkflowShellSha
+  ) {
+    return { ok: true, decision: "closed-release-pr-shell-runtime" };
+  }
   if (
     eventName === "pull_request" &&
     sameRepositoryPullRequest === true &&

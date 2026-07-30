@@ -31,7 +31,43 @@ function temporaryDirectory(t) {
   return directory;
 }
 
-function writeAdapterOutput(directory, durationMs = 2500) {
+function terminalCapture(durationMs = 2500) {
+  const captureDurationMs = Math.max(500, durationMs - 500);
+  return {
+    schema: "kungfu.terminal-capture/v1",
+    command: "kungfu agent-work-lab autoplay",
+    dimensions: { columns: 120, rows: 36 },
+    durationMs: captureDurationMs,
+    encoding: "base64",
+    events: [
+      { atMs: 0, data: Buffer.from("\u001b[2J\u001b[HAgent Work Lab\r\n").toString("base64") },
+      { atMs: Math.max(1, captureDurationMs - 1), data: Buffer.from("completed\r\n").toString("base64") },
+    ],
+    completion: {
+      schema: "kungfu.agent-work-lab.tui-autoplay/v1",
+      status: "qualified",
+      reportRoot: `sha256:${"e".repeat(64)}`,
+      eventCount: 4,
+    },
+    exitCode: 0,
+    authority: {
+      classification: "volatile-terminal-observation",
+      grants: [],
+      nonAuthorities: [
+        "first-party-identity",
+        "system-identity",
+        "kfd-compliance",
+        "product-system-metadata",
+        "package-metadata",
+        "registry-history",
+        "scan-output",
+        "standalone-generation",
+      ],
+    },
+  };
+}
+
+function writeAdapterOutput(directory, durationMs = 2500, withCapture = false) {
   fs.mkdirSync(directory, { recursive: true });
   fs.writeFileSync(path.join(directory, "complete-transcript.txt"), "build started\nartifact qualified\n");
   fs.writeFileSync(path.join(directory, "scene.json"), stableJson({
@@ -57,6 +93,12 @@ function writeAdapterOutput(directory, durationMs = 2500) {
       annotation: "qualified output",
     }],
   }));
+  if (withCapture) {
+    fs.writeFileSync(
+      path.join(directory, "terminal-capture.json"),
+      stableJson(terminalCapture(durationMs)),
+    );
+  }
 }
 
 function writeRendererOutput(directory, inputs) {
@@ -105,6 +147,13 @@ function writeRendererOutput(directory, inputs) {
       scene: { root: sha256(fs.readFileSync(path.join(directory, "scene.json"))) },
       transcript: { root: sha256(fs.readFileSync(path.join(directory, "complete-transcript.txt"))) },
       projection: { root: sha256(fs.readFileSync(path.join(directory, "public-projection.json"))) },
+      ...(inputs.terminalCapture
+        ? {
+          terminalCapture: {
+            root: sha256(fs.readFileSync(inputs.terminalCapture)),
+          },
+        }
+        : {}),
     },
     outputs,
   }));
@@ -272,6 +321,33 @@ test("adapter output is strict and smoke input is bounded", (t) => {
   assert.throws(() => validateAdapterOutput(adapter), /undeclared adapter output/);
 });
 
+test("optional terminal capture is bounded and grants no implicit authority", (t) => {
+  const root = temporaryDirectory(t);
+  writeAdapterOutput(root, 2500, true);
+  assert.equal(validateAdapterOutput(root).terminalCapture.schema, "kungfu.terminal-capture/v1");
+
+  const capturePath = path.join(root, "terminal-capture.json");
+  const capture = JSON.parse(fs.readFileSync(capturePath, "utf8"));
+  capture.completion.status = "passed";
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.throws(() => validateAdapterOutput(root), /not a qualified Agent Work Lab autoplay/);
+
+  capture.completion.status = "qualified";
+  capture.authority.grants = ["system-identity"];
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.throws(() => validateAdapterOutput(root), /must not grant authority/);
+
+  capture.authority.grants = [];
+  capture.authority.nonAuthorities.pop();
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.throws(() => validateAdapterOutput(root), /must declare every identity and metadata non-authority/);
+
+  capture.authority.nonAuthorities.push("standalone-generation");
+  capture.events[0].atMs = 1;
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.throws(() => validateAdapterOutput(root), /must start at zero/);
+});
+
 test("checksums cover every member and reject tampering", (t) => {
   const root = temporaryDirectory(t);
   fs.writeFileSync(path.join(root, "one.txt"), "one");
@@ -317,7 +393,7 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
   const gate = path.join(root, "gate");
   const fullOutput = path.join(root, "full-output");
   const media = path.join(root, "media");
-  writeAdapterOutput(adapter);
+  writeAdapterOutput(adapter, 2500, true);
   prepareSmoke({ "--adapter-output": adapter, "--output": smokeInput });
   writeRendererOutput(smokeOutput, {
     transcript: path.join(smokeInput, "complete-transcript.txt"),
@@ -364,11 +440,18 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
     "--renderer-image": RENDERER_IMAGE,
     "--source-sha": SOURCE_SHA,
   });
+  const gateReceipt = JSON.parse(fs.readFileSync(path.join(gate, "gate-receipt.json"), "utf8"));
+  assert.equal(gateReceipt.qualifiedInputs.terminalCapture.schema, "kungfu.terminal-capture/v1");
+  assert.equal(
+    gateReceipt.qualifiedInputs.terminalCapture.root,
+    sha256(fs.readFileSync(path.join(gate, "terminal-capture.json"))),
+  );
 
   writeRendererOutput(fullOutput, {
     transcript: path.join(gate, "complete-transcript.txt"),
     projection: path.join(gate, "public-projection.json"),
     scene: path.join(gate, "scene.json"),
+    terminalCapture: path.join(gate, "terminal-capture.json"),
   });
   finalizeMedia({
     "--gate-bundle": gate,
@@ -383,6 +466,7 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
   assert.equal(mediaReceipt.schema, "buildchain.auditable-demo-media/v1");
   assert.equal(mediaReceipt.qualifiedGateRoot, gateRoot);
   assert.equal(mediaReceipt.qualification, undefined);
+  assert.equal(fs.existsSync(path.join(media, "terminal-capture.json")), false);
   assert.match(verifyChecksums(media), /^sha256:[0-9a-f]{64}$/);
 
   const webMedia = path.join(root, "web-media");

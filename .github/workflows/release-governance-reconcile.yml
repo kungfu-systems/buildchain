@@ -18,7 +18,7 @@ on:
         type: boolean
       buildchain-ref:
         description: "Buildchain runtime ref containing the reconciliation command"
-        default: "v2"
+        default: "v3"
         required: false
         type: string
     secrets:
@@ -45,7 +45,7 @@ on:
         type: boolean
       buildchain-ref:
         description: "Buildchain runtime ref containing the reconciliation command"
-        default: "v2"
+        default: "v3"
         required: false
         type: string
 

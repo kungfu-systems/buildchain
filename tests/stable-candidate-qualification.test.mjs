@@ -82,6 +82,31 @@ test("dispatches missing workflows at immutable refs and waits before attesting"
   assert.equal(client.calls[2][0], "status");
 });
 
+test("waits for a run newer than the completed failure that triggered dispatch", async () => {
+  const failedAt = "2026-07-30T04:50:00Z";
+  const waits = [];
+  const client = fakeClient({
+    async findWorkflowRun({ repository }) {
+      if (repository === "kungfu-systems/buildchain") {
+        return { status: "completed", conclusion: "success", html_url: "https://example.test/build" };
+      }
+      return { id: 41, status: "completed", conclusion: "startup_failure", created_at: failedAt, html_url: "https://example.test/stale" };
+    },
+    async waitForWorkflowRun(input) {
+      waits.push(input);
+      return { id: 42, status: "completed", conclusion: "success", created_at: "2026-07-30T05:00:00Z", html_url: "https://example.test/current" };
+    },
+  });
+
+  const result = await runStableCandidateQualification({ repository: "kungfu-systems/buildchain", candidateSha: SHA }, client);
+
+  assert.equal(waits.length, 1);
+  assert.equal(waits[0].notBefore, failedAt);
+  assert.equal(waits[0].excludeRunId, "41");
+  assert.equal(result.canary.url, "https://example.test/current");
+  assert.equal(client.calls.find(([kind]) => kind === "status")[1].targetUrl, "https://example.test/current");
+});
+
 test("dispatches a bootstrap canary from an exact consumer commit", async () => {
   const canaryRef = "evidence/stable-canary";
   const canarySha = "b".repeat(40);
@@ -163,4 +188,49 @@ test("cross-repository canary matching binds the candidate through the exact run
     sourceSha: "b".repeat(40),
   });
   assert.equal(run.id, 42);
+});
+
+test("GitHub polling ignores stale completed runs until the dispatched run is visible", async () => {
+  const stale = {
+    id: 41,
+    head_sha: "b".repeat(40),
+    display_title: `Buildchain Stable Canary / ${SHA}`,
+    status: "completed",
+    conclusion: "startup_failure",
+    created_at: "2026-07-30T04:50:00Z",
+  };
+  const current = {
+    ...stale,
+    id: 42,
+    conclusion: "success",
+  };
+  let request = 0;
+  const client = createGitHubQualificationClient({
+    token: "dispatch",
+    sleep: async () => {},
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      async text() {
+        request += 1;
+        return JSON.stringify({ workflow_runs: request === 1 ? [stale] : [current, stale] });
+      },
+    }),
+  });
+
+  const run = await client.waitForWorkflowRun({
+    repository: "kungfu-systems/site-libkungfu-dev",
+    workflowFile: "buildchain-stable-canary.yml",
+    workflowName: "Buildchain Stable Canary",
+    headSha: SHA,
+    runName: `Buildchain Stable Canary / ${SHA}`,
+    sourceSha: "b".repeat(40),
+    notBefore: stale.created_at,
+    excludeRunId: String(stale.id),
+    attempts: 2,
+    intervalMs: 0,
+  });
+
+  assert.equal(run.id, 42);
+  assert.equal(request, 2);
 });

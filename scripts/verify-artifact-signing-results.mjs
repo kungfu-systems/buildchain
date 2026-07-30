@@ -27,11 +27,36 @@ function resolveBelow(root, relative, label) {
   return target;
 }
 
+function walk(root, name, output = []) {
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    const child = path.join(root, entry.name);
+    if (entry.isDirectory()) walk(child, name, output);
+    else if (entry.isFile() && entry.name === name) output.push(child);
+  }
+  return output;
+}
+
+function resolveRequestRoot(root) {
+  const direct = path.join(root, "index.json");
+  if (fs.existsSync(direct)) return root;
+  const candidates = walk(root, "index.json").filter((candidate) => {
+    try {
+      return JSON.parse(fs.readFileSync(candidate, "utf8")).contract === "kungfu-buildchain-artifact-signing-request-index/v1";
+    } catch {
+      return false;
+    }
+  });
+  if (candidates.length !== 1) {
+    throw new Error(`expected exactly one artifact signing request index, found ${candidates.length}`);
+  }
+  return path.dirname(candidates[0]);
+}
+
 export function verifyArtifactSigningResults({
   requestRoot = process.env.BUILDCHAIN_SIGNING_REQUEST_ROOT,
   resultRoot = process.env.BUILDCHAIN_SIGNING_RESULT_ROOT,
 } = {}) {
-  const requests = path.resolve(required(requestRoot, "signing request root"));
+  const requests = resolveRequestRoot(path.resolve(required(requestRoot, "signing request root")));
   const results = path.resolve(required(resultRoot, "signing result root"));
   const requestIndex = JSON.parse(
     fs.readFileSync(path.join(requests, "index.json"), "utf8"),

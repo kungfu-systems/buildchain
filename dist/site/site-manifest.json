@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-30T07:24:06.316Z",
-  "publishedAt": "2026-07-30T07:24:06.316Z",
+  "generatedAt": "2026-07-30T09:49:04.119Z",
+  "publishedAt": "2026-07-30T09:49:04.119Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "1aeb9191f607a7223f8ab63c96427b605ecda9be",
+  "sourceRevision": "5770bd104905c6a7ac9fe6b0513ca9e24e5814b4",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.2",
+    "version": "3.0.3-alpha.0",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -61,7 +61,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:0e8cf2162c2e1f83cfe3a6171e3055f494cab5f03fdcbec3854e1793678e6908"
+      "digest": "sha256:6af21e489bc3d2e9e2d01838926f1fbab6d74d92446d1f9cfc5eb08e090dd3a5"
     },
     {
       "id": "install",
@@ -109,7 +109,7 @@
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:b8c3d9ad53c2509bbd95804ccc31f6aa89989c3aadf3a2b75d9c73aef168b7e8"
+      "digest": "sha256:304d0246d21bdd0f6a77183ac6839a5d1234d08d98bd5da9728c85a65b1ff7b7"
     },
     {
       "id": "release-candidate",
@@ -157,7 +157,7 @@
       "path": "docs/consumer-issue-reporting.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:96804310360c02f408fee9d540385d875a40d09bef046c3df369228d311a1cdd"
+      "digest": "sha256:20c33ab68e91227837626d1289d6c5540a318c8ff484d9a1f0ebe7dbe8626d02"
     },
     {
       "id": "infra-contract",
@@ -253,7 +253,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ea36ec722f811f5156735aa7471ed080cdc7e87d71c20c300243b226e233e675"
+      "digest": "sha256:4409c8259c3613b51a1db809493e73d9b85a0d16d292a491046fd36770d98fb0"
     },
     {
       "id": "publish-transaction",
@@ -269,7 +269,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:42a45f51db7ea11658431718835e1a430959db2a5cc80fc4651681502fe6fb7c"
+      "digest": "sha256:8c31e6daccd40ea4e7cb08e8fa3eb2f238006e331621aed45eddcb80aee5532f"
     },
     {
       "id": "release-flow",
@@ -293,7 +293,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:4b40cb8675c111b7588297102a61cb241630f2b707a67a0384a6df7527b2c64c"
+      "digest": "sha256:52f58a1a69ea924cb1fae11bb6a8def2b0c66cc4ab08416553cf680c213b5ded"
     },
     {
       "id": "web-surface-deployments",
@@ -301,7 +301,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ed4ff02dcb6f66118a29084784f25d8008ca472f59005b2e014133524706a9c5"
+      "digest": "sha256:6b907af93c55ffd8274cd83ad87a45dd48eb9a01938cf419aafebb5557be5821"
     }
   ],
   "facts": [

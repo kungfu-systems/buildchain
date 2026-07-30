@@ -155,7 +155,7 @@ function alphaDistTagForPromotion({
   sharedAlphaAuthorityMajor,
 } = {}) {
   const major = releaseLineMajor(line);
-  if (!major) {
+  if (major === undefined) {
     throw new Error(
       `alpha publication requires a vN.N release line; got ${line || "<empty>"}`,
     );

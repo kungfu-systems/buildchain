@@ -153,6 +153,7 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
       { id: "resolve-runtime", status: "passed" },
       { id: "resolve-source", status: "passed" },
       { id: "build", status: "passed", evidence: [{ kind: "artifact", digest: `sha256:${"d".repeat(64)}` }] },
+      { id: "signing-finalization", status: "passed" },
       { id: "verify", status: "passed" },
       { id: "aggregate", status: "passed" },
     ],
@@ -266,6 +267,27 @@ test("release propagation workflow emits only stages declared by its controller 
   const declared = descriptor("release-propagation").expected.stages.map((stage) => stage.id);
 
   assert.deepEqual(emitted, declared);
+});
+
+test("build workflow receipts emit every stage declared by the build controller descriptor", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github", "workflows", ".build.yml"),
+    "utf8",
+  );
+  const stageBlocks = [...workflow.matchAll(
+    /BUILDCHAIN_CONTROLLER_STAGES_JSON:\s*>-\s*\n([\s\S]*?)\n\s+BUILDCHAIN_CONTROLLER_EVIDENCE_/g,
+  )];
+  assert.equal(stageBlocks.length, 2, "build workflow must emit both controller receipt stage sets");
+  const declared = descriptor("build-lifecycle").expected.stages.map((stage) => stage.id);
+
+  for (const [index, stageBlock] of stageBlocks.entries()) {
+    const emitted = [...stageBlock[1].matchAll(/\{"id":"([^"]+)"/g)].map((match) => match[1]);
+    assert.deepEqual(
+      emitted,
+      declared,
+      "build controller receipt " + (index + 1) + " must match its descriptor",
+    );
+  }
 });
 
 test("source, runtime, and plan mismatches invalidate receipts", () => {

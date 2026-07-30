@@ -18,7 +18,7 @@ on:
       target-ref:
         description: "Buildchain channel branch to promote"
         required: true
-        default: "alpha/v2/v2.2"
+        default: "alpha/v3/v3.0"
       dry-run:
         description: "Only print planned tag updates"
         required: true
@@ -121,7 +121,11 @@ jobs:
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
+      # Durable recovery keeps the exact protected channel SHA as product
+      # source while executing the reviewed workflow runtime that owns the
+      # recovery dispatch. This prevents a source-tree defect from making its
+      # own governed recovery path permanently unreachable.
+      buildchain-ref: ${{ github.event.workflow_run.head_sha || (inputs['recover-durable-transaction'] == true && github.sha) || inputs.sha || github.sha }}
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       package-manager: pnpm

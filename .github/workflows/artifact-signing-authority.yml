@@ -127,18 +127,19 @@ jobs:
         with:
           name: authority-intake-${{ inputs.correlation-id }}
           path: .buildchain/authority-intake
-      - name: Materialize exact unsigned Mach-O
+      - name: Materialize sealed unsigned Apple artifact
         run: node scripts/materialize-artifact-signing-request.mjs
         env:
           BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
           BUILDCHAIN_SIGNING_REQUEST_PATH: ${{ matrix.request.request }}
           BUILDCHAIN_SIGNING_EXPECTED_PROFILE: apple-developer-id
           BUILDCHAIN_UNSIGNED_OUTPUT: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
-      - name: Developer ID sign, notarize, and Gatekeeper verify
+      - name: Developer ID sign and notarize Apple artifact
         run: bash scripts/sign-macos-mach-o-request.sh
         env:
           BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
           BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ matrix.request.slug }}/provider-evidence.json
+          BUILDCHAIN_ARTIFACT_KIND: ${{ matrix.request.kind }}
           BUILDCHAIN_APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
           BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
           BUILDCHAIN_APPLE_CERTIFICATE_SHA1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
@@ -154,7 +155,6 @@ jobs:
           BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
           BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ matrix.request.slug }}/provider-evidence.json
           BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/provider-results/${{ matrix.request.slug }}
-          BUILDCHAIN_SIGNING_VERIFICATION_CHECKS: codesign-strict,developer-id-team,hardened-runtime,notarytool-accepted,gatekeeper-execute
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: authority-result-macos-${{ matrix.request.slug }}-${{ inputs.correlation-id }}
@@ -232,10 +232,19 @@ jobs:
         with:
           pattern: authority-result-*-${{ inputs.correlation-id }}
           path: .buildchain/provider-results
+      - uses: actions/download-artifact@v7.0.0
+        with:
+          name: authority-intake-${{ inputs.correlation-id }}
+          path: .buildchain/authority-intake
       - name: Merge provider result indexes without changing signed bytes
         run: node scripts/merge-artifact-signing-results.mjs
         env:
           BUILDCHAIN_SIGNING_RESULT_INPUT_ROOT: .buildchain/provider-results
+          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/authority-result
+      - name: Verify complete signed result set on GitHub-hosted infrastructure
+        run: node scripts/verify-artifact-signing-results.mjs
+        env:
+          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
           BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/authority-result
       - name: Publish immutable signed result delivery
         uses: actions/upload-artifact@v7.0.1

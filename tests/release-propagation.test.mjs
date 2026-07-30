@@ -198,7 +198,7 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
   assert.match(workflow, /buildchain-repository:/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /repository: \$\{\{ inputs\.buildchain-repository \}\}/);
-  assert.match(workflow, /ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.match(workflow, /ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3' \}\}/);
   assert.match(workflow, /path: \.buildchain\/runtime/);
   assert.match(workflow, /Install Buildchain runtime dependencies/);
   assert.match(workflow, /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/);
