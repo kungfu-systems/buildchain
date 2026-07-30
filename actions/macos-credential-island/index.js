@@ -25,6 +25,7 @@ import {
   requirePattern,
   requireRepository,
   requireSha,
+  resolveExpectedBundleId,
   rewriteWheelRecord,
   resolveInside,
   safeArtifactName,
@@ -337,7 +338,7 @@ async function main() {
   );
   const sourceRef = input("source-ref", false);
   const artifactName = safeArtifactName(input("artifact-name"));
-  const expectedBundleId = input("expected-bundle-id");
+  const configuredBundleId = input("expected-bundle-id", false);
   const expectedTeamId = requirePattern(
     input("expected-team-id"),
     TEAM_ID_PATTERN,
@@ -377,8 +378,11 @@ async function main() {
     sourceTreeSha,
     runtimeSha,
     platformId: input("platform-id", false),
-    bundleId: expectedBundleId,
   });
+  const expectedBundleId = resolveExpectedBundleId(
+    configuredBundleId,
+    sealed.manifest.app.bundleId,
+  );
   const artifactStem = safeArtifactStem(
     input("artifact-stem", false) || sealed.manifest.app.productName,
   );
