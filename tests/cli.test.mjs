@@ -1876,6 +1876,48 @@ test("standalone binary runs public CLI without imported script entrypoint side 
   assert.equal(layout.contract, "kungfu-buildchain-layout-discovery");
   assert.equal(layout.buildchain.version, version);
   assert.equal(layout.kfd.registries["kfd-3"].path, ".buildchain/kfd/kfd-3/surfaces.json");
+
+  const paperCwd = tempDir("standalone-paper");
+  const scaffold = JSON.parse(
+    execFileSync(
+      executable,
+      [
+        "paper",
+        "scaffold",
+        "--cwd",
+        paperCwd,
+        "--package",
+        "@example/standalone-paper",
+        "--repository",
+        "example/standalone-paper",
+        "--write",
+        "--json",
+      ],
+      { encoding: "utf8" },
+    ),
+  );
+  assert.equal(scaffold.ok, true);
+  assert.equal(scaffold.written.length, 14);
+  execFileSync("git", ["init", "-q"], { cwd: paperCwd });
+  const preflight = JSON.parse(
+    execFileSync(
+      executable,
+      [
+        "paper",
+        "preflight",
+        "--cwd",
+        paperCwd,
+        "--offline",
+        "--json",
+      ],
+      { encoding: "utf8" },
+    ),
+  );
+  assert.equal(preflight.localReady, true);
+  assert.equal(
+    preflight.checks.find((entry) => entry.id === "runtime.exact-source").status,
+    "pass",
+  );
 });
 
 test("CLI span wraps commands and preserves failure exit codes", () => {

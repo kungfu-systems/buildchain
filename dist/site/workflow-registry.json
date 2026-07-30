@@ -1461,9 +1461,12 @@
       ],
       "inputCount": 26,
       "secrets": [
+        "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
+        "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
+        "BUILDCHAIN_GENERATED_WRITE_TOKEN",
         "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 1,
+      "secretCount": 4,
       "outputs": [
         "github-release-url",
         "package-name",
@@ -1914,6 +1917,7 @@
         "downstream-prepare-command",
         "downstream-repository",
         "downstream-target",
+        "downstream-update-command",
         "downstream-verify-command",
         "dry-run",
         "graph-json",
@@ -1924,7 +1928,7 @@
         "source-node",
         "upstream-release-json"
       ],
-      "inputCount": 16,
+      "inputCount": 17,
       "secrets": [
         "propagation-token"
       ],
@@ -1936,9 +1940,11 @@
         "controller-receipt-artifact",
         "controller-receipt-digest",
         "controller-receipt-json",
-        "controller-receipt-status"
+        "controller-receipt-status",
+        "propagation-receipt-digest",
+        "propagation-receipt-json"
       ],
-      "outputCount": 7,
+      "outputCount": 9,
       "surface": "release-propagation",
       "capabilityGroup": "site-and-propagation",
       "status": "preview"
@@ -2124,6 +2130,8 @@
         "publish-package-set-order",
         "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
+        "publish-sealed-bundle-manifest",
+        "publish-sealed-bundle-root",
         "publish-source-locked",
         "publish-source-ref",
         "publish-source-sha",
@@ -2165,7 +2173,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 67,
+      "inputCount": 69,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

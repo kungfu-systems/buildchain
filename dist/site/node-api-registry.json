@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d9ae3dea43788f32b8a65bcc50044bb29fb268a354b5b1fe3558cb4250e2b83b",
+      "digest": "sha256:768a2a349594112dc6cba9425877d0c4b90f159f2a4424334ac51b8a01dca7eb",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d9ae3dea43788f32b8a65bcc50044bb29fb268a354b5b1fe3558cb4250e2b83b",
+      "digest": "sha256:768a2a349594112dc6cba9425877d0c4b90f159f2a4424334ac51b8a01dca7eb",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -333,7 +333,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:680a821f732f3da344c0ecc7a6c8f4178ac268694c43890f677e4c05ad5c3a7e",
+      "digest": "sha256:da96db43564bff353b4e6a87c0b9e8a566f597a8b0a15a05e3e9efc0fbcc0cc8",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -372,7 +372,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-artifact",
       "export": "./publication-artifact",
       "target": "./packages/core/publication-artifact.js",
-      "digest": "sha256:3c565ff115c1d6b161311227f99e3b2bbc0142f2be09cd95e07f35b1f168beef",
+      "digest": "sha256:475ac6390ef2834bc355a9853a23327408d53b1e63ba5710b16f79b9ad9dcc00",
       "summary": "Publication artifact manifest, source bundle, and publication passport APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -387,6 +387,45 @@
       "target": "./packages/core/publication-package.js",
       "digest": "sha256:fa37e806991e37bc8bde854c59cba760d735eb809fbdc4705f5c808e24ec2a69",
       "summary": "Publication npm package synthesis APIs for Buildchain-managed paper release presets.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-reproducibility",
+      "export": "./publication-reproducibility",
+      "target": "./packages/core/publication-reproducibility.js",
+      "digest": "sha256:ce857ae600c4abb88b21c180c68f014044b3ea673c97b32227806c7bd91f6879",
+      "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-sealed-bundle",
+      "export": "./publication-sealed-bundle",
+      "target": "./packages/core/publication-sealed-bundle.js",
+      "digest": "sha256:9b1405a04548c9a87863c2cf410224f6cd7b44e06b76e0de0f7b8052029bc92d",
+      "summary": "Build-once publication bundle manifests and exact-byte resume verification APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/paper",
+      "export": "./paper",
+      "target": "./packages/core/paper.js",
+      "digest": "sha256:3b94d19dbc6d16eda247c1e6423b6ceba7d67eac5a0ff0e45830a4e174a5d5dc",
+      "summary": "Unified paper scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
@@ -515,7 +554,7 @@
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
-      "digest": "sha256:74eecd2917cabbf9b2e2f7c37c75bb924ecaaa72d0b94255d5c5ab01820c26f2",
+      "digest": "sha256:a74aa99143964266c0076697e949dd423a8a71f63969913b847aaa740e76073c",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
       "audience": [
@@ -568,7 +607,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:49da688f9f8b726a9169a3e4b246cb6ef07c6c626ea15c22f0b26ba1a37a58b4"
+      "digest": "sha256:e5f1cb801b4e88799ddd6214bada24073550bb412a50d7c7e05432541c679ffe"
     },
     {
       "id": "build-facts",

@@ -459,6 +459,60 @@ the owning and parent surface syncs carried their required delete exclusions.
 The runner must provide an AWS CLI version whose `s3 sync` supports
 `--no-overwrite`.
 
+### Qualified publication package-pin fast path
+
+A consumer may narrow one deployment to the exact paper version introduced by
+a package-pin-only PR. The artifact root `manifest.json` must carry a
+consumer-owned qualification envelope:
+
+```json
+{
+  "publicationFastPath": {
+    "contract": "kungfu-buildchain-publication-package-pin-fast-path",
+    "mode": "package-pin-only",
+    "targetSurface": "papers",
+    "qualificationRoot": "sha256:...",
+    "immutablePrefixes": [
+      "archive/observer-declared-timelines/v0.1.0-alpha.10"
+    ],
+    "mutableFiles": [
+      "archive/index.html",
+      "index.html",
+      "manifest.json",
+      "observer-declared-timelines/index.html",
+      "observer-declared-timelines/latest/index.html",
+      "registry.json"
+    ],
+    "invalidationPaths": [
+      "/",
+      "/archive/",
+      "/archive/observer-declared-timelines/v0.1.0-alpha.10*",
+      "/observer-declared-timelines/",
+      "/observer-declared-timelines/latest/",
+      "/manifest.json",
+      "/registry.json"
+    ]
+  }
+}
+```
+
+Buildchain validates that the target surface exists, every immutable prefix is
+declared by that surface's archive manifest, every mutable file exists outside
+those prefixes, and the qualification root is exact. A qualified plan:
+
+- selects only `targetSurface`;
+- verifies/uploads only the declared immutable prefixes with the normal
+  no-overwrite digest safeguards;
+- copies only the declared mutable files;
+- skips full `sync --delete` and directory-index alias writes;
+- invalidates only the declared viewer paths plus the deployment manifest.
+
+Any missing, malformed, or unqualified envelope keeps the normal full-surface
+plan. The fast path narrows bytes; it does not weaken channel controls.
+`package-published`, `alpha-complete`, `staging-visible`, and
+`production-visible` remain separate facts, and a package qualification never
+authorizes production by itself.
+
 For multi-surface sites, each surface host is treated as a root-relative view
 of that surface's artifact path prefix. For example, a `buildchain` surface with
 `path = "/buildchain/"` and preview URL

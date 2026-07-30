@@ -858,6 +858,114 @@
       "maturity": "stable"
     },
     {
+      "id": "paper",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper",
+      "purpose": "Inspect the unified paper repository and publication command families.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "paper-alpha",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]",
+      "purpose": "Plan or open the protected dev-to-alpha paper publication PR without direct publication.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "paper-bootstrap-npm",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper bootstrap npm [--cwd <dir>] [--execute]",
+      "purpose": "Dry-run or explicitly bootstrap the public npm package and bind GitHub Trusted Publishing.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "paper-build",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper build [--cwd <dir>] [--execute] [--json]",
+      "purpose": "Plan or execute the existing two-clean-build reproducibility gate for a paper.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "paper-migrate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper migrate [--cwd <dir>] [--write] [--json]",
+      "purpose": "Plan or write the bounded Buildchain-owned control-file migration for an existing paper repository.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "paper-preflight",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper preflight [--cwd <dir>] [--offline] [--json]",
+      "purpose": "Report exact source, runtime, permission, npm trust, deterministic build, and release-state readiness.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "paper-resume",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]",
+      "purpose": "Plan or dispatch recovery of the exact existing sealed paper release transaction.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "paper-scaffold",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]",
+      "purpose": "Plan or write an idempotent, no-overwrite, release-ready paper repository scaffold.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "paper-status",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper status [--cwd <dir>] [--json]",
+      "purpose": "Report explicit evidence for every paper lifecycle state without unsupported inference.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "portable-cache",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain portable-cache plan --manifest <file-or-json> [--output <file>]",
@@ -910,6 +1018,18 @@
       "source": "bin/buildchain.mjs",
       "usage": "buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]",
       "purpose": "Synthesize the declared npm paper package from a publication artifact manifest, passport, registry, source bundle, and primary artifact.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "publication-artifact-reproducibility",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publication-artifact reproducibility [--cwd <dir>] [--source-sha <sha>]",
+      "purpose": "Prove exact PDF, source bundle, publication evidence, and npm tarball bytes across two independent clean builds.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "agent",

@@ -711,36 +711,70 @@ test("publication artifact workflow exposes paper artifact contract", () => {
     path.join(root, ".github/workflows/publication-artifact.yml"),
     "utf8",
   );
+  const reproducibility = fs.readFileSync(
+    path.join(root, "packages/core/publication-reproducibility.js"),
+    "utf8",
+  );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
-  assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
-  assert.match(workflow, /buildchain-ref override requires write, maintain, or admin permission/);
-  assert.match(workflow, /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/);
+  assert.match(
+    workflow,
+    /buildchain-ref override is only allowed for trusted workflow_dispatch runs/,
+  );
+  assert.match(
+    workflow,
+    /buildchain-ref override requires write, maintain, or admin permission/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/,
+  );
   assert.match(workflow, /build-command:/);
   assert.match(workflow, /toolchain-type:/);
   assert.match(workflow, /toolchain-image:/);
-  assert.match(workflow, /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/);
+  assert.match(
+    workflow,
+    /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/,
+  );
   assert.match(workflow, /toolchain-digest:/);
-  assert.match(workflow, /sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8/);
+  assert.match(
+    workflow,
+    /sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8/,
+  );
   assert.match(workflow, /Resolve publication toolchain/);
-  assert.match(workflow, /docker pull/);
+  assert.match(reproducibility, /"docker", \["pull", toolchain\.imageRef\]/);
+  assert.match(reproducibility, /"--network=none"/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE/);
   assert.match(workflow, /verify-command:/);
-  assert.match(workflow, /publication-artifact manifest/);
+  assert.match(workflow, /publication-artifact reproducibility/);
+  assert.match(workflow, /--promote/);
+  assert.match(workflow, /reproducibility-receipt\.json/);
+  assert.match(workflow, /receipt\.qualifying !== true/);
+  assert.match(workflow, /qualified npm integrity changed/);
   assert.match(workflow, /publication-artifact-passport\.json/);
   assert.match(workflow, /publication-registry\.json/);
   assert.match(workflow, /publication-registry-path:/);
-  assert.match(workflow, /registry-path=\$\{result\.registryPath \|\| ""\}/);
+  assert.match(
+    workflow,
+    /registry-path=\$\{publication\.registryPath \|\| ""\}/,
+  );
   assert.match(workflow, /source\.tar\.gz/);
-  assert.match(workflow, /Upload publication artifact[\s\S]*include-hidden-files: true/);
+  assert.match(
+    workflow,
+    /Upload publication artifact[\s\S]*include-hidden-files: true/,
+  );
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
-      workflow.indexOf("- name: Build publication"),
+      workflow.indexOf("- name: Prove publication reproducibility"),
   );
   assert.ok(
     workflow.indexOf("- name: Verify publication") <
-      workflow.indexOf("Collect publication artifact manifest"),
+      workflow.indexOf("Read qualified publication artifact manifest"),
+  );
+  assert.ok(
+    workflow.indexOf("Hydrate cumulative publication registry") <
+      workflow.indexOf("Prove publication reproducibility"),
   );
 });
 
@@ -797,9 +831,15 @@ test("paper release workflow publishes declared npm package with source lock and
   );
   assert.match(workflow, /cannot read branch protection before publication build/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.match(docs, /paper-release-sealed\.yml@v3/);
+  assert.match(
+    docs,
+    /paper-release-sealed\.yml@<exact-buildchain-sha>/,
+  );
   assert.match(docs, /does not use a long-lived token for npm publication/);
-  assert.match(docs, /only for machine-generated[\s\S]*version-state updates/);
+  assert.match(
+    docs,
+    /GitHub App installation token[\s\S]*equivalent narrow compatibility authority/,
+  );
   assert.match(workflow, /default: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
@@ -3545,7 +3585,6 @@ test("publish source manifest fails closed on version mismatch", async () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
-
 test("publish source lock fails closed when branch moved", () => {
   assert.deepEqual(
     resolvePublishSourceLock({

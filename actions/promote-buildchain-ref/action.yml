@@ -62,6 +62,12 @@ inputs:
   publish-evidence-path:
     description: "Path to publish evidence JSON. Defaults to .buildchain/release-evidence/<tag>/evidence.json"
     default: ""
+  publish-sealed-bundle-root:
+    description: "Root containing the exact qualified publication candidate bytes; restored from durable state on resume"
+    default: ""
+  publish-sealed-bundle-manifest:
+    description: "Qualified content-addressed sealed publication bundle manifest"
+    default: ""
   transaction-state-path:
     description: "Path to release transaction state JSON. Defaults to .buildchain/release-state/<tag>.json"
     default: ""
@@ -216,6 +222,12 @@ outputs:
     description: "Stable release transaction identity"
   transaction-state:
     description: "Final release transaction state"
+  transaction-publication-state:
+    description: "Stable external publication state such as sealed, package-published, alpha-complete, or repair-required"
+  transaction-sealed-bundle-root:
+    description: "Content root of the durable build-once publication bundle"
+  transaction-resume-command:
+    description: "Exact resume command bound to the durable state ref"
   transaction-exact-tag:
     description: "Exact release or prerelease tag governed by the transaction"
   planned-publication-version:
