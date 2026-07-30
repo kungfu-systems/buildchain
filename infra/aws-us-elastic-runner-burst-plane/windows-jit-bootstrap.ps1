@@ -73,7 +73,7 @@ function Install-PortableGit([string]$Root) {
   if ($Process.ExitCode -ne 0) {
     throw "PortableGit extraction failed with exit code $($Process.ExitCode)"
   }
-  $env:PATH = "$Root\cmd;$env:PATH"
+  $env:PATH = "$Root\bin;$Root\cmd;$env:PATH"
 }
 
 function Install-PowerShell {
