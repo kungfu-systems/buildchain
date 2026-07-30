@@ -6,7 +6,7 @@
     "cliCommandCount": 97,
     "workflowCount": 57,
     "actionCount": 6,
-    "sitePageCount": 59,
+    "sitePageCount": 60,
     "docCommandRefCount": 291,
     "failureCount": 0
   },
@@ -581,6 +581,9 @@
           "artifact-retention-days",
           "artifact-signing-request-upload-no-proxy",
           "artifact-transfer-mode",
+          "aws-codebuild-project",
+          "aws-ec2-macos-runner-label",
+          "aws-ec2-windows-runner-label",
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
@@ -643,7 +646,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 75,
+        "inputCount": 78,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1382,6 +1385,9 @@
           "artifact-retention-days",
           "artifact-signing-request-upload-no-proxy",
           "artifact-transfer-mode",
+          "aws-codebuild-project",
+          "aws-ec2-macos-runner-label",
+          "aws-ec2-windows-runner-label",
           "build-command",
           "buildchain-alpha-contract-lock-path",
           "buildchain-channel",
@@ -1447,7 +1453,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 78,
+        "inputCount": 81,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2651,6 +2657,10 @@
       },
       {
         "id": "manual:auditable-demo",
+        "category": "manual"
+      },
+      {
+        "id": "manual:aws-us-elastic-runner-burst-plane",
         "category": "manual"
       },
       {
@@ -4269,8 +4279,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "520ea7f41a3798cf7d785b9913f3331b1109df23443ced83bf3922e6f21ca70e",
-    "pageRegistryDigest": "dcf144c19885d33225c4d78520e58b9b00c0a78e3cdc6b02d41468734d5c9100"
+    "workflowRegistryDigest": "810eca96ed27bfff2ef6c69eba25c391c30f72802b91b1ae2ee48c1595c7f263",
+    "pageRegistryDigest": "19ea61251d07831fb3f0ac00e31f3a0d9eaba2d2715e948cdaf5ab80a53a3654"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -564,6 +564,9 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/);
   assert.match(workflow, /path: \|\n\s+\.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-delegation\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-runner-burst-core\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-windows-jit-core\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-macos-jit-core\.mjs/);
   assert.equal(
     (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length,
     2,
@@ -3229,12 +3232,87 @@ test("runner presets resolve to explicit matrices", () => {
   );
   assert.equal(kungfuNative.platforms[1].runner, '["ubuntu-24.04-arm"]');
 
+  const codebuild = resolveRunnerMatrix({
+    runnerPreset: "aws-us-codebuild-linux",
+    awsCodeBuildProject: "kungfu-buildchain-linux-burst-poc",
+  });
+  assert.equal(codebuild.runnerPreset, "aws-us-codebuild-linux");
+  assert.equal(codebuild.platformCount, 1);
+  assert.equal(codebuild.platforms[0].provider, "aws-codebuild");
+  assert.equal(
+    codebuild.platforms[0].project,
+    "kungfu-buildchain-linux-burst-poc",
+  );
+
+  const windowsJit = resolveRunnerMatrix({
+    runnerPreset: "aws-us-ec2-windows-jit",
+    awsEc2WindowsRunnerLabel: "aws-us-ec2-windows-jit-full-01",
+  });
+  assert.equal(windowsJit.runnerPreset, "aws-us-ec2-windows-jit");
+  assert.equal(windowsJit.platformCount, 1);
+  assert.equal(windowsJit.platforms[0].provider, "aws-ec2-windows-jit");
+  assert.match(windowsJit.platforms[0].runner, /windows-jit-full-01/);
+
+  const macosJit = resolveRunnerMatrix({
+    runnerPreset: "aws-us-ec2-macos-jit",
+    awsEc2MacosRunnerLabel: "aws-us-ec2-macos-jit-full-01",
+  });
+  assert.equal(macosJit.runnerPreset, "aws-us-ec2-macos-jit");
+  assert.equal(macosJit.platformCount, 1);
+  assert.equal(macosJit.platforms[0].provider, "aws-ec2-macos-jit");
+  assert.match(macosJit.platforms[0].runner, /macos-jit-full-01/);
+
   const custom = resolveRunnerMatrix({
     platformsJson:
       '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',
   });
   assert.equal(custom.runnerPreset, "custom");
   assert.equal(custom.platformCount, 1);
+});
+
+test("AWS CodeBuild runner preset fails closed without an exact project", () => {
+  assert.throws(
+    () => resolveRunnerMatrix({ runnerPreset: "aws-us-codebuild-linux" }),
+    /requires a valid aws-codebuild-project/,
+  );
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        runnerPreset: "aws-us-codebuild-linux",
+        awsCodeBuildProject: "not valid",
+      }),
+    /requires a valid aws-codebuild-project/,
+  );
+});
+
+test("AWS Windows EC2 JIT preset fails closed without a card-scoped label", () => {
+  assert.throws(
+    () => resolveRunnerMatrix({ runnerPreset: "aws-us-ec2-windows-jit" }),
+    /runner label must match/,
+  );
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        runnerPreset: "aws-us-ec2-windows-jit",
+        awsEc2WindowsRunnerLabel: "kungfu-build-v4-windows-x64",
+      }),
+    /runner label must match/,
+  );
+});
+
+test("AWS macOS EC2 JIT preset fails closed without a campaign-scoped label", () => {
+  assert.throws(
+    () => resolveRunnerMatrix({ runnerPreset: "aws-us-ec2-macos-jit" }),
+    /runner label must match/,
+  );
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        runnerPreset: "aws-us-ec2-macos-jit",
+        awsEc2MacosRunnerLabel: "kungfu-build-v4-macos-arm64",
+      }),
+    /runner label must match/,
+  );
 });
 
 test("linux container preset routes only Linux platforms into the container matrix", () => {

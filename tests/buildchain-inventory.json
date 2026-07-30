@@ -99,6 +99,9 @@
       "runnerPresets": [
         "github-hosted",
         "kungfu-v4-self-hosted",
+        "aws-us-codebuild-linux",
+        "aws-us-ec2-windows-jit",
+        "aws-us-ec2-macos-jit",
         "custom"
       ],
       "artifactNameTemplate": true,

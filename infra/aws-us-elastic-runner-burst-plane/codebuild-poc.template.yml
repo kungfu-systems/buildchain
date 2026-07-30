@@ -1,0 +1,475 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Bounded, credential-free-at-runtime AWS CodeBuild burst plane for trusted
+  kungfu-systems/kungfu Linux qualification jobs.
+
+Parameters:
+  GitHubConnectionArn:
+    Type: String
+    Description: AVAILABLE AWS CodeConnections GitHub App connection scoped to kungfu-systems/kungfu.
+    AllowedPattern: "^arn:aws(-[a-z]+)?:codeconnections:[a-z0-9-]+:[0-9]{12}:connection/[0-9a-f-]+$"
+  GitHubRepositoryUrl:
+    Type: String
+    Default: https://github.com/kungfu-systems/kungfu.git
+    AllowedPattern: "^https://github\\.com/kungfu-systems/kungfu(?:\\.git)?$"
+  ProjectName:
+    Type: String
+    Default: kungfu-buildchain-linux-burst-poc
+    AllowedPattern: "^[A-Za-z0-9][A-Za-z0-9_-]{1,149}$"
+  AllowedWorkflowNamePattern:
+    Type: String
+    Default: "^AWS US Linux Burst Qualification$"
+  BudgetLimitUsd:
+    Type: Number
+    Default: 49
+    MinValue: 1
+    MaxValue: 49
+  MaxAcceptedBuilds:
+    Type: Number
+    Default: 12
+    MinValue: 10
+    MaxValue: 12
+  CostTelemetryMaxAgeHours:
+    Type: Number
+    Default: 6
+    MinValue: 1
+    MaxValue: 24
+
+Resources:
+  BurstLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /kungfu/buildchain/${ProjectName}
+      RetentionInDays: 14
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+
+  BurstState:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: bounded-runner-logs-and-github-app
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: WriteDedicatedLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub ${BurstLogGroup.Arn}:*
+              - Sid: UseDedicatedGitHubAppConnection
+                Effect: Allow
+                Action:
+                  - codeconnections:GetConnection
+                  - codeconnections:GetConnectionToken
+                Resource: !Ref GitHubConnectionArn
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    DependsOn:
+      - BurstLogGroup
+    Properties:
+      Name: !Ref ProjectName
+      Description: Ephemeral one-job Linux CodeBuild runner for bounded Kungfu qualification.
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      ConcurrentBuildLimit: 2
+      QueuedTimeoutInMinutes: 15
+      TimeoutInMinutes: 40
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_XLARGE
+        Image: aws/codebuild/standard:8.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: false
+      Source:
+        Type: GITHUB
+        Location: !Ref GitHubRepositoryUrl
+        ReportBuildStatus: false
+        Auth:
+          Type: CODECONNECTIONS
+          Resource: !Ref GitHubConnectionArn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref BurstLogGroup
+          StreamName: runner
+        S3Logs:
+          Status: DISABLED
+      Triggers:
+        Webhook: false
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:phase
+          Value: linux-codebuild-poc-under-usd-50
+
+  KillSwitchTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Kungfu AWS runner burst kill switch
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+
+  KillSwitchTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref KillSwitchTopic
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowAwsBudgets
+            Effect: Allow
+            Principal:
+              Service: budgets.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref KillSwitchTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+
+  BurstBudget:
+    Type: AWS::Budgets::Budget
+    DependsOn:
+      - KillSwitchTopicPolicy
+    Properties:
+      Budget:
+        BudgetName: !Sub ${ProjectName}-actual-spend
+        BudgetLimit:
+          Amount: !Ref BudgetLimitUsd
+          Unit: USD
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        CostFilters:
+          Service:
+            - AWS CodeBuild
+      NotificationsWithSubscribers:
+        - Notification:
+            ComparisonOperator: GREATER_THAN
+            NotificationType: ACTUAL
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - Address: !Ref KillSwitchTopic
+              SubscriptionType: SNS
+        - Notification:
+            ComparisonOperator: GREATER_THAN
+            NotificationType: ACTUAL
+            Threshold: 95
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - Address: !Ref KillSwitchTopic
+              SubscriptionType: SNS
+
+  ControllerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: bounded-burst-controller
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: StateLedger
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:TransactWriteItems
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt BurstState.Arn
+              - Sid: StopBoundedProject
+                Effect: Allow
+                Action:
+                  - codebuild:DeleteWebhook
+                  - codebuild:BatchGetBuilds
+                Resource: !GetAtt CodeBuildProject.Arn
+              - Sid: StopBoundedBuilds
+                Effect: Allow
+                Action:
+                  - codebuild:StopBuild
+                  - codebuild:BatchGetBuilds
+                Resource: !Sub arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:build/${ProjectName}:*
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+
+  BurstController:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Fail-closed CodeBuild admission ledger and kill switch.
+      Runtime: python3.13
+      Handler: index.handler
+      Role: !GetAtt ControllerRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          PROJECT_NAME: !Ref ProjectName
+          STATE_TABLE: !Ref BurstState
+          MAX_ACCEPTED_BUILDS: !Ref MaxAcceptedBuilds
+          TELEMETRY_MAX_AGE_HOURS: !Ref CostTelemetryMaxAgeHours
+          BUDGET_LIMIT_USD: !Ref BudgetLimitUsd
+          WORST_CASE_BUILD_USD: "3.20"
+      Code:
+        ZipFile: |
+          import json
+          import os
+          import time
+          from decimal import Decimal
+          import boto3
+          from botocore.exceptions import ClientError
+
+          codebuild = boto3.client("codebuild")
+          dynamodb = boto3.client("dynamodb")
+          project = os.environ["PROJECT_NAME"]
+          table = os.environ["STATE_TABLE"]
+          max_builds = int(os.environ["MAX_ACCEPTED_BUILDS"])
+          telemetry_max_age = int(os.environ["TELEMETRY_MAX_AGE_HOURS"]) * 3600
+          budget_limit = Decimal(os.environ["BUDGET_LIMIT_USD"])
+          worst_case_build = Decimal(os.environ["WORST_CASE_BUILD_USD"])
+
+          def get_item(pk):
+              return dynamodb.get_item(
+                  TableName=table,
+                  Key={"pk": {"S": pk}},
+                  ConsistentRead=True,
+              ).get("Item", {})
+
+          def kill(reason, build_id=""):
+              now = int(time.time())
+              dynamodb.put_item(
+                  TableName=table,
+                  Item={
+                      "pk": {"S": "CONTROL"},
+                      "killed": {"BOOL": True},
+                      "reason": {"S": reason},
+                      "updated_at": {"N": str(now)},
+                  },
+              )
+              try:
+                  codebuild.delete_webhook(projectName=project)
+              except ClientError as error:
+                  if error.response.get("Error", {}).get("Code") not in (
+                      "ResourceNotFoundException",
+                      "InvalidInputException",
+                  ):
+                      raise
+              if build_id:
+                  try:
+                      codebuild.stop_build(id=build_id)
+                  except ClientError as error:
+                      if error.response.get("Error", {}).get("Code") != "ResourceNotFoundException":
+                          raise
+              return {"status": "killed", "reason": reason, "build_id": build_id}
+
+          def telemetry_is_fresh(now):
+              item = get_item("COST")
+              if not item:
+                  return False, "cost-telemetry-missing"
+              observed = int(item.get("observed_at", {}).get("N", "0"))
+              actual = Decimal(item.get("actual_usd", {}).get("N", "0"))
+              if observed <= 0 or now - observed > telemetry_max_age:
+                  return False, "cost-telemetry-stale"
+              if actual >= budget_limit:
+                  return False, "actual-budget-reached"
+              return True, ""
+
+          def handler(event, context):
+              now = int(time.time())
+              if "Records" in event:
+                  return kill("aws-budget-notification")
+
+              detail = event.get("detail", {})
+              status = detail.get("build-status", "")
+              build_id = detail.get("build-id", "")
+              if detail and detail.get("project-name") != project:
+                  return {"status": "ignored", "reason": "different-project"}
+
+              fresh, reason = telemetry_is_fresh(now)
+              if not fresh:
+                  return kill(reason, build_id if status == "IN_PROGRESS" else "")
+
+              control = get_item("CONTROL")
+              if control.get("killed", {}).get("BOOL", False):
+                  return kill("controller-already-killed", build_id if status == "IN_PROGRESS" else "")
+
+              if status != "IN_PROGRESS":
+                  return {"status": "healthy", "event_status": status or "scheduled-audit"}
+
+              build_pk = f"BUILD#{build_id}"
+              try:
+                  dynamodb.transact_write_items(
+                      TransactItems=[
+                          {
+                              "Put": {
+                                  "TableName": table,
+                                  "Item": {
+                                      "pk": {"S": build_pk},
+                                      "build_id": {"S": build_id},
+                                      "observed_at": {"N": str(now)},
+                                      "expires_at": {"N": str(now + 1209600)},
+                                  },
+                                  "ConditionExpression": "attribute_not_exists(pk)",
+                              }
+                          },
+                          {
+                              "Update": {
+                                  "TableName": table,
+                                  "Key": {"pk": {"S": "COUNTER"}},
+                                  "UpdateExpression": (
+                                      "ADD accepted_builds :one, reserved_usd :cost "
+                                      "SET last_build_id = :build, updated_at = :now"
+                                  ),
+                                  "ExpressionAttributeValues": {
+                                      ":one": {"N": "1"},
+                                      ":cost": {"N": str(worst_case_build)},
+                                      ":build": {"S": build_id},
+                                      ":now": {"N": str(now)},
+                                  },
+                              }
+                          },
+                      ]
+                  )
+              except ClientError as error:
+                  if (
+                      error.response.get("Error", {}).get("Code")
+                      == "TransactionCanceledException"
+                      and get_item(build_pk)
+                  ):
+                      return {"status": "duplicate", "build_id": build_id}
+                  raise
+              attrs = get_item("COUNTER")
+              accepted = int(attrs["accepted_builds"]["N"])
+              reserved = Decimal(attrs["reserved_usd"]["N"])
+              if accepted > max_builds or reserved >= budget_limit:
+                  return kill("reserved-budget-cap-reached", build_id)
+              return {
+                  "status": "accepted",
+                  "ordinal": accepted,
+                  "reserved_usd": str(reserved),
+                  "build_id": build_id,
+              }
+
+  BudgetSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref KillSwitchTopic
+      Protocol: lambda
+      Endpoint: !GetAtt BurstController.Arn
+
+  BudgetInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BurstController
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref KillSwitchTopic
+
+  CodeBuildStateRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codebuild
+        detail-type:
+          - CodeBuild Build State Change
+        detail:
+          project-name:
+            - !Ref ProjectName
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt BurstController.Arn
+          Id: burst-controller
+
+  CodeBuildStateInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BurstController
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt CodeBuildStateRule.Arn
+
+  ControllerAuditSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(5 minutes)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt BurstController.Arn
+          Id: fail-closed-cost-audit
+
+  ControllerAuditInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BurstController
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ControllerAuditSchedule.Arn
+
+Outputs:
+  ProjectName:
+    Value: !Ref CodeBuildProject
+  ProjectArn:
+    Value: !GetAtt CodeBuildProject.Arn
+  StateTable:
+    Value: !Ref BurstState
+  KillSwitchTopicArn:
+    Value: !Ref KillSwitchTopic
+  ControllerArn:
+    Value: !GetAtt BurstController.Arn
+  CostEnvelope:
+    Value: "12 accepted plus two full-timeout race builds x 40 min x USD 0.08 = USD 44.80 < USD 49"
