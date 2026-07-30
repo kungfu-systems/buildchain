@@ -485,6 +485,45 @@ test("duplicate qualification events are idempotent after next_candidate is pers
   assert.deepEqual(duplicate.calls, []);
 });
 
+test("settlement compare-and-swap rejects a stale observed controller root before writes", async () => {
+  const seeded = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA],
+    runs: [
+      apiRun(DEV, { id: 303, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 404, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest()],
+  });
+  await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, settlementAuthorized: true, dryRun: false },
+    seeded,
+  );
+  const persisted = candidatePullRequest({ body: seeded.calls[0][2] });
+  const stale = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA],
+    runs: [
+      apiRun(DEV, { id: 303, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 404, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [persisted],
+  });
+  await assert.rejects(
+    runDevAlphaCandidatePatrol(
+      {
+        ...patrolOptions,
+        expectedPriorStateRoot: "sha256:" + "f".repeat(64),
+        settlementAuthorized: true,
+        dryRun: false,
+      },
+      stale,
+    ),
+    /compare-and-swap failed/u,
+  );
+  assert.deepEqual(stale.calls, []);
+});
+
 test("a newer qualified SHA explicitly supersedes the previously retained next candidate", async () => {
   const first = client({
     sourceHistory: [SOURCE_SHA],
@@ -525,6 +564,132 @@ test("a newer qualified SHA explicitly supersedes the previously retained next c
   assert.equal(result.controller.nextCandidate.sourceSha, OBSERVED_SHA);
   assert.equal(result.controller.supersededCandidate.sourceSha, SOURCE_SHA);
   assert.equal(second.calls[0][0], "update-pr");
+  const persisted = parseCandidateStateMarker(second.calls[0][2]);
+  assert.equal(persisted.tombstones.length, 1);
+  assert.equal(persisted.tombstones[0].candidateSha, SOURCE_SHA);
+  assert.equal(
+    persisted.tombstones[0].reason,
+    "newer-qualified-next-candidate",
+  );
+  assert.equal(
+    persisted.tombstones[0].priorStateRoot,
+    result.controller.priorStateRoot,
+  );
+  assert.match(persisted.tombstones[0].tombstoneRoot, /^sha256:[0-9a-f]{64}$/u);
+});
+
+test("a rejected retained next is tombstoned and cannot reactivate without explicit authority", async () => {
+  const qualified = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA],
+    runs: [
+      apiRun(DEV, { id: 303, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 404, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest()],
+  });
+  await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, settlementAuthorized: true, dryRun: false },
+    qualified,
+  );
+
+  const rejected = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA],
+    runs: [
+      apiRun(DEV, {
+        id: 305,
+        head_sha: OBSERVED_SHA,
+        conclusion: "failure",
+      }),
+      apiRun(ALPHA, { id: 406, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest({ body: qualified.calls[0][2] })],
+  });
+  const rejection = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, settlementAuthorized: true, dryRun: false },
+    rejected,
+  );
+  assert.equal(rejection.controller.state, "rejected-next");
+  const rejectedState = parseCandidateStateMarker(rejected.calls[0][2]);
+  assert.equal(rejectedState.nextCandidate, null);
+  assert.equal(rejectedState.tombstones[0].candidateSha, OBSERVED_SHA);
+  assert.equal(
+    rejectedState.tombstones[0].reason,
+    "qualification-evidence-rejected",
+  );
+
+  const automatic = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA],
+    runs: [
+      apiRun(DEV, { id: 307, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 408, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest({ body: rejected.calls[0][2] })],
+  });
+  const blocked = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, settlementAuthorized: true, dryRun: false },
+    automatic,
+  );
+  assert.equal(blocked.controller.state, "tombstone-blocked");
+  assert.deepEqual(automatic.calls, []);
+
+  const authorized = client({
+    sourceHead: OBSERVED_SHA,
+    sourceHistory: [OBSERVED_SHA],
+    runs: [
+      apiRun(DEV, { id: 309, head_sha: OBSERVED_SHA }),
+      apiRun(ALPHA, { id: 410, head_sha: OBSERVED_SHA }),
+    ],
+    openPullRequests: [candidatePullRequest({ body: rejected.calls[0][2] })],
+  });
+  const reactivated = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      reactivationAuthorized: true,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    authorized,
+  );
+  assert.equal(reactivated.controller.state, "retained-next");
+  assert.equal(reactivated.controller.nextCandidate.sourceSha, OBSERVED_SHA);
+  assert.equal(authorized.calls[0][0], "update-pr");
+});
+
+test("a previously known closed PR is reused as a tombstone instead of duplicated", async () => {
+  const fake = client();
+  fake.ensurePullRequest = async (request) => {
+    fake.calls.push(["pr", request]);
+    return {
+      number: 33,
+      html_url: "https://example.invalid/pull/33",
+      state: "closed",
+      merged_at: null,
+      body: request.body,
+      reused: true,
+    };
+  };
+  const result = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, settlementAuthorized: true, dryRun: false },
+    fake,
+  );
+  assert.equal(result.controller.state, "tombstoned");
+  assert.equal(
+    result.controller.settlementAction,
+    "reuse-known-candidate-tombstone",
+  );
+  assert.equal(
+    fake.calls.filter(([kind]) => kind === "pr").length,
+    1,
+    "the known PR lookup must not mint another candidate identity",
+  );
+  const update = fake.calls.find(([kind]) => kind === "update-pr");
+  const state = parseCandidateStateMarker(update[2]);
+  assert.equal(state.activeCandidate, null);
+  assert.equal(state.tombstones[0].candidateSha, SOURCE_SHA);
+  assert.equal(state.tombstones[0].reason, "candidate-pr-closed");
 });
 
 test("foreign Alpha PRs are ignored and multiple managed candidates fail closed", async () => {
@@ -664,6 +829,11 @@ test("reusable workflow retains the no-publication boundary", () => {
     workflowText,
     /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA: \$\{\{ needs\.observe\.outputs\.selected-sha \}\}/u,
   );
+  assert.match(
+    workflowText,
+    /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_PRIOR_STATE_ROOT: \$\{\{ needs\.observe\.outputs\.prior-state-root \}\}/u,
+  );
+  assert.match(workflowText, /reactivation-authorized:/u);
   const observeJob = workflowText.split("\n  settle:")[0];
   assert.doesNotMatch(observeJob, /secrets\.promotion-token/u);
   const settleJob = workflowText.split("\n  settle:")[1] || "";
