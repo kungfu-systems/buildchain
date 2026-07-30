@@ -83,7 +83,7 @@ queue ruleset.
 
 ## Repository and plan admission
 
-The 2026-07-24 baseline contains 16 managed repositories: 13 public and three
+The 2026-07-30 baseline contains 19 managed repositories: 16 public and three
 private. Public repository names are versioned in the descriptor. Private
 repository names are never emitted in public evidence; their identities are
 represented by stable roots derived from the GitHub provider repository ID,
