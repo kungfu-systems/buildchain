@@ -136,7 +136,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:b7d2deef7d50fc412aa21c7ef1019c4c2bd8b0392b9b323356b1c0b1fc2596b6",
+      "digest": "sha256:aea013d923a8d419fc76e99a81765f281640dd95141d32ae415b8572604e9d32",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -289,7 +289,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:49da688f9f8b726a9169a3e4b246cb6ef07c6c626ea15c22f0b26ba1a37a58b4",
+      "digest": "sha256:e5f1cb801b4e88799ddd6214bada24073550bb412a50d7c7e05432541c679ffe",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -374,7 +374,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:cde5256d5f6443a6d32b47783900a0677e973855266af5a360db8d4d112bb677",
+      "digest": "sha256:c7f58699ca036703988c98435ed38df608d96d099da8662062118c334afbfa99",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -442,7 +442,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:6b907af93c55ffd8274cd83ad87a45dd48eb9a01938cf419aafebb5557be5821",
+      "digest": "sha256:fa4406086decab2d329a3a54086389a59c13b80977c8fe78b816fe31ffde4951",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

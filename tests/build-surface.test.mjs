@@ -306,6 +306,20 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/name: Upload KFD Agent Hub evidence/g) || []).length, 2);
   assert.match(workflow, /buildchain\.mjs kfd hub test/);
   assert.match(workflow, /artifact-name \}\}-kfd-agent-hub-\$\{\{ matrix\.platform\.id \}\}/);
+  assert.match(
+    workflow,
+    /name: Resolve source-bound application identity[\s\S]*?loadCredentialInput[\s\S]*?sourceTreeSha: process\.env\.BUILDCHAIN_SOURCE_TREE_SHA/,
+    "the credential island must derive product identity from the exact source-bound sealed manifest",
+  );
+  assert.match(
+    workflow,
+    /expected-bundle-id: \$\{\{ steps\.credential-identity\.outputs\.bundle-id \}\}/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID/,
+    "consumer repositories must not configure product bundle identity in the signing environment",
+  );
   assert.match(workflow, /name: Validate consumer package manager contract/);
   assert.match(
     workflow,
@@ -564,6 +578,9 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/);
   assert.match(workflow, /path: \|\n\s+\.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-delegation\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-runner-burst-core\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-windows-jit-core\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-macos-jit-core\.mjs/);
   assert.equal(
     (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length,
     2,
@@ -708,36 +725,70 @@ test("publication artifact workflow exposes paper artifact contract", () => {
     path.join(root, ".github/workflows/publication-artifact.yml"),
     "utf8",
   );
+  const reproducibility = fs.readFileSync(
+    path.join(root, "packages/core/publication-reproducibility.js"),
+    "utf8",
+  );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
-  assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
-  assert.match(workflow, /buildchain-ref override requires write, maintain, or admin permission/);
-  assert.match(workflow, /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/);
+  assert.match(
+    workflow,
+    /buildchain-ref override is only allowed for trusted workflow_dispatch runs/,
+  );
+  assert.match(
+    workflow,
+    /buildchain-ref override requires write, maintain, or admin permission/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/,
+  );
   assert.match(workflow, /build-command:/);
   assert.match(workflow, /toolchain-type:/);
   assert.match(workflow, /toolchain-image:/);
-  assert.match(workflow, /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/);
+  assert.match(
+    workflow,
+    /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/,
+  );
   assert.match(workflow, /toolchain-digest:/);
-  assert.match(workflow, /sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8/);
+  assert.match(
+    workflow,
+    /sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8/,
+  );
   assert.match(workflow, /Resolve publication toolchain/);
-  assert.match(workflow, /docker pull/);
+  assert.match(reproducibility, /"docker", \["pull", toolchain\.imageRef\]/);
+  assert.match(reproducibility, /"--network=none"/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE/);
   assert.match(workflow, /verify-command:/);
-  assert.match(workflow, /publication-artifact manifest/);
+  assert.match(workflow, /publication-artifact reproducibility/);
+  assert.match(workflow, /--promote/);
+  assert.match(workflow, /reproducibility-receipt\.json/);
+  assert.match(workflow, /receipt\.qualifying !== true/);
+  assert.match(workflow, /qualified npm integrity changed/);
   assert.match(workflow, /publication-artifact-passport\.json/);
   assert.match(workflow, /publication-registry\.json/);
   assert.match(workflow, /publication-registry-path:/);
-  assert.match(workflow, /registry-path=\$\{result\.registryPath \|\| ""\}/);
+  assert.match(
+    workflow,
+    /registry-path=\$\{publication\.registryPath \|\| ""\}/,
+  );
   assert.match(workflow, /source\.tar\.gz/);
-  assert.match(workflow, /Upload publication artifact[\s\S]*include-hidden-files: true/);
+  assert.match(
+    workflow,
+    /Upload publication artifact[\s\S]*include-hidden-files: true/,
+  );
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
-      workflow.indexOf("- name: Build publication"),
+      workflow.indexOf("- name: Prove publication reproducibility"),
   );
   assert.ok(
     workflow.indexOf("- name: Verify publication") <
-      workflow.indexOf("Collect publication artifact manifest"),
+      workflow.indexOf("Read qualified publication artifact manifest"),
+  );
+  assert.ok(
+    workflow.indexOf("Hydrate cumulative publication registry") <
+      workflow.indexOf("Prove publication reproducibility"),
   );
 });
 
@@ -794,9 +845,15 @@ test("paper release workflow publishes declared npm package with source lock and
   );
   assert.match(workflow, /cannot read branch protection before publication build/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.match(docs, /paper-release-sealed\.yml@v3/);
+  assert.match(
+    docs,
+    /paper-release-sealed\.yml@<exact-buildchain-sha>/,
+  );
   assert.match(docs, /does not use a long-lived token for npm publication/);
-  assert.match(docs, /only for machine-generated[\s\S]*version-state updates/);
+  assert.match(
+    docs,
+    /GitHub App installation token[\s\S]*equivalent narrow compatibility authority/,
+  );
   assert.match(workflow, /default: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
@@ -3229,12 +3286,87 @@ test("runner presets resolve to explicit matrices", () => {
   );
   assert.equal(kungfuNative.platforms[1].runner, '["ubuntu-24.04-arm"]');
 
+  const codebuild = resolveRunnerMatrix({
+    runnerPreset: "aws-us-codebuild-linux",
+    awsCodeBuildProject: "kungfu-buildchain-linux-burst-poc",
+  });
+  assert.equal(codebuild.runnerPreset, "aws-us-codebuild-linux");
+  assert.equal(codebuild.platformCount, 1);
+  assert.equal(codebuild.platforms[0].provider, "aws-codebuild");
+  assert.equal(
+    codebuild.platforms[0].project,
+    "kungfu-buildchain-linux-burst-poc",
+  );
+
+  const windowsJit = resolveRunnerMatrix({
+    runnerPreset: "aws-us-ec2-windows-jit",
+    awsEc2WindowsRunnerLabel: "aws-us-ec2-windows-jit-full-01",
+  });
+  assert.equal(windowsJit.runnerPreset, "aws-us-ec2-windows-jit");
+  assert.equal(windowsJit.platformCount, 1);
+  assert.equal(windowsJit.platforms[0].provider, "aws-ec2-windows-jit");
+  assert.match(windowsJit.platforms[0].runner, /windows-jit-full-01/);
+
+  const macosJit = resolveRunnerMatrix({
+    runnerPreset: "aws-us-ec2-macos-jit",
+    awsEc2MacosRunnerLabel: "aws-us-ec2-macos-jit-full-01",
+  });
+  assert.equal(macosJit.runnerPreset, "aws-us-ec2-macos-jit");
+  assert.equal(macosJit.platformCount, 1);
+  assert.equal(macosJit.platforms[0].provider, "aws-ec2-macos-jit");
+  assert.match(macosJit.platforms[0].runner, /macos-jit-full-01/);
+
   const custom = resolveRunnerMatrix({
     platformsJson:
       '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',
   });
   assert.equal(custom.runnerPreset, "custom");
   assert.equal(custom.platformCount, 1);
+});
+
+test("AWS CodeBuild runner preset fails closed without an exact project", () => {
+  assert.throws(
+    () => resolveRunnerMatrix({ runnerPreset: "aws-us-codebuild-linux" }),
+    /requires a valid aws-codebuild-project/,
+  );
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        runnerPreset: "aws-us-codebuild-linux",
+        awsCodeBuildProject: "not valid",
+      }),
+    /requires a valid aws-codebuild-project/,
+  );
+});
+
+test("AWS Windows EC2 JIT preset fails closed without a card-scoped label", () => {
+  assert.throws(
+    () => resolveRunnerMatrix({ runnerPreset: "aws-us-ec2-windows-jit" }),
+    /runner label must match/,
+  );
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        runnerPreset: "aws-us-ec2-windows-jit",
+        awsEc2WindowsRunnerLabel: "kungfu-build-v4-windows-x64",
+      }),
+    /runner label must match/,
+  );
+});
+
+test("AWS macOS EC2 JIT preset fails closed without a campaign-scoped label", () => {
+  assert.throws(
+    () => resolveRunnerMatrix({ runnerPreset: "aws-us-ec2-macos-jit" }),
+    /runner label must match/,
+  );
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        runnerPreset: "aws-us-ec2-macos-jit",
+        awsEc2MacosRunnerLabel: "kungfu-build-v4-macos-arm64",
+      }),
+    /runner label must match/,
+  );
 });
 
 test("linux container preset routes only Linux platforms into the container matrix", () => {
@@ -3467,7 +3599,6 @@ test("publish source manifest fails closed on version mismatch", async () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
-
 test("publish source lock fails closed when branch moved", () => {
   assert.deepEqual(
     resolvePublishSourceLock({

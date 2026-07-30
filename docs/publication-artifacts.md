@@ -106,6 +106,37 @@ for compatibility, but the passport records it as lower trust because
 Buildchain can record the command boundary without proving the compiler or
 LaTeX distribution digest.
 
+## Reproducibility Gate
+
+Alpha and release admission require
+`.buildchain/publication/reproducibility-receipt.json`. Buildchain creates the
+receipt by cloning the exact checked-out Git commit into two independent local
+repositories, assigning each build a separate home and npm cache, and deriving
+`SOURCE_DATE_EPOCH` from the source commit. A pinned `latex-docker` build runs
+with UTC, `C.UTF-8`, no build-time network, and the exact image digest declared
+in `[publication.toolchain]`.
+
+Each clean build independently creates the PDF set, source bundle, publication
+manifest and passport, append-only registry, synthesized npm package directory,
+and an actual npm tarball. After qualification, Buildchain copies the first
+qualifying tarball into the promoted publication candidate instead of deleting
+it with the temporary clean build. The receipt compares exact bytes and records:
+
+- source repository, commit, tree, and `SOURCE_DATE_EPOCH`;
+- toolchain image, digest, command, and toolchain identity root;
+- every artifact and evidence path with byte size and SHA-256;
+- npm tarball SHA-256, SHA-1 shasum, and `sha512` integrity;
+- per-build output-set roots and the first differing field or artifact.
+
+The gate is fail-closed. A build-only `custom-command` run can diagnose byte
+drift and promote its byte-identical local output with
+`--allow-unpinned-toolchain`, but it is never a qualifying publication receipt.
+Any workflow that prepares a publishable paper package accepts only a
+digest-pinned toolchain and promotes the first clean build into the publication
+candidate only after both builds are byte-identical. The receipt remains
+outside the npm tarball to avoid a circular digest; it binds the tarball bytes
+from the surrounding sealed publication evidence.
+
 `publish.kind = "npm-paper-package"` declares that Buildchain, not the consumer
 repository, owns the standard paper npm package shape and release transaction
 mechanics. `publish.package` is the public npm package that contains the PDF,
@@ -134,14 +165,18 @@ The build-only workflow:
   any paper build runs;
 - resolves the declared publication toolchain from `[publication.toolchain]` or
   workflow inputs;
+- hydrates authenticated registry history before building so both clean
+  candidates include the same append-only history;
 - for `latex-docker`, pulls the pinned build-images LaTeX builder digest and
-  runs the declared command in the container;
+  runs two independent clean builds with the reproducibility policy above;
 - for `custom-command`, runs the declared command and records the lower-trust
-  boundary in the passport;
+  boundary in the passport, but refuses publication qualification;
 - runs the verify command;
 - creates a source bundle from `publication.source_paths`;
 - writes `.buildchain/publication/publication-artifact.json`;
 - writes `.buildchain/publication/publication-artifact-passport.json`;
+- writes a qualifying
+  `.buildchain/publication/reproducibility-receipt.json`;
 - when `[publication.archive]` is configured, writes
   `.buildchain/publication/publication-registry.json` and verifies same-version
   immutability;
@@ -174,36 +209,36 @@ on:
       - alpha/v1/v1.0
       - release/v1/v1.0
   workflow_dispatch:
-    inputs:
-      buildchain-ref:
-        description: "Temporary Buildchain runtime ref"
-        required: false
-        default: ""
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@<exact-buildchain-sha>
     permissions:
       actions: read
       checks: write
-      contents: write
+      contents: read
       id-token: write
       issues: write
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || '' }}
+      buildchain-ref: <exact-buildchain-sha>
       publisher-workflow-path: .github/workflows/paper-release.yml
       toolchain-type: config
       verify-command: make check
       artifact-paths: _build/paper-name.pdf
       buildchain-contract-lock-path: .buildchain/contract-lock.json
     secrets:
-      BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+      BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+      BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+      BUILDCHAIN_GENERATED_WRITE_TOKEN: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
 ```
 
-The sealed preset does not use a long-lived token for npm publication. It may
-accept an optional `BUILDCHAIN_PROMOTION_TOKEN` only for machine-generated
-version-state updates on protected channel branches; npm publication remains
-bound to GitHub OIDC trusted publishing. The preset builds and packages the
+The sealed preset does not use a long-lived token for npm publication. It
+prefers a repository-scoped GitHub App installation token for generated
+repository writes and accepts `BUILDCHAIN_GENERATED_WRITE_TOKEN` as an
+equivalent narrow compatibility authority. The deprecated
+`BUILDCHAIN_PROMOTION_TOKEN` name remains accepted for existing consumers, but
+there is no `github.token` fallback for generated writes. npm publication
+remains bound to GitHub OIDC trusted publishing. The preset builds and packages the
 paper in a read-only job, then a credential-free authority job downloads that
 exact candidate, audits the external control plane, and seals a capability over
 the source tree, Buildchain runtime, controller receipt, PDF, and npm package
@@ -214,8 +249,9 @@ workflow named by `publisher-workflow-path`.
 
 The preset:
 
-- resolves the floating Buildchain runtime once and binds the exact SHA into the
-  publication candidate and authority capability;
+- uses the exact Buildchain SHA admitted by the provisioning authority and
+  binds it into the caller bytes, contract lock, publication candidate, and
+  authority capability;
 - builds the PDF through the declared pinned LaTeX Docker toolchain or custom
   command in a read-only job;
 - verifies the paper repository;
@@ -229,7 +265,13 @@ The preset:
   channel commit and requires `promote-buildchain-ref` to verify that lock
   before any publish side effect;
 - verifies the complete candidate again after authority and publishes the
-  package through npm Trusted Publishing without rebuilding it;
+  package through npm Trusted Publishing without rebuilding or repacking it;
+- writes a typed sealed-bundle manifest that binds the candidate root, exact
+  npm tarball, every GitHub Release asset, durable storage path, and resume
+  command;
+- persists the complete binary bundle to the transaction's durable release-state
+  ref before npm receives credentials, allowing an empty runner to restore and
+  verify the same bytes after interruption;
 - writes Buildchain release/passport evidence; and
 - creates or updates the exact-version GitHub Release by default, uploading
   every file declared by `publication.primary_artifact` and
@@ -238,6 +280,17 @@ The preset:
 Consumers can opt out of the GitHub Release with `github-release: false`, but
 the default is on so downstream release propagation can observe
 `release.published` without hand-written `gh release` steps.
+
+The transaction exposes a stable publication progression:
+
+```text
+prepared -> sealed -> package-published -> alpha-complete
+```
+
+Stable publication ends at `release-complete`. If a run stops after npm but
+before GitHub Release completion, the next run starts from
+`package-published`, restores the sealed PDF and companion assets, and finishes
+the release without invoking the paper build or `npm pack` again.
 
 Declared publication artifacts are resolved from the generated publication
 manifest rather than repeated in consumer workflow YAML. Publication fails
@@ -256,10 +309,90 @@ Buildchain rather than forking the mechanics into each paper repository.
 
 ## CLI And Node API
 
+### Unified paper operator surface
+
+The `buildchain paper` command family assembles the existing publication
+primitives into a resumable operator flow:
+
+```text
+scaffold/new or migrate/existing -> preflight -> bootstrap npm -> build -> alpha -> status -> resume
+```
+
+Each command emits a typed JSON envelope with `--json`. Dry-run is the default
+for every external mutation. `scaffold --write` is limited to no-overwrite
+local file creation. `migrate --write` is limited to the Buildchain-owned
+contract lock, version pin, thin workflows, and provisioning authority; paper
+content and publication configuration are preserved. `bootstrap npm --execute`, `alpha --execute`, and
+`resume --execute` cross external authority boundaries and therefore require
+explicit execution.
+
+The evidence model is intentionally non-inferential:
+
+| State                | Required evidence                                        |
+| -------------------- | -------------------------------------------------------- |
+| `scaffolded`         | Complete managed scaffold inventory                      |
+| `governed`           | Compatible Buildchain contract lock                      |
+| `admitted`           | Repository admission receipt                             |
+| `bootstrapped`       | Successful public npm bootstrap receipt or registry fact |
+| `trust-bound`        | Trusted publisher binding receipt                        |
+| `content-ready`      | Declared source paths present                            |
+| `artifact-sealed`    | Verified sealed publication bundle                       |
+| `package-published`  | Exact package version visible in npm                     |
+| `alpha-complete`     | Protected Alpha PR completion evidence                   |
+| `staging-visible`    | Staging route evidence                                   |
+| `production-visible` | Production route evidence                                |
+
+`paper status` reports `satisfied`, `not-reached`, `blocked`, or `unknown` for
+each state. It does not promote a state merely because a prior state is
+complete. This makes a later `paper resume` safe: the command dispatches the
+thin repository release workflow, while the workflow re-verifies durable
+evidence and remains the publication authority.
+
+Operationally, responsibility remains split:
+
+- the paper repository owns content, declared metadata, and its thin
+  build/release workflow;
+- Buildchain owns scaffold shape, evidence contracts, reproducibility, sealed
+  bundle mechanics, npm transaction mechanics, and resumption planning;
+- GitHub branch protection and trusted publishing own authority transitions;
+- the papers site consumes publication evidence and owns reader-facing
+  rendering.
+
+Run a local readiness check without network observations:
+
+```sh
+buildchain paper preflight --offline --json
+buildchain paper status --json
+```
+
+Before real npm bootstrap, first inspect the default dry-run result:
+
+```sh
+buildchain paper bootstrap npm --json
+```
+
+Only after reviewing the package, repository, workflow, and dry-run evidence:
+
+```sh
+buildchain paper bootstrap npm \
+  --execute \
+  --confirm-public-package @kungfu-tech/paper-example \
+  --json
+```
+
 Generate the publication manifest locally or in CI:
 
 ```sh
 buildchain publication-artifact manifest --source-sha "$(git rev-parse HEAD)" --json
+```
+
+Prove the complete candidate from two clean builds:
+
+```sh
+buildchain publication-artifact reproducibility \
+  --source-sha "$(git rev-parse HEAD)" \
+  --promote \
+  --json
 ```
 
 Generate the npm package contents after the manifest exists:
@@ -280,6 +413,13 @@ import {
   collectPublicationPackageFacts,
   preparePublicationNpmPackage,
 } from "@kungfu-tech/buildchain/publication-package";
+
+import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
+
+import {
+  createPublicationSealedBundle,
+  verifyPublicationSealedBundle,
+} from "@kungfu-tech/buildchain/publication-sealed-bundle";
 ```
 
 `writePublicationArtifact()` is the single implementation used by the CLI and

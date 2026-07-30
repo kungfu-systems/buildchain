@@ -61,6 +61,11 @@ on:
         default: true
         required: false
         type: boolean
+      reactivation-authorized:
+        description: Explicitly authorize a new evidence-bound transition for a tombstoned SHA
+        default: false
+        required: false
+        type: boolean
     secrets:
       promotion-token:
         description: Repository-owned token for source-lock branch and PR writes
@@ -84,6 +89,8 @@ on:
         value: ${{ jobs.settle.outputs.next-candidate-sha || jobs.observe.outputs.next-candidate-sha }}
       settlement-action:
         value: ${{ jobs.settle.outputs.settlement-action || 'none' }}
+      prior-state-root:
+        value: ${{ jobs.settle.outputs.prior-state-root || jobs.observe.outputs.prior-state-root }}
 
 permissions:
   actions: read
@@ -110,6 +117,7 @@ jobs:
       active-candidate-pr: ${{ steps.observe.outputs.active-candidate-pr }}
       next-candidate-sha: ${{ steps.observe.outputs.next-candidate-sha }}
       pull-request-body-prefix: ${{ steps.render-body-prefix.outputs.pull-request-body-prefix || inputs.pull-request-body-prefix }}
+      prior-state-root: ${{ steps.observe.outputs.prior-state-root }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -202,6 +210,7 @@ jobs:
       active-candidate-pr: ${{ steps.settle.outputs.active-candidate-pr }}
       next-candidate-sha: ${{ steps.settle.outputs.next-candidate-sha }}
       settlement-action: ${{ steps.settle.outputs.settlement-action }}
+      prior-state-root: ${{ steps.settle.outputs.prior-state-root }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -233,6 +242,8 @@ jobs:
           BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS: ${{ inputs.max-age-seconds }}
           BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: ${{ needs.observe.outputs.pull-request-body-prefix }}
           BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA: ${{ needs.observe.outputs.selected-sha }}
+          BUILDCHAIN_CHANNEL_PATROL_EXPECTED_PRIOR_STATE_ROOT: ${{ needs.observe.outputs.prior-state-root }}
+          BUILDCHAIN_CHANNEL_PATROL_REACTIVATION_AUTHORIZED: ${{ inputs.reactivation-authorized }}
           BUILDCHAIN_CHANNEL_PATROL_CREATE_PR: "true"
           BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED: "true"
           BUILDCHAIN_CHANNEL_PATROL_DRY_RUN: "false"

@@ -178,6 +178,18 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "aws-codebuild-project": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-macos-runner-label": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-windows-runner-label": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "build-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -472,7 +484,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:e5b4b732a1d5483f9000cb259b2a52b36c0c9d99fe0dd8b8ddad370c9947640a"
+      "digest": "sha256:dd7f9f5a64447323743a7f8a58ca4a373e4491cc03895d6bfa459e23e8723d20"
     },
     {
       "schemaVersion": 1,
@@ -574,6 +586,18 @@
         },
         "artifact-transfer-mode": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "aws-codebuild-project": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-macos-runner-label": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-windows-runner-label": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "build-command": {
@@ -858,7 +882,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:db1642144d44c4a534fd8671eaf1d715afb41a484dc79bfe7d568702aa396942"
+      "digest": "sha256:f8993d324d4b87ac25fb8a0869acf605c8b3538d8a2914a1da9d6bc0a95d4cea"
     },
     {
       "schemaVersion": 1,
@@ -2069,6 +2093,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "downstream-update-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "downstream-verify-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -2156,7 +2184,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f97656a8df0758c8e404d5b7c387529256a1ec45d1748f8efb6847a3256b1216"
+      "digest": "sha256:aff7a9f6bcf96d7a9d406e490868288f3acef104e53eddddc5782b8a2b5b4fa5"
     },
     {
       "schemaVersion": 1,
@@ -2205,5 +2233,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:38a986b9b8722c5751071183e5465aaf762cbe291214d51ed0fee4935e73eac8"
+  "digest": "sha256:6feab3c1d351b561dd995f01d4a3c0aca06df42ff71544c0fba15dcb56bb37a5"
 }

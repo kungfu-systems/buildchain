@@ -32,8 +32,23 @@ on:
         type: string
         required: false
       runner-preset:
-        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, or custom with platforms-json"
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, aws-us-codebuild-linux, aws-us-ec2-windows-jit, aws-us-ec2-macos-jit, or custom with platforms-json"
         default: "github-hosted"
+        type: string
+        required: false
+      aws-codebuild-project:
+        description: "Required CodeBuild project name for the explicit aws-us-codebuild-linux burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-windows-runner-label:
+        description: "Required unique card-scoped JIT label for the explicit aws-us-ec2-windows-jit burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-macos-runner-label:
+        description: "Required unique campaign-scoped JIT label for the explicit aws-us-ec2-macos-jit burst preset"
+        default: ""
         type: string
         required: false
       platforms-json:
@@ -717,6 +732,9 @@ jobs:
             .buildchain/workflow-shell/scripts/locked-source-checkout.mjs
             .buildchain/workflow-shell/scripts/artifact-signing-delegation.mjs
             .buildchain/workflow-shell/scripts/build-contract-core.mjs
+            .buildchain/workflow-shell/scripts/aws-runner-burst-core.mjs
+            .buildchain/workflow-shell/scripts/aws-windows-jit-core.mjs
+            .buildchain/workflow-shell/scripts/aws-macos-jit-core.mjs
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -1080,6 +1098,9 @@ jobs:
         env:
           BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
           BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
+          BUILDCHAIN_AWS_CODEBUILD_PROJECT: ${{ inputs.aws-codebuild-project }}
+          BUILDCHAIN_AWS_EC2_WINDOWS_RUNNER_LABEL: ${{ inputs.aws-ec2-windows-runner-label }}
+          BUILDCHAIN_AWS_EC2_MACOS_RUNNER_LABEL: ${{ inputs.aws-ec2-macos-runner-label }}
           BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
           BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
@@ -1263,7 +1284,7 @@ jobs:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
-    runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    runs-on: ${{ matrix.platform.provider == 'aws-codebuild' && format('codebuild-{0}-{1}-{2}', matrix.platform.project, github.run_id, github.run_attempt) || fromJSON(matrix.platform.runner) }}
     timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
     env:
       CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
@@ -1373,6 +1394,45 @@ jobs:
 
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Record AWS burst runner provenance
+        if: ${{ matrix.platform.provider == 'aws-codebuild' }}
+        run: node .buildchain/runtime/scripts/aws-runner-burst.mjs evidence
+        env:
+          BUILDCHAIN_BURST_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
+          BUILDCHAIN_BURST_PROVIDER: ${{ matrix.platform.provider }}
+          BUILDCHAIN_BURST_PROJECT: ${{ matrix.platform.project }}
+          BUILDCHAIN_BURST_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_BURST_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_BURST_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_BURST_RUN_ID: ${{ github.run_id }}
+          BUILDCHAIN_BURST_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILDCHAIN_BURST_JOB: ${{ github.job }}
+
+      - name: Record AWS Windows JIT runner provenance
+        if: ${{ matrix.platform.provider == 'aws-ec2-windows-jit' }}
+        shell: pwsh
+        run: node .buildchain/runtime/scripts/aws-windows-jit.mjs evidence
+        env:
+          BUILDCHAIN_WINDOWS_JIT_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-windows-jit.json
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_EXPECTED_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+
+      - name: Record AWS macOS JIT runner provenance
+        if: ${{ matrix.platform.provider == 'aws-ec2-macos-jit' }}
+        run: node .buildchain/runtime/scripts/aws-macos-jit.mjs evidence
+        env:
+          BUILDCHAIN_MACOS_JIT_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-macos-jit.json
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_EXPECTED_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+
+      - name: Prepare AWS CodeBuild native toolchain
+        if: ${{ matrix.platform.provider == 'aws-codebuild' }}
+        run: node .buildchain/runtime/scripts/aws-codebuild-toolchain.mjs prepare
+        env:
+          BUILDCHAIN_BURST_TOOLCHAIN_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
 
       - name: Resolve artifact contract
         id: artifact-contract
@@ -1723,6 +1783,35 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload AWS burst runner provenance
+        if: ${{ always() && matrix.platform.provider == 'aws-codebuild' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-aws-runner-burst-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload AWS Windows JIT runner provenance
+        if: ${{ always() && matrix.platform.provider == 'aws-ec2-windows-jit' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-aws-windows-jit-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-windows-jit.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload AWS macOS JIT runner provenance
+        if: ${{ always() && matrix.platform.provider == 'aws-ec2-macos-jit' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-aws-macos-jit-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-macos-jit.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -2459,6 +2548,34 @@ jobs:
           name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
+      - name: Resolve source-bound application identity
+        id: credential-identity
+        shell: bash
+        env:
+          BUILDCHAIN_CREDENTIAL_INPUT_ROOT: .buildchain/credential-island-input
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { loadCredentialInput } from "./.buildchain/runtime/actions/macos-credential-island/lib.js";
+
+          const sealed = loadCredentialInput(
+            process.env.BUILDCHAIN_CREDENTIAL_INPUT_ROOT,
+            {
+              repository: process.env.BUILDCHAIN_SOURCE_REPOSITORY,
+              sourceSha: process.env.BUILDCHAIN_SOURCE_SHA,
+              sourceTreeSha: process.env.BUILDCHAIN_SOURCE_TREE_SHA,
+            },
+          );
+          const bundleId = String(sealed.manifest.app.bundleId || "").trim();
+          if (!/^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/u.test(bundleId)) {
+            throw new Error("sealed application bundle identifier is invalid");
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `bundle-id=${bundleId}\n`);
+          NODE
+
       - name: Sign, notarize, staple, and verify
         id: credential-island
         uses: ./.buildchain/runtime/actions/macos-credential-island
@@ -2473,7 +2590,7 @@ jobs:
           artifact-name: ${{ steps.names.outputs.artifact-name }}
           platform-id: ${{ inputs.credential-island-macos-platform-id }}-credential
           artifact-relative-output: product/release
-          expected-bundle-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID }}
+          expected-bundle-id: ${{ steps.credential-identity.outputs.bundle-id }}
           expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
           certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
           certificate-p12-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}

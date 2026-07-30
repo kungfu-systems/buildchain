@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "5c0c7307bb74585dfbbd98fba33388016a8c2caa9c244407aa415708cb46900d",
+    "sha256": "ac4926ebd1854dc2c051400e9b5f7ec6446332644bd52778c9de8f94ff98a522",
     "summary": {
-      "cliCommandCount": 97,
+      "cliCommandCount": 107,
       "workflowCount": 57,
       "actionCount": 6,
-      "sitePageCount": 59,
-      "docCommandRefCount": 291,
+      "sitePageCount": 60,
+      "docCommandRefCount": 311,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "5c0c7307bb74585dfbbd98fba33388016a8c2caa9c244407aa415708cb46900d",
+      "sha256": "ac4926ebd1854dc2c051400e9b5f7ec6446332644bd52778c9de8f94ff98a522",
       "summary": {
-        "cliCommandCount": 97,
+        "cliCommandCount": 107,
         "workflowCount": 57,
         "actionCount": 6,
-        "sitePageCount": 59,
-        "docCommandRefCount": 291,
+        "sitePageCount": 60,
+        "docCommandRefCount": 311,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1435,6 +1435,42 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./publication-package"
+        },
+        {
+          "id": "export:./publication-reproducibility",
+          "name": "@kungfu-tech/buildchain/publication-reproducibility",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-reproducibility.js",
+          "evidencePath": "packages/core/publication-reproducibility.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-reproducibility"
+        },
+        {
+          "id": "export:./publication-sealed-bundle",
+          "name": "@kungfu-tech/buildchain/publication-sealed-bundle",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-sealed-bundle.js",
+          "evidencePath": "packages/core/publication-sealed-bundle.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-sealed-bundle"
+        },
+        {
+          "id": "export:./paper",
+          "name": "@kungfu-tech/buildchain/paper",
+          "kind": "package-export",
+          "sourcePath": "packages/core/paper.js",
+          "evidencePath": "packages/core/paper.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./paper"
         },
         {
           "id": "export:./publication-authority",
@@ -2669,6 +2705,114 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:paper",
+          "name": "buildchain paper",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-alpha",
+          "name": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-bootstrap-npm",
+          "name": "buildchain paper bootstrap npm [--cwd <dir>] [--execute]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-build",
+          "name": "buildchain paper build [--cwd <dir>] [--execute] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-migrate",
+          "name": "buildchain paper migrate [--cwd <dir>] [--write] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-preflight",
+          "name": "buildchain paper preflight [--cwd <dir>] [--offline] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-resume",
+          "name": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-scaffold",
+          "name": "buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-status",
+          "name": "buildchain paper status [--cwd <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:portable-cache",
           "name": "buildchain portable-cache plan --manifest <file-or-json> [--output <file>]",
           "kind": "cli-command",
@@ -2719,6 +2863,18 @@
         {
           "id": "cli:publication-artifact-npm-package",
           "name": "buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:publication-artifact-reproducibility",
+          "name": "buildchain publication-artifact reproducibility [--cwd <dir>] [--source-sha <sha>]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3045,7 +3201,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 75,
+          "inputCount": 78,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3061,6 +3217,9 @@
             "artifact-retention-days",
             "artifact-signing-request-upload-no-proxy",
             "artifact-transfer-mode",
+            "aws-codebuild-project",
+            "aws-ec2-macos-runner-label",
+            "aws-ec2-windows-runner-label",
             "build-command",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
@@ -3726,7 +3885,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 78,
+          "inputCount": 81,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3742,6 +3901,9 @@
             "artifact-retention-days",
             "artifact-signing-request-upload-no-proxy",
             "artifact-transfer-mode",
+            "aws-codebuild-project",
+            "aws-ec2-macos-runner-label",
+            "aws-ec2-windows-runner-label",
             "build-command",
             "buildchain-alpha-contract-lock-path",
             "buildchain-channel",
@@ -3984,7 +4146,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
             "alpha-workflow-path",
             "buildchain-ref",
@@ -3995,6 +4157,7 @@
             "max-age-seconds",
             "pull-request-body-prefix",
             "pull-request-body-prefix-renderer",
+            "reactivation-authorized",
             "settlement-authorized",
             "source-branch",
             "target-branch"
@@ -4474,7 +4637,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 16,
+          "inputCount": 17,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
@@ -4483,6 +4646,7 @@
             "downstream-prepare-command",
             "downstream-repository",
             "downstream-target",
+            "downstream-update-command",
             "downstream-verify-command",
             "dry-run",
             "graph-json",
@@ -4654,7 +4818,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 67,
+          "inputCount": 69,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -4683,6 +4847,8 @@
             "publish-package-set-order",
             "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
+            "publish-sealed-bundle-manifest",
+            "publish-sealed-bundle-root",
             "publish-source-locked",
             "publish-source-ref",
             "publish-source-sha",
@@ -5081,6 +5247,18 @@
         {
           "id": "site-page:manual:auditable-demo",
           "name": "site-page:manual:auditable-demo",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:aws-us-elastic-runner-burst-plane",
+          "name": "site-page:manual:aws-us-elastic-runner-burst-plane",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -5717,6 +5895,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 365
+    "publicSurfaceCount": 379
   }
 }

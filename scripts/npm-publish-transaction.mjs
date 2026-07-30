@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -69,6 +70,39 @@ function artifactDigest(pack) {
     return `sha1:${pack.shasum}`;
   }
   throw new Error("npm pack did not return integrity or shasum");
+}
+
+function sealedPackResult() {
+  const tarballPath = readEnv("BUILDCHAIN_SEALED_NPM_TARBALL");
+  if (!tarballPath) {
+    return undefined;
+  }
+  const resolved = path.resolve(tarballPath);
+  if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+    throw new Error(`sealed npm tarball is missing: ${resolved}`);
+  }
+  const bytes = fs.readFileSync(resolved);
+  const integrity = `sha512-${crypto.createHash("sha512").update(bytes).digest("base64")}`;
+  const shasum = crypto.createHash("sha1").update(bytes).digest("hex");
+  const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
+  const expectedIntegrity = readEnv("BUILDCHAIN_SEALED_NPM_INTEGRITY");
+  const expectedSha256 = readEnv("BUILDCHAIN_SEALED_NPM_SHA256").replace(/^sha256:/, "");
+  if (expectedIntegrity && integrity !== expectedIntegrity) {
+    throw new Error(`sealed npm tarball integrity mismatch: expected ${expectedIntegrity}, got ${integrity}`);
+  }
+  if (expectedSha256 && sha256 !== expectedSha256) {
+    throw new Error(`sealed npm tarball sha256 mismatch: expected ${expectedSha256}, got ${sha256}`);
+  }
+  return {
+    filename: path.basename(resolved),
+    integrity,
+    shasum,
+    sha256,
+    bytes: bytes.length,
+    entryCount: 0,
+    tarballPath: resolved,
+    sealed: true,
+  };
 }
 
 function parseNpmView(stdout) {
@@ -154,10 +188,14 @@ export function npmPublishTransaction({
   const exactTag = assertPackageVersion({ pkg, expectedVersion });
   const distTag = readEnv("BUILDCHAIN_NPM_DIST_TAG", pkg.version.includes("-") ? "alpha" : "latest");
 
-  const pack = parsePackResult(runNpm({
-    cwd: resolvedCwd,
-    args: ["pack", "--dry-run", "--json", `--registry=${registry}`],
-  }).stdout);
+  const pack =
+    sealedPackResult() ||
+    parsePackResult(
+      runNpm({
+        cwd: resolvedCwd,
+        args: ["pack", "--dry-run", "--json", `--registry=${registry}`],
+      }).stdout,
+    );
   const digest = artifactDigest(pack);
 
   const existingDigest = skipRegistryLookup
@@ -178,7 +216,15 @@ export function npmPublishTransaction({
   } else {
     runNpm({
       cwd: resolvedCwd,
-      args: ["publish", "--access", access, "--tag", distTag, `--registry=${registry}`],
+      args: [
+        "publish",
+        ...(pack.tarballPath ? [pack.tarballPath] : []),
+        "--access",
+        access,
+        "--tag",
+        distTag,
+        `--registry=${registry}`,
+      ],
     });
     publishAction = "published";
     const registryDigest = skipRegistryLookup
@@ -215,7 +261,11 @@ export function npmPublishTransaction({
       digest,
     }],
   };
-  const resolvedEvidencePath = writeEvidence({ cwd: resolvedCwd, evidencePath, evidence });
+  const resolvedEvidencePath = writeEvidence({
+    cwd: resolvedCwd,
+    evidencePath,
+    evidence,
+  });
   writeGitHubOutputs({
     version: pkg.version,
     "exact-tag": exactTag,
@@ -235,6 +285,7 @@ export function npmPublishTransaction({
     registry,
     publishAction,
     pack,
+    sealedBundleRoot: readEnv("BUILDCHAIN_SEALED_BUNDLE_ROOT"),
     evidencePath: resolvedEvidencePath,
     evidence,
   };

@@ -592,6 +592,8 @@ export {
   RELEASE_PROPAGATION_GRAPH_CONTRACT,
   RELEASE_PROPAGATION_LOCK_CONTRACT,
   RELEASE_PROPAGATION_PLAN_CONTRACT,
+  RELEASE_PROPAGATION_RECEIPT_CONTRACT,
+  createReleasePropagationReceipt,
   createReleasePropagationLock,
   normalizeReleasePropagationGraph,
   planReleasePropagation,
@@ -613,6 +615,42 @@ export {
   validateReleaseActivationReceiptSet,
   validateReleaseActivationTransaction,
 } from "./release-activation-transaction.js";
+
+export {
+  PUBLICATION_REPRODUCIBILITY_RECEIPT_CONTRACT,
+  verifyPublicationReproducibility,
+} from "./publication-reproducibility.js";
+
+export {
+  PUBLICATION_SEALED_BUNDLE_CONTRACT,
+  createPublicationSealedBundle,
+  verifyPublicationSealedBundle,
+} from "./publication-sealed-bundle.js";
+
+export {
+  PAPER_ALPHA_PLAN_CONTRACT,
+  PAPER_BUILD_PLAN_CONTRACT,
+  PAPER_MIGRATION_CONTRACT,
+  PAPER_NPM_BOOTSTRAP_CONTRACT,
+  PAPER_PATHS,
+  PAPER_PREFLIGHT_CONTRACT,
+  PAPER_RESUME_PLAN_CONTRACT,
+  PAPER_SCAFFOLD_CONTRACT,
+  PAPER_STATE_ORDER,
+  PAPER_STATUS_CONTRACT,
+  PAPER_VISIBILITY_CONTRACT,
+  collectPaperPreflight,
+  collectPaperStatus,
+  createPaperAlphaPlan,
+  createPaperBuildPlan,
+  createPaperResumePlan,
+  executePaperNpmBootstrap,
+  planPaperMigration,
+  planPaperScaffold,
+  resolvePaperRepository,
+  writePaperMigration,
+  writePaperScaffold,
+} from "./paper.js";
 
 export {
   SURFACE_TIMESTAMP_POLICY_CONTRACT,

@@ -91,6 +91,9 @@
         "artifact-retention-days",
         "artifact-signing-request-upload-no-proxy",
         "artifact-transfer-mode",
+        "aws-codebuild-project",
+        "aws-ec2-macos-runner-label",
+        "aws-ec2-windows-runner-label",
         "build-command",
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
@@ -153,7 +156,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 75,
+      "inputCount": 78,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -955,6 +958,9 @@
         "artifact-retention-days",
         "artifact-signing-request-upload-no-proxy",
         "artifact-transfer-mode",
+        "aws-codebuild-project",
+        "aws-ec2-macos-runner-label",
+        "aws-ec2-windows-runner-label",
         "build-command",
         "buildchain-alpha-contract-lock-path",
         "buildchain-channel",
@@ -1020,7 +1026,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 78,
+      "inputCount": 81,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1281,11 +1287,12 @@
         "max-age-seconds",
         "pull-request-body-prefix",
         "pull-request-body-prefix-renderer",
+        "reactivation-authorized",
         "settlement-authorized",
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 12,
+      "inputCount": 13,
       "secrets": [
         "promotion-token"
       ],
@@ -1295,13 +1302,14 @@
         "controller-state",
         "eligible",
         "next-candidate-sha",
+        "prior-state-root",
         "promotion-pr",
         "result-path",
         "selected-sha",
         "settlement-action",
         "source-lock-ref"
       ],
-      "outputCount": 9,
+      "outputCount": 10,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
       "status": "active"
@@ -1453,9 +1461,12 @@
       ],
       "inputCount": 26,
       "secrets": [
+        "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
+        "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
+        "BUILDCHAIN_GENERATED_WRITE_TOKEN",
         "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 1,
+      "secretCount": 4,
       "outputs": [
         "github-release-url",
         "package-name",
@@ -1906,6 +1917,7 @@
         "downstream-prepare-command",
         "downstream-repository",
         "downstream-target",
+        "downstream-update-command",
         "downstream-verify-command",
         "dry-run",
         "graph-json",
@@ -1916,7 +1928,7 @@
         "source-node",
         "upstream-release-json"
       ],
-      "inputCount": 16,
+      "inputCount": 17,
       "secrets": [
         "propagation-token"
       ],
@@ -1928,9 +1940,11 @@
         "controller-receipt-artifact",
         "controller-receipt-digest",
         "controller-receipt-json",
-        "controller-receipt-status"
+        "controller-receipt-status",
+        "propagation-receipt-digest",
+        "propagation-receipt-json"
       ],
-      "outputCount": 7,
+      "outputCount": 9,
       "surface": "release-propagation",
       "capabilityGroup": "site-and-propagation",
       "status": "preview"
@@ -2116,6 +2130,8 @@
         "publish-package-set-order",
         "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
+        "publish-sealed-bundle-manifest",
+        "publish-sealed-bundle-root",
         "publish-source-locked",
         "publish-source-ref",
         "publish-source-sha",
@@ -2157,7 +2173,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 67,
+      "inputCount": 69,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

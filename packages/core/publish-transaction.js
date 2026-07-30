@@ -4,6 +4,7 @@ import path from "node:path";
 
 export const RELEASE_TRANSACTION_STATES = Object.freeze([
   "prepared",
+  "sealed",
   "publishing",
   "publish_failed",
   "published",
@@ -18,7 +19,8 @@ const TERMINAL_STATES = new Set(["complete", "abandoned", "failed_permanently"])
 const BLOCKED_RECOVERY_STATES = new Set(["abandoned", "failed_permanently"]);
 
 const ALLOWED_TRANSITIONS = new Map([
-  ["prepared", new Set(["publishing", "abandoned", "failed_permanently"])],
+  ["prepared", new Set(["sealed", "publishing", "abandoned", "failed_permanently"])],
+  ["sealed", new Set(["publishing", "repair_required", "abandoned", "failed_permanently"])],
   ["publishing", new Set(["publish_failed", "published", "repair_required", "abandoned", "failed_permanently"])],
   ["publish_failed", new Set(["publishing", "repair_required", "abandoned", "failed_permanently"])],
   ["published", new Set(["finalizing", "complete", "repair_required", "abandoned", "failed_permanently"])],
@@ -209,7 +211,12 @@ export function createReleaseTransaction({
   actor = "",
   runId = "",
 } = {}) {
-  const id = releaseTransactionId({ repository, version, sourceSha, targetRef });
+  const id = releaseTransactionId({
+    repository,
+    version,
+    sourceSha,
+    targetRef,
+  });
   const createdAt = nowIso();
   return {
     schema: 1,
@@ -237,6 +244,10 @@ export function createReleaseTransaction({
     failure: "",
     artifacts: [],
     evidence: [],
+    sealed_bundle: null,
+    publication_state: "prepared",
+    milestones: {},
+    resume_command: "",
     created_at: createdAt,
     updated_at: createdAt,
   };
@@ -255,10 +266,11 @@ export function transitionReleaseTransaction(record, nextState, metadata = {}) {
       throw new Error(`cannot transition release transaction from ${currentState} to ${nextState}`);
     }
   }
-  const nextFailure = nextState === "complete"
-    ? optionalString(metadata.failure ?? "")
-    : optionalString(metadata.failure ?? record.failure);
-  return {
+  const nextFailure =
+    nextState === "complete"
+      ? optionalString(metadata.failure ?? "")
+      : optionalString(metadata.failure ?? record.failure);
+  const nextRecord = {
     ...record,
     previous_state: currentState === nextState ? record.previous_state || "" : currentState,
     state: nextState,
@@ -267,6 +279,88 @@ export function transitionReleaseTransaction(record, nextState, metadata = {}) {
     superseded_by: optionalString(metadata.supersededBy ?? record.superseded_by),
     failure: nextFailure,
     updated_at: nowIso(),
+  };
+  return {
+    ...nextRecord,
+    publication_state: releaseTransactionPublicationState(nextRecord),
+  };
+}
+
+export function releaseTransactionPublicationState(record) {
+  const state = record?.state || "prepared";
+  if (state === "repair_required") {
+    return "repair-required";
+  }
+  if (["abandoned", "failed_permanently"].includes(state)) {
+    return state.replaceAll("_", "-");
+  }
+  const githubReleaseRequired = record?.sealed_bundle?.completion?.githubReleaseRequired === true;
+  const githubReleaseComplete = record?.milestones?.github_release?.status === "complete";
+  if (state === "complete" && (!githubReleaseRequired || githubReleaseComplete)) {
+    return record?.channel === "alpha" ? "alpha-complete" : "release-complete";
+  }
+  if (
+    ["published", "finalizing", "complete"].includes(state) ||
+    record?.milestones?.package_published?.status === "complete"
+  ) {
+    return "package-published";
+  }
+  if (state === "sealed" || record?.sealed_bundle?.root) {
+    return "sealed";
+  }
+  if (state === "publishing" || state === "publish_failed") {
+    return state.replaceAll("_", "-");
+  }
+  return "prepared";
+}
+
+export function attachReleaseTransactionSealedBundle(record, sealedBundle, { actor = "", runId = "" } = {}) {
+  if (!record || typeof record !== "object") {
+    throw new Error("release transaction record must be an object");
+  }
+  const root = assertNonEmptyString(sealedBundle?.root, "sealedBundle.root");
+  if (record.sealed_bundle?.root && record.sealed_bundle.root !== root) {
+    throw new Error(`sealed bundle root mismatch: expected ${record.sealed_bundle.root}, got ${root}`);
+  }
+  if (!["prepared", "sealed"].includes(record.state || "prepared")) {
+    if (!record.sealed_bundle?.root) {
+      throw new Error(`cannot attach a sealed bundle after transaction entered ${record.state}`);
+    }
+    return record;
+  }
+  let next = {
+    ...record,
+    sealed_bundle: sealedBundle,
+    resume_command: optionalString(sealedBundle.resumeCommand),
+    actor: optionalString(actor || record.actor),
+    run_id: optionalString(runId || record.run_id),
+    updated_at: nowIso(),
+  };
+  if ((next.state || "prepared") === "prepared") {
+    next = transitionReleaseTransaction(next, "sealed", { actor, runId });
+  }
+  return {
+    ...next,
+    publication_state: releaseTransactionPublicationState(next),
+  };
+}
+
+export function recordReleaseTransactionMilestone(record, milestone, details = {}) {
+  const normalizedMilestone = assertNonEmptyString(milestone, "milestone").replaceAll("-", "_");
+  const next = {
+    ...record,
+    milestones: {
+      ...(record.milestones || {}),
+      [normalizedMilestone]: {
+        status: "complete",
+        ...details,
+      },
+    },
+    updated_at: nowIso(),
+  };
+  return {
+    ...next,
+    publication_state: releaseTransactionPublicationState(next),
   };
 }
 
@@ -284,8 +378,12 @@ export function writeReleaseTransaction(filePath, record) {
     return record;
   }
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, `${JSON.stringify(record, null, 2)}\n`);
-  return record;
+  const normalized = {
+    ...record,
+    publication_state: releaseTransactionPublicationState(record),
+  };
+  fs.writeFileSync(filePath, `${JSON.stringify(normalized, null, 2)}\n`);
+  return normalized;
 }
 
 function artifactIdentity(artifact) {
@@ -424,7 +522,9 @@ export function parsePublishArtifactsJson(value, label = "publish artifacts") {
     throw new Error(`${label} must be a JSON array`);
   }
   return parsed.map((artifact, index) =>
-    normalizePublishArtifact(artifact, `${label}[${index}]`, { requireDigest: false }),
+    normalizePublishArtifact(artifact, `${label}[${index}]`, {
+      requireDigest: false,
+    }),
   );
 }
 
@@ -470,7 +570,9 @@ export function readPublishEvidence(filePath) {
 
 export function planArtifactPublish({ requiredArtifacts = [], existingArtifacts = [] } = {}) {
   const required = requiredArtifacts.map((artifact, index) =>
-    normalizePublishArtifact(artifact, `requiredArtifacts[${index}]`, { requireDigest: false }),
+    normalizePublishArtifact(artifact, `requiredArtifacts[${index}]`, {
+      requireDigest: false,
+    }),
   );
   const existing = existingArtifacts.map((artifact, index) =>
     normalizePublishArtifact(artifact, `existingArtifacts[${index}]`),
@@ -487,7 +589,11 @@ export function planArtifactPublish({ requiredArtifacts = [], existingArtifacts 
     const current = candidates.find((candidate) => artifactMatchesRequirement(candidate, artifact));
     if (!current) {
       if (candidates.length > 0) {
-        conflicts.push({ expected: artifact, actual: candidates[0], fields: ["ref"] });
+        conflicts.push({
+          expected: artifact,
+          actual: candidates[0],
+          fields: ["ref"],
+        });
         continue;
       }
       publish.push(artifact);
@@ -667,7 +773,11 @@ export function planTransactionRecovery({
   explicitOverride = false,
 } = {}) {
   if (!transaction) {
-    return { action: "prepare", blocked: false, reason: "no existing transaction" };
+    return {
+      action: "prepare",
+      blocked: false,
+      reason: "no existing transaction",
+    };
   }
   const state = transaction.state || "prepared";
   assertKnownState(state);
@@ -679,19 +789,39 @@ export function planTransactionRecovery({
     };
   }
   if (state === "complete") {
-    return { action: "inspect", blocked: false, reason: "transaction is complete" };
+    return {
+      action: "inspect",
+      blocked: false,
+      reason: "transaction is complete",
+    };
   }
   if (state === "repair_required" && !explicitOverride) {
-    return { action: "blocked", blocked: true, reason: "transaction requires explicit repair" };
+    return {
+      action: "blocked",
+      blocked: true,
+      reason: "transaction requires explicit repair",
+    };
   }
   const result = validation || (evidence ? { valid: true } : undefined);
   if (result?.valid) {
-    return { action: "finalize", blocked: false, reason: "publish evidence is valid" };
+    return {
+      action: "finalize",
+      blocked: false,
+      reason: "publish evidence is valid",
+    };
   }
   if (state === "published" || state === "finalizing") {
-    return { action: "repair", blocked: true, reason: "published transaction has invalid or missing evidence" };
+    return {
+      action: "repair",
+      blocked: true,
+      reason: "published transaction has invalid or missing evidence",
+    };
   }
-  return { action: "publish", blocked: false, reason: "publish evidence is missing or incomplete" };
+  return {
+    action: "publish",
+    blocked: false,
+    reason: "publish evidence is missing or incomplete",
+  };
 }
 
 export function isReleaseTransactionTerminal(record) {

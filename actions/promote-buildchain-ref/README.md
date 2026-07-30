@@ -244,6 +244,16 @@ Passport collection. This is explicit opt-in because registry publication and
 other provider mutations must not be replayed blindly; the option rejects
 `promote-existing-version`.
 
+Build-once callers additionally pass `publish-sealed-bundle-root` and
+`publish-sealed-bundle-manifest`. The action verifies the typed manifest and
+persists every declared file below
+`sealed-bundle/<candidate-root>/files/` on the same durable ref before it starts
+the publish command. A fresh runner can omit both inputs: the action restores
+the exact binary bundle into `.buildchain/recovered-publication/<version>/`,
+re-verifies it, and exports the recovered npm tarball through
+`BUILDCHAIN_SEALED_NPM_TARBALL` with its exact integrity and SHA-256. This path
+never repacks the npm tarball.
+
 The action runs `lifecycle.publish` from `buildchain.toml` or the explicit
 `publish-command` input, then validates publish evidence before exact tags and
 floating refs move. If durable state persistence fails, the action fails closed
@@ -275,6 +285,10 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_SEALED_BUNDLE_ROOT
+BUILDCHAIN_SEALED_NPM_TARBALL
+BUILDCHAIN_SEALED_NPM_INTEGRITY
+BUILDCHAIN_SEALED_NPM_SHA256
 BUILDCHAIN_REQUIRED_ARTIFACTS
 ```
 
@@ -287,11 +301,17 @@ before `lifecycle.publish`. Requirement descriptors may omit `digest`; final
 publish evidence may not.
 
 The action outputs `transaction-id`, `transaction-state`,
+`transaction-publication-state`, `transaction-sealed-bundle-root`,
+`transaction-resume-command`,
 `transaction-exact-tag`, `public-release-tag`, `transaction-release-sha`,
 `transaction-state-ref`, `transaction-state-sha`, `transaction-state-path`,
 `publish-evidence-path`, and `release-passport-path`, `release-passport-output-dir`,
 `release-passport-state-sha`, and `finalization-needed`.
 `transaction-state-ref` is the durable recovery location.
+`transaction-publication-state` provides the stable
+`prepared`, `sealed`, `package-published`, `alpha-complete`, or
+`release-complete` operator view. `transaction-resume-command` is the exact
+consumer-facing resume entrypoint bound into the sealed manifest.
 `release-passport-state-sha` is the durable ref commit after the generated
 `release-passport/*` files have been uploaded into that recovery ref.
 `finalization-needed=true` means publish evidence is valid, but protected branch
@@ -311,7 +331,11 @@ package releases, `public-release-tag` is derived
 from the published package version, while `transaction-exact-tag` remains the
 internal Buildchain transaction ref for recovery and audit. If the transaction is
 not complete yet, the action defers GitHub Release publication to the next
-idempotent promotion run.
+idempotent promotion run. When sealed release assets are present, those restored
+files replace caller-supplied artifact paths. After upload succeeds, the action
+writes the `github_release` milestone back to the durable transaction; an
+interruption before that write is safe to retry because release creation and
+asset replacement are idempotent.
 
 After a publish transaction reaches `complete`, the action generates the unified
 `buildchain-release-passport` in `.buildchain/release-passport` by default and

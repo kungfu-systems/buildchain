@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 97,
+    "cliCommandCount": 107,
     "workflowCount": 57,
     "actionCount": 6,
-    "sitePageCount": 59,
-    "docCommandRefCount": 291,
+    "sitePageCount": 60,
+    "docCommandRefCount": 311,
     "failureCount": 0
   },
   "enumerated": {
@@ -368,6 +368,51 @@
         "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]"
       },
       {
+        "id": "paper",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper"
+      },
+      {
+        "id": "paper-alpha",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper bootstrap npm [--cwd <dir>] [--execute]"
+      },
+      {
+        "id": "paper-build",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper build [--cwd <dir>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-migrate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper migrate [--cwd <dir>] [--write] [--json]"
+      },
+      {
+        "id": "paper-preflight",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper preflight [--cwd <dir>] [--offline] [--json]"
+      },
+      {
+        "id": "paper-resume",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-scaffold",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]"
+      },
+      {
+        "id": "paper-status",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper status [--cwd <dir>] [--json]"
+      },
+      {
         "id": "portable-cache",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain portable-cache plan --manifest <file-or-json> [--output <file>]"
@@ -391,6 +436,11 @@
         "id": "publication-artifact-npm-package",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]"
+      },
+      {
+        "id": "publication-artifact-reproducibility",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain publication-artifact reproducibility [--cwd <dir>] [--source-sha <sha>]"
       },
       {
         "id": "publish-source",
@@ -581,6 +631,9 @@
           "artifact-retention-days",
           "artifact-signing-request-upload-no-proxy",
           "artifact-transfer-mode",
+          "aws-codebuild-project",
+          "aws-ec2-macos-runner-label",
+          "aws-ec2-windows-runner-label",
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
@@ -643,7 +696,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 75,
+        "inputCount": 78,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1382,6 +1435,9 @@
           "artifact-retention-days",
           "artifact-signing-request-upload-no-proxy",
           "artifact-transfer-mode",
+          "aws-codebuild-project",
+          "aws-ec2-macos-runner-label",
+          "aws-ec2-windows-runner-label",
           "build-command",
           "buildchain-alpha-contract-lock-path",
           "buildchain-channel",
@@ -1447,7 +1503,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 78,
+        "inputCount": 81,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1675,11 +1731,12 @@
           "max-age-seconds",
           "pull-request-body-prefix",
           "pull-request-body-prefix-renderer",
+          "reactivation-authorized",
           "settlement-authorized",
           "source-branch",
           "target-branch"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [
           "promotion-token"
         ],
@@ -1689,13 +1746,14 @@
           "controller-state",
           "eligible",
           "next-candidate-sha",
+          "prior-state-root",
           "promotion-pr",
           "result-path",
           "selected-sha",
           "settlement-action",
           "source-lock-ref"
         ],
-        "outputCount": 9
+        "outputCount": 10
       },
       {
         "id": "dev-merge-queue-governance",
@@ -1829,9 +1887,12 @@
         ],
         "inputCount": 26,
         "secrets": [
+          "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
+          "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
+          "BUILDCHAIN_GENERATED_WRITE_TOKEN",
           "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 1,
+        "secretCount": 4,
         "outputs": [
           "github-release-url",
           "package-name",
@@ -2249,6 +2310,7 @@
           "downstream-prepare-command",
           "downstream-repository",
           "downstream-target",
+          "downstream-update-command",
           "downstream-verify-command",
           "dry-run",
           "graph-json",
@@ -2259,7 +2321,7 @@
           "source-node",
           "upstream-release-json"
         ],
-        "inputCount": 16,
+        "inputCount": 17,
         "secrets": [
           "propagation-token"
         ],
@@ -2271,9 +2333,11 @@
           "controller-receipt-artifact",
           "controller-receipt-digest",
           "controller-receipt-json",
-          "controller-receipt-status"
+          "controller-receipt-status",
+          "propagation-receipt-digest",
+          "propagation-receipt-json"
         ],
-        "outputCount": 7
+        "outputCount": 9
       },
       {
         "id": "release-verify",
@@ -2436,6 +2500,8 @@
           "publish-package-set-order",
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
+          "publish-sealed-bundle-manifest",
+          "publish-sealed-bundle-root",
           "publish-source-locked",
           "publish-source-ref",
           "publish-source-sha",
@@ -2477,7 +2543,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 67
+        "inputCount": 69
       },
       {
         "id": "report-buildchain-issue",
@@ -2651,6 +2717,10 @@
       },
       {
         "id": "manual:auditable-demo",
+        "category": "manual"
+      },
+      {
+        "id": "manual:aws-us-elastic-runner-burst-plane",
         "category": "manual"
       },
       {
@@ -3888,6 +3958,91 @@
         "command": "buildchain npm dry-run"
       },
       {
+        "id": "paper-alpha",
+        "path": "docs/cli.md",
+        "command": "buildchain paper alpha --json"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/cli.md",
+        "command": "buildchain paper bootstrap npm"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper bootstrap npm"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper bootstrap npm"
+      },
+      {
+        "id": "paper-build",
+        "path": "docs/cli.md",
+        "command": "buildchain paper build --json"
+      },
+      {
+        "id": "paper-migrate",
+        "path": "docs/cli.md",
+        "command": "buildchain paper migrate --json"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "docs/cli.md",
+        "command": "buildchain paper preflight --offline"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper preflight --offline"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "README.md",
+        "command": "buildchain paper preflight --offline"
+      },
+      {
+        "id": "paper-resume",
+        "path": "docs/cli.md",
+        "command": "buildchain paper resume --json"
+      },
+      {
+        "id": "paper-scaffold",
+        "path": "docs/cli.md",
+        "command": "buildchain paper scaffold --package"
+      },
+      {
+        "id": "paper-scaffold",
+        "path": "README.md",
+        "command": "buildchain paper scaffold"
+      },
+      {
+        "id": "paper-status",
+        "path": "docs/cli.md",
+        "command": "buildchain paper status --json"
+      },
+      {
+        "id": "paper-status",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper status --json"
+      },
+      {
+        "id": "paper-status",
+        "path": "README.md",
+        "command": "buildchain paper status"
+      },
+      {
+        "id": "paper",
+        "path": "docs/cli.md",
+        "command": "buildchain paper"
+      },
+      {
+        "id": "paper",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper"
+      },
+      {
         "id": "portable-cache",
         "path": "docs/cli.md",
         "command": "buildchain portable-cache plan"
@@ -3931,6 +4086,16 @@
         "id": "publication-artifact-npm-package",
         "path": "docs/publication-artifacts.md",
         "command": "buildchain publication-artifact npm-package --json"
+      },
+      {
+        "id": "publication-artifact-reproducibility",
+        "path": "docs/cli.md",
+        "command": "buildchain publication-artifact reproducibility"
+      },
+      {
+        "id": "publication-artifact-reproducibility",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain publication-artifact reproducibility"
       },
       {
         "id": "publication-artifact",
@@ -4011,6 +4176,11 @@
         "id": "release-propagation",
         "path": "docs/release-propagation.md",
         "command": "buildchain release-propagation write-lock"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation receipt"
       },
       {
         "id": "release-transaction",
@@ -4268,9 +4438,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "520ea7f41a3798cf7d785b9913f3331b1109df23443ced83bf3922e6f21ca70e",
-    "pageRegistryDigest": "dcf144c19885d33225c4d78520e58b9b00c0a78e3cdc6b02d41468734d5c9100"
+    "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
+    "workflowRegistryDigest": "53a221b92266e2847b800e94ca94d3afa099eaf553313d012b40fa9b1fc3b70a",
+    "pageRegistryDigest": "969c21883e01ff29af9eeb22d1659db505740293dea78144fc708715ea41d900"
   },
   "comparison": {
     "missingCliRegistry": [],

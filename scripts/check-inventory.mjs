@@ -56,6 +56,9 @@ const requiredPaths = [
   "packages/core/anchored-version-material.js",
   "packages/core/build-facts.js",
   "packages/core/publication-package.js",
+  "packages/core/publication-reproducibility.js",
+  "packages/core/publication-sealed-bundle.js",
+  "packages/core/paper.js",
   "packages/core/release-line-bootstrap.js",
   "packages/core/public-surface-audit.js",
   "docs/MAP.md",
@@ -102,8 +105,10 @@ const requiredPaths = [
   "scripts/anchored-version-material.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "scripts/npm-publish-transaction.mjs",
+  "scripts/paper.mjs",
   "scripts/publication-package.mjs",
   "scripts/publication-commit-evidence.mjs",
+  "scripts/publication-reproducibility.mjs",
   "scripts/release-candidate-resolver.mjs",
   "scripts/buildchain-patrol.mjs",
   "scripts/observed-evidence.mjs",
@@ -114,6 +119,7 @@ const requiredPaths = [
   "docs/observed-evidence-patrol.md",
   "docs/ownership.md",
   "tests/buildchain-inventory.json",
+  "tests/paper.test.mjs",
   ".buildchain/buildchain.toml",
   ".buildchain/contract-lock.json",
   ".buildchain/alpha-contract-lock.json",
@@ -382,6 +388,9 @@ if (rootPackage.exports?.["./buildchain-kfd-claims"] !== "./packages/core/buildc
 }
 if (rootPackage.exports?.["./public-surface-audit"] !== "./packages/core/public-surface-audit.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/public-surface-audit");
+}
+if (rootPackage.exports?.["./paper"] !== "./packages/core/paper.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/paper");
 }
 if (rootPackage.exports?.["./site/buildchain-site.json"] !== "./dist/site/buildchain-site.json") {
   throw new Error("root package must export @kungfu-tech/buildchain/site/buildchain-site.json");
@@ -1069,7 +1078,10 @@ if (commonJsSourcePattern.test(npmDryRunScript)) {
 }
 for (const requiredSnippet of [
   "BUILDCHAIN_PUBLISH_EVIDENCE",
-  "\"publish\", \"--access\", access, \"--tag\", distTag",
+  "BUILDCHAIN_SEALED_NPM_TARBALL",
+  "...(pack.tarballPath ? [pack.tarballPath] : [])",
+  "\"--access\"",
+  "\"--tag\"",
   "artifact digest mismatch",
 ]) {
   if (!npmPublishTransactionScript.includes(requiredSnippet)) {
