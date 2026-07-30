@@ -51,6 +51,11 @@ const signedGeneratedCommitMessage = (message) => `${message}\n\n${GENERATED_COM
 test("only the configured major can write the shared npm alpha channel", () => {
   assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: true,
+    line: "v0.1",
+    publishDistTag: "alpha",
+  }), "alpha");
+  assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: true,
     line: "v3.0",
     sharedAlphaAuthorityMajor: 3,
   }), "");

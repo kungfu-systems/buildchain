@@ -5,7 +5,7 @@ on:
     inputs:
       buildchain-ref:
         type: string
-        default: v2
+        default: v3
         required: false
       build-command:
         type: string

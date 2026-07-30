@@ -37,9 +37,7 @@ export function resolveWebSurfaceProductionDecision({
       reason: trusted ? "trusted-manual-dispatch" : "manual-actor-permission-insufficient",
     });
   }
-  const reviewedReleaseEvent =
-    (eventName === "push" && refName === "main") ||
-    (eventName === "pull_request" && eventAction === "closed");
+  const reviewedReleaseEvent = eventName === "push" && refName === "main";
   if (
     reviewedReleaseEvent &&
     productionApply === true &&
@@ -55,6 +53,24 @@ export function resolveWebSurfaceProductionDecision({
       releasePr,
       releaseSource,
       reason: "reviewed-release-pr-merged",
+    });
+  }
+  if (
+    eventName === "pull_request" &&
+    eventAction === "closed" &&
+    productionApply === true &&
+    productionReleaseOnMain === true &&
+    releaseApproved === true
+  ) {
+    return createWebSurfaceProductionDecision({
+      approved: false,
+      kind: "none",
+      repository,
+      sourceSha,
+      actor,
+      releasePr,
+      releaseSource,
+      reason: "release-pr-verified-awaiting-main-push",
     });
   }
   return createWebSurfaceProductionDecision({

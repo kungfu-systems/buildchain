@@ -52,6 +52,31 @@ function assertInside(root, target, label) {
   }
 }
 
+function containsPath(root, target) {
+  const relative = path.relative(root, target);
+  return (
+    !relative || (!relative.startsWith("..") && !path.isAbsolute(relative))
+  );
+}
+
+function resetGeneratedOutputRoot({
+  workspace,
+  cwd,
+  outputRoot,
+  protectedPaths = [],
+}) {
+  const protectedRoots = [workspace, cwd, ...protectedPaths];
+  for (const protectedPath of protectedRoots) {
+    if (containsPath(outputRoot, protectedPath)) {
+      throw new Error(
+        "signing request output must not contain the workspace, working directory, manifest, or a declared artifact",
+      );
+    }
+  }
+  fs.rmSync(outputRoot, { recursive: true, force: true });
+  fs.mkdirSync(outputRoot, { recursive: true });
+}
+
 function walkSubject(subjectRoot) {
   const entries = [];
   function visit(current) {
@@ -255,8 +280,12 @@ export function sealArtifactSigningRequests({
   );
   const resolvedOutputRoot = path.resolve(resolvedWorkspace, outputRoot);
   assertInside(resolvedWorkspace, resolvedOutputRoot, "signing request output");
-  fs.mkdirSync(resolvedOutputRoot, { recursive: true });
   if (selected.length === 0) {
+    resetGeneratedOutputRoot({
+      workspace: resolvedWorkspace,
+      cwd: resolvedCwd,
+      outputRoot: resolvedOutputRoot,
+    });
     const index = { schemaVersion: 1, contract: INDEX_CONTRACT, requests: [] };
     const indexPath = path.join(resolvedOutputRoot, "index.json");
     fs.writeFileSync(indexPath, `${JSON.stringify(index, null, 2)}\n`);
@@ -274,8 +303,7 @@ export function sealArtifactSigningRequests({
   assertInside(resolvedWorkspace, resolvedManifest, "artifact manifest");
   const manifest = JSON.parse(fs.readFileSync(resolvedManifest, "utf8"));
   const platform = normalizePlatform(manifest.platform?.os || process.platform);
-  const requests = [];
-  for (const declaration of selected) {
+  const prepared = selected.map((declaration) => {
     const subjectPath = path.resolve(resolvedCwd, declaration.path);
     assertInside(
       resolvedWorkspace,
@@ -288,7 +316,7 @@ export function sealArtifactSigningRequests({
       );
     const realSubject = fs.realpathSync(subjectPath);
     assertInside(
-      resolvedWorkspace,
+      fs.realpathSync(resolvedWorkspace),
       realSubject,
       `signing artifact ${declaration.id}`,
     );
@@ -299,8 +327,25 @@ export function sealArtifactSigningRequests({
       subjectPath,
       descriptor,
     });
-    const id = safeId(declaration.id);
-    const kind = inferKind(subjectPath, declaration.kind);
+    return {
+      declaration,
+      subjectPath,
+      descriptor,
+      id: safeId(declaration.id),
+      kind: inferKind(subjectPath, declaration.kind),
+    };
+  });
+  resetGeneratedOutputRoot({
+    workspace: resolvedWorkspace,
+    cwd: resolvedCwd,
+    outputRoot: resolvedOutputRoot,
+    protectedPaths: [
+      resolvedManifest,
+      ...prepared.map((entry) => entry.subjectPath),
+    ],
+  });
+  const requests = [];
+  for (const { declaration, subjectPath, descriptor, id, kind } of prepared) {
     const transport = archiveSubject({
       subjectPath,
       outputRoot: resolvedOutputRoot,

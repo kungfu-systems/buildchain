@@ -662,6 +662,8 @@ jobs:
             --allow-release-reconciliation \
             --job publish \
             --environment buildchain-release-assets \
+            --environment-ref "v${{ inputs.publication-version }}" \
+            --environment-ref-type tag \
             --publisher-mode github-token \
             --output .buildchain/publication-authority/auto/control-plane.json
 

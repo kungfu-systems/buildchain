@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-30
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-24
+  generated_at: 2026-07-30
   limits: Live GitHub state and account recovery remain provider-controlled and must be re-audited.
 ---
 
@@ -75,16 +75,19 @@ protection. Inspecting only one layer is insufficient because an applicable
 bypass or weaker update path in another layer can invalidate the effective
 policy.
 
+When an admitted default development branch uses GitHub merge queue, its
+candidate-source, queue-lease, and final build checks are one exact authority
+set. The queue lease may remain intentionally unbound while workflow-produced
+checks retain their GitHub Actions App binding; strictness must match the live
+queue ruleset.
+
 ## Repository and plan admission
 
-The 2026-07-24 baseline contains 16 managed repositories: 13 public and three
-private. Public repository names are versioned in the descriptor. Private
-repository names are never emitted in public evidence; their identities are
-represented by stable roots derived from the GitHub provider repository ID,
-independent of the governance policy root. This prevents a policy revision from
-changing repository identity or creating a circular admission dependency. A
-newly discovered repository or target ref is non-authoritative until explicitly
-admitted.
+The 2026-07-30 baseline contains 16 managed public repositories. The descriptor
+sets `managedVisibilities` to `public`; private repositories are outside the
+managed-zone inventory and do not produce governance receipts. Public
+repository names are versioned in the descriptor. A newly discovered public
+repository or target ref is non-authoritative until explicitly admitted.
 
 The descriptor also versions every active public merge target. The full audit
 evaluates one receipt per authoritative target rather than assuming the default
@@ -94,19 +97,11 @@ which case it is non-qualifying. Retained historical channels and generated
 per-release publish-gate refs are not silently deleted or promoted to current
 authority; they require an explicit registry revision before they can qualify.
 
-For an admitted private repository, the active target set is the current
-default branch plus existing alpha/release siblings on the same version line.
-Its required-check bindings remain non-qualifying until their sanitized binding
-roots are sealed into the private identity entry after supported native
-protection exists.
-
 Public repositories can qualify on supported Free, Team, or Enterprise
-enforcement. Private repositories and organization-wide rules require Team or
-Enterprise capability. On an unsupported plan they remain explicitly
-`non-authoritative-plan-capability-required` and publication-ineligible. The
-verifier does not replace missing native enforcement with CI or documentation,
-and the implementation never makes a private repository public as a
-workaround.
+enforcement. Organization-wide rules require Team or Enterprise capability.
+The verifier does not reinterpret an excluded private repository as qualifying,
+replace missing native enforcement with CI or documentation, or make a private
+repository public as a workaround.
 
 ## Read-only audit
 
@@ -148,12 +143,10 @@ allow the exact publication transaction audit to resolve required check runs
 and merged pull-request review lineage. Omitting either read permission makes
 the transaction evidence incomplete and therefore non-qualifying.
 
-The output is sanitized. Public repositories retain their public identity.
-Private repositories expose only an identity root, visibility class, target
-ref, sanitized required-check bindings and fact roots, and a qualifying or
-non-qualifying decision. Tokens, cookies, recovery material, private
-CODEOWNERS bytes, raw permission payloads, and credential-bearing URLs are
-never included.
+The output is sanitized. Managed public repositories retain their public
+identity. Excluded private repositories produce no receipt or diagnostic.
+Tokens, cookies, recovery material, private CODEOWNERS bytes, raw permission
+payloads, and credential-bearing URLs are never included.
 
 ## Mutation and rollback boundary
 
@@ -206,8 +199,8 @@ buildchain github-governance rollback \
 
 For an admitted exact target, classic branch protection can also be compiled
 directly from the authority descriptor. This mode preserves both App-bound
-checks and intentionally unbound check contexts such as Kungfu alpha's
-`build`, rather than guessing a provider App identity.
+checks and intentionally unbound check contexts such as Kungfu release's
+legacy `build`, rather than guessing a provider App identity.
 
 ```bash
 buildchain github-governance protection-policy-plan \

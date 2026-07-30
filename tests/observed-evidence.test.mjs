@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { publishObservedEvidence, validateObservedEvidenceBundle } from "../scripts/observed-evidence.mjs";
 
-function fixture() {
+function fixture({ withProjection = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "observed-evidence-"));
   const snapshotId = "snapshot-2026-07-21T00:00:00Z";
   const document = `${JSON.stringify({ snapshotId, value: 1 })}\n`;
@@ -14,6 +14,12 @@ function fixture() {
   fs.writeFileSync(path.join(root, "snapshots", `${snapshotId}.json`), document);
   fs.writeFileSync(path.join(root, "latest.json"), document);
   const digest = crypto.createHash("sha256").update(document).digest("hex");
+  const projection = `<!doctype html><meta name="snapshot-id" content="${snapshotId}"><p>latest observation</p>\n`;
+  const projectionDigest = crypto.createHash("sha256").update(projection).digest("hex");
+  if (withProjection) {
+    fs.mkdirSync(path.join(root, "dogfood"));
+    fs.writeFileSync(path.join(root, "dogfood", "index.html"), projection);
+  }
   const manifest = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-observed-evidence-bundle",
@@ -21,12 +27,23 @@ function fixture() {
     publication: {
       immutable: { source: `snapshots/${snapshotId}.json`, key: `dogfood-evidence/snapshots/${snapshotId}.json`, sha256: digest },
       latest: { source: "latest.json", key: "dogfood-evidence.json", sha256: digest },
+      ...(withProjection
+        ? {
+            projections: [{
+              source: "dogfood/index.html",
+              key: "dogfood/index.html",
+              sha256: projectionDigest,
+              contentType: "text/html; charset=utf-8",
+              cacheControl: "public,max-age=0,must-revalidate",
+            }],
+          }
+        : {}),
       invalidationPaths: ["/dogfood-evidence.json", "/dogfood/*"],
     },
   };
   const manifestPath = path.join(root, "manifest.json");
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  return { root, manifestPath, snapshotId, digest };
+  return { root, manifestPath, snapshotId, digest, projectionDigest };
 }
 
 test("observed evidence validates exact immutable and latest digests", () => {
@@ -71,4 +88,104 @@ test("publisher never replaces a conflicting immutable snapshot", () => {
     ? { status: 0, stdout: JSON.stringify({ Metadata: { sha256: "0".repeat(64), "snapshot-id": value.snapshotId } }), stderr: "" }
     : { status: 1, stdout: "", stderr: "unexpected write" };
   assert.throws(() => publishObservedEvidence({ manifestPath: value.manifestPath, artifactRoot: value.root, bucket: "bucket", dryRun: false }, { commandRunner: runner }), /existing immutable object/);
+});
+
+test("publisher verifies derived projections before advancing latest", () => {
+  const value = fixture({ withProjection: true });
+  const objects = new Map();
+  const writes = [];
+  const runner = (args) => {
+    const action = args.slice(0, 2).join(" ");
+    const key = args[args.indexOf("--key") + 1];
+    if (action === "s3api head-object") {
+      const object = objects.get(key);
+      return object
+        ? { status: 0, stdout: JSON.stringify({
+            Metadata: object.metadata,
+            VersionId: object.versionId,
+            ContentType: object.contentType,
+            CacheControl: object.cacheControl,
+          }), stderr: "" }
+        : { status: 254, stdout: "", stderr: "not found" };
+    }
+    if (action === "s3api put-object") {
+      const metadata = Object.fromEntries(args[args.indexOf("--metadata") + 1].split(",").map((entry) => entry.split("=")));
+      writes.push(key);
+      objects.set(key, {
+        metadata,
+        versionId: `v${writes.length}`,
+        contentType: args[args.indexOf("--content-type") + 1],
+        cacheControl: args[args.indexOf("--cache-control") + 1],
+      });
+      return { status: 0, stdout: "{}", stderr: "" };
+    }
+    if (action === "cloudfront create-invalidation") return { status: 0, stdout: '{"Invalidation":{"Id":"I1"}}', stderr: "" };
+    throw new Error(`unexpected command: ${args.join(" ")}`);
+  };
+  const result = publishObservedEvidence({
+    manifestPath: value.manifestPath,
+    artifactRoot: value.root,
+    bucket: "bucket",
+    distributionId: "DIST",
+    dryRun: false,
+  }, { commandRunner: runner });
+  assert.deepEqual(writes, [
+    `dogfood-evidence/snapshots/${value.snapshotId}.json`,
+    "dogfood/index.html",
+    "dogfood-evidence.json",
+  ]);
+  assert.equal(result.projections[0].verification.sha256, value.projectionDigest);
+  assert.equal(result.rollback.status, "not-needed");
+});
+
+test("projection transaction restores the preceding mutable version when latest fails", () => {
+  const value = fixture({ withProjection: true });
+  const oldProjection = { sha256: "1".repeat(64), snapshotId: "previous", versionId: "projection-v1" };
+  const oldLatest = { sha256: "2".repeat(64), snapshotId: "previous", versionId: "latest-v1" };
+  const objects = new Map([
+    ["dogfood/index.html", { ...oldProjection }],
+    ["dogfood-evidence.json", { ...oldLatest }],
+  ]);
+  const operations = [];
+  const runner = (args) => {
+    const action = args.slice(0, 2).join(" ");
+    const key = args[args.indexOf("--key") + 1];
+    operations.push(`${action}:${key || ""}`);
+    if (action === "s3api head-object") {
+      const object = objects.get(key);
+      return object
+        ? { status: 0, stdout: JSON.stringify({
+            Metadata: { sha256: object.sha256, "snapshot-id": object.snapshotId },
+            VersionId: object.versionId,
+            ContentType: object.contentType,
+            CacheControl: object.cacheControl,
+          }), stderr: "" }
+        : { status: 254, stdout: "", stderr: "not found" };
+    }
+    if (action === "s3api put-object") {
+      if (key === "dogfood-evidence.json") return { status: 1, stdout: "", stderr: "latest unavailable" };
+      const metadata = Object.fromEntries(args[args.indexOf("--metadata") + 1].split(",").map((entry) => entry.split("=")));
+      objects.set(key, {
+        sha256: metadata.sha256,
+        snapshotId: metadata["snapshot-id"],
+        versionId: "new",
+        contentType: args[args.indexOf("--content-type") + 1],
+        cacheControl: args[args.indexOf("--cache-control") + 1],
+      });
+      return { status: 0, stdout: "{}", stderr: "" };
+    }
+    if (action === "s3api copy-object") {
+      objects.set(key, { ...oldProjection });
+      return { status: 0, stdout: "{}", stderr: "" };
+    }
+    throw new Error(`unexpected command: ${args.join(" ")}`);
+  };
+  assert.throws(() => publishObservedEvidence({
+    manifestPath: value.manifestPath,
+    artifactRoot: value.root,
+    bucket: "bucket",
+    dryRun: false,
+  }, { commandRunner: runner }), /latest alias update failed/);
+  assert.equal(objects.get("dogfood/index.html").snapshotId, "previous");
+  assert.ok(operations.includes("s3api copy-object:dogfood/index.html"));
 });

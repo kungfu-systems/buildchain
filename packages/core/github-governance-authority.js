@@ -34,6 +34,9 @@ const target = (
   allowedBypassActors,
 });
 const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
+  ".github": [
+    target("main", [check("governance")], false),
+  ],
   "agent-hub-demo": [
     target("dev/v0/v0.2", [check("check / check")], true),
     target("alpha/v0/v0.2", [check("check / check")], false),
@@ -60,9 +63,13 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
     target("alpha/v1/v1.0", [check("check / check")], true),
   ],
   kungfu: [
-    target("dev/v4/v4.0", [check("affected-native / linux")], false),
+    target("dev/v4/v4.0", [
+      check("Candidate source acceptance / check"),
+      check("Queue admission lease", null),
+      check("affected-native / linux"),
+    ], true),
     target("alpha/v4/v4.0", [
-      check("build", null),
+      check("build / Finalize build controller evidence"),
       check("signoff"),
       check("validate"),
     ], true),
@@ -81,12 +88,21 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
       true,
     ),
   ],
+  "runtime-images": [
+    target("dev/v1/v1.0", [check("Signed-off commits"), check("check")], true),
+    target("alpha/v1/v1.0", [check("Signed-off commits"), check("check")], false),
+  ],
   "paper-episodes-to-primitives": [
     target("main", [check("governance")], false),
     target("dev/v0/v0.1", [check("check / check")], true),
     target("alpha/v0/v0.1", [check("check / check")], true),
   ],
   "paper-kfd-foundation-real-world-agent-work": [
+    target("main", [check("check / check")], false),
+    target("dev/v0/v0.1", [check("check / check")], true),
+    target("alpha/v0/v0.1", [check("check / check")], true),
+  ],
+  "paper-kfd-machine-life-roadmap": [
     target("main", [check("check / check")], false),
     target("dev/v0/v0.1", [check("check / check")], true),
     target("alpha/v0/v0.1", [check("check / check")], true),
@@ -109,11 +125,6 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   ],
 });
 const PUBLIC_REPOSITORIES = Object.freeze(Object.keys(PUBLIC_REPOSITORY_TARGETS).sort());
-const PRIVATE_REPOSITORY_IDENTITIES = Object.freeze([
-  "sha256:581823ab841e1d9a9025c92d0c47b164c6aaa1ea22112fdbc8d73bd2c862a05f",
-  "sha256:b7255e01d10000eb3a2786456b4c558178675ccb6cf28a6e39a74dbfe918df35",
-  "sha256:f41bd767e9c4a0ab429ca2a2f456d29ddefab0e996d75000ba36334689eb177e",
-]);
 const PROTECTED_AUTHORITY_PATHS = Object.freeze([
   ".github/CODEOWNERS",
   ".github/workflows/.publication-authority.yml",
@@ -477,6 +488,7 @@ export function createBuildchainGithubGovernanceAuthority() {
       ],
     },
     repositoryAdmission: {
+      managedVisibilities: ["public"],
       publicRepositories: [...PUBLIC_REPOSITORIES],
       publicAuthoritativeTargets: Object.fromEntries(
         Object.entries(PUBLIC_REPOSITORY_TARGETS).map(([repository, targets]) => [
@@ -493,25 +505,21 @@ export function createBuildchainGithubGovernanceAuthority() {
           })),
         ]),
       ),
-      privateRepositoryIdentities: PRIVATE_REPOSITORY_IDENTITIES.map((identityRoot) => ({
-        identityRoot,
-        targetPolicy: "default-and-current-version-line",
-        requiredCheckPolicies: {},
-      })),
-      privateRepositoryPolicy: "non-authoritative-until-plan-capability-qualifies",
+      privateRepositoryIdentities: [],
+      privateRepositoryPolicy: "excluded-from-managed-zone",
       unknownRepositoryPolicy: "non-authoritative-until-explicit-admission",
       baseline: {
-        observedOn: "2026-07-24",
+        observedOn: "2026-07-30",
         repositoryCount: 16,
-        publicCount: 13,
-        privateCount: 3,
+        publicCount: 16,
+        privateCount: 0,
         authoritativePublicTargetCount: Object.values(PUBLIC_REPOSITORY_TARGETS)
           .reduce((count, targets) => count + targets.length, 0),
       },
     },
     planCapability: {
       publicRepositories: ["free", "team", "enterprise"],
-      privateRepositories: ["team", "enterprise"],
+      privateRepositories: [],
       organizationRulesets: ["team", "enterprise"],
     },
     effectivePolicy: {

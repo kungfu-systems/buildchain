@@ -9,8 +9,8 @@ on:
         type: string
         required: false
       buildchain-ref:
-        description: "Optional Buildchain runtime ref. Empty uses v2."
-        default: "v2"
+        description: "Optional Buildchain runtime ref. Empty uses v3."
+        default: "v3"
         type: string
         required: false
       target-branch:
@@ -122,7 +122,7 @@ jobs:
           case "${target_branch}" in
             dev/v*/v*) ;;
             *)
-              echo "::error::target-branch must be a semver dev branch such as dev/v2/v2.N, got: ${target_branch}"
+              echo "::error::target-branch must be a semver dev branch such as dev/v3/v3.N, got: ${target_branch}"
               exit 1
               ;;
           esac
@@ -135,7 +135,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          ref: ${{ inputs.buildchain-ref || 'v3' }}
           path: .buildchain/runtime
           persist-credentials: false
 

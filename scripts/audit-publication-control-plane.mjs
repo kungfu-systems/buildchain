@@ -6,6 +6,7 @@ import path from "node:path";
 import {
   evaluateBuildchainReleaseReconciliation,
   evaluatePublicationControlPlaneSnapshot,
+  matchesGithubDeploymentPolicy,
 } from "../packages/core/publication-control-plane-audit.js";
 
 function flag(name, fallback = "") {
@@ -197,8 +198,10 @@ function main() {
   const requiredStatusCheck = flag("required-status-check", "check");
   const jobId = flag("job", "promote");
   const environment = flag("environment", "none");
-  const providerEnvironment = environment === "none" ? "" : environment;
   const branch = flag("branch");
+  const environmentRef = flag("environment-ref", branch);
+  const environmentRefType = flag("environment-ref-type", "branch");
+  const providerEnvironment = environment === "none" ? "" : environment;
   const sourceSha = flag("source-sha").toLowerCase();
   const packageName = flag("package", "@kungfu-tech/buildchain");
   const publisherMode = flag("publisher-mode", "npm-trusted-publisher");
@@ -239,15 +242,19 @@ function main() {
   const deploymentBranches = environment !== "none" && environmentState.deployment_branch_policy?.custom_branch_policies === true
     ? githubJson(`repos/${repository}/environments/${encodeURIComponent(environment)}/deployment-branch-policies?per_page=100`, "Environment deployment branch policy")
     : { branch_policies: [] };
-  const exactEnvironmentBranchPolicy = (deploymentBranches.branch_policies || []).find((entry) =>
-    entry?.type === "branch" && entry?.name === branch
+  if (!["branch", "tag"].includes(environmentRefType)) {
+    throw new Error(`unsupported --environment-ref-type: ${environmentRefType}`);
+  }
+  const matchingEnvironmentPolicy = (deploymentBranches.branch_policies || []).find((entry) =>
+    matchesGithubDeploymentPolicy(entry, { ref: environmentRef, refType: environmentRefType })
   );
   const environmentBranchAuthorized = environment !== "none" && (
     (
+      environmentRefType === "branch" &&
       environmentState.deployment_branch_policy?.protected_branches === true &&
       branchState.protected === true
     ) ||
-    Boolean(exactEnvironmentBranchPolicy)
+    Boolean(matchingEnvironmentPolicy)
   );
   const oidc = githubJson(`repos/${repository}/actions/oidc/customization/sub`, "OIDC subject policy");
   if (!["npm-trusted-publisher", "github-token", "oidc-role"].includes(publisherMode)) {
@@ -465,12 +472,14 @@ function main() {
           environmentState.deployment_branch_policy?.protected_branches === true ||
           (deploymentBranches.branch_policies || []).length > 0,
         branchAuthorized: environmentBranchAuthorized,
-        branchPolicyMode: environmentState.deployment_branch_policy?.protected_branches === true
+        branchPolicyMode: environmentRefType === "branch" && environmentState.deployment_branch_policy?.protected_branches === true
           ? "protected-branches"
-          : exactEnvironmentBranchPolicy
-            ? "exact-custom-branch"
+          : matchingEnvironmentPolicy
+            ? `custom-${environmentRefType}-policy`
             : "unqualified",
-        authorizedBranch: exactEnvironmentBranchPolicy?.name || "",
+        authorizedBranch: matchingEnvironmentPolicy?.name || "",
+        authorizedRef: environmentRef,
+        authorizedRefType: environmentRefType,
         reviewRequired: reviewRules.length > 0,
         preventSelfReview: reviewRules.some((rule) => rule.prevent_self_review === true),
       },

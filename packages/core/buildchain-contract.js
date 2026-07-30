@@ -692,6 +692,7 @@ export function createBuildchainContractWorld({
         ? {
             compatibleBreakingDigests: [
               "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
+              "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
             ],
           }
         : {}),

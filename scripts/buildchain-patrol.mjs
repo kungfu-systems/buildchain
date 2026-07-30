@@ -49,7 +49,7 @@ function normalizeRepository(value) {
 function normalizeTargetBranch(value) {
   const branch = String(value || process.env.GITHUB_REF_NAME || DEFAULT_TARGET_BRANCH).replace(/^refs\/heads\//, "");
   if (!/^dev\/v\d+\/v\d+\.\d+$/.test(branch)) {
-    throw new Error(`target-branch must be a semver dev branch such as dev/v2/v2.N, got: ${branch || "<empty>"}`);
+    throw new Error(`target-branch must be a semver dev branch such as dev/v3/v3.N, got: ${branch || "<empty>"}`);
   }
   return branch;
 }
