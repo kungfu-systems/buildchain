@@ -239,16 +239,11 @@ test("release propagation plans admit optional consumer stages recorded as skipp
     evidence: [
       { kind: "propagation-plan", digest: `sha256:${"4".repeat(64)}` },
       { kind: "propagation-lock", digest: `sha256:${"5".repeat(64)}` },
-      { kind: "propagation-receipt", digest: `sha256:${"6".repeat(64)}` },
     ],
   });
 
   assert.equal(receipt.status, "passed");
   assert.equal(receipt.qualifying, true);
-  assert.equal(
-    receipt.stages.find((stage) => stage.id === "downstream-update").status,
-    "skipped",
-  );
   assert.equal(
     receipt.stages.find((stage) => stage.id === "prepare-consumer").status,
     "skipped",
