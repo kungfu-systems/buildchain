@@ -308,6 +308,75 @@ Buildchain rather than forking the mechanics into each paper repository.
 
 ## CLI And Node API
 
+### Unified paper operator surface
+
+The `buildchain paper` command family assembles the existing publication
+primitives into a resumable operator flow:
+
+```text
+scaffold -> preflight -> bootstrap npm -> build -> alpha -> status -> resume
+```
+
+Each command emits a typed JSON envelope with `--json`. Dry-run is the default
+for every external mutation. `scaffold --write` is limited to no-overwrite
+local file creation; `bootstrap npm --execute`, `alpha --execute`, and
+`resume --execute` cross external authority boundaries and therefore require
+explicit execution.
+
+The evidence model is intentionally non-inferential:
+
+| State | Required evidence |
+| --- | --- |
+| `scaffolded` | Complete managed scaffold inventory |
+| `governed` | Compatible Buildchain contract lock |
+| `admitted` | Repository admission receipt |
+| `bootstrapped` | Successful public npm bootstrap receipt or registry fact |
+| `trust-bound` | Trusted publisher binding receipt |
+| `content-ready` | Declared source paths present |
+| `artifact-sealed` | Verified sealed publication bundle |
+| `package-published` | Exact package version visible in npm |
+| `alpha-complete` | Protected Alpha PR completion evidence |
+| `staging-visible` | Staging route evidence |
+| `production-visible` | Production route evidence |
+
+`paper status` reports `satisfied`, `not-reached`, `blocked`, or `unknown` for
+each state. It does not promote a state merely because a prior state is
+complete. This makes a later `paper resume` safe: the command dispatches the
+thin repository release workflow, while the workflow re-verifies durable
+evidence and remains the publication authority.
+
+Operationally, responsibility remains split:
+
+- the paper repository owns content, declared metadata, and its thin
+  build/release workflow;
+- Buildchain owns scaffold shape, evidence contracts, reproducibility, sealed
+  bundle mechanics, npm transaction mechanics, and resumption planning;
+- GitHub branch protection and trusted publishing own authority transitions;
+- the papers site consumes publication evidence and owns reader-facing
+  rendering.
+
+Run a local readiness check without network observations:
+
+```sh
+buildchain paper preflight --offline --json
+buildchain paper status --json
+```
+
+Before real npm bootstrap, first inspect the default dry-run result:
+
+```sh
+buildchain paper bootstrap npm --json
+```
+
+Only after reviewing the package, repository, workflow, and dry-run evidence:
+
+```sh
+buildchain paper bootstrap npm \
+  --execute \
+  --confirm-public-package @kungfu-tech/paper-example \
+  --json
+```
+
 Generate the publication manifest locally or in CI:
 
 ```sh

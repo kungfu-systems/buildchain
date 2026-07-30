@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:3b1fe7876658ab67a144576ac06aedceae7ab65f9a24e5280d8abdef626235eb",
+      "digest": "sha256:9277b8ec91d7bd46325ab93d5bd55173b2dc2cc8d07a498414fa5a7696009c35",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:3b1fe7876658ab67a144576ac06aedceae7ab65f9a24e5280d8abdef626235eb",
+      "digest": "sha256:9277b8ec91d7bd46325ab93d5bd55173b2dc2cc8d07a498414fa5a7696009c35",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -190,7 +190,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:1a7ab71556fa0c42a9d2c3b4a8613903ee830035a385d487aaa751c4c81b2809",
+      "digest": "sha256:11d4924a88ad3d3a586706ef85d1fdbfb514497f97a8dfdb1dd606dacb02a6b4",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -257,6 +257,19 @@
       "target": "./packages/core/publication-sealed-bundle.js",
       "digest": "sha256:9b1405a04548c9a87863c2cf410224f6cd7b44e06b76e0de0f7b8052029bc92d",
       "summary": "Build-once publication bundle manifests and exact-byte resume verification APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/paper",
+      "export": "./paper",
+      "target": "./packages/core/paper.js",
+      "digest": "sha256:76826e83ea7d333ffa2dbbb89fe3a293406af29fd235866b98915710b31502e0",
+      "summary": "Unified paper scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
@@ -438,7 +451,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:42f9356d4480764636098fa576009d4cfb836144101c30e826319a89149a19bb"
+      "digest": "sha256:7310326834ac13fde6220bafc8eb991e653e2e6a50cfeb1d817057bf203af162"
     },
     {
       "id": "build-facts",

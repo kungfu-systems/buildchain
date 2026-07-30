@@ -77,6 +77,7 @@ import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
 import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
+import { collectPaperStatus } from "@kungfu-tech/buildchain/paper";
 import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
 import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
 import { createBuildchainLayoutDiscovery } from "@kungfu-tech/buildchain/buildchain-layout";
@@ -92,6 +93,54 @@ their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
 floating-ref contract world for a runtime such as `@v2`.
 
 ## Commands
+
+### Governed paper lifecycle
+
+`buildchain paper` is the unified operator surface for a paper repository. Its
+seven subcommands return versioned JSON contracts with `--json`:
+
+```bash
+buildchain paper scaffold --package @kungfu-tech/paper-example \
+  --repository kungfu-systems/paper-example
+buildchain paper preflight --offline --json
+buildchain paper bootstrap npm --json
+buildchain paper build --json
+buildchain paper alpha --json
+buildchain paper status --json
+buildchain paper resume --json
+```
+
+The safety boundary is explicit:
+
+- `scaffold` plans a 13-file, no-overwrite repository shape by default; add
+  `--write` to create only missing files.
+- `preflight` separates local readiness from readiness for external mutation.
+  `--offline` skips live GitHub and npm observations without treating them as
+  local failures.
+- `bootstrap npm` always performs npm pack and publish dry-runs first. A real
+  public bootstrap requires both `--execute` and
+  `--confirm-public-package <exact-name>`, uses only the official npm registry,
+  and returns trusted-publisher setup URLs without exposing credentials.
+- `build` plans the two-clean-build reproducibility proof. Add `--execute` to
+  create and verify the sealed publication bundle.
+- `alpha` plans or opens the protected Alpha pull request; it never merges,
+  publishes, or advances a floating ref.
+- `status` reports only evidence found in the repository or external
+  observations. It never infers a later lifecycle state from an earlier one.
+- `resume` plans or dispatches the repository's thin release workflow; the
+  protected workflow remains the release authority.
+
+The ordered evidence states are `scaffolded`, `governed`, `admitted`,
+`bootstrapped`, `trust-bound`, `content-ready`, `artifact-sealed`,
+`package-published`, `alpha-complete`, `staging-visible`, and
+`production-visible`. A state can be `satisfied`, `not-reached`, `blocked`, or
+`unknown`; consumers must not collapse those distinctions.
+
+The corresponding Node surface is
+`@kungfu-tech/buildchain/paper`. Planning and status functions are read-only;
+`writePaperScaffold()` is the only local scaffold writer, and
+`executePaperNpmBootstrap()` preserves the same confirmation boundary used by
+the CLI.
 
 `buildchain layout` is the stable machine question for repository layout. Tools
 such as Shifu should call it instead of copying `.buildchain/` path constants:
