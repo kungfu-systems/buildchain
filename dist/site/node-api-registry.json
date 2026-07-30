@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:1ec95d91d3140a4f32fe9bf32a72cb55a18342769bd64a07869e72cc46906e67",
+      "digest": "sha256:aec8d76bfe6dcb768fcf98d131874ca21fd0a07bcf3845a276ed8622b25d77d4",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:1ec95d91d3140a4f32fe9bf32a72cb55a18342769bd64a07869e72cc46906e67",
+      "digest": "sha256:aec8d76bfe6dcb768fcf98d131874ca21fd0a07bcf3845a276ed8622b25d77d4",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -554,7 +554,7 @@
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
-      "digest": "sha256:74eecd2917cabbf9b2e2f7c37c75bb924ecaaa72d0b94255d5c5ab01820c26f2",
+      "digest": "sha256:a74aa99143964266c0076697e949dd423a8a71f63969913b847aaa740e76073c",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
       "audience": [

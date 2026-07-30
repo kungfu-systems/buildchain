@@ -1917,6 +1917,7 @@
         "downstream-prepare-command",
         "downstream-repository",
         "downstream-target",
+        "downstream-update-command",
         "downstream-verify-command",
         "dry-run",
         "graph-json",
@@ -1927,7 +1928,7 @@
         "source-node",
         "upstream-release-json"
       ],
-      "inputCount": 16,
+      "inputCount": 17,
       "secrets": [
         "propagation-token"
       ],
@@ -1939,9 +1940,11 @@
         "controller-receipt-artifact",
         "controller-receipt-digest",
         "controller-receipt-json",
-        "controller-receipt-status"
+        "controller-receipt-status",
+        "propagation-receipt-digest",
+        "propagation-receipt-json"
       ],
-      "outputCount": 7,
+      "outputCount": 9,
       "surface": "release-propagation",
       "capabilityGroup": "site-and-propagation",
       "status": "preview"

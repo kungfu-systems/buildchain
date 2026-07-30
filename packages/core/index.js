@@ -592,6 +592,8 @@ export {
   RELEASE_PROPAGATION_GRAPH_CONTRACT,
   RELEASE_PROPAGATION_LOCK_CONTRACT,
   RELEASE_PROPAGATION_PLAN_CONTRACT,
+  RELEASE_PROPAGATION_RECEIPT_CONTRACT,
+  createReleasePropagationReceipt,
   createReleasePropagationLock,
   normalizeReleasePropagationGraph,
   planReleasePropagation,

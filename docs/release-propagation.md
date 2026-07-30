@@ -132,6 +132,13 @@ This lets a site repository render the latest reader page and historical
 version index from release facts while keeping old PDFs, source bundles,
 manifests, and passports immutable.
 
+When the downstream consumer is expected to update an exact npm paper pin, the
+upstream envelope must carry both `package` and `publicationArtifact`. The
+consumer can then prove that package name, version, sha512 integrity,
+publication URLs, and immutable artifact digests all describe the same release.
+`publicationArtifact` without `package` remains valid for evidence-only
+propagation, but it cannot qualify a package-pin fast path.
+
 ## CLI
 
 Generate a propagation plan:
@@ -164,7 +171,34 @@ The written lock has contract
 - release passport URL and SHA-256;
 - optional site bundle manifest SHA-256;
 - downstream repository, channel, base ref, lock path;
-- edge id and channel policy.
+- edge id and channel policy;
+- a deterministic propagation key and branch derived from the exact upstream
+  repository/version/channel plus downstream repository.
+
+Repeated runs for the same release identity reuse that branch and lock. A
+different release version or channel receives a different branch, so concurrent
+releases cannot collapse into one mutable propagation PR.
+
+Create the exact propagation receipt after the lock/PR outcome is known:
+
+```bash
+buildchain release-propagation receipt \
+  --plan .buildchain/release-propagation-plan.json \
+  --lock-result .buildchain/release-propagation-write-lock.json \
+  --pr-outcome .buildchain/release-propagation-pr-outcome.json \
+  --target site-libkungfu-dev \
+  --output .buildchain/release-propagation-receipt.json \
+  --json
+```
+
+The receipt keeps four machine states separate:
+
+- `package-published`: exact npm name/version/integrity exists;
+- `alpha-complete`: the upstream alpha passport/tag is complete;
+- `staging-visible`: the downstream staging surface is actually visible;
+- `production-visible`: the production surface is actually visible.
+
+Package publication or alpha completion never implies either visibility state.
 
 ## Reusable Workflow
 
@@ -181,7 +215,11 @@ jobs:
       upstream-release-json: ${{ needs.release.outputs.upstream-release-json }}
       downstream-target: site-libkungfu-dev
       downstream-repository: kungfu-systems/site-libkungfu-dev
-      downstream-base-ref: main
+      downstream-base-ref: dev/v2/v2.7
+      downstream-update-command: >-
+        node scripts/paper-propagation.cjs consume
+        --lock "$BUILDCHAIN_PROPAGATION_LOCK_PATH"
+        && corepack pnpm install --lockfile-only --ignore-scripts
       downstream-prepare-command: pnpm install --frozen-lockfile --ignore-scripts
       downstream-verify-command: pnpm run check
       dry-run: false
@@ -201,8 +239,14 @@ open PR.
 The workflow checks out the Buildchain runtime selected by
 `buildchain-repository` and `buildchain-ref` into `.buildchain/runtime`, invokes
 that runtime for the propagation plan and lock write, then checks out the
-downstream repository and writes the exact lock. A consumer that must pin the
-exact upstream package or regenerate deterministic files declares
+downstream repository and writes the exact lock. If
+`downstream-update-command` is set, Buildchain runs that consumer-owned command
+after writing the lock and exposes the exact lock path, lock SHA-256,
+propagation key, branch, and upstream release JSON as
+`BUILDCHAIN_PROPAGATION_*` environment variables. The command is part of the
+downstream PR diff; it is not a deployment hook.
+
+A consumer that must perform further deterministic preparation can declare
 `downstream-prepare-command`. The command receives
 `BUILDCHAIN_UPSTREAM_PACKAGE_NAME`, `BUILDCHAIN_UPSTREAM_PACKAGE_VERSION`, and
 `BUILDCHAIN_UPSTREAM_RELEASE_LOCK`. After preparation, Buildchain refreshes an
@@ -210,14 +254,15 @@ existing `<!-- buildchain:badges:start -->` README block by default. Consumers
 can disable that step with `refresh-managed-readme-badges: false`.
 
 `downstream-verify-command` runs against the final tree before any commit or
-push, so consumers can use the same check as their PR workflow. Preparation,
-badge refresh, and verification failures all fail closed. The workflow stages
-the complete deterministic result, signs the propagation commit with DCO, and
-then opens or updates the PR. It does not publish the downstream release
-directly. The downstream repository keeps its normal Buildchain governance: the
-PR updates source-of-truth facts, then downstream alpha or release publication
-runs through its own protected channel. A byte-identical rerun is an explicit
-successful no-op.
+push, so consumers can use the same check as their PR workflow. Update,
+preparation, badge refresh, and verification failures all fail closed. The
+workflow stages the complete deterministic result, signs the propagation
+commit with DCO, and then opens or updates the PR. It does not publish the
+downstream release directly. The downstream repository keeps its normal
+Buildchain governance: the PR updates source-of-truth facts, then downstream
+alpha or release publication runs through its own protected channel. A
+byte-identical rerun is an explicit successful no-op.
+
 For unreleased runtime validation, keep the caller's reusable workflow reference
 on `@v3` and pass a temporary train ref through `buildchain-ref`.
 

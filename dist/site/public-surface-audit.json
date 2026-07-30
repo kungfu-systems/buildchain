@@ -7,7 +7,7 @@
     "workflowCount": 57,
     "actionCount": 6,
     "sitePageCount": 60,
-    "docCommandRefCount": 309,
+    "docCommandRefCount": 310,
     "failureCount": 0
   },
   "enumerated": {
@@ -2305,6 +2305,7 @@
           "downstream-prepare-command",
           "downstream-repository",
           "downstream-target",
+          "downstream-update-command",
           "downstream-verify-command",
           "dry-run",
           "graph-json",
@@ -2315,7 +2316,7 @@
           "source-node",
           "upstream-release-json"
         ],
-        "inputCount": 16,
+        "inputCount": 17,
         "secrets": [
           "propagation-token"
         ],
@@ -2327,9 +2328,11 @@
           "controller-receipt-artifact",
           "controller-receipt-digest",
           "controller-receipt-json",
-          "controller-receipt-status"
+          "controller-receipt-status",
+          "propagation-receipt-digest",
+          "propagation-receipt-json"
         ],
-        "outputCount": 7
+        "outputCount": 9
       },
       {
         "id": "release-verify",
@@ -4163,6 +4166,11 @@
         "command": "buildchain release-propagation write-lock"
       },
       {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation receipt"
+      },
+      {
         "id": "release-transaction",
         "path": "docs/cli.md",
         "command": "buildchain release"
@@ -4419,8 +4427,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "cb8c7cd46b82c73ce3864891c376aa7543dbea31a7f039ff1de95d3940b79645",
-    "workflowRegistryDigest": "dda00adeecda9be79d7c6bb125c76494665a893c8c5f5f454b69e92ccabe6441",
-    "pageRegistryDigest": "1a87cf41ac6ae5ba74baa50fb8501e6aec5b263534c367f9ad42c212189125c8"
+    "workflowRegistryDigest": "ed681c6bf65cd1225bf9103143fa5c314ec494c6a9dfe78f81280bfc19f9ac19",
+    "pageRegistryDigest": "6956259afd00271f0ee265848b14a8080a99be6f85eb99776524413a5c14d384"
   },
   "comparison": {
     "missingCliRegistry": [],

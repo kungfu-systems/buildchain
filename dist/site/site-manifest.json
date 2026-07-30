@@ -125,7 +125,7 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:b7d2deef7d50fc412aa21c7ef1019c4c2bd8b0392b9b323356b1c0b1fc2596b6"
+      "digest": "sha256:aea013d923a8d419fc76e99a81765f281640dd95141d32ae415b8572604e9d32"
     },
     {
       "id": "readme-badges",
@@ -301,7 +301,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:6b907af93c55ffd8274cd83ad87a45dd48eb9a01938cf419aafebb5557be5821"
+      "digest": "sha256:fa4406086decab2d329a3a54086389a59c13b80977c8fe78b816fe31ffde4951"
     }
   ],
   "facts": [
