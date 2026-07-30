@@ -269,6 +269,27 @@ test("release propagation workflow emits only stages declared by its controller 
   assert.deepEqual(emitted, declared);
 });
 
+test("build workflow receipts emit every stage declared by the build controller descriptor", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github", "workflows", ".build.yml"),
+    "utf8",
+  );
+  const stageBlocks = [...workflow.matchAll(
+    /BUILDCHAIN_CONTROLLER_STAGES_JSON:\s*>-\s*\n([\s\S]*?)\n\s+BUILDCHAIN_CONTROLLER_EVIDENCE_/g,
+  )];
+  assert.equal(stageBlocks.length, 2, "build workflow must emit both controller receipt stage sets");
+  const declared = descriptor("build-lifecycle").expected.stages.map((stage) => stage.id);
+
+  for (const [index, stageBlock] of stageBlocks.entries()) {
+    const emitted = [...stageBlock[1].matchAll(/\{"id":"([^"]+)"/g)].map((match) => match[1]);
+    assert.deepEqual(
+      emitted,
+      declared,
+      "build controller receipt " + (index + 1) + " must match its descriptor",
+    );
+  }
+});
+
 test("source, runtime, and plan mismatches invalidate receipts", () => {
   const expectedPlan = plan();
   const receipt = createControllerReceipt({
