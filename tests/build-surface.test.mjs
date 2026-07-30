@@ -316,6 +316,16 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(workflow, /runner-preset:/);
   assert.match(workflow, /platforms-json:/);
+  assert.match(workflow, /self-hosted-offline-fallback:/);
+  assert.match(
+    workflow,
+    /name: Route offline self-hosted lanes[\s\S]*?BUILDCHAIN_RUNNER_INVENTORY_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
+  assert.match(
+    workflow,
+    /name: Checkout trusted runner-routing shell[\s\S]*?buildchain-workflow-shell-sha/,
+  );
+  assert.match(workflow, /runner-routing-json:/);
   assert.match(workflow, /linux-container-preset:/);
   assert.match(workflow, /linux-container-image:/);
   assert.match(workflow, /resolve-contract:/);

@@ -390,6 +390,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "self-hosted-offline-fallback": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "setup-node": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -468,7 +472,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:c9c8c1493e95aecfc1a2ec092f9490c1e16b9a9cdc1e3673bf6bdd329baac523"
+      "digest": "sha256:e5b4b732a1d5483f9000cb259b2a52b36c0c9d99fe0dd8b8ddad370c9947640a"
     },
     {
       "schemaVersion": 1,
@@ -796,6 +800,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "self-hosted-offline-fallback": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "setup-node": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -850,7 +858,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:eac228a4746684d61d9664e8bce63e20d4b1e7bea0afd8718c8584cef941a95d"
+      "digest": "sha256:db1642144d44c4a534fd8671eaf1d715afb41a484dc79bfe7d568702aa396942"
     },
     {
       "schemaVersion": 1,
@@ -2197,5 +2205,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:f18f3b706683ae34168ed582d0b51f2d7d2574d627dda4c7b667d01f86623331"
+  "digest": "sha256:38a986b9b8722c5751071183e5465aaf762cbe291214d51ed0fee4935e73eac8"
 }
