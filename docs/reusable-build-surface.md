@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -490,6 +490,33 @@ by a short display name plus fingerprint, not by secret-bearing credentials.
 Runtime checkout evidence is uploaded separately as `runtime-checkout.json`,
 including cache transport, fallback attempts, and exact runtime `HEAD`
 verification, even when a later lifecycle step fails.
+
+## Auditable Compiler Cache
+
+Consumers can prepare `sccache` on selected platforms after the install
+lifecycle and before compilation:
+
+```yaml
+with:
+  compiler-cache-provider: sccache
+  compiler-cache-platforms-json: '["windows-x64"]'
+  compiler-cache-required: true
+```
+
+The consumer remains responsible for installing and pinning the tool before
+the preparation step. Buildchain probes its version, runs `sccache
+--zero-stats`, and writes
+`compiler-cache-preparation.json`. The receipt binds the source commit/tree,
+Buildchain runtime, platform, cache profile, and any declared dependency,
+toolchain, or policy roots. It resets counters only; it does not delete cached
+compiler outputs.
+
+Final diagnostics admit sccache hit/miss outcomes as current-run evidence only
+when that preparation receipt is present and valid. A bare `sccache
+--show-stats` result without the reset receipt remains cumulative and is
+reported as unavailable for the current run. The preparation receipt is copied
+into the small diagnostics artifact and sealed by
+`diagnostics-manifest.json`.
 
 When a Buildchain maintainer asks for downstream validation, the expected
 request is:

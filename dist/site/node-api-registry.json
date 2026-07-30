@@ -190,7 +190,7 @@
       "specifier": "@kungfu-tech/buildchain/cache-evidence",
       "export": "./cache-evidence",
       "target": "./packages/core/cache-evidence.js",
-      "digest": "sha256:9f8453c53d7f31bccbfc9cdf5c5e62578d531c08fd213416845f753f92ee1d2e",
+      "digest": "sha256:9b19957c2f42c20bcc36621741381e471133ad02647d7ffa0d98a7eca49c126d",
       "summary": "Content-addressed cache operation receipts and source/platform-bound evidence-set verification APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -216,7 +216,7 @@
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
-      "digest": "sha256:be62d59d4a6e18e8fe96a98539012cd8db82976eea2593540db80a8522d52e73",
+      "digest": "sha256:21d14194f9b876927c54b53cecf8265b23085b05f98d57c5526ef2a4a033962f",
       "summary": "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [

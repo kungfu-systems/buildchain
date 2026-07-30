@@ -220,7 +220,7 @@
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "digest": "sha256:d7f4179c3912d7bbc5940bfba69e674fb03d020a740063c0b877a171bd5789e3",
+      "digest": "sha256:1a08331cdca2b48e622ecbb799a7465a59cc4a779dd73d36f559f9bc1b98578c",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
@@ -360,7 +360,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:f0d5e81db1c571ec20f89d766f491dcc2c1098b389ac8431001df5e67f58b49b",
+      "digest": "sha256:c2149c8ed67114acfd341d5e249f3a173b5a34d273215d9e3c7aff442d91a29c",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
