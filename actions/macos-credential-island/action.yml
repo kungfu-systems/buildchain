@@ -31,8 +31,9 @@ inputs:
     required: false
     default: ""
   expected-bundle-id:
-    description: "Expected application bundle identifier"
-    required: true
+    description: "Optional expected application bundle identifier; defaults to the source-bound sealed application identity"
+    required: false
+    default: ""
   expected-team-id:
     description: "Expected Apple Developer team identifier"
     required: true
