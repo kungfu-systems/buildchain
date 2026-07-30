@@ -455,6 +455,50 @@ test("paper Alpha and resume plans preserve protected workflow boundaries", () =
   assert.match(noTransaction.nextActions[0].command, /paper alpha/);
 });
 
+test("paper Alpha plans prefer remote-tracking channel truth over stale local branches", () => {
+  const cwd = tempDir("alpha-remote-truth");
+  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
+  initGit(cwd);
+  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd });
+  execFileSync("git", ["config", "user.email", "buildchain@example.test"], {
+    cwd,
+  });
+  execFileSync("git", ["add", "."], { cwd });
+  execFileSync("git", ["commit", "-qm", "test: initialize paper"], { cwd });
+  execFileSync("git", ["branch", "dev/v0/v0.1"], { cwd });
+  execFileSync(
+    "git",
+    ["update-ref", "refs/remotes/origin/dev/v0/v0.1", "HEAD"],
+    { cwd },
+  );
+  fs.writeFileSync(path.join(cwd, "remote-only.txt"), "remote\n");
+  execFileSync("git", ["add", "remote-only.txt"], { cwd });
+  execFileSync("git", ["commit", "-qm", "test: advance remote truth"], { cwd });
+  execFileSync(
+    "git",
+    ["update-ref", "refs/remotes/origin/dev/v0/v0.1", "HEAD"],
+    { cwd },
+  );
+  execFileSync(
+    "git",
+    ["update-ref", "refs/remotes/origin/alpha/v0/v0.1", "HEAD^"],
+    { cwd },
+  );
+
+  const alpha = createPaperAlphaPlan({ cwd });
+  assert.equal(
+    alpha.source.sha,
+    execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd,
+      encoding: "utf8",
+    }).trim(),
+  );
+  assert.equal(alpha.source.observation, "origin-tracking-ref");
+  assert.equal(alpha.source.observedRef, "refs/remotes/origin/dev/v0/v0.1");
+  assert.equal(alpha.target.observation, "origin-tracking-ref");
+  assert.equal(alpha.target.observedRef, "refs/remotes/origin/alpha/v0/v0.1");
+});
+
 test("paper npm bootstrap dry-run uses only a minimal temporary package", () => {
   const cwd = tempDir("npm-bootstrap");
   writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));

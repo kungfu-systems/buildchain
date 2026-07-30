@@ -213,6 +213,32 @@ function githubPrRows({ cwd, repository, sourceRef, targetRef }) {
   }
 }
 
+function githubBranchObservation({ cwd, repository, ref }) {
+  const query = commandResult(
+    "gh",
+    [
+      "api",
+      `repos/${repository}/git/ref/heads/${encodeURIComponent(ref)}`,
+      "--jq",
+      ".object.sha",
+    ],
+    { cwd },
+  );
+  const sha = query.stdout.trim();
+  return {
+    ok: query.ok && /^[0-9a-f]{40}$/.test(sha),
+    ref,
+    sha: /^[0-9a-f]{40}$/.test(sha) ? sha : "",
+    observedRef: `refs/heads/${ref}`,
+    observation: "github-api",
+    errorCode: query.ok
+      ? "github-ref-response-invalid"
+      : query.error
+        ? "gh-unavailable"
+        : "github-ref-query-failed",
+  };
+}
+
 function executeAlphaPlan(plan) {
   if (!plan.ok) {
     return {
@@ -222,22 +248,54 @@ function executeAlphaPlan(plan) {
       errorCode: "paper-alpha-plan-invalid",
     };
   }
-  if (!plan.source.sha) {
+  const source = githubBranchObservation({
+    cwd: plan.cwd,
+    repository: plan.repository,
+    ref: plan.source.ref,
+  });
+  if (!source.ok) {
     return {
       ...plan,
       ok: false,
       dryRun: false,
-      errorCode: "paper-alpha-source-ref-unresolved",
+      errorCode: source.errorCode,
       nextActions: [
         {
-          id: "fetch-source-ref",
-          command: `git fetch origin ${plan.source.ref}:${plan.source.ref}`,
+          id: "resolve-source-ref",
+          command: "",
           description:
-            "Resolve the exact protected dev source ref before opening an Alpha PR.",
+            "Resolve the exact protected dev source ref from GitHub before opening an Alpha PR.",
         },
       ],
     };
   }
+  const target = githubBranchObservation({
+    cwd: plan.cwd,
+    repository: plan.repository,
+    ref: plan.target.ref,
+  });
+  if (!target.ok) {
+    return {
+      ...plan,
+      source,
+      ok: false,
+      dryRun: false,
+      errorCode: target.errorCode,
+      nextActions: [
+        {
+          id: "resolve-target-ref",
+          command: "",
+          description:
+            "Resolve the exact protected Alpha target ref from GitHub before opening an Alpha PR.",
+        },
+      ],
+    };
+  }
+  plan = {
+    ...plan,
+    source,
+    target,
+  };
   const existing = githubPrRows({
     cwd: plan.cwd,
     repository: plan.repository,
