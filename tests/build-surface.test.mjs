@@ -1429,6 +1429,8 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(qualification, /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/);
   assert.match(qualification, /name: buildchain-v3-alpha-self-dogfood-evidence/);
   assert.match(qualification, /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/);
+  assert.match(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/);
+  assert.doesNotMatch(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.candidate-sha \}\}/);
   assert.match(qualification, /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ steps\.candidate\.outputs\.sha \}\}/);
   assert.doesNotMatch(qualification, /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ github\.event\.workflow_run\.head_sha/);
   assert.match(qualification, /stable-candidate-qualification\.mjs/);
