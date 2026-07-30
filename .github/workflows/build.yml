@@ -392,6 +392,21 @@ on:
         default: ""
         type: string
         required: false
+      compiler-cache-provider:
+        description: "Audited compiler cache provider prepared before build: none or sccache"
+        default: "none"
+        type: string
+        required: false
+      compiler-cache-platforms-json:
+        description: "JSON array of platform ids on which compiler-cache preparation is enabled"
+        default: "[]"
+        type: string
+        required: false
+      compiler-cache-required:
+        description: "Fail the selected platform before build when the compiler cache cannot be prepared"
+        default: false
+        type: boolean
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
         default: ""
@@ -802,6 +817,9 @@ jobs:
       cache-dependency-lock-root: ${{ inputs.cache-dependency-lock-root }}
       cache-toolchain-root: ${{ inputs.cache-toolchain-root }}
       cache-policy-root: ${{ inputs.cache-policy-root }}
+      compiler-cache-provider: ${{ inputs.compiler-cache-provider }}
+      compiler-cache-platforms-json: ${{ inputs.compiler-cache-platforms-json }}
+      compiler-cache-required: ${{ inputs.compiler-cache-required }}
       gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
     secrets: inherit
 
