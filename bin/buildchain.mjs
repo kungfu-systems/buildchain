@@ -104,6 +104,7 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
+const embeddedSourceSha = process.env.BUILDCHAIN_EMBEDDED_SOURCE_SHA || "";
 
 function usage() {
   return `Usage:
@@ -1844,7 +1845,8 @@ async function main(argv = process.argv.slice(2)) {
       buildchainRoot: root,
       buildchainVersion: packageVersion(),
       buildchainRef: process.env.BUILDCHAIN_RUNTIME_REF || "v2",
-      buildchainSha: process.env.BUILDCHAIN_RUNTIME_SHA || "",
+      buildchainSha:
+        process.env.BUILDCHAIN_RUNTIME_SHA || embeddedSourceSha || "",
     });
     return;
   }

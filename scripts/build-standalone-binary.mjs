@@ -149,9 +149,36 @@ function packageVersion(cwd) {
   return packageJson.version;
 }
 
+function sourceSha(cwd) {
+  const result = spawnSync("git", ["rev-parse", "HEAD"], {
+    cwd,
+    encoding: "utf8",
+  });
+  const value = String(result.stdout || "").trim();
+  if (result.status !== 0 || !/^[0-9a-f]{40}$/i.test(value)) {
+    throw new Error("standalone binary requires an exact Buildchain source SHA");
+  }
+  return value;
+}
+
 function bundleCli({ cwd, tempDir, version, logger }) {
   const outDir = path.join(tempDir, "bundle");
   const configPath = path.join(tempDir, "tsup.config.mjs");
+  const kfdAgentRuntimeVerifierWasmBase64 = fs
+    .readFileSync(
+      fileURLToPath(
+        import.meta.resolve("@kungfu-tech/kfd-agent-runtime/verifier/wasm"),
+      ),
+    )
+    .toString("base64");
+  const embeddedContractWorld = fs.readFileSync(
+    path.join(cwd, "dist", "site", "buildchain-contract.json"),
+    "utf8",
+  );
+  const embeddedLicenseText = fs.readFileSync(
+    path.join(cwd, "LICENSE"),
+    "utf8",
+  );
   fs.writeFileSync(configPath, `export default {
   entry: {
     buildchain: ${JSON.stringify(path.join(cwd, "bin", "buildchain.mjs"))},
@@ -169,6 +196,9 @@ function bundleCli({ cwd, tempDir, version, logger }) {
   noExternal: ["smol-toml", /^@kungfu-tech\\/kfd(?:\\/|$)/],
   define: {
     "process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION": ${JSON.stringify(JSON.stringify(version || packageVersion(cwd)))},
+    "process.env.BUILDCHAIN_EMBEDDED_SOURCE_SHA": ${JSON.stringify(JSON.stringify(sourceSha(cwd)))},
+    "process.env.BUILDCHAIN_EMBEDDED_CONTRACT_WORLD": ${JSON.stringify(JSON.stringify(embeddedContractWorld))},
+    "process.env.BUILDCHAIN_EMBEDDED_LICENSE_TEXT": ${JSON.stringify(JSON.stringify(embeddedLicenseText))},
     "process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT": ${JSON.stringify(JSON.stringify("1"))},
   },
 };

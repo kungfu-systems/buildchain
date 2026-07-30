@@ -536,6 +536,7 @@ export async function runPaperCli(
 }
 
 if (
+  !process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT &&
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
