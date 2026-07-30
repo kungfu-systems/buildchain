@@ -118,6 +118,10 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "BUILDCHAIN_PROMOTION_TOKEN": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -190,6 +194,18 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "cache-dependency-lock-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "cache-policy-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "cache-toolchain-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "cargo-registry-index": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -251,6 +267,18 @@
           "source": "workflow-call-input"
         },
         "gate-profile-aggregate-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-platform-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-signer-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-subject-path": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -427,7 +455,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:79920272446ddef3cc1e28c23f9efc4192e51d603fb5bf3ab1060b15342980c8"
+      "digest": "sha256:146718143cc50e48ac57154aade4a4b06a8df4e036708a150233098d3c1cb6f7"
     },
     {
       "schemaVersion": 1,
@@ -468,6 +496,10 @@
           "source": "workflow-call-secret"
         },
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_PROMOTION_TOKEN": {
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
@@ -555,6 +587,18 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "cache-dependency-lock-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "cache-policy-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "cache-toolchain-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "cargo-registry-index": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -616,6 +660,18 @@
           "source": "workflow-call-input"
         },
         "gate-profile-aggregate-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-platform-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-signer-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-subject-path": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -773,7 +829,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:af7d22d385b6993a2039de602ce1f9d27efdad62bb2b37998a89cbaf7257c127"
+      "digest": "sha256:55b3189412e7da7769a8de60bd1ba4cf52d726d8b79c0a720598e49742aa72a0"
     },
     {
       "schemaVersion": 1,
@@ -1602,6 +1658,18 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "github-artifact-attestation-environment": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-policy-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-retention-days": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "github-governance-receipt-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1842,6 +1910,14 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "release-passport-kfd-product-gate-jsons": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-passport-kfd-support-matrix-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-passport-output-dir": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1924,7 +2000,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2bae7310eb27f48a3afc6b7f993872d6b6121cf3f67ad4d6e2da35b254c4d047"
+      "digest": "sha256:00baae93d9ed75129fdaed6fcc33285e515b8c7de84816831a39e660941dd7ae"
     },
     {
       "schemaVersion": 1,
@@ -2100,5 +2176,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:becd8aae765ed9ac3dd0fd737d0d4ce4d7b5b4dff3ec31355bce5b2cf6493c6c"
+  "digest": "sha256:c637b908f2be506f3bd56a7e41995450c4d7011f3badc232712884e4fb7039b4"
 }

@@ -95,11 +95,6 @@ tags until those provider-enforced transactions land. Reusable wrapper callers
 should allow `checks: write` so the generated checks are owned by GitHub Actions
 and match the managed branch protection rule.
 
-If the governed promotion runtime itself needs a recovery fix on a protected
-release line, carry it through an exact line-scoped
-`fix/release-line-vN-vN.M-finalization-recovery` PR. This keeps the recovery
-source machine-verifiable without weakening normal alpha-to-release lineage.
-
 Stable promotion also protects concurrent development work. The reusable
 wrapper checks out the exact current `dev/vN/vN.M` head as a reconciliation
 workspace. If next-alpha bookkeeping cannot fast-forward that branch, the
@@ -341,6 +336,13 @@ product-owned `release-passport-kfd-3-artifact-verify-command` such as
 `kungfu agent verify --json`. Buildchain compares declared shipped public
 surfaces with artifact-exposed public surfaces and writes the result under the
 KFD-provided `kfd-3` passport section.
+Set `release-passport-kfd-support-matrix-json` to the product-owned KFD-1..13
+support matrix and `release-passport-kfd-product-gate-jsons` to the
+newline-separated KFD-4, KFD-5, and KFD-7 gate results. Buildchain verifies
+their exact source, freshness, KFD package revision, matrix barriers, and
+gate/matrix agreement, then writes the immutable `kfd-support.json` sibling and
+embeds the same projection in `buildchain.release.json`. This projection cannot
+self-qualify or widen candidate, unsupported, draft, or non-shipped states.
 Set `release-passport-invariant-passport-jsons` to one or more product-owned
 invariant Passport paths, or set `release-passport-invariant-passport-command`
 to a command that emits one canonical Passport JSON document. Buildchain does
@@ -355,6 +357,13 @@ inside the final version-state workspace, after the release transaction has
 materialized generated files such as `package.json` and `dist/site/*`. This
 keeps self-hosted KFD witness hashes bound to the exact published package
 instead of to a pre-promotion checkout.
+Set `release-passport-github-artifact-attestation-policy-jsons` to one or more
+newline-separated `buildchain.github-artifact-attestation-policy/v1` paths when
+the Release Passport must require GitHub keyless provenance for Linux release
+artifacts. The higher-level v3 promotion workflow exposes the single-artifact
+`github-artifact-attestation-policy-json` input and owns staging, signing,
+provider verification, immutable GitHub Release evidence upload, and read-back;
+direct action callers own those post-Passport steps themselves.
 When present, the passport includes the aggregate build summary, platform
 artifact manifests, npm publish evidence, dist-tag promotion evidence, the
 release-state ref, trusted publishing metadata, and the Buildchain transaction

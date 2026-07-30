@@ -8,7 +8,7 @@ on:
         type: string
         required: false
       buildchain-ref:
-        description: "Official floating Buildchain channel, or a temporary train/SHA for trusted manual validation."
+        description: "Official floating Buildchain channel, protected authority, or a temporary train/SHA for trusted manual validation."
         default: ""
         type: string
         required: false
@@ -197,6 +197,21 @@ on:
         default: "macos-arm64"
         type: string
         required: false
+      github-artifact-attestation-subject-path:
+        description: "Optional exact artifact path to bind to a GitHub keyless attestation policy after the final platform manifest is sealed"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-signer-sha:
+        description: "Exact 40-hex Buildchain commit containing the trusted reusable signer workflow"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-platform-id:
+        description: "Linux platform id that owns github-artifact-attestation-subject-path"
+        default: "linux-x64"
+        type: string
+        required: false
       release-candidate:
         description: "Generate and upload a PR-stage release-candidate passport after the full platform matrix succeeds"
         default: false
@@ -316,6 +331,21 @@ on:
         default: ""
         type: string
         required: false
+      cache-dependency-lock-root:
+        description: "Optional consumer-owned exact dependency-lock root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-toolchain-root:
+        description: "Optional consumer-owned exact toolchain root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-policy-root:
+        description: "Optional consumer-owned exact qualification policy root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
         default: ""
@@ -337,6 +367,9 @@ on:
       BUILDCHAIN_MACOS_NOTARY_API_KEY_ID:
         required: false
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
+        required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
         required: false
     outputs:
       runner-preset:
@@ -394,10 +427,10 @@ on:
         description: "Resolved immutable Buildchain runtime SHA"
         value: ${{ jobs.trust-gate.outputs.buildchain-runtime-sha }}
       buildchain-runtime-class:
-        description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
+        description: "Runtime stability class: stable, alpha, authority, train, exact-sha, or development"
         value: ${{ jobs.trust-gate.outputs.buildchain-runtime-class }}
       buildchain-runtime-override:
-        description: "Whether a train or exact-SHA buildchain-ref override was used"
+        description: "Whether an authority, train, or exact-SHA buildchain-ref override was used"
         value: ${{ jobs.trust-gate.outputs.buildchain-runtime-override }}
       buildchain-runtime-trust-decision:
         description: "Runtime override trust decision"
@@ -521,6 +554,7 @@ jobs:
             }
             const exactSha = /^[0-9a-f]{40}$/i;
             const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const authorityRef = /^authority\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
             const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
@@ -542,6 +576,7 @@ jobs:
               const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
               if (exactSha.test(value)) return "exact-sha";
               if (trainRef.test(value)) return "train";
+              if (authorityRef.test(value)) return "authority";
               if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
               if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
               return "development";
@@ -577,11 +612,11 @@ jobs:
                 runtimeClass = "exact-sha";
               } else {
                 runtimeRef = requested.replace(/^refs\/heads\//, "");
-                if (!trainRef.test(runtimeRef)) {
-                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                if (!trainRef.test(runtimeRef) && !authorityRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, authority/vN/vN.M/<capability>, refs/heads/authority/vN/vN.M/<capability>, or an exact 40-character SHA");
                 }
                 runtimeFullRef = `refs/heads/${runtimeRef}`;
-                runtimeClass = "train";
+                runtimeClass = authorityRef.test(runtimeRef) ? "authority" : "train";
               }
               trustDecision = trustedSameRepositoryPullRequestHead
                 ? "same-repository-pr-head"
@@ -1182,6 +1217,7 @@ jobs:
     timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
     env:
       CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
+      CCACHE_STATSLOG: ${{ github.workspace }}/.buildchain/diagnostics/ccache-stats-${{ matrix.platform.id }}.log
     steps:
       - name: Setup Node.js
         if: ${{ inputs.setup-node }}
@@ -1238,6 +1274,7 @@ jobs:
       - name: Download Buildchain runtime checkout bootstrap
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime-bootstrap
 
@@ -1271,8 +1308,9 @@ jobs:
         run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
           BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
           BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
           BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
@@ -1300,7 +1338,12 @@ jobs:
         uses: ./.buildchain/runtime/actions/run-lifecycle
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1320,7 +1363,12 @@ jobs:
         uses: ./.buildchain/runtime/actions/run-lifecycle
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
           # The ordinary matrix must emit an unsigned sealed input. Prevent a
@@ -1347,12 +1395,85 @@ jobs:
           requested-parallelism: ${{ inputs.requested-parallelism }}
           process-summary-required: ${{ inputs.require-build }}
 
+      - name: Seal declared artifact signing requests
+        id: signing-requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          signing_sealer=".buildchain/runtime/scripts/seal-artifact-signing-requests.mjs"
+          if [ ! -f "${signing_sealer}" ]; then
+            {
+              echo "request-count=0"
+              echo "request-index="
+              echo "request-root="
+            } >> "${GITHUB_OUTPUT}"
+            echo "Artifact signing request sealing is unavailable in the resolved legacy runtime; continuing with its validated contract."
+            exit 0
+          fi
+          node "${signing_sealer}"
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
+          BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Publish Buildchain-owned artifact signing request
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.signing-requests.outputs.request-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Dispatch and await Buildchain signing authority
+        id: signing-authority
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/dispatch-artifact-signing-authority.mjs
+        env:
+          BUILDCHAIN_AUTHORITY_DISPATCH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ inputs.artifact-name }}-signing-result-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          BUILDCHAIN_SIGNING_TIMEOUT_SECONDS: 7200
+
+      - name: Download immutable signed result
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          repository: ${{ inputs.buildchain-repository }}
+          run-id: ${{ steps.signing-authority.outputs.authority-run-id }}
+          name: ${{ steps.signing-authority.outputs.result-artifact }}
+          path: .buildchain/signing/results/${{ matrix.platform.id }}
+
+      - name: Verify and import final signed bytes
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/import-artifact-signing-results.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/signing/results/${{ matrix.platform.id }}
+          BUILDCHAIN_SIGNING_IMPORTED_EVIDENCE_ROOT: .buildchain/artifacts/signing/${{ matrix.platform.id }}
+
       - name: Run verify lifecycle
         id: verify-lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1366,7 +1487,9 @@ jobs:
           diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
-          artifact-paths: ${{ inputs.artifact-paths }}
+          artifact-paths: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/signing
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
@@ -1402,6 +1525,30 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           compression-level: 0
+
+      - name: Create GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        run: node .buildchain/runtime/scripts/create-github-artifact-attestation-policy.mjs
+        env:
+          BUILDCHAIN_SOURCE_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SUBJECT_PATH: ${{ inputs.github-artifact-attestation-subject-path }}
+          BUILDCHAIN_GITHUB_ATTESTATION_PLATFORM_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          BUILDCHAIN_GITHUB_ATTESTATION_POLICY_OUTPUT: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA: ${{ inputs.github-artifact-attestation-signer-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Upload GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-attestation-policy-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}
@@ -1546,6 +1693,7 @@ jobs:
       - name: Download Buildchain runtime checkout bootstrap
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime-bootstrap
 
@@ -1650,6 +1798,74 @@ jobs:
           requested-parallelism: ${{ inputs.requested-parallelism }}
           process-summary-required: ${{ inputs.require-build }}
 
+      - name: Seal declared artifact signing requests
+        id: signing-requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          signing_sealer=".buildchain/runtime/scripts/seal-artifact-signing-requests.mjs"
+          if [ ! -f "${signing_sealer}" ]; then
+            {
+              echo "request-count=0"
+              echo "request-index="
+              echo "request-root="
+            } >> "${GITHUB_OUTPUT}"
+            echo "Artifact signing request sealing is unavailable in the resolved legacy runtime; continuing with its validated contract."
+            exit 0
+          fi
+          node "${signing_sealer}"
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
+          BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Publish Buildchain-owned artifact signing request
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.signing-requests.outputs.request-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Dispatch and await Buildchain signing authority
+        id: signing-authority
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/dispatch-artifact-signing-authority.mjs
+        env:
+          BUILDCHAIN_AUTHORITY_DISPATCH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ inputs.artifact-name }}-signing-result-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          BUILDCHAIN_SIGNING_TIMEOUT_SECONDS: 7200
+
+      - name: Download immutable signed result
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          repository: ${{ inputs.buildchain-repository }}
+          run-id: ${{ steps.signing-authority.outputs.authority-run-id }}
+          name: ${{ steps.signing-authority.outputs.result-artifact }}
+          path: .buildchain/signing/results/${{ matrix.platform.id }}
+
+      - name: Verify and import final signed bytes
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/import-artifact-signing-results.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
+          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/signing/results/${{ matrix.platform.id }}
+          BUILDCHAIN_SIGNING_IMPORTED_EVIDENCE_ROOT: .buildchain/artifacts/signing/${{ matrix.platform.id }}
+
       - name: Run verify lifecycle
         id: verify-lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -1669,12 +1885,30 @@ jobs:
           diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
-          artifact-paths: ${{ inputs.artifact-paths }}
+          artifact-paths: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/signing
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+
+      - name: Create GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        run: node .buildchain/runtime/scripts/create-github-artifact-attestation-policy.mjs
+        env:
+          BUILDCHAIN_SOURCE_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SUBJECT_PATH: ${{ inputs.github-artifact-attestation-subject-path }}
+          BUILDCHAIN_GITHUB_ATTESTATION_PLATFORM_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          BUILDCHAIN_GITHUB_ATTESTATION_POLICY_OUTPUT: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+
+      - name: Upload GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-attestation-policy-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
 
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}
@@ -1823,6 +2057,7 @@ jobs:
       - name: Download artifact relay manifest
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
 
@@ -1923,13 +2158,22 @@ jobs:
       - name: Download immutable credential-island runtime
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-runtime-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime/actions/macos-credential-island
+
+      - name: Download generic Buildchain artifact signing request
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ inputs.artifact-name }}-signing-request-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/credential-island-input
 
       - name: Download source-bound sealed application archive
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: unsigned-app.zip
           path: .buildchain/credential-island-input
 
@@ -1937,6 +2181,7 @@ jobs:
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-input-manifest-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
@@ -1944,6 +2189,7 @@ jobs:
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
@@ -2076,6 +2322,7 @@ jobs:
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           pattern: ${{ inputs.artifact-name }}-manifest-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-manifests
           merge-multiple: false
@@ -2083,6 +2330,7 @@ jobs:
       - name: Download platform diagnostics
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           pattern: ${{ inputs.artifact-name }}-diagnostics-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-diagnostics
           merge-multiple: false
@@ -2090,12 +2338,14 @@ jobs:
       - name: Download build controller plan for release-candidate passport
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
           path: .buildchain/controller
 
       - name: Download anchored version material evidence
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
           path: .buildchain/anchored-version-material
 
@@ -2284,6 +2534,7 @@ jobs:
       - name: Download build controller plan
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
           path: .buildchain/controller
 
@@ -2291,6 +2542,7 @@ jobs:
         if: ${{ needs.summarize.result == 'success' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.summarize.outputs.summary-artifact-name }}
           path: .buildchain/controller/evidence
 
@@ -2298,6 +2550,7 @@ jobs:
         if: ${{ needs.anchored-release-preflight.result == 'success' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
           path: .buildchain/controller/evidence
 

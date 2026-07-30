@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
+import { validateArtifactSigningRequest } from "../../packages/core/artifact-signing.js";
+
 export const INPUT_CONTRACT = "buildchain.macos-credential-input/v1";
 export const EVIDENCE_CONTRACT =
   "buildchain.macos-credential-island-evidence/v1";
@@ -291,6 +293,128 @@ export function loadCredentialInput(inputRoot, expected = {}) {
   return { manifest, manifestPath, archivePath };
 }
 
+export function loadArtifactSigningInput(inputRoot, expected = {}) {
+  const requests = [];
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(target);
+      else if (entry.isFile() && entry.name === "request.json")
+        requests.push(target);
+    }
+  };
+  const root = path.resolve(inputRoot);
+  visit(root);
+  const candidates = requests
+    .map((requestPath) => ({
+      requestPath,
+      request: JSON.parse(fs.readFileSync(requestPath, "utf8")),
+    }))
+    .filter(
+      ({ request }) => request.signature?.profile === "apple-developer-id",
+    );
+  if (candidates.length !== 1) {
+    throw new Error(
+      `expected one apple-developer-id request.json under input-root, found ${candidates.length}`,
+    );
+  }
+  const { requestPath, request } = candidates[0];
+  const check = validateArtifactSigningRequest(request);
+  if (!check.ok) {
+    throw new Error(
+      `artifact signing request is invalid: ${check.issues.join(", ")}`,
+    );
+  }
+  if (request.artifact.platform !== "macos") {
+    throw new Error("artifact signing request platform must be macos");
+  }
+  if (request.artifact.kind !== "app-bundle") {
+    throw new Error(
+      `apple authority adapter does not yet support ${request.artifact.kind}; expected app-bundle`,
+    );
+  }
+  const repository = requireRepository(request.source.repository);
+  const sourceSha = requireSha(
+    request.source.sha,
+    "artifact signing source SHA",
+  );
+  const sourceTreeSha = requireSha(
+    request.source.treeSha,
+    "artifact signing source tree SHA",
+  );
+  const runtimeSha = requireSha(
+    request.runtime.sha,
+    "artifact signing runtime SHA",
+  );
+  if (expected.repository && repository !== expected.repository)
+    throw new Error("artifact signing request repository mismatch");
+  if (expected.sourceSha && sourceSha !== expected.sourceSha)
+    throw new Error("artifact signing request source SHA mismatch");
+  if (expected.sourceTreeSha && sourceTreeSha !== expected.sourceTreeSha)
+    throw new Error("artifact signing request source tree SHA mismatch");
+  if (expected.runtimeSha && runtimeSha !== expected.runtimeSha)
+    throw new Error("artifact signing request runtime SHA mismatch");
+  const transport = request.artifact.transport;
+  if (transport?.format !== "ditto-zip") {
+    throw new Error("apple app signing request must use ditto-zip transport");
+  }
+  const archivePath = resolveInside(
+    root,
+    transport.file,
+    "artifact signing transport",
+  );
+  if (!fs.statSync(archivePath).isFile()) {
+    throw new Error("artifact signing transport is not a file");
+  }
+  assertRealPathInside(root, archivePath, "artifact signing transport");
+  if (sha256File(archivePath) !== transport.digest) {
+    throw new Error("artifact signing transport digest mismatch");
+  }
+  if (fs.statSync(archivePath).size !== transport.bytes) {
+    throw new Error("artifact signing transport size mismatch");
+  }
+  const archivePathInPayload = path.basename(request.artifact.path);
+  return {
+    request,
+    requestPath,
+    manifestPath: requestPath,
+    archivePath,
+    manifest: {
+      schema: request.contract,
+      source: request.source,
+      platform: {
+        id: String(expected.platformId || "macos"),
+        os: "macos",
+        arch: request.artifact.arch,
+      },
+      app: {
+        archivePath: archivePathInPayload,
+        productName: archivePathInPayload.replace(/\.app$/iu, ""),
+      },
+      archive: {
+        file: transport.file,
+        format: transport.format,
+        bytes: transport.bytes,
+        sha256: transport.digest,
+      },
+    },
+  };
+}
+
+export function loadMacosSigningInput(inputRoot, expected = {}) {
+  try {
+    return loadArtifactSigningInput(inputRoot, expected);
+  } catch (genericError) {
+    try {
+      return loadCredentialInput(inputRoot, expected);
+    } catch (legacyError) {
+      throw new Error(
+        `macOS signing input is neither a generic artifact request nor a legacy credential input: ${genericError.message}; ${legacyError.message}`,
+      );
+    }
+  }
+}
+
 export function parseIdentityListing(output, expectedSha1) {
   const expected = requireSha(expectedSha1, "certificate-sha1").toUpperCase();
   const matches = String(output || "")
@@ -311,20 +435,76 @@ export function parseIdentityListing(output, expectedSha1) {
   return selected[0];
 }
 
-export function parseNotaryResult(output, label) {
+export function parseNotarySubmission(output, label) {
   let value;
   try {
     value = JSON.parse(String(output || ""));
   } catch {
     throw new Error(`${label} notarization did not return JSON`);
   }
-  if (
-    value.status !== "Accepted" ||
-    !/^[0-9a-f-]{36}$/iu.test(String(value.id || ""))
-  ) {
-    throw new Error(`${label} notarization was not accepted`);
+  if (!/^[0-9a-f-]{36}$/iu.test(String(value.id || ""))) {
+    throw new Error(`${label} notarization did not return a submission id`);
+  }
+  if (!/^[A-Za-z][A-Za-z -]{0,63}$/u.test(String(value.status || ""))) {
+    throw new Error(`${label} notarization did not return a bounded status`);
   }
   return { id: value.id, status: value.status };
+}
+
+export function parseNotaryResult(output, label) {
+  const result = parseNotarySubmission(output, label);
+  if (result.status !== "Accepted") {
+    throw new Error(`${label} notarization was not accepted`);
+  }
+  return result;
+}
+
+function boundedNotaryText(value, maxLength) {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .replace(/[\u0000-\u001f\u007f]+/gu, " ")
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/giu, "<email>")
+    .replace(
+      /(?:[A-Za-z]:\\Users\\|\/Users\/|\/home\/)[^/\\\s]+[/\\]/gu,
+      "<home>/",
+    )
+    .replace(
+      /\b(token|secret|password|api[-_ ]?key)\s*[:=]\s*[^\s,;]+/giu,
+      "$1=<redacted>",
+    )
+    .replace(/\s+/gu, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+export function summarizeNotaryLog(output, label) {
+  let value;
+  try {
+    value = JSON.parse(String(output || ""));
+  } catch {
+    throw new Error(`${label} notarization log did not return JSON`);
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} notarization log did not return an object`);
+  }
+  const issues = (Array.isArray(value.issues) ? value.issues : [])
+    .filter(
+      (issue) => issue && typeof issue === "object" && !Array.isArray(issue),
+    )
+    .slice(0, 5)
+    .map((issue) => ({
+      severity: boundedNotaryText(issue.severity, 32),
+      code: boundedNotaryText(issue.code, 64),
+      path: boundedNotaryText(issue.path, 240),
+      message: boundedNotaryText(issue.message, 400),
+      architecture: boundedNotaryText(issue.architecture, 32),
+    }));
+  return {
+    status: boundedNotaryText(value.status, 64),
+    statusCode: boundedNotaryText(value.statusCode, 64),
+    statusSummary: boundedNotaryText(value.statusSummary, 400),
+    issues,
+  };
 }
 
 export function entitlementsForProfile(profile) {
@@ -334,6 +514,164 @@ export function entitlementsForProfile(profile) {
       `unsupported entitlements profile: ${profile || "<empty>"}`,
     );
   return { name: profile, content: value, sha256: sha256Buffer(value) };
+}
+
+export function signingOptionsForFile(entitlementsPath) {
+  const resolved = String(entitlementsPath || "").trim();
+  if (!resolved) {
+    throw new Error("Buildchain-owned entitlements path is required");
+  }
+  return () => ({
+    entitlements: resolved,
+    hardenedRuntime: true,
+  });
+}
+
+function wheelRelativePath(root, filePath) {
+  return path.relative(root, filePath).split(path.sep).join("/");
+}
+
+function recordField(value) {
+  const text = String(value);
+  return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+export function validateWheelEntryListing(output) {
+  const entries = String(output || "")
+    .split(/\r?\n/u)
+    .filter(Boolean);
+  if (entries.length === 0) {
+    throw new Error("embedded wheel is empty");
+  }
+  const seen = new Set();
+  for (const entry of entries) {
+    const normalized = entry.normalize("NFC");
+    const segments = normalized.replace(/\/+$/u, "").split("/");
+    if (
+      !normalized ||
+      normalized.includes("\\") ||
+      normalized.includes("\0") ||
+      normalized.startsWith("/") ||
+      segments.some(
+        (segment) => !segment || segment === "." || segment === "..",
+      )
+    ) {
+      throw new Error("embedded wheel contains an unsafe archive path");
+    }
+    const collisionKey = normalized.replace(/\/+$/u, "").toLowerCase();
+    if (seen.has(collisionKey)) {
+      throw new Error("embedded wheel contains colliding archive paths");
+    }
+    seen.add(collisionKey);
+  }
+  return entries;
+}
+
+export function validateWheelMetadata(output, expectedEntryCount) {
+  const entries = String(output || "")
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter((line) => /^\S+\s+\d+\.\d+\s+\S+\s+/u.test(line));
+  if (
+    !Number.isSafeInteger(expectedEntryCount) ||
+    expectedEntryCount < 1 ||
+    entries.length !== expectedEntryCount
+  ) {
+    throw new Error("embedded wheel metadata does not match its entry listing");
+  }
+  if (entries.some((line) => !["-", "d"].includes(line[0]))) {
+    throw new Error(
+      "embedded wheel must contain only regular files and directories",
+    );
+  }
+  return entries;
+}
+
+export function findEmbeddedWheels(appPath) {
+  const wheels = [];
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) {
+        if (entry.name.toLowerCase().endsWith(".whl")) {
+          throw new Error("embedded wheel must not be a symbolic link");
+        }
+      } else if (entry.isDirectory()) {
+        visit(target);
+      } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".whl")) {
+        wheels.push(target);
+      }
+    }
+  };
+  visit(path.resolve(appPath));
+  return wheels.sort();
+}
+
+export function inspectExtractedWheel(root) {
+  const files = [];
+  const machOFiles = [];
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) {
+        throw new Error("embedded wheel must not contain symbolic links");
+      }
+      if (entry.isDirectory()) {
+        visit(target);
+        continue;
+      }
+      if (!entry.isFile()) {
+        throw new Error("embedded wheel must contain only regular files");
+      }
+      files.push(target);
+      if (isMacCodeArtifact(target)) machOFiles.push(target);
+    }
+  };
+  const absoluteRoot = path.resolve(root);
+  visit(absoluteRoot);
+  const records = files.filter((filePath) =>
+    /^[^/]+\.dist-info\/RECORD$/u.test(
+      wheelRelativePath(absoluteRoot, filePath),
+    ),
+  );
+  if (records.length !== 1) {
+    throw new Error(
+      `embedded wheel must contain exactly one top-level dist-info RECORD, found ${records.length}`,
+    );
+  }
+  return {
+    files: files.sort(),
+    machOFiles: machOFiles.sort(),
+    recordPath: records[0],
+  };
+}
+
+export function rewriteWheelRecord(root) {
+  const absoluteRoot = path.resolve(root);
+  const inspected = inspectExtractedWheel(absoluteRoot);
+  const rows = inspected.files
+    .filter((filePath) => filePath !== inspected.recordPath)
+    .map((filePath) => {
+      const bytes = fs.readFileSync(filePath);
+      const digest = crypto
+        .createHash("sha256")
+        .update(bytes)
+        .digest("base64url");
+      return [
+        recordField(wheelRelativePath(absoluteRoot, filePath)),
+        `sha256=${digest}`,
+        String(bytes.length),
+      ].join(",");
+    });
+  rows.push(
+    `${recordField(wheelRelativePath(absoluteRoot, inspected.recordPath))},,`,
+  );
+  fs.writeFileSync(inspected.recordPath, `${rows.join("\n")}\n`);
+  return {
+    fileCount: inspected.files.length,
+    machOFiles: inspected.machOFiles,
+    recordPath: inspected.recordPath,
+  };
 }
 
 export function cleanupState(state, runSecurity = () => {}) {

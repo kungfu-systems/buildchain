@@ -268,6 +268,16 @@ on:
         default: ""
         type: string
         required: false
+      release-passport-kfd-support-matrix-json:
+        description: "KFD-1..13 support matrix JSON path projected into the release passport"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-product-gate-jsons:
+        description: "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths"
+        default: ""
+        type: string
+        required: false
       release-passport-invariant-passport-jsons:
         description: "Newline- or comma-separated invariant Passport JSON paths passed to the release gate"
         default: ""
@@ -282,6 +292,21 @@ on:
         description: "Generate Buildchain-owned KFD-1/2/3 self witnesses and claims from the checked-out package source before release passport finalization"
         default: false
         type: boolean
+        required: false
+      github-artifact-attestation-policy-json:
+        description: "One GitHub artifact attestation policy JSON path from the sealed release candidate; empty disables attestation"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-environment:
+        description: "Caller-repository protected environment governing the keyless attestation"
+        default: "buildchain-artifact-attestation"
+        type: string
+        required: false
+      github-artifact-attestation-retention-days:
+        description: "Retention for offline GitHub/Sigstore evidence artifacts"
+        default: 90
+        type: number
         required: false
       release-passport-platform-manifest-paths:
         description: "Optional platform manifest paths for release passport; defaults to downloaded PR-stage payload manifests"
@@ -476,6 +501,18 @@ on:
       publication-capability-digest:
         description: "Sealed publication capability receipt digest"
         value: ${{ jobs.alpha.outputs.publication-capability-digest || jobs.stable.outputs.publication-capability-digest }}
+      github-artifact-attestation-id:
+        description: "GitHub keyless attestation id for the declared Linux release artifact"
+        value: ${{ jobs.alpha.outputs.github-artifact-attestation-id || jobs.stable.outputs.github-artifact-attestation-id }}
+      github-artifact-attestation-url:
+        description: "GitHub keyless attestation URL"
+        value: ${{ jobs.alpha.outputs.github-artifact-attestation-url || jobs.stable.outputs.github-artifact-attestation-url }}
+      github-artifact-attestation-evidence-root:
+        description: "Verified Buildchain attestation evidence root published with the GitHub Release"
+        value: ${{ jobs.alpha.outputs.github-artifact-attestation-evidence-root || jobs.stable.outputs.github-artifact-attestation-evidence-root }}
+      github-artifact-attestation-publication-receipt-digest:
+        description: "Read-back verified GitHub Release evidence publication receipt digest"
+        value: ${{ jobs.alpha.outputs.github-artifact-attestation-publication-receipt-digest || jobs.stable.outputs.github-artifact-attestation-publication-receipt-digest }}
       controller-receipt-artifact:
         description: "Controller receipt artifact name"
         value: ${{ jobs.alpha.outputs.controller-receipt-artifact || jobs.stable.outputs.controller-receipt-artifact }}
@@ -491,6 +528,8 @@ on:
 
 permissions:
   actions: write
+  artifact-metadata: write
+  attestations: write
   checks: write
   contents: write
   id-token: write
@@ -692,6 +731,8 @@ jobs:
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3-alpha
     permissions:
       actions: write
+      artifact-metadata: write
+      attestations: write
       checks: write
       contents: write
       id-token: write
@@ -759,9 +800,14 @@ jobs:
       release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
       release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+      release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}
+      release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
       release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
       release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
       release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
+      github-artifact-attestation-policy-json: ${{ inputs.github-artifact-attestation-policy-json }}
+      github-artifact-attestation-environment: ${{ inputs.github-artifact-attestation-environment }}
+      github-artifact-attestation-retention-days: ${{ inputs.github-artifact-attestation-retention-days }}
       release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths }}
       required-artifact-count: ${{ inputs.required-artifact-count }}
       publication-admission-json: ${{ inputs.publication-admission-json }}
@@ -790,6 +836,8 @@ jobs:
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3
     permissions:
       actions: write
+      artifact-metadata: write
+      attestations: write
       checks: write
       contents: write
       id-token: write

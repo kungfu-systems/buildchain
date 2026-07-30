@@ -24,7 +24,7 @@ on:
         type: string
         required: false
       buildchain-ref:
-        description: "Official floating Buildchain channel, or a temporary train/SHA for trusted manual validation."
+        description: "Official floating Buildchain channel, protected authority, or a temporary train/SHA for trusted manual validation."
         default: ""
         type: string
         required: false
@@ -213,6 +213,21 @@ on:
         default: "macos-arm64"
         type: string
         required: false
+      github-artifact-attestation-subject-path:
+        description: "Optional exact artifact path to bind to a GitHub keyless attestation policy after the final platform manifest is sealed"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-signer-sha:
+        description: "Exact 40-hex Buildchain commit containing the trusted reusable signer workflow"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-platform-id:
+        description: "Linux platform id that owns github-artifact-attestation-subject-path"
+        default: "linux-x64"
+        type: string
+        required: false
       release-candidate:
         description: "Generate and upload a PR-stage release-candidate passport after the full platform matrix succeeds"
         default: false
@@ -332,6 +347,21 @@ on:
         default: ""
         type: string
         required: false
+      cache-dependency-lock-root:
+        description: "Optional consumer-owned exact dependency-lock root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-toolchain-root:
+        description: "Optional consumer-owned exact toolchain root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-policy-root:
+        description: "Optional consumer-owned exact qualification policy root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
         default: ""
@@ -353,6 +383,9 @@ on:
       BUILDCHAIN_MACOS_NOTARY_API_KEY_ID:
         required: false
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
+        required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
         required: false
     outputs:
       buildchain-channel:
@@ -419,10 +452,10 @@ on:
         description: "Resolved immutable Buildchain runtime SHA"
         value: ${{ jobs.build.outputs.buildchain-runtime-sha }}
       buildchain-runtime-class:
-        description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
+        description: "Runtime stability class: stable, alpha, authority, train, exact-sha, or development"
         value: ${{ jobs.build.outputs.buildchain-runtime-class }}
       buildchain-runtime-override:
-        description: "Whether a train or exact-SHA buildchain-ref override was used"
+        description: "Whether an authority, train, or exact-SHA buildchain-ref override was used"
         value: ${{ jobs.build.outputs.buildchain-runtime-override }}
       buildchain-runtime-trust-decision:
         description: "Runtime override trust decision"
@@ -700,6 +733,9 @@ jobs:
       credential-island-environment: ${{ inputs.credential-island-environment }}
       credential-island-caller-owned: ${{ inputs.credential-island-caller-owned }}
       credential-island-macos-platform-id: ${{ inputs.credential-island-macos-platform-id }}
+      github-artifact-attestation-subject-path: ${{ inputs.github-artifact-attestation-subject-path }}
+      github-artifact-attestation-signer-sha: ${{ inputs.github-artifact-attestation-signer-sha }}
+      github-artifact-attestation-platform-id: ${{ inputs.github-artifact-attestation-platform-id }}
       release-candidate: ${{ inputs.release-candidate }}
       expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
       process-summary-path: ${{ inputs.process-summary-path }}
@@ -724,6 +760,9 @@ jobs:
       checkout-cache-fetch-attempts: ${{ inputs.checkout-cache-fetch-attempts }}
       shifu-cache-profile-ref: ${{ inputs.shifu-cache-profile-ref }}
       shifu-cache-profile-digest: ${{ inputs.shifu-cache-profile-digest }}
+      cache-dependency-lock-root: ${{ inputs.cache-dependency-lock-root }}
+      cache-toolchain-root: ${{ inputs.cache-toolchain-root }}
+      cache-policy-root: ${{ inputs.cache-policy-root }}
       gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
     secrets: inherit
 

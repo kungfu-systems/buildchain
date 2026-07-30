@@ -546,10 +546,106 @@
       "maturity": "stable"
     },
     {
+      "id": "kfd-4-gate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 4 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]",
+      "purpose": "Evaluate source-bound KFD-4 observer-perspective and contrastive-replay product evidence.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "kfd-4-schema",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd 4 schema [--schema <name>] [--json]",
       "purpose": "Print the default KFD-4 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-4-verify",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 4 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]",
+      "purpose": "Verify a retained KFD-4 product-gate result without widening product support.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-5-gate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 5 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]",
+      "purpose": "Evaluate source-bound KFD-5 Primitive discovery qualification evidence.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-5-schema",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 5 schema [--schema <name>] [--json]",
+      "purpose": "Print the default KFD-5 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-5-verify",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 5 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]",
+      "purpose": "Verify a retained KFD-5 product-gate result without widening product support.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-7-gate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 7 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]",
+      "purpose": "Evaluate a source-bound KFD-7 Domain Profile, evidence obligations, and independent review.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-7-schema",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 7 schema [--schema <name>] [--json]",
+      "purpose": "Print the default KFD-7 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-7-verify",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 7 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]",
+      "purpose": "Verify a retained KFD-7 product-gate result without widening product support.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
@@ -622,6 +718,18 @@
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd status [--cwd <dir>] [--json]",
       "purpose": "Report implemented KFD support and the active .buildchain repository layout.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-support",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>...",
+      "purpose": "Project and verify a product-owned KFD-1 through KFD-13 support matrix against KFD-4/5/7 gates.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
@@ -970,6 +1078,18 @@
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify artifact-envelope <file-or-json> [--assessment-time <epoch>]",
       "purpose": "Verify exact roots, identity, lifecycle, revocation, and an existing KFD assessment in a sealed artifact envelope.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify-github-artifact-attestation",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify github-artifact-attestation <artifact>",
+      "purpose": "Verify GitHub keyless attestation identity plus local artifact, manifest, Passport, predicate, bundle, and evidence bindings.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "agent",

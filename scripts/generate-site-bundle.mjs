@@ -16,6 +16,10 @@ import {
 } from "../packages/core/kfd.js";
 import { KFD_AGENT_HUB_ADOPTION_SCHEMA } from "../packages/core/kfd-agent-hub.js";
 import {
+  KFD_PRODUCT_GATE_INPUT_SCHEMA,
+  KFD_SUPPORT_PROJECTION_SCHEMA,
+} from "../packages/core/kfd-product-gates.js";
+import {
   createReadmeBadgeEndpointRegistry,
 } from "../packages/core/readme-badges.js";
 import {
@@ -324,6 +328,7 @@ const manualMetaById = new Map(Object.entries({
   "product-mechanism": { capabilityGroup: "getting-started", audience: ["agent", "maintainer"], maturity: "stable", order: 30 },
   cli: { capabilityGroup: "api-cli-reference", audience: ["agent", "developer"], maturity: "stable", order: 40 },
   "release-passport": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 100 },
+  "github-artifact-attestation": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 108 },
   "publication-authority": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 105 },
   "github-governance-authority": { capabilityGroup: "governance-versioning", audience: ["maintainer", "release-operator", "agent"], maturity: "preview", order: 106 },
   "controller-evidence": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator", "agent"], maturity: "draft", order: 205 },
@@ -333,6 +338,7 @@ const manualMetaById = new Map(Object.entries({
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
+  "dev-alpha-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 137 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
   "lifecycle-protocol": { capabilityGroup: "reusable-build", audience: ["consumer", "developer"], maturity: "stable", order: 210 },
@@ -400,6 +406,7 @@ function cliCommandMeta(id) {
     "collect-github-release": { group: "release-passport-trust", purpose: "Collect GitHub Release assets into a release passport." },
     create: { group: "release-passport-trust", purpose: "Create canonical sealed publication evidence documents." },
     "create-publication-admission": { group: "release-passport-trust", purpose: "Create a canonical short-lived publication admission envelope from exact consumer bindings." },
+    "create-github-artifact-attestation-policy": { group: "release-passport-trust", purpose: "Create an exact source, signer, Linux build, and Release Passport attestation policy." },
     "create-runner-provenance": { group: "release-passport-trust", purpose: "Create runner provenance evidence with an explicit qualification floor." },
     diagnostics: { group: "observability-diagnostics", purpose: "Inspect diagnostics command families." },
     "diagnostics-summary": { group: "observability-diagnostics", purpose: "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables." },
@@ -445,6 +452,15 @@ function cliCommandMeta(id) {
     "kfd-3-register": { group: "kfd-trust", purpose: "Declare detected KFD-3 public surfaces into a product-owned surface registry." },
     "kfd-3-witness": { group: "kfd-trust", purpose: "Generate release-passport-compatible KFD-3 surface witnesses from a product registry." },
     "kfd-4-schema": { group: "kfd-trust", purpose: "Print the default KFD-4 schema exposed by the KFD package standards metadata." },
+    "kfd-4-gate": { group: "kfd-trust", purpose: "Evaluate source-bound KFD-4 observer-perspective and contrastive-replay product evidence." },
+    "kfd-4-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-4 product-gate result without widening product support." },
+    "kfd-5-schema": { group: "kfd-trust", purpose: "Print the default KFD-5 schema exposed by the KFD package standards metadata." },
+    "kfd-5-gate": { group: "kfd-trust", purpose: "Evaluate source-bound KFD-5 Primitive discovery qualification evidence." },
+    "kfd-5-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-5 product-gate result without widening product support." },
+    "kfd-7-schema": { group: "kfd-trust", purpose: "Print the default KFD-7 schema exposed by the KFD package standards metadata." },
+    "kfd-7-gate": { group: "kfd-trust", purpose: "Evaluate a source-bound KFD-7 Domain Profile, evidence obligations, and independent review." },
+    "kfd-7-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-7 product-gate result without widening product support." },
+    "kfd-support": { group: "kfd-trust", purpose: "Project and verify a product-owned KFD-1 through KFD-13 support matrix against KFD-4/5/7 gates." },
     "kfd-aggregate": { group: "kfd-trust", purpose: "Return a product KFD view that combines own KFD status with upstream KFD aggregate facts." },
     "kfd-upstream": { group: "kfd-trust", purpose: "Inspect KFD upstream aggregate command families." },
     "kfd-upstream-check": { group: "kfd-trust", purpose: "Validate a KFD upstream aggregate document and fail closed on missing evidence." },
@@ -480,6 +496,7 @@ function cliCommandMeta(id) {
     verify: { group: "release-passport-trust", purpose: "Inspect release and artifact verification command families." },
     "verify-artifact": { group: "release-passport-trust", purpose: "Verify artifact subjects against release passport evidence." },
     "verify-artifact-envelope": { group: "release-passport-trust", purpose: "Verify exact roots, identity, lifecycle, revocation, and an existing KFD assessment in a sealed artifact envelope." },
+    "verify-github-artifact-attestation": { group: "release-passport-trust", purpose: "Verify GitHub keyless attestation identity plus local artifact, manifest, Passport, predicate, bundle, and evidence bindings." },
     "verify-infra-contract-evidence-bundle": { group: "governance-versioning", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
     "verify-observability-log": { group: "observability-diagnostics", purpose: "Verify Buildchain observability log events." },
     "verify-publication-admission": { group: "release-passport-trust", purpose: "Independently verify sealed publication admission, runner provenance, control-plane audit, nonce freshness, and exact artifact bindings." },
@@ -503,6 +520,8 @@ function nodeApiMeta(exportName) {
     "./homebrew": { group: "distribution-indexes", summary: "Homebrew tap fact collection, Formula rendering, update, and check APIs." },
     "./build-facts": { group: "observability-diagnostics", summary: "Git source, version, module output, product artifact, and legacy Kungfu build fact APIs." },
     "./candidate-timeline": { group: "observability-diagnostics", summary: "Source-bound candidate event normalization, per-attempt critical-path-safe aggregation, and compact reporting APIs." },
+    "./channel-candidate": { group: "governance-versioning", summary: "Exact-source channel candidate decisions, same-SHA workflow evidence validation, and deterministic source-lock reference APIs." },
+    "./cache-evidence": { group: "observability-diagnostics", summary: "Content-addressed cache operation receipts and source/platform-bound evidence-set verification APIs." },
     "./diagnostics": { group: "observability-diagnostics", summary: "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs." },
     "./logging": { group: "observability-diagnostics", summary: "Buildchain JSONL logging, span, summary, and verification APIs." },
     "./portable-dev-cache": { group: "observability-diagnostics", summary: "Portable dependency/compiler cache plan, exact-root verification, and provider receipt APIs." },
@@ -514,8 +533,12 @@ function nodeApiMeta(exportName) {
     "./github-governance-authority": { group: "governance-versioning", summary: "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs." },
     "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
     "./artifact-verification-envelope": { group: "release-passport-trust", summary: "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission." },
+    "./artifact-signing": { group: "reusable-build", summary: "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs." },
+    "./artifact-signing-result": { group: "release-passport-trust", summary: "Immutable signed-result, final-payload, receipt, evidence-root, and provider-verification binding APIs." },
+    "./detached-artifact-signature": { group: "release-passport-trust", summary: "Buildchain-authority Ed25519 detached signature and verification APIs for arbitrary binary artifacts." },
     "./anchored-version-material": { group: "reusable-build", summary: "Anchored/manual derived version material preflight, exact-tree binding, and digest evidence APIs." },
     "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
+    "./github-artifact-attestation": { group: "release-passport-trust", summary: "GitHub keyless artifact attestation policy, predicate, provider evidence, and fail-closed verification APIs." },
     "./kfd-agent-hub": { group: "kfd-trust", summary: "Declarative Agent Hub adapter inspection, fixed-suite execution, exact KFD cut locking, and agent explanation APIs." },
     "./release-passport-contract": { group: "release-passport-trust", summary: "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs." },
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
@@ -529,6 +552,7 @@ function nodeApiMeta(exportName) {
     "./issue-reporting": { group: "observability-diagnostics", summary: "Buildchain-owned issue reporting API for workflow friction feedback." },
     "./buildchain-layout": { group: "kfd-trust", summary: "Versioned Buildchain repository-layout discovery contract plus canonical .buildchain path resolution and migration APIs." },
     "./kfd": { group: "kfd-trust", summary: "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers." },
+    "./kfd-product-gates": { group: "kfd-trust", summary: "Fail-closed KFD-4, KFD-5, and KFD-7 product evidence gates plus non-widening KFD support-matrix release projections." },
     "./public-surface-audit": { group: "kfd-trust", summary: "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces." },
     "./kfd-gate": { group: "kfd-trust", summary: "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs." },
     "./buildchain-kfd-claims": { group: "kfd-trust", summary: "Buildchain self KFD claim registry, witnesses, and public claim APIs." },
@@ -589,6 +613,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
 }
 
 function workflowCapabilityGroup(entry) {
+  if (entry.id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
   if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
@@ -598,6 +623,7 @@ function workflowCapabilityGroup(entry) {
 }
 
 function actionCapabilityGroup(id) {
+  if (id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
   if (id === "promote-buildchain-ref") return capabilityGroup("release-passport-trust");
   if (id === "run-lifecycle" || id === "validate-config") return capabilityGroup("reusable-build");
   if (id === "report-buildchain-issue") return capabilityGroup("observability-diagnostics");
@@ -799,6 +825,7 @@ function buildSiteBundle() {
       "docs/reusable-build-surface.md",
       "docs/release-candidate.md",
       "docs/stable-candidate-patrol.md",
+      "docs/dev-alpha-candidate-patrol.md",
       "docs/observed-evidence-patrol.md",
       "docs/release-governance.md",
       "docs/release-passport.md",
@@ -880,11 +907,13 @@ function buildSiteBundle() {
         ["dev-pr-auto-merge", "dev-governance"],
         ["github-governance-audit", "dev-governance"],
         ["binary-distribution", "release-passport"],
+        ["github-artifact-attestation", "release-passport"],
         ["buildchain-patrol", "repository-patrol"],
         ["buildchain-patrol-daily", "repository-patrol"],
         ["buildchain-patrol-weekly", "repository-patrol"],
         ["buildchain-patrol-monthly", "repository-patrol"],
         ["stable-candidate-patrol", "repository-patrol"],
+        ["dev-alpha-candidate-patrol", "repository-patrol"],
         ["buildchain-stable-candidate-patrol", "repository-patrol"],
         ["buildchain-stable-candidate-qualification", "repository-patrol"],
         ["patrol-daily", "repository-patrol"],
@@ -972,6 +1001,7 @@ function buildSiteBundle() {
         "publish evidence JSON",
         "buildchain.release.json",
         "release passport assets",
+        "GitHub artifact attestation Sigstore bundle and Buildchain evidence JSON",
       ],
       owner: "promote-buildchain-ref",
     },
@@ -993,6 +1023,9 @@ function buildSiteBundle() {
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
+      "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/kfd-support-projection-v1.schema.json",
+      "kfd-support.json",
       "artifact-evidence.json",
       "product-mechanism.json",
       "impact.json",
@@ -1001,6 +1034,10 @@ function buildSiteBundle() {
       "llms.txt",
       "buildchain-release-bundle.json",
       "buildchain-release-bundle.tar.gz",
+      "github-artifact-attestation.policy.json",
+      "github-artifact-attestation.predicate.json",
+      "github-artifact-attestation.evidence.json",
+      "attestation.sigstore.json",
     ],
     site: [
       "buildchain-site.json",
@@ -1021,6 +1058,8 @@ function buildSiteBundle() {
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
+      "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/kfd-support-projection-v1.schema.json",
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1150,6 +1189,8 @@ function buildSiteBundle() {
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
+      "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/kfd-support-projection-v1.schema.json",
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1323,6 +1364,8 @@ function buildSiteBundle() {
     "release-passport-check-manifest.json": createReleasePassportCheckManifest(),
     "schemas/release-passport-v1.schema.json": RELEASE_PASSPORT_SCHEMA,
     "schemas/kfd-agent-hub-adoption.schema.json": KFD_AGENT_HUB_ADOPTION_SCHEMA,
+    "schemas/kfd-product-gate-input-v1.schema.json": KFD_PRODUCT_GATE_INPUT_SCHEMA,
+    "schemas/kfd-support-projection-v1.schema.json": KFD_SUPPORT_PROJECTION_SCHEMA,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),

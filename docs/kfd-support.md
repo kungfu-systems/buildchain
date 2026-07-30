@@ -7,8 +7,9 @@ facts, not as README prose. The machine-readable sources are:
   collaboration surfaces;
 - `dist/site/public-surface-audit.json` for reverse enumeration of exposed CLI,
   workflow, action, site, and documented command surfaces;
-- `buildchain.release.json` for release-specific KFD-1, KFD-2, and KFD-3
-  passport results;
+- `buildchain.release.json` plus its `kfd-support.json` sibling for
+  release-specific KFD-1/2/3 evidence and the exact KFD-1..13 support
+  projection;
 - `.buildchain/buildchain.toml` for repository-owned Buildchain configuration;
 - `.buildchain/kfd/kfd-2/registry.json` for product-owned KFD-2 public claim
   declarations;
@@ -41,11 +42,43 @@ buildchain kfd upstream check --json
 buildchain kfd aggregate --json
 buildchain kfd 3 query buildchain --json
 buildchain kfd 4 schema --json
+buildchain kfd 4 gate --input-json kfd-4-gate-input.json --json
+buildchain kfd 5 gate --input-json kfd-5-gate-input.json --json
+buildchain kfd 7 gate --input-json kfd-7-gate-input.json --json
+buildchain kfd support project --matrix-json support-matrix.json \
+  --gate-json kfd-4-gate.json --gate-json kfd-5-gate.json \
+  --gate-json kfd-7-gate.json --json
 ```
 
-KFD-1, KFD-2, and KFD-3 have concrete Buildchain workflows. KFD-4 is currently
-schema-only in Buildchain: agents can discover and read the KFD-4 schema from
-`@kungfu-tech/kfd`, but Buildchain does not claim KFD-4 verification.
+KFD-1, KFD-2, and KFD-3 have concrete Buildchain workflows. KFD-4, KFD-5, and
+KFD-7 additionally have product-evidence gates backed by the installed KFD
+package and its offline WASM verifier. These gates verify exact source,
+freshness, record bytes, negative evidence, and product-owned responsibility;
+they do not self-qualify, self-certify, activate, or silently widen support.
+KFD-6 remains an explicit unsupported barrier. KFD-8 through KFD-13 remain
+draft adopter-evidence barriers until their standards and product gates mature.
+
+## KFD-4 / KFD-5 / KFD-7 Product Gates
+
+Each gate input uses
+`kungfu-buildchain-kfd-product-gate-input` version 1 and binds repository-relative
+KFD records and evidence by SHA-256. The result uses
+`kungfu-buildchain-kfd-product-gate` version 1 and always records
+`qualifying: false` and `selfCertified: false`.
+
+- KFD-4 requires a verified observer perspective, contrastive perspective
+  replay, declared loss, preserved evidence boundaries, projection fsck, and a
+  negative fixture.
+- KFD-5 requires an accepted Primitive discovery record whose minimum-closure,
+  deletion, fuse, and dogfood tests pass with retained evidence, plus explicit
+  falsifiers and a negative fixture.
+- KFD-7 requires a qualified and activated Domain Profile, independent review,
+  product witnesses, all 13 evidence obligations, and negative evidence.
+
+`buildchain kfd support project` joins the three gate results with the
+product-owned KFD-1..13 matrix. It rejects normative metadata drift, source or
+freshness mismatch, gate/matrix disagreement, KFD-4/5 candidate widening,
+KFD-6 support, KFD-8..13 promotion, or any unsupported shipped-support claim.
 
 ## KFD-1
 
@@ -349,12 +382,15 @@ Inspect KFD-owned schema facts:
 buildchain kfd schema list --json
 buildchain kfd schema show kfd-1 --json
 buildchain kfd 4 schema --json
+buildchain kfd 5 schema --json
+buildchain kfd 7 schema --json
 ```
 
 The KFD schema namespace is discovered from `@kungfu-tech/kfd/standards.json`.
 For KFD-2 this includes `trustClaims`, `trustAssessment`, `trustTaxonomy`,
-`releaseClaims`, and `releaseTrustPassport`. For KFD-4 Buildchain currently
-exposes the KFD-owned `observerPerspective` schema only.
+`releaseClaims`, and `releaseTrustPassport`. KFD-4 exposes both
+`observerPerspective` and `perspectiveReplay`; KFD-5 exposes
+`primitiveDiscovery`; KFD-7 exposes `domainProfileDeclaration`.
 
 Detect public surface candidates:
 

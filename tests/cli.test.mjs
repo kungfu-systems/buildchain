@@ -1116,6 +1116,44 @@ test("diagnostics SDK summarizes process samples against requested parallelism",
   assert.equal(artifact.process.observedConcurrency.max, 5);
 });
 
+test("diagnostics cache evidence accepts sanitized empty cache locators", () => {
+  const sourceSha = "a".repeat(40);
+  const sourceTree = "b".repeat(40);
+  const artifact = createDiagnosticsArtifact({
+    cwd: path.join(root, "fixtures/libnode-shaped"),
+    links: { platformId: "macos" },
+    sourceCheckout: {
+      repository: "kungfu-systems/buildchain",
+      source: {
+        sha: sourceSha,
+        treeSha: sourceTree,
+      },
+      policy: {
+        mode: "auto",
+        referenceRepository: { display: "", fingerprint: "" },
+        mirror: { display: "", fingerprint: "" },
+      },
+      cache: {
+        attempted: true,
+        hit: false,
+        fallbackUsed: true,
+        transport: "github",
+        lookupDurationMs: 0,
+      },
+      verification: {
+        head: sourceSha,
+        tree: sourceTree,
+      },
+    },
+  });
+
+  const checkout = artifact.cacheEvidence.operations.find(
+    ({ operationId }) => operationId === "source-checkout:macos",
+  );
+  assert.equal(checkout.cacheRoot, "transport:github");
+  assert.equal(checkout.outcome, "miss");
+});
+
 test("diagnostics SDK infers requested parallelism from sampled process descendants", () => {
   const samples = [
     {

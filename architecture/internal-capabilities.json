@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "coverageRoots": [
+    "actions/promote-buildchain-ref/internal",
+    "bin/internal",
+    "scripts/promotion-routing-evidence.mjs",
+    "scripts/verify-promotion-router-binding.sh"
+  ],
+  "dependencyRules": [
+    {
+      "id": "core-does-not-depend-on-delivery-surfaces",
+      "sources": ["packages/core"],
+      "allowedRelativeTargets": ["packages/core"]
+    },
+    {
+      "id": "promotion-internals-do-not-depend-on-facade",
+      "sources": ["actions/promote-buildchain-ref/internal"],
+      "allowedRelativeTargets": [
+        "actions/promote-buildchain-ref/internal",
+        "packages/core"
+      ]
+    },
+    {
+      "id": "cli-handlers-do-not-depend-on-entrypoint",
+      "sources": ["bin/internal"],
+      "allowedRelativeTargets": [
+        "bin/internal",
+        "packages/core",
+        "scripts"
+      ]
+    },
+    {
+      "id": "workflow-helpers-stay-below-workflow-delivery",
+      "sources": [
+        "scripts/promotion-routing-evidence.mjs"
+      ],
+      "allowedRelativeTargets": [
+        "packages/core",
+        "scripts"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "promotion-policy",
+      "implementation": [
+        "actions/promote-buildchain-ref/internal/promotion-policy.js"
+      ],
+      "tests": [
+        "tests/promote-buildchain-ref.test.mjs"
+      ],
+      "contracts": [
+        "actions/promote-buildchain-ref/action.yml",
+        "actions/promote-buildchain-ref/lib.js"
+      ]
+    },
+    {
+      "id": "promotion-version-state",
+      "implementation": [
+        "actions/promote-buildchain-ref/internal/version-state.js"
+      ],
+      "tests": [
+        "tests/promote-buildchain-ref.test.mjs",
+        "tests/release-impact-contract.test.mjs"
+      ],
+      "contracts": [
+        ".buildchain/release-impact.json",
+        "actions/promote-buildchain-ref/lib.js"
+      ]
+    },
+    {
+      "id": "promotion-github-transaction-store",
+      "implementation": [
+        "actions/promote-buildchain-ref/internal/durable-transaction-store.js",
+        "actions/promote-buildchain-ref/internal/github-adapter.js"
+      ],
+      "tests": [
+        "tests/promote-buildchain-ref.test.mjs"
+      ],
+      "contracts": [
+        "actions/promote-buildchain-ref/lib.js"
+      ]
+    },
+    {
+      "id": "cli-trust-release-dispatch",
+      "implementation": [
+        "bin/internal/cli-options.mjs",
+        "bin/internal/trust-release-cli.mjs"
+      ],
+      "tests": [
+        "tests/cli.test.mjs",
+        "tests/public-surface-audit.test.mjs"
+      ],
+      "contracts": [
+        "bin/buildchain.mjs",
+        "docs/cli.md"
+      ]
+    },
+    {
+      "id": "release-workflow-promotion-routing",
+      "implementation": [
+        "scripts/promotion-routing-evidence.mjs",
+        "scripts/verify-promotion-router-binding.sh"
+      ],
+      "tests": [
+        "tests/promotion-routing-evidence.test.mjs",
+        "tests/build-surface.test.mjs"
+      ],
+      "contracts": [
+        ".github/workflows/.release-candidate-promote.yml",
+        ".github/workflows/release-candidate-promote.yml"
+      ]
+    }
+  ]
+}

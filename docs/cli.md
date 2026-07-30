@@ -74,6 +74,7 @@ import { verifyKfd1ReleaseGate } from "@kungfu-tech/buildchain/kfd-gate";
 import { collectBadgeBundleFacts } from "@kungfu-tech/buildchain/badges";
 import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
+import { verifyGitHubArtifactAttestationEvidence } from "@kungfu-tech/buildchain/github-artifact-attestation";
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
 import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
 import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
@@ -91,6 +92,14 @@ their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
 floating-ref contract world for a runtime such as `@v3`.
 
 ## Commands
+
+`buildchain create github-artifact-attestation-policy` seals the expected
+artifact, caller source, original Linux build, immutable Buildchain signer, and
+GitHub permission set before the Release Passport is collected.
+`buildchain verify github-artifact-attestation` invokes `gh attestation verify`
+with the exact signer/source policy and then verifies the retained bundle,
+predicate, platform manifest, Passport, and Buildchain evidence locally. See
+[`github-artifact-attestation.md`](github-artifact-attestation.md).
 
 `buildchain layout` is the stable machine question for repository layout. Tools
 such as Shifu should call it instead of copying `.buildchain/` path constants:
@@ -281,8 +290,9 @@ assertPublicSurfaceReverseAudit(collectPublicSurfaceReverseAudit({ root: process
 `buildchain kfd` is the product-facing KFD namespace. Schema commands expose the
 machine-readable KFD standards shipped by `@kungfu-tech/kfd`, while versioned
 subcommands host concrete product workflows. KFD-1, KFD-2, and KFD-3 are
-first-class Buildchain surfaces. KFD-4 is schema-only until Buildchain has a
-real verification protocol for it.
+first-class Buildchain surfaces. KFD-4, KFD-5, and KFD-7 expose fail-closed
+product-evidence gate and verification protocols; passing those protocols does
+not itself qualify, certify, activate, or ship support.
 
 `status` reports implemented support and the active repo-owned file layout.
 `migrate-layout` moves legacy root files into `.buildchain/`:
@@ -290,6 +300,12 @@ real verification protocol for it.
 ```bash
 buildchain kfd status --json
 buildchain kfd migrate-layout --write
+buildchain kfd 4 gate --input-json kfd-4-gate-input.json --output kfd-4-gate.json
+buildchain kfd 5 gate --input-json kfd-5-gate-input.json --output kfd-5-gate.json
+buildchain kfd 7 gate --input-json kfd-7-gate-input.json --output kfd-7-gate.json
+buildchain kfd support project --matrix-json support-matrix.json \
+  --gate-json kfd-4-gate.json --gate-json kfd-5-gate.json \
+  --gate-json kfd-7-gate.json --output kfd-support.json
 ```
 
 KFD-1 commands generate and validate contract-world release evidence:

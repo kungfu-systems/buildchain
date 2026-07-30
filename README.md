@@ -206,9 +206,11 @@ readable, but new consumers should keep Buildchain-owned files under
 Lifecycle commands can call pnpm, npm, yarn, pip, Conan, CMake, Make, custom
 scripts, or any other command that can run in the repository checkout.
 
-The KFD entrypoint is `buildchain kfd`. Buildchain currently provides concrete
-KFD-1 contract-world, KFD-2 trust-claim, and KFD-3 collaboration-surface
-workflows; KFD-4 is exposed as schema-only until a verification protocol exists.
+The KFD entrypoint is `buildchain kfd`. Buildchain provides concrete KFD-1
+contract-world, KFD-2 trust-claim, and KFD-3 collaboration-surface workflows,
+plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
+gates preserve product-owned qualification and support decisions; they do not
+turn a schema-valid record into certification or shipped support.
 
 Buildchain's active GitHub Action surface is deliberately small:
 
@@ -223,8 +225,9 @@ The active reusable workflow surfaces are:
   planning, capability-aware runner dispatch, receipt validation, and one
   stable aggregate check;
 - `.github/workflows/.auditable-demo.yml` for exact-artifact demo
-  qualification, transcript-bound renderer smoke, and optional media rendering
-  from the exact passing Gate bundle;
+  qualification, transcript-bound renderer smoke, optional media rendering
+  from the exact passing Gate bundle, and opt-in content-addressed web-delivery
+  profiles with independently verified rendition roles;
 - `.github/workflows/.build.yml` for deterministic multi-platform build and
   artifact contracts;
 - `.github/workflows/build.yml` for the single-config channel router that uses
@@ -364,6 +367,7 @@ npm pack --dry-run --json --registry=https://registry.npmjs.org/
 - [Product mechanism](docs/product-mechanism.md)
 - [Release Passport and binary distribution](docs/release-passport.md)
 - [GitHub governance authority](docs/github-governance-authority.md)
+- [GitHub-native Linux artifact attestation](docs/github-artifact-attestation.md)
 - [Binary distribution details](docs/binary-distribution.md)
 - [Toolkit observability](docs/toolkit-observability.md)
 - [Site bundle contract](docs/site-bundle-contract.md)

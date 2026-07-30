@@ -161,6 +161,12 @@ inputs:
   release-passport-kfd-3-artifact-verify-command:
     description: "Product-owned command that emits a KFD-3 artifact-side collaboration-interface witness JSON document"
     default: ""
+  release-passport-kfd-support-matrix-json:
+    description: "KFD-1..13 support matrix JSON path to project into the release passport"
+    default: ""
+  release-passport-kfd-product-gate-jsons:
+    description: "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths to bind into the support projection"
+    default: ""
   release-passport-invariant-passport-jsons:
     description: "Newline- or comma-separated invariant Passport JSON paths required by the release gate"
     default: ""
@@ -170,6 +176,9 @@ inputs:
   release-passport-buildchain-self-kfd:
     description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
     default: "false"
+  release-passport-github-artifact-attestation-policy-jsons:
+    description: "Newline- or comma-separated GitHub artifact attestation policy JSON paths bound into the Release Passport"
+    default: ""
   github-release:
     description: "Create/update the public GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
     default: "false"

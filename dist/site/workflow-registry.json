@@ -11,6 +11,7 @@
         "adapter-path",
         "artifact-retention-days",
         "buildchain-repository",
+        "media-profile",
         "render-media",
         "renderer-image",
         "require-trusted-event",
@@ -18,7 +19,7 @@
         "source-artifact-name",
         "source-ref"
       ],
-      "inputCount": 9,
+      "inputCount": 10,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -31,10 +32,12 @@
         "media-artifact-id",
         "media-artifact-name",
         "media-artifact-url",
+        "media-profile",
+        "media-qualification-root",
         "media-root",
         "source-sha"
       ],
-      "outputCount": 11,
+      "outputCount": 13,
       "surface": "auditable-demo",
       "capabilityGroup": "api-cli-reference",
       "status": "preview"
@@ -92,6 +95,9 @@
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
+        "cache-dependency-lock-root",
+        "cache-policy-root",
+        "cache-toolchain-root",
         "cargo-registry-index",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
@@ -108,6 +114,9 @@
         "expected-artifacts-json",
         "fail-fast",
         "gate-profile-aggregate-json",
+        "github-artifact-attestation-platform-id",
+        "github-artifact-attestation-signer-sha",
+        "github-artifact-attestation-subject-path",
         "install-command",
         "kfd-agent-hub",
         "lifecycle-timeout-minutes",
@@ -141,7 +150,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 66,
+      "inputCount": 72,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -150,9 +159,10 @@
         "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
         "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+        "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 8,
+      "secretCount": 9,
       "outputs": [
         "artifact-coordinates-json",
         "build-diagnostics-summary-artifact",
@@ -352,6 +362,9 @@
         "buildchain-repository",
         "channel",
         "dry-run",
+        "github-artifact-attestation-environment",
+        "github-artifact-attestation-policy-json",
+        "github-artifact-attestation-retention-days",
         "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
@@ -412,6 +425,8 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-product-gate-jsons",
+        "release-passport-kfd-support-matrix-json",
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
@@ -423,7 +438,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 83,
+      "inputCount": 88,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -446,6 +461,10 @@
         "controller-receipt-digest",
         "controller-receipt-json",
         "controller-receipt-status",
+        "github-artifact-attestation-evidence-root",
+        "github-artifact-attestation-id",
+        "github-artifact-attestation-publication-receipt-digest",
+        "github-artifact-attestation-url",
         "promoted-sha",
         "publication-capability-digest",
         "publication-commit-evidence-digest",
@@ -454,7 +473,7 @@
         "publication-commit-url",
         "release-candidate-artifact"
       ],
-      "outputCount": 15,
+      "outputCount": 19,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -844,6 +863,34 @@
       "status": "active"
     },
     {
+      "id": "artifact-signing-authority",
+      "path": ".github/workflows/artifact-signing-authority.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
+      "id": "auditable-demo-media-profile-qualification",
+      "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "binary-distribution",
       "path": ".github/workflows/binary-distribution.yml",
       "reusable": false,
@@ -911,6 +958,9 @@
         "buildchain-ref",
         "buildchain-repository",
         "buildchain-stable-contract-lock-path",
+        "cache-dependency-lock-root",
+        "cache-policy-root",
+        "cache-toolchain-root",
         "cargo-registry-index",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
@@ -927,6 +977,9 @@
         "expected-artifacts-json",
         "fail-fast",
         "gate-profile-aggregate-json",
+        "github-artifact-attestation-platform-id",
+        "github-artifact-attestation-signer-sha",
+        "github-artifact-attestation-subject-path",
         "install-command",
         "kfd-agent-hub",
         "lifecycle-timeout-minutes",
@@ -960,7 +1013,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 69,
+      "inputCount": 75,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -969,9 +1022,10 @@
         "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
         "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+        "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 8,
+      "secretCount": 9,
       "outputs": [
         "artifact-coordinates-json",
         "build-diagnostics-summary-artifact",
@@ -1206,6 +1260,44 @@
       "status": "active"
     },
     {
+      "id": "dev-alpha-candidate-patrol",
+      "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
+      "reusable": true,
+      "inputs": [
+        "alpha-workflow-path",
+        "buildchain-ref",
+        "buildchain-repository",
+        "create-pull-request",
+        "dev-workflow-path",
+        "dry-run",
+        "max-age-seconds",
+        "pull-request-body-prefix",
+        "settlement-authorized",
+        "source-branch",
+        "target-branch"
+      ],
+      "inputCount": 11,
+      "secrets": [
+        "promotion-token"
+      ],
+      "secretCount": 1,
+      "outputs": [
+        "active-candidate-pr",
+        "controller-state",
+        "eligible",
+        "next-candidate-sha",
+        "promotion-pr",
+        "result-path",
+        "selected-sha",
+        "settlement-action",
+        "source-lock-ref"
+      ],
+      "outputCount": 9,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active"
+    },
+    {
       "id": "dev-merge-queue-governance",
       "path": ".github/workflows/dev-merge-queue-governance.yml",
       "reusable": false,
@@ -1254,6 +1346,40 @@
       "outputCount": 6,
       "surface": "dev-governance",
       "capabilityGroup": "governance-versioning",
+      "status": "active"
+    },
+    {
+      "id": "github-artifact-attestation",
+      "path": ".github/workflows/github-artifact-attestation.yml",
+      "reusable": true,
+      "inputs": [
+        "buildchain-ref",
+        "environment",
+        "evidence-artifact-name",
+        "evidence-run-id",
+        "platform-manifest-artifact-name",
+        "platform-manifest-relative-path",
+        "policy-json",
+        "release-passport-artifact-name",
+        "release-passport-relative-path",
+        "retention-days",
+        "source-sha",
+        "subject-artifact-name",
+        "subject-relative-path"
+      ],
+      "inputCount": 13,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [
+        "attestation-id",
+        "attestation-url",
+        "bundle-digest",
+        "evidence-artifact-name",
+        "evidence-root"
+      ],
+      "outputCount": 5,
+      "surface": "release-passport",
+      "capabilityGroup": "release-passport-trust",
       "status": "active"
     },
     {
@@ -1592,6 +1718,9 @@
         "buildchain-stable-contract-lock-path",
         "channel",
         "dry-run",
+        "github-artifact-attestation-environment",
+        "github-artifact-attestation-policy-json",
+        "github-artifact-attestation-retention-days",
         "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
@@ -1641,6 +1770,8 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-product-gate-jsons",
+        "release-passport-kfd-support-matrix-json",
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
@@ -1652,7 +1783,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 75,
+      "inputCount": 80,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1676,6 +1807,10 @@
         "controller-receipt-digest",
         "controller-receipt-json",
         "controller-receipt-status",
+        "github-artifact-attestation-evidence-root",
+        "github-artifact-attestation-id",
+        "github-artifact-attestation-publication-receipt-digest",
+        "github-artifact-attestation-url",
         "promoted-sha",
         "promotion-contract-lock-digest",
         "promotion-contract-lock-path",
@@ -1695,7 +1830,7 @@
         "publication-commit-url",
         "release-candidate-artifact"
       ],
-      "outputCount": 27,
+      "outputCount": 31,
       "surface": "release-governance",
       "capabilityGroup": "reusable-build",
       "status": "active"
@@ -1891,6 +2026,28 @@
   "actionSource": "actions/*/action.yml reverse input enumeration",
   "actions": [
     {
+      "id": "github-artifact-attestation",
+      "path": "actions/github-artifact-attestation/action.yml",
+      "inputs": [
+        "attestation-id",
+        "attestation-url",
+        "bundle-path",
+        "expected-buildchain-ref",
+        "expected-caller-repository",
+        "expected-source-sha",
+        "mode",
+        "output-dir",
+        "platform-manifest-path",
+        "policy-json",
+        "preparation-json",
+        "release-passport-path",
+        "subject-path"
+      ],
+      "inputCount": 13,
+      "capabilityGroup": "release-passport-trust",
+      "status": "active"
+    },
+    {
       "id": "macos-credential-island",
       "path": "actions/macos-credential-island/action.yml",
       "inputs": [
@@ -1964,6 +2121,7 @@
         "release-passport",
         "release-passport-build-summary-path",
         "release-passport-buildchain-self-kfd",
+        "release-passport-github-artifact-attestation-policy-jsons",
         "release-passport-impact-json",
         "release-passport-invariant-passport-command",
         "release-passport-invariant-passport-jsons",
@@ -1972,6 +2130,8 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-product-gate-jsons",
+        "release-passport-kfd-support-matrix-json",
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
@@ -1988,7 +2148,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 64,
+      "inputCount": 67,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

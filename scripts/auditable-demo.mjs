@@ -11,6 +11,12 @@ import { fileURLToPath } from "node:url";
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
 const DIGEST_PATTERN = /^sha256:[0-9a-f]{64}$/;
+const MAX_BUNDLE_MEMBER_BYTES = 8 * 1024 * 1024;
+const SCRIPT_DIRECTORY = path.dirname(fileURLToPath(import.meta.url));
+const MEDIA_PROFILE_CATALOG = path.resolve(
+  SCRIPT_DIRECTORY,
+  "../contracts/auditable-demo-media-profiles-v1.json",
+);
 const REQUIRED_ADAPTER_FILES = [
   "complete-transcript.txt",
   "public-projection.json",
@@ -119,7 +125,10 @@ function verifyChecksums(root, checksumName = "checksums.sha256") {
     const target = resolveInside(root, member, "checksum member");
     invariant(!declared.has(member), `duplicate checksum member: ${member}`);
     declared.add(member);
-    invariant(sha256(readRegular(target, member)).slice(7) === match[1], `checksum mismatch: ${member}`);
+    invariant(
+      sha256(readRegular(target, member, MAX_BUNDLE_MEMBER_BYTES)).slice(7) === match[1],
+      `checksum mismatch: ${member}`,
+    );
   }
   const actual = listFiles(root).filter((name) => name !== checksumName);
   invariant(
@@ -164,7 +173,18 @@ function validateScene(value) {
   for (const key of ["background", "accent"]) {
     if (value[key] !== undefined) invariant(/^#[0-9a-fA-F]{6}$/.test(value[key]), `scene.${key} is invalid`);
   }
-  return value;
+  return {
+    schema: value.schema,
+    id: value.id,
+    width: value.width,
+    height: value.height,
+    fps: value.fps,
+    durationMs: value.durationMs,
+    title: value.title,
+    commandLabel: value.commandLabel ?? "",
+    background: (value.background ?? "#10151f").toLowerCase(),
+    accent: (value.accent ?? "#67e8a5").toLowerCase(),
+  };
 }
 
 function validateProjection(value, scene, transcriptLineCount) {
@@ -190,7 +210,17 @@ function validateProjection(value, scene, transcriptLineCount) {
     }
     if (cue.annotation !== undefined) text(cue.annotation, 0, 200, `projection.cues[${index}].annotation`);
   }
-  return value;
+  return {
+    schema: value.schema,
+    evidenceClass: value.evidenceClass,
+    claimBoundary: value.claimBoundary,
+    cues: value.cues.map((cue) => ({
+      startMs: cue.startMs,
+      endMs: cue.endMs,
+      transcriptLines: cue.transcriptLines,
+      annotation: cue.annotation ?? "",
+    })),
+  };
 }
 
 function validateSourceCoordinate(value) {
@@ -371,40 +401,465 @@ function prepareSmoke(values) {
   writeJson(path.join(output, "public-projection.json"), projection);
 }
 
-function verifyRendererOutput(renderOutput, expectedImage, expectedInputs) {
+function semanticRoot(value) {
+  return sha256(Buffer.from(stableJson(value)));
+}
+
+function validateBudgetBasis(entry, label) {
+  exactKeys(
+    entry.budgetBasis,
+    ["evidence", "observedPath", "observedBytes", "multiplier", "rounding"],
+    [],
+    `${label}.budgetBasis`,
+  );
+  invariant(
+    entry.budgetBasis.evidence === "contracts/evidence/auditable-demo-web-delivery-v1.json",
+    `${label}.budgetBasis.evidence is unsupported`,
+  );
+  text(entry.budgetBasis.observedPath, 1, 128, `${label}.budgetBasis.observedPath`);
+  const observedBytes = integer(
+    entry.budgetBasis.observedBytes,
+    1,
+    MAX_BUNDLE_MEMBER_BYTES,
+    `${label}.budgetBasis.observedBytes`,
+  );
+  const multiplier = integer(entry.budgetBasis.multiplier, 1, 64, `${label}.budgetBasis.multiplier`);
+  invariant(entry.budgetBasis.rounding === "next-power-of-two", `${label}.budgetBasis.rounding is unsupported`);
+  const expected = 2 ** Math.ceil(Math.log2(observedBytes * multiplier));
+  invariant(entry.maximumBytes === expected, `${label}.maximumBytes does not match its measured budget basis`);
+}
+
+function loadMediaProfile(profileId) {
+  const catalog = readJson(MEDIA_PROFILE_CATALOG, "auditable demo media profile catalog");
+  invariant(
+    catalog.schema === "buildchain.auditable-demo-media-profiles/v1",
+    "unsupported media profile catalog",
+  );
+  invariant(catalog.profiles && typeof catalog.profiles === "object", "media profile catalog is invalid");
+  const seen = new Set();
+  const resolve = (identifier) => {
+    invariant(!seen.has(identifier), `media profile inheritance cycle: ${identifier}`);
+    const declared = catalog.profiles[identifier];
+    invariant(declared && typeof declared === "object", `unsupported media profile: ${identifier}`);
+    seen.add(identifier);
+    const inherited = declared.extends ? resolve(declared.extends) : {
+      mode: "archive",
+      renditions: [],
+      singletonRoles: [],
+      additionalRenditions: null,
+    };
+    seen.delete(identifier);
+    const byPath = new Map(inherited.renditions.map((entry) => [entry.path, entry]));
+    for (const entry of declared.renditions || []) {
+      invariant(entry && typeof entry === "object" && typeof entry.path === "string", `${identifier} rendition is invalid`);
+      byPath.set(entry.path, { ...(byPath.get(entry.path) || {}), ...entry });
+    }
+    return {
+      mode: declared.mode || inherited.mode,
+      renditions: [...byPath.values()],
+      singletonRoles: [...new Set([...(inherited.singletonRoles || []), ...(declared.singletonRoles || [])])],
+      additionalRenditions: declared.additionalRenditions || inherited.additionalRenditions || null,
+    };
+  };
+  const resolved = resolve(profileId);
+  const profile = { id: profileId, ...resolved };
+  for (const [index, entry] of profile.renditions.entries()) {
+    if (profile.mode === "web-delivery") {
+      invariant(entry.budgetBasis, `${profileId}.renditions[${index}].budgetBasis is required`);
+      validateBudgetBasis(entry, `${profileId}.renditions[${index}]`);
+    }
+  }
+  return {
+    catalog,
+    catalogRoot: semanticRoot(catalog),
+    profile,
+    profileRoot: semanticRoot(profile),
+  };
+}
+
+function inspectIsoBmffFastStart(filePath) {
+  const bytes = readRegular(filePath, "MP4 rendition", MAX_BUNDLE_MEMBER_BYTES);
+  let offset = 0;
+  let moovOffset = -1;
+  let mdatOffset = -1;
+  let ftypSeen = false;
+  while (offset + 8 <= bytes.length) {
+    let size = bytes.readUInt32BE(offset);
+    const type = bytes.toString("ascii", offset + 4, offset + 8);
+    let headerSize = 8;
+    if (size === 1) {
+      invariant(offset + 16 <= bytes.length, "MP4 extended box header is truncated");
+      const extended = bytes.readBigUInt64BE(offset + 8);
+      invariant(extended <= BigInt(Number.MAX_SAFE_INTEGER), "MP4 box size is too large");
+      size = Number(extended);
+      headerSize = 16;
+    } else if (size === 0) {
+      size = bytes.length - offset;
+    }
+    invariant(size >= headerSize && offset + size <= bytes.length, "MP4 box layout is invalid");
+    if (type === "ftyp") ftypSeen = true;
+    if (type === "moov" && moovOffset === -1) moovOffset = offset;
+    if (type === "mdat" && mdatOffset === -1) mdatOffset = offset;
+    offset += size;
+  }
+  invariant(offset === bytes.length && ftypSeen, "MP4 top-level boxes are incomplete");
+  if (moovOffset === -1 || mdatOffset === -1) return "missing-moov-or-mdat";
+  return moovOffset < mdatOffset ? "moov-before-mdat" : "mdat-before-moov";
+}
+
+function rationalNumber(value) {
+  const match = /^([0-9]+)\/([0-9]+)$/.exec(String(value || ""));
+  if (!match || Number(match[2]) === 0) return 0;
+  return Number(match[1]) / Number(match[2]);
+}
+
+function inspectMediaFile(filePath) {
+  const result = spawnSync(
+    "ffprobe",
+    [
+      "-v", "error",
+      "-show_entries", "format=format_name,duration:stream=codec_type,codec_name,pix_fmt,width,height,avg_frame_rate",
+      "-of", "json",
+      filePath,
+    ],
+    { encoding: "utf8", maxBuffer: 1024 * 1024 },
+  );
+  invariant(!result.error && result.status === 0, `ffprobe failed for ${path.basename(filePath)}`);
+  let parsed;
+  try {
+    parsed = JSON.parse(result.stdout);
+  } catch {
+    throw new Error(`ffprobe returned invalid JSON for ${path.basename(filePath)}`);
+  }
+  const streams = Array.isArray(parsed.streams) ? parsed.streams : [];
+  const videos = streams.filter((entry) => entry.codec_type === "video");
+  const audioStreams = streams.filter((entry) => entry.codec_type === "audio").length;
+  invariant(videos.length === 1, `${path.basename(filePath)} must contain exactly one video or image stream`);
+  const video = videos[0];
+  const formatNames = String(parsed.format?.format_name || "").split(",");
+  let container = formatNames.includes("mp4") ? "mp4" : "";
+  if (formatNames.includes("webm")) container = "webm";
+  if (formatNames.includes("gif") || video.codec_name === "gif") container = "gif";
+  if (video.codec_name === "png") container = "png";
+  if (video.codec_name === "webp") container = "webp";
+  if (video.codec_name === "av1" && formatNames.includes("avif")) container = "avif";
+  const duration = Number(parsed.format?.duration || 0);
+  return {
+    container,
+    videoCodec: String(video.codec_name || ""),
+    pixelFormat: String(video.pix_fmt || ""),
+    width: Number(video.width || 0),
+    height: Number(video.height || 0),
+    durationMs: Number.isFinite(duration) ? Math.round(duration * 1000) : 0,
+    frameRate: rationalNumber(video.avg_frame_rate),
+    audioStreams,
+    progressiveDownload: container === "mp4" ? inspectIsoBmffFastStart(filePath) : "not-applicable",
+  };
+}
+
+function inspectRendererMedia(values) {
+  const renderOutput = path.resolve(required(values, "--render-output"));
+  const output = path.resolve(required(values, "--output"));
+  const rendererImage = required(values, "--renderer-image");
+  invariant(IMAGE_PATTERN.test(rendererImage), "renderer image must use an immutable sha256 coordinate");
+  invariant(!fs.existsSync(output), "media inspection output must not already exist");
+  const manifest = readJson(path.join(renderOutput, "manifest.json"), "renderer manifest");
+  invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
+  invariant(manifest.renderer?.image === rendererImage, "renderer manifest image coordinate mismatch");
+  const members = Object.keys(manifest.outputs || {})
+    .filter((name) => name !== "media-probe.json")
+    .sort()
+    .map((name) => {
+      const target = resolveInside(renderOutput, name, "media inspection member");
+      const bytes = readRegular(target, name, MAX_BUNDLE_MEMBER_BYTES);
+      return {
+        path: name,
+        root: sha256(bytes),
+        bytes: bytes.length,
+        facts: inspectMediaFile(target),
+      };
+    });
+  const body = {
+    schema: "buildchain.auditable-demo-media-inspection/v1",
+    rendererImage,
+    members,
+  };
+  writeJson(output, { ...body, inspectionRoot: semanticRoot(body) });
+}
+
+function qualifyMediaFixture(values) {
+  const renderOutput = path.resolve(required(values, "--render-output"));
+  const output = path.resolve(required(values, "--output"));
+  const rendererImage = required(values, "--renderer-image");
+  const rendererSourceRepository = required(values, "--renderer-source-repository");
+  const rendererSourceRef = required(values, "--renderer-source-ref");
+  const rendererSourceSha = required(values, "--renderer-source-sha");
+  const mediaProfile = required(values, "--media-profile");
+  invariant(IMAGE_PATTERN.test(rendererImage), "renderer image must use an immutable sha256 coordinate");
+  invariant(/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/.test(rendererSourceRepository), "renderer source repository is invalid");
+  invariant(/^refs\/tags\/[a-zA-Z0-9._-]+$/.test(rendererSourceRef), "renderer source ref must be an exact tag ref");
+  invariant(/^[0-9a-f]{40}$/.test(rendererSourceSha), "renderer source SHA must be exact");
+  invariant(!fs.existsSync(output), "media fixture evidence output must not already exist");
+  const mediaInspection = loadMediaInspection(
+    path.resolve(required(values, "--media-inspection")),
+    renderOutput,
+    rendererImage,
+  );
+  const verified = verifyRendererOutput(renderOutput, rendererImage, {
+    scene: path.join(renderOutput, "scene.json"),
+    transcript: path.join(renderOutput, "complete-transcript.txt"),
+    projection: path.join(renderOutput, "public-projection.json"),
+  }, {
+    mediaProfile,
+    inspectMedia: mediaInspection.inspectMedia,
+    inspectionRoot: mediaInspection.inspectionRoot,
+  });
+  const body = {
+    schema: "buildchain.auditable-demo-media-profile-fixture/v1",
+    renderer: {
+      image: rendererImage,
+      sourceRepository: rendererSourceRepository,
+      sourceRef: rendererSourceRef,
+      sourceSha: rendererSourceSha,
+    },
+    inputs: Object.fromEntries(
+      ["complete-transcript.txt", "public-projection.json", "scene.json"].map((name) => [
+        name,
+        sha256(readRegular(path.join(renderOutput, name), `fixture ${name}`)),
+      ]),
+    ),
+    rendererManifestRoot: sha256(readRegular(path.join(renderOutput, "manifest.json"), "renderer manifest")),
+    qualification: verified.qualification,
+  };
+  writeJson(output, { ...body, evidenceRoot: semanticRoot(body) });
+}
+
+function loadMediaInspection(filePath, renderOutput, rendererImage) {
+  const value = readJson(filePath, "media inspection");
+  exactKeys(value, ["schema", "rendererImage", "members", "inspectionRoot"], [], "mediaInspection");
+  invariant(value.schema === "buildchain.auditable-demo-media-inspection/v1", "unsupported media inspection schema");
+  invariant(value.rendererImage === rendererImage, "media inspection renderer image mismatch");
+  invariant(Array.isArray(value.members), "mediaInspection.members must be an array");
+  const body = {
+    schema: value.schema,
+    rendererImage: value.rendererImage,
+    members: value.members,
+  };
+  invariant(value.inspectionRoot === semanticRoot(body), "media inspection root mismatch");
+  const byPath = new Map();
+  for (const [index, entry] of value.members.entries()) {
+    exactKeys(entry, ["path", "root", "bytes", "facts"], [], `mediaInspection.members[${index}]`);
+    text(entry.path, 1, 256, `mediaInspection.members[${index}].path`);
+    invariant(DIGEST_PATTERN.test(entry.root), `mediaInspection.members[${index}].root is invalid`);
+    integer(entry.bytes, 1, MAX_BUNDLE_MEMBER_BYTES, `mediaInspection.members[${index}].bytes`);
+    exactKeys(
+      entry.facts,
+      [
+        "container",
+        "videoCodec",
+        "pixelFormat",
+        "width",
+        "height",
+        "durationMs",
+        "frameRate",
+        "audioStreams",
+        "progressiveDownload",
+      ],
+      [],
+      `mediaInspection.members[${index}].facts`,
+    );
+    const facts = {
+      container: text(entry.facts.container, 1, 32, `mediaInspection.members[${index}].facts.container`),
+      videoCodec: text(entry.facts.videoCodec, 1, 32, `mediaInspection.members[${index}].facts.videoCodec`),
+      pixelFormat: text(entry.facts.pixelFormat, 0, 32, `mediaInspection.members[${index}].facts.pixelFormat`),
+      width: integer(entry.facts.width, 1, 16384, `mediaInspection.members[${index}].facts.width`),
+      height: integer(entry.facts.height, 1, 16384, `mediaInspection.members[${index}].facts.height`),
+      durationMs: integer(entry.facts.durationMs, 0, 3_600_000, `mediaInspection.members[${index}].facts.durationMs`),
+      frameRate: entry.facts.frameRate,
+      audioStreams: integer(entry.facts.audioStreams, 0, 64, `mediaInspection.members[${index}].facts.audioStreams`),
+      progressiveDownload: text(
+        entry.facts.progressiveDownload,
+        1,
+        32,
+        `mediaInspection.members[${index}].facts.progressiveDownload`,
+      ),
+    };
+    invariant(
+      Number.isFinite(facts.frameRate) && facts.frameRate >= 0 && facts.frameRate <= 240,
+      `mediaInspection.members[${index}].facts.frameRate is out of range`,
+    );
+    invariant(!byPath.has(entry.path), `duplicate media inspection member: ${entry.path}`);
+    const target = resolveInside(renderOutput, entry.path, "media inspection member");
+    const bytes = readRegular(target, entry.path, MAX_BUNDLE_MEMBER_BYTES);
+    invariant(entry.root === sha256(bytes), `media inspection member root mismatch: ${entry.path}`);
+    invariant(entry.bytes === bytes.length, `media inspection member byte count mismatch: ${entry.path}`);
+    byPath.set(entry.path, facts);
+  }
+  return {
+    inspectionRoot: value.inspectionRoot,
+    inspectMedia: (target) => {
+      const facts = byPath.get(path.relative(renderOutput, target).split(path.sep).join("/"));
+      invariant(facts, `media inspection facts are missing: ${path.basename(target)}`);
+      return facts;
+    },
+  };
+}
+
+function constraintsForAdditionalRendition(entry, policy) {
+  const common = {
+    path: entry.path,
+    role: entry.role,
+    mimeType: entry.mimeType,
+    maximumBytes: policy.maximumBytesByMimeType[entry.mimeType],
+    audioStreams: 0,
+  };
+  if (entry.mimeType === "video/mp4") {
+    return { ...common, container: "mp4", videoCodec: "h264", pixelFormat: "yuv420p", progressiveDownload: "moov-before-mdat" };
+  }
+  if (entry.mimeType === "video/webm") {
+    return { ...common, container: "webm", videoCodec: "vp9", pixelFormat: "yuv420p" };
+  }
+  if (entry.mimeType === "image/webp") return { ...common, container: "webp", videoCodec: "webp" };
+  if (entry.mimeType === "image/avif") return { ...common, container: "avif", videoCodec: "av1" };
+  throw new Error(`additional rendition MIME type is not allowed: ${entry.mimeType}`);
+}
+
+function qualifyRendererOutput(renderOutput, manifest, scene, profileId, inspectMedia, inspectionRoot = "") {
+  const loaded = loadMediaProfile(profileId);
+  const { profile, catalog } = loaded;
+  const outputs = manifest.outputs || {};
+  const rules = profile.renditions.map((entry) => ({ ...entry }));
+  const knownPaths = new Set(rules.map((entry) => entry.path));
+  const declaration = manifest.webDelivery;
+  if (declaration !== undefined) {
+    exactKeys(declaration, ["schema", "renditions"], [], "manifest.webDelivery");
+    invariant(
+      declaration.schema === "build-images.auditable-demo-web-delivery/v1",
+      "unsupported renderer web-delivery declaration",
+    );
+    invariant(Array.isArray(declaration.renditions), "manifest.webDelivery.renditions must be an array");
+    for (const [index, entry] of declaration.renditions.entries()) {
+      exactKeys(entry, ["path", "role", "mimeType"], [], `manifest.webDelivery.renditions[${index}]`);
+      invariant(!knownPaths.has(entry.path), `renderer web-delivery path is already profile-owned: ${entry.path}`);
+      const policy = profile.additionalRenditions;
+      invariant(policy, `media profile ${profileId} does not admit additional renditions`);
+      invariant(policy.allowedRoles.includes(entry.role), `additional rendition role is not allowed: ${entry.role}`);
+      invariant(policy.allowedMimeTypes.includes(entry.mimeType), `additional rendition MIME type is not allowed: ${entry.mimeType}`);
+      const maximumBytes = policy.maximumBytesByMimeType?.[entry.mimeType];
+      integer(maximumBytes, 1, MAX_BUNDLE_MEMBER_BYTES, `media profile ${profileId} additional ${entry.mimeType} budget`);
+      rules.push(constraintsForAdditionalRendition(entry, policy));
+      knownPaths.add(entry.path);
+    }
+  }
+  for (const name of Object.keys(outputs)) {
+    if (name !== "media-probe.json") invariant(knownPaths.has(name), `unbound renderer output: ${name}`);
+  }
+  const singletonRoles = new Set(profile.singletonRoles || []);
+  const observedRoles = new Set();
+  const renditions = [];
+  for (const rule of rules) {
+    const declared = outputs[rule.path];
+    invariant(declared && typeof declared === "object", `required renderer output is missing: ${rule.path}`);
+    const target = resolveInside(renderOutput, rule.path, "renderer output path");
+    const bytes = readRegular(target, rule.path, MAX_BUNDLE_MEMBER_BYTES);
+    invariant(declared.root === sha256(bytes), `renderer manifest root mismatch: ${rule.path}`);
+    invariant(declared.bytes === bytes.length, `renderer manifest byte count mismatch: ${rule.path}`);
+    if (rule.maximumBytes !== undefined) {
+      invariant(bytes.length <= rule.maximumBytes, `${rule.path} byte budget exceeded`);
+    }
+    if (singletonRoles.has(rule.role)) {
+      invariant(!observedRoles.has(rule.role), `duplicate singleton role: ${rule.role}`);
+      observedRoles.add(rule.role);
+    }
+    const facts = profile.mode === "web-delivery" ? inspectMedia(target) : {};
+    if (profile.mode === "web-delivery") {
+      invariant(facts && typeof facts === "object", `${rule.path} inspection is missing`);
+      invariant(facts.container === rule.container, `${rule.path} container mismatch`);
+      invariant(facts.videoCodec === rule.videoCodec, `${rule.path} video codec mismatch`);
+      if (rule.pixelFormat) invariant(facts.pixelFormat === rule.pixelFormat, `${rule.path} pixel format mismatch`);
+      invariant(facts.audioStreams === rule.audioStreams, `${rule.path} audio stream policy failed`);
+      invariant(facts.width === scene.width && facts.height === scene.height, `${rule.path} dimensions mismatch`);
+      if (facts.durationMs > 0) {
+        invariant(
+          Math.abs(facts.durationMs - scene.durationMs) <= catalog.qualification.durationToleranceMs,
+          `${rule.path} duration mismatch`,
+        );
+      }
+      if (rule.frameRatePolicy === "scene-exact") {
+        invariant(Math.abs(facts.frameRate - scene.fps) < 0.001, `${rule.path} frame rate mismatch`);
+      }
+      if (rule.progressiveDownload) {
+        invariant(
+          facts.progressiveDownload === rule.progressiveDownload,
+          `${rule.path} progressive download evidence mismatch`,
+        );
+      }
+    }
+    renditions.push({
+      path: rule.path,
+      role: rule.role,
+      mimeType: rule.mimeType,
+      root: declared.root,
+      bytes: declared.bytes,
+      maximumBytes: rule.maximumBytes || 0,
+      ...facts,
+    });
+  }
+  const body = {
+    schema: "buildchain.auditable-demo-media-qualification/v1",
+    profile: {
+      id: profileId,
+      mode: profile.mode,
+      catalogRoot: loaded.catalogRoot,
+      profileRoot: loaded.profileRoot,
+    },
+    inspectionRoot,
+    renditions,
+    nonClaims: catalog.qualification.nonClaims,
+  };
+  return { ...body, qualificationRoot: semanticRoot(body) };
+}
+
+function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, options = {}) {
   invariant(IMAGE_PATTERN.test(expectedImage), "renderer image must use an immutable sha256 coordinate");
-  const expectedMembers = [
+  const fixedMembers = [
     "checksums.sha256",
     "complete-transcript.txt",
-    "demo.gif",
-    "demo.mp4",
-    "demo.webm",
     "manifest.json",
-    "media-probe.json",
-    "poster.png",
     "public-projection.json",
     "scene.json",
   ];
-  invariant(
-    JSON.stringify(listFiles(renderOutput)) === JSON.stringify(expectedMembers),
-    "renderer output member set is not exact",
-  );
   verifyChecksums(renderOutput);
   const manifest = readJson(path.join(renderOutput, "manifest.json"), "renderer manifest");
   invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
   invariant(manifest.renderer?.image === expectedImage, "renderer manifest image coordinate mismatch");
-  invariant(
-    JSON.stringify(Object.keys(manifest.outputs || {}).sort()) ===
-      JSON.stringify(["demo.gif", "demo.mp4", "demo.webm", "media-probe.json", "poster.png"]),
-    "renderer manifest output set is not exact",
-  );
+  const outputNames = Object.keys(manifest.outputs || {}).sort();
+  invariant(outputNames.includes("media-probe.json"), "renderer manifest must declare media-probe.json");
+  const expectedMembers = [...new Set([...fixedMembers, ...outputNames])].sort();
+  invariant(JSON.stringify(listFiles(renderOutput)) === JSON.stringify(expectedMembers), "renderer output member set is not exact");
+  for (const name of outputNames) {
+    invariant(!name.includes("\\") && !name.split("/").includes(".."), `renderer output path is invalid: ${name}`);
+    const target = resolveInside(renderOutput, name, "renderer manifest output");
+    const bytes = readRegular(target, name, MAX_BUNDLE_MEMBER_BYTES);
+    const declared = manifest.outputs[name];
+    invariant(declared?.root === sha256(bytes), `renderer manifest root mismatch: ${name}`);
+    invariant(declared?.bytes === bytes.length, `renderer manifest byte count mismatch: ${name}`);
+  }
   for (const [key, filePath] of Object.entries(expectedInputs)) {
     const observed = manifest.inputs?.[key]?.root;
     invariant(observed === sha256(readRegular(filePath, `${key} input`)), `renderer ${key} input root mismatch`);
   }
   const probe = readJson(path.join(renderOutput, "media-probe.json"), "media probe");
   invariant(probe.schema === "build-images.demo-media-probe/v1" && probe.passed === true, "renderer media probe failed");
-  return { manifest, probe };
+  const qualification = qualifyRendererOutput(
+    renderOutput,
+    manifest,
+    readJson(path.join(renderOutput, "scene.json"), "renderer scene"),
+    options.mediaProfile || "archive-v1",
+    options.inspectMedia || inspectMediaFile,
+    options.inspectionRoot || "",
+  );
+  return { manifest, probe, qualification };
 }
 
 function finalizeGate(values) {
@@ -427,7 +882,9 @@ function finalizeGate(values) {
   const sourceCoordinate = validateSourceCoordinate(readJson(sourceCoordinatePath, "source artifact coordinate"));
   invariant(sourceCoordinate.sourceSha === sourceSha, "source artifact coordinate SHA mismatch");
   ensureEmptyDirectory(output, "gate bundle");
-  for (const name of REQUIRED_ADAPTER_FILES) copyFile(path.join(adapterOutput, name), path.join(output, name));
+  fs.writeFileSync(path.join(output, "complete-transcript.txt"), normalized.transcript);
+  writeJson(path.join(output, "scene.json"), normalized.scene);
+  writeJson(path.join(output, "public-projection.json"), normalized.projection);
   copyFile(sourceCoordinatePath, path.join(output, "source-artifact.json"));
   copyFile(path.join(diagnostics, "adapter.json"), path.join(output, "adapter.json"));
   for (const name of listFiles(smokeOutput)) {
@@ -454,9 +911,9 @@ function finalizeGate(values) {
       smokeManifestRoot: sha256(readRegular(path.join(smokeOutput, "manifest.json"), "smoke manifest")),
     },
     qualifiedInputs: {
-      transcript: sha256(readRegular(path.join(adapterOutput, "complete-transcript.txt"), "transcript")),
-      projection: sha256(readRegular(path.join(adapterOutput, "public-projection.json"), "projection")),
-      scene: sha256(readRegular(path.join(adapterOutput, "scene.json"), "scene")),
+      transcript: sha256(readRegular(path.join(output, "complete-transcript.txt"), "transcript")),
+      projection: sha256(readRegular(path.join(output, "public-projection.json"), "projection")),
+      scene: sha256(readRegular(path.join(output, "scene.json"), "scene")),
       evidenceClass: normalized.projection.evidenceClass,
       claimBoundary: normalized.projection.claimBoundary,
     },
@@ -498,16 +955,32 @@ function finalizeMedia(values) {
   const rendererImage = required(values, "--renderer-image");
   const gateRoot = required(values, "--gate-root");
   const sourceSha = required(values, "--source-sha");
+  const mediaProfile = values["--media-profile"] || "archive-v1";
+  const selectedProfile = loadMediaProfile(mediaProfile).profile;
+  const mediaInspectionPath = values["--media-inspection"]
+    ? path.resolve(values["--media-inspection"])
+    : "";
+  const mediaInspection = selectedProfile.mode === "web-delivery"
+    ? loadMediaInspection(
+      required({ "--media-inspection": mediaInspectionPath }, "--media-inspection"),
+      renderOutput,
+      rendererImage,
+    )
+    : null;
   verifyGate({
     "--bundle": gateBundle,
     "--expected-root": gateRoot,
     "--renderer-image": rendererImage,
     "--source-sha": sourceSha,
   });
-  verifyRendererOutput(renderOutput, rendererImage, {
+  const verifiedRenderer = verifyRendererOutput(renderOutput, rendererImage, {
     scene: path.join(gateBundle, "scene.json"),
     transcript: path.join(gateBundle, "complete-transcript.txt"),
     projection: path.join(gateBundle, "public-projection.json"),
+  }, {
+    mediaProfile,
+    inspectMedia: mediaInspection?.inspectMedia,
+    inspectionRoot: mediaInspection?.inspectionRoot || "",
   });
   ensureEmptyDirectory(output, "media bundle");
   for (const name of listFiles(renderOutput)) {
@@ -515,19 +988,30 @@ function finalizeMedia(values) {
     copyFile(path.join(renderOutput, name), path.join(output, destination));
   }
   copyFile(path.join(gateBundle, "gate-receipt.json"), path.join(output, "gate-receipt.json"));
-  writeJson(path.join(output, "media-receipt.json"), {
-    schema: "buildchain.auditable-demo-media/v1",
+  if (mediaInspectionPath) copyFile(mediaInspectionPath, path.join(output, "media-inspection.json"));
+  const commonReceipt = {
     status: "passed",
     sourceSha,
     qualifiedGateRoot: gateRoot,
     rendererImage,
     rendererManifestRoot: sha256(readRegular(path.join(renderOutput, "manifest.json"), "renderer manifest")),
-  });
+  };
+  const mediaReceipt = selectedProfile.mode === "archive"
+    ? { schema: "buildchain.auditable-demo-media/v1", ...commonReceipt }
+    : {
+      schema: "buildchain.auditable-demo-media/v2",
+      ...commonReceipt,
+      qualification: verifiedRenderer.qualification,
+      qualificationRoot: verifiedRenderer.qualification.qualificationRoot,
+    };
+  writeJson(path.join(output, "media-receipt.json"), mediaReceipt);
   const root = writeChecksums(output);
   const artifactName = `auditable-demo-media-${sourceSha.slice(0, 12)}-${root.slice(7, 23)}`;
   appendOutputs(values["--github-output"], {
     "media-root": root,
     "media-artifact-name": artifactName,
+    "media-profile": mediaProfile,
+    "media-qualification-root": verifiedRenderer.qualification.qualificationRoot,
   });
   process.stdout.write(stableJson({ status: "passed", root, artifactName }));
 }
@@ -545,6 +1029,10 @@ function main(argv) {
       return verifyGate(values);
     case "finalize-media":
       return finalizeMedia(values);
+    case "inspect-media":
+      return inspectRendererMedia(values);
+    case "qualify-media-fixture":
+      return qualifyMediaFixture(values);
     default:
       throw new Error(`unknown command: ${command || "<empty>"}`);
   }
@@ -563,6 +1051,10 @@ if (invokedDirectly) {
 export {
   finalizeGate,
   finalizeMedia,
+  inspectIsoBmffFastStart,
+  inspectMediaFile,
+  inspectRendererMedia,
+  qualifyMediaFixture,
   prepareSmoke,
   runAdapter,
   sha256,

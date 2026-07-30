@@ -117,7 +117,7 @@ test("authority descriptor freezes the TCB, baseline, plan boundary, and non-cla
   assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 16);
   assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 13);
   assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 3);
-  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 33);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 35);
   assert.deepEqual(descriptor.planCapability.privateRepositories, ["team", "enterprise"]);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
@@ -386,6 +386,7 @@ test("authoritative target registry detects default drift and constrains private
   assert.ok(publicTargets.includes("dev/v3/v3.0"));
   assert.ok(publicTargets.includes("alpha/v3/v3.0"));
   assert.ok(publicTargets.includes("release/v3/v3.0"));
+  assert.ok(publicTargets.includes("authority/v3/v3.0/artifact-signing"));
   assert.ok(publicTargets.includes("publish-gate/major"));
   assert.ok(publicTargets.includes("dev/v2/v2.15"));
 
@@ -410,6 +411,20 @@ test("authoritative target registry detects default drift and constrains private
     "alpha/v7/v7.3",
     "release/v7/v7.3",
   ]);
+});
+
+test("formal artifact-signing authority is admitted with exact checks and no bypass", () => {
+  const policy = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "authority/v3/v3.0/artifact-signing",
+  });
+  assert.deepEqual(policy.requiredCheckBindings, [
+    { context: "check", appId: 15368 },
+    { context: "verify", appId: 15368 },
+  ]);
+  assert.equal(policy.strictRequiredChecks, true);
+  assert.deepEqual(policy.allowedBypassActors, []);
+  assert.equal(policy.requiredApprovals, 1);
 });
 
 test("unadmitted targets, required-check removal, producer substitution, and strict drift deny", () => {
@@ -536,17 +551,46 @@ test("rollout CLI preserves observed check apps and requires explicit new bindin
 });
 
 test("protection policy plan preserves descriptor-bound and unbound checks", () => {
+  const expected = {
+    strictRequiredChecks: true,
+    requiredCheckBindings: [
+      { context: "build", app_id: null },
+      { context: "signoff", app_id: 15368 },
+      { context: "validate", app_id: 15368 },
+    ],
+    requiredApprovals: 1,
+  };
+  for (const targetRef of ["alpha/v4/v4.0", "release/v4/v4.0"]) {
+    assert.deepEqual(
+      resolveGithubProtectionTargetPolicy({
+        repository: "kungfu-systems/kungfu",
+        targetRef,
+      }),
+      expected,
+    );
+  }
+});
+
+test("ruleset authority admits Kungfu stable with exact independent checks", () => {
   assert.deepEqual(
-    resolveGithubProtectionTargetPolicy({
+    resolveGithubGovernanceTargetPolicy({
       repository: "kungfu-systems/kungfu",
-      targetRef: "alpha/v4/v4.0",
+      targetRef: "release/v4/v4.0",
     }),
     {
+      targetRef: "release/v4/v4.0",
       strictRequiredChecks: true,
       requiredCheckBindings: [
-        { context: "build", app_id: null },
-        { context: "signoff", app_id: 15368 },
-        { context: "validate", app_id: 15368 },
+        { context: "build", appId: null },
+        { context: "signoff", appId: 15368 },
+        { context: "validate", appId: 15368 },
+      ],
+      allowedBypassActors: [
+        {
+          actorType: "Integration",
+          actorId: 15368,
+          bypassMode: "always",
+        },
       ],
       requiredApprovals: 1,
     },
@@ -827,6 +871,57 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
       requiredCheckBindings: targetPolicy.requiredCheckBindings,
     },
   }), /one exact target branch condition/);
+});
+
+test("ruleset policy rollout creates a missing exact target with deletion and force-push protection", () => {
+  const targetPolicy = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/kungfu",
+    targetRef: "alpha/v4/v4.0",
+  });
+  const inventory = {
+    repository: "kungfu-systems/kungfu",
+    targetRef: "alpha/v4/v4.0",
+    matchingRulesets: [],
+  };
+  const plan = createGithubRulesetGovernanceRolloutPlan({
+    repository: "kungfu-systems/kungfu",
+    targetRef: "alpha/v4/v4.0",
+    rulesetName: "Kungfu Alpha candidate authority: alpha/v4/v4.0",
+    inventory,
+    rollbackSnapshot: null,
+    desiredProtection: {
+      strictRequiredChecks: targetPolicy.strictRequiredChecks,
+      requiredCheckBindings: targetPolicy.requiredCheckBindings,
+      requiredApprovals: 1,
+      rulesetBypassActors: [],
+      blockDeletions: true,
+      blockNonFastForward: true,
+    },
+  });
+  assert.equal(plan.action, "create");
+  assert.equal(plan.rulesetId, null);
+  assert.equal(plan.operations[0].method, "POST");
+  assert.equal(
+    plan.operations[0].endpoint,
+    "repos/kungfu-systems/kungfu/rulesets",
+  );
+  assert.deepEqual(plan.operations[0].body.bypass_actors, []);
+  assert.deepEqual(
+    plan.operations[0].body.conditions.ref_name.include,
+    ["refs/heads/alpha/v4/v4.0"],
+  );
+  assert.deepEqual(
+    plan.operations[0].body.rules.map(({ type }) => type).sort(),
+    [
+      "deletion",
+      "non_fast_forward",
+      "pull_request",
+      "required_status_checks",
+    ],
+  );
+  assert.equal(plan.rollback[0].method, "DELETE");
+  assert.equal(plan.rollback[0].requiresApplyReceipt, true);
+  assert.match(plan.rollback[0].endpoint, /\{ruleset_id\}$/);
 });
 
 test("tampering and stale receipts are rejected", () => {

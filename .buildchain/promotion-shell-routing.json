@@ -13,10 +13,15 @@
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true,
     "unsupportedInputs": [
+      "github-artifact-attestation-environment",
+      "github-artifact-attestation-policy-json",
+      "github-artifact-attestation-retention-days",
       "release-activation-command",
       "release-activation-receipt-set-path",
       "release-passport-evidence-command",
-      "release-passport-evidence-path"
+      "release-passport-evidence-path",
+      "release-passport-kfd-support-matrix-json",
+      "release-passport-kfd-product-gate-jsons"
     ]
   }
 }

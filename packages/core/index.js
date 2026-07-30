@@ -65,6 +65,16 @@ export {
 } from "./portable-dev-cache.js";
 
 export {
+  BUILDCHAIN_CACHE_EVIDENCE_SET_CONTRACT,
+  BUILDCHAIN_CACHE_OPERATION_RECEIPT_CONTRACT,
+  cacheEvidenceDigest,
+  createCacheEvidenceSet,
+  createCacheOperationReceipt,
+  verifyCacheEvidenceSet,
+  verifyCacheOperationReceipt,
+} from "./cache-evidence.js";
+
+export {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
 } from "./release-line-dry-run.js";
@@ -89,6 +99,12 @@ export {
   formatCandidateTimelineReport,
   normalizeCandidateTimelineEvent,
 } from "./candidate-timeline.js";
+
+export {
+  CHANNEL_CANDIDATE_DECISION_SCHEMA,
+  channelCandidateSourceLockRef,
+  decideChannelCandidate,
+} from "./channel-candidate.js";
 
 export {
   BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
@@ -247,6 +263,33 @@ export {
 } from "./artifact-verification-envelope.js";
 
 export {
+  ARTIFACT_SIGNING_AUTHORITY_CONTRACT,
+  ARTIFACT_SIGNING_RECEIPT_CONTRACT,
+  ARTIFACT_SIGNING_REQUEST_CONTRACT,
+  artifactSigningDigest,
+  createArtifactSigningReceipt,
+  createArtifactSigningRequest,
+  listArtifactSigningProfiles,
+  resolveArtifactSigningProfile,
+  validateArtifactSigningReceipt,
+  validateArtifactSigningRequest,
+} from "./artifact-signing.js";
+
+export {
+  ARTIFACT_SIGNING_RESULT_CONTRACT,
+  artifactSigningEvidenceDigest,
+  createArtifactSigningResult,
+  validateArtifactSigningResult,
+  verifyArtifactSigningResultFiles,
+} from "./artifact-signing-result.js";
+
+export {
+  DETACHED_ARTIFACT_SIGNATURE_CONTRACT,
+  signDetachedArtifactRequest,
+  verifyDetachedArtifactSignature,
+} from "./detached-artifact-signature.js";
+
+export {
   BUILDCHAIN_CONTRACT_LOCK,
   BUILDCHAIN_RUNTIME_CONTRACT_WORLD,
   contractSummary,
@@ -358,6 +401,25 @@ export {
 } from "./release-passport.js";
 
 export {
+  GITHUB_ARTIFACT_ATTESTATION_EVIDENCE_CONTRACT,
+  GITHUB_ARTIFACT_ATTESTATION_POLICY_CONTRACT,
+  GITHUB_ARTIFACT_ATTESTATION_PREDICATE_CONTRACT,
+  GITHUB_ARTIFACT_ATTESTATION_PREDICATE_TYPE,
+  GITHUB_ARTIFACT_ATTESTATION_VERIFICATION_CONTRACT,
+  GITHUB_ARTIFACT_ATTESTATION_WORKFLOW,
+  createGitHubArtifactAttestationEvidence,
+  createGitHubArtifactAttestationPolicy,
+  createGitHubArtifactAttestationVerificationPlan,
+  githubArtifactAttestationRequiredPermissions,
+  githubArtifactAttestationSemanticRoot,
+  githubArtifactAttestationSha256Buffer,
+  githubArtifactAttestationSha256File,
+  normalizeGitHubArtifactAttestationPolicy,
+  prepareGitHubArtifactAttestation,
+  verifyGitHubArtifactAttestationEvidence,
+} from "./github-artifact-attestation.js";
+
+export {
   KFD_AGENT_HUB_ADOPTION_CONTRACT,
   KFD_AGENT_HUB_ADOPTION_SCHEMA,
   KFD_AGENT_HUB_DECLARATION,
@@ -369,6 +431,23 @@ export {
   inspectKfdAgentHub,
   testKfdAgentHub,
 } from "./kfd-agent-hub.js";
+
+export {
+  KFD_PRODUCT_GATE_CONTRACT,
+  KFD_PRODUCT_GATE_INPUT_CONTRACT,
+  KFD_PRODUCT_GATE_INPUT_SCHEMA,
+  KFD_PRODUCT_GATE_INPUT_SCHEMA_ID,
+  KFD_SUPPORT_PROJECTION_CONTRACT,
+  KFD_SUPPORT_PROJECTION_SCHEMA,
+  KFD_SUPPORT_PROJECTION_SCHEMA_ID,
+  createKfdSupportProjection,
+  evaluateKfdProductGate,
+  kfdProductGateDigest,
+  kfdProductGates,
+  validateKfdProductGateResult,
+  validateKfdSupportProjection,
+  verifyKfdRecord,
+} from "./kfd-product-gates.js";
 
 export {
   RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT,

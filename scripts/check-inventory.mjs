@@ -68,8 +68,14 @@ const requiredPaths = [
   "docs/product-mechanism.md",
   "docs/readme-badges.md",
   "docs/release-passport.md",
+  "docs/github-artifact-attestation.md",
   "docs/shifu-gate-profiles.md",
   "docs/auditable-demo.md",
+  "contracts/auditable-demo-media-profiles-v1.json",
+  "contracts/evidence/auditable-demo-web-delivery-v1.json",
+  "contracts/fixtures/auditable-demo-web-delivery-v1/complete-transcript.txt",
+  "contracts/fixtures/auditable-demo-web-delivery-v1/public-projection.json",
+  "contracts/fixtures/auditable-demo-web-delivery-v1/scene.json",
   "docs/release-propagation.md",
   "docs/site-bundle-contract.md",
   "docs/toolkit-observability.md",
@@ -357,6 +363,9 @@ if (rootPackage.exports?.["./kfd-gate"] !== "./packages/core/kfd-gate.js") {
 }
 if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-passport.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport");
+}
+if (rootPackage.exports?.["./github-artifact-attestation"] !== "./packages/core/github-artifact-attestation.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/github-artifact-attestation");
 }
 if (rootPackage.exports?.["./release-passport-contract"] !== "./packages/core/release-passport-contract.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport-contract");
@@ -924,6 +933,10 @@ for (const requiredSnippet of [
   "release-passport-kfd-3-artifact-witness-jsons:",
   "release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}",
   "release-passport-kfd-3-artifact-verify-command:",
+  "release-passport-kfd-support-matrix-json:",
+  "release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}",
+  "release-passport-kfd-product-gate-jsons:",
+  "release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}",
   "release-passport-invariant-passport-jsons:",
   "release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}",
   "release-passport-invariant-passport-command:",

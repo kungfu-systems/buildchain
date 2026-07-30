@@ -168,10 +168,15 @@ test("stable route calls the hidden advanced workflow through the current major 
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
     unsupportedInputs: [
+      "github-artifact-attestation-environment",
+      "github-artifact-attestation-policy-json",
+      "github-artifact-attestation-retention-days",
       "release-activation-command",
       "release-activation-receipt-set-path",
       "release-passport-evidence-command",
       "release-passport-evidence-path",
+      "release-passport-kfd-support-matrix-json",
+      "release-passport-kfd-product-gate-jsons",
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v3/);
@@ -196,6 +201,11 @@ test("stable route forwards only inputs supported by the current workflow shell"
   for (const name of shellRouting.stable.unsupportedInputs) {
     assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
+  assert.doesNotMatch(stableBlock, /^      release-passport-kfd-support-matrix-json:/m);
+  assert.doesNotMatch(stableBlock, /^      release-passport-kfd-product-gate-jsons:/m);
+  assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-policy-json:/m);
+  assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-environment:/m);
+  assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-retention-days:/m);
   assert.match(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(stableBlock, /^      publish-rematerialize-on-resume:/m);
   assert.match(
@@ -227,10 +237,21 @@ test("alpha router coerces string job output before forwarding a boolean input",
 test("promotion router contains no native build job and delegates candidate reuse to the advanced shell", () => {
   const router = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
+  const bindingVerifier = fs.readFileSync(
+    path.join(root, "scripts/verify-promotion-router-binding.sh"),
+    "utf8",
+  );
   assert.doesNotMatch(router, /matrix:|Build native|pnpm run build/);
   assert.match(advanced, /Resolve PR-stage release candidate/);
   assert.match(advanced, /release-candidate-resolver\.mjs/);
   assert.match(advanced, /CALLED_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
-  assert.match(advanced, /\[\[ "\$\{CALLED_WORKFLOW_SHA\}" = "\$\{SHELL_SHA\}" \]\]/);
+  assert.match(
+    advanced,
+    /bash \.buildchain\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
+  );
+  assert.match(
+    bindingVerifier,
+    /\[\[ "\$\{CALLED_WORKFLOW_SHA\}" = "\$\{SHELL_SHA\}" \]\]/,
+  );
   assert.doesNotMatch(advanced, /strategy:\n\s+matrix:/);
 });

@@ -17,18 +17,25 @@ import {
   createCredentialArtifactManifest,
   decodeBase64Secret,
   entitlementsForProfile,
-  loadCredentialInput,
+  findEmbeddedWheels,
+  inspectExtractedWheel,
+  loadMacosSigningInput,
   parseIdentityListing,
-  parseNotaryResult,
+  parseNotarySubmission,
   requirePattern,
   requireRepository,
   requireSha,
+  rewriteWheelRecord,
   resolveInside,
   safeArtifactName,
   safeArtifactStem,
   safePlatformId,
   sha256File,
   signingIgnore,
+  signingOptionsForFile,
+  summarizeNotaryLog,
+  validateWheelEntryListing,
+  validateWheelMetadata,
 } from "./lib.js";
 
 function input(name, required = true) {
@@ -38,13 +45,7 @@ function input(name, required = true) {
 function runFile(
   command,
   args,
-  {
-    cwd,
-    env,
-    redact = false,
-    stdoutOnly = false,
-    failureLabel = "",
-  } = {},
+  { cwd, env, redact = false, stdoutOnly = false, failureLabel = "" } = {},
 ) {
   const result = spawnSync(command, args, {
     cwd,
@@ -128,6 +129,125 @@ function verifySignedApp(appPath, expectedTeamId) {
   return { teamId: teamMatch[1] };
 }
 
+function verifySignedMachO(filePath, expectedTeamId) {
+  runFile("/usr/bin/codesign", [
+    "--verify",
+    "--strict",
+    "--verbose=2",
+    filePath,
+  ]);
+  const detail = runFile("/usr/bin/codesign", ["-d", "--verbose=4", filePath]);
+  if (!detail.includes("Authority=Developer ID Application:")) {
+    throw new Error(
+      "embedded wheel Mach-O does not expose a Developer ID Application authority",
+    );
+  }
+  if (!/flags=.*runtime/iu.test(detail)) {
+    throw new Error("embedded wheel Mach-O does not enable hardened runtime");
+  }
+  if (!/^Timestamp=.+$/imu.test(detail)) {
+    throw new Error("embedded wheel Mach-O does not expose a secure timestamp");
+  }
+  const teamMatch = detail.match(/TeamIdentifier=([A-Z0-9]{10})/u);
+  if (!teamMatch || teamMatch[1] !== expectedTeamId) {
+    throw new Error("embedded wheel Mach-O team identifier mismatch");
+  }
+}
+
+function signAndVerifyContainer(
+  filePath,
+  { certificateSha1, keychainPath, expectedTeamId },
+) {
+  runFile("/usr/bin/codesign", [
+    "--force",
+    "--sign",
+    certificateSha1,
+    "--keychain",
+    keychainPath,
+    "--timestamp",
+    filePath,
+  ]);
+  runFile("/usr/bin/codesign", [
+    "--verify",
+    "--strict",
+    "--verbose=2",
+    filePath,
+  ]);
+  const detail = runFile("/usr/bin/codesign", ["-d", "--verbose=4", filePath]);
+  if (!detail.includes("Authority=Developer ID Application:")) {
+    throw new Error(
+      "signed container does not expose a Developer ID Application authority",
+    );
+  }
+  if (!/^Timestamp=.+$/imu.test(detail)) {
+    throw new Error("signed container does not expose a secure timestamp");
+  }
+  const teamMatch = detail.match(/TeamIdentifier=([A-Z0-9]{10})/u);
+  if (!teamMatch || teamMatch[1] !== expectedTeamId) {
+    throw new Error("signed container team identifier mismatch");
+  }
+}
+
+function sealEmbeddedWheelCode(
+  appPath,
+  temporaryRoot,
+  { certificateSha1, keychainPath, expectedTeamId },
+) {
+  const wheels = findEmbeddedWheels(appPath);
+  let signedFileCount = 0;
+  wheels.forEach((wheelPath, wheelIndex) => {
+    const listing = runFile("/usr/bin/unzip", ["-Z1", wheelPath], {
+      stdoutOnly: true,
+      failureLabel: "list embedded wheel",
+    });
+    const entries = validateWheelEntryListing(listing);
+    const metadata = runFile("/usr/bin/unzip", ["-Z", "-l", wheelPath], {
+      stdoutOnly: true,
+      failureLabel: "inspect embedded wheel metadata",
+    });
+    validateWheelMetadata(metadata, entries.length);
+    const wheelRoot = path.join(temporaryRoot, `wheel-${wheelIndex}`);
+    fs.mkdirSync(wheelRoot);
+    runFile("/usr/bin/ditto", ["-x", "-k", wheelPath, wheelRoot], {
+      failureLabel: "extract embedded wheel",
+    });
+    const inspected = inspectExtractedWheel(wheelRoot);
+    if (inspected.machOFiles.length === 0) return;
+
+    for (const filePath of inspected.machOFiles) {
+      runFile("/usr/bin/codesign", [
+        "--force",
+        "--sign",
+        certificateSha1,
+        "--keychain",
+        keychainPath,
+        "--options",
+        "runtime",
+        "--timestamp",
+        filePath,
+      ]);
+      verifySignedMachO(filePath, expectedTeamId);
+      signedFileCount += 1;
+    }
+    rewriteWheelRecord(wheelRoot);
+    const repackedPath = path.join(temporaryRoot, `wheel-${wheelIndex}.whl`);
+    runFile("/usr/bin/ditto", [
+      "-c",
+      "-k",
+      "--norsrc",
+      wheelRoot,
+      repackedPath,
+    ]);
+    runFile("/usr/bin/unzip", ["-t", repackedPath], {
+      failureLabel: "verify repacked embedded wheel",
+    });
+    const originalMode = fs.statSync(wheelPath).mode;
+    fs.renameSync(repackedPath, wheelPath);
+    fs.chmodSync(wheelPath, originalMode);
+  });
+  return { wheelCount: wheels.length, signedFileCount };
+}
+
 function submitNotary(target, credentials, label) {
   const output = runFile(
     "/usr/bin/xcrun",
@@ -147,7 +267,47 @@ function submitNotary(target, credentials, label) {
     ],
     { redact: true, stdoutOnly: true },
   );
-  return parseNotaryResult(output, label);
+  const submission = parseNotarySubmission(output, label);
+  if (submission.status === "Accepted") return submission;
+
+  let diagnostics = {
+    status: submission.status,
+    statusCode: "",
+    statusSummary: "sanitized notarization log unavailable",
+    issues: [],
+  };
+  try {
+    const log = runFile(
+      "/usr/bin/xcrun",
+      [
+        "notarytool",
+        "log",
+        submission.id,
+        "--key",
+        credentials.keyPath,
+        "--key-id",
+        credentials.keyId,
+        "--issuer",
+        credentials.issuer,
+        "--output-format",
+        "json",
+      ],
+      { redact: true, stdoutOnly: true },
+    );
+    const summary = summarizeNotaryLog(log, label);
+    diagnostics = {
+      ...summary,
+      status: summary.status || submission.status,
+    };
+  } catch {
+    // The submission identity and status remain useful without exposing command output.
+  }
+  throw new Error(
+    `${label} notarization was not accepted: ${JSON.stringify({
+      submissionId: submission.id,
+      ...diagnostics,
+    }).slice(0, 4000)}`,
+  );
 }
 
 function staple(target) {
@@ -211,10 +371,12 @@ async function main() {
   const entitlements = entitlementsForProfile(
     input("entitlements-profile", false) || "electron-desktop-v1",
   );
-  const sealed = loadCredentialInput(inputRoot, {
+  const sealed = loadMacosSigningInput(inputRoot, {
     repository: sourceRepository,
     sourceSha,
     sourceTreeSha,
+    runtimeSha,
+    platformId: input("platform-id", false),
     bundleId: expectedBundleId,
   });
   const artifactStem = safeArtifactStem(
@@ -350,6 +512,14 @@ async function main() {
       certificateSha1,
     );
 
+    const embeddedWheelCode = sealEmbeddedWheelCode(appPath, temporaryRoot, {
+      certificateSha1,
+      keychainPath,
+      expectedTeamId,
+    });
+    core.info(
+      `sealed ${embeddedWheelCode.signedFileCount} Mach-O files across ${embeddedWheelCode.wheelCount} embedded wheels`,
+    );
     await signAsync({
       app: appPath,
       identity: certificateSha1,
@@ -358,6 +528,7 @@ async function main() {
       hardenedRuntime: true,
       entitlements: entitlementsPath,
       entitlementsInherit: entitlementsPath,
+      optionsForFile: signingOptionsForFile(entitlementsPath),
       gatekeeperAssess: false,
       ignore: signingIgnore,
     });
@@ -417,6 +588,11 @@ async function main() {
       "UDZO",
       dmgPath,
     ]);
+    signAndVerifyContainer(dmgPath, {
+      certificateSha1,
+      keychainPath,
+      expectedTeamId,
+    });
     const dmgNotary = submitNotary(
       dmgPath,
       { keyPath: apiKeyPath, keyId: apiKeyId, issuer: apiIssuer },
@@ -473,8 +649,11 @@ async function main() {
       verification: {
         codesignStrict: true,
         hardenedRuntime: true,
+        embeddedWheelCount: embeddedWheelCode.wheelCount,
+        embeddedWheelMachOCount: embeddedWheelCode.signedFileCount,
         appStaple: true,
         appGatekeeper: true,
+        dmgCodesign: true,
         dmgStaple: true,
         dmgGatekeeper: true,
       },

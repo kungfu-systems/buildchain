@@ -608,6 +608,10 @@ export async function resolveReleaseCandidateArtifacts({
   }
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
   const platformManifestPaths = findDownloadedFiles(payloadDir, "manifest.json");
+  const githubArtifactAttestationPolicyPaths = findDownloadedFiles(
+    payloadDir,
+    "github-artifact-attestation-policy.json",
+  );
   const npmTarballPaths = publishArtifactKind === "npm"
     ? findDownloadedFilesByExtension(payloadDir, [".tgz"])
     : [];
@@ -639,6 +643,7 @@ export async function resolveReleaseCandidateArtifacts({
       buildSummary: outputPath(buildSummaryPath),
       payloads: outputPath(payloadDir),
       platformManifests: platformManifestPaths.map(outputPath),
+      githubArtifactAttestationPolicies: githubArtifactAttestationPolicyPaths.map(outputPath),
       npmTarballs: npmTarballPaths.map(outputPath),
       releaseAssets: releaseAssetPaths.map(outputPath),
       publishRequiredArtifacts: outputPath(requiredArtifactsPath),
@@ -647,6 +652,7 @@ export async function resolveReleaseCandidateArtifacts({
     candidateHash: passport.candidateHash || "",
     payloadCount: payloadArtifacts.length,
     platformManifestCount: platformManifestPaths.length,
+    githubArtifactAttestationPolicyCount: githubArtifactAttestationPolicyPaths.length,
     npmTarballCount: npmTarballPaths.length,
     publishRequiredArtifacts: generatedRequiredArtifacts,
   };
@@ -684,6 +690,12 @@ export async function resolveReleaseCandidateArtifactsCli() {
     "release-candidate-payload-dir": result.paths?.payloads || "",
     "release-candidate-platform-manifest-paths": (result.paths?.platformManifests || []).join(","),
     "release-candidate-platform-manifest-count": String(result.platformManifestCount || 0),
+    "release-candidate-github-artifact-attestation-policy-paths": (
+      result.paths?.githubArtifactAttestationPolicies || []
+    ).join(","),
+    "release-candidate-github-artifact-attestation-policy-count": String(
+      result.githubArtifactAttestationPolicyCount || 0,
+    ),
     "release-candidate-npm-tarball-paths": (result.paths?.npmTarballs || []).join(","),
     "release-candidate-npm-tarball-count": String(result.npmTarballCount || 0),
     "release-candidate-github-release-artifact-paths": (

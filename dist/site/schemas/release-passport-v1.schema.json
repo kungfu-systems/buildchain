@@ -187,6 +187,12 @@
         "type": "object"
       }
     },
+    "githubArtifactAttestations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
     "kfd-1": {
       "type": "object"
     },
@@ -194,6 +200,9 @@
       "type": "object"
     },
     "kfd-3": {
+      "type": "object"
+    },
+    "kfdSupport": {
       "type": "object"
     }
   },

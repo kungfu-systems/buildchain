@@ -6,6 +6,9 @@
     "release-passport-check-manifest.json",
     "schemas/release-passport-v1.schema.json",
     "schemas/kfd-agent-hub-adoption.schema.json",
+    "schemas/kfd-product-gate-input-v1.schema.json",
+    "schemas/kfd-support-projection-v1.schema.json",
+    "kfd-support.json",
     "artifact-evidence.json",
     "product-mechanism.json",
     "impact.json",
@@ -13,7 +16,11 @@
     "check-report.json",
     "llms.txt",
     "buildchain-release-bundle.json",
-    "buildchain-release-bundle.tar.gz"
+    "buildchain-release-bundle.tar.gz",
+    "github-artifact-attestation.policy.json",
+    "github-artifact-attestation.predicate.json",
+    "github-artifact-attestation.evidence.json",
+    "attestation.sigstore.json"
   ],
   "site": [
     "buildchain-site.json",
@@ -34,6 +41,8 @@
     "release-passport-check-manifest.json",
     "schemas/release-passport-v1.schema.json",
     "schemas/kfd-agent-hub-adoption.schema.json",
+    "schemas/kfd-product-gate-input-v1.schema.json",
+    "schemas/kfd-support-projection-v1.schema.json",
     "buildchain-contract.json",
     "kfd-claims.json",
     "product-mechanism.json",
