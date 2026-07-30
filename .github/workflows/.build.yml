@@ -251,6 +251,11 @@ on:
         default: 0
         type: number
         required: false
+      artifact-signing-request-upload-no-proxy:
+        description: "Optional NO_PROXY value scoped only to Buildchain-owned signing request uploads; signed-result downloads retain the runner route"
+        default: ""
+        type: string
+        required: false
       artifact-transfer-mode:
         description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
         default: "github-artifacts"
@@ -1426,9 +1431,18 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
 
+      - name: Resolve artifact signing request upload route
+        id: signing-request-upload-route
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/resolve-artifact-signing-upload-route.mjs
+        env:
+          BUILDCHAIN_SIGNING_REQUEST_UPLOAD_NO_PROXY: ${{ inputs.artifact-signing-request-upload-no-proxy || vars.BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY }}
+
       - name: Publish Buildchain-owned artifact signing request
         if: ${{ steps.signing-requests.outputs.request-count != '0' }}
         uses: actions/upload-artifact@v7.0.1
+        env:
+          NO_PROXY: ${{ steps.signing-request-upload-route.outputs.no-proxy }}
         with:
           name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: ${{ steps.signing-requests.outputs.request-root }}
@@ -1830,9 +1844,18 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
 
+      - name: Resolve artifact signing request upload route
+        id: signing-request-upload-route
+        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+        run: node .buildchain/runtime/scripts/resolve-artifact-signing-upload-route.mjs
+        env:
+          BUILDCHAIN_SIGNING_REQUEST_UPLOAD_NO_PROXY: ${{ inputs.artifact-signing-request-upload-no-proxy || vars.BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY }}
+
       - name: Publish Buildchain-owned artifact signing request
         if: ${{ steps.signing-requests.outputs.request-count != '0' }}
         uses: actions/upload-artifact@v7.0.1
+        env:
+          NO_PROXY: ${{ steps.signing-request-upload-route.outputs.no-proxy }}
         with:
           name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: ${{ steps.signing-requests.outputs.request-root }}

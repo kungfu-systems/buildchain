@@ -572,6 +572,24 @@ from entering the uploaded request artifact. An output root that contains the
 workspace, working directory, lifecycle manifest, or any declared subject is
 rejected before cleanup.
 
+Self-hosted runners whose network requires different routes for Artifact upload
+and download can scope an upload-only proxy bypass to the sealed signing request:
+
+```yaml
+with:
+  artifact-signing-request-upload-no-proxy: ".blob.core.windows.net"
+```
+
+The caller repository variable
+`BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY` provides the same value
+without changing a consumer workflow; an explicit workflow input takes
+precedence. When neither is set, Buildchain preserves the runner's existing
+`NO_PROXY` and `no_proxy` values. The resolved value applies only to the
+Buildchain-owned signing-request upload. Authority dispatch and immutable
+signed-result download keep the runner's original proxy route. This is a
+transport control only: it does not change request bytes, signing authority,
+artifact identity, or verification policy.
+
 `profile = "auto"` resolves signable Apple artifacts such as Mach-O files,
 `.dylib`, `.framework`, `.app`, `.xpc`, `.plugin`, `.pkg`, `.dmg`, and macOS
 archives containing native code to the native `apple-developer-id` provider.

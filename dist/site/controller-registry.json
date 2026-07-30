@@ -170,6 +170,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "artifact-signing-request-upload-no-proxy": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "artifact-transfer-mode": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -459,7 +463,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:e14f3ec327b4916067d1fefc83374828ebee0b6746f0d778182176130b14b779"
+      "digest": "sha256:5c6a5ee33b0bcc4f57b9281a896bf30f7f0c48235ff03c445d555d045e680236"
     },
     {
       "schemaVersion": 1,
@@ -552,6 +556,10 @@
           "source": "workflow-call-input"
         },
         "artifact-retention-days": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "artifact-signing-request-upload-no-proxy": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -837,7 +845,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:779d8cc5004c68b3e29bd01c2065526eafe320f77fa9555aa3d798dc7c12bd13"
+      "digest": "sha256:eac228a4746684d61d9664e8bce63e20d4b1e7bea0afd8718c8584cef941a95d"
     },
     {
       "schemaVersion": 1,
@@ -2184,5 +2192,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:636565d800181f6ab8f44c8e5ed44236c385b3d083052f4387ff190674eb890b"
+  "digest": "sha256:9ecead23e16e94cfc8da628b9ff153cdf2d0474845c6e92e759a068b57055bc4"
 }
