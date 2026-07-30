@@ -306,6 +306,20 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/name: Upload KFD Agent Hub evidence/g) || []).length, 2);
   assert.match(workflow, /buildchain\.mjs kfd hub test/);
   assert.match(workflow, /artifact-name \}\}-kfd-agent-hub-\$\{\{ matrix\.platform\.id \}\}/);
+  assert.match(
+    workflow,
+    /name: Resolve source-bound application identity[\s\S]*?loadCredentialInput[\s\S]*?sourceTreeSha: process\.env\.BUILDCHAIN_SOURCE_TREE_SHA/,
+    "the credential island must derive product identity from the exact source-bound sealed manifest",
+  );
+  assert.match(
+    workflow,
+    /expected-bundle-id: \$\{\{ steps\.credential-identity\.outputs\.bundle-id \}\}/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID/,
+    "consumer repositories must not configure product bundle identity in the signing environment",
+  );
   assert.match(workflow, /name: Validate consumer package manager contract/);
   assert.match(
     workflow,
