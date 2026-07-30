@@ -651,6 +651,9 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "compiler-cache-platforms-json",
+          "compiler-cache-provider",
+          "compiler-cache-required",
           "control-runner-json",
           "credential-island-caller-owned",
           "credential-island-environment",
@@ -696,7 +699,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 78,
+        "inputCount": 81,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1458,6 +1461,9 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "compiler-cache-platforms-json",
+          "compiler-cache-provider",
+          "compiler-cache-required",
           "control-runner-json",
           "credential-island-caller-owned",
           "credential-island-environment",
@@ -1503,7 +1509,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 81,
+        "inputCount": 84,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -4439,8 +4445,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "53a221b92266e2847b800e94ca94d3afa099eaf553313d012b40fa9b1fc3b70a",
-    "pageRegistryDigest": "969c21883e01ff29af9eeb22d1659db505740293dea78144fc708715ea41d900"
+    "workflowRegistryDigest": "2b47852fc43da46d58bff16fd62f892fa56b49f629a29649d10d017d40573a58",
+    "pageRegistryDigest": "f1efa194af473028839fd0ad6644eee1f375363e710f22da5905d6fcf51ba947"
   },
   "comparison": {
     "missingCliRegistry": [],
