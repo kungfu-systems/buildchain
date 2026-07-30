@@ -32,7 +32,7 @@ permissions:
   statuses: write
 
 concurrency:
-  group: buildchain-stable-candidate-qualification-${{ github.event.workflow_run.head_sha || inputs.candidate-sha }}
+  group: buildchain-stable-candidate-qualification-${{ github.event.workflow_run.id || inputs.candidate-sha }}
   cancel-in-progress: false
 
 jobs:
@@ -45,16 +45,35 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || inputs.candidate-sha }}
           persist-credentials: false
 
+      - name: Download exact self-dogfood evidence
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-v3-alpha-self-dogfood-evidence
+          path: .buildchain/qualification/self-dogfood
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+
+      - name: Resolve exact alpha candidate
+        id: candidate
+        run: node scripts/stable-candidate-qualification.mjs
+        env:
+          BUILDCHAIN_QUALIFICATION_RESOLVE_CANDIDATE: "true"
+          BUILDCHAIN_QUALIFICATION_EVENT_NAME: ${{ github.event_name }}
+          BUILDCHAIN_QUALIFICATION_INPUT_CANDIDATE_SHA: ${{ inputs.candidate-sha || '' }}
+          BUILDCHAIN_QUALIFICATION_SELF_DOGFOOD_EVIDENCE: .buildchain/qualification/self-dogfood/evidence.json
 
       - name: Produce exact-alpha qualification evidence
         run: node scripts/stable-candidate-qualification.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: ${{ github.token }}
-          BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: ${{ github.event.workflow_run.head_sha || inputs.candidate-sha }}
+          BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: ${{ steps.candidate.outputs.sha }}
           BUILDCHAIN_QUALIFICATION_CANARY_REF: ${{ inputs.canary-ref || '' }}
           BUILDCHAIN_QUALIFICATION_CANARY_SHA: ${{ inputs.canary-sha || '' }}
           BUILDCHAIN_QUALIFICATION_DRY_RUN: ${{ inputs.dry-run || false }}
