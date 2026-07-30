@@ -1,3 +1,21 @@
+---
+status: draft
+period: ongoing
+theme: buildchain-versioning
+doc_type: policy
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-30
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-30
+  invisible_context_boundary: Live release and provider state must be verified independently.
+---
+
 # Buildchain Versioning
 
 Buildchain uses semantic version lines to describe public contracts, not only
@@ -61,6 +79,7 @@ repository changes are patch".
 
 | Date       | Action       | Line    | Faces                                                                                                                                                                        | Class    | Rationale                                                                                                                                                                                                                                                                                                                              | PR    |
 | ---------- | ------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| 2026-07-30 | extend-minor | `v3.0`  | reusable-build-workflow, observed-evidence-bundle, release-passport-json-reader, web-surface-release-governance                                                               | additive | Add bounded artifact compression and remote-read controls plus transactional derived evidence projections while repairing release-PR runtime handoff so production remains protected-main-only.                                                                                                                                       |       |
 | 2026-07-29 | extend-minor | `v3.0`  | artifact-signing-config, apple-developer-id-authority, artifact-signing-evidence                                                                                             | additive | Extend the consumer-neutral signing declaration to macOS compound archives, including nested wheel Mach-O signing, PEP 427 RECORD repair, safe archive reconstruction, and whole-product notarization under the same protected authority.                                                                                              |       |
 | 2026-07-28 | extend-minor | `v3.0`  | auditable-demo-workflow, auditable-demo-media-profile, auditable-demo-media-receipt                                                                                          | additive | Add opt-in archive, web-delivery, and site-hero profiles; independently bind codec, container, audio, layout, byte-budget, role, and fast-start facts into a v2 media receipt while preserving the existing archive default.                                                                                                           |       |
 | 2026-07-26 | extend-minor | `v3.0`  | auditable-demo-workflow, auditable-demo-evidence                                                                                                                             | additive | Forward-port the consumer-neutral reusable Gate that binds exact same-run GitHub Artifacts to checked-in adapters and immutable renderer evidence, with optional media rendering only from the exact passing Gate bundle.                                                                                                              | #1862 |

@@ -556,6 +556,20 @@ test("release passport JSON reader follows GitHub-style redirects", async () => 
   });
 });
 
+test("release passport JSON reader bounds an unresponsive remote", async () => {
+  const server = http.createServer(() => {});
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  try {
+    await assert.rejects(
+      readJsonFromLocation(`http://127.0.0.1:${port}/never`, 0, { timeoutMs: 25 }),
+      /timed out after 25ms/,
+    );
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 function createUnifiedPassportFixture({
   missingPlatformDigest = false,
   missingPublishArtifact = false,

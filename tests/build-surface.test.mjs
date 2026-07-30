@@ -208,6 +208,10 @@ test("reusable build workflow exposes the required surface contract", () => {
     path.join(root, ".github/workflows/.build.yml"),
     "utf8",
   );
+  const router = fs.readFileSync(
+    path.join(root, ".github/workflows/build.yml"),
+    "utf8",
+  );
   const summarizeJob = workflow.slice(
     workflow.indexOf("  summarize:"),
     workflow.indexOf("\n  controller-receipt:", workflow.indexOf("  summarize:")),
@@ -610,6 +614,13 @@ test("reusable build workflow exposes the required surface contract", () => {
     /BUILDCHAIN_SOURCE_SHA: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
   );
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+  assert.match(workflow, /artifact-compression-level:/);
+  assert.match(workflow, /default: 0/);
+  assert.equal(
+    (workflow.match(/name: Upload deterministic artifact[\s\S]*?compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/g) || []).length,
+    3,
+  );
+  assert.match(router, /artifact-compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/);
 });
 
 test("publication artifact workflow exposes paper artifact contract", () => {
@@ -2394,6 +2405,24 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     }),
     { ok: true, decision: "same-repository-pr-head" },
   );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      eventAction: "closed",
+      workflowShellSha: "a".repeat(40),
+    }),
+    { ok: true, decision: "closed-release-pr-shell-runtime" },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      eventAction: "closed",
+      workflowShellSha: "b".repeat(40),
+    }).ok,
+    false,
+  );
   assert.equal(
     validateRuntimeOverrideTrust({
       requestedRef: "a".repeat(40),
@@ -2439,6 +2468,18 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
     assert.match(workflow, /\? "official-channel"/);
     assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
   }
+});
+
+test("web-surface release PR close hands production to the protected main push", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.web-surface.yml"), "utf8");
+  assert.match(workflow, /trustedClosedReleasePrRuntime/);
+  assert.match(workflow, /requested\.toLowerCase\(\) === \(await resolveRef\(shellRef\)\)\.toLowerCase\(\)/);
+  assert.match(workflow, /closed-release-pr-shell-runtime/);
+  assert.match(workflow, /EVENT_ACTION" = "closed"[\s\S]*?web_surface_channel=""/);
+  assert.match(
+    fs.readFileSync(path.join(root, "scripts/web-surface-production-decision.mjs"), "utf8"),
+    /release-pr-verified-awaiting-main-push/,
+  );
 });
 
 test("runtime-aware workflows pin same-repository pull request merge refs", () => {

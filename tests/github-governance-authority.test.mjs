@@ -628,6 +628,19 @@ test("ruleset authority binds Kungfu Alpha to final build controller evidence", 
   assert.equal(policy.strictRequiredChecks, true);
 });
 
+test("ruleset authority binds Kungfu dev to its merge queue admission checks", () => {
+  const policy = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/kungfu",
+    targetRef: "dev/v4/v4.0",
+  });
+  assert.deepEqual(policy.requiredCheckBindings, [
+    { context: "Candidate source acceptance / check", appId: 15368 },
+    { context: "Queue admission lease", appId: null },
+    { context: "affected-native / linux", appId: 15368 },
+  ]);
+  assert.equal(policy.strictRequiredChecks, true);
+});
+
 test("ruleset authority admits Kungfu stable with exact independent checks", () => {
   assert.deepEqual(
     resolveGithubGovernanceTargetPolicy({

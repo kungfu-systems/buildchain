@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-30
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-24
+  generated_at: 2026-07-30
   limits: Live GitHub state and account recovery remain provider-controlled and must be re-audited.
 ---
 
@@ -74,6 +74,12 @@ Repository and organization rulesets are additive to classic branch
 protection. Inspecting only one layer is insufficient because an applicable
 bypass or weaker update path in another layer can invalidate the effective
 policy.
+
+When an admitted default development branch uses GitHub merge queue, its
+candidate-source, queue-lease, and final build checks are one exact authority
+set. The queue lease may remain intentionally unbound while workflow-produced
+checks retain their GitHub Actions App binding; strictness must match the live
+queue ruleset.
 
 ## Repository and plan admission
 
