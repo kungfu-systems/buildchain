@@ -91,8 +91,12 @@ async function ensureWorkflowEvidence({ client, repository, workflowFile, workfl
   let run = await client.findWorkflowRun({ repository, workflowFile, workflowName, headSha, runName, sourceSha });
   if (successful(run)) return { state: "existing", run };
 
+  let notBefore = "";
+  let excludeRunId = "";
   if (!active(run)) {
     if (options.dryRun) return { state: "planned", run };
+    notBefore = text(run?.created_at);
+    excludeRunId = text(run?.id);
     await client.dispatchWorkflow({ repository, workflowFile, ref, inputs: runName ? { buildchain_ref: headSha } : {} });
   }
 
@@ -104,6 +108,8 @@ async function ensureWorkflowEvidence({ client, repository, workflowFile, workfl
     headSha,
     runName,
     sourceSha,
+    notBefore,
+    excludeRunId,
     attempts: options.pollAttempts,
     intervalMs: options.pollIntervalMs,
   });
@@ -220,6 +226,8 @@ export function createGitHubQualificationClient({
           || (query.runName && (run.display_title === query.runName || run.name === query.runName))
         )
         && (!query.sourceSha || run.head_sha === query.sourceSha)
+        && (!query.notBefore || String(run.created_at || "") >= query.notBefore)
+        && (!query.excludeRunId || String(run.id || "") !== query.excludeRunId)
       ))
       .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0];
   }
