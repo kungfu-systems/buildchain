@@ -293,10 +293,17 @@ Allowed override refs are deliberately narrow:
 | `<40-character SHA>`                    | Exact immutable Buildchain runtime commit              |
 
 Override requests fail closed unless the event is `workflow_dispatch` and the
-actor has write, maintain, or admin permission on the caller repository.
+actor has write, maintain, or admin permission on the caller repository. One
+non-override exact-pin case is also admitted: when the reusable workflow itself
+is invoked from an exact Buildchain SHA and `buildchain-ref` names that identical
+SHA, the run records `pinned-self`. The input cannot select code other than the
+already-running workflow shell, so protected push and pull-request publication
+jobs can retain one immutable runtime root. Different SHA and train requests
+still fail closed outside trusted manual dispatch.
+
 Pull requests, including same-repository pull requests and fork-originated pull
-requests, cannot use `buildchain-ref` override. This keeps automated PR builds on
-the stable runtime surface.
+requests, cannot select an independent `buildchain-ref` override. This keeps
+automated PR builds on the stable or exact pinned-self runtime surface.
 
 Every run resolves the runtime ref to an immutable SHA before checkout. The job
 summary and aggregate build summary record the workflow shell ref, requested

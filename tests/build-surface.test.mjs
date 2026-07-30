@@ -2514,6 +2514,22 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     }),
     { ok: true, decision: "official-channel" },
   );
+  assert.deepEqual(
+    resolveRuntimeSelection({
+      requestedRef: "a".repeat(40),
+      workflowRef: `kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@${"a".repeat(40)}`,
+    }),
+    {
+      requestedRef: "a".repeat(40),
+      runtimeRef: "a".repeat(40),
+      runtimeFullRef: "a".repeat(40),
+      runtimeClass: "exact-sha",
+      runtimeOverride: false,
+      workflowShellRef: "a".repeat(40),
+      rollbackRef: "a".repeat(40),
+      trustDecision: "pinned-self",
+    },
+  );
   assert.equal(
     normalizeRequestedRuntimeRef("refs/heads/train/v2/v2.3/runtime-loader").ref,
     "train/v2/v2.3/runtime-loader",
@@ -2540,6 +2556,24 @@ test("runtime selection accepts official channels and gates train or SHA overrid
       decision: "rejected-untrusted-event",
       reason: "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
     },
+  );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "push",
+      sameRepositoryWorkflow: true,
+      workflowShellSha: "a".repeat(40),
+    }),
+    { ok: true, decision: "pinned-self" },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "push",
+      sameRepositoryWorkflow: true,
+      workflowShellSha: "b".repeat(40),
+    }).ok,
+    false,
   );
   assert.deepEqual(
     validateRuntimeOverrideTrust({
@@ -2609,7 +2643,17 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
     assert.match(workflow, /process\.env\.BUILDCHAIN_WORKFLOW_REF \|\| process\.env\.GITHUB_WORKFLOW_REF/);
     assert.match(workflow, /const officialChannelRef = \/\^v\\d\+/);
     assert.match(workflow, /const officialChannel = officialChannelRef\.test\(requested\)/);
-    assert.match(workflow, /requested !== "" && !officialChannel/);
+    if (
+      workflowFile === ".github/workflows/paper-release.yml" ||
+      workflowFile === ".github/workflows/publication-artifact.yml"
+    ) {
+      assert.match(workflow, /const pinnedSelfRuntime =/);
+      assert.match(workflow, /requested\.toLowerCase\(\) === shellRef\.toLowerCase\(\)/);
+      assert.match(workflow, /requested !== "" && !officialChannel && !pinnedSelfRuntime/);
+      assert.match(workflow, /\? "pinned-self"/);
+    } else {
+      assert.match(workflow, /requested !== "" && !officialChannel/);
+    }
     assert.match(workflow, /\? "official-channel"/);
     assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
   }

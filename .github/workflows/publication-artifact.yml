@@ -216,9 +216,16 @@ jobs:
             let runtimeFullRef = runtimeRef;
             let runtimeClass = normalizeClass(runtimeRef);
             const officialChannel = officialChannelRef.test(requested);
-            let runtimeOverride = requested !== "" && !officialChannel;
+            const pinnedSelfRuntime =
+              sameRepositoryWorkflow &&
+              exactSha.test(requested) &&
+              exactSha.test(shellRef) &&
+              requested.toLowerCase() === shellRef.toLowerCase();
+            let runtimeOverride = requested !== "" && !officialChannel && !pinnedSelfRuntime;
             let trustDecision = officialChannel
               ? "official-channel"
+              : pinnedSelfRuntime
+                ? "pinned-self"
               : runtimeOverride
                 ? "override-requested"
                 : "stable-default";
