@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:fa99d5c4b223fce8f4cf961c413df7f8d8a311ffe6a800fb845d27c5f9dd689a",
+      "digest": "sha256:1ec95d91d3140a4f32fe9bf32a72cb55a18342769bd64a07869e72cc46906e67",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:fa99d5c4b223fce8f4cf961c413df7f8d8a311ffe6a800fb845d27c5f9dd689a",
+      "digest": "sha256:1ec95d91d3140a4f32fe9bf32a72cb55a18342769bd64a07869e72cc46906e67",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -333,7 +333,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:680a821f732f3da344c0ecc7a6c8f4178ac268694c43890f677e4c05ad5c3a7e",
+      "digest": "sha256:da96db43564bff353b4e6a87c0b9e8a566f597a8b0a15a05e3e9efc0fbcc0cc8",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -400,6 +400,32 @@
       "target": "./packages/core/publication-reproducibility.js",
       "digest": "sha256:68c2ded9d23fc115c9dbc2a234af44123cd53c9f3e83e6925322661eea4afa74",
       "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-sealed-bundle",
+      "export": "./publication-sealed-bundle",
+      "target": "./packages/core/publication-sealed-bundle.js",
+      "digest": "",
+      "summary": "Build-once publication bundle manifests and exact-byte resume verification APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/paper",
+      "export": "./paper",
+      "target": "./packages/core/paper.js",
+      "digest": "sha256:884b5b556ed269729979cc90610d43565f6641ee5ffa43638c9c4e3c10621d36",
+      "summary": "Unified paper scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
@@ -581,7 +607,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:ce664b804be49e4eaa7ea9b8e4f3f3d032b8b0c4095e9c496fed2ea0c92fe714"
+      "digest": "sha256:f007999ed76772a29217226a0e2ff544d4479234e20c0f430b5f3d982e8ca986"
     },
     {
       "id": "build-facts",

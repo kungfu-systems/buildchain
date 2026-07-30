@@ -620,6 +620,34 @@ export {
 } from "./publication-reproducibility.js";
 
 export {
+  PUBLICATION_SEALED_BUNDLE_CONTRACT,
+  createPublicationSealedBundle,
+  verifyPublicationSealedBundle,
+} from "./publication-sealed-bundle.js";
+
+export {
+  PAPER_ALPHA_PLAN_CONTRACT,
+  PAPER_BUILD_PLAN_CONTRACT,
+  PAPER_NPM_BOOTSTRAP_CONTRACT,
+  PAPER_PATHS,
+  PAPER_PREFLIGHT_CONTRACT,
+  PAPER_RESUME_PLAN_CONTRACT,
+  PAPER_SCAFFOLD_CONTRACT,
+  PAPER_STATE_ORDER,
+  PAPER_STATUS_CONTRACT,
+  PAPER_VISIBILITY_CONTRACT,
+  collectPaperPreflight,
+  collectPaperStatus,
+  createPaperAlphaPlan,
+  createPaperBuildPlan,
+  createPaperResumePlan,
+  executePaperNpmBootstrap,
+  planPaperScaffold,
+  resolvePaperRepository,
+  writePaperScaffold,
+} from "./paper.js";
+
+export {
   SURFACE_TIMESTAMP_POLICY_CONTRACT,
   applySurfaceTimestampPolicy,
   createSurfaceTimestampPolicy,

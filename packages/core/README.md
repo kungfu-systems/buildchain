@@ -26,6 +26,10 @@ Current shared surfaces:
   passports through `@kungfu-tech/buildchain/publication-artifact`.
 - two-clean-build byte reproducibility receipts through
   `@kungfu-tech/buildchain/publication-reproducibility`.
+- build-once publication bundle manifests and exact-byte verification through
+  `@kungfu-tech/buildchain/publication-sealed-bundle`.
+- governed paper scaffold, preflight, status, npm bootstrap, build, Alpha, and
+  resume plans through `@kungfu-tech/buildchain/paper`.
 
 ## Toolkit Imports
 
@@ -113,6 +117,33 @@ const receipt = verifyPublicationReproducibility({
 });
 if (!receipt.qualifying) throw new Error("publication is not reproducible");
 ```
+
+Bind the promoted bytes into the durable build-once publication envelope:
+
+```js
+import {
+  createPublicationSealedBundle,
+  verifyPublicationSealedBundle,
+} from "@kungfu-tech/buildchain/publication-sealed-bundle";
+```
+
+The sealed manifest names the exact npm tarball and release assets. Promotion
+persists those binary files before registry publication and verifies them again
+when a fresh runner resumes.
+
+Paper automation can use the same typed contracts as the CLI:
+
+```js
+import {
+  collectPaperPreflight,
+  collectPaperStatus,
+  planPaperScaffold,
+} from "@kungfu-tech/buildchain/paper";
+```
+
+Planning and observation are side-effect free. `writePaperScaffold()` performs
+the local no-overwrite scaffold write, while external mutations remain explicit
+CLI operations guarded by `--execute`.
 
 Web-surface validation stays in core because both local scripts and GitHub
 Actions need the same fail-closed interpretation of project, channel, deploy,

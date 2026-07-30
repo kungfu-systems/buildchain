@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 98,
+    "cliCommandCount": 106,
     "workflowCount": 57,
     "actionCount": 6,
     "sitePageCount": 60,
-    "docCommandRefCount": 293,
+    "docCommandRefCount": 309,
     "failureCount": 0
   },
   "enumerated": {
@@ -366,6 +366,46 @@
         "id": "npm-dry-run",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]"
+      },
+      {
+        "id": "paper",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper"
+      },
+      {
+        "id": "paper-alpha",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper bootstrap npm [--cwd <dir>] [--execute]"
+      },
+      {
+        "id": "paper-build",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper build [--cwd <dir>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-preflight",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper preflight [--cwd <dir>] [--offline] [--json]"
+      },
+      {
+        "id": "paper-resume",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-scaffold",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]"
+      },
+      {
+        "id": "paper-status",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper status [--cwd <dir>] [--json]"
       },
       {
         "id": "portable-cache",
@@ -3905,6 +3945,86 @@
         "command": "buildchain npm dry-run"
       },
       {
+        "id": "paper-alpha",
+        "path": "docs/cli.md",
+        "command": "buildchain paper alpha --json"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/cli.md",
+        "command": "buildchain paper bootstrap npm"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper bootstrap npm"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper bootstrap npm"
+      },
+      {
+        "id": "paper-build",
+        "path": "docs/cli.md",
+        "command": "buildchain paper build --json"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "docs/cli.md",
+        "command": "buildchain paper preflight --offline"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper preflight --offline"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "README.md",
+        "command": "buildchain paper preflight --offline"
+      },
+      {
+        "id": "paper-resume",
+        "path": "docs/cli.md",
+        "command": "buildchain paper resume --json"
+      },
+      {
+        "id": "paper-scaffold",
+        "path": "docs/cli.md",
+        "command": "buildchain paper scaffold --package"
+      },
+      {
+        "id": "paper-scaffold",
+        "path": "README.md",
+        "command": "buildchain paper scaffold"
+      },
+      {
+        "id": "paper-status",
+        "path": "docs/cli.md",
+        "command": "buildchain paper status --json"
+      },
+      {
+        "id": "paper-status",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper status --json"
+      },
+      {
+        "id": "paper-status",
+        "path": "README.md",
+        "command": "buildchain paper status"
+      },
+      {
+        "id": "paper",
+        "path": "docs/cli.md",
+        "command": "buildchain paper"
+      },
+      {
+        "id": "paper",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper"
+      },
+      {
         "id": "portable-cache",
         "path": "docs/cli.md",
         "command": "buildchain portable-cache plan"
@@ -4295,9 +4415,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "44cb3db4bf2d16f4d16ddb4f157d0adb76e0b551943826f2002c7a3f4f847b22",
+    "cliRegistryDigest": "cb8c7cd46b82c73ce3864891c376aa7543dbea31a7f039ff1de95d3940b79645",
     "workflowRegistryDigest": "e2d14e4749508f93488396ef4fcc6611694f644bc05ec9484724c60545bd074d",
-    "pageRegistryDigest": "41a598d2ce1f37b6dfb43a5178bb38ec62258744bcdc7451c880a0d969e00b6e"
+    "pageRegistryDigest": "82c9fe4631d9d7d053f047f985b7cd3536228bf527e2a458be0d82b519a52df9"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -191,6 +191,22 @@ npx @kungfu-tech/buildchain validate --require-version-state
 npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
 ```
 
+Bootstrap and inspect a governed paper repository through one interface:
+
+```bash
+npx @kungfu-tech/buildchain paper scaffold \
+  --package @kungfu-tech/paper-example \
+  --repository kungfu-systems/paper-example
+npx @kungfu-tech/buildchain paper preflight --offline
+npx @kungfu-tech/buildchain paper status
+```
+
+The paper surface is dry-run first. Add `--write` only to create missing
+scaffold files; external mutations such as npm bootstrap, Alpha PR creation,
+and release resumption require `--execute`. See
+[`docs/publication-artifacts.md`](docs/publication-artifacts.md) for the
+evidence-state model and operator flow.
+
 Buildchain supports package and non-package projects through
 `.buildchain/buildchain.toml`. Legacy root `buildchain.toml` files remain
 readable, but new consumers should keep Buildchain-owned files under
