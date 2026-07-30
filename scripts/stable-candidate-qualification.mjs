@@ -41,6 +41,29 @@ function optionalSha(value, label) {
   return normalized;
 }
 
+export function resolveStableCandidateQualificationCandidate({ eventName, inputCandidateSha = "", selfDogfoodEvidence } = {}) {
+  if (text(eventName) === "workflow_dispatch") {
+    return optionalSha(inputCandidateSha, "candidate SHA");
+  }
+  if (text(eventName) !== "workflow_run") {
+    throw new Error(`qualification candidate resolver does not admit event ${eventName || "<empty>"}`);
+  }
+  const evidence = selfDogfoodEvidence;
+  if (
+    evidence?.contract !== "kungfu-buildchain-alpha-self-dogfood"
+    || evidence?.status !== "passed"
+    || evidence?.observed?.alpha?.ref !== "v3-alpha"
+  ) {
+    throw new Error("self-dogfood evidence is not a passing v3-alpha observation");
+  }
+  const observedSha = optionalSha(evidence.observed.alpha.sha, "observed v3-alpha SHA");
+  const expectedSha = optionalSha(evidence.observed.alpha.expectedSha, "expected v3-alpha SHA");
+  if (!observedSha || observedSha !== expectedSha) {
+    throw new Error("self-dogfood evidence does not bind observed and expected v3-alpha SHAs");
+  }
+  return observedSha;
+}
+
 function optionalRef(value, label) {
   const normalized = text(value);
   if (
@@ -275,6 +298,25 @@ export function createGitHubQualificationClient({
 }
 
 async function main() {
+  if (bool(process.env.BUILDCHAIN_QUALIFICATION_RESOLVE_CANDIDATE, false)) {
+    let selfDogfoodEvidence;
+    if (text(process.env.BUILDCHAIN_QUALIFICATION_EVENT_NAME) === "workflow_run") {
+      const fs = await import("node:fs");
+      const evidencePath = text(process.env.BUILDCHAIN_QUALIFICATION_SELF_DOGFOOD_EVIDENCE);
+      selfDogfoodEvidence = JSON.parse(fs.readFileSync(evidencePath, "utf8"));
+    }
+    const sha = resolveStableCandidateQualificationCandidate({
+      eventName: process.env.BUILDCHAIN_QUALIFICATION_EVENT_NAME,
+      inputCandidateSha: process.env.BUILDCHAIN_QUALIFICATION_INPUT_CANDIDATE_SHA,
+      selfDogfoodEvidence,
+    });
+    process.stdout.write(`${sha}\n`);
+    if (process.env.GITHUB_OUTPUT) {
+      const fs = await import("node:fs");
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `sha=${sha}\n`);
+    }
+    return;
+  }
   const result = await runStableCandidateQualification();
   const output = `${JSON.stringify(result, null, 2)}\n`;
   process.stdout.write(output);
