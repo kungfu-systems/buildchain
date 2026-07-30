@@ -447,7 +447,7 @@
         "temporary keychain and API key material are cleaned in both main and post phases"
       ],
       "breakingDigest": "sha256:61866985864205770c70cbe14c3c60f479512a32c0b007b5fd6d8d65132ff8be",
-      "auditDigest": "sha256:efbc4a3641ab7e7137da5a197f5a9414c40a070bf75c6bf9fcb98ddcbf621e73"
+      "auditDigest": "sha256:24b0b6302e36ab0df556c5b473e616a3041070ef24f017ad8a41899a1136004d"
     },
     {
       "contractVersion": 1,
@@ -3448,5 +3448,5 @@
     }
   ],
   "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102",
-  "contractDigest": "sha256:772b0293e22b2fcf78bdf5fbbe6cabf21a8f473d22370f759e505c349c2da785"
+  "contractDigest": "sha256:9fd13609b31c78d57112fd4724649d5f7040abfc4c127b9b74d8beba55f88d19"
 }
