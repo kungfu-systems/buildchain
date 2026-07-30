@@ -112,8 +112,17 @@ on:
         type: boolean
         required: false
     secrets:
+      BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID:
+        description: "Preferred GitHub App client ID for generated repository writes"
+        required: false
+      BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY:
+        description: "Preferred GitHub App private key for generated repository writes"
+        required: false
+      BUILDCHAIN_GENERATED_WRITE_TOKEN:
+        description: "Equivalent narrow token fallback for generated repository writes"
+        required: false
       BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Optional bypass-capable token used only for generated protected ref updates"
+        description: "Deprecated compatibility alias for a narrow generated-write token"
         required: false
     outputs:
       package-name:
@@ -191,7 +200,7 @@ jobs:
     permissions:
       actions: read
       checks: write
-      contents: write
+      contents: read
       id-token: write
       issues: write
       pull-requests: write
@@ -221,6 +230,45 @@ jobs:
           ref: ${{ needs.publication-candidate.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Resolve generated-write authority config
+        id: generated-write-config
+        env:
+          APP_CLIENT_ID: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${APP_CLIENT_ID}" ] && [ -n "${APP_PRIVATE_KEY}" ]; then
+            echo "app-configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "app-configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create generated-write GitHub App token
+        id: generated-write-app-token
+        if: ${{ steps.generated-write-config.outputs.app-configured == 'true' }}
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          client-id: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-checks: write
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Require narrow generated-write authority
+        env:
+          APP_TOKEN: ${{ steps.generated-write-app-token.outputs.token }}
+          NARROW_TOKEN: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_TOKEN}" ] && [ -z "${NARROW_TOKEN}" ]; then
+            echo "::error::paper release requires a GitHub App token or equivalent narrow generated-write token; github.token fallback is forbidden"
+            exit 1
+          fi
 
       - name: Download admitted publication candidate
         uses: actions/download-artifact@v7.0.0
@@ -322,12 +370,8 @@ jobs:
       - name: Ensure publish-gate ref locks admitted commit
         id: publish-gate
         uses: actions/github-script@v8
-        env:
-          CHANNEL: ${{ steps.target.outputs.channel }}
-          TARGET_REF: ${{ steps.target.outputs.ref }}
-          TARGET_SHA: ${{ steps.target.outputs.sha }}
-          VERSION: ${{ steps.candidate.outputs.package-version }}
         with:
+          github-token: ${{ steps.generated-write-app-token.outputs.token || secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           script: |
             const gateRef = `publish-gate/${process.env.CHANNEL}/${process.env.TARGET_REF.replace(/^(alpha|release)\//, "")}/${process.env.VERSION}`;
             const ref = `heads/${gateRef}`;
@@ -343,12 +387,17 @@ jobs:
             core.setOutput("ref", gateRef);
             core.setOutput("sha", process.env.TARGET_SHA);
             core.setOutput("locked", "true");
+        env:
+          CHANNEL: ${{ steps.target.outputs.channel }}
+          TARGET_REF: ${{ steps.target.outputs.ref }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          VERSION: ${{ steps.candidate.outputs.package-version }}
 
       - name: Publish admitted npm package and GitHub Release assets
         id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ github.token }}
+          token: ${{ steps.generated-write-app-token.outputs.token || secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           sha: ${{ steps.target.outputs.sha }}
           target-ref: ${{ steps.target.outputs.ref }}
           tags: ${{ steps.candidate.outputs.exact-tag }}
@@ -356,8 +405,8 @@ jobs:
           require-governance: "true"
           require-version-state: "false"
           required-status-check: ${{ inputs.required-status-check }}
-          generated-status-check-token: ${{ github.token }}
-          generated-ref-update-token: ${{ github.token }}
+          generated-status-check-token: ${{ steps.generated-write-app-token.outputs.token || secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          generated-ref-update-token: ${{ steps.generated-write-app-token.outputs.token || secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}

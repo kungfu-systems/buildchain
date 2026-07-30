@@ -119,17 +119,28 @@ buildchain paper status --json
 buildchain paper resume --json
 ```
 
-The safety boundary is explicit:
+The safety and authority boundary is explicit:
 
-- `scaffold` plans a 13-file, no-overwrite repository shape by default; add
+- `scaffold` plans a 14-file, no-overwrite repository shape by default; add
   `--write` to create only missing files.
+- The scaffolded `.buildchain/paper/provisioning-authority.json` binds both
+  caller workflow byte digests, their exact reusable-workflow SHA, the runtime
+  SHA, contract-lock bytes, npm registry and trusted-publisher coordinates, and
+  the repository Actions/generated-write policy under one digest. A floating
+  Buildchain ref cannot change release policy after that authority is accepted.
 - `preflight` separates local readiness from readiness for external mutation.
   `--offline` skips live GitHub and npm observations without treating them as
-  local failures.
+  local failures. Live readiness requires default workflow permissions `read`,
+  Actions pull-request approval disabled, and GitHub App or equivalent narrow
+  generated-write credential metadata.
 - `bootstrap npm` always performs npm pack and publish dry-runs first. A real
   public bootstrap requires both `--execute` and
   `--confirm-public-package <exact-name>`, uses only the official npm registry,
-  and returns trusted-publisher setup URLs without exposing credentials.
+  fixes the bootstrap version at `0.0.0-bootstrap.0`, and returns only npm URLs
+  observed from command output. Success requires public package readback and
+  the exact repository/workflow/environment trusted-publisher binding. For
+  GitHub, the npm coordinate is the workflow filename (`paper-release.yml`),
+  not its `.github/workflows/` repository path.
 - `build` plans the two-clean-build reproducibility proof. Add `--execute` to
   create and verify the sealed publication bundle.
 - `alpha` plans or opens the protected Alpha pull request; it never merges,

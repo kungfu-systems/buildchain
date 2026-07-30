@@ -1882,9 +1882,12 @@
         ],
         "inputCount": 26,
         "secrets": [
+          "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
+          "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
+          "BUILDCHAIN_GENERATED_WRITE_TOKEN",
           "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 1,
+        "secretCount": 4,
         "outputs": [
           "github-release-url",
           "package-name",
@@ -4416,8 +4419,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "cb8c7cd46b82c73ce3864891c376aa7543dbea31a7f039ff1de95d3940b79645",
-    "workflowRegistryDigest": "e2d14e4749508f93488396ef4fcc6611694f644bc05ec9484724c60545bd074d",
-    "pageRegistryDigest": "82c9fe4631d9d7d053f047f985b7cd3536228bf527e2a458be0d82b519a52df9"
+    "workflowRegistryDigest": "dda00adeecda9be79d7c6bb125c76494665a893c8c5f5f454b69e92ccabe6441",
+    "pageRegistryDigest": "1a87cf41ac6ae5ba74baa50fb8501e6aec5b263534c367f9ad42c212189125c8"
   },
   "comparison": {
     "missingCliRegistry": [],

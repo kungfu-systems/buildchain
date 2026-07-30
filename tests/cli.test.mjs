@@ -1897,7 +1897,7 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     ),
   );
   assert.equal(scaffold.ok, true);
-  assert.equal(scaffold.written.length, 13);
+  assert.equal(scaffold.written.length, 14);
   execFileSync("git", ["init", "-q"], { cwd: paperCwd });
   const preflight = JSON.parse(
     execFileSync(
