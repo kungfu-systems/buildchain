@@ -688,7 +688,7 @@ jobs:
       dry-run: true
 ```
 
-All three wrappers default to the `v2` floating Buildchain runtime. When
+All three wrappers default to the `v3` floating Buildchain runtime. When
 `target-branch` is omitted, the caller's current/default branch selects the
 active semver dev line, so consumers do not pin patrol to a stale minor branch.
 The separate workflow names keep consumer schedules readable and stable while

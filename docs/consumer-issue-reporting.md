@@ -34,7 +34,7 @@ The recommended pattern is:
     summary: "Buildchain reusable build failed before artifact finalization"
     failure-code: reusable-build-failed
     diagnostics-path: .buildchain/artifacts/diagnostics.json
-    buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
+    buildchain-ref: ${{ inputs.buildchain-ref || 'v3' }}
 ```
 
 ## Behavior
