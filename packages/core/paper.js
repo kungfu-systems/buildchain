@@ -243,6 +243,28 @@ function runtimeAcceptedAt(buildchainRoot, sha) {
     : parsed.toISOString();
 }
 
+function runtimeContractWorld(buildchainRoot) {
+  const embedded = String(process.env.BUILDCHAIN_EMBEDDED_CONTRACT_WORLD || "");
+  if (embedded) {
+    const parsed = safeParseJson(embedded);
+    if (parsed?.contract) return parsed;
+    throw new Error("embedded Buildchain contract world is invalid");
+  }
+  return createBuildchainContractWorld({ root: buildchainRoot });
+}
+
+function runtimeLicenseText(buildchainRoot) {
+  const licensePath = path.join(buildchainRoot, "LICENSE");
+  if (fs.existsSync(licensePath) && fs.statSync(licensePath).isFile()) {
+    return fs.readFileSync(licensePath, "utf8");
+  }
+  const embedded = String(process.env.BUILDCHAIN_EMBEDDED_LICENSE_TEXT || "");
+  if (embedded) return embedded;
+  throw new Error(
+    "Buildchain package is missing LICENSE; cannot create a governed paper scaffold",
+  );
+}
+
 function tomlString(value) {
   return JSON.stringify(String(value || ""));
 }
@@ -509,7 +531,7 @@ function scaffoldFiles({
   version,
   siteBaseUrl,
 }) {
-  const contractWorld = createBuildchainContractWorld({ root: buildchainRoot });
+  const contractWorld = runtimeContractWorld(buildchainRoot);
   const existingLock = readJson(
     path.resolve(cwd, PAPER_PATHS.contractLock),
   ).value;
@@ -522,12 +544,7 @@ function scaffoldFiles({
     contractWorld,
     acceptedAt,
   });
-  const licensePath = path.join(buildchainRoot, "LICENSE");
-  if (!fs.existsSync(licensePath)) {
-    throw new Error(
-      "Buildchain package is missing LICENSE; cannot create a governed paper scaffold",
-    );
-  }
+  const licenseText = runtimeLicenseText(buildchainRoot);
   return new Map([
     [
       PAPER_PATHS.config,
@@ -549,7 +566,7 @@ function scaffoldFiles({
     ["docs/MAP.md", scaffoldMap()],
     ["paper/main.tex", scaffoldMainTex(title)],
     ["paper/references.bib", "% Add reviewed bibliography entries here.\n"],
-    ["LICENSE", fs.readFileSync(licensePath, "utf8")],
+    ["LICENSE", licenseText],
     [
       ".gitignore",
       "_build/\n.buildchain/publication/\n.buildchain/release-state/\n.buildchain/release-evidence/\n",
@@ -1236,7 +1253,7 @@ function runtimeFacts({
   buildchainSha,
 }) {
   const identity = buildchainPackageIdentity(buildchainRoot, buildchainVersion);
-  const contractWorld = createBuildchainContractWorld({ root: buildchainRoot });
+  const contractWorld = runtimeContractWorld(buildchainRoot);
   return {
     version: identity.version,
     ref: buildchainRef,
@@ -1485,7 +1502,7 @@ export function collectPaperPreflight({
   try {
     const lock = readBuildchainContractLock(lockPath);
     if (lock) {
-      const current = createBuildchainContractWorld({ root: buildchainRoot });
+      const current = runtimeContractWorld(buildchainRoot);
       lockEvaluation = evaluateBuildchainContractLock({
         lock,
         current,

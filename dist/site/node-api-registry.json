@@ -268,7 +268,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:884b5b556ed269729979cc90610d43565f6641ee5ffa43638c9c4e3c10621d36",
+      "digest": "sha256:76826e83ea7d333ffa2dbbb89fe3a293406af29fd235866b98915710b31502e0",
       "summary": "Unified paper scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
