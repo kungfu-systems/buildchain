@@ -92,6 +92,19 @@ test("stable gate accepts a non-empty candidate after named canaries, soak, and 
   assert.deepEqual(report.summary.failedChecks, []);
 });
 
+test("stable gate accepts release-candidate evidence produced before alpha publication", () => {
+  const canaries = facts().canaries.map((entry) => entry.id === "build-surface-fixture"
+    ? { ...entry, completedAt: "2026-07-08T23:55:00.000Z" }
+    : entry);
+  const report = evaluateStableReleaseGate(facts({ canaries }));
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.decision, "allow");
+  const releaseCandidate = report.checks.find(
+    (entry) => entry.id === "stable.canary.build-surface-fixture",
+  );
+  assert.equal(releaseCandidate?.details.completionTimingValid, true);
+});
+
 test("stable gate does not throttle alpha promotions", () => {
   const report = evaluateStableReleaseGate(facts({ channel: "alpha", canaries: [] }));
   assert.equal(report.applies, false);
@@ -114,7 +127,7 @@ test("stable gate blocks missing, mismatched, stale, or unauthorized canaries", 
       expected: "stable.canary.site-libkungfu-dev",
     },
     {
-      name: "before alpha",
+      name: "commit status before alpha",
       canaries: facts().canaries.map((entry) => entry.id === "site-libkungfu-dev"
         ? { ...entry, completedAt: "2026-07-08T23:59:59.000Z" }
         : entry),
