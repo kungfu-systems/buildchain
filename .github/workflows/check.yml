@@ -9,8 +9,8 @@ on:
         type: string
         required: false
       buildchain-ref:
-        description: "Buildchain runtime ref. Empty uses v2."
-        default: "v2"
+        description: "Buildchain runtime ref. Empty uses v3."
+        default: "v3"
         type: string
         required: false
       working-directory:
@@ -89,7 +89,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          ref: ${{ inputs.buildchain-ref || 'v3' }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -113,7 +113,7 @@ jobs:
           BUILDCHAIN_CONTROLLER_ID: source-check
           BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ steps.identities.outputs.source-sha }}
-          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ inputs.buildchain-ref || 'v2' }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ inputs.buildchain-ref || 'v3' }}
           BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
           BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
           BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
