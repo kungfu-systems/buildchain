@@ -444,6 +444,7 @@ function cliCommandMeta(id) {
     "paper-alpha": { group: "release-passport-trust", purpose: "Plan or open the protected dev-to-alpha paper publication PR without direct publication." },
     "paper-bootstrap-npm": { group: "release-passport-trust", purpose: "Dry-run or explicitly bootstrap the public npm package and bind GitHub Trusted Publishing." },
     "paper-build": { group: "reusable-build", purpose: "Plan or execute the existing two-clean-build reproducibility gate for a paper." },
+    "paper-migrate": { group: "getting-started", purpose: "Plan or write the bounded Buildchain-owned control-file migration for an existing paper repository." },
     "paper-preflight": { group: "reusable-build", purpose: "Report exact source, runtime, permission, npm trust, deterministic build, and release-state readiness." },
     "paper-resume": { group: "release-passport-trust", purpose: "Plan or dispatch recovery of the exact existing sealed paper release transaction." },
     "paper-scaffold": { group: "getting-started", purpose: "Plan or write an idempotent, no-overwrite, release-ready paper repository scaffold." },

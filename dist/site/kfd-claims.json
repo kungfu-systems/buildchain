@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "be0860843437b18099783c9f12a5e5c5d099beebd41dd6e2821037c4b2547794",
+    "sha256": "cfadd38032737447fb915aee5c015c7446a7431a20451473b4473672619b642b",
     "summary": {
-      "cliCommandCount": 88,
+      "cliCommandCount": 89,
       "workflowCount": 47,
       "actionCount": 4,
       "sitePageCount": 51,
-      "docCommandRefCount": 268,
+      "docCommandRefCount": 269,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -227,13 +227,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "be0860843437b18099783c9f12a5e5c5d099beebd41dd6e2821037c4b2547794",
+      "sha256": "cfadd38032737447fb915aee5c015c7446a7431a20451473b4473672619b642b",
       "summary": {
-        "cliCommandCount": 88,
+        "cliCommandCount": 89,
         "workflowCount": 47,
         "actionCount": 4,
         "sitePageCount": 51,
-        "docCommandRefCount": 268,
+        "docCommandRefCount": 269,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -2382,6 +2382,18 @@
         {
           "id": "cli:paper-build",
           "name": "buildchain paper build [--cwd <dir>] [--execute] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-migrate",
+          "name": "buildchain paper migrate [--cwd <dir>] [--write] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4852,6 +4864,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 316
+    "publicSurfaceCount": 317
   }
 }
