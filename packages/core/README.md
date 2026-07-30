@@ -122,13 +122,15 @@ Paper automation can use the same typed contracts as the CLI:
 import {
   collectPaperPreflight,
   collectPaperStatus,
+  planPaperMigration,
   planPaperScaffold,
+  writePaperMigration,
 } from "@kungfu-tech/buildchain/paper";
 ```
 
-Planning and observation are side-effect free. `writePaperScaffold()` performs
-the local no-overwrite scaffold write, while external mutations remain explicit
-CLI operations guarded by `--execute`.
+Planning and observation are side-effect free. `writePaperScaffold()` and
+`writePaperMigration()` perform the bounded local writes, while external
+mutations remain explicit CLI operations guarded by `--execute`.
 
 Web-surface validation stays in core because both local scripts and GitHub
 Actions need the same fail-closed interpretation of project, channel, deploy,

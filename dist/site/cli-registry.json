@@ -750,6 +750,18 @@
       "maturity": "stable"
     },
     {
+      "id": "paper-migrate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper migrate [--cwd <dir>] [--write] [--json]",
+      "purpose": "Plan or write the bounded Buildchain-owned control-file migration for an existing paper repository.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "paper-preflight",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain paper preflight [--cwd <dir>] [--offline] [--json]",
