@@ -123,6 +123,24 @@ jobs:
 | `kungfu-v4-native`      | Kungfu Linux x64, Linux ARM64, macOS ARM64, and Windows x64; Linux ARM64 uses GitHub-hosted `ubuntu-24.04-arm` |
 | `custom`                | Requires `platforms-json`                                                                                      |
 
+Set `self-hosted-offline-fallback: true` to inspect every exact-label
+self-hosted lane from the trusted Buildchain workflow shell before the matrix
+starts. A lane with no matching online runner is replaced independently by its
+supported GitHub-hosted runner: Kungfu Linux x64 uses `ubuntu-24.04`, macOS ARM64
+uses `macos-15`, and Windows x64 uses `windows-2022`. Online-but-busy runners
+remain online and keep their declared self-hosted route. If the inventory token,
+permission, or API is unavailable, Buildchain preserves the original matrix
+instead of guessing that the fleet is offline. The public workflow output
+`runner-routing-json` records only de-identified counts and routing decisions.
+
+```yaml
+with:
+  runner-preset: kungfu-v4-native
+  self-hosted-offline-fallback: true
+secrets:
+  BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.KUNGFU_GITHUB_TOKEN }}
+```
+
 Callers can still provide a custom matrix with `platforms-json`. Each platform
 object has:
 

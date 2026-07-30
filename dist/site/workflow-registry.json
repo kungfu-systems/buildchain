@@ -144,6 +144,7 @@
         "rustup-dist-server",
         "rustup-update-root",
         "sample-process-tree",
+        "self-hosted-offline-fallback",
         "setup-node",
         "setup-rust",
         "shifu-cache-profile-digest",
@@ -152,7 +153,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 74,
+      "inputCount": 75,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -207,9 +208,10 @@
         "release-candidate-passport-json",
         "release-manifest-json",
         "runner-preset",
+        "runner-routing-json",
         "trusted-event"
       ],
-      "outputCount": 42,
+      "outputCount": 43,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -1009,6 +1011,7 @@
         "rustup-dist-server",
         "rustup-update-root",
         "sample-process-tree",
+        "self-hosted-offline-fallback",
         "setup-node",
         "setup-rust",
         "shifu-cache-profile-digest",
@@ -1017,7 +1020,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 77,
+      "inputCount": 78,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1075,9 +1078,10 @@
         "release-candidate-passport-json",
         "release-manifest-json",
         "runner-preset",
+        "runner-routing-json",
         "trusted-event"
       ],
-      "outputCount": 45,
+      "outputCount": 46,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active"
