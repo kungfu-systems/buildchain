@@ -30,6 +30,13 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.match(workflow, /Verify candidate bytes against sealed capability/);
   assert.match(workflow, /capability\.artifactDigest !== bundle\.candidate\.candidateDigest/);
   assert.match(workflow, /resolvePublicationCandidateFile\(bundle\.evidence\.files, candidatePath\)/);
+  assert.match(workflow, /createPublicationSealedBundle/);
+  assert.match(workflow, /verifyPublicationSealedBundle/);
+  assert.match(workflow, /publish-sealed-bundle-root: \$\{\{ steps\.candidate\.outputs\.sealed-bundle-root \}\}/);
+  assert.match(
+    workflow,
+    /publish-sealed-bundle-manifest: \$\{\{ steps\.candidate\.outputs\.sealed-bundle-manifest \}\}/,
+  );
   assert.doesNotMatch(workflow, /entry\.path\.endsWith/);
   assert.match(workflow, /github-release-artifact-paths: \$\{\{ steps\.candidate\.outputs\.github-release-artifact-paths \}\}/);
   assert.match(workflow, /publish-transaction-override: "true"/);

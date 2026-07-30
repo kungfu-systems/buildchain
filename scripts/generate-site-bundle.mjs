@@ -483,6 +483,7 @@ function nodeApiMeta(exportName) {
     "./publication-artifact": { group: "reusable-build", summary: "Publication artifact manifest, source bundle, and publication passport APIs." },
     "./publication-package": { group: "reusable-build", summary: "Publication npm package synthesis APIs for Buildchain-managed paper release presets." },
     "./publication-reproducibility": { group: "reusable-build", summary: "Two-clean-build publication byte reproducibility receipt APIs." },
+    "./publication-sealed-bundle": { group: "reusable-build", summary: "Build-once publication bundle manifests and exact-byte resume verification APIs." },
     "./publication-authority": { group: "release-passport-trust", summary: "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs." },
     "./publication-control-plane-audit": { group: "release-passport-trust", summary: "Read-only publication control-plane snapshot evaluation APIs." },
     "./buildchain-publication-authority": { group: "release-passport-trust", summary: "Buildchain-owned closed-world publication authority descriptor registry." },
