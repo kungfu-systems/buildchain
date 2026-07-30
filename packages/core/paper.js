@@ -2542,6 +2542,37 @@ function parsePaperVersion(version) {
   };
 }
 
+function resolvePaperChannelRef(cwd, ref) {
+  const candidates = [
+    {
+      observedRef: `refs/remotes/origin/${ref}`,
+      observation: "origin-tracking-ref",
+    },
+    {
+      observedRef: `refs/heads/${ref}`,
+      observation: "local-branch-ref",
+    },
+  ];
+  for (const candidate of candidates) {
+    const sha = gitValue(cwd, [
+      "rev-parse",
+      "--verify",
+      `${candidate.observedRef}^{commit}`,
+    ]);
+    if (GIT_SHA_PATTERN.test(sha)) {
+      return {
+        sha,
+        ...candidate,
+      };
+    }
+  }
+  return {
+    sha: "",
+    observedRef: "",
+    observation: "unresolved",
+  };
+}
+
 export function createPaperAlphaPlan({
   cwd = process.cwd(),
   sourceRef = "",
@@ -2556,8 +2587,8 @@ export function createPaperAlphaPlan({
   const source = sourceRef || `dev/v${parsed.major}/${line}`;
   const target = targetRef || `alpha/v${parsed.major}/${line}`;
   const repository = resolvePaperRepository(resolvedCwd);
-  const sourceSha = gitValue(resolvedCwd, ["rev-parse", source]);
-  const targetSha = gitValue(resolvedCwd, ["rev-parse", target]);
+  const sourceObservation = resolvePaperChannelRef(resolvedCwd, source);
+  const targetObservation = resolvePaperChannelRef(resolvedCwd, target);
   const currentBranch = gitValue(resolvedCwd, ["branch", "--show-current"]);
   return {
     schemaVersion: 1,
@@ -2571,11 +2602,11 @@ export function createPaperAlphaPlan({
     channel: "alpha",
     source: {
       ref: source,
-      sha: GIT_SHA_PATTERN.test(sourceSha) ? sourceSha : "",
+      ...sourceObservation,
     },
     target: {
       ref: target,
-      sha: GIT_SHA_PATTERN.test(targetSha) ? targetSha : "",
+      ...targetObservation,
     },
     currentBranch,
     mutation: {
