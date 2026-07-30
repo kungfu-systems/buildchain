@@ -267,6 +267,11 @@ on:
         default: 0
         type: number
         required: false
+      artifact-signing-request-upload-no-proxy:
+        description: "Optional NO_PROXY value scoped only to Buildchain-owned signing request uploads; signed-result downloads retain the runner route"
+        default: ""
+        type: string
+        required: false
       artifact-transfer-mode:
         description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
         default: "github-artifacts"
@@ -749,6 +754,7 @@ jobs:
       requested-parallelism: ${{ inputs.requested-parallelism }}
       artifact-retention-days: ${{ inputs.artifact-retention-days }}
       artifact-compression-level: ${{ inputs.artifact-compression-level }}
+      artifact-signing-request-upload-no-proxy: ${{ inputs.artifact-signing-request-upload-no-proxy }}
       artifact-transfer-mode: ${{ inputs.artifact-transfer-mode }}
       artifact-relay-s3-bucket: ${{ inputs.artifact-relay-s3-bucket }}
       artifact-relay-s3-region: ${{ inputs.artifact-relay-s3-region }}

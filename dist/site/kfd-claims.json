@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "71d73121c7c40a7e604742ed9df6019ab43eb03026a72d2188690c87a30cd41e",
+    "sha256": "77dc2d89edf2c8174fcf2a378a4ef29198fdfdcc4ff45052c7e8acc62aa906b3",
     "summary": {
       "cliCommandCount": 97,
       "workflowCount": 57,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "71d73121c7c40a7e604742ed9df6019ab43eb03026a72d2188690c87a30cd41e",
+      "sha256": "77dc2d89edf2c8174fcf2a378a4ef29198fdfdcc4ff45052c7e8acc62aa906b3",
       "summary": {
         "cliCommandCount": 97,
         "workflowCount": 57,
@@ -3045,7 +3045,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 73,
+          "inputCount": 74,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3059,6 +3059,7 @@
             "artifact-relay-s3-role-arn",
             "artifact-relay-s3-upload-role-arn",
             "artifact-retention-days",
+            "artifact-signing-request-upload-no-proxy",
             "artifact-transfer-mode",
             "build-command",
             "buildchain-contract-compatibility-policy",
@@ -3724,7 +3725,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 76,
+          "inputCount": 77,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3738,6 +3739,7 @@
             "artifact-relay-s3-role-arn",
             "artifact-relay-s3-upload-role-arn",
             "artifact-retention-days",
+            "artifact-signing-request-upload-no-proxy",
             "artifact-transfer-mode",
             "build-command",
             "buildchain-alpha-contract-lock-path",

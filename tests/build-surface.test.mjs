@@ -429,7 +429,7 @@ test("reusable build workflow exposes the required surface contract", () => {
         /if: \$\{\{ steps\.signing-requests\.outputs\.request-count != '0' \}\}/g,
       ) || []
     ).length,
-    8,
+    10,
   );
   assert.equal(
     (
@@ -449,6 +449,13 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /process-sample-interval-ms:/);
   assert.match(workflow, /requested-parallelism:/);
   assert.match(workflow, /artifact-transfer-mode:/);
+  assert.match(workflow, /artifact-signing-request-upload-no-proxy:/);
+  assert.equal((workflow.match(/vars\.BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY/g) || []).length, 2);
+  assert.equal((workflow.match(/Resolve artifact signing request upload route/g) || []).length, 2);
+  assert.equal(
+    (workflow.match(/NO_PROXY: \$\{\{ steps\.signing-request-upload-route\.outputs\.no-proxy \}\}/g) || []).length,
+    2,
+  );
   assert.match(workflow, /s3-to-github-artifacts/);
   assert.match(workflow, /artifact-relay-s3-bucket:/);
   assert.match(workflow, /artifact-relay-s3-region:/);

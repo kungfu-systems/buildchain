@@ -89,6 +89,7 @@
         "artifact-relay-s3-role-arn",
         "artifact-relay-s3-upload-role-arn",
         "artifact-retention-days",
+        "artifact-signing-request-upload-no-proxy",
         "artifact-transfer-mode",
         "build-command",
         "buildchain-contract-compatibility-policy",
@@ -151,7 +152,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 73,
+      "inputCount": 74,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -950,6 +951,7 @@
         "artifact-relay-s3-role-arn",
         "artifact-relay-s3-upload-role-arn",
         "artifact-retention-days",
+        "artifact-signing-request-upload-no-proxy",
         "artifact-transfer-mode",
         "build-command",
         "buildchain-alpha-contract-lock-path",
@@ -1015,7 +1017,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 76,
+      "inputCount": 77,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

@@ -579,6 +579,7 @@
           "artifact-relay-s3-role-arn",
           "artifact-relay-s3-upload-role-arn",
           "artifact-retention-days",
+          "artifact-signing-request-upload-no-proxy",
           "artifact-transfer-mode",
           "build-command",
           "buildchain-contract-compatibility-policy",
@@ -641,7 +642,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 73,
+        "inputCount": 74,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1377,6 +1378,7 @@
           "artifact-relay-s3-role-arn",
           "artifact-relay-s3-upload-role-arn",
           "artifact-retention-days",
+          "artifact-signing-request-upload-no-proxy",
           "artifact-transfer-mode",
           "build-command",
           "buildchain-alpha-contract-lock-path",
@@ -1442,7 +1444,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 76,
+        "inputCount": 77,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -4263,8 +4265,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "46cb2587522fbc5ff4b81c8ef9827f8d20f042813fb34340e9fc15ccbb9da67e",
-    "pageRegistryDigest": "66f90a9886e80effcfe7928c610e1daeac5402f3f4877f4d6c301b8166b37b69"
+    "workflowRegistryDigest": "b89bf8a2a89711fd2033b022bc70dcf92bc1b84ce7697b2c736f098d41fefe92",
+    "pageRegistryDigest": "82172ba64a830da68a6b6c71ec07566190b39ff6397362c5d37b38027e2e6163"
   },
   "comparison": {
     "missingCliRegistry": [],
