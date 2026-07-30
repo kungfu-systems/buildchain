@@ -164,13 +164,6 @@ function sourceSha(cwd) {
 function bundleCli({ cwd, tempDir, version, logger }) {
   const outDir = path.join(tempDir, "bundle");
   const configPath = path.join(tempDir, "tsup.config.mjs");
-  const kfdAgentRuntimeVerifierWasmBase64 = fs
-    .readFileSync(
-      fileURLToPath(
-        import.meta.resolve("@kungfu-tech/kfd-agent-runtime/verifier/wasm"),
-      ),
-    )
-    .toString("base64");
   const embeddedContractWorld = fs.readFileSync(
     path.join(cwd, "dist", "site", "buildchain-contract.json"),
     "utf8",

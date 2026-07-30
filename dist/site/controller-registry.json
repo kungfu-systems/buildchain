@@ -2153,6 +2153,10 @@
             "required": true
           },
           {
+            "id": "downstream-update",
+            "required": false
+          },
+          {
             "id": "prepare-consumer",
             "required": false
           },
@@ -2169,6 +2173,10 @@
             "required": false
           },
           {
+            "id": "receipt",
+            "required": true
+          },
+          {
             "id": "aggregate",
             "required": true
           }
@@ -2181,10 +2189,11 @@
         "evidence": [
           "propagation-plan",
           "propagation-lock",
+          "propagation-receipt",
           "controller-receipt"
         ]
       },
-      "digest": "sha256:aff7a9f6bcf96d7a9d406e490868288f3acef104e53eddddc5782b8a2b5b4fa5"
+      "digest": "sha256:8c6eeb8b38310700ef2b36ff79ca674f61e26e7481d6b6b2ba59d08001ee703a"
     },
     {
       "schemaVersion": 1,
@@ -2233,5 +2242,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:6feab3c1d351b561dd995f01d4a3c0aca06df42ff71544c0fba15dcb56bb37a5"
+  "digest": "sha256:315121ceb159e10e5722cb2695ea24d1b66457fcea45420f2504d1f4756653d2"
 }

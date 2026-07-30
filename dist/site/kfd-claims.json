@@ -14,7 +14,7 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102",
+    "compatibilityDigest": "sha256:710c72404d77cd65f77744ab254ffc5790da3ab6f3f1a26bc2d457e03d177e85",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
