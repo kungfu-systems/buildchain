@@ -194,12 +194,14 @@ export function evaluateStableReleaseGate({
       : undefined;
     const attestorAllowed = required.allowedAttestors.length === 0 ||
       required.allowedAttestors.includes(string(evidence?.attestor));
+    const completionTimingValid = required.source === "release-candidate" ||
+      (completedAt && completedAt.milliseconds >= candidatePublished.milliseconds);
     const valid = Boolean(
       evidence &&
       string(evidence.status) === "success" &&
       string(evidence.candidateSha) === candidateSha &&
       completedAt &&
-      completedAt.milliseconds >= candidatePublished.milliseconds &&
+      completionTimingValid &&
       attestorAllowed,
     );
     if (completedAt) {
@@ -222,6 +224,7 @@ export function evaluateStableReleaseGate({
         evidenceUrl: string(evidence?.evidenceUrl),
         attestor: string(evidence?.attestor),
         attestorAllowed,
+        completionTimingValid: Boolean(completionTimingValid),
       },
     ));
   }

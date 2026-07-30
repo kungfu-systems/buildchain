@@ -41,6 +41,11 @@ on:
         default: ""
         required: false
         type: string
+      pull-request-body-prefix-renderer:
+        description: Repository-relative Node.js renderer for an exact-source PR declaration
+        default: ""
+        required: false
+        type: string
       create-pull-request:
         description: Backward-compatible alias for settlement-authorized
         default: false
@@ -104,6 +109,7 @@ jobs:
       controller-state: ${{ steps.observe.outputs.controller-state }}
       active-candidate-pr: ${{ steps.observe.outputs.active-candidate-pr }}
       next-candidate-sha: ${{ steps.observe.outputs.next-candidate-sha }}
+      pull-request-body-prefix: ${{ steps.render-body-prefix.outputs.pull-request-body-prefix || inputs.pull-request-body-prefix }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -139,11 +145,41 @@ jobs:
           BUILDCHAIN_CHANNEL_PATROL_DRY_RUN: "true"
           BUILDCHAIN_CHANNEL_PATROL_OUTPUT_PATH: .buildchain/patrol/dev-alpha-candidate.json
 
+      - name: Reject ambiguous PR body prefix authority
+        if: ${{ inputs.pull-request-body-prefix-renderer != '' && inputs.pull-request-body-prefix != '' }}
+        shell: bash
+        run: |
+          echo "pull-request-body-prefix and pull-request-body-prefix-renderer are mutually exclusive" >&2
+          exit 1
+
+      - name: Checkout exact consumer source for PR body prefix
+        if: ${{ inputs.pull-request-body-prefix-renderer != '' && steps.observe.outputs.eligible == 'true' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ steps.observe.outputs.selected-sha }}
+          path: .buildchain/consumer
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Render exact-source PR body prefix
+        id: render-body-prefix
+        if: ${{ inputs.pull-request-body-prefix-renderer != '' && steps.observe.outputs.eligible == 'true' }}
+        run: node .buildchain/runtime/scripts/run-candidate-body-prefix-renderer.mjs
+        env:
+          BUILDCHAIN_CHANNEL_PATROL_CONSUMER_ROOT: .buildchain/consumer
+          BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX_RENDERER: ${{ inputs.pull-request-body-prefix-renderer }}
+          BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX_OUTPUT: .buildchain/patrol/pull-request-body-prefix.txt
+          BUILDCHAIN_CHANNEL_PATROL_SELECTED_SHA: ${{ steps.observe.outputs.selected-sha }}
+          BUILDCHAIN_CHANNEL_PATROL_SOURCE_BRANCH: ${{ inputs.source-branch }}
+          BUILDCHAIN_CHANNEL_PATROL_TARGET_BRANCH: ${{ inputs.target-branch }}
+
       - name: Upload read-only exact-source observation
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-dev-alpha-candidate-observation-${{ steps.observe.outputs.selected-sha }}
-          path: ${{ steps.observe.outputs.result-path }}
+          path: |
+            ${{ steps.observe.outputs.result-path }}
+            .buildchain/patrol/pull-request-body-prefix.txt
           if-no-files-found: error
           retention-days: 30
 
@@ -195,7 +231,8 @@ jobs:
           BUILDCHAIN_CHANNEL_PATROL_DEV_WORKFLOW: ${{ inputs.dev-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_ALPHA_WORKFLOW: ${{ inputs.alpha-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS: ${{ inputs.max-age-seconds }}
-          BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: ${{ inputs.pull-request-body-prefix }}
+          BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: ${{ needs.observe.outputs.pull-request-body-prefix }}
+          BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA: ${{ needs.observe.outputs.selected-sha }}
           BUILDCHAIN_CHANNEL_PATROL_CREATE_PR: "true"
           BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED: "true"
           BUILDCHAIN_CHANNEL_PATROL_DRY_RUN: "false"

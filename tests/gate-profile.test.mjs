@@ -321,7 +321,20 @@ test("same Shifu plans resolve to a deterministic generic runner matrix", () => 
       { id: "native.verify", mode: "advisory" },
     ],
   );
+  assert.equal(first.entries[0].timeoutMinutes, 41);
   assert.equal(JSON.stringify(first).includes("kungfu"), false);
+});
+
+test("runner timeout preserves Gate budgets plus bounded control-plane overhead", () => {
+  const longPlan = plan("linux");
+  longPlan.groups[1].gates[0].cost.timeoutSeconds = 24 * 60 * 60;
+  const resolved = createGateExecutionMatrix({
+    profile: "candidate",
+    includeAdvisory: true,
+    platforms: [platforms[0]],
+    plans: { linux: longPlan },
+  });
+  assert.equal(resolved.entries[0].timeoutMinutes, 360);
 });
 
 test("required runner capability gaps fail closed while optional platforms are recorded", () => {

@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-30
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-24
+  generated_at: 2026-07-30
   limits: Live GitHub state and account recovery remain provider-controlled and must be re-audited.
 ---
 
@@ -75,9 +75,15 @@ protection. Inspecting only one layer is insufficient because an applicable
 bypass or weaker update path in another layer can invalidate the effective
 policy.
 
+When an admitted default development branch uses GitHub merge queue, its
+candidate-source, queue-lease, and final build checks are one exact authority
+set. The queue lease may remain intentionally unbound while workflow-produced
+checks retain their GitHub Actions App binding; strictness must match the live
+queue ruleset.
+
 ## Repository and plan admission
 
-The 2026-07-24 baseline contains 16 managed repositories: 13 public and three
+The 2026-07-30 baseline contains 19 managed repositories: 16 public and three
 private. Public repository names are versioned in the descriptor. Private
 repository names are never emitted in public evidence; their identities are
 represented by stable roots derived from the GitHub provider repository ID,
@@ -206,8 +212,8 @@ buildchain github-governance rollback \
 
 For an admitted exact target, classic branch protection can also be compiled
 directly from the authority descriptor. This mode preserves both App-bound
-checks and intentionally unbound check contexts such as Kungfu alpha's
-`build`, rather than guessing a provider App identity.
+checks and intentionally unbound check contexts such as Kungfu release's
+legacy `build`, rather than guessing a provider App identity.
 
 ```bash
 buildchain github-governance protection-policy-plan \

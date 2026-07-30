@@ -65,6 +65,13 @@ function pullRequestBodyPrefix(value) {
   return normalized;
 }
 
+function optionalExactSha(value, name) {
+  const normalized = text(value);
+  if (normalized && !EXACT_SHA.test(normalized))
+    throw new Error(`${name} must be an exact 40-character commit SHA`);
+  return normalized;
+}
+
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === "object") {
@@ -224,6 +231,11 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
     pullRequestBodyPrefix: pullRequestBodyPrefix(
       options.pullRequestBodyPrefix ??
         process.env.BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX,
+    ),
+    expectedSelectedSha: optionalExactSha(
+      options.expectedSelectedSha ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA,
+      "expectedSelectedSha",
     ),
     createPullRequest,
     settlementAuthorized: bool(
@@ -526,6 +538,14 @@ export async function runDevAlphaCandidatePatrol(
         maxAgeSeconds: options.maxAgeSeconds,
         now: options.now,
       });
+  if (
+    options.expectedSelectedSha &&
+    decision.source.sha !== options.expectedSelectedSha
+  ) {
+    throw new Error(
+      `selected source changed between observation and settlement: expected ${options.expectedSelectedSha}, observed ${decision.source.sha}`,
+    );
+  }
   const openPullRequests = await client.listOpenPullRequests(
     options.targetBranch,
   );

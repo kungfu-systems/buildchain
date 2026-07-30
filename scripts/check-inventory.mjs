@@ -73,6 +73,7 @@ const requiredPaths = [
   "docs/auditable-demo.md",
   "contracts/auditable-demo-media-profiles-v1.json",
   "contracts/evidence/auditable-demo-web-delivery-v1.json",
+  "contracts/buildchain-v2-residuals-v1.json",
   "contracts/fixtures/auditable-demo-web-delivery-v1/complete-transcript.txt",
   "contracts/fixtures/auditable-demo-web-delivery-v1/public-projection.json",
   "contracts/fixtures/auditable-demo-web-delivery-v1/scene.json",

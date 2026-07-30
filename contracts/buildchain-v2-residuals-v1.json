@@ -1,0 +1,191 @@
+{
+  "contract": "buildchain.v2-residual-inventory/v1",
+  "scope": ".github/workflows on the current default branch",
+  "policy": {
+    "runtimeDefault": "v3",
+    "dogfoodRuntimeDefault": "v3-alpha",
+    "unclassifiedV2TokensAllowed": false
+  },
+  "entries": [
+    {
+      "path": ".github/workflows/.build.yml",
+      "token": "BUILDCHAIN_DEFAULT_REF: v2",
+      "expectedOccurrences": 1,
+      "classification": "public-contract-compatibility-fallback",
+      "callerStatus": "fallback-only-when-workflow-shell-ref-is-unavailable",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Change only at a governed major contract boundary after consumer migration."
+    },
+    {
+      "path": ".github/workflows/.build.yml",
+      "token": "BUILDCHAIN_DEFAULT_REF || \"v2\"",
+      "expectedOccurrences": 1,
+      "classification": "public-contract-compatibility-fallback",
+      "callerStatus": "fallback-only-when-workflow-shell-ref-is-unavailable",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Change only at a governed major contract boundary after consumer migration."
+    },
+    {
+      "path": ".github/workflows/.bump-minor-version.yml",
+      "token": "kungfu-systems/buildchain/actions/bump-version@v2",
+      "expectedOccurrences": 1,
+      "classification": "legacy-compatibility-action",
+      "callerStatus": "legacy-reusable",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove after every known caller migrates to the lifecycle version command."
+    },
+    {
+      "path": ".github/workflows/.release-candidate-promote.yml",
+      "token": "actions/create-github-app-token@v2",
+      "expectedOccurrences": 1,
+      "classification": "third-party-action-version",
+      "callerStatus": "active",
+      "owner": "actions/create-github-app-token maintainers",
+      "sunsetCondition": "Upgrade through normal dependency review when a compatible successor is adopted."
+    },
+    {
+      "path": ".github/workflows/.release-docker.yml",
+      "token": "workflows v2 Docker release path is retired",
+      "expectedOccurrences": 1,
+      "classification": "retired-path-tombstone",
+      "callerStatus": "fail-closed",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove only after the compatibility workflow entry itself is removed."
+    },
+    {
+      "path": ".github/workflows/.release-elastic-beanstalk.yml",
+      "token": "workflows v2 Elastic Beanstalk release path is retired",
+      "expectedOccurrences": 1,
+      "classification": "retired-path-tombstone",
+      "callerStatus": "fail-closed",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove only after the compatibility workflow entry itself is removed."
+    },
+    {
+      "path": ".github/workflows/.release-new-version.yml",
+      "token": "default: \"v2\"",
+      "expectedOccurrences": 1,
+      "classification": "retired-input-tombstone",
+      "callerStatus": "fail-closed-unused-input",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove with the retired workflow input compatibility surface."
+    },
+    {
+      "path": ".github/workflows/.release-verify.yml",
+      "token": "workflows v2",
+      "expectedOccurrences": 3,
+      "classification": "retired-path-tombstone",
+      "callerStatus": "fail-closed",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove each message with its corresponding retired input or path."
+    },
+    {
+      "path": ".github/workflows/.sam-release.yml",
+      "token": "workflows v2 SAM release path is retired",
+      "expectedOccurrences": 1,
+      "classification": "retired-path-tombstone",
+      "callerStatus": "fail-closed",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove only after the compatibility workflow entry itself is removed."
+    },
+    {
+      "path": ".github/workflows/.sam-verify.yml",
+      "token": "kungfu-systems/buildchain/actions/bump-version@v2",
+      "expectedOccurrences": 3,
+      "classification": "legacy-compatibility-action",
+      "callerStatus": "legacy-reusable",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove after SAM consumers migrate to the lifecycle version command."
+    },
+    {
+      "path": ".github/workflows/.sam-verify.yml",
+      "token": "aws-actions/setup-sam@v2",
+      "expectedOccurrences": 1,
+      "classification": "third-party-action-version",
+      "callerStatus": "legacy-reusable",
+      "owner": "aws-actions/setup-sam maintainers",
+      "sunsetCondition": "Upgrade through normal dependency review when a compatible successor is adopted."
+    },
+    {
+      "path": ".github/workflows/.sync-release-page.yml",
+      "token": "retired in workflows v2",
+      "expectedOccurrences": 1,
+      "classification": "retired-path-tombstone",
+      "callerStatus": "fail-closed",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove only after the compatibility workflow entry itself is removed."
+    },
+    {
+      "path": ".github/workflows/.web-surface.yml",
+      "token": "BUILDCHAIN_DEFAULT_REF: v2",
+      "expectedOccurrences": 1,
+      "classification": "public-contract-compatibility-fallback",
+      "callerStatus": "fallback-only-when-workflow-shell-ref-is-unavailable",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Change only at a governed major contract boundary after consumer migration."
+    },
+    {
+      "path": ".github/workflows/.web-surface.yml",
+      "token": "BUILDCHAIN_DEFAULT_REF || \"v2\"",
+      "expectedOccurrences": 1,
+      "classification": "public-contract-compatibility-fallback",
+      "callerStatus": "fallback-only-when-workflow-shell-ref-is-unavailable",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Change only at a governed major contract boundary after consumer migration."
+    },
+    {
+      "path": ".github/workflows/.wheel-release.yml",
+      "token": "workflows v2 wheel release path is retired",
+      "expectedOccurrences": 1,
+      "classification": "retired-path-tombstone",
+      "callerStatus": "fail-closed",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove only after the compatibility workflow entry itself is removed."
+    },
+    {
+      "path": ".github/workflows/.wheel-verify.yml",
+      "token": "kungfu-systems/buildchain/actions/publish-prebuilt@v2",
+      "expectedOccurrences": 1,
+      "classification": "legacy-compatibility-action",
+      "callerStatus": "legacy-reusable",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove after wheel consumers migrate to the publication authority path."
+    },
+    {
+      "path": ".github/workflows/.wheel-verify.yml",
+      "token": "kungfu-systems/buildchain/actions/bump-version@v2",
+      "expectedOccurrences": 3,
+      "classification": "legacy-compatibility-action",
+      "callerStatus": "legacy-reusable",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove after wheel consumers migrate to the lifecycle version command."
+    },
+    {
+      "path": ".github/workflows/binary-distribution.yml",
+      "token": "v2.2.0-alpha.0",
+      "expectedOccurrences": 1,
+      "classification": "artifact-version-example",
+      "callerStatus": "manual-input",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Replace when the binary-distribution manual default is refreshed independently of runtime routing."
+    },
+    {
+      "path": ".github/workflows/candidate-lab.yml",
+      "token": "default: \"v2\"",
+      "expectedOccurrences": 1,
+      "classification": "legacy-compatibility-ref",
+      "callerStatus": "manual-no-publish-report-only",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove after the legacy workflows comparison lane is formally retired."
+    },
+    {
+      "path": ".github/workflows/schedule-purge-artifacts.yml",
+      "token": "not shipped in buildchain v2",
+      "expectedOccurrences": 1,
+      "classification": "retired-path-tombstone",
+      "callerStatus": "fail-closed",
+      "owner": "buildchain-maintainers",
+      "sunsetCondition": "Remove only after the compatibility workflow entry itself is removed."
+    }
+  ]
+}

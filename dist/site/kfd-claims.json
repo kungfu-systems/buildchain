@@ -14,14 +14,14 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:9770baa99ba374e9dbd743ca9624a72137513b8c4e65af1fbf2160cb3ef51d9d",
+    "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "5d48015039ed4e6885acc9a0057d492f48e0b8b31b853a482af41ebae525d801",
+    "sha256": "9fd994f49f39d25e4555edb80e33baecb22024307704e2dd038d0f72c1f04d6c",
     "summary": {
       "cliCommandCount": 97,
       "workflowCount": 57,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "5d48015039ed4e6885acc9a0057d492f48e0b8b31b853a482af41ebae525d801",
+      "sha256": "9fd994f49f39d25e4555edb80e33baecb22024307704e2dd038d0f72c1f04d6c",
       "summary": {
         "cliCommandCount": 97,
         "workflowCount": 57,
@@ -3045,8 +3045,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 72,
+          "inputCount": 74,
           "inputs": [
+            "artifact-compression-level",
             "artifact-name",
             "artifact-name-template",
             "artifact-paths",
@@ -3058,6 +3059,7 @@
             "artifact-relay-s3-role-arn",
             "artifact-relay-s3-upload-role-arn",
             "artifact-retention-days",
+            "artifact-signing-request-upload-no-proxy",
             "artifact-transfer-mode",
             "build-command",
             "buildchain-contract-compatibility-policy",
@@ -3723,8 +3725,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 75,
+          "inputCount": 77,
           "inputs": [
+            "artifact-compression-level",
             "artifact-name",
             "artifact-name-template",
             "artifact-paths",
@@ -3736,6 +3739,7 @@
             "artifact-relay-s3-role-arn",
             "artifact-relay-s3-upload-role-arn",
             "artifact-retention-days",
+            "artifact-signing-request-upload-no-proxy",
             "artifact-transfer-mode",
             "build-command",
             "buildchain-alpha-contract-lock-path",
@@ -3978,7 +3982,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 11,
+          "inputCount": 12,
           "inputs": [
             "alpha-workflow-path",
             "buildchain-ref",
@@ -3988,6 +3992,7 @@
             "dry-run",
             "max-age-seconds",
             "pull-request-body-prefix",
+            "pull-request-body-prefix-renderer",
             "settlement-authorized",
             "source-branch",
             "target-branch"

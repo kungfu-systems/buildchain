@@ -295,6 +295,14 @@ test("contract world exposes versioned controller evidence surfaces", () => {
       .controllerDescriptor.inputClassifications["build-command"].classification,
     /digest-only/,
   );
+  const buildLifecycle = controllers.find((entry) => entry.id === "controller:build-lifecycle");
+  assert.ok(buildLifecycle.breakingDefaults.requiredStages.includes("signing-finalization"));
+  assert.ok(buildLifecycle.breakingDefaults.capabilities.includes("artifact-signing-finalization"));
+  assert.ok(
+    buildLifecycle.compatibleBreakingDigests.includes(
+      "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
+    ),
+  );
 });
 
 test("write-lock records resolved SHA and contract digest", () => {

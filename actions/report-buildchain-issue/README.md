@@ -25,7 +25,7 @@ organization.
     token: ${{ steps.buildchain-issue-token.outputs.token }}
     summary: "Reusable build failed before artifact finalization"
     failure-code: reusable-build-failed
-    buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
+    buildchain-ref: ${{ inputs.buildchain-ref || 'v3' }}
     diagnostics-path: .buildchain/artifacts/diagnostics.json
 ```
 

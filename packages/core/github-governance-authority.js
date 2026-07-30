@@ -34,6 +34,9 @@ const target = (
   allowedBypassActors,
 });
 const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
+  ".github": [
+    target("main", [check("governance")], false),
+  ],
   "agent-hub-demo": [
     target("dev/v0/v0.2", [check("check / check")], true),
     target("alpha/v0/v0.2", [check("check / check")], false),
@@ -60,9 +63,13 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
     target("alpha/v1/v1.0", [check("check / check")], true),
   ],
   kungfu: [
-    target("dev/v4/v4.0", [check("affected-native / linux")], false),
+    target("dev/v4/v4.0", [
+      check("Candidate source acceptance / check"),
+      check("Queue admission lease", null),
+      check("affected-native / linux"),
+    ], true),
     target("alpha/v4/v4.0", [
-      check("build", null),
+      check("build / Finalize build controller evidence"),
       check("signoff"),
       check("validate"),
     ], true),
@@ -81,12 +88,21 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
       true,
     ),
   ],
+  "runtime-images": [
+    target("dev/v1/v1.0", [check("Signed-off commits"), check("check")], true),
+    target("alpha/v1/v1.0", [check("Signed-off commits"), check("check")], false),
+  ],
   "paper-episodes-to-primitives": [
     target("main", [check("governance")], false),
     target("dev/v0/v0.1", [check("check / check")], true),
     target("alpha/v0/v0.1", [check("check / check")], true),
   ],
   "paper-kfd-foundation-real-world-agent-work": [
+    target("main", [check("check / check")], false),
+    target("dev/v0/v0.1", [check("check / check")], true),
+    target("alpha/v0/v0.1", [check("check / check")], true),
+  ],
+  "paper-kfd-machine-life-roadmap": [
     target("main", [check("check / check")], false),
     target("dev/v0/v0.1", [check("check / check")], true),
     target("alpha/v0/v0.1", [check("check / check")], true),
@@ -501,9 +517,9 @@ export function createBuildchainGithubGovernanceAuthority() {
       privateRepositoryPolicy: "non-authoritative-until-plan-capability-qualifies",
       unknownRepositoryPolicy: "non-authoritative-until-explicit-admission",
       baseline: {
-        observedOn: "2026-07-24",
-        repositoryCount: 16,
-        publicCount: 13,
+        observedOn: "2026-07-30",
+        repositoryCount: 19,
+        publicCount: 16,
         privateCount: 3,
         authoritativePublicTargetCount: Object.values(PUBLIC_REPOSITORY_TARGETS)
           .reduce((count, targets) => count + targets.length, 0),

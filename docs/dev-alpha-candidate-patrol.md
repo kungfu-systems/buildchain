@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-29
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-27
-  visible_context: Existing Buildchain stable-candidate source locks, Kungfu exact-source Alpha preflight, Dev Patrol, and repository release governance.
+  generated_at: 2026-07-29
+  visible_context: Existing Buildchain source locks, Kungfu exact-source Alpha preflight, Dev Patrol, repository release governance, and the consumer-owned settlement renderer threat model.
   invisible_context_boundary: No credentials, private logs, or private configuration were used.
 ---
 
@@ -77,13 +77,27 @@ exact same-SHA evidence, it may set `settlement-authorized: true` and
 alias for settlement authorization.
 
 Repositories whose promotion policy requires a machine-readable PR declaration
-can pass it through `pull-request-body-prefix`. Buildchain prepends that trusted,
-repository-owned text only when it creates the candidate PR and preserves it
-when later controller observations update the managed state marker. Keep the
-declaration source-controlled in the caller workflow and update it whenever the
-qualified development delta changes its release or architecture settlement.
-Buildchain rejects a prefix that attempts to inject its managed controller
-marker.
+can pass static text through `pull-request-body-prefix`. When the declaration
+depends on the exact qualified delta, use `pull-request-body-prefix-renderer`
+instead. It names a repository-relative Node.js file in the consumer checkout.
+The read-only `observe` job checks out the selected SHA with credentials disabled,
+runs the renderer with a reduced environment, and requires it to write UTF-8 text
+to `BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX_OUTPUT`. The renderer also receives
+the selected SHA plus source and target branch names. It may derive a declaration
+from the exact checkout and `origin/<target-branch>` without receiving the
+promotion token.
+
+Static and rendered prefixes are mutually exclusive. A renderer failure, path
+escape, source-SHA mismatch, empty or oversized result, invalid UTF-8, or managed
+controller-marker injection fails before the write-permission job can run. The
+rendered bytes are retained with the read-only observation artifact and passed
+to `settle` as a job output, so the candidate PR is created with the correct
+declaration on its first write. Buildchain preserves that repository-owned text
+when later observations update only the managed state marker. Before any write,
+`settle` also requires its fresh observation to select the same SHA that produced
+the rendered bytes. Concurrent qualification progress therefore fails closed
+and is recomputed by the next patrol instead of attaching a declaration to the
+wrong candidate.
 
 The separately permissioned `settle` job re-runs the exact observation before
 any write. With no active managed candidate, it creates one branch named from

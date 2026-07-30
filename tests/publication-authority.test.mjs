@@ -25,6 +25,7 @@ import {
 import {
   evaluateBuildchainReleaseReconciliation,
   evaluatePublicationControlPlaneSnapshot,
+  matchesGithubDeploymentPolicy,
 } from "../packages/core/publication-control-plane-audit.js";
 import { sha256Json } from "../packages/core/release-candidate.js";
 
@@ -962,4 +963,23 @@ test("control-plane snapshot audit supports scoped GitHub tokens and sanitized O
     },
   });
   assert.equal(oidcRole.facts.every((entry) => entry.status === "pass"), true);
+});
+
+test("GitHub Environment deployment policies bind the exact branch or tag kind", () => {
+  assert.equal(matchesGithubDeploymentPolicy(
+    { type: "tag", name: "v*" },
+    { ref: "v3.0.2", refType: "tag" },
+  ), true);
+  assert.equal(matchesGithubDeploymentPolicy(
+    { type: "tag", name: "v*" },
+    { ref: "release/v3/v3.0", refType: "branch" },
+  ), false);
+  assert.equal(matchesGithubDeploymentPolicy(
+    { type: "branch", name: "release/**" },
+    { ref: "release/v3/v3.0", refType: "branch" },
+  ), true);
+  assert.equal(matchesGithubDeploymentPolicy(
+    { type: "branch", name: "release/*" },
+    { ref: "release/v3/v3.0", refType: "branch" },
+  ), false);
 });
