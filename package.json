@@ -41,6 +41,7 @@
     "./portable-dev-cache": "./packages/core/portable-dev-cache.js",
     "./publication-artifact": "./packages/core/publication-artifact.js",
     "./publication-package": "./packages/core/publication-package.js",
+    "./publication-reproducibility": "./packages/core/publication-reproducibility.js",
     "./publication-authority": "./packages/core/publication-authority.js",
     "./publication-control-plane-audit": "./packages/core/publication-control-plane-audit.js",
     "./buildchain-publication-authority": "./packages/core/buildchain-publication-authority.js",

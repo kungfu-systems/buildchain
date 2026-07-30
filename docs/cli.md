@@ -76,6 +76,7 @@ import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
 import { verifyGitHubArtifactAttestationEvidence } from "@kungfu-tech/buildchain/github-artifact-attestation";
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
+import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
 import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
 import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
 import { createBuildchainLayoutDiscovery } from "@kungfu-tech/buildchain/buildchain-layout";
@@ -284,7 +285,9 @@ import {
   assertPublicSurfaceReverseAudit,
 } from "@kungfu-tech/buildchain/public-surface-audit";
 
-assertPublicSurfaceReverseAudit(collectPublicSurfaceReverseAudit({ root: process.cwd() }));
+assertPublicSurfaceReverseAudit(
+  collectPublicSurfaceReverseAudit({ root: process.cwd() }),
+);
 ```
 
 `buildchain kfd` is the product-facing KFD namespace. Schema commands expose the
@@ -398,7 +401,10 @@ The event protocol is JSONL and is also available from the SDK:
 ```js
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 
-const logger = createBuildchainLogger({ source: "user", component: "native-build" });
+const logger = createBuildchainLogger({
+  source: "user",
+  component: "native-build",
+});
 logger.mark("configure.ready", { phase: "configure" });
 ```
 
@@ -529,6 +535,24 @@ buildchain publication-artifact manifest \
   --source-sha "$(git rev-parse HEAD)" \
   --json
 ```
+
+Run the fail-closed clean-room gate before Alpha or release admission:
+
+```bash
+buildchain publication-artifact reproducibility \
+  --source-sha "$(git rev-parse HEAD)" \
+  --promote \
+  --json
+```
+
+The command checks two independent clones of the exact commit, isolates caches,
+derives `SOURCE_DATE_EPOCH` from Git, and compares every declared artifact,
+source bundle, publication evidence file, npm package file, and actual npm
+tarball. It writes
+`.buildchain/publication/reproducibility-receipt.json`. Only a byte-identical
+build using the digest-pinned `latex-docker` toolchain is qualifying.
+`--allow-unpinned-toolchain` exists for local diagnostics and never changes the
+receipt's `qualifying` field.
 
 Generate the Buildchain-owned npm paper package contents from declared
 publication facts:

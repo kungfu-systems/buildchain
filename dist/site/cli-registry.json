@@ -918,6 +918,18 @@
       "maturity": "stable"
     },
     {
+      "id": "publication-artifact-reproducibility",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publication-artifact reproducibility [--cwd <dir>] [--source-sha <sha>]",
+      "purpose": "Prove exact PDF, source bundle, publication evidence, and npm tarball bytes across two independent clean builds.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "publish-source",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...",

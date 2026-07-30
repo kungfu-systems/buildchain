@@ -11,6 +11,7 @@ import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
 import { runReleaseGovernanceCli } from "../scripts/reconcile-release-governance.mjs";
 import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
+import { runPublicationReproducibilityCli } from "../scripts/publication-reproducibility.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { detectPackageManager } from "../packages/core/package-manager.js";
 import {
@@ -294,6 +295,10 @@ function usage() {
                                            [--registry-output <file>] [--source-bundle <file>]
                                            [--no-source-bundle] [--json]
   buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]
+  buildchain publication-artifact reproducibility [--cwd <dir>] [--source-sha <sha>]
+                                                   [--output <file>] [--promote]
+                                                   [--no-toolchain-pull]
+                                                   [--allow-unpinned-toolchain] [--json]
   buildchain release-propagation <plan|write-lock> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
@@ -1812,6 +1817,10 @@ async function main(argv = process.argv.slice(2)) {
   if (command === "publication-artifact" || command === "publication") {
     if (args[0] === "npm-package" || args[0] === "package") {
       runPublicationPackageCli(args.slice(1));
+      return;
+    }
+    if (args[0] === "reproducibility" || args[0] === "reproducible") {
+      runPublicationReproducibilityCli(args.slice(1));
       return;
     }
     runPublicationArtifactCli(args);
