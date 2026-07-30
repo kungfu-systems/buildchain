@@ -705,7 +705,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:c44af2e824cf3f358a89532dca640b02c9395a36cbaf9942f804897db921dbcd"
+      "auditDigest": "sha256:9f233e352f2c6fe7c15c8caa1c11563e1939a36f15a36cd6a7d0b4505c9073f1"
     },
     {
       "contractVersion": 1,
@@ -2445,7 +2445,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:3f76502666069c2727d23efcfdb08fb80f89ced1955a69e29f11525ae88aca1d",
-      "auditDigest": "sha256:f576586ee45f0bc56934f432ed6acf26d9c171ffb03672fbceeb1594094f01ca"
+      "auditDigest": "sha256:4b45a6967a6aa76ad73aa4c05759d3d2d419d1f0ce0239e14954dad422b02f51"
     },
     {
       "contractVersion": 1,
@@ -2695,7 +2695,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:0eb318df455ef9cb737a7c2515a2411b685d34ed0bde7b5f5b173a7a42513114",
-      "auditDigest": "sha256:63ce6fcf05c4a3aaf9202003824e48d8229f122b9a4667dca560688cf38a79c4"
+      "auditDigest": "sha256:7467fb0651dae2f5463f8dd07e3c28690f7a2aa63b9560810f8e3e0f4a49a970"
     },
     {
       "contractVersion": 1,
@@ -3448,5 +3448,5 @@
     }
   ],
   "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102",
-  "contractDigest": "sha256:9fd13609b31c78d57112fd4724649d5f7040abfc4c127b9b74d8beba55f88d19"
+  "contractDigest": "sha256:d31e31a21fd155ba1094832131137afd6eddce00d69412d702ad8dc5cc16c860"
 }
