@@ -2251,6 +2251,8 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(publicPublication, /Binary Distribution source \$source_sha does not match \$release_tag/);
   assert.match(publicPublication, /manual buildchain-ref must equal the exact workflow source SHA/);
   assert.match(authority, /--allow-release-reconciliation/);
+  assert.match(authority, /--environment-ref "v\$\{\{ inputs\.publication-version \}\}"/);
+  assert.match(authority, /--environment-ref-type tag/);
   assert.match(authority, /BUILDCHAIN_AUTHORITY_REF: \$\{\{ inputs\.buildchain-ref \}\}/);
   assert.match(authority, /actualRuntimeSha !== expectedAuthorityRuntimeSha/);
   assert.match(
