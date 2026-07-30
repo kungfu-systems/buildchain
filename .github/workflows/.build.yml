@@ -2548,6 +2548,34 @@ jobs:
           name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
+      - name: Resolve source-bound application identity
+        id: credential-identity
+        shell: bash
+        env:
+          BUILDCHAIN_CREDENTIAL_INPUT_ROOT: .buildchain/credential-island-input
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { loadCredentialInput } from "./.buildchain/runtime/actions/macos-credential-island/lib.js";
+
+          const sealed = loadCredentialInput(
+            process.env.BUILDCHAIN_CREDENTIAL_INPUT_ROOT,
+            {
+              repository: process.env.BUILDCHAIN_SOURCE_REPOSITORY,
+              sourceSha: process.env.BUILDCHAIN_SOURCE_SHA,
+              sourceTreeSha: process.env.BUILDCHAIN_SOURCE_TREE_SHA,
+            },
+          );
+          const bundleId = String(sealed.manifest.app.bundleId || "").trim();
+          if (!/^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/u.test(bundleId)) {
+            throw new Error("sealed application bundle identifier is invalid");
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `bundle-id=${bundleId}\n`);
+          NODE
+
       - name: Sign, notarize, staple, and verify
         id: credential-island
         uses: ./.buildchain/runtime/actions/macos-credential-island
@@ -2562,7 +2590,7 @@ jobs:
           artifact-name: ${{ steps.names.outputs.artifact-name }}
           platform-id: ${{ inputs.credential-island-macos-platform-id }}-credential
           artifact-relative-output: product/release
-          expected-bundle-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID }}
+          expected-bundle-id: ${{ steps.credential-identity.outputs.bundle-id }}
           expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
           certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
           certificate-p12-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
