@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8a49518fedf61ac874bbe11bcbba5309406c3b838eb9b109d25e6d201513c0b0",
+    "sha256": "f58a3a016dfccd7b70b632e801ca6ddf1308137309941131074f22cb5274bf12",
     "summary": {
-      "cliCommandCount": 80,
+      "cliCommandCount": 88,
       "workflowCount": 47,
       "actionCount": 4,
       "sitePageCount": 51,
-      "docCommandRefCount": 251,
+      "docCommandRefCount": 267,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -227,13 +227,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8a49518fedf61ac874bbe11bcbba5309406c3b838eb9b109d25e6d201513c0b0",
+      "sha256": "f58a3a016dfccd7b70b632e801ca6ddf1308137309941131074f22cb5274bf12",
       "summary": {
-        "cliCommandCount": 80,
+        "cliCommandCount": 88,
         "workflowCount": 47,
         "actionCount": 4,
         "sitePageCount": 51,
-        "docCommandRefCount": 251,
+        "docCommandRefCount": 267,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1254,6 +1254,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./publication-sealed-bundle"
+        },
+        {
+          "id": "export:./paper",
+          "name": "@kungfu-tech/buildchain/paper",
+          "kind": "package-export",
+          "sourcePath": "packages/core/paper.js",
+          "evidencePath": "packages/core/paper.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./paper"
         },
         {
           "id": "export:./publication-authority",
@@ -2322,6 +2334,102 @@
         {
           "id": "cli:npm-dry-run",
           "name": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper",
+          "name": "buildchain paper",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-alpha",
+          "name": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-bootstrap-npm",
+          "name": "buildchain paper bootstrap npm [--cwd <dir>] [--execute]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-build",
+          "name": "buildchain paper build [--cwd <dir>] [--execute] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-preflight",
+          "name": "buildchain paper preflight [--cwd <dir>] [--offline] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-resume",
+          "name": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-scaffold",
+          "name": "buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-status",
+          "name": "buildchain paper status [--cwd <dir>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4743,6 +4851,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 307
+    "publicSurfaceCount": 316
   }
 }
