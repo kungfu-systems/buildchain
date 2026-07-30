@@ -121,6 +121,12 @@ test("native authority materializes only the sealed PE and binds final signed by
       }).ok,
       true,
     );
+    const nestedIntake = path.join(value.root, "nested-intake", "request-artifact");
+    fs.cpSync(value.input, nestedIntake, { recursive: true });
+    assert.equal(
+      verifyArtifactSigningResults({ requestRoot: path.dirname(nestedIntake), resultRoot: output }).ok,
+      true,
+    );
     const consumer = path.join(value.root, "consumer");
     fs.mkdirSync(path.join(consumer, "dist"), { recursive: true });
     fs.writeFileSync(path.join(consumer, "dist", "agent.exe"), value.payload);
@@ -197,6 +203,7 @@ test("Buildchain authority owns native credentials and performs provider verific
     "utf8",
   );
   assert.match(workflow, /environment: buildchain-artifact-signing/);
+  assert.match(workflow, /Verify complete signed result set on GitHub-hosted infrastructure/);
   assert.match(releaseVerify, /authority\/\*\/\*\/artifact-signing/);
   assert.match(
     reusableDocs,

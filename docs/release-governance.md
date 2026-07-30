@@ -260,6 +260,13 @@ Developer ID, Windows Authenticode, and detached cryptographic signatures share
 the request/receipt model, while each profile retains its honest platform
 semantics and fail-closed verification requirements.
 
+The authority verifies the complete result set on GitHub-hosted infrastructure
+before delivery. The consumer controller also performs final result verification,
+exact-byte import, manifest recomputation, and deterministic-artifact replacement
+on a GitHub-hosted lane. Self-hosted build runners do not download authority
+result payloads, and aggregate/release evidence fails closed until this
+finalization succeeds.
+
 The central `buildchain-artifact-signing` environment reuses the established
 macOS Credential Island names (`BUILDCHAIN_MACOS_CERTIFICATE_*`,
 `BUILDCHAIN_MACOS_NOTARY_API_*`, and

@@ -246,7 +246,7 @@ test("reusable build workflow exposes the required surface contract", () => {
         /strategy:\n\s+fail-fast: \$\{\{ inputs\.fail-fast \}\}/g,
       ) || []
     ).length,
-    3,
+    4,
   );
   assert.match(workflow, /kfd-agent-hub:\n\s+description: "Agent Hub conformance mode: off or auto/);
   assert.equal((workflow.match(/name: Run KFD Agent Hub conformance/g) || []).length, 2);
@@ -399,11 +399,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
     (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
-    6,
+    7,
   );
   assert.equal(
     (workflow.match(/pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g) || []).length,
-    6,
+    7,
   );
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);
@@ -414,7 +414,12 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/Seal declared artifact signing requests/g) || []).length, 2);
   assert.equal((workflow.match(/Publish Buildchain-owned artifact signing request/g) || []).length, 2);
   assert.equal((workflow.match(/Dispatch and await Buildchain signing authority/g) || []).length, 2);
-  assert.equal((workflow.match(/Verify and import final signed bytes/g) || []).length, 2);
+  assert.equal((workflow.match(/Verify and import final signed bytes on GitHub-hosted infrastructure/g) || []).length, 1);
+  assert.doesNotMatch(workflow, /Download immutable signed result\n/);
+  assert.equal((workflow.match(/Seal GitHub-hosted signing finalization delegation/g) || []).length, 2);
+  assert.equal((workflow.match(/Publish GitHub-hosted signing finalization delegation/g) || []).length, 2);
+  assert.match(workflow, /finalize-artifact-signing:[\s\S]*?runs-on: ubuntu-24\.04/);
+  assert.match(workflow, /needs\.finalize-artifact-signing\.result == 'success'/);
   assert.equal(
     (
       workflow.match(
@@ -429,7 +434,7 @@ test("reusable build workflow exposes the required surface contract", () => {
         /if: \$\{\{ steps\.signing-requests\.outputs\.request-count != '0' \}\}/g,
       ) || []
     ).length,
-    10,
+    6,
   );
   assert.equal(
     (
@@ -494,7 +499,12 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /"workflow-shell-sha": workflowShellSha/);
   assert.match(workflow, /Checkout Buildchain workflow shell/);
   assert.match(workflow, /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/);
-  assert.match(workflow, /path: \.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
+  assert.match(workflow, /path: \|\n\s+\.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-delegation\.mjs/);
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length,
+    2,
+  );
   assert.match(workflow, /Upload Buildchain runtime checkout bootstrap/);
   assert.equal(
     (workflow.match(/Download Buildchain runtime checkout bootstrap/g) || []).length,
@@ -536,7 +546,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.equal(
     (workflow.match(/\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/source-checkout\.json/g) || []).length,
-    4,
+    5,
   );
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /artifact-transfer:/);
