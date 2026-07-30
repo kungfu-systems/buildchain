@@ -48,8 +48,23 @@ on:
         type: string
         required: false
       runner-preset:
-        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, or custom with platforms-json"
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, aws-us-codebuild-linux, aws-us-ec2-windows-jit, aws-us-ec2-macos-jit, or custom with platforms-json"
         default: "github-hosted"
+        type: string
+        required: false
+      aws-codebuild-project:
+        description: "Required CodeBuild project name for the explicit aws-us-codebuild-linux burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-windows-runner-label:
+        description: "Required unique card-scoped JIT label for the explicit aws-us-ec2-windows-jit burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-macos-runner-label:
+        description: "Required unique campaign-scoped JIT label for the explicit aws-us-ec2-macos-jit burst preset"
+        default: ""
         type: string
         required: false
       platforms-json:
@@ -717,6 +732,9 @@ jobs:
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
+      aws-codebuild-project: ${{ inputs.aws-codebuild-project }}
+      aws-ec2-windows-runner-label: ${{ inputs.aws-ec2-windows-runner-label }}
+      aws-ec2-macos-runner-label: ${{ inputs.aws-ec2-macos-runner-label }}
       platforms-json: ${{ inputs.platforms-json }}
       self-hosted-offline-fallback: ${{ inputs.self-hosted-offline-fallback }}
       control-runner-json: ${{ inputs.control-runner-json }}

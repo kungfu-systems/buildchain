@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "5c0c7307bb74585dfbbd98fba33388016a8c2caa9c244407aa415708cb46900d",
+    "sha256": "ca69064478378b6eedf0dd64705e73496db0935a24a37e7760d2c9da30e15884",
     "summary": {
       "cliCommandCount": 97,
       "workflowCount": 57,
       "actionCount": 6,
-      "sitePageCount": 59,
+      "sitePageCount": 60,
       "docCommandRefCount": 291,
       "failureCount": 0
     },
@@ -228,12 +228,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "5c0c7307bb74585dfbbd98fba33388016a8c2caa9c244407aa415708cb46900d",
+      "sha256": "ca69064478378b6eedf0dd64705e73496db0935a24a37e7760d2c9da30e15884",
       "summary": {
         "cliCommandCount": 97,
         "workflowCount": 57,
         "actionCount": 6,
-        "sitePageCount": 59,
+        "sitePageCount": 60,
         "docCommandRefCount": 291,
         "failureCount": 0
       },
@@ -3045,7 +3045,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 75,
+          "inputCount": 78,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3061,6 +3061,9 @@
             "artifact-retention-days",
             "artifact-signing-request-upload-no-proxy",
             "artifact-transfer-mode",
+            "aws-codebuild-project",
+            "aws-ec2-macos-runner-label",
+            "aws-ec2-windows-runner-label",
             "build-command",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
@@ -3726,7 +3729,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 78,
+          "inputCount": 81,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3742,6 +3745,9 @@
             "artifact-retention-days",
             "artifact-signing-request-upload-no-proxy",
             "artifact-transfer-mode",
+            "aws-codebuild-project",
+            "aws-ec2-macos-runner-label",
+            "aws-ec2-windows-runner-label",
             "build-command",
             "buildchain-alpha-contract-lock-path",
             "buildchain-channel",
@@ -5091,6 +5097,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:aws-us-elastic-runner-burst-plane",
+          "name": "site-page:manual:aws-us-elastic-runner-burst-plane",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:binary-distribution",
           "name": "site-page:manual:binary-distribution",
           "kind": "site-page",
@@ -5717,6 +5735,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 365
+    "publicSurfaceCount": 366
   }
 }
