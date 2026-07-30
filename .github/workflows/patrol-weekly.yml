@@ -9,8 +9,8 @@ on:
         type: string
         required: false
       buildchain-ref:
-        description: "Optional Buildchain runtime ref. Empty uses v2."
-        default: "v2"
+        description: "Optional Buildchain runtime ref. Empty uses v3."
+        default: "v3"
         type: string
         required: false
       target-branch:

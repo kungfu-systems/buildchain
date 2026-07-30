@@ -20,7 +20,10 @@ import {
   resolveGithubGovernanceTargetRefs,
   verifyGithubGovernanceReceipt,
 } from "../packages/core/github-governance-authority.js";
-import { resolveVerifierSourceRevision } from "../scripts/audit-github-governance.mjs";
+import {
+  resolveVerifierSourceRevision,
+  selectGithubGovernanceRepositories,
+} from "../scripts/audit-github-governance.mjs";
 import {
   githubApiFailureIsAbsence,
   resolveGithubProtectionTargetPolicy,
@@ -115,11 +118,12 @@ function qualifyingInput(overrides = {}) {
 test("authority descriptor freezes the TCB, baseline, plan boundary, and non-claims", () => {
   const descriptor = BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY;
   assert.equal(descriptor.organization, "kungfu-systems");
-  assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 19);
+  assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 16);
+  assert.deepEqual(descriptor.repositoryAdmission.managedVisibilities, ["public"]);
   assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 16);
-  assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 3);
+  assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 0);
   assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 41);
-  assert.deepEqual(descriptor.planCapability.privateRepositories, ["team", "enterprise"]);
+  assert.deepEqual(descriptor.planCapability.privateRepositories, []);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
     Object.fromEntries(Object.entries(descriptor).filter(([key]) => key !== "policyRoot")),
@@ -336,16 +340,21 @@ test("private repositories on Free remain anonymous and non-qualifying", () => {
   assert.equal(JSON.stringify(receipt).includes("private-control"), false);
 });
 
-test("private admission uses a policy-independent provider identity root and sealed target checks", () => {
+test("custom private admission remains explicit and policy-root bound", () => {
   const descriptor = structuredClone(BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY);
-  const identityRoot = descriptor.repositoryAdmission.privateRepositoryIdentities[0].identityRoot;
+  const identityRoot = githubGovernanceDigest("private-provider-identity");
   const requiredCheckBindings = [{ context: "check", appId: 15368 }];
-  descriptor.repositoryAdmission.privateRepositoryIdentities[0].requiredCheckPolicies = {
-    "dev/v3/v3.0": {
-      requiredCheckBindingRoot: githubGovernanceDigest(requiredCheckBindings),
-      strictRequiredChecks: false,
+  descriptor.repositoryAdmission.privateRepositoryIdentities.push({
+    identityRoot,
+    targetPolicy: "default-and-current-version-line",
+    requiredCheckPolicies: {
+      "dev/v3/v3.0": {
+        requiredCheckBindingRoot: githubGovernanceDigest(requiredCheckBindings),
+        strictRequiredChecks: false,
+      },
     },
-  };
+  });
+  descriptor.planCapability.privateRepositories = ["team", "enterprise"];
   const { policyRoot: ignored, ...descriptorCore } = descriptor;
   descriptor.policyRoot = githubGovernanceDigest(descriptorCore);
   assert.equal(
@@ -422,13 +431,19 @@ test("authoritative target registry detects default drift and constrains private
   });
   assert.deepEqual(organizationProfileTargets, ["main"]);
 
+  const descriptor = structuredClone(BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY);
+  const identityRoot = githubGovernanceDigest("private-provider-identity");
+  descriptor.repositoryAdmission.privateRepositoryIdentities.push({
+    identityRoot,
+    targetPolicy: "default-and-current-version-line",
+    requiredCheckPolicies: {},
+  });
   const privateTargets = resolveGithubGovernanceTargetRefs({
+    descriptor,
     repository: {
       fullName: "kungfu-systems/private-control",
       visibility: "private",
-      identityRoot:
-        BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.repositoryAdmission
-          .privateRepositoryIdentities[0].identityRoot,
+      identityRoot,
       defaultBranch: "dev/v7/v7.3",
     },
     availableRefs: [
@@ -443,6 +458,25 @@ test("authoritative target registry detects default drift and constrains private
     "alpha/v7/v7.3",
     "release/v7/v7.3",
   ]);
+});
+
+test("audit selection excludes private repositories before receipt generation", () => {
+  const repositories = [
+    { full_name: "kungfu-systems/buildchain", visibility: "public" },
+    { full_name: "kungfu-systems/new-public", private: false },
+    { full_name: "kungfu-systems/private-control", visibility: "private" },
+  ];
+  assert.deepEqual(
+    selectGithubGovernanceRepositories(repositories).map((entry) => entry.full_name),
+    ["kungfu-systems/buildchain", "kungfu-systems/new-public"],
+  );
+  assert.throws(
+    () => selectGithubGovernanceRepositories(
+      repositories,
+      "kungfu-systems/private-control",
+    ),
+    /outside managed governance scope/,
+  );
 });
 
 test("formal artifact-signing authority is admitted with exact checks and no bypass", () => {

@@ -41,6 +41,11 @@ on:
         default: ""
         type: string
         required: false
+      self-hosted-offline-fallback:
+        description: "Route each supported exact-label self-hosted lane to its GitHub-hosted runner when no matching runner is online"
+        default: false
+        type: boolean
+        required: false
       control-runner-json:
         description: "JSON runner-label array for trusted control-plane jobs"
         default: '["ubuntu-24.04"]'
@@ -379,7 +384,7 @@ on:
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
         required: false
       BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
+        description: "Standard Buildchain control-plane token used only for protected runner inventory, dispatch, and central authority retrieval"
         required: false
     outputs:
       runner-preset:
@@ -388,6 +393,9 @@ on:
       platforms-json:
         description: "Resolved platform matrix JSON"
         value: ${{ jobs.resolve-contract.outputs.platforms-json }}
+      runner-routing-json:
+        description: "De-identified self-hosted availability and offline fallback decision"
+        value: ${{ jobs.resolve-contract.outputs.runner-routing-json }}
       platform-count:
         description: "Resolved platform count"
         value: ${{ jobs.resolve-contract.outputs.platform-count }}
@@ -1044,18 +1052,19 @@ jobs:
     needs:
       - trust-gate
     outputs:
-      runner-preset: ${{ steps.runners.outputs.runner-preset }}
-      platforms-json: ${{ steps.runners.outputs.platforms-json }}
-      platform-count: ${{ steps.runners.outputs.platform-count }}
-      platform-source: ${{ steps.runners.outputs.platform-source }}
-      native-platforms-json: ${{ steps.runners.outputs.native-platforms-json }}
-      native-platform-count: ${{ steps.runners.outputs.native-platform-count }}
-      container-platforms-json: ${{ steps.runners.outputs.container-platforms-json }}
-      container-platform-count: ${{ steps.runners.outputs.container-platform-count }}
-      linux-container-enabled: ${{ steps.runners.outputs.linux-container-enabled }}
-      linux-container-preset: ${{ steps.runners.outputs.linux-container-preset }}
-      linux-container-image: ${{ steps.runners.outputs.linux-container-image }}
-      linux-container-source: ${{ steps.runners.outputs.linux-container-source }}
+      runner-preset: ${{ steps.routed-runners.outputs.runner-preset || steps.runners.outputs.runner-preset }}
+      platforms-json: ${{ steps.routed-runners.outputs.platforms-json || steps.runners.outputs.platforms-json }}
+      platform-count: ${{ steps.routed-runners.outputs.platform-count || steps.runners.outputs.platform-count }}
+      platform-source: ${{ steps.routed-runners.outputs.platform-source || steps.runners.outputs.platform-source }}
+      native-platforms-json: ${{ steps.routed-runners.outputs.native-platforms-json || steps.runners.outputs.native-platforms-json }}
+      native-platform-count: ${{ steps.routed-runners.outputs.native-platform-count || steps.runners.outputs.native-platform-count }}
+      container-platforms-json: ${{ steps.routed-runners.outputs.container-platforms-json || steps.runners.outputs.container-platforms-json }}
+      container-platform-count: ${{ steps.routed-runners.outputs.container-platform-count || steps.runners.outputs.container-platform-count }}
+      linux-container-enabled: ${{ steps.routed-runners.outputs.linux-container-enabled || steps.runners.outputs.linux-container-enabled }}
+      linux-container-preset: ${{ steps.routed-runners.outputs.linux-container-preset || steps.runners.outputs.linux-container-preset }}
+      linux-container-image: ${{ steps.routed-runners.outputs.linux-container-image || steps.runners.outputs.linux-container-image }}
+      linux-container-source: ${{ steps.routed-runners.outputs.linux-container-source || steps.runners.outputs.linux-container-source }}
+      runner-routing-json: ${{ steps.offline-fallback.outputs.routing-json || '{"schema":"buildchain.runner-offline-routing/v1","status":"disabled","routes":[]}' }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -1071,6 +1080,34 @@ jobs:
         env:
           BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
           BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
+          BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
+          BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
+
+      - name: Checkout trusted runner-routing shell
+        if: ${{ inputs.self-hosted-offline-fallback }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/runner-routing-shell
+          persist-credentials: false
+
+      - name: Route offline self-hosted lanes
+        if: ${{ inputs.self-hosted-offline-fallback }}
+        id: offline-fallback
+        run: node .buildchain/runner-routing-shell/scripts/route-offline-runners.mjs
+        env:
+          BUILDCHAIN_RUNNER_PRESET: custom
+          BUILDCHAIN_PLATFORMS_JSON: ${{ steps.runners.outputs.platforms-json }}
+          BUILDCHAIN_RUNNER_INVENTORY_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+
+      - name: Resolve routed runner matrix
+        if: ${{ inputs.self-hosted-offline-fallback }}
+        id: routed-runners
+        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode runners
+        env:
+          BUILDCHAIN_RUNNER_PRESET: custom
+          BUILDCHAIN_PLATFORMS_JSON: ${{ steps.offline-fallback.outputs.platforms-json }}
           BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
           BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
@@ -2671,7 +2708,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"signing-finalization","status":"${{ needs.finalize-artifact-signing.result }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"anchored-version-material","path":".buildchain/anchored-version-material/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]'
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/release-candidate-receipt.json

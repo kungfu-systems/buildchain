@@ -634,6 +634,7 @@
           "rustup-dist-server",
           "rustup-update-root",
           "sample-process-tree",
+          "self-hosted-offline-fallback",
           "setup-node",
           "setup-rust",
           "shifu-cache-profile-digest",
@@ -642,7 +643,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 74,
+        "inputCount": 75,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -697,9 +698,10 @@
           "release-candidate-passport-json",
           "release-manifest-json",
           "runner-preset",
+          "runner-routing-json",
           "trusted-event"
         ],
-        "outputCount": 42
+        "outputCount": 43
       },
       {
         "id": ".bump-minor-version",
@@ -1436,6 +1438,7 @@
           "rustup-dist-server",
           "rustup-update-root",
           "sample-process-tree",
+          "self-hosted-offline-fallback",
           "setup-node",
           "setup-rust",
           "shifu-cache-profile-digest",
@@ -1444,7 +1447,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 77,
+        "inputCount": 78,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1502,9 +1505,10 @@
           "release-candidate-passport-json",
           "release-manifest-json",
           "runner-preset",
+          "runner-routing-json",
           "trusted-event"
         ],
-        "outputCount": 45
+        "outputCount": 46
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -4265,8 +4269,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "b89bf8a2a89711fd2033b022bc70dcf92bc1b84ce7697b2c736f098d41fefe92",
-    "pageRegistryDigest": "fafdc9dc9bdc3f6b40ee04b3ed0dea2d9968a3ffd3dd9938fc1e5a2262d71895"
+    "workflowRegistryDigest": "520ea7f41a3798cf7d785b9913f3331b1109df23443ced83bf3922e6f21ca70e",
+    "pageRegistryDigest": "dcf144c19885d33225c4d78520e58b9b00c0a78e3cdc6b02d41468734d5c9100"
   },
   "comparison": {
     "missingCliRegistry": [],

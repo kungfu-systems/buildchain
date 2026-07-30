@@ -25,7 +25,7 @@ jobs:
   patrol:
     uses: ./.github/workflows/patrol-monthly.yml
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
+      buildchain-ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
       dry-run: ${{ inputs.dry-run || true }}
     secrets:
       github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}

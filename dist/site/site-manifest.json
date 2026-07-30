@@ -109,7 +109,7 @@
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:2a5b9c471072b9d032fa594641d3755cb6bdcddf77cf360d026b6b653097dea8"
+      "digest": "sha256:304d0246d21bdd0f6a77183ac6839a5d1234d08d98bd5da9728c85a65b1ff7b7"
     },
     {
       "id": "release-candidate",
@@ -157,7 +157,7 @@
       "path": "docs/consumer-issue-reporting.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:96804310360c02f408fee9d540385d875a40d09bef046c3df369228d311a1cdd"
+      "digest": "sha256:20c33ab68e91227837626d1289d6c5540a318c8ff484d9a1f0ebe7dbe8626d02"
     },
     {
       "id": "infra-contract",
@@ -253,7 +253,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:4409c8259c3613b51a1db809493e73d9b85a0d16d292a491046fd36770d98fb0"
+      "digest": "sha256:d010fcf796c4b06cc961b6d5e4221fb987986fdce8a0c8533510529e3af029a9"
     },
     {
       "id": "publish-transaction",
@@ -269,7 +269,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:003634ea469b21c7cb1442c308dbfddba50e90bfc9d8df56680e051584b720a8"
+      "digest": "sha256:8c31e6daccd40ea4e7cb08e8fa3eb2f238006e331621aed45eddcb80aee5532f"
     },
     {
       "id": "release-flow",

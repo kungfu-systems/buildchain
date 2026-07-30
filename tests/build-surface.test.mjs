@@ -94,6 +94,59 @@ const root = path.resolve(
   "..",
 );
 
+test("every workflow v2 token is explicitly governed and no ungoverned runtime default remains", () => {
+  const inventory = JSON.parse(
+    fs.readFileSync(path.join(root, "contracts/buildchain-v2-residuals-v1.json"), "utf8"),
+  );
+  assert.equal(inventory.contract, "buildchain.v2-residual-inventory/v1");
+  assert.equal(inventory.policy.runtimeDefault, "v3");
+  assert.equal(inventory.policy.dogfoodRuntimeDefault, "v3-alpha");
+  assert.equal(inventory.policy.unclassifiedV2TokensAllowed, false);
+
+  const allowedClassifications = new Set([
+    "artifact-version-example",
+    "legacy-compatibility-action",
+    "legacy-compatibility-ref",
+    "public-contract-compatibility-fallback",
+    "retired-input-tombstone",
+    "retired-path-tombstone",
+    "third-party-action-version",
+  ]);
+  for (const entry of inventory.entries) {
+    assert.ok(entry.path.startsWith(".github/workflows/"), `${entry.path} must be a workflow`);
+    assert.ok(entry.token.toLowerCase().includes("v2"), `${entry.path} token must identify v2`);
+    assert.ok(Number.isInteger(entry.expectedOccurrences) && entry.expectedOccurrences > 0);
+    assert.ok(allowedClassifications.has(entry.classification), `${entry.path} classification must be governed`);
+    assert.ok(entry.callerStatus, `${entry.path} must declare caller status`);
+    assert.ok(entry.owner, `${entry.path} must declare an owner`);
+    assert.ok(entry.sunsetCondition, `${entry.path} must declare a sunset condition`);
+
+    const source = fs.readFileSync(path.join(root, entry.path), "utf8");
+    assert.equal(
+      source.split(entry.token).length - 1,
+      entry.expectedOccurrences,
+      `${entry.path} residual count drifted for ${entry.token}`,
+    );
+  }
+
+  const workflowDir = path.join(root, ".github/workflows");
+  for (const name of fs.readdirSync(workflowDir).filter((entry) => /\.ya?ml$/.test(entry))) {
+    const workflowPath = `.github/workflows/${name}`;
+    const source = fs.readFileSync(path.join(workflowDir, name), "utf8");
+    for (const [index, line] of source.split("\n").entries()) {
+      if (!line.toLowerCase().includes("v2")) continue;
+      const matches = inventory.entries.filter(
+        (entry) => entry.path === workflowPath && line.includes(entry.token),
+      );
+      assert.equal(
+        matches.length,
+        1,
+        `${workflowPath}:${index + 1} has an unclassified or ambiguous v2 token: ${line.trim()}`,
+      );
+    }
+  }
+});
+
 test("public reusable controllers expose source-bound plan and always-aggregated receipt outputs", () => {
   const workflows = [
     ".github/workflows/check.yml",
@@ -316,6 +369,16 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(workflow, /runner-preset:/);
   assert.match(workflow, /platforms-json:/);
+  assert.match(workflow, /self-hosted-offline-fallback:/);
+  assert.match(
+    workflow,
+    /name: Route offline self-hosted lanes[\s\S]*?BUILDCHAIN_RUNNER_INVENTORY_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
+  assert.match(
+    workflow,
+    /name: Checkout trusted runner-routing shell[\s\S]*?buildchain-workflow-shell-sha/,
+  );
+  assert.match(workflow, /runner-routing-json:/);
   assert.match(workflow, /linux-container-preset:/);
   assert.match(workflow, /linux-container-image:/);
   assert.match(workflow, /resolve-contract:/);
@@ -1317,13 +1380,13 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /pull-requests: write/);
   assert.match(dogfoodWeekly, /schedule:/);
   assert.match(dogfoodWeekly, /uses: \.\/\.github\/workflows\/patrol-weekly\.yml/);
-  assert.match(dogfoodWeekly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.match(dogfoodWeekly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
   assert.doesNotMatch(dogfoodWeekly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodWeekly, /contents: write/);
   assert.match(dogfoodWeekly, /pull-requests: write/);
   assert.match(dogfoodMonthly, /schedule:/);
   assert.match(dogfoodMonthly, /uses: \.\/\.github\/workflows\/patrol-monthly\.yml/);
-  assert.match(dogfoodMonthly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.match(dogfoodMonthly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
   assert.doesNotMatch(dogfoodMonthly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodMonthly, /contents: write/);
   assert.match(dogfoodMonthly, /pull-requests: write/);
@@ -1374,6 +1437,12 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(qualification, /statuses: write/);
   assert.match(qualification, /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(qualification, /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.match(qualification, /name: buildchain-v3-alpha-self-dogfood-evidence/);
+  assert.match(qualification, /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/);
+  assert.match(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/);
+  assert.doesNotMatch(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.candidate-sha \}\}/);
+  assert.match(qualification, /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ steps\.candidate\.outputs\.sha \}\}/);
+  assert.doesNotMatch(qualification, /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ github\.event\.workflow_run\.head_sha/);
   assert.match(qualification, /stable-candidate-qualification\.mjs/);
 });
 
@@ -2362,7 +2431,7 @@ test("runtime selection accepts official channels and gates train or SHA overrid
   );
   assert.equal(
     resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/libnode/.github/workflows/build.yml@main" }).runtimeRef,
-    "v2",
+    "v3",
   );
   assert.deepEqual(
     resolveRuntimeSelection({
@@ -2375,8 +2444,8 @@ test("runtime selection accepts official channels and gates train or SHA overrid
       runtimeFullRef: "v2-alpha",
       runtimeClass: "alpha",
       runtimeOverride: false,
-      workflowShellRef: "v2",
-      rollbackRef: "v2",
+      workflowShellRef: "v3",
+      rollbackRef: "v3",
       trustDecision: "official-channel",
     },
   );
