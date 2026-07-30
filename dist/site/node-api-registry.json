@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:aec8d76bfe6dcb768fcf98d131874ca21fd0a07bcf3845a276ed8622b25d77d4",
+      "digest": "sha256:768a2a349594112dc6cba9425877d0c4b90f159f2a4424334ac51b8a01dca7eb",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:aec8d76bfe6dcb768fcf98d131874ca21fd0a07bcf3845a276ed8622b25d77d4",
+      "digest": "sha256:768a2a349594112dc6cba9425877d0c4b90f159f2a4424334ac51b8a01dca7eb",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -424,7 +424,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:da2163f7a6e8fc7ec7600f6ffac50e51932027827c18f275b1a043c87ce2e1bb",
+      "digest": "sha256:3b94d19dbc6d16eda247c1e6423b6ceba7d67eac5a0ff0e45830a4e174a5d5dc",
       "summary": "Unified paper scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -607,7 +607,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:6c86228a9287aabbfc63d70fcc8afdcbc2f7bec48c4109161b06c63de23bc70a"
+      "digest": "sha256:e5f1cb801b4e88799ddd6214bada24073550bb412a50d7c7e05432541c679ffe"
     },
     {
       "id": "build-facts",

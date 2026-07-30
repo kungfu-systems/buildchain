@@ -630,6 +630,7 @@ export {
 export {
   PAPER_ALPHA_PLAN_CONTRACT,
   PAPER_BUILD_PLAN_CONTRACT,
+  PAPER_MIGRATION_CONTRACT,
   PAPER_NPM_BOOTSTRAP_CONTRACT,
   PAPER_PATHS,
   PAPER_PREFLIGHT_CONTRACT,
@@ -644,8 +645,10 @@ export {
   createPaperBuildPlan,
   createPaperResumePlan,
   executePaperNpmBootstrap,
+  planPaperMigration,
   planPaperScaffold,
   resolvePaperRepository,
+  writePaperMigration,
   writePaperScaffold,
 } from "./paper.js";
 
