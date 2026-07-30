@@ -3003,7 +3003,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): prepare v'\)/);
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
-  assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
+  assert.match(
+    workflow,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+  );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /package-manager: pnpm/);
@@ -3959,7 +3962,10 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(actionlintConfig, /property "workflow_repository" is not defined in object type/);
   assert.match(actionlintConfig, /property "workflow_sha" is not defined in object type/);
 
-  assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
+  assert.match(
+    promotion,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+  );
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
 });
 
