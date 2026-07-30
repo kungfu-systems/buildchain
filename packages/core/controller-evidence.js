@@ -25,6 +25,7 @@ const CONTROLLER_SPECS = [
     capabilities: [
       "source-lock",
       "lifecycle-build",
+      "artifact-signing-finalization",
       "credential-island",
       "lifecycle-verify",
       "artifact-admission",
@@ -34,6 +35,7 @@ const CONTROLLER_SPECS = [
       "resolve-source",
       "anchored-release-preflight",
       "build",
+      "signing-finalization",
       "credential-island",
       "verify",
       "aggregate",

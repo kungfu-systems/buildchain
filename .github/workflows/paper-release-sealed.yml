@@ -194,6 +194,7 @@ jobs:
       contents: write
       id-token: write
       issues: write
+      pull-requests: write
     outputs:
       package-name: ${{ steps.candidate.outputs.package-name }}
       package-version: ${{ steps.candidate.outputs.package-version }}

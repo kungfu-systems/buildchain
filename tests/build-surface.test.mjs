@@ -208,6 +208,10 @@ test("reusable build workflow exposes the required surface contract", () => {
     path.join(root, ".github/workflows/.build.yml"),
     "utf8",
   );
+  const router = fs.readFileSync(
+    path.join(root, ".github/workflows/build.yml"),
+    "utf8",
+  );
   const summarizeJob = workflow.slice(
     workflow.indexOf("  summarize:"),
     workflow.indexOf("\n  controller-receipt:", workflow.indexOf("  summarize:")),
@@ -242,7 +246,7 @@ test("reusable build workflow exposes the required surface contract", () => {
         /strategy:\n\s+fail-fast: \$\{\{ inputs\.fail-fast \}\}/g,
       ) || []
     ).length,
-    3,
+    4,
   );
   assert.match(workflow, /kfd-agent-hub:\n\s+description: "Agent Hub conformance mode: off or auto/);
   assert.equal((workflow.match(/name: Run KFD Agent Hub conformance/g) || []).length, 2);
@@ -395,11 +399,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
     (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
-    6,
+    7,
   );
   assert.equal(
     (workflow.match(/pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g) || []).length,
-    6,
+    7,
   );
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);
@@ -410,7 +414,12 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/Seal declared artifact signing requests/g) || []).length, 2);
   assert.equal((workflow.match(/Publish Buildchain-owned artifact signing request/g) || []).length, 2);
   assert.equal((workflow.match(/Dispatch and await Buildchain signing authority/g) || []).length, 2);
-  assert.equal((workflow.match(/Verify and import final signed bytes/g) || []).length, 2);
+  assert.equal((workflow.match(/Verify and import final signed bytes on GitHub-hosted infrastructure/g) || []).length, 1);
+  assert.doesNotMatch(workflow, /Download immutable signed result\n/);
+  assert.equal((workflow.match(/Seal GitHub-hosted signing finalization delegation/g) || []).length, 2);
+  assert.equal((workflow.match(/Publish GitHub-hosted signing finalization delegation/g) || []).length, 2);
+  assert.match(workflow, /finalize-artifact-signing:[\s\S]*?runs-on: ubuntu-24\.04/);
+  assert.match(workflow, /needs\.finalize-artifact-signing\.result == 'success'/);
   assert.equal(
     (
       workflow.match(
@@ -425,7 +434,7 @@ test("reusable build workflow exposes the required surface contract", () => {
         /if: \$\{\{ steps\.signing-requests\.outputs\.request-count != '0' \}\}/g,
       ) || []
     ).length,
-    8,
+    6,
   );
   assert.equal(
     (
@@ -445,6 +454,13 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /process-sample-interval-ms:/);
   assert.match(workflow, /requested-parallelism:/);
   assert.match(workflow, /artifact-transfer-mode:/);
+  assert.match(workflow, /artifact-signing-request-upload-no-proxy:/);
+  assert.equal((workflow.match(/vars\.BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY/g) || []).length, 2);
+  assert.equal((workflow.match(/Resolve artifact signing request upload route/g) || []).length, 2);
+  assert.equal(
+    (workflow.match(/NO_PROXY: \$\{\{ steps\.signing-request-upload-route\.outputs\.no-proxy \}\}/g) || []).length,
+    2,
+  );
   assert.match(workflow, /s3-to-github-artifacts/);
   assert.match(workflow, /artifact-relay-s3-bucket:/);
   assert.match(workflow, /artifact-relay-s3-region:/);
@@ -483,7 +499,12 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /"workflow-shell-sha": workflowShellSha/);
   assert.match(workflow, /Checkout Buildchain workflow shell/);
   assert.match(workflow, /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/);
-  assert.match(workflow, /path: \.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
+  assert.match(workflow, /path: \|\n\s+\.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-delegation\.mjs/);
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length,
+    2,
+  );
   assert.match(workflow, /Upload Buildchain runtime checkout bootstrap/);
   assert.equal(
     (workflow.match(/Download Buildchain runtime checkout bootstrap/g) || []).length,
@@ -525,7 +546,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.equal(
     (workflow.match(/\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/source-checkout\.json/g) || []).length,
-    4,
+    5,
   );
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /artifact-transfer:/);
@@ -610,6 +631,13 @@ test("reusable build workflow exposes the required surface contract", () => {
     /BUILDCHAIN_SOURCE_SHA: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
   );
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+  assert.match(workflow, /artifact-compression-level:/);
+  assert.match(workflow, /default: 0/);
+  assert.equal(
+    (workflow.match(/name: Upload deterministic artifact[\s\S]*?compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/g) || []).length,
+    3,
+  );
+  assert.match(router, /artifact-compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/);
 });
 
 test("publication artifact workflow exposes paper artifact contract", () => {
@@ -2233,6 +2261,8 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(publicPublication, /Binary Distribution source \$source_sha does not match \$release_tag/);
   assert.match(publicPublication, /manual buildchain-ref must equal the exact workflow source SHA/);
   assert.match(authority, /--allow-release-reconciliation/);
+  assert.match(authority, /--environment-ref "v\$\{\{ inputs\.publication-version \}\}"/);
+  assert.match(authority, /--environment-ref-type tag/);
   assert.match(authority, /BUILDCHAIN_AUTHORITY_REF: \$\{\{ inputs\.buildchain-ref \}\}/);
   assert.match(authority, /actualRuntimeSha !== expectedAuthorityRuntimeSha/);
   assert.match(
@@ -2394,6 +2424,24 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     }),
     { ok: true, decision: "same-repository-pr-head" },
   );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      eventAction: "closed",
+      workflowShellSha: "a".repeat(40),
+    }),
+    { ok: true, decision: "closed-release-pr-shell-runtime" },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      eventAction: "closed",
+      workflowShellSha: "b".repeat(40),
+    }).ok,
+    false,
+  );
   assert.equal(
     validateRuntimeOverrideTrust({
       requestedRef: "a".repeat(40),
@@ -2439,6 +2487,18 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
     assert.match(workflow, /\? "official-channel"/);
     assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
   }
+});
+
+test("web-surface release PR close hands production to the protected main push", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.web-surface.yml"), "utf8");
+  assert.match(workflow, /trustedClosedReleasePrRuntime/);
+  assert.match(workflow, /requested\.toLowerCase\(\) === \(await resolveRef\(shellRef\)\)\.toLowerCase\(\)/);
+  assert.match(workflow, /closed-release-pr-shell-runtime/);
+  assert.match(workflow, /EVENT_ACTION" = "closed"[\s\S]*?web_surface_channel=""/);
+  assert.match(
+    fs.readFileSync(path.join(root, "scripts/web-surface-production-decision.mjs"), "utf8"),
+    /release-pr-verified-awaiting-main-push/,
+  );
 });
 
 test("runtime-aware workflows pin same-repository pull request merge refs", () => {
@@ -2955,7 +3015,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): prepare v'\)/);
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
-  assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
+  assert.match(
+    workflow,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+  );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /package-manager: pnpm/);
@@ -3911,7 +3974,10 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(actionlintConfig, /property "workflow_repository" is not defined in object type/);
   assert.match(actionlintConfig, /property "workflow_sha" is not defined in object type/);
 
-  assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
+  assert.match(
+    promotion,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+  );
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
 });
 

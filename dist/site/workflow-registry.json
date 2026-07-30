@@ -77,6 +77,7 @@
       "path": ".github/workflows/.build.yml",
       "reusable": true,
       "inputs": [
+        "artifact-compression-level",
         "artifact-name",
         "artifact-name-template",
         "artifact-paths",
@@ -88,6 +89,7 @@
         "artifact-relay-s3-role-arn",
         "artifact-relay-s3-upload-role-arn",
         "artifact-retention-days",
+        "artifact-signing-request-upload-no-proxy",
         "artifact-transfer-mode",
         "build-command",
         "buildchain-contract-compatibility-policy",
@@ -150,7 +152,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 72,
+      "inputCount": 74,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -937,6 +939,7 @@
       "path": ".github/workflows/build.yml",
       "reusable": true,
       "inputs": [
+        "artifact-compression-level",
         "artifact-name",
         "artifact-name-template",
         "artifact-paths",
@@ -948,6 +951,7 @@
         "artifact-relay-s3-role-arn",
         "artifact-relay-s3-upload-role-arn",
         "artifact-retention-days",
+        "artifact-signing-request-upload-no-proxy",
         "artifact-transfer-mode",
         "build-command",
         "buildchain-alpha-contract-lock-path",
@@ -1013,7 +1017,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 75,
+      "inputCount": 77,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

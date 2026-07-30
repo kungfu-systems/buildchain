@@ -10,6 +10,34 @@ export const BUILDCHAIN_RELEASE_RECONCILIATION_PATHS = Object.freeze([
   "package.json",
 ]);
 
+function deploymentPatternExpression(pattern) {
+  let expression = "";
+  for (let index = 0; index < pattern.length; index += 1) {
+    const character = pattern[index];
+    if (character === "*") {
+      if (pattern[index + 1] === "*") {
+        expression += ".*";
+        index += 1;
+      } else {
+        expression += "[^/]*";
+      }
+    } else {
+      expression += character.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+  }
+  return new RegExp(`^${expression}$`);
+}
+
+export function matchesGithubDeploymentPolicy(policy, { ref, refType = "branch" } = {}) {
+  const normalizedRef = String(ref || "");
+  const normalizedType = String(refType || "");
+  const policyName = String(policy?.name || "");
+  const policyType = String(policy?.type || "");
+  if (!normalizedRef || !["branch", "tag"].includes(normalizedType)) return false;
+  if (policyType !== normalizedType || !policyName) return false;
+  return deploymentPatternExpression(policyName).test(normalizedRef);
+}
+
 export function evaluateBuildchainReleaseReconciliation({
   repository,
   publicationVersion,

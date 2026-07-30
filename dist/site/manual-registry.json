@@ -107,7 +107,7 @@
       "title": "GitHub governance authority",
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
-      "digest": "sha256:a8322b19ab38d72754a80950d3c7dd97f330236ec5ab62c78df76b5993491067",
+      "digest": "sha256:2a5b9c471072b9d032fa594641d3755cb6bdcddf77cf360d026b6b653097dea8",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -360,7 +360,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:61af405bf8149e362826020d9784305738ede87695445ef20a37cb05bc830ae9",
+      "digest": "sha256:4409c8259c3613b51a1db809493e73d9b85a0d16d292a491046fd36770d98fb0",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -387,7 +387,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:42a45f51db7ea11658431718835e1a430959db2a5cc80fc4651681502fe6fb7c",
+      "digest": "sha256:003634ea469b21c7cb1442c308dbfddba50e90bfc9d8df56680e051584b720a8",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -429,7 +429,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:732f5ac5a5721937dd53619874964670d9de43ba984312151adf5f2cb6dcfa5c",
+      "digest": "sha256:52f58a1a69ea924cb1fae11bb6a8def2b0c66cc4ab08416553cf680c213b5ded",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
@@ -442,7 +442,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:ed4ff02dcb6f66118a29084784f25d8008ca472f59005b2e014133524706a9c5",
+      "digest": "sha256:6b907af93c55ffd8274cd83ad87a45dd48eb9a01938cf419aafebb5557be5821",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

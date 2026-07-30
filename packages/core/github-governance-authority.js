@@ -34,6 +34,9 @@ const target = (
   allowedBypassActors,
 });
 const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
+  ".github": [
+    target("main", [check("governance")], false),
+  ],
   "agent-hub-demo": [
     target("dev/v0/v0.2", [check("check / check")], true),
     target("alpha/v0/v0.2", [check("check / check")], false),
@@ -60,7 +63,11 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
     target("alpha/v1/v1.0", [check("check / check")], true),
   ],
   kungfu: [
-    target("dev/v4/v4.0", [check("affected-native / linux")], false),
+    target("dev/v4/v4.0", [
+      check("Candidate source acceptance / check"),
+      check("Queue admission lease", null),
+      check("affected-native / linux"),
+    ], true),
     target("alpha/v4/v4.0", [
       check("build / Finalize build controller evidence"),
       check("signoff"),
@@ -80,6 +87,10 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
       [check("build / Build with resolved channel / Summarize build contract")],
       true,
     ),
+  ],
+  "runtime-images": [
+    target("dev/v1/v1.0", [check("Signed-off commits"), check("check")], true),
+    target("alpha/v1/v1.0", [check("Signed-off commits"), check("check")], false),
   ],
   "paper-episodes-to-primitives": [
     target("main", [check("governance")], false),
@@ -506,9 +517,9 @@ export function createBuildchainGithubGovernanceAuthority() {
       privateRepositoryPolicy: "non-authoritative-until-plan-capability-qualifies",
       unknownRepositoryPolicy: "non-authoritative-until-explicit-admission",
       baseline: {
-        observedOn: "2026-07-29",
-        repositoryCount: 17,
-        publicCount: 14,
+        observedOn: "2026-07-30",
+        repositoryCount: 19,
+        publicCount: 16,
         privateCount: 3,
         authoritativePublicTargetCount: Object.values(PUBLIC_REPOSITORY_TARGETS)
           .reduce((count, targets) => count + targets.length, 0),

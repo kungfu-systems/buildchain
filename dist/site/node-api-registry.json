@@ -151,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:79a3b4109777e3e13ac936a04e09e2d71fd8f93f50544ead4d51ed41f3fdf3e8",
+      "digest": "sha256:325ec94cd696d84dfb084add313b3110bde410db0a5822e1fecd3988fef51022",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -203,7 +203,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:6169f625ab2bd8a21ddcbb1c72529df481a4eeadd2b37a4c5e8e0dee9668a435",
+      "digest": "sha256:5237d49ad4bb4cc803bdeb96039967b1896145483f6d9f40c7e06e0303545457",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -411,7 +411,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
       "export": "./publication-control-plane-audit",
       "target": "./packages/core/publication-control-plane-audit.js",
-      "digest": "sha256:3817d243ef01490be7375d7ed8bb0d00326f528b1fe0681bfd0d003c9932cc96",
+      "digest": "sha256:a2d207047837abddf9d1f2b728b5a730467917444cbcb2221310f8c45fe0ce5d",
       "summary": "Read-only publication control-plane snapshot evaluation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -437,7 +437,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:7f6eada6b168b0cdc04bd324d029328d63b8aa58f5ec94f592747f60e3cb9ae8",
+      "digest": "sha256:14186386fa8837deadc28cc7718484f801ecc2ebdc03651c776f5091e5cf4929",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -489,7 +489,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:aad90c2b39ce3fd7d2d4df5833f388c3090f5eeaecfd97d03276d375eed9459b",
+      "digest": "sha256:46f9f5dd3c27da361b9b4dad88df6630d77d025e13a7c3711cc844ed598d449d",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

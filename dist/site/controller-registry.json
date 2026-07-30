@@ -122,6 +122,10 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "artifact-compression-level": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -163,6 +167,10 @@
           "source": "workflow-call-input"
         },
         "artifact-retention-days": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "artifact-signing-request-upload-no-proxy": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -430,6 +438,10 @@
             "required": true
           },
           {
+            "id": "signing-finalization",
+            "required": true
+          },
+          {
             "id": "credential-island",
             "required": false
           },
@@ -445,6 +457,7 @@
         "capabilities": [
           "source-lock",
           "lifecycle-build",
+          "artifact-signing-finalization",
           "credential-island",
           "lifecycle-verify",
           "artifact-admission"
@@ -455,7 +468,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:146718143cc50e48ac57154aade4a4b06a8df4e036708a150233098d3c1cb6f7"
+      "digest": "sha256:c9c8c1493e95aecfc1a2ec092f9490c1e16b9a9cdc1e3673bf6bdd329baac523"
     },
     {
       "schemaVersion": 1,
@@ -503,6 +516,10 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "artifact-compression-level": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -544,6 +561,10 @@
           "source": "workflow-call-input"
         },
         "artifact-retention-days": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "artifact-signing-request-upload-no-proxy": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -829,7 +850,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:55b3189412e7da7769a8de60bd1ba4cf52d726d8b79c0a720598e49742aa72a0"
+      "digest": "sha256:eac228a4746684d61d9664e8bce63e20d4b1e7bea0afd8718c8584cef941a95d"
     },
     {
       "schemaVersion": 1,
@@ -2176,5 +2197,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:c637b908f2be506f3bd56a7e41995450c4d7011f3badc232712884e4fb7039b4"
+  "digest": "sha256:f18f3b706683ae34168ed582d0b51f2d7d2574d627dda4c7b667d01f86623331"
 }

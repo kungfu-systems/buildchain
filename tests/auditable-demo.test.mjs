@@ -45,7 +45,7 @@ function terminalCapture(durationMs = 2500) {
     ],
     completion: {
       schema: "kungfu.agent-work-lab.tui-autoplay/v1",
-      status: "passed",
+      status: "qualified",
       reportRoot: `sha256:${"e".repeat(64)}`,
       eventCount: 4,
     },
@@ -328,6 +328,11 @@ test("optional terminal capture is bounded and grants no implicit authority", (t
 
   const capturePath = path.join(root, "terminal-capture.json");
   const capture = JSON.parse(fs.readFileSync(capturePath, "utf8"));
+  capture.completion.status = "passed";
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.throws(() => validateAdapterOutput(root), /not a qualified Agent Work Lab autoplay/);
+
+  capture.completion.status = "qualified";
   capture.authority.grants = ["system-identity"];
   fs.writeFileSync(capturePath, stableJson(capture));
   assert.throws(() => validateAdapterOutput(root), /must not grant authority/);

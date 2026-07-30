@@ -115,10 +115,10 @@ function qualifyingInput(overrides = {}) {
 test("authority descriptor freezes the TCB, baseline, plan boundary, and non-claims", () => {
   const descriptor = BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY;
   assert.equal(descriptor.organization, "kungfu-systems");
-  assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 17);
-  assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 14);
+  assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 19);
+  assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 16);
   assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 3);
-  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 38);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 41);
   assert.deepEqual(descriptor.planCapability.privateRepositories, ["team", "enterprise"]);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
@@ -404,6 +404,24 @@ test("authoritative target registry detects default drift and constrains private
     "main",
   ]);
 
+  const runtimeImageTargets = resolveGithubGovernanceTargetRefs({
+    repository: {
+      fullName: "kungfu-systems/runtime-images",
+      visibility: "public",
+      defaultBranch: "dev/v1/v1.0",
+    },
+  });
+  assert.deepEqual(runtimeImageTargets, ["alpha/v1/v1.0", "dev/v1/v1.0"]);
+
+  const organizationProfileTargets = resolveGithubGovernanceTargetRefs({
+    repository: {
+      fullName: "kungfu-systems/.github",
+      visibility: "public",
+      defaultBranch: "main",
+    },
+  });
+  assert.deepEqual(organizationProfileTargets, ["main"]);
+
   const privateTargets = resolveGithubGovernanceTargetRefs({
     repository: {
       fullName: "kungfu-systems/private-control",
@@ -624,6 +642,19 @@ test("ruleset authority binds Kungfu Alpha to final build controller evidence", 
     },
     { context: "signoff", appId: 15368 },
     { context: "validate", appId: 15368 },
+  ]);
+  assert.equal(policy.strictRequiredChecks, true);
+});
+
+test("ruleset authority binds Kungfu dev to its merge queue admission checks", () => {
+  const policy = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/kungfu",
+    targetRef: "dev/v4/v4.0",
+  });
+  assert.deepEqual(policy.requiredCheckBindings, [
+    { context: "Candidate source acceptance / check", appId: 15368 },
+    { context: "Queue admission lease", appId: null },
+    { context: "affected-native / linux", appId: 15368 },
   ]);
   assert.equal(policy.strictRequiredChecks, true);
 });

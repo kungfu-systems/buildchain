@@ -567,6 +567,7 @@
         "path": ".github/workflows/.build.yml",
         "reusable": true,
         "inputs": [
+          "artifact-compression-level",
           "artifact-name",
           "artifact-name-template",
           "artifact-paths",
@@ -578,6 +579,7 @@
           "artifact-relay-s3-role-arn",
           "artifact-relay-s3-upload-role-arn",
           "artifact-retention-days",
+          "artifact-signing-request-upload-no-proxy",
           "artifact-transfer-mode",
           "build-command",
           "buildchain-contract-compatibility-policy",
@@ -640,7 +642,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 72,
+        "inputCount": 74,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1364,6 +1366,7 @@
         "path": ".github/workflows/build.yml",
         "reusable": true,
         "inputs": [
+          "artifact-compression-level",
           "artifact-name",
           "artifact-name-template",
           "artifact-paths",
@@ -1375,6 +1378,7 @@
           "artifact-relay-s3-role-arn",
           "artifact-relay-s3-upload-role-arn",
           "artifact-retention-days",
+          "artifact-signing-request-upload-no-proxy",
           "artifact-transfer-mode",
           "build-command",
           "buildchain-alpha-contract-lock-path",
@@ -1440,7 +1444,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 75,
+        "inputCount": 77,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -4261,8 +4265,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0be723caa314a36a1a36b03522527eb5b13e9b741e6566ff7f6ee06958df02ca",
-    "workflowRegistryDigest": "436fbf9f62f6cf28c1c8196278eccf7f0391f24d1482d1b429bd1f0577fe47cd",
-    "pageRegistryDigest": "34a2cff82ec99aa12eb1ab39c57f9f68df73832f4f7114621bd215da0c709990"
+    "workflowRegistryDigest": "b89bf8a2a89711fd2033b022bc70dcf92bc1b84ce7697b2c736f098d41fefe92",
+    "pageRegistryDigest": "fafdc9dc9bdc3f6b40ee04b3ed0dea2d9968a3ffd3dd9938fc1e5a2262d71895"
   },
   "comparison": {
     "missingCliRegistry": [],

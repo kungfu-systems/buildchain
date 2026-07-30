@@ -87,7 +87,7 @@ test("stable gate collector binds exact alpha tag or SHA runtime inputs to consu
         head_sha: ALPHA_SHA,
         name: "Build Surface Fixture",
         path: ".github/workflows/build-surface-fixture.yml",
-        updated_at: "2026-07-10T02:10:00Z",
+        updated_at: "2026-07-10T01:59:00Z",
         html_url: "https://github.com/kungfu-systems/buildchain/actions/runs/99",
         actor: { login: "github-actions[bot]" },
       }] });

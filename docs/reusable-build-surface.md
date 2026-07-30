@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-29
+last_reviewed: 2026-07-30
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-27
+  generated_at: 2026-07-30
   invisible_context: not asserted
 ---
 
@@ -572,6 +572,24 @@ from entering the uploaded request artifact. An output root that contains the
 workspace, working directory, lifecycle manifest, or any declared subject is
 rejected before cleanup.
 
+Self-hosted runners whose network requires different routes for Artifact upload
+and download can scope an upload-only proxy bypass to the sealed signing request:
+
+```yaml
+with:
+  artifact-signing-request-upload-no-proxy: ".blob.core.windows.net"
+```
+
+The caller repository variable
+`BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY` provides the same value
+without changing a consumer workflow; an explicit workflow input takes
+precedence. When neither is set, Buildchain preserves the runner's existing
+`NO_PROXY` and `no_proxy` values. The resolved value applies only to the
+Buildchain-owned signing-request upload. Authority dispatch and immutable
+signed-result download keep the runner's original proxy route. This is a
+transport control only: it does not change request bytes, signing authority,
+artifact identity, or verification policy.
+
 `profile = "auto"` resolves signable Apple artifacts such as Mach-O files,
 `.dylib`, `.framework`, `.app`, `.xpc`, `.plugin`, `.pkg`, `.dmg`, and macOS
 archives containing native code to the native `apple-developer-id` provider.
@@ -595,9 +613,14 @@ evidence. Consumer repositories neither receive nor duplicate credential-island
 material. The reusable workflow dispatches the sealed request to the
 Buildchain repository, waits for its protected authority workflow, verifies the
 immutable result, replaces only the declared artifact with the returned final
-bytes, and then runs the consumer's normal verification. Platform manifests,
-KFD evidence, checksums, and Release Passport inputs therefore observe the
-final signed artifact rather than the pre-signing build output.
+bytes. The ordinary platform lane completes the consumer's functional
+verification before delegation. A GitHub-hosted finalization lane then verifies
+the authority result against the sealed request, imports the exact signed bytes,
+and recomputes the final manifest before replacing the deterministic artifact.
+The signing result is never downloaded back to a self-hosted native runner.
+Platform manifests, KFD evidence, checksums, and Release Passport inputs
+therefore observe the final signed artifact rather than the pre-signing build
+output.
 
 For a standalone Mach-O request, the authority requires strict Developer ID
 verification, the declared Team ID, hardened runtime, and an `Accepted`
@@ -634,7 +657,16 @@ to GitHub artifacts:
 ```yaml
 with:
   artifact-transfer-mode: github-artifacts
+  artifact-compression-level: 0
 ```
+
+Direct GitHub Artifact payloads default to compression level `0`. Buildchain
+artifacts are commonly already-compressed archives; storing them without a
+second compression pass shortens the upload window while preserving the same
+artifact name, run/id/digest binding, retention, and no-overwrite behavior.
+Callers may select `1` through `9` for payloads that materially benefit from
+compression. Manifests and diagnostics retain their existing small-artifact
+behavior.
 
 Large self-hosted native builds can opt into the first-class S3 relay path:
 
