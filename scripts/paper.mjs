@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   PAPER_ALPHA_PLAN_CONTRACT,
   PAPER_BUILD_PLAN_CONTRACT,
+  PAPER_MIGRATION_CONTRACT,
   PAPER_NPM_BOOTSTRAP_CONTRACT,
   PAPER_PREFLIGHT_CONTRACT,
   PAPER_RESUME_PLAN_CONTRACT,
@@ -17,7 +18,9 @@ import {
   createPaperBuildPlan,
   createPaperResumePlan,
   executePaperNpmBootstrap,
+  planPaperMigration,
   planPaperScaffold,
+  writePaperMigration,
   writePaperScaffold,
 } from "../packages/core/paper.js";
 import { verifyPublicationReproducibility } from "../packages/core/publication-reproducibility.js";
@@ -28,6 +31,7 @@ function usage() {
                             [--cwd <dir>] [--name <name>] [--title <title>]
                             [--version <semver>] [--site-base-url <url>]
                             [--buildchain-ref <ref>] [--write] [--json]
+  buildchain paper migrate [--cwd <dir>] [--write] [--json]
   buildchain paper preflight [--cwd <dir>] [--offline] [--json]
   buildchain paper bootstrap npm [--cwd <dir>] [--package <name>]
                                   [--repository <owner/repo>] [--workflow <filename>]
@@ -44,7 +48,8 @@ function usage() {
                            [--execute] [--json]
 
 Safety:
-  scaffold is a no-overwrite dry-run unless --write is present.
+  scaffold is a no-overwrite dry-run unless --write is present. migrate only
+  rewrites the five Buildchain-owned authority, workflow, lock, and version files.
   npm bootstrap, Alpha PR creation, and resume dispatch never mutate externally
   unless --execute is present. Real npm bootstrap additionally requires the
   exact --confirm-public-package value.
@@ -93,6 +98,18 @@ function humanSummary(result) {
     );
     process.stdout.write(
       `create=${result.summary.create} unchanged=${result.summary.unchanged} conflict=${result.summary.conflict}\n`,
+    );
+    for (const entry of result.changes) {
+      process.stdout.write(`- ${entry.action}: ${entry.path}\n`);
+    }
+    return;
+  }
+  if (result.contract === PAPER_MIGRATION_CONTRACT) {
+    process.stdout.write(
+      `paper migrate: ${result.ok ? "ok" : "blocked"} (${result.dryRun ? "dry-run" : "write"})\n`,
+    );
+    process.stdout.write(
+      `create=${result.summary.create} update=${result.summary.update} unchanged=${result.summary.unchanged} conflict=${result.summary.conflict}\n`,
     );
     for (const entry of result.changes) {
       process.stdout.write(`- ${entry.action}: ${entry.path}\n`);
@@ -405,6 +422,17 @@ export async function runPaperCli(
         hasFlag(effectiveArgs, "write") || hasFlag(effectiveArgs, "execute")
           ? writePaperScaffold(plan)
           : publicScaffoldPlan(plan);
+    } else if (command === "migrate") {
+      const plan = planPaperMigration({
+        cwd,
+        buildchainRoot,
+        buildchainVersion,
+        buildchainSha,
+      });
+      result =
+        hasFlag(effectiveArgs, "write") || hasFlag(effectiveArgs, "execute")
+          ? writePaperMigration(plan)
+          : plan;
     } else if (command === "preflight") {
       result = collectPaperPreflight({
         cwd,
@@ -505,7 +533,7 @@ export async function runPaperCli(
         : plan;
     } else {
       throw new Error(
-        "usage: buildchain paper <scaffold|preflight|bootstrap npm|build|alpha|status|resume> ...",
+        "usage: buildchain paper <scaffold|migrate|preflight|bootstrap npm|build|alpha|status|resume> ...",
       );
     }
     printResult(result, json);
