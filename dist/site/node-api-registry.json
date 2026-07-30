@@ -398,7 +398,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-reproducibility",
       "export": "./publication-reproducibility",
       "target": "./packages/core/publication-reproducibility.js",
-      "digest": "sha256:68c2ded9d23fc115c9dbc2a234af44123cd53c9f3e83e6925322661eea4afa74",
+      "digest": "sha256:ce857ae600c4abb88b21c180c68f014044b3ea673c97b32227806c7bd91f6879",
       "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -411,7 +411,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-sealed-bundle",
       "export": "./publication-sealed-bundle",
       "target": "./packages/core/publication-sealed-bundle.js",
-      "digest": "",
+      "digest": "sha256:9b1405a04548c9a87863c2cf410224f6cd7b44e06b76e0de0f7b8052029bc92d",
       "summary": "Build-once publication bundle manifests and exact-byte resume verification APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [

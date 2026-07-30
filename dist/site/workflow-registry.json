@@ -2130,6 +2130,8 @@
         "publish-package-set-order",
         "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
+        "publish-sealed-bundle-manifest",
+        "publish-sealed-bundle-root",
         "publish-source-locked",
         "publish-source-ref",
         "publish-source-sha",
@@ -2171,7 +2173,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 67,
+      "inputCount": 69,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

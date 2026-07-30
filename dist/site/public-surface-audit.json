@@ -2500,6 +2500,8 @@
           "publish-package-set-order",
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
+          "publish-sealed-bundle-manifest",
+          "publish-sealed-bundle-root",
           "publish-source-locked",
           "publish-source-ref",
           "publish-source-sha",
@@ -2541,7 +2543,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 67
+        "inputCount": 69
       },
       {
         "id": "report-buildchain-issue",
@@ -4437,8 +4439,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "ed681c6bf65cd1225bf9103143fa5c314ec494c6a9dfe78f81280bfc19f9ac19",
-    "pageRegistryDigest": "e79d74a1a1485aaeec30677ec8a530108ed25337a0c4fdd85859ba20d1c2bbc0"
+    "workflowRegistryDigest": "53a221b92266e2847b800e94ca94d3afa099eaf553313d012b40fa9b1fc3b70a",
+    "pageRegistryDigest": "969c21883e01ff29af9eeb22d1659db505740293dea78144fc708715ea41d900"
   },
   "comparison": {
     "missingCliRegistry": [],

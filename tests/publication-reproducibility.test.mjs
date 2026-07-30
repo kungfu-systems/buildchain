@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -163,6 +164,19 @@ test("publication reproducibility compares two clean builds and exact npm tarbal
         path.join(cwd, ".buildchain/publication/npm-package/package.json"),
       ),
       true,
+    );
+    const promotedTarball = path.join(
+      cwd,
+      ".buildchain/publication/npm-tarball",
+      result.builds[0].npmPackage.filename,
+    );
+    assert.equal(fs.existsSync(promotedTarball), true);
+    assert.equal(
+      crypto
+        .createHash("sha256")
+        .update(fs.readFileSync(promotedTarball))
+        .digest("hex"),
+      result.builds[0].npmPackage.sha256,
     );
     const repeated = verifyPublicationReproducibility({
       cwd,
