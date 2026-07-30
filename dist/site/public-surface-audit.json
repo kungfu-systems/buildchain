@@ -7,7 +7,7 @@
     "workflowCount": 47,
     "actionCount": 4,
     "sitePageCount": 51,
-    "docCommandRefCount": 267,
+    "docCommandRefCount": 268,
     "failureCount": 0
   },
   "enumerated": {
@@ -1761,6 +1761,7 @@
           "downstream-branch",
           "downstream-repository",
           "downstream-target",
+          "downstream-update-command",
           "dry-run",
           "graph-json",
           "lock-path",
@@ -1769,7 +1770,7 @@
           "source-node",
           "upstream-release-json"
         ],
-        "inputCount": 13,
+        "inputCount": 14,
         "secrets": [
           "propagation-token"
         ],
@@ -1781,9 +1782,11 @@
           "controller-receipt-artifact",
           "controller-receipt-digest",
           "controller-receipt-json",
-          "controller-receipt-status"
+          "controller-receipt-status",
+          "propagation-receipt-digest",
+          "propagation-receipt-json"
         ],
-        "outputCount": 7
+        "outputCount": 9
       },
       {
         "id": "release-verify",
@@ -3341,6 +3344,11 @@
         "command": "buildchain release-propagation write-lock"
       },
       {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation receipt"
+      },
+      {
         "id": "release-transaction",
         "path": "docs/cli.md",
         "command": "buildchain release"
@@ -3577,8 +3585,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "40b987b863a8bd7edfb6aaf6857e4837f5aba7b8d6d35b0583ce5b34c28d3adb",
-    "workflowRegistryDigest": "f96cd8a89e7b56971176c4f76c6905f121d443f546b8a9f1fff7d3c3365bdbbd",
-    "pageRegistryDigest": "6b9baf79cdbc522db05b9328084854055b28ba93ef93bbcbd89694c9ff83178f"
+    "workflowRegistryDigest": "df0c40a6d15212e596a0970524128228ddbccbd142f4b791cb1d494e8618eb8a",
+    "pageRegistryDigest": "e4d0270e434e06d96cb8c7d25a0b98d209261d4cbebb468594e221389164f052"
   },
   "comparison": {
     "missingCliRegistry": [],

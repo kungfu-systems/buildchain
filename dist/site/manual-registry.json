@@ -93,7 +93,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:c8085445fcd0ffd6a55197ac2db1e34fa4aaa94df9107e8e7b216b925fc3bddc",
+      "digest": "sha256:e2ce9af9edbae03af40c22a45b82abf4dcff43b30474bfe9b7fab29f2f310fa7",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -384,7 +384,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:5487689c3cbada1e83bbe9abaa31ff7f6fd5333daf9ac6ee97521de36f325f45",
+      "digest": "sha256:d47b3fe7fe6289c84eb4adf7ac5f2d7d23fafaf508f94c6ad60ba7b54b36dbdf",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

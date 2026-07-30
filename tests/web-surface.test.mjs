@@ -809,6 +809,125 @@ test("web-surface deploy preserves publication archives while deleting mutable p
   });
 });
 
+test("publication package-pin fast path touches one surface and bounded files only", async () => {
+  await withFixtureAsync(async (fixture) => {
+    const surfaceRoot = path.join(fixture, "dist", "buildchain");
+    const oldPrefix = path.join(surfaceRoot, "archive", "paper", "v0.9.0");
+    const newPrefix = path.join(surfaceRoot, "archive", "paper", "v1.0.0");
+    fs.mkdirSync(oldPrefix, { recursive: true });
+    fs.mkdirSync(newPrefix, { recursive: true });
+    fs.mkdirSync(path.join(surfaceRoot, "paper", "latest"), { recursive: true });
+    fs.writeFileSync(path.join(oldPrefix, "index.html"), "old immutable reader\n");
+    fs.writeFileSync(path.join(oldPrefix, "main.pdf"), "old immutable pdf\n");
+    fs.writeFileSync(path.join(newPrefix, "index.html"), "new immutable reader\n");
+    fs.writeFileSync(path.join(newPrefix, "main.pdf"), "new immutable pdf\n");
+    fs.writeFileSync(path.join(surfaceRoot, "index.html"), "paper shelf\n");
+    fs.writeFileSync(path.join(surfaceRoot, "paper", "latest", "index.html"), "latest paper\n");
+    fs.writeFileSync(
+      path.join(surfaceRoot, "manifest.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "consumer-publication-archive-surface",
+        archivePolicy: {
+          contract: "kungfu-buildchain-publication-archive-policy",
+          deploymentBoundary: "append-only immutable version prefixes",
+        },
+        publications: [{
+          id: "paper",
+          versions: [
+            { version: "0.9.0", immutablePath: "/archive/paper/v0.9.0/" },
+            { version: "1.0.0", immutablePath: "/archive/paper/v1.0.0/" },
+          ],
+        }],
+      }, null, 2)}\n`,
+    );
+    fs.writeFileSync(
+      path.join(fixture, "dist", "manifest.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "consumer-generated-site-manifest",
+        publicationFastPath: {
+          contract: "kungfu-buildchain-publication-package-pin-fast-path",
+          mode: "package-pin-only",
+          targetSurface: "buildchain",
+          qualificationRoot: `sha256:${"a".repeat(64)}`,
+          immutablePrefixes: ["archive/paper/v1.0.0"],
+          mutableFiles: ["index.html", "manifest.json", "paper/latest/index.html"],
+          invalidationPaths: ["/", "/archive/paper/v1.0.0/*", "/paper/latest/*"],
+        },
+      }, null, 2)}\n`,
+    );
+
+    const plan = planWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      deployedAt: "2026-07-01T00:00:00.000Z",
+    });
+    assert.deepEqual(Object.keys(plan.urls), ["buildchain"]);
+    assert.equal(plan.surfaceBindings.length, 1);
+    assert.equal(plan.publicationFastPath.targetSurface, "buildchain");
+    const binding = plan.surfaceBindings[0];
+    assert.deepEqual(binding.immutablePublication.uploadRoots, ["archive/paper/v1.0.0"]);
+    assert.deepEqual(
+      binding.immutablePublication.files.map((file) => file.path),
+      ["archive/paper/v1.0.0/index.html", "archive/paper/v1.0.0/main.pdf"],
+    );
+    assert.equal(plan.steps.some((step) => step.action === "sync-static-artifact"), false);
+    assert.equal(
+      plan.steps.filter((step) => step.action === "sync-publication-fast-path").length,
+      3,
+    );
+
+    const calls = [];
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      plan,
+      dryRun: false,
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: `${operation.action}\n`, stderr: "" };
+      },
+    });
+    assert.equal(calls.some((call) => call.surface !== "buildchain"), false);
+    assert.equal(calls.some((call) => call.action === "sync-static-artifact"), false);
+    assert.equal(
+      calls.filter((call) => call.action === "sync-publication-fast-path").length,
+      3,
+    );
+    const immutableSync = calls.find((call) => call.action === "sync-immutable-artifact");
+    assert.equal(
+      immutableSync.args[2],
+      path.join(fixture, "dist", "buildchain", "archive", "paper", "v1.0.0"),
+    );
+    assert.equal(immutableSync.args.some((arg) => String(arg).includes("v0.9.0")), false);
+    const invalidation = calls.find((call) => call.action === "invalidate-cdn");
+    assert.deepEqual(
+      invalidation.args.slice(invalidation.args.indexOf("--paths") + 1, -1),
+      ["/", "/archive/paper/v1.0.0/*", "/paper/latest/*"],
+    );
+    assert.deepEqual(result.invalidationPaths.slice(0, -1), [
+      "/",
+      "/archive/paper/v1.0.0/*",
+      "/paper/latest/*",
+    ]);
+    assert.equal(result.immutablePreservation[0].status, "applied");
+
+    const health = await checkWebSurfaceHealth({
+      result,
+      cwd: fixture,
+      managedNetworkS3ObjectVerification: false,
+      fetchImpl() {
+        throw new Error("managed-network health must not require public fetch");
+      },
+    });
+    assert.equal(
+      health.checks.find((check) => check.surface === "__immutable__").status,
+      "pass",
+    );
+  });
+});
+
 test("web-surface deploy apply fails closed when saved plan artifact drifted", () => {
   withFixture((fixture) => {
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
