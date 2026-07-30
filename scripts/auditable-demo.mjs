@@ -302,9 +302,9 @@ function validateTerminalCapture(value, scene) {
   );
   invariant(
     value.completion.schema === "kungfu.agent-work-lab.tui-autoplay/v1"
-      && value.completion.status === "passed"
+      && value.completion.status === "qualified"
       && DIGEST_PATTERN.test(value.completion.reportRoot),
-    "terminal capture completion sentinel is not a passed Agent Work Lab autoplay",
+    "terminal capture completion sentinel is not a qualified Agent Work Lab autoplay",
   );
   integer(value.completion.eventCount, 1, 100_000, "terminalCapture.completion.eventCount");
   invariant(value.exitCode === 0, "terminal capture exitCode must be zero");
