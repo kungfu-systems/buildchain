@@ -397,6 +397,11 @@ on:
         default: ""
         type: string
         required: false
+      release-candidate-family-evidence-json:
+        description: "Optional exact Initiative-family release evidence JSON embedded in the release-candidate passport"
+        default: ""
+        type: string
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -803,6 +808,7 @@ jobs:
       cache-toolchain-root: ${{ inputs.cache-toolchain-root }}
       cache-policy-root: ${{ inputs.cache-policy-root }}
       gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
+      release-candidate-family-evidence-json: ${{ inputs.release-candidate-family-evidence-json }}
     secrets: inherit
 
   controller-receipt:

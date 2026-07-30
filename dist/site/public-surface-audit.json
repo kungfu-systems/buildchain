@@ -677,6 +677,7 @@
           "publish-registry",
           "publish-source-ref",
           "release-candidate",
+          "release-candidate-family-evidence-json",
           "requested-parallelism",
           "require-build",
           "require-install",
@@ -696,7 +697,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 78,
+        "inputCount": 79,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -946,6 +947,10 @@
           "publish-transaction-override",
           "release-activation-command",
           "release-activation-receipt-set-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
@@ -973,7 +978,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 88,
+        "inputCount": 92,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1484,6 +1489,7 @@
           "publish-registry",
           "publish-source-ref",
           "release-candidate",
+          "release-candidate-family-evidence-json",
           "requested-parallelism",
           "require-build",
           "require-install",
@@ -1503,7 +1509,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 81,
+        "inputCount": 82,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2181,6 +2187,10 @@
           "publish-transaction-override",
           "release-activation-command",
           "release-activation-receipt-set-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
@@ -2208,7 +2218,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 80,
+        "inputCount": 84,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2510,6 +2520,10 @@
           "publish-transaction-override",
           "reconciliation-workspace",
           "release-candidate-build-summary-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-passport-path",
           "release-candidate-version",
           "release-material-sha",
@@ -2543,7 +2557,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 69
+        "inputCount": 73
       },
       {
         "id": "report-buildchain-issue",
@@ -4439,8 +4453,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "53a221b92266e2847b800e94ca94d3afa099eaf553313d012b40fa9b1fc3b70a",
-    "pageRegistryDigest": "548181d8b11b59dabc272f736566df474321c5710c8033b4fba41b371e556961"
+    "workflowRegistryDigest": "0b46df9c526db9f17b361b29891260f7d6992f1b751157c33adf09f53008cf29",
+    "pageRegistryDigest": "d49a0eb4c7a8b04c0f17f718327460453dcec4098317b561e3304ae436c95605"
   },
   "comparison": {
     "missingCliRegistry": [],

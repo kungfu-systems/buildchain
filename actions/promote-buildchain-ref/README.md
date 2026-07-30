@@ -237,6 +237,10 @@ and fail before publish-gate side effects if it no longer matches:
     promote-only-release-candidate: "true"
     release-candidate-passport-path: .buildchain/artifacts/release-candidate-passport.json
     release-candidate-build-summary-path: .buildchain/artifacts/build-summary.json
+    release-candidate-family-evidence-required: "true"
+    release-candidate-family-evidence-root: sha256:<initiative-family-root>
+    release-candidate-family-initiative-id: 2026-07-30-example-initiative
+    release-candidate-family-assignment-id: 2026-07-30-example-release
 ```
 
 The action validates repository, channel, source identity, platform matrix, and
@@ -246,6 +250,14 @@ identity accepts the exact source SHA, the PR merge ref SHA, or the promoted
 channel HEAD's Git tree SHA matching the passport tree hash. If validation
 fails, run or attach the verified channel PR build first instead of promoting a
 stale or unproven artifact set.
+
+The four family-evidence inputs are optional. When enabled, the action requires
+the candidate passport to carry the exact
+`kungfu-buildchain-initiative-family-release-evidence/v1` envelope and checks
+its family root, Initiative id, and Assignment id before any promotion
+mutation. Buildchain only transports and validates this adapter-edge release
+evidence; Kungfu Work Control remains authoritative for native Family State v1
+and its additive v2 typed envelope.
 
 When enabled, the action creates or resumes a release transaction keyed by
 repository, version, source SHA, and target ref. It persists that transaction to

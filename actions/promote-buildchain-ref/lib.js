@@ -464,6 +464,10 @@ function validatePromotionReleaseCandidate({
   sourceHeadSha,
   sourceTreeSha = "",
   requirePlatforms = true,
+  requireFamilyEvidence = false,
+  familyEvidenceRoot = "",
+  familyInitiativeId = "",
+  familyAssignmentId = "",
 }) {
   const resolvedPassportPath = resolveMaybeRelative(cwd, passportPath);
   if (!fs.existsSync(resolvedPassportPath)) {
@@ -483,6 +487,10 @@ function validatePromotionReleaseCandidate({
     version,
     buildSummary,
     requirePlatforms,
+    requireFamilyEvidence,
+    familyEvidenceRoot,
+    familyInitiativeId,
+    familyAssignmentId,
   });
   const acceptedSourceShas = [
     passport.source?.headSha,
@@ -507,6 +515,7 @@ function validatePromotionReleaseCandidate({
     candidateHash: passport.candidateHash || "",
     platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
     gateProfileEvidence: passport.gateProfileEvidence,
+    familyEvidence: passport.familyEvidence,
     controllerReceipts: passport.controllerReceipts || [],
     builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
     builtSourceTreeSha: passport.source?.treeHash || "",
@@ -2979,6 +2988,10 @@ async function promoteBuildchainRefs({
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releaseCandidateVersion = "",
+  releaseCandidateFamilyEvidenceRequired = false,
+  releaseCandidateFamilyEvidenceRoot = "",
+  releaseCandidateFamilyInitiativeId = "",
+  releaseCandidateFamilyAssignmentId = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
   runId = process.env.GITHUB_RUN_ID || "",
   publishTransactionOverride = false,
@@ -3125,6 +3138,10 @@ async function promoteBuildchainRefs({
       version: releaseCandidateVersion,
       sourceHeadSha: sha,
       sourceTreeSha: targetCommitInfo.treeSha,
+      requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
+      familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
+      familyInitiativeId: releaseCandidateFamilyInitiativeId,
+      familyAssignmentId: releaseCandidateFamilyAssignmentId,
     });
     updates.push({
       action: "verified-release-candidate",

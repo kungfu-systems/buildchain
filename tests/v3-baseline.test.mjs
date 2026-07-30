@@ -81,3 +81,20 @@ test("the v2 inventory is explicitly historical and points to v3", () => {
   assert.match(inventory, /Buildchain v3 is now the active monorepo source of truth/);
   assert.match(inventory, /## Current v3 Refs/);
 });
+
+test("the v2 train-only Initiative-family release handoff is present on v3", () => {
+  const releaseCandidate = source("packages/core/release-candidate.js");
+  const publicationAuthority = source("packages/core/publication-authority.js");
+  const promoteAction = source("actions/promote-buildchain-ref/action.yml");
+  const retrospective = source(".github/retrospectives/2026-07-31-buildchain-v2-v3-parity.md");
+
+  assert.match(
+    releaseCandidate,
+    /kungfu-buildchain-initiative-family-release-evidence\/v1/,
+  );
+  assert.match(releaseCandidate, /\.\.\.\(candidate\.familyEvidence \? \{ familyEvidence:/);
+  assert.match(publicationAuthority, /\.\.\.\(passport\.familyEvidence \? \{ familyEvidence:/);
+  assert.match(promoteAction, /release-candidate-family-evidence-required:/);
+  assert.match(retrospective, /all 992 fetched remote refs and tags/);
+  assert.match(retrospective, /train\/v2\/v2\.3\/go-family-release-handoff/);
+});

@@ -157,6 +157,7 @@ export {
 } from "./build-facts.js";
 
 export {
+  FAMILY_RELEASE_EVIDENCE_CONTRACT,
   RELEASE_CANDIDATE_PASSPORT_CONTRACT,
   createReleaseCandidatePassport,
   sha256Json,

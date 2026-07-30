@@ -26,6 +26,8 @@ superseded product-specific gates must not be revived.
 
 ## Reviewed Refs
 
+- all 992 fetched remote refs and tags whose names select the v2 product line,
+  representing 869 unique tips;
 - latest v2 development: `dev/v2/v2.14@daf55ad0e7964658be64c219d473c10c6ace6e67`;
 - latest v2 alpha: `alpha/v2/v2.14@42d27e8045e372d9383c613f8dfc32dacffb4f3d`;
 - latest v2 release: `release/v2/v2.14@57234bde8f44bac6d96507884e6f9eb2b992547b`;
@@ -37,7 +39,9 @@ superseded product-specific gates must not be revived.
   exact pinned-self runtime fix at
   `176d2aca157640c53fce8dfa29e18db6a556df64`.
 
-The v2 development head has 115 commits, including 55 non-merge commits, that
+The complete ref audit included authority refs, train refs, work branches,
+version-state refs, immutable tags, and other remote v2 coordinates. The v2
+development head has 115 commits, including 55 non-merge commits, that
 are not ancestors of the reviewed v3 head. Ancestry alone therefore cannot
 prove parity. Direct tree comparison reports 311 changed files but no file
 present at the latest v2.14 development head and deleted from v3.
@@ -93,7 +97,7 @@ v3 product work.
 
 ## Residual Gaps Closed
 
-The audit found one v2 patch that had not reached v3:
+The authority-line audit found one v2 patch that had not reached v3:
 `1e1b10aa0f094b6e8ce3f7001d1ce57bf7da17ee` shortened the AWS
 CodeConnections proof-of-concept name to fit the provider's 32-character limit.
 The v3 guide now uses `kungfu-linux-burst-poc`, documents the limit, and has a
@@ -113,6 +117,20 @@ cannot detect:
 Those defaults now resolve to v3. Explicit v2 refs remain valid inputs and test
 fixtures where they prove multi-major compatibility; no compatibility parser
 or release-history evidence was removed.
+
+The expanded all-ref audit also found one capability that existed only on
+`train/v2/v2.3/go-family-release-handoff` at
+`c4f3ad6fcc84a131f40e97773975e6b4a81a5dd3`:
+Initiative-family release evidence. V3 now restores that optional fail-closed
+handoff in its current release-candidate architecture. The exact family
+evidence is normalized, included in the candidate hash, carried into
+publication authority, and checked by promotion against optional family root,
+Initiative id, and Assignment id requirements.
+
+The restored contract remains the Buildchain adapter envelope
+`kungfu-buildchain-initiative-family-release-evidence/v1`. It does not copy or
+supersede Kungfu Work Control's native immutable Family State v1 projection or
+the additive Family State v2 typed envelope.
 
 `contracts/buildchain-v2-residuals-v1.json` remains the machine inventory for
 workflow-local v2 tokens. Active runtime fallbacks and the binary example were
@@ -152,8 +170,11 @@ git rev-list --count origin/dev/v3/v3.0..origin/dev/v2/v2.14
 git diff --name-status origin/dev/v2/v2.14 origin/dev/v3/v3.0
 ```
 
-For the historical path union, enumerate `git ls-tree -r --name-only` over all
-fetched v2 dev/alpha/release heads, deduplicate it, and compare it with the
-v3 development tree. Verification must then run the workflow residual audit,
-v3 baseline test, AWS runner test, workflow validation, site generation check,
-and the complete repository check.
+For the complete audit, enumerate every fetched remote ref and tag whose name
+contains a v2 product-line coordinate, deduplicate their tips, and classify
+commits not reachable from the v2 authority heads or v3. For the historical
+path union, enumerate `git ls-tree -r --name-only` over all fetched v2
+dev/alpha/release heads, deduplicate it, and compare it with the v3 development
+tree. Verification must then run the workflow residual audit, v3 baseline test,
+AWS runner test, workflow validation, site generation check, and the complete
+repository check.

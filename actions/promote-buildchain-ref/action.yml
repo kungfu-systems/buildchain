@@ -209,6 +209,18 @@ inputs:
   release-candidate-version:
     description: "Optional expected product version recorded in the release-candidate passport"
     default: ""
+  release-candidate-family-evidence-required:
+    description: "Require exact Initiative-family evidence in the release-candidate passport"
+    default: "false"
+  release-candidate-family-evidence-root:
+    description: "Optional expected Initiative-family evidence content root"
+    default: ""
+  release-candidate-family-initiative-id:
+    description: "Optional expected Initiative identity"
+    default: ""
+  release-candidate-family-assignment-id:
+    description: "Optional expected child Assignment identity"
+    default: ""
 outputs:
   failure-message:
     description: "Single-line promotion failure passed to workflow-friction reporting"
