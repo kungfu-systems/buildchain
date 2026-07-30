@@ -8,6 +8,7 @@ import test from "node:test";
 
 import {
   PAPER_NPM_BOOTSTRAP_CONTRACT,
+  PAPER_PROVISIONING_CONTRACT,
   PAPER_STATE_ORDER,
   PAPER_VISIBILITY_CONTRACT,
   collectPaperPreflight,
@@ -86,11 +87,49 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   const cwd = tempDir("scaffold");
   const firstPlan = planPaperScaffold(scaffoldOptions(cwd));
   assert.equal(firstPlan.ok, true);
-  assert.equal(firstPlan.summary.create, 13);
+  assert.equal(firstPlan.summary.create, 14);
   assert.equal(JSON.stringify(firstPlan).includes("_plannedFiles"), false);
   const firstWrite = writePaperScaffold(firstPlan);
   assert.equal(firstWrite.ok, true);
-  assert.equal(firstWrite.written.length, 13);
+  assert.equal(firstWrite.written.length, 14);
+  const provisioning = JSON.parse(
+    fs.readFileSync(
+      path.join(cwd, ".buildchain", "paper", "provisioning-authority.json"),
+      "utf8",
+    ),
+  );
+  assert.equal(provisioning.contract, PAPER_PROVISIONING_CONTRACT);
+  assert.equal(provisioning.runtime.ref, provisioning.runtime.resolvedSha);
+  assert.equal(
+    provisioning.admission.acceptedSha,
+    provisioning.runtime.resolvedSha,
+  );
+  assert.equal(
+    provisioning.policy.repositoryActions.defaultWorkflowPermissions,
+    "read",
+  );
+  assert.equal(
+    provisioning.policy.repositoryActions.canApprovePullRequestReviews,
+    false,
+  );
+  assert.equal(provisioning.policy.generatedWrites.githubTokenFallback, false);
+  assert.equal(provisioning.policy.release.versionState, "not-required");
+  assert.equal(provisioning.trustedPublisher.workflow, "paper-release.yml");
+  const releaseWorkflow = fs.readFileSync(
+    path.join(cwd, ".github", "workflows", "paper-release.yml"),
+    "utf8",
+  );
+  assert.match(
+    releaseWorkflow,
+    new RegExp(
+      `paper-release-sealed\\.yml@${provisioning.runtime.resolvedSha}`,
+    ),
+  );
+  assert.match(
+    releaseWorkflow,
+    new RegExp(`buildchain-ref: ${provisioning.runtime.resolvedSha}`),
+  );
+  assert.doesNotMatch(releaseWorkflow, /BUILDCHAIN_PROMOTION_TOKEN/);
 
   initGit(cwd);
   const validation = JSON.parse(
@@ -143,6 +182,11 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   assert.equal(preflight.localReady, true);
   assert.equal(preflight.ok, true);
   assert.equal(preflight.readyForExternalMutation, false);
+  assert.equal(preflight.provisioning.valid, true);
+  assert.equal(
+    preflight.provisioning.authorityDigest,
+    provisioning.authorityDigest,
+  );
   assert.equal(
     preflight.checks.find((entry) => entry.id === "runtime.contract-lock")
       .status,
@@ -150,6 +194,11 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   );
   assert.equal(
     preflight.checks.find((entry) => entry.id === "runtime.exact-source")
+      .status,
+    "pass",
+  );
+  assert.equal(
+    preflight.checks.find((entry) => entry.id === "provisioning.authority")
       .status,
     "pass",
   );
@@ -353,6 +402,120 @@ test("paper npm bootstrap dry-run uses only a minimal temporary package", () => 
       }),
     /requires the official registry/,
   );
+  assert.throws(
+    () =>
+      executePaperNpmBootstrap({
+        cwd,
+        bootstrapVersion: "0.0.0-bootstrap.1",
+        offline: true,
+      }),
+    /version is fixed at 0\.0\.0-bootstrap\.0/,
+  );
+});
+
+test("paper provisioning authority rejects caller drift and requires exact npm trust", () => {
+  const cwd = tempDir("authority-drift");
+  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
+  initGit(cwd);
+  const releasePath = path.join(
+    cwd,
+    ".github",
+    "workflows",
+    "paper-release.yml",
+  );
+  fs.appendFileSync(releasePath, "\n# unadmitted drift\n");
+  const drifted = collectPaperPreflight({
+    cwd,
+    buildchainRoot: root,
+    buildchainVersion: packageVersion,
+    offline: true,
+  });
+  assert.equal(drifted.provisioning.valid, false);
+  assert.equal(
+    drifted.checks.find((entry) => entry.id === "provisioning.authority")
+      .status,
+    "fail",
+  );
+
+  const trustedCwd = tempDir("exact-trust");
+  writePaperScaffold(planPaperScaffold(scaffoldOptions(trustedCwd)));
+  const fakeBin = path.join(trustedCwd, "fake-bin");
+  fs.mkdirSync(fakeBin);
+  const fakeNpm = path.join(fakeBin, "npm");
+  fs.writeFileSync(
+    fakeNpm,
+    `#!/bin/sh
+case "$1 $2" in
+  "view @example/paper-contract-test") printf '"0.0.0-bootstrap.0"\\n' ;;
+  "whoami --registry=https://registry.npmjs.org/") printf 'paper-owner\\n' ;;
+  "pack --dry-run") printf '[{"files":[{"path":"package.json"}]}]\\n' ;;
+  "publish --dry-run") printf '{}\\n' ;;
+  "trust github") printf '{}\\n' ;;
+  "trust list")
+    printf '%s\\n' "\${FAKE_NPM_TRUST_JSON:-[]}"
+    ;;
+  *) echo "unexpected npm invocation: $*" >&2; exit 2 ;;
+esac
+`,
+  );
+  fs.chmodSync(fakeNpm, 0o755);
+  const originalPath = process.env.PATH;
+  const originalTrust = process.env.FAKE_NPM_TRUST_JSON;
+  process.env.PATH = `${fakeBin}:${originalPath}`;
+  try {
+    process.env.FAKE_NPM_TRUST_JSON = JSON.stringify([
+      {
+        type: "github",
+        repository: "example/another-paper",
+        workflow: "paper-release.yml",
+        environment: "",
+      },
+    ]);
+    const mismatch = executePaperNpmBootstrap({
+      cwd: trustedCwd,
+      execute: true,
+      confirmedPackage: "@example/paper-contract-test",
+    });
+    assert.equal(mismatch.ok, false);
+    assert.equal(mismatch.trust.status, "failed");
+    assert.equal(mismatch.trust.exactBinding, false);
+
+    process.env.FAKE_NPM_TRUST_JSON = JSON.stringify([
+      {
+        type: "github",
+        repository: "example/paper-contract-test",
+        workflow: "paper-release.yml",
+        environment: "",
+      },
+    ]);
+    const exact = executePaperNpmBootstrap({
+      cwd: trustedCwd,
+      execute: true,
+      confirmedPackage: "@example/paper-contract-test",
+    });
+    assert.equal(exact.ok, true);
+    assert.equal(exact.package.existsAfter, true);
+    assert.equal(exact.trust.status, "configured");
+    assert.equal(exact.trust.exactBinding, true);
+    assert.equal(
+      exact.authority.digest,
+      JSON.parse(
+        fs.readFileSync(
+          path.join(
+            trustedCwd,
+            ".buildchain",
+            "paper",
+            "provisioning-authority.json",
+          ),
+          "utf8",
+        ),
+      ).authorityDigest,
+    );
+  } finally {
+    process.env.PATH = originalPath;
+    if (originalTrust === undefined) delete process.env.FAKE_NPM_TRUST_JSON;
+    else process.env.FAKE_NPM_TRUST_JSON = originalTrust;
+  }
 });
 
 test("paper CLI emits stable JSON errors and all seven routes", () => {

@@ -209,36 +209,36 @@ on:
       - alpha/v1/v1.0
       - release/v1/v1.0
   workflow_dispatch:
-    inputs:
-      buildchain-ref:
-        description: "Temporary Buildchain runtime ref"
-        required: false
-        default: ""
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@<exact-buildchain-sha>
     permissions:
       actions: read
       checks: write
-      contents: write
+      contents: read
       id-token: write
       issues: write
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || '' }}
+      buildchain-ref: <exact-buildchain-sha>
       publisher-workflow-path: .github/workflows/paper-release.yml
       toolchain-type: config
       verify-command: make check
       artifact-paths: _build/paper-name.pdf
       buildchain-contract-lock-path: .buildchain/contract-lock.json
     secrets:
-      BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+      BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+      BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+      BUILDCHAIN_GENERATED_WRITE_TOKEN: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
 ```
 
-The sealed preset does not use a long-lived token for npm publication. It may
-accept an optional `BUILDCHAIN_PROMOTION_TOKEN` only for machine-generated
-version-state updates on protected channel branches; npm publication remains
-bound to GitHub OIDC trusted publishing. The preset builds and packages the
+The sealed preset does not use a long-lived token for npm publication. It
+prefers a repository-scoped GitHub App installation token for generated
+repository writes and accepts `BUILDCHAIN_GENERATED_WRITE_TOKEN` as an
+equivalent narrow compatibility authority. The deprecated
+`BUILDCHAIN_PROMOTION_TOKEN` name remains accepted for existing consumers, but
+there is no `github.token` fallback for generated writes. npm publication
+remains bound to GitHub OIDC trusted publishing. The preset builds and packages the
 paper in a read-only job, then a credential-free authority job downloads that
 exact candidate, audits the external control plane, and seals a capability over
 the source tree, Buildchain runtime, controller receipt, PDF, and npm package
@@ -249,8 +249,9 @@ workflow named by `publisher-workflow-path`.
 
 The preset:
 
-- resolves the floating Buildchain runtime once and binds the exact SHA into the
-  publication candidate and authority capability;
+- uses the exact Buildchain SHA admitted by the provisioning authority and
+  binds it into the caller bytes, contract lock, publication candidate, and
+  authority capability;
 - builds the PDF through the declared pinned LaTeX Docker toolchain or custom
   command in a read-only job;
 - verifies the paper repository;
@@ -325,19 +326,19 @@ explicit execution.
 
 The evidence model is intentionally non-inferential:
 
-| State | Required evidence |
-| --- | --- |
-| `scaffolded` | Complete managed scaffold inventory |
-| `governed` | Compatible Buildchain contract lock |
-| `admitted` | Repository admission receipt |
-| `bootstrapped` | Successful public npm bootstrap receipt or registry fact |
-| `trust-bound` | Trusted publisher binding receipt |
-| `content-ready` | Declared source paths present |
-| `artifact-sealed` | Verified sealed publication bundle |
-| `package-published` | Exact package version visible in npm |
-| `alpha-complete` | Protected Alpha PR completion evidence |
-| `staging-visible` | Staging route evidence |
-| `production-visible` | Production route evidence |
+| State                | Required evidence                                        |
+| -------------------- | -------------------------------------------------------- |
+| `scaffolded`         | Complete managed scaffold inventory                      |
+| `governed`           | Compatible Buildchain contract lock                      |
+| `admitted`           | Repository admission receipt                             |
+| `bootstrapped`       | Successful public npm bootstrap receipt or registry fact |
+| `trust-bound`        | Trusted publisher binding receipt                        |
+| `content-ready`      | Declared source paths present                            |
+| `artifact-sealed`    | Verified sealed publication bundle                       |
+| `package-published`  | Exact package version visible in npm                     |
+| `alpha-complete`     | Protected Alpha PR completion evidence                   |
+| `staging-visible`    | Staging route evidence                                   |
+| `production-visible` | Production route evidence                                |
 
 `paper status` reports `satisfied`, `not-reached`, `blocked`, or `unknown` for
 each state. It does not promote a state merely because a prior state is

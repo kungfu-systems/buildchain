@@ -30,7 +30,7 @@ function usage() {
                             [--buildchain-ref <ref>] [--write] [--json]
   buildchain paper preflight [--cwd <dir>] [--offline] [--json]
   buildchain paper bootstrap npm [--cwd <dir>] [--package <name>]
-                                  [--repository <owner/repo>] [--workflow <path>]
+                                  [--repository <owner/repo>] [--workflow <filename>]
                                   [--bootstrap-version <version>] [--userconfig <path>]
                                   [--offline] [--execute]
                                   [--confirm-public-package <name>] [--json]
@@ -436,11 +436,7 @@ export async function runPaperCli(
           "https://registry.npmjs.org/",
         ),
         repository: readFlag(effectiveArgs, "repository", ""),
-        workflow: readFlag(
-          effectiveArgs,
-          "workflow",
-          ".github/workflows/paper-release.yml",
-        ),
+        workflow: readFlag(effectiveArgs, "workflow", "paper-release.yml"),
         environment: readFlag(effectiveArgs, "environment", ""),
         execute: hasFlag(effectiveArgs, "execute"),
         confirmedPackage: readFlag(effectiveArgs, "confirm-public-package", ""),

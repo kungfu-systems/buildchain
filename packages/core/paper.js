@@ -28,6 +28,8 @@ export const PAPER_PREFLIGHT_CONTRACT = "kungfu-buildchain-paper-preflight";
 export const PAPER_STATUS_CONTRACT = "kungfu-buildchain-paper-status";
 export const PAPER_NPM_BOOTSTRAP_CONTRACT =
   "kungfu-buildchain-paper-npm-bootstrap";
+export const PAPER_PROVISIONING_CONTRACT =
+  "kungfu-buildchain-paper-provisioning-authority";
 export const PAPER_BUILD_PLAN_CONTRACT = "kungfu-buildchain-paper-build-plan";
 export const PAPER_ALPHA_PLAN_CONTRACT = "kungfu-buildchain-paper-alpha-plan";
 export const PAPER_RESUME_PLAN_CONTRACT = "kungfu-buildchain-paper-resume-plan";
@@ -60,6 +62,7 @@ export const PAPER_PATHS = Object.freeze({
   capability: ".buildchain/admitted/publication-capability.json",
   npmBootstrap: ".buildchain/paper/npm-bootstrap.json",
   npmTrust: ".buildchain/paper/npm-trust.json",
+  provisioningAuthority: ".buildchain/paper/provisioning-authority.json",
   visibility: ".buildchain/paper/visibility.json",
 });
 const PAPER_SCAFFOLD_PATHS = Object.freeze([
@@ -68,6 +71,7 @@ const PAPER_SCAFFOLD_PATHS = Object.freeze([
   PAPER_PATHS.versionPin,
   PAPER_PATHS.buildWorkflow,
   PAPER_PATHS.releaseWorkflow,
+  PAPER_PATHS.provisioningAuthority,
   "Makefile",
   "package.json",
   "README.md",
@@ -345,16 +349,11 @@ command = "make check"
 `;
 }
 
-function scaffoldBuildWorkflow() {
+function scaffoldBuildWorkflow(buildchainSha) {
   return `name: Build
 
 on:
   workflow_dispatch:
-    inputs:
-      buildchain-ref:
-        description: "Temporary Buildchain runtime ref for trusted manual validation"
-        required: false
-        default: ""
   pull_request:
   push:
     branches:
@@ -368,9 +367,9 @@ permissions:
 
 jobs:
   publication:
-    uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@${buildchainSha}
     with:
-      buildchain-ref: \${{ inputs.buildchain-ref || '' }}
+      buildchain-ref: ${buildchainSha}
       buildchain-contract-lock-path: .buildchain/contract-lock.json
       toolchain-type: config
       verify-command: make check
@@ -378,16 +377,11 @@ jobs:
 `;
 }
 
-function scaffoldReleaseWorkflow() {
+function scaffoldReleaseWorkflow(buildchainSha) {
   return `name: Paper Release
 
 on:
   workflow_dispatch:
-    inputs:
-      buildchain-ref:
-        description: "Temporary Buildchain runtime ref"
-        required: false
-        default: ""
   push:
     branches:
       - "alpha/**"
@@ -398,23 +392,116 @@ permissions:
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@${buildchainSha}
     permissions:
       actions: read
       checks: write
-      contents: write
+      contents: read
       id-token: write
       issues: write
     with:
-      buildchain-ref: \${{ inputs.buildchain-ref || '' }}
+      buildchain-ref: ${buildchainSha}
       buildchain-contract-lock-path: .buildchain/contract-lock.json
       publisher-workflow-path: .github/workflows/paper-release.yml
       toolchain-type: config
       verify-command: make check
       artifact-paths: _build/main.pdf
     secrets:
-      BUILDCHAIN_PROMOTION_TOKEN: \${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+      BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+      BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+      BUILDCHAIN_GENERATED_WRITE_TOKEN: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
 `;
+}
+
+function paperProvisioningPolicy() {
+  return {
+    repositoryActions: {
+      defaultWorkflowPermissions: "read",
+      canApprovePullRequestReviews: false,
+    },
+    generatedWrites: {
+      preferredAuthority: "github-app",
+      compatibilityAuthority: "narrow-token",
+      githubTokenFallback: false,
+      permissions: ["checks:write", "contents:write", "pull-requests:write"],
+      tokenPersistence: "runtime-only",
+    },
+    release: {
+      protectedReviewRequired: true,
+      versionState: "not-required",
+      identityOnlyPullRequests: false,
+      manualVersionStateRepairPullRequests: false,
+    },
+    roles: {
+      actor: "repository-development-role",
+      pusher: "repository-development-role",
+      reviewer: "independent-review-role",
+      generatedWriteAuthority: "github-app-or-narrow-token",
+    },
+  };
+}
+
+export function createPaperProvisioningAuthority({
+  repository,
+  packageName,
+  buildchainVersion,
+  buildchainSha,
+  contractLock,
+  buildWorkflow,
+  releaseWorkflow,
+  environment = "",
+}) {
+  const policy = paperProvisioningPolicy();
+  const payload = {
+    schemaVersion: 1,
+    contract: PAPER_PROVISIONING_CONTRACT,
+    repository,
+    package: {
+      name: packageName,
+      registry: NPM_REGISTRY,
+      bootstrapVersion: DEFAULT_BOOTSTRAP_VERSION,
+    },
+    runtime: {
+      repository: "kungfu-systems/buildchain",
+      version: buildchainVersion,
+      ref: buildchainSha,
+      resolvedSha: buildchainSha,
+    },
+    workflows: {
+      build: {
+        path: PAPER_PATHS.buildWorkflow,
+        sourceDigest: sha256Text(buildWorkflow),
+        reusablePath: ".github/workflows/publication-artifact.yml",
+        reusableRef: buildchainSha,
+      },
+      release: {
+        path: PAPER_PATHS.releaseWorkflow,
+        sourceDigest: sha256Text(releaseWorkflow),
+        reusablePath: ".github/workflows/paper-release-sealed.yml",
+        reusableRef: buildchainSha,
+      },
+    },
+    admission: {
+      contractLockPath: PAPER_PATHS.contractLock,
+      contractLockDigest: sha256Text(contractLock),
+      acceptedRef: buildchainSha,
+      acceptedSha: buildchainSha,
+    },
+    trustedPublisher: {
+      type: "github",
+      repository,
+      workflow: path.posix.basename(PAPER_PATHS.releaseWorkflow),
+      environment,
+    },
+    policy: {
+      ...policy,
+      policyDigest: sha256Text(stableJson(policy)),
+    },
+  };
+  return {
+    ...payload,
+    authorityDigest: sha256Text(stableJson(payload)),
+  };
 }
 
 function scaffoldMakefile() {
@@ -539,10 +626,22 @@ function scaffoldFiles({
     existingLock?.buildchain?.acceptedAt ||
     runtimeAcceptedAt(buildchainRoot, buildchainSha);
   const contractLock = createBuildchainContractLock({
-    buildchainRef,
+    buildchainRef: buildchainSha,
     resolvedSha: buildchainSha,
     contractWorld,
     acceptedAt,
+  });
+  const contractLockText = jsonText(contractLock);
+  const buildWorkflow = scaffoldBuildWorkflow(buildchainSha);
+  const releaseWorkflow = scaffoldReleaseWorkflow(buildchainSha);
+  const provisioningAuthority = createPaperProvisioningAuthority({
+    repository,
+    packageName,
+    buildchainVersion,
+    buildchainSha,
+    contractLock: contractLockText,
+    buildWorkflow,
+    releaseWorkflow,
   });
   const licenseText = runtimeLicenseText(buildchainRoot);
   return new Map([
@@ -556,10 +655,11 @@ function scaffoldFiles({
         siteBaseUrl,
       }),
     ],
-    [PAPER_PATHS.contractLock, jsonText(contractLock)],
+    [PAPER_PATHS.contractLock, contractLockText],
     [PAPER_PATHS.versionPin, `${buildchainVersion}\n`],
-    [PAPER_PATHS.buildWorkflow, scaffoldBuildWorkflow()],
-    [PAPER_PATHS.releaseWorkflow, scaffoldReleaseWorkflow()],
+    [PAPER_PATHS.buildWorkflow, buildWorkflow],
+    [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
+    [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
     ["Makefile", scaffoldMakefile()],
     ["package.json", scaffoldPackageJson({ name, packageName, repository })],
     ["README.md", scaffoldReadme({ title, packageName })],
@@ -569,7 +669,7 @@ function scaffoldFiles({
     ["LICENSE", licenseText],
     [
       ".gitignore",
-      "_build/\n.buildchain/publication/\n.buildchain/release-state/\n.buildchain/release-evidence/\n",
+      "_build/\n.buildchain/publication/\n.buildchain/release-state/\n.buildchain/release-evidence/\n.buildchain/paper/npm-bootstrap.json\n.buildchain/paper/npm-trust.json\n",
     ],
   ]);
 }
@@ -681,7 +781,7 @@ export function planPaperScaffold({
     },
     buildchain: {
       version: runtimeIdentity.version,
-      ref: buildchainRef,
+      ref: runtimeSha,
       resolvedSha: runtimeSha,
     },
     summary: {
@@ -1246,6 +1346,160 @@ export function resolvePaperRepository(cwd = process.cwd()) {
   );
 }
 
+function validatePaperProvisioningAuthority(cwd) {
+  const authorityPath = path.resolve(cwd, PAPER_PATHS.provisioningAuthority);
+  const source = readJson(authorityPath);
+  if (!source.exists) {
+    return {
+      exists: false,
+      valid: false,
+      value: undefined,
+      errors: ["paper provisioning authority is missing"],
+    };
+  }
+  if (source.error || !source.value) {
+    return {
+      exists: true,
+      valid: false,
+      value: source.value,
+      errors: [source.error || "paper provisioning authority is invalid"],
+    };
+  }
+  const value = source.value;
+  const errors = [];
+  if (value.contract !== PAPER_PROVISIONING_CONTRACT) {
+    errors.push("paper provisioning authority contract mismatch");
+  }
+  const { authorityDigest, ...payload } = value;
+  if (
+    !SHA256_PATTERN.test(String(authorityDigest || "")) ||
+    authorityDigest !== sha256Text(stableJson(payload))
+  ) {
+    errors.push("paper provisioning authority digest mismatch");
+  }
+  if (
+    !GIT_SHA_PATTERN.test(String(value.runtime?.resolvedSha || "")) ||
+    value.runtime?.ref !== value.runtime?.resolvedSha ||
+    value.admission?.acceptedRef !== value.runtime?.resolvedSha ||
+    value.admission?.acceptedSha !== value.runtime?.resolvedSha
+  ) {
+    errors.push("paper runtime and admission are not bound to one exact SHA");
+  }
+  if (
+    value.package?.registry !== NPM_REGISTRY ||
+    value.package?.bootstrapVersion !== DEFAULT_BOOTSTRAP_VERSION
+  ) {
+    errors.push(
+      "paper npm bootstrap authority is not fixed to the official registry and bootstrap version",
+    );
+  }
+  const policy = value.policy || {};
+  const { policyDigest, ...policyPayload } = policy;
+  if (
+    !SHA256_PATTERN.test(String(policyDigest || "")) ||
+    policyDigest !== sha256Text(stableJson(policyPayload))
+  ) {
+    errors.push("paper provisioning policy digest mismatch");
+  }
+  if (
+    policy.repositoryActions?.defaultWorkflowPermissions !== "read" ||
+    policy.repositoryActions?.canApprovePullRequestReviews !== false
+  ) {
+    errors.push("paper repository Actions policy is not least privilege");
+  }
+  if (
+    policy.generatedWrites?.preferredAuthority !== "github-app" ||
+    policy.generatedWrites?.githubTokenFallback !== false
+  ) {
+    errors.push("paper generated-write policy permits an unbounded authority");
+  }
+  if (
+    policy.release?.versionState !== "not-required" ||
+    policy.release?.identityOnlyPullRequests !== false ||
+    policy.release?.manualVersionStateRepairPullRequests !== false
+  ) {
+    errors.push(
+      "paper release policy permits avoidable bookkeeping pull requests",
+    );
+  }
+  for (const workflow of [value.workflows?.build, value.workflows?.release]) {
+    if (!workflow?.path || !workflow?.sourceDigest) {
+      errors.push("paper workflow authority is incomplete");
+      continue;
+    }
+    const absolute = path.resolve(cwd, workflow.path);
+    if (
+      !fs.existsSync(absolute) ||
+      sha256File(absolute) !== workflow.sourceDigest
+    ) {
+      errors.push(`paper workflow source digest mismatch: ${workflow.path}`);
+      continue;
+    }
+    const text = fs.readFileSync(absolute, "utf8");
+    const expectedUse = `${value.runtime.repository}/${workflow.reusablePath}@${value.runtime.resolvedSha}`;
+    if (!text.includes(`uses: ${expectedUse}`)) {
+      errors.push(
+        `paper workflow reusable source is not exact: ${workflow.path}`,
+      );
+    }
+    if (!text.includes(`buildchain-ref: ${value.runtime.resolvedSha}`)) {
+      errors.push(
+        `paper workflow runtime input is not exact: ${workflow.path}`,
+      );
+    }
+  }
+  const lockPath = path.resolve(
+    cwd,
+    value.admission?.contractLockPath || PAPER_PATHS.contractLock,
+  );
+  if (
+    !fs.existsSync(lockPath) ||
+    sha256File(lockPath) !== value.admission?.contractLockDigest
+  ) {
+    errors.push("paper contract lock bytes differ from provisioning authority");
+  }
+  return {
+    exists: true,
+    valid: errors.length === 0,
+    value,
+    errors,
+  };
+}
+
+function expectedPaperTrustedPublisher(authority, fallback = {}) {
+  const value = authority?.trustedPublisher || {};
+  return {
+    type: String(value.type || "github").toLowerCase(),
+    repository: normalizeRepository(
+      value.repository || fallback.repository || "",
+    ),
+    workflow: toPosix(value.workflow || fallback.workflow || ""),
+    environment: String(value.environment || fallback.environment || ""),
+  };
+}
+
+function normalizedTrustedPublisher(value) {
+  return {
+    type: String(value?.type || value?.provider || "")
+      .trim()
+      .toLowerCase()
+      .replace(/^github-actions$/, "github"),
+    repository: normalizeRepository(value?.repository || value?.repo || ""),
+    workflow: toPosix(value?.workflow || value?.file || "").replace(/^\/+/, ""),
+    environment: String(value?.environment || value?.env || "").trim(),
+  };
+}
+
+function trustedPublisherMatches(actual, expected) {
+  const normalized = normalizedTrustedPublisher(actual);
+  return (
+    normalized.type === expected.type &&
+    normalized.repository === expected.repository &&
+    normalized.workflow === expected.workflow &&
+    normalized.environment === expected.environment
+  );
+}
+
 function runtimeFacts({
   buildchainRoot,
   buildchainVersion,
@@ -1325,7 +1579,12 @@ function liveNpmAuthObservation(registry, cwd) {
   };
 }
 
-function liveNpmTrustObservation(packageName, registry, cwd) {
+function liveNpmTrustObservation(
+  packageName,
+  registry,
+  cwd,
+  expectedPublisher = undefined,
+) {
   const result = commandResult(
     "npm",
     ["trust", "list", packageName, "--json", `--registry=${registry}`],
@@ -1359,15 +1618,20 @@ function liveNpmTrustObservation(packageName, registry, cwd) {
       : Array.isArray(parsed?.trustedPublishers)
         ? parsed.trustedPublishers
         : [];
+  const normalizedPublishers = publishers.map(normalizedTrustedPublisher);
+  const exactMatches = expectedPublisher
+    ? normalizedPublishers.filter((entry) =>
+        trustedPublisherMatches(entry, expectedPublisher),
+      )
+    : [];
   return {
     status: "observed",
-    configured: publishers.length > 0,
-    publishers: publishers.map((entry) => ({
-      type: entry?.type || entry?.provider || "",
-      repository: entry?.repository || entry?.repo || "",
-      workflow: entry?.workflow || entry?.file || "",
-      environment: entry?.environment || entry?.env || "",
-    })),
+    configured: expectedPublisher
+      ? exactMatches.length === 1
+      : normalizedPublishers.length > 0,
+    exactBinding: expectedPublisher ? exactMatches.length === 1 : null,
+    expectedPublisher: expectedPublisher || null,
+    publishers: normalizedPublishers,
     errorCode: "",
   };
 }
@@ -1413,6 +1677,98 @@ function liveRepositoryPermissionObservation(repository, cwd) {
     defaultBranch: parsed.default_branch || "",
     archived: parsed.archived === true,
     visibility: parsed.visibility || (parsed.private ? "private" : "public"),
+    errorCode: "",
+  };
+}
+
+function liveRepositoryActionsPolicyObservation(repository, cwd) {
+  if (!repository) {
+    return {
+      status: "unknown",
+      defaultWorkflowPermissions: "",
+      canApprovePullRequestReviews: null,
+      errorCode: "repository-unresolved",
+    };
+  }
+  const result = commandResult(
+    "gh",
+    ["api", `repos/${repository}/actions/permissions/workflow`],
+    { cwd },
+  );
+  if (!result.ok) {
+    return {
+      status: "unknown",
+      defaultWorkflowPermissions: "",
+      canApprovePullRequestReviews: null,
+      errorCode: result.error
+        ? "gh-unavailable"
+        : "github-actions-policy-query-failed",
+    };
+  }
+  const parsed = safeParseJson(result.stdout);
+  if (!parsed || typeof parsed !== "object") {
+    return {
+      status: "unknown",
+      defaultWorkflowPermissions: "",
+      canApprovePullRequestReviews: null,
+      errorCode: "github-actions-policy-response-invalid",
+    };
+  }
+  return {
+    status: "observed",
+    defaultWorkflowPermissions: String(
+      parsed.default_workflow_permissions || "",
+    ),
+    canApprovePullRequestReviews:
+      parsed.can_approve_pull_request_reviews === true,
+    errorCode: "",
+  };
+}
+
+function liveGeneratedWriteAuthorityObservation(repository, cwd) {
+  if (!repository) {
+    return {
+      status: "unknown",
+      configured: null,
+      mode: "",
+      errorCode: "repository-unresolved",
+    };
+  }
+  const result = commandResult(
+    "gh",
+    ["secret", "list", "--repo", repository, "--json", "name"],
+    { cwd },
+  );
+  if (!result.ok) {
+    return {
+      status: "unknown",
+      configured: null,
+      mode: "",
+      errorCode: result.error
+        ? "gh-unavailable"
+        : "github-secret-metadata-query-failed",
+    };
+  }
+  const parsed = safeParseJson(result.stdout);
+  const names = new Set(
+    (Array.isArray(parsed) ? parsed : [])
+      .map((entry) => String(entry?.name || ""))
+      .filter(Boolean),
+  );
+  const appConfigured =
+    names.has("BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID") &&
+    names.has("BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY");
+  const narrowTokenConfigured =
+    names.has("BUILDCHAIN_GENERATED_WRITE_TOKEN") ||
+    names.has("BUILDCHAIN_PROMOTION_TOKEN");
+  return {
+    status: "observed",
+    configured: appConfigured || narrowTokenConfigured,
+    mode: appConfigured
+      ? "github-app"
+      : narrowTokenConfigured
+        ? "narrow-token"
+        : "",
     errorCode: "",
   };
 }
@@ -1476,6 +1832,7 @@ export function collectPaperPreflight({
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const status = collectPaperStatus({ cwd: resolvedCwd });
+  const provisioning = validatePaperProvisioningAuthority(resolvedCwd);
   const configResult = paperConfig(resolvedCwd);
   let validation;
   let validationError = "";
@@ -1489,7 +1846,7 @@ export function collectPaperPreflight({
   const runtime = runtimeFacts({
     buildchainRoot,
     buildchainVersion,
-    buildchainRef,
+    buildchainRef: provisioning.value?.runtime?.ref || buildchainRef,
     buildchainSha,
   });
   const lockPath = path.resolve(resolvedCwd, PAPER_PATHS.contractLock);
@@ -1528,6 +1885,10 @@ export function collectPaperPreflight({
   };
   const packageName = status.identity.package;
   const repository = status.identity.repository;
+  const expectedPublisher = expectedPaperTrustedPublisher(provisioning.value, {
+    repository,
+    workflow: path.posix.basename(PAPER_PATHS.releaseWorkflow),
+  });
   const npm =
     offline || !packageName
       ? {
@@ -1558,7 +1919,12 @@ export function collectPaperPreflight({
             resolvedCwd,
           ),
           auth: liveNpmAuthObservation(registry, resolvedCwd),
-          trust: liveNpmTrustObservation(packageName, registry, resolvedCwd),
+          trust: liveNpmTrustObservation(
+            packageName,
+            registry,
+            resolvedCwd,
+            expectedPublisher,
+          ),
         };
   const repositoryPermissions = offline
     ? {
@@ -1568,11 +1934,36 @@ export function collectPaperPreflight({
         errorCode: "offline",
       }
     : liveRepositoryPermissionObservation(repository, resolvedCwd);
+  const repositoryActions = offline
+    ? {
+        status: "unknown",
+        defaultWorkflowPermissions: "",
+        canApprovePullRequestReviews: null,
+        errorCode: "offline",
+      }
+    : liveRepositoryActionsPolicyObservation(repository, resolvedCwd);
+  const generatedWriteAuthority = offline
+    ? {
+        status: "unknown",
+        configured: null,
+        mode: "",
+        errorCode: "offline",
+      }
+    : liveGeneratedWriteAuthorityObservation(repository, resolvedCwd);
   const toolchain = localToolchainObservation(
     resolvedCwd,
     configResult.loaded?.config?.publication,
   );
   const checks = [
+    {
+      id: "provisioning.authority",
+      status: provisioning.valid ? "pass" : "fail",
+      blocking: true,
+      scope: "local",
+      message: provisioning.valid
+        ? "Paper runtime, callers, contract lock, trust target, and policy share one exact authority root."
+        : provisioning.errors.join("; "),
+    },
     {
       id: "config.publication",
       status: validationError ? "fail" : "pass",
@@ -1643,6 +2034,42 @@ export function collectPaperPreflight({
             : `Repository permission is unknown (${repositoryPermissions.errorCode}).`,
     },
     {
+      id: "repository.actions-policy",
+      status:
+        repositoryActions.defaultWorkflowPermissions === "read" &&
+        repositoryActions.canApprovePullRequestReviews === false
+          ? "pass"
+          : repositoryActions.status === "observed"
+            ? "fail"
+            : "unknown",
+      blocking: false,
+      scope: "external-mutation",
+      message:
+        repositoryActions.defaultWorkflowPermissions === "read" &&
+        repositoryActions.canApprovePullRequestReviews === false
+          ? "Repository defaults workflow permissions to read and disables Actions pull-request approval."
+          : repositoryActions.status === "observed"
+            ? "Repository Actions policy is broader than the paper provisioning authority."
+            : `Repository Actions policy is unknown (${repositoryActions.errorCode}).`,
+    },
+    {
+      id: "repository.generated-write-authority",
+      status:
+        generatedWriteAuthority.configured === true
+          ? "pass"
+          : generatedWriteAuthority.configured === false
+            ? "pending"
+            : "unknown",
+      blocking: false,
+      scope: "external-mutation",
+      message:
+        generatedWriteAuthority.configured === true
+          ? `Generated writes use ${generatedWriteAuthority.mode} metadata; no secret value was read.`
+          : generatedWriteAuthority.configured === false
+            ? "No GitHub App or compatible narrow generated-write credential is configured."
+            : `Generated-write authority is unknown (${generatedWriteAuthority.errorCode}).`,
+    },
+    {
       id: "npm.package",
       status:
         npm.package.exists === true
@@ -1671,9 +2098,9 @@ export function collectPaperPreflight({
       scope: "external-mutation",
       message:
         npm.trust.configured === true
-          ? "npm reports at least one Trusted Publisher."
+          ? "npm reports exactly the expected repository, workflow, and environment Trusted Publisher binding."
           : npm.trust.configured === false
-            ? "npm reports no Trusted Publisher."
+            ? "npm does not report the exact expected Trusted Publisher binding."
             : `npm Trusted Publisher status is unknown (${npm.trust.errorCode}).`,
     },
     {
@@ -1704,7 +2131,7 @@ export function collectPaperPreflight({
   const externalMutationChecks = checks.filter(
     (entry) =>
       entry.scope === "external-mutation" &&
-      ["fail", "unknown"].includes(entry.status),
+      ["fail", "pending", "unknown"].includes(entry.status),
   );
   const nextActions = [];
   if (validationError) {
@@ -1738,6 +2165,26 @@ export function collectPaperPreflight({
         "Run the public-package bootstrap and Trusted Publishing dry-run.",
     });
   }
+  if (
+    repositoryActions.status === "observed" &&
+    (repositoryActions.defaultWorkflowPermissions !== "read" ||
+      repositoryActions.canApprovePullRequestReviews !== false)
+  ) {
+    nextActions.push({
+      id: "constrain-repository-actions",
+      command: "",
+      description:
+        "Set default workflow permissions to read and disable Actions pull-request approval through the repository provisioner.",
+    });
+  }
+  if (generatedWriteAuthority.configured === false) {
+    nextActions.push({
+      id: "configure-generated-write-authority",
+      command: "",
+      description:
+        "Install a least-privilege GitHub App or configure an equivalent narrow generated-write token without exposing its value.",
+    });
+  }
   if (status.deterministicBuild.status !== "qualifying") {
     nextActions.push({
       id: "build-paper",
@@ -1767,7 +2214,16 @@ export function collectPaperPreflight({
         reasons: lockEvaluation.reasons || [],
       },
     },
+    provisioning: {
+      path: PAPER_PATHS.provisioningAuthority,
+      valid: provisioning.valid,
+      authorityDigest: provisioning.value?.authorityDigest || "",
+      policyDigest: provisioning.value?.policy?.policyDigest || "",
+      errors: provisioning.errors,
+    },
     repositoryPermissions,
+    repositoryActions,
+    generatedWriteAuthority,
     npm,
     deterministicBuild: status.deterministicBuild,
     releaseState: {
@@ -2020,7 +2476,7 @@ export function executePaperNpmBootstrap({
   bootstrapVersion = DEFAULT_BOOTSTRAP_VERSION,
   registry = NPM_REGISTRY,
   repository = "",
-  workflow = ".github/workflows/paper-release.yml",
+  workflow = "paper-release.yml",
   environment = "",
   execute = false,
   confirmedPackage = "",
@@ -2033,6 +2489,11 @@ export function executePaperNpmBootstrap({
       `paper npm bootstrap requires the official registry ${NPM_REGISTRY}`,
     );
   }
+  if (bootstrapVersion !== DEFAULT_BOOTSTRAP_VERSION) {
+    throw new Error(
+      `paper npm bootstrap version is fixed at ${DEFAULT_BOOTSTRAP_VERSION}`,
+    );
+  }
   const configResult = paperConfig(resolvedCwd);
   if (configResult.error) throw new Error(configResult.error);
   const name = normalizePackageName(
@@ -2043,6 +2504,23 @@ export function executePaperNpmBootstrap({
   const repo = normalizeRepository(
     repository || resolvePaperRepository(resolvedCwd),
   );
+  const provisioning = validatePaperProvisioningAuthority(resolvedCwd);
+  if (!provisioning.valid) {
+    throw new Error(
+      `paper npm bootstrap requires a valid provisioning authority: ${provisioning.errors.join("; ")}`,
+    );
+  }
+  const expectedPublisher = expectedPaperTrustedPublisher(provisioning.value);
+  if (
+    provisioning.value.package?.name !== name ||
+    expectedPublisher.repository !== repo ||
+    expectedPublisher.workflow !== toPosix(workflow).replace(/^\/+/, "") ||
+    expectedPublisher.environment !== String(environment || "")
+  ) {
+    throw new Error(
+      "paper npm bootstrap coordinates differ from the exact provisioning authority",
+    );
+  }
   if (execute && confirmedPackage !== name) {
     throw new Error(
       `real npm bootstrap requires --confirm-public-package ${name}`,
@@ -2090,6 +2568,10 @@ export function executePaperNpmBootstrap({
       github: repo,
       workflow,
       environment,
+    },
+    authority: {
+      digest: provisioning.value.authorityDigest,
+      policyDigest: provisioning.value.policy.policyDigest,
     },
     auth: {
       authenticated: auth.authenticated,
@@ -2349,7 +2831,12 @@ export function executePaperNpmBootstrap({
     ];
     const trustList =
       trustCommand.ok && urls.length === 0
-        ? liveNpmTrustObservation(name, registry, resolvedCwd)
+        ? liveNpmTrustObservation(
+            name,
+            registry,
+            resolvedCwd,
+            expectedPublisher,
+          )
         : {
             status: "unknown",
             configured: null,
@@ -2363,16 +2850,24 @@ export function executePaperNpmBootstrap({
         : urls.length > 0
           ? "action-required"
           : "failed";
+    const packageAfter = liveNpmPackageObservation(name, registry, resolvedCwd);
+    const packageVerified = packageAfter.exists === true;
     const receipt = {
       ...plan,
-      ok: trustStatus !== "failed",
+      ok: trustStatus !== "failed" && packageVerified,
       dryRun: false,
       externalMutation: true,
-      errorCode: trustStatus === "failed" ? "npm-trust-failed" : "",
+      errorCode:
+        trustStatus === "failed"
+          ? "npm-trust-failed"
+          : packageVerified
+            ? ""
+            : "npm-package-readback-failed",
       package: {
         ...plan.package,
-        existsAfter:
-          publishStatus === "published" || publishStatus === "existing",
+        existsAfter: packageAfter.exists,
+        observedVersionAfter: packageAfter.version,
+        readbackStatus: packageAfter.status,
       },
       publish: {
         ...plan.publish,
@@ -2381,10 +2876,12 @@ export function executePaperNpmBootstrap({
       trust: {
         status: trustStatus,
         urls,
+        expectedPublisher,
+        exactBinding: trustList.exactBinding === true,
         publishers: trustList.publishers,
       },
       nextActions:
-        trustStatus === "configured"
+        trustStatus === "configured" && packageVerified
           ? [
               {
                 id: "paper-preflight",
@@ -2393,7 +2890,7 @@ export function executePaperNpmBootstrap({
                   "Verify package existence and Trusted Publisher binding from live read-only sources.",
               },
             ]
-          : trustStatus === "action-required"
+          : trustStatus === "action-required" && packageVerified
             ? [
                 {
                   id: "complete-npm-web-action",
@@ -2403,19 +2900,31 @@ export function executePaperNpmBootstrap({
                   urls,
                 },
               ]
-            : [
-                {
-                  id: "retry-npm-trust",
-                  command: `buildchain paper bootstrap npm --execute --confirm-public-package ${name} --json`,
-                  description:
-                    "The package exists; retry only the idempotent Trusted Publisher configuration path.",
-                },
-              ],
+            : !packageVerified
+              ? [
+                  {
+                    id: "verify-npm-package-readback",
+                    command: `npm view ${name} version --json --registry=${registry}`,
+                    description:
+                      "The mutation returned but the official registry did not prove package existence; do not infer success.",
+                  },
+                ]
+              : [
+                  {
+                    id: "retry-npm-trust",
+                    command: `buildchain paper bootstrap npm --execute --confirm-public-package ${name} --json`,
+                    description:
+                      "The package exists; retry only the idempotent Trusted Publisher configuration path.",
+                  },
+                ],
     };
     receipt.receipts = [
       writePaperReceipt(resolvedCwd, PAPER_PATHS.npmBootstrap, receipt),
     ];
-    if (trustStatus === "configured" || trustStatus === "action-required") {
+    if (
+      packageVerified &&
+      (trustStatus === "configured" || trustStatus === "action-required")
+    ) {
       receipt.receipts.push(
         writePaperReceipt(resolvedCwd, PAPER_PATHS.npmTrust, receipt),
       );

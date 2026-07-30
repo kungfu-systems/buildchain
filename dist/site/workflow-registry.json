@@ -1070,9 +1070,12 @@
       ],
       "inputCount": 25,
       "secrets": [
+        "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
+        "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
+        "BUILDCHAIN_GENERATED_WRITE_TOKEN",
         "BUILDCHAIN_PROMOTION_TOKEN"
       ],
-      "secretCount": 1,
+      "secretCount": 4,
       "outputs": [
         "github-release-url",
         "package-name",
