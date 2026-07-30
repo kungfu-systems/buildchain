@@ -613,9 +613,14 @@ evidence. Consumer repositories neither receive nor duplicate credential-island
 material. The reusable workflow dispatches the sealed request to the
 Buildchain repository, waits for its protected authority workflow, verifies the
 immutable result, replaces only the declared artifact with the returned final
-bytes, and then runs the consumer's normal verification. Platform manifests,
-KFD evidence, checksums, and Release Passport inputs therefore observe the
-final signed artifact rather than the pre-signing build output.
+bytes. The ordinary platform lane completes the consumer's functional
+verification before delegation. A GitHub-hosted finalization lane then verifies
+the authority result against the sealed request, imports the exact signed bytes,
+and recomputes the final manifest before replacing the deterministic artifact.
+The signing result is never downloaded back to a self-hosted native runner.
+Platform manifests, KFD evidence, checksums, and Release Passport inputs
+therefore observe the final signed artifact rather than the pre-signing build
+output.
 
 For a standalone Mach-O request, the authority requires strict Developer ID
 verification, the declared Team ID, hardened runtime, and an `Accepted`

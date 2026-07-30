@@ -232,10 +232,19 @@ jobs:
         with:
           pattern: authority-result-*-${{ inputs.correlation-id }}
           path: .buildchain/provider-results
+      - uses: actions/download-artifact@v7.0.0
+        with:
+          name: authority-intake-${{ inputs.correlation-id }}
+          path: .buildchain/authority-intake
       - name: Merge provider result indexes without changing signed bytes
         run: node scripts/merge-artifact-signing-results.mjs
         env:
           BUILDCHAIN_SIGNING_RESULT_INPUT_ROOT: .buildchain/provider-results
+          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/authority-result
+      - name: Verify complete signed result set on GitHub-hosted infrastructure
+        run: node scripts/verify-artifact-signing-results.mjs
+        env:
+          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
           BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/authority-result
       - name: Publish immutable signed result delivery
         uses: actions/upload-artifact@v7.0.1
