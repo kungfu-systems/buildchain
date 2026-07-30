@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+  createReleasePropagationReceipt,
   planReleasePropagation,
   readReleasePropagationJson,
   writeReleasePropagationLock,
@@ -16,6 +17,14 @@ function usage() {
   buildchain release-propagation write-lock --plan <json-or-path>
                                             [--target <id-or-repo>] [--cwd <dir>]
                                             [--output <file>] [--json]
+  buildchain release-propagation receipt --plan <json-or-path>
+                                         --lock-result <json-or-path>
+                                         --pr-outcome <json-or-path>
+                                         [--target <id-or-repo>]
+                                         [--staging-state <state>]
+                                         [--production-state <state>]
+                                         [--observed-at <iso-8601>]
+                                         [--output <file>] [--json]
 `;
 }
 
@@ -87,6 +96,36 @@ export function runReleasePropagationCli(argv = process.argv.slice(2)) {
     } else {
       process.stdout.write(`release propagation lock: ${result.path}\n`);
       process.stdout.write(`lock sha256: ${result.lockSha256}\n`);
+    }
+    return;
+  }
+  if (mode === "receipt") {
+    const plan = readReleasePropagationJson(readFlag(args, "plan"), {
+      label: "--plan",
+      cwd: process.cwd(),
+    });
+    const lockResult = readReleasePropagationJson(readFlag(args, "lock-result"), {
+      label: "--lock-result",
+      cwd: process.cwd(),
+    });
+    const prOutcome = readReleasePropagationJson(readFlag(args, "pr-outcome"), {
+      label: "--pr-outcome",
+      cwd: process.cwd(),
+    });
+    const receipt = createReleasePropagationReceipt({
+      plan,
+      target: readFlag(args, "target", ""),
+      lockResult,
+      prOutcome,
+      stagingState: readFlag(args, "staging-state", "pending"),
+      productionState: readFlag(args, "production-state", "not-requested"),
+      observedAt: readFlag(args, "observed-at", ""),
+    });
+    writeOutput(readFlag(args, "output", ""), receipt);
+    if (hasFlag(args, "json")) {
+      printJson(receipt);
+    } else {
+      process.stdout.write(`release propagation receipt: ${receipt.receiptSha256}\n`);
     }
     return;
   }

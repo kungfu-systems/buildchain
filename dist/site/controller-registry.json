@@ -1723,6 +1723,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "downstream-update-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "dry-run": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1790,8 +1794,8 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
+      "digest": "sha256:1f283099f6ce064a2579d5e09acbc5e5a77bc7cca66c80f7ee697c9f40b7419c"
     }
   ],
-  "digest": "sha256:e98b74ca4734811ffc92ebc6b9bed8b33bd9f1433b6a632422b1d440d1d333f5"
+  "digest": "sha256:77f000d3dd9344ad4c9efeb4f9f5c17f9c3e8c6f92f795f1f6a433764eeea77c"
 }

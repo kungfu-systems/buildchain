@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  createReleasePropagationReceipt,
   normalizeReleasePropagationGraph,
   planReleasePropagation,
   writeReleasePropagationLock,
@@ -38,6 +39,11 @@ test("release propagation graph preserves alpha channel and exact upstream facts
   assert.equal(plan.targets[0].lock.upstream.package.integrity, readJson("upstream-alpha.json").package.integrity);
   assert.equal(plan.targets[0].lock.upstream.releasePassport.sha256, "2222222222222222222222222222222222222222222222222222222222222222");
   assert.equal(plan.targets[0].lock.propagation.floatingTags, false);
+  assert.match(plan.targets[0].propagationKey, /^[0-9a-f]{64}$/);
+  assert.match(
+    plan.targets[0].branch,
+    /^buildchain\/release-propagation\/kungfu-systems-kfd\/1\.4\.0-alpha\.3-alpha-[0-9a-f]{12}$/,
+  );
   assert.match(plan.targets[0].lock.lockSha256, /^[0-9a-f]{64}$/);
 });
 
@@ -120,6 +126,49 @@ test("release propagation write-lock writes exact downstream lock", () => {
   assert.equal(lock.downstream.repository, "kungfu-systems/site-libkungfu-dev");
   assert.equal(lock.upstream.tag, "v1.4.0-alpha.3");
   assert.equal(lock.lockSha256, result.lockSha256);
+  assert.equal(result.status, "written");
+  assert.equal(result.changed, true);
+  const reused = writeReleasePropagationLock({
+    plan,
+    target: "site-libkungfu-dev",
+    cwd,
+  });
+  assert.equal(reused.status, "reused");
+  assert.equal(reused.changed, false);
+});
+
+test("release propagation receipt keeps alpha truth independent from site visibility", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  const target = plan.targets[0];
+  const receipt = createReleasePropagationReceipt({
+    plan,
+    target: target.target,
+    lockResult: {
+      lockSha256: target.lock.lockSha256,
+      propagationKey: target.propagationKey,
+      status: "written",
+    },
+    prOutcome: {
+      state: "created",
+      number: 235,
+      url: "https://github.com/kungfu-systems/site-libkungfu-dev/pull/235",
+      branch: target.branch,
+    },
+    stagingState: "pending",
+    productionState: "not-requested",
+    observedAt: "2026-07-30T00:00:00.000Z",
+  });
+
+  assert.equal(receipt.contract, "kungfu-buildchain-release-propagation-receipt");
+  assert.equal(receipt.states["package-published"].state, "complete");
+  assert.equal(receipt.states["alpha-complete"].state, "complete");
+  assert.equal(receipt.states["staging-visible"].state, "pending");
+  assert.equal(receipt.states["production-visible"].state, "not-requested");
+  assert.equal(receipt.downstream.pullRequest.state, "created");
+  assert.match(receipt.receiptSha256, /^[0-9a-f]{64}$/);
 });
 
 test("release propagation CLI plans and writes downstream locks", () => {
@@ -157,6 +206,30 @@ test("release propagation CLI plans and writes downstream locks", () => {
   const lockResult = JSON.parse(lockOutput);
 
   assert.equal(fs.existsSync(lockResult.path), true);
+
+  const prOutcomePath = path.join(cwd, "pr-outcome.json");
+  fs.writeFileSync(prOutcomePath, `${JSON.stringify({
+    state: "planned",
+    branch: plan.targets[0].branch,
+  }, null, 2)}\n`);
+  const lockResultPath = path.join(cwd, "lock-result.json");
+  fs.writeFileSync(lockResultPath, `${JSON.stringify(lockResult, null, 2)}\n`);
+  const receiptOutput = execFileSync(process.execPath, [
+    bin,
+    "release-propagation",
+    "receipt",
+    "--plan",
+    planPath,
+    "--lock-result",
+    lockResultPath,
+    "--pr-outcome",
+    prOutcomePath,
+    "--target",
+    "site-libkungfu-dev",
+    "--json",
+  ], { cwd: root, encoding: "utf8" });
+  const receipt = JSON.parse(receiptOutput);
+  assert.equal(receipt.propagationKey, plan.targets[0].propagationKey);
 });
 
 test("release propagation CLI fails fast when target is ambiguous", () => {
@@ -188,6 +261,17 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
   assert.equal(workflow.includes("node bin/buildchain.mjs release-propagation"), false);
   assert.equal(
     (workflow.match(/node \.buildchain\/runtime\/bin\/buildchain\.mjs release-propagation/g) || []).length,
-    2,
+    3,
   );
+  assert.match(workflow, /concurrency:/);
+  assert.match(workflow, /fromJSON\(inputs\.upstream-release-json\)\.repository/);
+  assert.match(workflow, /cancel-in-progress: false/);
+  assert.match(workflow, /downstream-update-command:/);
+  assert.match(workflow, /Apply consumer-owned downstream update/);
+  assert.match(workflow, /BUILDCHAIN_PROPAGATION_LOCK_PATH:/);
+  assert.match(workflow, /bash --noprofile --norc -e -u -o pipefail -c "\$DOWNSTREAM_UPDATE_COMMAND"/);
+  assert.match(workflow, /release-propagation receipt/);
+  assert.match(workflow, /gh pr list/);
+  assert.match(workflow, /release propagation found duplicate matching PRs/);
+  assert.equal(workflow.includes("gh pr create \\\n"), true);
 });

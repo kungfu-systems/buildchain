@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "56b2ec2d901445e92db6e28814717f481095712b8a9a75bac0d357e980c42d26",
+    "sha256": "be0860843437b18099783c9f12a5e5c5d099beebd41dd6e2821037c4b2547794",
     "summary": {
       "cliCommandCount": 88,
       "workflowCount": 47,
       "actionCount": 4,
       "sitePageCount": 51,
-      "docCommandRefCount": 267,
+      "docCommandRefCount": 268,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -227,13 +227,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "56b2ec2d901445e92db6e28814717f481095712b8a9a75bac0d357e980c42d26",
+      "sha256": "be0860843437b18099783c9f12a5e5c5d099beebd41dd6e2821037c4b2547794",
       "summary": {
         "cliCommandCount": 88,
         "workflowCount": 47,
         "actionCount": 4,
         "sitePageCount": 51,
-        "docCommandRefCount": 267,
+        "docCommandRefCount": 268,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -3839,7 +3839,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
@@ -3847,6 +3847,7 @@
             "downstream-branch",
             "downstream-repository",
             "downstream-target",
+            "downstream-update-command",
             "dry-run",
             "graph-json",
             "lock-path",

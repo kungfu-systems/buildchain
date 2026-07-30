@@ -286,6 +286,7 @@ function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix, deleteExcl
 }
 
 const PUBLICATION_ARCHIVE_POLICY_CONTRACT = "kungfu-buildchain-publication-archive-policy";
+const PUBLICATION_FAST_PATH_CONTRACT = "kungfu-buildchain-publication-package-pin-fast-path";
 
 function immutablePrefix(value, label) {
   const raw = String(value || "").trim().replaceAll("\\", "/");
@@ -297,6 +298,98 @@ function immutablePrefix(value, label) {
     throw new Error(`${label} must identify a versioned path below an immutable root: ${value}`);
   }
   return normalized;
+}
+
+function publicationFastPathScope({ artifactRoot, bindings }) {
+  const manifestFile = path.join(artifactRoot, "manifest.json");
+  if (!fs.existsSync(manifestFile)) return null;
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  } catch (error) {
+    throw new Error(`invalid web-surface artifact manifest: ${error.message}`);
+  }
+  const raw = manifest?.publicationFastPath;
+  if (raw === undefined || raw === null) return null;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error("publicationFastPath must be an object");
+  }
+  if (raw.contract !== PUBLICATION_FAST_PATH_CONTRACT || raw.mode !== "package-pin-only") {
+    throw new Error("publicationFastPath contract or mode is unsupported");
+  }
+  const targetSurface = String(raw.targetSurface || "").trim();
+  const binding = bindings.find((entry) => entry.surface === targetSurface);
+  if (!binding) {
+    throw new Error(`publicationFastPath target surface is not declared: ${targetSurface}`);
+  }
+  const qualificationRoot = String(raw.qualificationRoot || "").trim();
+  if (!/^sha256:[a-f0-9]{64}$/.test(qualificationRoot)) {
+    throw new Error("publicationFastPath qualificationRoot must be an exact SHA-256 root");
+  }
+  const surfaceRoot = surfaceArtifactRootFor({ artifactRoot, binding });
+  const immutablePrefixes = [...new Set((raw.immutablePrefixes || []).map((entry) =>
+    immutablePrefix(entry, "publicationFastPath immutable prefix"),
+  ))].sort();
+  if (immutablePrefixes.length === 0) {
+    throw new Error("publicationFastPath must declare immutablePrefixes");
+  }
+  const mutableFiles = [...new Set((raw.mutableFiles || []).map((entry) => {
+    const normalized = normalizeS3Key(entry);
+    const candidate = path.join(surfaceRoot, normalized);
+    if (
+      !normalized
+      || String(entry).includes("..")
+      || !fs.statSync(candidate, { throwIfNoEntry: false })?.isFile()
+    ) {
+      throw new Error(`invalid or missing publicationFastPath mutable file: ${entry}`);
+    }
+    return normalized;
+  }))].sort();
+  if (mutableFiles.length === 0) {
+    throw new Error("publicationFastPath must declare mutableFiles");
+  }
+  if (mutableFiles.some((file) =>
+    immutablePrefixes.some((prefix) => file === prefix || file.startsWith(`${prefix}/`)))) {
+    throw new Error("publicationFastPath mutable files cannot overlap immutable prefixes");
+  }
+  for (const prefix of immutablePrefixes) {
+    if (!fs.statSync(path.join(surfaceRoot, prefix), { throwIfNoEntry: false })?.isDirectory()) {
+      throw new Error(`publicationFastPath immutable prefix does not exist: ${prefix}`);
+    }
+  }
+  const invalidationPaths = [...new Set((raw.invalidationPaths || []).map((entry) => {
+    const value = String(entry || "").trim();
+    if (!value.startsWith("/") || value.includes("..")) {
+      throw new Error(`invalid publicationFastPath invalidation path: ${entry}`);
+    }
+    return value;
+  }))].sort();
+  if (invalidationPaths.length === 0) {
+    throw new Error("publicationFastPath must declare invalidationPaths");
+  }
+  return {
+    contract: PUBLICATION_FAST_PATH_CONTRACT,
+    mode: "package-pin-only",
+    targetSurface,
+    qualificationRoot,
+    immutablePrefixes,
+    mutableFiles,
+    invalidationPaths,
+  };
+}
+
+function applyPublicationFastPathScope(bindings, { cwd, artifactPath }) {
+  const artifactRoot = path.resolve(cwd, artifactPath);
+  const scope = publicationFastPathScope({ artifactRoot, bindings });
+  if (!scope) {
+    return { bindings, scope: null };
+  }
+  return {
+    bindings: bindings
+      .filter((binding) => binding.surface === scope.targetSurface)
+      .map((binding) => ({ ...binding, publicationFastPath: scope })),
+    scope,
+  };
 }
 
 function publicationImmutablePolicy({ artifactRoot, binding }) {
@@ -325,7 +418,15 @@ function publicationImmutablePolicy({ artifactRoot, binding }) {
     }
   }
   const preservedRoots = [...new Set(declaredPrefixes.map((prefix) => prefix.split("/")[0]))].sort();
-  const files = preservedRoots
+  const uploadRoots = binding.publicationFastPath?.immutablePrefixes || preservedRoots;
+  if (binding.publicationFastPath) {
+    for (const prefix of uploadRoots) {
+      if (!declaredPrefixes.includes(prefix)) {
+        throw new Error(`publicationFastPath immutable prefix is not declared by the archive manifest: ${prefix}`);
+      }
+    }
+  }
+  const files = uploadRoots
     .flatMap((root) => listFiles(surfaceRoot, root))
     .map((filePath) => ({
       path: toPosix(path.relative(surfaceRoot, filePath)),
@@ -340,7 +441,9 @@ function publicationImmutablePolicy({ artifactRoot, binding }) {
     manifestPath: toPosix(path.relative(artifactRoot, manifestFile)),
     preservedRoots,
     declaredPrefixes,
+    uploadRoots,
     files,
+    fastPath: binding.publicationFastPath || undefined,
   };
 }
 
@@ -1090,7 +1193,11 @@ export function planWebSurfaceDeploy({
   if (installerEvidence) {
     manifest.installerPublicationEvidence = installerEvidence;
   }
-  const surfaceBindings = withImmutablePublicationPolicies(withSurfaceRoutingEvidence(manifest.surfaceBindings, {
+  const scoped = applyPublicationFastPathScope(manifest.surfaceBindings, {
+    cwd,
+    artifactPath: artifactPath || deployConfig.artifactPath || ".",
+  });
+  const surfaceBindings = withImmutablePublicationPolicies(withSurfaceRoutingEvidence(scoped.bindings, {
     artifactPath: artifactPath || deployConfig.artifactPath || ".",
     files: resolvedArtifact.files,
   }), {
@@ -1107,6 +1214,10 @@ export function planWebSurfaceDeploy({
     }
   }
   manifest.surfaceBindings = surfaceBindings;
+  if (scoped.scope) {
+    manifest.publicationFastPath = scoped.scope;
+    manifest.url = surfaceBindings[0].url;
+  }
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-web-surface-deploy-plan",
@@ -1123,6 +1234,7 @@ export function planWebSurfaceDeploy({
     },
     manifest,
     surfaceBindings,
+    publicationFastPath: scoped.scope || undefined,
     steps: planAdapterSteps(deployConfig.adapter, deployConfig, manifest),
   };
 }
@@ -1134,7 +1246,18 @@ export function verifyWebSurfaceArtifactChannelFacts({ cwd = process.cwd(), plan
     try { return new URL(binding.url).host; } catch { return ""; }
   }).filter(Boolean));
   const observed = [];
-  for (const filePath of listFiles(artifactRoot, artifactRoot).filter((entry) => entry.endsWith(".json"))) {
+  const scopedPrefix = normalizeS3Key(
+    resolvedPlan.publicationFastPath
+      ? resolvedPlan.surfaceBindings?.[0]?.artifactPathPrefix || ""
+      : "",
+  );
+  for (const filePath of listFiles(artifactRoot, artifactRoot)
+    .filter((entry) => entry.endsWith(".json"))
+    .filter((entry) => {
+      if (!scopedPrefix) return true;
+      const relative = normalizeS3Key(path.relative(artifactRoot, entry));
+      return relative === scopedPrefix || relative.startsWith(`${scopedPrefix}/`);
+    })) {
     let value;
     try { value = JSON.parse(fs.readFileSync(filePath, "utf8")); } catch { continue; }
     if (!value || typeof value !== "object" || Array.isArray(value) || !String(value.contract || "").includes("manifest")) continue;
@@ -1219,7 +1342,7 @@ export function applyWebSurfaceDeploy({
     ...bindingOperations.filter((operation) => operation.action === "verify-immutable-artifact-before-upload"),
     ...bindingOperations.filter((operation) => operation.action === "sync-immutable-artifact"),
     ...bindingOperations.filter((operation) => operation.action === "verify-immutable-artifact-after-upload"),
-    ...cloudFrontDirectoryIndexRewriteOperations(bindings),
+    ...cloudFrontDirectoryIndexRewriteOperations(bindings.filter((binding) => !binding.publicationFastPath)),
     ...bindingOperations.filter((operation) => ![
       "verify-immutable-artifact-before-upload",
       "sync-immutable-artifact",
@@ -1229,7 +1352,10 @@ export function applyWebSurfaceDeploy({
   const primaryBinding = bindings[0] || {};
   const objectPrefix = primaryBinding.objectPrefix || objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
   const manifestKey = primaryBinding.manifestKey || deployManifestKey(deployConfig, resolvedPlan.manifest);
-  const invalidationPaths = bindings.flatMap((binding) => [viewerWildcardPath(binding), cdnPath(binding.manifestKey)]);
+  const invalidationPaths = bindings.flatMap((binding) =>
+    binding.publicationFastPath
+      ? [...binding.publicationFastPath.invalidationPaths, cdnPath(binding.manifestKey)]
+      : [viewerWildcardPath(binding), cdnPath(binding.manifestKey)]);
   const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
   const immutablePreservation = bindings
     .filter((binding) => binding.immutablePublication)
@@ -1241,10 +1367,12 @@ export function applyWebSurfaceDeploy({
           "sync-immutable-artifact",
           "verify-immutable-artifact-after-upload",
           "sync-static-artifact",
+          "sync-publication-fast-path",
         ].includes(operation.action),
       );
       const expectedOperationCount = (binding.immutablePublication.files.length * 2) +
-        binding.immutablePublication.preservedRoots.length + 1;
+        binding.immutablePublication.uploadRoots.length +
+        (binding.publicationFastPath ? binding.publicationFastPath.mutableFiles.length : 1);
       const complete = relevant.length === expectedOperationCount;
       return {
         surface: binding.surface,
@@ -1279,6 +1407,7 @@ export function applyWebSurfaceDeploy({
     objectPrefix,
     manifestKey,
     invalidationPaths,
+    publicationFastPath: resolvedPlan.publicationFastPath || resolvedPlan.manifest.publicationFastPath,
     manifest: resolvedPlan.manifest,
     surfaceBindings: bindings,
     immutablePreservation,
@@ -1866,19 +1995,23 @@ export async function checkWebSurfaceHealth({
     const operationSource = Array.isArray(result?.operations) && result.operations.length > 0
       ? result.operations
       : (Array.isArray(plan?.steps) ? plan.steps : []);
-    const requiredActions = [
-      "verify-immutable-artifact-before-upload",
-      "sync-immutable-artifact",
-      "verify-immutable-artifact-after-upload",
-      "sync-static-artifact",
-    ];
     const preservationBindings = immutableBindings.map((binding) => {
+      const requiredActions = [
+        "verify-immutable-artifact-before-upload",
+        "sync-immutable-artifact",
+        "verify-immutable-artifact-after-upload",
+        binding.publicationFastPath
+          ? "sync-publication-fast-path"
+          : "sync-static-artifact",
+      ];
       const actions = new Set(operationSource
         .filter((operation) => operation.surface === binding.surface)
         .filter((operation) => operationEvidenceStatus(operation, { plannedEvidence: !result }))
         .map((operation) => operation.action));
       const missingActions = requiredActions.filter((action) => !actions.has(action));
-      const coveringBindings = (binding.immutablePublication.coveringBindings || []).map((covering) => {
+      const coveringBindings = binding.publicationFastPath
+        ? []
+        : (binding.immutablePublication.coveringBindings || []).map((covering) => {
         const sync = operationSource.find((operation) =>
           operation.surface === covering.surface &&
           operation.action === "sync-static-artifact" &&
@@ -1891,7 +2024,7 @@ export async function checkWebSurfaceHealth({
             ? "pass"
             : "fail",
         };
-      });
+          });
       return {
         surface: binding.surface,
         manifestPath: binding.immutablePublication.manifestPath,
@@ -2023,7 +2156,7 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
       sha256: file.sha256,
     },
   }));
-  const syncImmutable = (immutable?.preservedRoots || []).map((root) => {
+  const syncImmutable = (immutable?.uploadRoots || immutable?.preservedRoots || []).map((root) => {
     const installerCacheArgs = installerBinding && root === installerRoot
       ? [
           "--content-type",
@@ -2075,30 +2208,53 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
       cacheControl: "public,max-age=300,must-revalidate",
     },
   }));
+  const fastPathMutable = (binding.publicationFastPath?.mutableFiles || []).map((file) => ({
+    action: "sync-publication-fast-path",
+    surface: binding.surface,
+    command: "aws",
+    args: [
+      "s3",
+      "cp",
+      path.join(surfaceArtifactRoot, file),
+      s3Uri(bucket, joinS3Key(binding.objectPrefix, file)),
+      "--checksum-algorithm",
+      "SHA256",
+    ],
+    publicationFastPath: {
+      qualificationRoot: binding.publicationFastPath.qualificationRoot,
+      path: file,
+      overwriteBoundary: "declared-mutable-file-only",
+    },
+  }));
+  const mutableSync = binding.publicationFastPath
+    ? fastPathMutable
+    : [{
+        action: "sync-static-artifact",
+        surface: binding.surface,
+        command: "aws",
+        args: syncStaticArtifactArgs({
+          artifactRoot: surfaceArtifactRoot,
+          bucket,
+          objectPrefix: binding.objectPrefix,
+          deleteExcludes: binding.mutableDeleteExcludes || [],
+        }),
+        routing: binding.routing,
+        preservation: binding.mutableDeleteExcludes?.length > 0
+          ? {
+              contract: "kungfu-buildchain-web-surface-immutable-delete-exclusion",
+              mutableDeleteExcludes: binding.mutableDeleteExcludes,
+            }
+          : undefined,
+      }];
   const operations = [
     ...verifyImmutable("before-upload"),
     ...syncImmutable,
     ...verifyImmutable("after-upload"),
-    {
-      action: "sync-static-artifact",
-      surface: binding.surface,
-      command: "aws",
-      args: syncStaticArtifactArgs({
-        artifactRoot: surfaceArtifactRoot,
-        bucket,
-        objectPrefix: binding.objectPrefix,
-        deleteExcludes: binding.mutableDeleteExcludes || [],
-      }),
-      routing: binding.routing,
-      preservation: binding.mutableDeleteExcludes?.length > 0
-        ? {
-            contract: "kungfu-buildchain-web-surface-immutable-delete-exclusion",
-            mutableDeleteExcludes: binding.mutableDeleteExcludes,
-          }
-        : undefined,
-    },
+    ...mutableSync,
     ...publishFriendlyInstallers,
-    ...directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding }),
+    ...(binding.publicationFastPath
+      ? []
+      : directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding })),
     {
       action: "write-deployment-manifest",
       surface: binding.surface,
@@ -2113,6 +2269,8 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
     },
   ];
   if (distribution) {
+    const invalidationPaths = binding.publicationFastPath?.invalidationPaths
+      || [viewerWildcardPath(binding)];
     operations.push({
       action: "invalidate-cdn",
       surface: binding.surface,
@@ -2123,7 +2281,7 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
         "--distribution-id",
         distribution,
         "--paths",
-        viewerWildcardPath(binding),
+        ...invalidationPaths,
         cdnPath(binding.manifestKey),
       ],
     });
@@ -2144,7 +2302,7 @@ function planAdapterSteps(adapter, deployConfig, manifest) {
             {
               action: "sync-immutable-artifact",
               surface: binding.surface,
-              roots: binding.immutablePublication.preservedRoots,
+              roots: binding.immutablePublication.uploadRoots,
               overwrite: false,
             },
             {
@@ -2154,13 +2312,21 @@ function planAdapterSteps(adapter, deployConfig, manifest) {
             },
           ]
         : []),
-      {
-        action: "sync-static-artifact",
-        surface: binding.surface,
-        target: binding.bucket,
-        prefix: binding.objectPrefix,
-        deleteExcludes: binding.mutableDeleteExcludes || [],
-      },
+      ...(binding.publicationFastPath
+        ? binding.publicationFastPath.mutableFiles.map((file) => ({
+            action: "sync-publication-fast-path",
+            surface: binding.surface,
+            target: binding.bucket,
+            path: file,
+            qualificationRoot: binding.publicationFastPath.qualificationRoot,
+          }))
+        : [{
+            action: "sync-static-artifact",
+            surface: binding.surface,
+            target: binding.bucket,
+            prefix: binding.objectPrefix,
+            deleteExcludes: binding.mutableDeleteExcludes || [],
+          }]),
       {
         action: "write-deployment-manifest",
         surface: binding.surface,
@@ -2171,13 +2337,16 @@ function planAdapterSteps(adapter, deployConfig, manifest) {
         action: "invalidate-cdn",
         surface: binding.surface,
         distribution: binding.distributionId,
+        paths: binding.publicationFastPath?.invalidationPaths,
       },
     ]);
     return [
       ...bindingSteps.filter((step) => step.action === "verify-immutable-artifact-before-upload"),
       ...bindingSteps.filter((step) => step.action === "sync-immutable-artifact"),
       ...bindingSteps.filter((step) => step.action === "verify-immutable-artifact-after-upload"),
-      ...cloudFrontDirectoryIndexRewriteOperations(manifest.surfaceBindings || []).map((operation) => ({
+      ...cloudFrontDirectoryIndexRewriteOperations(
+        (manifest.surfaceBindings || []).filter((binding) => !binding.publicationFastPath),
+      ).map((operation) => ({
         action: operation.action,
         distribution: operation.routing.distributionId,
         functionName: operation.routing.functionName,
