@@ -111,6 +111,9 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "compiler-cache-platforms-json",
+        "compiler-cache-provider",
+        "compiler-cache-required",
         "control-runner-json",
         "credential-island-caller-owned",
         "credential-island-environment",
@@ -157,7 +160,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 79,
+      "inputCount": 82,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -986,6 +989,9 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "compiler-cache-platforms-json",
+        "compiler-cache-provider",
+        "compiler-cache-required",
         "control-runner-json",
         "credential-island-caller-owned",
         "credential-island-environment",
@@ -1032,7 +1038,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 82,
+      "inputCount": 85,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

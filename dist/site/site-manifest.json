@@ -173,7 +173,7 @@
       "path": "docs/toolkit-observability.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:d7f4179c3912d7bbc5940bfba69e674fb03d020a740063c0b877a171bd5789e3"
+      "digest": "sha256:1a08331cdca2b48e622ecbb799a7465a59cc4a779dd73d36f559f9bc1b98578c"
     },
     {
       "id": "site-bundle-contract",
@@ -253,7 +253,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:60b85594295aae0089774e29fa1c3e471e1afc9fa68bf43d1cc19b78f9516fed"
+      "digest": "sha256:7b29cb27600daca5810992304a4688a8523c8012a8eeb09807957c0bcd5cf8e3"
     },
     {
       "id": "publish-transaction",

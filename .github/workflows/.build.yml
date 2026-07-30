@@ -376,6 +376,21 @@ on:
         default: ""
         type: string
         required: false
+      compiler-cache-provider:
+        description: "Audited compiler cache provider prepared before build: none or sccache"
+        default: "none"
+        type: string
+        required: false
+      compiler-cache-platforms-json:
+        description: "JSON array of platform ids on which compiler-cache preparation is enabled"
+        default: "[]"
+        type: string
+        required: false
+      compiler-cache-required:
+        description: "Fail the selected platform before build when the compiler cache cannot be prepared"
+        default: false
+        type: boolean
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
         default: ""
@@ -1459,6 +1474,7 @@ jobs:
           BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
           BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
           BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1473,6 +1489,22 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-install.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-install.json
+
+      - name: Prepare auditable compiler cache
+        if: ${{ inputs.compiler-cache-provider != 'none' && contains(fromJSON(inputs.compiler-cache-platforms-json), matrix.platform.id) }}
+        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs prepare
+        env:
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
+          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ inputs.compiler-cache-required }}
+          BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH: .buildchain/diagnostics/compiler-cache-preparation.json
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
 
       - name: Run build lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -1735,6 +1767,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
@@ -1785,6 +1818,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
@@ -1919,6 +1953,7 @@ jobs:
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1933,6 +1968,19 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-install.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-install.json
+
+      - name: Prepare auditable compiler cache
+        if: ${{ inputs.compiler-cache-provider != 'none' && contains(fromJSON(inputs.compiler-cache-platforms-json), matrix.platform.id) }}
+        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs prepare
+        env:
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
+          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ inputs.compiler-cache-required }}
+          BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH: .buildchain/diagnostics/compiler-cache-preparation.json
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
 
       - name: Run build lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -2142,6 +2190,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
@@ -2190,6 +2239,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
@@ -2474,6 +2524,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
