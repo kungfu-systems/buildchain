@@ -262,6 +262,11 @@ on:
         default: 14
         type: number
         required: false
+      artifact-compression-level:
+        description: "GitHub Artifact payload compression level (0-9); zero avoids recompressing release archives and reduces signed-URL exposure"
+        default: 0
+        type: number
+        required: false
       artifact-transfer-mode:
         description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
         default: "github-artifacts"
@@ -743,6 +748,7 @@ jobs:
       process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
       requested-parallelism: ${{ inputs.requested-parallelism }}
       artifact-retention-days: ${{ inputs.artifact-retention-days }}
+      artifact-compression-level: ${{ inputs.artifact-compression-level }}
       artifact-transfer-mode: ${{ inputs.artifact-transfer-mode }}
       artifact-relay-s3-bucket: ${{ inputs.artifact-relay-s3-bucket }}
       artifact-relay-s3-region: ${{ inputs.artifact-relay-s3-region }}

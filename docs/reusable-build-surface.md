@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-29
+last_reviewed: 2026-07-30
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-27
+  generated_at: 2026-07-30
   invisible_context: not asserted
 ---
 
@@ -634,7 +634,16 @@ to GitHub artifacts:
 ```yaml
 with:
   artifact-transfer-mode: github-artifacts
+  artifact-compression-level: 0
 ```
+
+Direct GitHub Artifact payloads default to compression level `0`. Buildchain
+artifacts are commonly already-compressed archives; storing them without a
+second compression pass shortens the upload window while preserving the same
+artifact name, run/id/digest binding, retention, and no-overwrite behavior.
+Callers may select `1` through `9` for payloads that materially benefit from
+compression. Manifests and diagnostics retain their existing small-artifact
+behavior.
 
 Large self-hosted native builds can opt into the first-class S3 relay path:
 

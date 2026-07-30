@@ -281,7 +281,10 @@ test("compound Apple archives sign outer and wheel Mach-O bytes and rebuild RECO
     const packed = spawnSync(
       "tar",
       ["-czf", archive, "-C", path.join(root, "source"), "product"],
-      { encoding: "utf8" },
+      {
+        encoding: "utf8",
+        env: { ...process.env, COPYFILE_DISABLE: "1" },
+      },
     );
     assert.equal(packed.status, 0, packed.stderr);
     const fake = path.join(root, "codesign");

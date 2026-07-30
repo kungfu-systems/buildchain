@@ -82,7 +82,7 @@ function fixture() {
   return { plan, planFileDigest, controllerReceipt, decision };
 }
 
-test("trusted manual and reviewed release PR paths both authorize production", () => {
+test("trusted manual and protected-main release PR paths both authorize production", () => {
   const manual = resolveWebSurfaceProductionDecision({
     eventName: "workflow_dispatch",
     refName: "main",
@@ -94,8 +94,7 @@ test("trusted manual and reviewed release PR paths both authorize production", (
     actorPermission: "write",
   });
   const release = resolveWebSurfaceProductionDecision({
-    eventName: "pull_request",
-    eventAction: "closed",
+    eventName: "push",
     refName: "main",
     repository: "kungfu-systems/site",
     sourceSha: SOURCE_SHA,
@@ -110,6 +109,25 @@ test("trusted manual and reviewed release PR paths both authorize production", (
   assert.equal(manual.kind, "manual-dispatch");
   assert.equal(release.approved, true);
   assert.equal(release.kind, "release-pr");
+});
+
+test("a closed release PR verifies intent but waits for the protected main push", () => {
+  const decision = resolveWebSurfaceProductionDecision({
+    eventName: "pull_request",
+    eventAction: "closed",
+    refName: "main",
+    repository: "kungfu-systems/site",
+    sourceSha: SOURCE_SHA,
+    actor: "maintainer",
+    productionApply: true,
+    productionReleaseOnMain: true,
+    releaseApproved: true,
+    releasePr: 98,
+    releaseSource: "release/production/site",
+  });
+  assert.equal(decision.approved, false);
+  assert.equal(decision.kind, "none");
+  assert.equal(decision.reason, "release-pr-verified-awaiting-main-push");
 });
 
 test("ordinary closed pull requests do not authorize production", () => {

@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-21
+last_reviewed: 2026-07-30
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-21
+  generated_at: 2026-07-30
   invisible_context_boundary: No credentials, private logs, or unpublished evidence values are included.
 ---
 
@@ -30,15 +30,28 @@ binds one `snapshot.id` to two byte-identical JSON files:
   `dogfood-evidence/snapshots/<snapshotId>.json`;
 - a mutable last-known-good alias such as `dogfood-evidence.json`.
 
+The bundle may also declare up to 16 derived mutable projections under
+`publication.projections`. Each projection declares its artifact-relative
+`source`, bounded destination `key`, exact `sha256`, `contentType`, and
+`cacheControl`. This supports static HTML such as `dogfood/index.html` without
+changing the existing immutable/latest JSON contract.
+
 Buildchain verifies both file digests and snapshot identities before receiving
 production authority. Apply then performs this order:
 
 1. conditionally create the immutable key with `If-None-Match: *`;
 2. read the immutable key back and verify its declared SHA-256 metadata;
-3. record the previous latest metadata as the rollback pointer;
-4. atomically replace the latest object;
-5. read latest back and verify the same snapshot and digest;
-6. invalidate only the declared viewer paths.
+3. record preceding version metadata for every declared mutable key;
+4. write and read back each derived projection in manifest order;
+5. atomically replace the latest object;
+6. read latest back and verify the same snapshot and digest;
+7. invalidate only the declared viewer paths.
+
+Projection-enabled publication requires bucket versioning before replacing an
+existing mutable key. If a later projection, latest update, or invalidation
+fails, Buildchain restores preceding object versions in reverse order and
+removes newly introduced declared projection keys. Rollback never lists the
+bucket and never touches keys outside the manifest.
 
 Any generator, schema, digest, immutable-key, provider, or read-after-write
 failure leaves the previous latest object in place. A colliding immutable key
@@ -58,6 +71,8 @@ review gate for steady-state refreshes. Its policy should allow only:
 
 - `s3:GetObject` and `s3:PutObject` on the exact latest key;
 - the same actions on the exact immutable snapshot prefix;
+- for projection-enabled bundles, `s3:GetObjectVersion` and bounded
+  `s3:DeleteObject` on the exact declared mutable keys;
 - `cloudfront:CreateInvalidation` on the one distribution.
 
 It must not receive bucket-wide delete, list, repository write, GitHub PR, or
@@ -76,9 +91,10 @@ fallback.
 
 ## Rollback and recovery
 
-Every receipt records the previous latest snapshot id, digest, ETag, and S3
-version id when available. Rollback regenerates a bundle whose latest file is
-the selected immutable snapshot and republishes it through the same validator;
-operators do not edit or delete immutable history. If CDN invalidation fails
-after latest advances, rerunning the same bundle is idempotent and repairs edge
-convergence.
+Every receipt records the previous latest and projection snapshot ids, digests,
+ETags, and S3 version ids when available. A projection transaction rolls back
+automatically when a later mutable step or CDN invalidation fails. Operators
+can also regenerate a bundle whose latest file is the selected immutable
+snapshot and republish it through the same validator; immutable history is
+never overwritten or deleted. Legacy bundles without projections retain their
+existing idempotent rerun behavior when CDN invalidation alone fails.

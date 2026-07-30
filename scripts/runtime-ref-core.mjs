@@ -114,9 +114,11 @@ export function resolveRuntimeSelection({
 export function validateRuntimeOverrideTrust({
   requestedRef = "",
   eventName = "",
+  eventAction = "",
   actorPermission = "",
   sameRepositoryPullRequest = false,
   pullRequestHeadSha = "",
+  workflowShellSha = "",
 } = {}) {
   if (!String(requestedRef || "").trim()) {
     return { ok: true, decision: "stable-default" };
@@ -126,6 +128,15 @@ export function validateRuntimeOverrideTrust({
   }
   const normalizedRequested = String(requestedRef || "").trim().toLowerCase();
   const normalizedHeadSha = String(pullRequestHeadSha || "").trim().toLowerCase();
+  const normalizedWorkflowShellSha = String(workflowShellSha || "").trim().toLowerCase();
+  if (
+    eventName === "pull_request" &&
+    eventAction === "closed" &&
+    EXACT_SHA_RE.test(normalizedRequested) &&
+    normalizedRequested === normalizedWorkflowShellSha
+  ) {
+    return { ok: true, decision: "closed-release-pr-shell-runtime" };
+  }
   if (
     eventName === "pull_request" &&
     sameRepositoryPullRequest === true &&

@@ -1,3 +1,21 @@
+---
+status: draft
+period: ongoing
+theme: web-surface-deployments
+doc_type: contract
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-30
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-30
+  invisible_context_boundary: No credentials, private logs, or unpublished deployment values are included.
+---
+
 # Web-Surface Deployment Contract
 
 Buildchain supports `project.type = "web-surface"` for repositories that publish
@@ -680,8 +698,9 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 | --- | --- |
 | `pull_request` opened / synchronized / reopened | validate, build, verify, and plan `preview` for `pr-N` |
 | `pull_request` closed | plan apply-mode cleanup for the `pr-N` preview alias and manifest |
+| `pull_request` closed for a matching release PR | verify the release intent and exact workflow-shell runtime, then wait for the protected `main` push; do not plan or apply production from `refs/pull/*/merge` |
 | `push` to `main` | validate, build, verify, plan and apply `staging` from the merged `main` SHA, then optionally open a production release PR |
-| `push` to `main` from a matching release PR merge | validate the associated release PR, plan `production`, and enter the configured GitHub Environment gate |
+| `push` to `main` from a matching release PR merge | validate the associated release PR, plan `production`, and enter the configured GitHub Environment gate from the protected mainline ref |
 | `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
 
 The optional `buildchain-ref` input is empty by default. Empty keeps the
