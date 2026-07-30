@@ -254,15 +254,33 @@ function addMinutes(iso, minutes) {
   return new Date(Date.parse(iso) + minutes * 60_000).toISOString();
 }
 
-function repositorySelector(repositories, requested) {
-  if (!requested) return repositories;
-  const exact = repositories.filter((repository) =>
-    repository.full_name === requested ||
-    repository.name === requested);
-  if (exact.length !== 1) {
-    throw new Error(`repository selector must resolve exactly once: ${requested}`);
+function repositoryVisibility(repository) {
+  return String(
+    repository.visibility || (repository.private ? "private" : "public"),
+  ).toLowerCase();
+}
+
+export function selectGithubGovernanceRepositories(
+  repositories,
+  requested = "",
+  descriptor = BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+) {
+  const exact = requested
+    ? repositories.filter((repository) =>
+        repository.full_name === requested || repository.name === requested)
+    : repositories;
+  if (requested && exact.length !== 1) {
+    throw new Error("repository selector must resolve exactly once");
   }
-  return exact;
+  const managedVisibilities = new Set(
+    descriptor.repositoryAdmission.managedVisibilities || ["public"],
+  );
+  const selected = exact.filter((repository) =>
+    managedVisibilities.has(repositoryVisibility(repository)));
+  if (requested && selected.length !== 1) {
+    throw new Error("repository selector is outside managed governance scope");
+  }
+  return selected;
 }
 
 export function collectGithubGovernanceAudit({
@@ -291,7 +309,10 @@ export function collectGithubGovernanceAudit({
   if (!organizationState.ok || !repositoriesState.readable) {
     throw new Error("organization or managed repository inventory is unreadable; governance audit fails closed");
   }
-  const selected = repositorySelector(repositoriesState.repositories, repository);
+  const selected = selectGithubGovernanceRepositories(
+    repositoriesState.repositories,
+    repository,
+  );
   if (targetRef && selected.length !== 1) {
     throw new Error("--target-ref requires exactly one selected repository");
   }
@@ -316,9 +337,7 @@ export function collectGithubGovernanceAudit({
   const diagnostics = [];
   for (const metadata of selected) {
     const fullName = String(metadata.full_name || "");
-    const visibilityClass = String(
-      metadata.visibility || (metadata.private ? "private" : "public"),
-    );
+    const visibilityClass = repositoryVisibility(metadata);
     const repositoryIdentityRoot = githubRepositoryIdentityRoot({
       provider: "github",
       providerRepositoryId: String(metadata.node_id || metadata.id || ""),
@@ -420,7 +439,7 @@ export function collectGithubGovernanceAudit({
     }
   }
   const visibility = selected.reduce((counts, item) => {
-    const key = String(item.visibility || (item.private ? "private" : "public"));
+    const key = repositoryVisibility(item);
     counts[key] = Number(counts[key] || 0) + 1;
     return counts;
   }, {});

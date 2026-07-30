@@ -125,11 +125,6 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   ],
 });
 const PUBLIC_REPOSITORIES = Object.freeze(Object.keys(PUBLIC_REPOSITORY_TARGETS).sort());
-const PRIVATE_REPOSITORY_IDENTITIES = Object.freeze([
-  "sha256:581823ab841e1d9a9025c92d0c47b164c6aaa1ea22112fdbc8d73bd2c862a05f",
-  "sha256:b7255e01d10000eb3a2786456b4c558178675ccb6cf28a6e39a74dbfe918df35",
-  "sha256:f41bd767e9c4a0ab429ca2a2f456d29ddefab0e996d75000ba36334689eb177e",
-]);
 const PROTECTED_AUTHORITY_PATHS = Object.freeze([
   ".github/CODEOWNERS",
   ".github/workflows/.publication-authority.yml",
@@ -493,6 +488,7 @@ export function createBuildchainGithubGovernanceAuthority() {
       ],
     },
     repositoryAdmission: {
+      managedVisibilities: ["public"],
       publicRepositories: [...PUBLIC_REPOSITORIES],
       publicAuthoritativeTargets: Object.fromEntries(
         Object.entries(PUBLIC_REPOSITORY_TARGETS).map(([repository, targets]) => [
@@ -509,25 +505,21 @@ export function createBuildchainGithubGovernanceAuthority() {
           })),
         ]),
       ),
-      privateRepositoryIdentities: PRIVATE_REPOSITORY_IDENTITIES.map((identityRoot) => ({
-        identityRoot,
-        targetPolicy: "default-and-current-version-line",
-        requiredCheckPolicies: {},
-      })),
-      privateRepositoryPolicy: "non-authoritative-until-plan-capability-qualifies",
+      privateRepositoryIdentities: [],
+      privateRepositoryPolicy: "excluded-from-managed-zone",
       unknownRepositoryPolicy: "non-authoritative-until-explicit-admission",
       baseline: {
         observedOn: "2026-07-30",
-        repositoryCount: 19,
+        repositoryCount: 16,
         publicCount: 16,
-        privateCount: 3,
+        privateCount: 0,
         authoritativePublicTargetCount: Object.values(PUBLIC_REPOSITORY_TARGETS)
           .reduce((count, targets) => count + targets.length, 0),
       },
     },
     planCapability: {
       publicRepositories: ["free", "team", "enterprise"],
-      privateRepositories: ["team", "enterprise"],
+      privateRepositories: [],
       organizationRulesets: ["team", "enterprise"],
     },
     effectivePolicy: {
