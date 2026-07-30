@@ -57,6 +57,11 @@ on:
         default: ""
         type: string
         required: false
+      self-hosted-offline-fallback:
+        description: "Route each supported exact-label self-hosted lane to its GitHub-hosted runner when no matching runner is online"
+        default: false
+        type: boolean
+        required: false
       control-runner-json:
         description: "JSON runner-label array for trusted control-plane jobs"
         default: '["ubuntu-24.04"]'
@@ -395,7 +400,7 @@ on:
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
         required: false
       BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
+        description: "Standard Buildchain control-plane token used only for protected runner inventory, dispatch, and central authority retrieval"
         required: false
     outputs:
       buildchain-channel:
@@ -413,6 +418,9 @@ on:
       platforms-json:
         description: "Resolved platform matrix JSON"
         value: ${{ jobs.build.outputs.platforms-json }}
+      runner-routing-json:
+        description: "De-identified self-hosted availability and offline fallback decision"
+        value: ${{ jobs.build.outputs.runner-routing-json }}
       platform-count:
         description: "Resolved platform count"
         value: ${{ jobs.build.outputs.platform-count }}
@@ -710,6 +718,7 @@ jobs:
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
       platforms-json: ${{ inputs.platforms-json }}
+      self-hosted-offline-fallback: ${{ inputs.self-hosted-offline-fallback }}
       control-runner-json: ${{ inputs.control-runner-json }}
       fail-fast: ${{ inputs.fail-fast }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
