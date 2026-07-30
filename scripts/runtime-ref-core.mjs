@@ -3,7 +3,7 @@ const TRAIN_REF_RE = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
 const AUTHORITY_REF_RE = /^authority\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
 const OFFICIAL_CHANNEL_REF_RE = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
 
-export function parseWorkflowShellRef(workflowRef = "", fallback = "v2", buildchainRepository = "kungfu-systems/buildchain") {
+export function parseWorkflowShellRef(workflowRef = "", fallback = "v3", buildchainRepository = "kungfu-systems/buildchain") {
   const value = String(workflowRef || "");
   const expectedPrefix = `${buildchainRepository}/.github/workflows/`;
   if (!value.startsWith(expectedPrefix)) {
@@ -80,7 +80,7 @@ export function normalizeRequestedRuntimeRef(requestedRef = "") {
 export function resolveRuntimeSelection({
   requestedRef = "",
   workflowRef = "",
-  defaultStableRef = "v2",
+  defaultStableRef = "v3",
   buildchainRepository = "kungfu-systems/buildchain",
 } = {}) {
   const requested = String(requestedRef || "").trim();
