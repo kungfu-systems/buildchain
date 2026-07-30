@@ -106,6 +106,35 @@ for compatibility, but the passport records it as lower trust because
 Buildchain can record the command boundary without proving the compiler or
 LaTeX distribution digest.
 
+## Reproducibility Gate
+
+Alpha and release admission require
+`.buildchain/publication/reproducibility-receipt.json`. Buildchain creates the
+receipt by cloning the exact checked-out Git commit into two independent local
+repositories, assigning each build a separate home and npm cache, and deriving
+`SOURCE_DATE_EPOCH` from the source commit. A pinned `latex-docker` build runs
+with UTC, `C.UTF-8`, no build-time network, and the exact image digest declared
+in `[publication.toolchain]`.
+
+Each clean build independently creates the PDF set, source bundle, publication
+manifest and passport, append-only registry, synthesized npm package directory,
+and an actual npm tarball. The receipt compares exact bytes and records:
+
+- source repository, commit, tree, and `SOURCE_DATE_EPOCH`;
+- toolchain image, digest, command, and toolchain identity root;
+- every artifact and evidence path with byte size and SHA-256;
+- npm tarball SHA-256, SHA-1 shasum, and `sha512` integrity;
+- per-build output-set roots and the first differing field or artifact.
+
+The gate is fail-closed. A build-only `custom-command` run can diagnose byte
+drift and promote its byte-identical local output with
+`--allow-unpinned-toolchain`, but it is never a qualifying publication receipt.
+Any workflow that prepares a publishable paper package accepts only a
+digest-pinned toolchain and promotes the first clean build into the publication
+candidate only after both builds are byte-identical. The receipt remains
+outside the npm tarball to avoid a circular digest; it binds the tarball bytes
+from the surrounding sealed publication evidence.
+
 `publish.kind = "npm-paper-package"` declares that Buildchain, not the consumer
 repository, owns the standard paper npm package shape and release transaction
 mechanics. `publish.package` is the public npm package that contains the PDF,
@@ -134,14 +163,18 @@ The build-only workflow:
   any paper build runs;
 - resolves the declared publication toolchain from `[publication.toolchain]` or
   workflow inputs;
+- hydrates authenticated registry history before building so both clean
+  candidates include the same append-only history;
 - for `latex-docker`, pulls the pinned build-images LaTeX builder digest and
-  runs the declared command in the container;
+  runs two independent clean builds with the reproducibility policy above;
 - for `custom-command`, runs the declared command and records the lower-trust
-  boundary in the passport;
+  boundary in the passport, but refuses publication qualification;
 - runs the verify command;
 - creates a source bundle from `publication.source_paths`;
 - writes `.buildchain/publication/publication-artifact.json`;
 - writes `.buildchain/publication/publication-artifact-passport.json`;
+- writes a qualifying
+  `.buildchain/publication/reproducibility-receipt.json`;
 - when `[publication.archive]` is configured, writes
   `.buildchain/publication/publication-registry.json` and verifies same-version
   immutability;
@@ -262,6 +295,15 @@ Generate the publication manifest locally or in CI:
 buildchain publication-artifact manifest --source-sha "$(git rev-parse HEAD)" --json
 ```
 
+Prove the complete candidate from two clean builds:
+
+```sh
+buildchain publication-artifact reproducibility \
+  --source-sha "$(git rev-parse HEAD)" \
+  --promote \
+  --json
+```
+
 Generate the npm package contents after the manifest exists:
 
 ```sh
@@ -280,6 +322,8 @@ import {
   collectPublicationPackageFacts,
   preparePublicationNpmPackage,
 } from "@kungfu-tech/buildchain/publication-package";
+
+import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
 ```
 
 `writePublicationArtifact()` is the single implementation used by the CLI and

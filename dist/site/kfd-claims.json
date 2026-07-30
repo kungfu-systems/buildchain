@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "95f62ec371731507fe1b5fc10d07348bb15956bcbd38eebc6d9fae9fddb81454",
+    "sha256": "b37621e2d4c11ce5dffbce9b4df1512b98329a690d11c3f5ae04340ace15cc1c",
     "summary": {
-      "cliCommandCount": 79,
+      "cliCommandCount": 80,
       "workflowCount": 47,
       "actionCount": 4,
       "sitePageCount": 51,
-      "docCommandRefCount": 249,
+      "docCommandRefCount": 251,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -227,13 +227,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "95f62ec371731507fe1b5fc10d07348bb15956bcbd38eebc6d9fae9fddb81454",
+      "sha256": "b37621e2d4c11ce5dffbce9b4df1512b98329a690d11c3f5ae04340ace15cc1c",
       "summary": {
-        "cliCommandCount": 79,
+        "cliCommandCount": 80,
         "workflowCount": 47,
         "actionCount": 4,
         "sitePageCount": 51,
-        "docCommandRefCount": 249,
+        "docCommandRefCount": 251,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1230,6 +1230,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./publication-package"
+        },
+        {
+          "id": "export:./publication-reproducibility",
+          "name": "@kungfu-tech/buildchain/publication-reproducibility",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-reproducibility.js",
+          "evidencePath": "packages/core/publication-reproducibility.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-reproducibility"
         },
         {
           "id": "export:./publication-authority",
@@ -2334,6 +2346,18 @@
         {
           "id": "cli:publication-artifact-npm-package",
           "name": "buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:publication-artifact-reproducibility",
+          "name": "buildchain publication-artifact reproducibility [--cwd <dir>] [--source-sha <sha>]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4705,6 +4729,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 304
+    "publicSurfaceCount": 306
   }
 }

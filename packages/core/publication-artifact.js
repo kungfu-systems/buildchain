@@ -253,7 +253,7 @@ export function createPublicationSourceBundle({
 } = {}) {
   const outputPath = path.resolve(cwd, output);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  const paths = sourcePaths.length > 0 ? sourcePaths : ["."];
+  const paths = [...(sourcePaths.length > 0 ? sourcePaths : ["."])].sort();
   execFileSync("git", [
     "archive",
     "--format=tar.gz",

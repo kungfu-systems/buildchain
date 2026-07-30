@@ -460,6 +460,11 @@ export {
 } from "./release-propagation.js";
 
 export {
+  PUBLICATION_REPRODUCIBILITY_RECEIPT_CONTRACT,
+  verifyPublicationReproducibility,
+} from "./publication-reproducibility.js";
+
+export {
   SURFACE_TIMESTAMP_POLICY_CONTRACT,
   applySurfaceTimestampPolicy,
   createSurfaceTimestampPolicy,

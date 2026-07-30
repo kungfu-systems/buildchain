@@ -20,6 +20,8 @@ Current shared surfaces:
   through `@kungfu-tech/buildchain/badges`.
 - publication artifact manifests, source bundles, and publication artifact
   passports through `@kungfu-tech/buildchain/publication-artifact`.
+- two-clean-build byte reproducibility receipts through
+  `@kungfu-tech/buildchain/publication-reproducibility`.
 
 ## Toolkit Imports
 
@@ -52,15 +54,20 @@ import {
 CommonJS scripts can use dynamic imports for the same package surfaces:
 
 ```js
-const { createBuildchainLogger } = await import("@kungfu-tech/buildchain/logging");
-const { collectRunnerDiagnostics } = await import("@kungfu-tech/buildchain/diagnostics");
+const { createBuildchainLogger } =
+  await import("@kungfu-tech/buildchain/logging");
+const { collectRunnerDiagnostics } =
+  await import("@kungfu-tech/buildchain/diagnostics");
 ```
 
 Build facts consumers can collect source-bound module/product facts before
 publishing and pass those facts into the release passport:
 
 ```js
-import { collectModuleBuildFacts, writeBuildFacts } from "@kungfu-tech/buildchain/build-facts";
+import {
+  collectModuleBuildFacts,
+  writeBuildFacts,
+} from "@kungfu-tech/buildchain/build-facts";
 
 const fact = collectModuleBuildFacts({ moduleId: "native-core" });
 writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
@@ -79,6 +86,19 @@ import { writePublicationArtifact } from "@kungfu-tech/buildchain/publication-ar
 writePublicationArtifact({ sourceSha: process.env.GITHUB_SHA });
 ```
 
+Before publication admission, prove the exact PDF, source bundle, manifests,
+and npm tarball twice from the same Git commit:
+
+```js
+import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
+
+const receipt = verifyPublicationReproducibility({
+  sourceSha: process.env.GITHUB_SHA,
+  promote: true,
+});
+if (!receipt.qualifying) throw new Error("publication is not reproducible");
+```
+
 Web-surface validation stays in core because both local scripts and GitHub
 Actions need the same fail-closed interpretation of project, channel, deploy,
 retention, and staging security declarations.
@@ -87,7 +107,10 @@ README badge consumers should import the public badge subpath and treat
 Markdown as a projection of the returned facts:
 
 ```js
-import { collectBadgeBundleFacts, renderBadgeBundleBlock } from "@kungfu-tech/buildchain/badges";
+import {
+  collectBadgeBundleFacts,
+  renderBadgeBundleBlock,
+} from "@kungfu-tech/buildchain/badges";
 
 const facts = await collectBadgeBundleFacts({ cwd: process.cwd() });
 const markdown = renderBadgeBundleBlock(facts);
