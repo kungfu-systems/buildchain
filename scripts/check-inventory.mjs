@@ -24,6 +24,7 @@ const requiredPaths = [
   "packages/core/build-facts.js",
   "packages/core/publication-package.js",
   "packages/core/publication-reproducibility.js",
+  "packages/core/publication-sealed-bundle.js",
   "packages/core/release-line-bootstrap.js",
   "packages/core/public-surface-audit.js",
   "docs/MAP.md",
@@ -958,7 +959,10 @@ if (commonJsSourcePattern.test(npmDryRunScript)) {
 }
 for (const requiredSnippet of [
   "BUILDCHAIN_PUBLISH_EVIDENCE",
-  "\"publish\", \"--access\", access, \"--tag\", distTag",
+  "BUILDCHAIN_SEALED_NPM_TARBALL",
+  "...(pack.tarballPath ? [pack.tarballPath] : [])",
+  "\"--access\"",
+  "\"--tag\"",
   "artifact digest mismatch",
 ]) {
   if (!npmPublishTransactionScript.includes(requiredSnippet)) {

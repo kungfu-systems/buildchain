@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "b37621e2d4c11ce5dffbce9b4df1512b98329a690d11c3f5ae04340ace15cc1c",
+    "sha256": "8a49518fedf61ac874bbe11bcbba5309406c3b838eb9b109d25e6d201513c0b0",
     "summary": {
       "cliCommandCount": 80,
       "workflowCount": 47,
@@ -227,7 +227,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "b37621e2d4c11ce5dffbce9b4df1512b98329a690d11c3f5ae04340ace15cc1c",
+      "sha256": "8a49518fedf61ac874bbe11bcbba5309406c3b838eb9b109d25e6d201513c0b0",
       "summary": {
         "cliCommandCount": 80,
         "workflowCount": 47,
@@ -1242,6 +1242,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./publication-reproducibility"
+        },
+        {
+          "id": "export:./publication-sealed-bundle",
+          "name": "@kungfu-tech/buildchain/publication-sealed-bundle",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-sealed-bundle.js",
+          "evidencePath": "packages/core/publication-sealed-bundle.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-sealed-bundle"
         },
         {
           "id": "export:./publication-authority",
@@ -3833,7 +3845,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 62,
+          "inputCount": 64,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -3856,6 +3868,8 @@
             "publish-package-main",
             "publish-package-set-order",
             "publish-required-artifacts-json",
+            "publish-sealed-bundle-manifest",
+            "publish-sealed-bundle-root",
             "publish-source-locked",
             "publish-source-ref",
             "publish-source-sha",
@@ -4729,6 +4743,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 306
+    "publicSurfaceCount": 307
   }
 }

@@ -118,7 +118,9 @@ in `[publication.toolchain]`.
 
 Each clean build independently creates the PDF set, source bundle, publication
 manifest and passport, append-only registry, synthesized npm package directory,
-and an actual npm tarball. The receipt compares exact bytes and records:
+and an actual npm tarball. After qualification, Buildchain copies the first
+qualifying tarball into the promoted publication candidate instead of deleting
+it with the temporary clean build. The receipt compares exact bytes and records:
 
 - source repository, commit, tree, and `SOURCE_DATE_EPOCH`;
 - toolchain image, digest, command, and toolchain identity root;
@@ -262,7 +264,13 @@ The preset:
   channel commit and requires `promote-buildchain-ref` to verify that lock
   before any publish side effect;
 - verifies the complete candidate again after authority and publishes the
-  package through npm Trusted Publishing without rebuilding it;
+  package through npm Trusted Publishing without rebuilding or repacking it;
+- writes a typed sealed-bundle manifest that binds the candidate root, exact
+  npm tarball, every GitHub Release asset, durable storage path, and resume
+  command;
+- persists the complete binary bundle to the transaction's durable release-state
+  ref before npm receives credentials, allowing an empty runner to restore and
+  verify the same bytes after interruption;
 - writes Buildchain release/passport evidence; and
 - creates or updates the exact-version GitHub Release by default, uploading
   every file declared by `publication.primary_artifact` and
@@ -271,6 +279,17 @@ The preset:
 Consumers can opt out of the GitHub Release with `github-release: false`, but
 the default is on so downstream release propagation can observe
 `release.published` without hand-written `gh release` steps.
+
+The transaction exposes a stable publication progression:
+
+```text
+prepared -> sealed -> package-published -> alpha-complete
+```
+
+Stable publication ends at `release-complete`. If a run stops after npm but
+before GitHub Release completion, the next run starts from
+`package-published`, restores the sealed PDF and companion assets, and finishes
+the release without invoking the paper build or `npm pack` again.
 
 Declared publication artifacts are resolved from the generated publication
 manifest rather than repeated in consumer workflow YAML. Publication fails
@@ -324,6 +343,11 @@ import {
 } from "@kungfu-tech/buildchain/publication-package";
 
 import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
+
+import {
+  createPublicationSealedBundle,
+  verifyPublicationSealedBundle,
+} from "@kungfu-tech/buildchain/publication-sealed-bundle";
 ```
 
 `writePublicationArtifact()` is the single implementation used by the CLI and

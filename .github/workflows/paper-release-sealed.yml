@@ -243,6 +243,10 @@ jobs:
             buildPublicationArtifactCandidate,
             resolvePublicationCandidateFile,
           } from "./.buildchain/runtime/scripts/publication-artifact-candidate.mjs";
+          import {
+            createPublicationSealedBundle,
+            verifyPublicationSealedBundle,
+          } from "./.buildchain/runtime/packages/core/publication-sealed-bundle.js";
 
           const root = ".buildchain/admitted/artifact";
           const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
@@ -274,6 +278,27 @@ jobs:
           const manifestPath = exactPath(".buildchain/publication/publication-artifact.json");
           const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
           const releaseAssets = (manifest.artifacts || []).map((entry) => exactPath(entry.path));
+          const reproducibilityPath = exactPath(".buildchain/publication/reproducibility-receipt.json");
+          const reproducibility = JSON.parse(fs.readFileSync(reproducibilityPath, "utf8"));
+          const qualifiedNpm = reproducibility.builds?.[0]?.npmPackage;
+          if (!qualifiedNpm?.filename || !qualifiedNpm?.integrity) {
+            throw new Error("qualified reproducibility receipt is missing npm tarball identity");
+          }
+          const npmTarballCandidatePath = `.buildchain/publication/npm-tarball/${qualifiedNpm.filename}`;
+          exactPath(npmTarballCandidatePath);
+          const sealedBundle = createPublicationSealedBundle({
+            candidate: bundle.candidate,
+            packageName: packageJson.name,
+            packageVersion: packageJson.version,
+            npmTarballPath: npmTarballCandidatePath,
+            npmIntegrity: qualifiedNpm.integrity,
+            releaseAssetPaths: (manifest.artifacts || []).map((entry) => entry.path),
+            githubReleaseRequired: ${{ inputs.github-release }},
+          });
+          verifyPublicationSealedBundle({ bundleRoot: root, manifest: sealedBundle });
+          const sealedBundlePath = ".buildchain/admitted/sealed-bundle.json";
+          fs.mkdirSync(path.dirname(sealedBundlePath), { recursive: true });
+          fs.writeFileSync(sealedBundlePath, `${JSON.stringify(sealedBundle, null, 2)}\n`);
           const requiredArtifactsPath = exactPath(".buildchain/paper-release/publish-required-artifacts.json");
           const buildSummaryPath = exactPath(".buildchain/paper-release/build-summary.json");
           const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
@@ -284,6 +309,8 @@ jobs:
           output.write(`exact-tag=v${packageJson.version}\n`);
           output.write(`manifest-path=${manifestPath}\n`);
           output.write(`build-summary-path=${buildSummaryPath}\n`);
+          output.write(`sealed-bundle-root=${path.resolve(root)}\n`);
+          output.write(`sealed-bundle-manifest=${path.resolve(sealedBundlePath)}\n`);
           output.write(`required-artifacts-json=${JSON.stringify(JSON.parse(fs.readFileSync(requiredArtifactsPath, "utf8")))}\n`);
           const marker = `EOF_ASSETS_${Date.now()}`;
           output.write(`github-release-artifact-paths<<${marker}\n${releaseAssets.join("\n")}\n${marker}\n`);
@@ -356,6 +383,8 @@ jobs:
           publish-command: >-
             node "${{ github.workspace }}/.buildchain/runtime/scripts/npm-publish-transaction.mjs"
             --cwd "${{ steps.candidate.outputs.package-dir }}"
+          publish-sealed-bundle-root: ${{ steps.candidate.outputs.sealed-bundle-root }}
+          publish-sealed-bundle-manifest: ${{ steps.candidate.outputs.sealed-bundle-manifest }}
           publish-required-artifacts-json: ${{ steps.candidate.outputs.required-artifacts-json }}
           publish-mode: "publish-final-version"
           publish-auth: "trusted-publishing"

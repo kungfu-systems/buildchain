@@ -47,6 +47,7 @@ The branch contains:
 ```text
 state.json
 evidence.json   # present after publish evidence exists
+sealed-bundle/<candidate-root>/files/**  # present for build-once publication
 ```
 
 The local `.buildchain/release-state/...` and
@@ -61,6 +62,16 @@ release refs move. Release-state GitHub API reads and writes use retry/backoff
 for transient service failures such as HTTP 5xx responses, connection resets,
 timeouts, and "other side closed" socket failures. If the durable write still
 cannot be persisted after retries, the action fails closed.
+
+For a sealed publication, `state.json` also carries the typed sealed-bundle
+manifest, its candidate root, publication milestones, stable
+`publication_state`, and an exact resume command. The durable ref stores every
+declared bundle file as binary Git blobs before the publish lifecycle starts.
+A fresh runner restores those blobs into
+`.buildchain/recovered-publication/<version>/`, verifies every size and SHA-256
+against the manifest, and only then supplies the recovered paths to the publish
+lifecycle. A missing or changed tarball, PDF, source bundle, or manifest fails
+before registry publication.
 
 Durable release-state refs reserve their exact version even when the public exact
 tag was never created. If a later machine run sees a failed or repair-required
@@ -103,6 +114,10 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_SEALED_BUNDLE_ROOT
+BUILDCHAIN_SEALED_NPM_TARBALL
+BUILDCHAIN_SEALED_NPM_INTEGRITY
+BUILDCHAIN_SEALED_NPM_SHA256
 BUILDCHAIN_REQUIRED_ARTIFACTS
 BUILDCHAIN_PUBLISH_MODE
 BUILDCHAIN_PUBLISH_AUTH
@@ -121,7 +136,8 @@ command = "node scripts/npm-publish-transaction.mjs"
 That script validates that `package.json` matches `BUILDCHAIN_VERSION`, runs
 `npm publish --access public --tag <BUILDCHAIN_NPM_DIST_TAG>` through npm Trusted
 Publishing, and writes npm artifact evidence before the promotion action moves
-public refs.
+public refs. When the sealed npm variables are present, the script verifies and
+publishes that exact `.tgz` file. It does not run `npm pack` again.
 
 `BUILDCHAIN_RELEASE_MATERIAL_SHA` is the source material whose artifacts must
 match. `BUILDCHAIN_PUBLISH_TOOLING_SHA` identifies the publishing code. A repair
@@ -323,32 +339,41 @@ however they need, as long as they emit the common evidence contract.
 The state machine is:
 
 ```text
-prepared -> publishing -> published -> finalizing -> complete
-                    |            |            |
-                    v            v            v
-              publish_failed  repair_required failed_permanently
-                    |
-                    v
-                abandoned
+prepared -> sealed -> publishing -> published -> finalizing -> complete
+                          |            |            |
+                          v            v            v
+                    publish_failed  repair_required failed_permanently
+                          |
+                          v
+                      abandoned
 ```
 
 Supported states:
 
-| State | Meaning |
-| --- | --- |
-| `prepared` | Transaction identity was created, but publish has not started. |
-| `publishing` | Publish lifecycle is running or may have been interrupted. |
-| `publish_failed` | Publish command failed before valid evidence was produced. |
-| `published` | Evidence is valid; refs have not necessarily finalized. |
-| `finalizing` | Buildchain is moving exact/floating refs or needs a later run to do it. |
-| `complete` | Required evidence is valid and refs have finalized. |
-| `repair_required` | Existing evidence or artifact state conflicts with expected release material. |
-| `abandoned` | A human or controlled process abandoned this transaction, usually because a newer version supersedes it. |
-| `failed_permanently` | Recovery should not continue without explicit override. |
+| State                | Meaning                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `prepared`           | Transaction identity was created, but publish has not started.                                           |
+| `sealed`             | Exact candidate bytes and manifest are verified and durable; registry publication has not started.       |
+| `publishing`         | Publish lifecycle is running or may have been interrupted.                                               |
+| `publish_failed`     | Publish command failed before valid evidence was produced.                                               |
+| `published`          | Evidence is valid; refs have not necessarily finalized.                                                  |
+| `finalizing`         | Buildchain is moving exact/floating refs or needs a later run to do it.                                  |
+| `complete`           | Required evidence is valid and refs have finalized.                                                      |
+| `repair_required`    | Existing evidence or artifact state conflicts with expected release material.                            |
+| `abandoned`          | A human or controlled process abandoned this transaction, usually because a newer version supersedes it. |
+| `failed_permanently` | Recovery should not continue without explicit override.                                                  |
 
 `repair_required`, `abandoned`, and `failed_permanently` fail closed unless the
 operator passes an explicit override. That override is for controlled repair
 runs, not normal retry behavior.
+
+`publication_state` is a stable operator-facing projection over the detailed
+transaction state. Its successful progression is
+`prepared -> sealed -> package-published -> alpha-complete` for Alpha or
+`release-complete` for stable release. If npm succeeds but GitHub Release work
+is interrupted, the durable record remains `package-published`; the next run
+reuses the exact npm evidence and sealed release assets instead of rebuilding
+or republishing them.
 
 ## Ref Ordering
 
@@ -357,11 +382,15 @@ When publish transactions are enabled, promotion order is:
 1. verify target source and governance;
 2. create or reuse the version-state release commit;
 3. acquire or resume the release transaction;
-4. run `lifecycle.publish` or accept already-valid evidence;
-5. validate evidence and required artifacts;
-6. move exact release/prerelease tag;
-7. move floating tags and channel refs;
-8. mark the transaction `complete`.
+4. for build-once publication, verify and persist the complete sealed bundle;
+5. run `lifecycle.publish` from the exact sealed tarball or accept already-valid
+   evidence;
+6. validate evidence and required artifacts;
+7. move exact release/prerelease tag;
+8. move floating tags and channel refs;
+9. mark the transaction `complete`;
+10. create or update the GitHub Release from restored sealed assets and record
+    the `github_release` milestone.
 
 If protected branch finalization is interrupted after publish evidence is
 valid, the transaction can stop in `finalizing` and output

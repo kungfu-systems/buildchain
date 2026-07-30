@@ -22,6 +22,8 @@ Current shared surfaces:
   passports through `@kungfu-tech/buildchain/publication-artifact`.
 - two-clean-build byte reproducibility receipts through
   `@kungfu-tech/buildchain/publication-reproducibility`.
+- build-once publication bundle manifests and exact-byte verification through
+  `@kungfu-tech/buildchain/publication-sealed-bundle`.
 
 ## Toolkit Imports
 
@@ -98,6 +100,19 @@ const receipt = verifyPublicationReproducibility({
 });
 if (!receipt.qualifying) throw new Error("publication is not reproducible");
 ```
+
+Bind the promoted bytes into the durable build-once publication envelope:
+
+```js
+import {
+  createPublicationSealedBundle,
+  verifyPublicationSealedBundle,
+} from "@kungfu-tech/buildchain/publication-sealed-bundle";
+```
+
+The sealed manifest names the exact npm tarball and release assets. Promotion
+persists those binary files before registry publication and verifies them again
+when a fresh runner resumes.
 
 Web-surface validation stays in core because both local scripts and GitHub
 Actions need the same fail-closed interpretation of project, channel, deploy,

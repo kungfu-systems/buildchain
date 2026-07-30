@@ -465,6 +465,12 @@ export {
 } from "./publication-reproducibility.js";
 
 export {
+  PUBLICATION_SEALED_BUNDLE_CONTRACT,
+  createPublicationSealedBundle,
+  verifyPublicationSealedBundle,
+} from "./publication-sealed-bundle.js";
+
+export {
   SURFACE_TIMESTAMP_POLICY_CONTRACT,
   applySurfaceTimestampPolicy,
   createSurfaceTimestampPolicy,

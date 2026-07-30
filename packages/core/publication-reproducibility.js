@@ -17,6 +17,7 @@ const DEFAULT_REGISTRY_INPUT_DIR = ".buildchain/publication/registry-inputs";
 const DEFAULT_REGISTRY_HYDRATION =
   ".buildchain/publication/registry-hydration.json";
 const DEFAULT_PACKAGE_DIR = ".buildchain/publication/npm-package";
+const DEFAULT_PACKAGE_TARBALL_DIR = ".buildchain/publication/npm-tarball";
 const DEFAULT_REGISTRY = "https://registry.npmjs.org/";
 
 function toPosix(value) {
@@ -719,6 +720,10 @@ function buildOnce({
     promotion: {
       artifactPaths: artifactFacts.map((entry) => entry.path),
       publicationPath: ".buildchain/publication",
+      npmTarball: {
+        sourcePath: toPosix(path.relative(buildRoot, npmPackage.tarballPath)),
+        targetPath: path.posix.join(DEFAULT_PACKAGE_TARBALL_DIR, npmPackage.filename),
+      },
     },
   };
 }
@@ -849,6 +854,16 @@ function promoteBuild(cwd, buildRoot, build) {
     recursive: true,
     force: true,
   });
+  const npmTarballSource = path.resolve(
+    buildRoot,
+    assertSafeRelativePath(build.promotion.npmTarball.sourcePath, "npm tarball promotion source"),
+  );
+  const npmTarballTarget = path.resolve(
+    cwd,
+    assertSafeRelativePath(build.promotion.npmTarball.targetPath, "npm tarball promotion target"),
+  );
+  ensureParent(npmTarballTarget);
+  fs.copyFileSync(npmTarballSource, npmTarballTarget);
 }
 
 export function verifyPublicationReproducibility({

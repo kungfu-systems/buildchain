@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
 import {
+  attachReleaseTransactionSealedBundle,
   assertTransactionIdentity,
   createReleaseTransaction,
   defaultPublishEvidencePath,
@@ -14,6 +16,8 @@ import {
   planTransactionRecovery,
   parsePublishArtifactsJson,
   readReleaseTransaction,
+  recordReleaseTransactionMilestone,
+  releaseTransactionPublicationState,
   resolvePublishArtifactRequirements,
   transitionReleaseTransaction,
   validatePublishEvidence,
@@ -68,12 +72,54 @@ test("publish evidence validates common fields and required multi-artifact units
     releaseMaterialSha: RELEASE_SHA,
     publishToolingSha: RELEASE_SHA,
     requiredArtifacts: [
-      { kind: "npm", name: "@kungfu-systems/example", ref: "1.0.0", digest: "sha256:npm" },
-      { kind: "oci", name: "ghcr.io/kungfu-systems/example", ref: "1.0.0", digest: "sha256:image" },
+      {
+        kind: "npm",
+        name: "@kungfu-systems/example",
+        ref: "1.0.0",
+        digest: "sha256:npm",
+      },
+      {
+        kind: "oci",
+        name: "ghcr.io/kungfu-systems/example",
+        ref: "1.0.0",
+        digest: "sha256:image",
+      },
     ],
   });
   assert.equal(validation.valid, true);
   assert.equal(validation.evidence.artifacts.length, 2);
+});
+
+test("sealed transactions expose package-published and alpha-complete milestones", () => {
+  let record = createReleaseTransaction({
+    repository: "kungfu-systems/paper",
+    version: "0.1.0-alpha.4",
+    channel: "alpha",
+    sourceSha: SHA,
+    targetRef: "alpha/v0/v0.1",
+    releaseSha: RELEASE_SHA,
+  });
+  record = attachReleaseTransactionSealedBundle(record, {
+    root: `sha256:${"c".repeat(64)}`,
+    durablePath: `sealed-bundle/sha256/${"c".repeat(64)}`,
+    files: [],
+    completion: { githubReleaseRequired: true },
+    resumeCommand:
+      'buildchain paper resume --version "0.1.0-alpha.4" --state-ref "refs/heads/buildchain/release-state/0-1-0-alpha-4"',
+  });
+  assert.equal(record.state, "sealed");
+  assert.equal(record.publication_state, "sealed");
+  record = transitionReleaseTransaction(record, "publishing");
+  record = transitionReleaseTransaction(record, "published");
+  record = recordReleaseTransactionMilestone(record, "package-published", {
+    artifactCount: 1,
+  });
+  record = transitionReleaseTransaction(record, "complete");
+  assert.equal(releaseTransactionPublicationState(record), "package-published");
+  record = recordReleaseTransactionMilestone(record, "github-release", {
+    tag: "v0.1.0-alpha.4",
+  });
+  assert.equal(record.publication_state, "alpha-complete");
 });
 
 test("publish evidence fails closed on material drift and missing required artifacts", () => {
@@ -86,7 +132,12 @@ test("publish evidence fails closed on material drift and missing required artif
     targetRef: "release/v1/v1.0",
     releaseMaterialSha: RELEASE_SHA,
     requiredArtifacts: [
-      { kind: "npm", name: "@kungfu-systems/example", ref: "1.0.0", digest: "sha256:npm" },
+      {
+        kind: "npm",
+        name: "@kungfu-systems/example",
+        ref: "1.0.0",
+        digest: "sha256:npm",
+      },
     ],
   });
   assert.equal(validation.valid, false);
@@ -99,7 +150,12 @@ test("artifact publish plan resumes missing artifacts and requires repair on con
     requiredArtifacts: [
       { kind: "npm", name: "pkg-a", ref: "1.0.0", digest: "sha256:a" },
       { kind: "oci", name: "image-a", ref: "1.0.0", digest: "sha256:b" },
-      { kind: "binary", name: "darwin-arm64", ref: "1.0.0", digest: "sha256:c" },
+      {
+        kind: "binary",
+        name: "darwin-arm64",
+        ref: "1.0.0",
+        digest: "sha256:c",
+      },
     ],
     existingArtifacts: [
       { kind: "npm", name: "pkg-a", ref: "1.0.0", digest: "sha256:a" },
@@ -113,20 +169,42 @@ test("artifact publish plan resumes missing artifacts and requires repair on con
 });
 
 test("post-publish requirements resolve the exact release ref without inventing a digest", () => {
-  const requiredArtifacts = resolvePublishArtifactRequirements([
-    { group: "image", kind: "oci", name: "ghcr.io/kungfu-systems/base-linux" },
-    { group: "image", kind: "oci", name: "ghcr.io/kungfu-systems/node24-pnpm" },
-  ], {
-    version: "1.2.0-alpha.3",
-    targetRef: "alpha/v1/v1.2",
-    sourceSha: SHA,
-    releaseMaterialSha: RELEASE_SHA,
-  });
+  const requiredArtifacts = resolvePublishArtifactRequirements(
+    [
+      {
+        group: "image",
+        kind: "oci",
+        name: "ghcr.io/kungfu-systems/base-linux",
+      },
+      {
+        group: "image",
+        kind: "oci",
+        name: "ghcr.io/kungfu-systems/node24-pnpm",
+      },
+    ],
+    {
+      version: "1.2.0-alpha.3",
+      targetRef: "alpha/v1/v1.2",
+      sourceSha: SHA,
+      releaseMaterialSha: RELEASE_SHA,
+    },
+  );
 
-  assert.deepEqual(requiredArtifacts.map(({ name, ref, digest }) => ({ name, ref, digest })), [
-    { name: "ghcr.io/kungfu-systems/base-linux", ref: "1.2.0-alpha.3", digest: "" },
-    { name: "ghcr.io/kungfu-systems/node24-pnpm", ref: "1.2.0-alpha.3", digest: "" },
-  ]);
+  assert.deepEqual(
+    requiredArtifacts.map(({ name, ref, digest }) => ({ name, ref, digest })),
+    [
+      {
+        name: "ghcr.io/kungfu-systems/base-linux",
+        ref: "1.2.0-alpha.3",
+        digest: "",
+      },
+      {
+        name: "ghcr.io/kungfu-systems/node24-pnpm",
+        ref: "1.2.0-alpha.3",
+        digest: "",
+      },
+    ],
+  );
   const validation = validatePublishEvidence({
     evidence: evidence({
       version: "1.2.0-alpha.3",
@@ -532,6 +610,66 @@ test("npm publish transaction writes Buildchain evidence without real publish in
     }],
   });
   assert.equal(validation.valid, true);
+});
+
+test("npm publish transaction reuses the exact sealed tarball without repacking", () => {
+  const cwd = tempDir();
+  fs.writeFileSync(
+    path.join(cwd, "package.json"),
+    JSON.stringify(
+      {
+        name: "@kungfu-tech/sealed-paper-fixture",
+        version: "0.1.0-alpha.4",
+        private: false,
+        license: "Apache-2.0",
+      },
+      null,
+      2,
+    ),
+  );
+  const tarballPath = path.join(cwd, "sealed-paper-fixture.tgz");
+  const tarballBytes = Buffer.from("already qualified npm tarball bytes");
+  fs.writeFileSync(tarballPath, tarballBytes);
+  const integrity = `sha512-${crypto.createHash("sha512").update(tarballBytes).digest("base64")}`;
+  const sha256 = crypto.createHash("sha256").update(tarballBytes).digest("hex");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/0.1.0-alpha.4/evidence.json");
+  const run = spawnSync(
+    process.execPath,
+    [
+      path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
+      "--cwd",
+      cwd,
+      "--dry-run-publish",
+      "--skip-registry-lookup",
+    ],
+    {
+      cwd,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        BUILDCHAIN_VERSION: "0.1.0-alpha.4",
+        BUILDCHAIN_CHANNEL: "alpha",
+        BUILDCHAIN_SOURCE_SHA: SHA,
+        BUILDCHAIN_RELEASE_SHA: RELEASE_SHA,
+        BUILDCHAIN_RELEASE_MATERIAL_SHA: RELEASE_SHA,
+        BUILDCHAIN_PUBLISH_TOOLING_SHA: RELEASE_SHA,
+        BUILDCHAIN_TARGET_REF: "alpha/v0/v0.1",
+        BUILDCHAIN_PUBLISH_EVIDENCE: evidencePath,
+        BUILDCHAIN_SEALED_BUNDLE_ROOT: `sha256:${"c".repeat(64)}`,
+        BUILDCHAIN_SEALED_NPM_TARBALL: tarballPath,
+        BUILDCHAIN_SEALED_NPM_INTEGRITY: integrity,
+        BUILDCHAIN_SEALED_NPM_SHA256: sha256,
+      },
+    },
+  );
+
+  assert.equal(run.status, 0, run.stderr);
+  const output = JSON.parse(run.stdout);
+  assert.equal(output.pack.sealed, true);
+  assert.equal(output.pack.integrity, integrity);
+  assert.equal(output.pack.sha256, sha256);
+  assert.equal(output.sealedBundleRoot, `sha256:${"c".repeat(64)}`);
+  assert.equal(JSON.parse(fs.readFileSync(evidencePath, "utf8")).artifacts[0].digest, integrity);
 });
 
 test("npm publish transaction honors explicit dist tag for libnode-style final versions", () => {
