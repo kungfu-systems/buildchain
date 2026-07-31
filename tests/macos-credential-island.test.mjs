@@ -636,7 +636,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
   );
   assert.match(
     implementation,
-    /resolveExpectedBundleId\([\s\S]*?sealed\.manifest\.app\.bundleId/u,
+    /resolveExpectedBundleId\([\s\S]*?plistValue\(appPath, "CFBundleIdentifier"\)/u,
   );
   for (const label of [
     "create temporary keychain",
