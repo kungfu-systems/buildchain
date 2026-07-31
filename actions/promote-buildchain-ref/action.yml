@@ -179,6 +179,15 @@ inputs:
   release-passport-invariant-passport-command:
     description: "Product-owned command that emits a canonical invariant Passport JSON document"
     default: ""
+  release-passport-evidence-jsons:
+    description: "Newline- or comma-separated product-owned release evidence attachment paths; each must bind the exact source SHA, tag, and channel"
+    default: ""
+  release-passport-attachment-command:
+    description: "Product-owned command that writes release evidence attachments and emits JSON with a files array"
+    default: ""
+  release-passport-evidence-command:
+    description: "Deprecated direct-action alias for release-passport-attachment-command; reusable workflows reserve this name for post-activation released evidence"
+    default: ""
   release-passport-buildchain-self-kfd:
     description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
     default: "false"
@@ -208,6 +217,18 @@ inputs:
     default: ".buildchain/artifacts/build-summary.json"
   release-candidate-version:
     description: "Optional expected product version recorded in the release-candidate passport"
+    default: ""
+  release-candidate-family-evidence-required:
+    description: "Require exact Initiative-family evidence in the release-candidate passport"
+    default: "false"
+  release-candidate-family-evidence-root:
+    description: "Optional expected Initiative-family evidence content root"
+    default: ""
+  release-candidate-family-initiative-id:
+    description: "Optional expected Initiative identity"
+    default: ""
+  release-candidate-family-assignment-id:
+    description: "Optional expected child Assignment identity"
     default: ""
 outputs:
   failure-message:

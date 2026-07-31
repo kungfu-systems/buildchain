@@ -69,7 +69,7 @@ function surface(root, value) {
 
 function majorLineFromPackageVersion(version = "") {
   const match = String(version || "").match(/^(\d+)\./);
-  return match ? `v${match[1]}` : "v2";
+  return match ? `v${match[1]}` : "v3";
 }
 
 export function createBuildchainContractWorld({
@@ -113,7 +113,7 @@ export function createBuildchainContractWorld({
         "release-candidate-artifact",
       ],
       breakingDefaults: {
-        buildchainRefDefault: "workflow-shell-ref-or-v2",
+        buildchainRefDefault: "workflow-shell-ref-or-v3",
         promoteOnlyHeavyBuildPolicy: "pr-stage-only",
       },
       optionalInputs: [
@@ -198,6 +198,8 @@ export function createBuildchainContractWorld({
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-invariant-passport-jsons",
         "release-passport-invariant-passport-command",
+        "release-passport-evidence-jsons",
+        "release-passport-attachment-command",
         "github-artifact-attestation-policy-json",
         "github-artifact-attestation-environment",
         "github-artifact-attestation-retention-days",
@@ -280,7 +282,7 @@ export function createBuildchainContractWorld({
         "web-surface-manifest-json",
       ],
       breakingDefaults: {
-        buildchainRefDefault: "workflow-shell-ref-or-v2",
+        buildchainRefDefault: "workflow-shell-ref-or-v3",
         contractCompatibilityPolicy: "major-compatible",
         breakingDriftPolicy: "fail-closed-before-build",
       },
@@ -382,6 +384,8 @@ export function createBuildchainContractWorld({
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-invariant-passport-jsons",
         "release-passport-invariant-passport-command",
+        "release-passport-evidence-jsons",
+        "release-passport-attachment-command",
         "release-passport-github-artifact-attestation-policy-jsons",
         "github-release",
         "github-release-title",
@@ -746,7 +750,7 @@ export function finalizeBuildchainContractWorld(contractWorld) {
 }
 
 export function createBuildchainContractLock({
-  buildchainRef = "v2",
+  buildchainRef = "v3",
   resolvedSha = "",
   contractWorld,
   compatibilityPolicy = DEFAULT_POLICY,

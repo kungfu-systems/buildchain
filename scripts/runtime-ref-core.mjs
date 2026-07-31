@@ -98,7 +98,15 @@ export function resolveRuntimeSelection({
     };
   }
   const normalized = normalizeRequestedRuntimeRef(requested);
-  const runtimeOverride = !normalized.officialChannel;
+  const sameRepositoryWorkflow = String(workflowRef || "").startsWith(
+    `${buildchainRepository}/.github/workflows/`,
+  );
+  const pinnedSelfRuntime =
+    sameRepositoryWorkflow &&
+    normalized.exactSha &&
+    EXACT_SHA_RE.test(workflowShellRef) &&
+    normalized.ref.toLowerCase() === workflowShellRef.toLowerCase();
+  const runtimeOverride = !normalized.officialChannel && !pinnedSelfRuntime;
   return {
     requestedRef: requested,
     runtimeRef: normalized.ref,
@@ -107,7 +115,11 @@ export function resolveRuntimeSelection({
     runtimeOverride,
     workflowShellRef: workflowShellRef || defaultStableRef,
     rollbackRef: workflowShellRef || defaultStableRef,
-    trustDecision: normalized.officialChannel ? "official-channel" : "override-requested",
+    trustDecision: normalized.officialChannel
+      ? "official-channel"
+      : pinnedSelfRuntime
+        ? "pinned-self"
+        : "override-requested",
   };
 }
 
@@ -117,6 +129,7 @@ export function validateRuntimeOverrideTrust({
   eventAction = "",
   actorPermission = "",
   sameRepositoryPullRequest = false,
+  sameRepositoryWorkflow = false,
   pullRequestHeadSha = "",
   workflowShellSha = "",
 } = {}) {
@@ -129,6 +142,14 @@ export function validateRuntimeOverrideTrust({
   const normalizedRequested = String(requestedRef || "").trim().toLowerCase();
   const normalizedHeadSha = String(pullRequestHeadSha || "").trim().toLowerCase();
   const normalizedWorkflowShellSha = String(workflowShellSha || "").trim().toLowerCase();
+  if (
+    sameRepositoryWorkflow === true &&
+    EXACT_SHA_RE.test(normalizedRequested) &&
+    EXACT_SHA_RE.test(normalizedWorkflowShellSha) &&
+    normalizedRequested === normalizedWorkflowShellSha
+  ) {
+    return { ok: true, decision: "pinned-self" };
+  }
   if (
     eventName === "pull_request" &&
     eventAction === "closed" &&

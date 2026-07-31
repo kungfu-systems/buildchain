@@ -409,6 +409,7 @@ jobs:
       contents: read
       id-token: write
       issues: write
+      pull-requests: write
     with:
       buildchain-ref: ${buildchainSha}
       buildchain-contract-lock-path: .buildchain/contract-lock.json
@@ -417,6 +418,7 @@ jobs:
       verify-command: make check
       artifact-paths: ${JSON.stringify(artifactPaths)}
 ${passportInput}    secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: \${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
       BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
       BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
       BUILDCHAIN_GENERATED_WRITE_TOKEN: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
@@ -688,7 +690,7 @@ export function planPaperScaffold({
   cwd = process.cwd(),
   buildchainRoot = process.cwd(),
   buildchainVersion = "",
-  buildchainRef = "v2",
+  buildchainRef = "v3",
   buildchainSha = "",
   name = path.basename(path.resolve(cwd)),
   title = "",
@@ -2082,7 +2084,7 @@ export function collectPaperPreflight({
   cwd = process.cwd(),
   buildchainRoot = process.cwd(),
   buildchainVersion = "",
-  buildchainRef = "v2",
+  buildchainRef = "v3",
   buildchainSha = "",
   registry = NPM_REGISTRY,
   offline = false,

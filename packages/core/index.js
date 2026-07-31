@@ -157,6 +157,7 @@ export {
 } from "./build-facts.js";
 
 export {
+  FAMILY_RELEASE_EVIDENCE_CONTRACT,
   RELEASE_CANDIDATE_PASSPORT_CONTRACT,
   createReleaseCandidatePassport,
   sha256Json,
@@ -386,6 +387,7 @@ export {
   KFD2_TRUST_PROOF_CONTRACT,
   PRODUCT_MECHANISM_CONTRACT,
   RELEASE_CHECK_REPORT_CONTRACT,
+  RELEASE_EVIDENCE_ATTACHMENT_CONTRACT,
   RELEASE_PASSPORT_CONTRACT,
   collectGitHubReleasePassport,
   createArtifactEvidence,

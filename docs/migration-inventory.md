@@ -1,9 +1,28 @@
+---
+status: historical
+period: 2026-07
+theme: buildchain-v2-migration-inventory
+doc_type: migration-inventory
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Buildchain v2 Migration Inventory
 
-This inventory records the buildchain v2 action surface. Buildchain v2 is the
-monorepo source of truth for active Kungfu repository workflows, the active
-reusable build workflow, and the three GitHub Actions that are still part of
-Buildchain's reusable contract.
+This historical inventory records the Buildchain v2 consolidation boundary.
+Buildchain v3 is now the active monorepo source of truth for Kungfu repository
+workflows, reusable build workflows, and Buildchain-native actions. The v2
+names below preserve the migration decisions that v3 inherited; they are not a
+current runtime baseline.
 Standalone `workflows` and `action-*` repositories are historical rollback
 anchors, not active Buildchain migration targets.
 
@@ -111,7 +130,7 @@ older standalone action repository.
 | `actions/run-lifecycle` | lifecycle command execution and deterministic artifact manifest generation |
 | `actions/validate-config` | `buildchain.toml` version-state and lifecycle preflight without executing lifecycle commands |
 
-## Stable v2 Refs
+## Current v3 Refs
 
 - Actions: `kungfu-systems/buildchain/actions/<name>@v3`
 - Reusable workflows: `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3`

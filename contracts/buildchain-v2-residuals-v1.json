@@ -8,24 +8,6 @@
   },
   "entries": [
     {
-      "path": ".github/workflows/.build.yml",
-      "token": "BUILDCHAIN_DEFAULT_REF: v2",
-      "expectedOccurrences": 1,
-      "classification": "public-contract-compatibility-fallback",
-      "callerStatus": "fallback-only-when-workflow-shell-ref-is-unavailable",
-      "owner": "buildchain-maintainers",
-      "sunsetCondition": "Change only at a governed major contract boundary after consumer migration."
-    },
-    {
-      "path": ".github/workflows/.build.yml",
-      "token": "BUILDCHAIN_DEFAULT_REF || \"v2\"",
-      "expectedOccurrences": 1,
-      "classification": "public-contract-compatibility-fallback",
-      "callerStatus": "fallback-only-when-workflow-shell-ref-is-unavailable",
-      "owner": "buildchain-maintainers",
-      "sunsetCondition": "Change only at a governed major contract boundary after consumer migration."
-    },
-    {
       "path": ".github/workflows/.bump-minor-version.yml",
       "token": "kungfu-systems/buildchain/actions/bump-version@v2",
       "expectedOccurrences": 1,
@@ -116,24 +98,6 @@
       "sunsetCondition": "Remove only after the compatibility workflow entry itself is removed."
     },
     {
-      "path": ".github/workflows/.web-surface.yml",
-      "token": "BUILDCHAIN_DEFAULT_REF: v2",
-      "expectedOccurrences": 1,
-      "classification": "public-contract-compatibility-fallback",
-      "callerStatus": "fallback-only-when-workflow-shell-ref-is-unavailable",
-      "owner": "buildchain-maintainers",
-      "sunsetCondition": "Change only at a governed major contract boundary after consumer migration."
-    },
-    {
-      "path": ".github/workflows/.web-surface.yml",
-      "token": "BUILDCHAIN_DEFAULT_REF || \"v2\"",
-      "expectedOccurrences": 1,
-      "classification": "public-contract-compatibility-fallback",
-      "callerStatus": "fallback-only-when-workflow-shell-ref-is-unavailable",
-      "owner": "buildchain-maintainers",
-      "sunsetCondition": "Change only at a governed major contract boundary after consumer migration."
-    },
-    {
       "path": ".github/workflows/.wheel-release.yml",
       "token": "workflows v2 wheel release path is retired",
       "expectedOccurrences": 1,
@@ -159,15 +123,6 @@
       "callerStatus": "legacy-reusable",
       "owner": "buildchain-maintainers",
       "sunsetCondition": "Remove after wheel consumers migrate to the lifecycle version command."
-    },
-    {
-      "path": ".github/workflows/binary-distribution.yml",
-      "token": "v2.2.0-alpha.0",
-      "expectedOccurrences": 1,
-      "classification": "artifact-version-example",
-      "callerStatus": "manual-input",
-      "owner": "buildchain-maintainers",
-      "sunsetCondition": "Replace when the binary-distribution manual default is refreshed independently of runtime routing."
     },
     {
       "path": ".github/workflows/candidate-lab.yml",

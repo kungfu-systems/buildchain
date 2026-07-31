@@ -34,6 +34,7 @@ const {
   resolveTagsForTarget,
   runVersionVerification,
   resolveReleaseImpactInput,
+  generateReleaseEvidenceInputs,
   resolveProtectedStatusCheckContext,
   releasePassportArtifactFiles,
   selectAlphaTag,
@@ -46,6 +47,53 @@ const {
 } = await import("../packages/core/buildchain-config.js");
 
 const GENERATED_COMMIT_SIGN_OFF = "Signed-off-by: Keren Dong <keren.dong@kungfu.link>";
+
+test("product release attachment command receives final coordinates and returns retained files", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-attachment-command-"));
+  try {
+    const script = path.join(cwd, "generate.mjs");
+    fs.writeFileSync(
+      script,
+      [
+        'import fs from "node:fs";',
+        'const file = "product-evidence.json";',
+        'fs.writeFileSync(file, JSON.stringify({',
+        '  sourceSha: process.env.BUILDCHAIN_RELEASE_SOURCE_SHA,',
+        '  tag: process.env.BUILDCHAIN_RELEASE_TAG,',
+        '  channel: process.env.BUILDCHAIN_RELEASE_CHANNEL,',
+        '  version: process.env.BUILDCHAIN_RELEASE_VERSION,',
+        '  deploymentCoordinate: process.env.BUILDCHAIN_RELEASE_DEPLOYMENT_COORDINATE,',
+        '  targetRef: process.env.BUILDCHAIN_RELEASE_TARGET_REF,',
+        '  outputDir: process.env.BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR',
+        '}));',
+        'process.stdout.write(JSON.stringify({ files: [file] }));',
+      ].join("\n"),
+    );
+    const files = generateReleaseEvidenceInputs({
+      command: `node ${JSON.stringify(script)}`,
+      cwd,
+      sourceSha: "a".repeat(40),
+      tag: "v4.0.0-alpha.1",
+      channel: "alpha",
+      version: "4.0.0-alpha.1",
+      deploymentCoordinate: "github-release:kungfu-systems/kungfu@v4.0.0-alpha.1",
+      targetRef: "alpha/v4/v4.0",
+      outputDir: path.join(cwd, "passport"),
+    });
+    assert.deepEqual(files, [path.join(cwd, "product-evidence.json")]);
+    assert.deepEqual(JSON.parse(fs.readFileSync(files[0], "utf8")), {
+      sourceSha: "a".repeat(40),
+      tag: "v4.0.0-alpha.1",
+      channel: "alpha",
+      version: "4.0.0-alpha.1",
+      deploymentCoordinate: "github-release:kungfu-systems/kungfu@v4.0.0-alpha.1",
+      targetRef: "alpha/v4/v4.0",
+      outputDir: path.join(cwd, "passport"),
+    });
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
 const signedGeneratedCommitMessage = (message) => `${message}\n\n${GENERATED_COMMIT_SIGN_OFF}`;
 
 test("only the configured major can write the shared npm alpha channel", () => {
