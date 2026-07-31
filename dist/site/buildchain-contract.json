@@ -731,7 +731,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:d4c6c4f3b9e252869dc592db51660a9214f6e3f787e5c9d3c77341d64d7c9cdc"
+      "auditDigest": "sha256:ec3a723c06044b56bcf0169052230d7231fce8b063967814bc8a758b5d873341"
     },
     {
       "contractVersion": 1,
@@ -2489,7 +2489,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:3f76502666069c2727d23efcfdb08fb80f89ced1955a69e29f11525ae88aca1d",
-      "auditDigest": "sha256:4b45a6967a6aa76ad73aa4c05759d3d2d419d1f0ce0239e14954dad422b02f51"
+      "auditDigest": "sha256:2cf66d8c40760900284c8417622b11120602a29016a55347a2ee709aafe4b3d5"
     },
     {
       "contractVersion": 1,
@@ -3522,5 +3522,5 @@
     }
   ],
   "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
-  "contractDigest": "sha256:75f305441a4c6c25e38354342dde79ddaed86cdb9939714033e6fef64221d98d"
+  "contractDigest": "sha256:56dd304f94b94ea5ea86765c05cdbf0fd29c0ebdf4518a0a000f8a75137f6640"
 }
