@@ -58,7 +58,7 @@ function scaffoldOptions(cwd) {
     cwd,
     buildchainRoot: root,
     buildchainVersion: packageVersion,
-    buildchainRef: "v2",
+    buildchainRef: "v3",
     name: "paper-contract-test",
     title: "Paper Contract Test",
     packageName: "@example/paper-contract-test",
@@ -267,6 +267,10 @@ test("paper migration converges existing repositories without rewriting content 
   fs.rmSync(
     path.join(cwd, ".buildchain", "paper", "provisioning-authority.json"),
   );
+  fs.writeFileSync(
+    path.join(cwd, ".github", "workflows", "verify.yml"),
+    "jobs:\n  check:\n    uses: kungfu-systems/buildchain/.github/workflows/check.yml@v2-alpha\n",
+  );
   const runtimeSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], {
     encoding: "utf8",
   }).trim();
@@ -305,6 +309,24 @@ test("paper migration converges existing repositories without rewriting content 
     contentBefore,
   );
   assert.equal(fs.readFileSync(configPath, "utf8"), configBefore);
+  assert.match(
+    fs.readFileSync(
+      path.join(cwd, ".github", "workflows", "verify.yml"),
+      "utf8",
+    ),
+    new RegExp(`check\\.yml@${runtimeSha}`),
+  );
+  const migratedLock = JSON.parse(
+    fs.readFileSync(
+      path.join(cwd, ".buildchain", "contract-lock.json"),
+      "utf8",
+    ),
+  );
+  assert.equal(migratedLock.buildchain.ref, "v3");
+  assert.notEqual(
+    migratedLock.buildchain.acceptedAt,
+    "1970-01-01T00:00:00.000Z",
+  );
   const preflight = collectPaperPreflight({
     cwd,
     buildchainRoot: root,
@@ -777,6 +799,34 @@ test("paper fleet audit and update converge data-driven worktrees only", () => {
   assert.equal(current.summary.repositories, 2);
   assert.equal(current.summary.current, 2, JSON.stringify(current, null, 2));
   assert.match(current.auditRoot, /^sha256:[0-9a-f]{64}$/);
+
+  const verifyPath = path.join(
+    repositories[1],
+    ".github",
+    "workflows",
+    "verify.yml",
+  );
+  fs.writeFileSync(
+    verifyPath,
+    "jobs:\n  check:\n    uses: kungfu-systems/buildchain/.github/workflows/check.yml@v2-alpha\n",
+  );
+  commitAll(repositories[1], "test: add legacy workflow drift");
+  const legacyWorkflow = collectPaperFleetAudit({
+    root: fleetRoot,
+    buildchainRoot: root,
+    buildchainVersion: packageVersion,
+  });
+  assert.equal(
+    legacyWorkflow.repositories[1].checks.find(
+      (entry) => entry.id === "workflows.buildchain-v2-absent",
+    ).status,
+    "fail",
+  );
+  fs.writeFileSync(
+    verifyPath,
+    fs.readFileSync(verifyPath, "utf8").replace("@v2-alpha", `@${packageVersion}`),
+  );
+  commitAll(repositories[1], "test: repair legacy workflow drift");
 
   const packagePath = path.join(repositories[0], "package.json");
   const driftedPackage = JSON.parse(fs.readFileSync(packagePath, "utf8"));
