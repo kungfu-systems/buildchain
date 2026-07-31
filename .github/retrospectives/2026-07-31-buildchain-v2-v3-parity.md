@@ -32,12 +32,12 @@ superseded product-specific gates must not be revived.
 - latest v2 alpha: `alpha/v2/v2.14@42d27e8045e372d9383c613f8dfc32dacffb4f3d`;
 - latest v2 release: `release/v2/v2.14@57234bde8f44bac6d96507884e6f9eb2b992547b`;
 - reviewed v3 development base:
-  `dev/v3/v3.0@7fed4f952790a4474717a98bf6374db8d366faaa`;
+  `dev/v3/v3.0@472bc2efc987dd8baab310f0d510e2e165875b19`;
 - shared merge base:
   `bcdf00393ddec9886fd294a8e5d7830ffaf19f6c`;
 - parity implementation branch: `fix/v2-v3-parity-closure`, stacked on the
   exact pinned-self runtime fix at
-  `176d2aca157640c53fce8dfa29e18db6a556df64`.
+  `a76ff92d0539323e8393617db643acb4af54faa2`.
 
 The complete ref audit included authority refs, train refs, work branches,
 version-state refs, immutable tags, and other remote v2 coordinates. The v2
@@ -131,6 +131,37 @@ The restored contract remains the Buildchain adapter envelope
 `kungfu-buildchain-initiative-family-release-evidence/v1`. It does not copy or
 supersede Kungfu Work Control's native immutable Family State v1 projection or
 the additive Family State v2 typed envelope.
+
+A second all-ref-only capability existed at
+`801813dfb933bf8f092e2059fae51a2c421435ed`: typed product-owned release
+evidence attachments. V3's newer post-activation released-evidence command and
+its invariant Passport gate do not subsume this capability: the former creates
+one activation-derived document after publication, while the latter accepts
+only the invariant Passport schema. V3 now again accepts one or more arbitrary
+typed attachment indexes, verifies their exact source SHA, public tag, and
+channel, copies them beside the Release Passport, binds their canonical JSON
+digests, and independently retrieves and verifies them.
+
+The v2 `release-passport-evidence-jsons` and CLI
+`--release-evidence-json` surfaces remain compatible. The direct Action retains
+the old `release-passport-evidence-command` alias, while reusable v3 workflows
+use the unambiguous `release-passport-attachment-command`; they reserve the old
+command name for the distinct activation-derived evidence stage already
+shipped on v3.
+
+Other non-authority feature tips were matched to current v3 surfaces:
+
+- Windows EC2 JIT, AWS CodeBuild burst, and CodeConnections behavior map to the
+  current governed runner planes;
+- lifecycle timeout, permissions, failure-evidence upload, controller receipt,
+  locked checkout, promotion-runtime, and exact candidate parent fixes are
+  present in the current workflow and Action tests;
+- Paper sealed resume is carried by the v3 Paper runtime repair;
+- KFD Agent Runtime and KFD-7 product-specific gates are superseded by the
+  consumer-neutral governed KFD product gate and must not be restored as a
+  second authority;
+- historical project-cut, release bookkeeping, CLI formatting, and dated
+  documentation commits contain no current product capability.
 
 `contracts/buildchain-v2-residuals-v1.json` remains the machine inventory for
 workflow-local v2 tokens. Active runtime fallbacks and the binary example were

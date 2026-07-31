@@ -1046,6 +1046,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-invariant-passport-jsons: \$\{\{ inputs\.release-passport-invariant-passport-jsons \}\}/);
   assert.match(workflow, /release-passport-invariant-passport-command:/);
   assert.match(workflow, /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/);
+  assert.match(workflow, /release-passport-evidence-jsons:/);
+  assert.match(workflow, /release-passport-evidence-jsons: \$\{\{ inputs\.release-passport-evidence-jsons \}\}/);
+  assert.match(workflow, /release-passport-attachment-command:/);
+  assert.match(workflow, /release-passport-attachment-command: \$\{\{ inputs\.release-passport-attachment-command \}\}/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
   assert.match(workflow, /github-artifact-attestation-policy-json:/);
@@ -3161,6 +3165,9 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-product-gate-jsons:/);
   assert.match(action, /release-passport-invariant-passport-jsons:/);
   assert.match(action, /release-passport-invariant-passport-command:/);
+  assert.match(action, /release-passport-evidence-jsons:/);
+  assert.match(action, /release-passport-attachment-command:/);
+  assert.match(action, /release-passport-evidence-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(action, /publish-rematerialize-on-resume:/);
   assert.match(action, /release-passport-github-artifact-attestation-policy-jsons:/);
@@ -3179,6 +3186,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfdProductGateJsons/);
   assert.match(implementation, /releasePassportInvariantPassportJsons/);
   assert.match(implementation, /releasePassportInvariantPassportCommand/);
+  assert.match(implementation, /releasePassportEvidenceJsons/);
+  assert.match(implementation, /releasePassportAttachmentCommand/);
   assert.match(implementation, /releasePassportBuildchainSelfKfd/);
   assert.match(implementation, /publishRematerializeOnResume/);
   assert.match(implementation, /releasePassportGitHubArtifactAttestationPolicyJsons/);
@@ -3190,6 +3199,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(docs, /release-passport-kfd-support-matrix-json/);
   assert.match(docs, /release-passport-kfd-product-gate-jsons/);
   assert.match(docs, /release-passport-invariant-passport-command/);
+  assert.match(docs, /release-passport-evidence-jsons/);
+  assert.match(docs, /release-passport-attachment-command/);
   assert.match(docs, /publish-rematerialize-on-resume: true/);
 });
 

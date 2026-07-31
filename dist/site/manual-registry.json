@@ -50,7 +50,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:d698078075700e60bafb9677bc4c35d49970136b98caaecfc51d38344285cdd5",
+      "digest": "sha256:e1ca1d470de4faeb9f7f0a57228aebbc166d0c96d03a5603fc576ad955c497a4",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -429,7 +429,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:dd5b7ac8bc6520ae94affdb83a771c3f01c74dd246f219dff8ada86b16f9ba29",
+      "digest": "sha256:ffe2e4fcfdd84a3f25a19eb48373ab578c82df909da51989979c97b697698492",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"

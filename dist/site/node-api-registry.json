@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:8c0acf24875986b4709e465a4cb3fe2269b592caaad49fae0039dfc74aa2379d",
+      "digest": "sha256:ad56044fe0c4ee1bb99a79195efb3d01da1bb1a7fabd393094c4fb94d97d5b87",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:8c0acf24875986b4709e465a4cb3fe2269b592caaad49fae0039dfc74aa2379d",
+      "digest": "sha256:ad56044fe0c4ee1bb99a79195efb3d01da1bb1a7fabd393094c4fb94d97d5b87",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -151,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:13d2e602846a85f72f1f02e5df06a6d8e4303e0055e1f38a46160e47dd2a1db1",
+      "digest": "sha256:b36bbd70ebd7dffdba2ab3161cbea8adfed0cd72b418ba587a4d0e5aecbd94dc",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -528,7 +528,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:46f9f5dd3c27da361b9b4dad88df6630d77d025e13a7c3711cc844ed598d449d",
+      "digest": "sha256:32bfec2359923d2c08abf4cfaba93d62b5dde59187153c10b23df0c1162dc9f6",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

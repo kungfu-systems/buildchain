@@ -315,6 +315,10 @@ async function main() {
   const releasePassportKfdProductGateJsons = core.getInput("release-passport-kfd-product-gate-jsons");
   const releasePassportInvariantPassportJsons = core.getInput("release-passport-invariant-passport-jsons");
   const releasePassportInvariantPassportCommand = core.getInput("release-passport-invariant-passport-command");
+  const releasePassportEvidenceJsons = core.getInput("release-passport-evidence-jsons");
+  const releasePassportAttachmentCommand =
+    core.getInput("release-passport-attachment-command") ||
+    core.getInput("release-passport-evidence-command");
   const releasePassportBuildchainSelfKfd = core.getBooleanInput("release-passport-buildchain-self-kfd");
   const releasePassportGitHubArtifactAttestationPolicyJsons = core.getInput(
     "release-passport-github-artifact-attestation-policy-jsons",
@@ -417,6 +421,8 @@ async function main() {
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
     releasePassportInvariantPassportCommand,
+    releasePassportEvidenceJsons,
+    releasePassportAttachmentCommand,
     releasePassportBuildchainSelfKfd,
     releasePassportGitHubArtifactAttestationPolicyJsons,
     promoteOnlyReleaseCandidate,

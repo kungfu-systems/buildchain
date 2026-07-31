@@ -429,8 +429,10 @@
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
+        "release-passport-attachment-command",
         "release-passport-buildchain-self-kfd",
         "release-passport-evidence-command",
+        "release-passport-evidence-jsons",
         "release-passport-evidence-path",
         "release-passport-impact-json",
         "release-passport-invariant-passport-command",
@@ -453,7 +455,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 92,
+      "inputCount": 94,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1795,8 +1797,10 @@
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
+        "release-passport-attachment-command",
         "release-passport-buildchain-self-kfd",
         "release-passport-evidence-command",
+        "release-passport-evidence-jsons",
         "release-passport-evidence-path",
         "release-passport-impact-json",
         "release-passport-invariant-passport-command",
@@ -1819,7 +1823,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 84,
+      "inputCount": 86,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2164,8 +2168,11 @@
         "release-candidate-version",
         "release-material-sha",
         "release-passport",
+        "release-passport-attachment-command",
         "release-passport-build-summary-path",
         "release-passport-buildchain-self-kfd",
+        "release-passport-evidence-command",
+        "release-passport-evidence-jsons",
         "release-passport-github-artifact-attestation-policy-jsons",
         "release-passport-impact-json",
         "release-passport-invariant-passport-command",
@@ -2193,7 +2200,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 73,
+      "inputCount": 76,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

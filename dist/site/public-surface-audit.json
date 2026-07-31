@@ -957,8 +957,10 @@
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-evidence-path",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -981,7 +983,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 92,
+        "inputCount": 94,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2200,8 +2202,10 @@
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-evidence-path",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -2224,7 +2228,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 84,
+        "inputCount": 86,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2534,8 +2538,11 @@
           "release-candidate-version",
           "release-material-sha",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-build-summary-path",
           "release-passport-buildchain-self-kfd",
+          "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-github-artifact-attestation-policy-jsons",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -2563,7 +2570,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 73
+        "inputCount": 76
       },
       {
         "id": "report-buildchain-issue",
@@ -4459,8 +4466,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "7524f643062d636e21f5222e953eb48161d1f40efea72eeafd47a7cc0154b8bb",
-    "pageRegistryDigest": "35e235adfbaf044b24a30393daaa9dde90c721499ba9e3b88d3de1e5b1591af6"
+    "workflowRegistryDigest": "c189034cdbe1b2cc486b073f3fdc27b449e27967767cc55cd972aa02cb29f91d",
+    "pageRegistryDigest": "5044073ca60ef7adb92ac5ebbfbb8903c2a7f0559a32a4458306ce881bab3728"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -31,6 +31,7 @@ export const IMPACT_LEDGER_CONTRACT = "kungfu-buildchain-impact";
 export const AGENT_INDEX_CONTRACT = "kungfu-buildchain-agent-index";
 export const PRODUCT_MECHANISM_CONTRACT = "kungfu-buildchain-product-mechanism";
 export const RELEASE_CHECK_REPORT_CONTRACT = "kungfu-buildchain-release-check-report";
+export const RELEASE_EVIDENCE_ATTACHMENT_CONTRACT = "kungfu-buildchain-release-evidence-attachment";
 export const KFD2_RELEASE_TRUST_PASSPORT_CONTRACT = "kungfu-buildchain-kfd-2-release-trust-passport-audit";
 export const KFD2_TRUST_PROOF_CONTRACT = "kungfu-buildchain-kfd-2-trust-proof";
 export const INVARIANT_PASSPORT_GATE_CONTRACT = "buildchain.invariant-passport-gate/v1";
@@ -42,6 +43,7 @@ const CONTRACTS = new Set([
   IMPACT_LEDGER_CONTRACT,
   AGENT_INDEX_CONTRACT,
   PRODUCT_MECHANISM_CONTRACT,
+  RELEASE_EVIDENCE_ATTACHMENT_CONTRACT,
 ]);
 
 function nowIso() {
@@ -247,6 +249,65 @@ function writeJsonFile(filePath, value) {
 function writeTextFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, value.endsWith("\n") ? value : `${value}\n`);
+}
+
+function normalizeReleaseEvidenceAttachment(meta, {
+  cwd,
+  expectedSourceSha,
+  expectedTag,
+  expectedChannel,
+  index,
+} = {}) {
+  const document = meta?.value;
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new Error(`releaseEvidenceJsons[${index}] must be a JSON object`);
+  }
+  const inputPath = resolveJsonInputPath(meta.path, { cwd });
+  if (!inputPath) {
+    throw new Error(`releaseEvidenceJsons[${index}] must be an existing JSON file path`);
+  }
+  if (Number(document.schemaVersion) !== 1) {
+    throw new Error(`releaseEvidenceJsons[${index}].schemaVersion must be 1`);
+  }
+  const id = nonEmptyString(document.id, `releaseEvidenceJsons[${index}].id`);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(id)) {
+    throw new Error(`releaseEvidenceJsons[${index}].id must use only letters, digits, dot, underscore, or hyphen`);
+  }
+  const contract = nonEmptyString(document.contract, `releaseEvidenceJsons[${index}].contract`);
+  const release = document.release;
+  if (!release || typeof release !== "object" || Array.isArray(release)) {
+    throw new Error(`releaseEvidenceJsons[${index}].release must be a JSON object`);
+  }
+  const sourceSha = nonEmptyString(release.sourceSha, `releaseEvidenceJsons[${index}].release.sourceSha`);
+  const tag = nonEmptyString(release.tag, `releaseEvidenceJsons[${index}].release.tag`);
+  const channel = nonEmptyString(release.channel, `releaseEvidenceJsons[${index}].release.channel`);
+  if (!/^[0-9a-f]{40}$/i.test(sourceSha)) {
+    throw new Error(`releaseEvidenceJsons[${index}].release.sourceSha must be a full 40-character Git SHA`);
+  }
+  if (!expectedSourceSha || sourceSha !== expectedSourceSha) {
+    throw new Error(`releaseEvidenceJsons[${index}].release.sourceSha must match the release passport source SHA`);
+  }
+  if (!expectedTag || tag !== expectedTag) {
+    throw new Error(`releaseEvidenceJsons[${index}].release.tag must match the release passport tag`);
+  }
+  if (!expectedChannel || channel !== expectedChannel) {
+    throw new Error(`releaseEvidenceJsons[${index}].release.channel must match the release passport channel`);
+  }
+  const relativePath = `release-evidence-${id}.json`;
+  return {
+    document,
+    inputPath,
+    reference: {
+      schemaVersion: 1,
+      contract: RELEASE_EVIDENCE_ATTACHMENT_CONTRACT,
+      id,
+      kind: optionalString(document.kind || "product-release-evidence"),
+      documentContract: contract,
+      path: relativePath,
+      sha256: sha256Text(stableJson(document)),
+      release: { sourceSha, tag, channel },
+    },
+  };
 }
 
 function inferPlatformFromName(name) {
@@ -1165,6 +1226,7 @@ export function createReleasePassport({
   kfdSupport = undefined,
   kfdSupportEvidencePath = "",
   invariantPassports = undefined,
+  releaseEvidence = [],
   kfdAgentHubEvidence = undefined,
   kfdAgentHubEvidencePath = "",
   controllerReceipts = [],
@@ -1366,6 +1428,7 @@ export function createReleasePassport({
     ...(normalizedKfdSupport ? { kfdSupport: normalizedKfdSupport } : {}),
     ...(normalizedKfdAgentHub ? { kfdAgentHub: normalizedKfdAgentHub } : {}),
     ...(invariantPassports ? { invariantPassports } : {}),
+    ...(releaseEvidence.length > 0 ? { releaseEvidence } : {}),
     ...(normalizedControllerReceipts.length > 0 ? { controllerReceipts: normalizedControllerReceipts } : {}),
     ...(normalizedGitHubArtifactAttestations.length > 0
       ? { githubArtifactAttestations: normalizedGitHubArtifactAttestations }
@@ -1414,6 +1477,7 @@ export function createReleasePassport({
       kfdSupport: normalizedKfdSupport ? optionalString(kfdSupportEvidencePath || "kfd-support.json") : "",
       kfdAgentHub: normalizedKfdAgentHub ? optionalString(kfdAgentHubEvidencePath || "kfd-agent-hub-evidence.json") : "",
       invariantPassports: invariantPassports ? "invariantPassports" : "",
+      releaseEvidence: releaseEvidence.map((entry) => entry.path),
       impact: impactPath,
       checkReport: checkReportPath,
       agentIndex: agentIndexPath,
@@ -1458,6 +1522,7 @@ export function collectGitHubReleasePassport({
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
   invariantPassportCommand = "",
+  releaseEvidenceJsons = [],
   kfdAgentHubEvidenceJson = "",
   controllerReceiptReferences = [],
   githubArtifactAttestationPolicyJsons = [],
@@ -1533,6 +1598,15 @@ export function collectGitHubReleasePassport({
   });
   if (invariantPassportCommandMeta.value) invariantPassportMetas.push(invariantPassportCommandMeta);
   const invariantPassports = createInvariantPassportGate(invariantPassportMetas);
+  const releaseEvidenceMetas = (releaseEvidenceJsons || [])
+    .filter(Boolean)
+    .map((evidenceJson) =>
+      parseJsonInputWithMeta(evidenceJson, undefined, {
+        cwd,
+        label: "releaseEvidenceJsons entry",
+      }),
+    )
+    .filter((meta) => meta.value);
   const kfdAgentHubEvidenceMeta = parseJsonInputWithMeta(
     kfdAgentHubEvidenceJson,
     undefined,
@@ -1560,6 +1634,28 @@ export function collectGitHubReleasePassport({
   ];
   const resolvedTag = tag || release.tag_name || release.name || "";
   const resolvedOutputDir = path.resolve(cwd, outputDir);
+  const resolvedChannel = optionalString(releaseExtra.channel || publish.channel);
+  const releaseEvidenceAttachments = releaseEvidenceMetas.map((meta, index) =>
+    normalizeReleaseEvidenceAttachment(meta, {
+      cwd,
+      expectedSourceSha: sourceSha,
+      expectedTag: resolvedTag,
+      expectedChannel: resolvedChannel,
+      index,
+    }),
+  );
+  const releaseEvidenceIds = new Set();
+  for (const { reference } of releaseEvidenceAttachments) {
+    if (releaseEvidenceIds.has(reference.id)) {
+      throw new Error(`release evidence attachment id must be unique: ${reference.id}`);
+    }
+    releaseEvidenceIds.add(reference.id);
+  }
+  for (const { inputPath, reference } of releaseEvidenceAttachments) {
+    const destinationPath = path.join(resolvedOutputDir, reference.path);
+    fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+    fs.copyFileSync(inputPath, destinationPath);
+  }
   const resolvedCheckedAt = optionalString(checkedAt) || nowIso();
   const productMechanism = defaultProductMechanism({ repository, productName });
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: resolvedTag, sourceSha, workflow });
@@ -1638,6 +1734,7 @@ export function collectGitHubReleasePassport({
     kfdSupport,
     kfdSupportEvidencePath: kfdSupport ? "kfd-support.json" : "",
     invariantPassports,
+    releaseEvidence: releaseEvidenceAttachments.map(({ reference }) => reference),
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value
       ? { ...kfdAgentHubEvidenceMeta, path: "kfd-agent-hub-evidence.json" }
       : undefined,
@@ -1661,6 +1758,7 @@ export function collectGitHubReleasePassport({
     productMechanism,
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value,
     kfdSupportEvidence: kfdSupport,
+    releaseEvidenceDocuments: releaseEvidenceAttachments,
     checkedAt: resolvedCheckedAt,
   });
   const files = {
@@ -1682,7 +1780,9 @@ export function collectGitHubReleasePassport({
     schemaVersion: 1,
     contract: "kungfu-buildchain-release-passport-collection",
     outputDir: resolvedOutputDir,
-    files: Object.keys(files).concat("llms.txt"),
+    files: Object.keys(files)
+      .concat(releaseEvidenceAttachments.map(({ reference }) => reference.path))
+      .concat("llms.txt"),
     passport,
     artifactEvidence,
     checkReport,
@@ -1966,6 +2066,7 @@ export function createReleaseCheckReport({
   productMechanism,
   kfdAgentHubEvidence,
   kfdSupportEvidence,
+  releaseEvidenceDocuments = [],
   checkedAt = nowIso(),
 } = {}) {
   const issues = [];
@@ -2043,6 +2144,47 @@ export function createReleaseCheckReport({
     ...(Array.isArray(artifactEvidence?.artifacts) ? artifactEvidence.artifacts : []),
     ...(normalizedPublishEvidence?.artifacts || []),
   ];
+  const releaseEvidence = Array.isArray(passport?.releaseEvidence) ? passport.releaseEvidence : [];
+  const releaseEvidenceById = new Map(
+    releaseEvidenceDocuments.map((entry) => [entry?.reference?.id || "", entry]),
+  );
+  for (const [index, reference] of releaseEvidence.entries()) {
+    const label = `releaseEvidence[${index}]`;
+    if (!reference || typeof reference !== "object" || Array.isArray(reference)) {
+      issues.push(issue("error", `${label}.object`, `${label} must be a JSON object`));
+      continue;
+    }
+    if (reference.contract !== RELEASE_EVIDENCE_ATTACHMENT_CONTRACT) {
+      issues.push(issue("error", `${label}.contract`, `${label}.contract must be ${RELEASE_EVIDENCE_ATTACHMENT_CONTRACT}`));
+    }
+    if (!reference.id || !reference.path || !reference.sha256 || !reference.documentContract) {
+      issues.push(issue("error", `${label}.identity`, `${label} must include id, path, sha256, and documentContract`));
+      continue;
+    }
+    const loaded = releaseEvidenceById.get(reference.id);
+    if (!loaded?.document) {
+      issues.push(issue("error", `${label}.missing`, `${label} document is not independently retrievable`, {
+        id: reference.id,
+        path: reference.path,
+      }));
+      continue;
+    }
+    const document = loaded.document;
+    if (document.contract !== reference.documentContract) {
+      issues.push(issue("error", `${label}.documentContract`, `${label} document contract differs from its passport reference`));
+    }
+    const digest = sha256Text(stableJson(document));
+    if (digest !== reference.sha256) {
+      issues.push(issue("error", `${label}.sha256`, `${label} document digest differs from its passport reference`));
+    }
+    for (const field of ["sourceSha", "tag", "channel"]) {
+      const expected = passport?.release?.[field] || "";
+      const declared = document?.release?.[field] || "";
+      if (!declared || declared !== expected || reference?.release?.[field] !== expected) {
+        issues.push(issue("error", `${label}.release.${field}`, `${label} ${field} must match the release passport`));
+      }
+    }
+  }
   if (publishEvidenceSupplied || passport?.packageSet) {
     const checkPublishField = (value, label) => {
       if (!value) {
@@ -2423,6 +2565,7 @@ export function createReleaseCheckReport({
       surfaceImpactsRequired: requiredSurfaceImpacts.required,
       surfaceImpactCount: surfaceImpacts.length,
       versionImpact: impact?.versionImpact?.final || "",
+      releaseEvidenceCount: releaseEvidence.length,
     },
     issues,
   };
@@ -2518,6 +2661,13 @@ export async function verifyReleasePassport({
     kfdSupportEvidenceLocation
       ? await readJsonFromLocation(kfdSupportEvidenceLocation)
       : await resolveSiblingJson(basePath, passport.evidence?.kfdSupport) || undefined;
+  const releaseEvidenceDocuments = [];
+  for (const reference of Array.isArray(passport.releaseEvidence) ? passport.releaseEvidence : []) {
+    releaseEvidenceDocuments.push({
+      reference,
+      document: await resolveSiblingJson(basePath, reference.path),
+    });
+  }
   return createReleaseCheckReport({
     passport,
     artifactEvidence,
@@ -2527,6 +2677,7 @@ export async function verifyReleasePassport({
     productMechanism,
     kfdAgentHubEvidence,
     kfdSupportEvidence,
+    releaseEvidenceDocuments,
     checkedAt,
   });
 }

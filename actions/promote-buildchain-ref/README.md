@@ -405,6 +405,23 @@ requires a `verified` verdict, complete platform coverage, a clean exact source
 revision, and then binds the result into `buildchain.release.json`. Missing,
 stale, falsified, incomplete, dirty, or tampered Passport evidence fails the
 release transaction closed.
+Set `release-passport-evidence-jsons` to newline-separated product-owned release
+evidence attachment indexes. Each JSON document must declare `schemaVersion`, a
+stable `id`, a product contract, and the exact release source SHA, tag, and
+channel. Buildchain copies and hashes the documents, verifies their coordinates
+against the final Passport, and retains them in the release evidence bundle
+without interpreting product-specific or legal claims.
+
+When release coordinates are not known until promotion, set
+`release-passport-attachment-command`. Buildchain supplies
+`BUILDCHAIN_RELEASE_SOURCE_SHA`, `BUILDCHAIN_RELEASE_TAG`,
+`BUILDCHAIN_RELEASE_CHANNEL`, `BUILDCHAIN_RELEASE_VERSION`,
+`BUILDCHAIN_RELEASE_DEPLOYMENT_COORDINATE`, `BUILDCHAIN_RELEASE_TARGET_REF`, and
+`BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR`; the command must emit a JSON array or
+an object with a non-empty `files` array. Direct Action callers may still use
+the v2 alias `release-passport-evidence-command`. Reusable v3 workflows reserve
+that older name for the distinct post-activation released-evidence command.
+
 Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
 "true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
 inside the final version-state workspace, after the release transaction has
