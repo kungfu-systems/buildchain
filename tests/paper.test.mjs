@@ -7,12 +7,16 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  PAPER_AGENT_ENTRY_CONTRACT,
+  PAPER_AGENT_ENTRY_SECTION_END,
+  PAPER_AGENT_ENTRY_SECTION_START,
   PAPER_MIGRATION_CONTRACT,
   PAPER_NPM_BOOTSTRAP_CONTRACT,
   PAPER_PROVISIONING_CONTRACT,
   PAPER_STATE_ORDER,
   PAPER_VISIBILITY_CONTRACT,
   collectPaperFleetAudit,
+  collectPaperAgentEntry,
   collectPaperPreflight,
   collectPaperStatus,
   createPaperAlphaPlan,
@@ -121,11 +125,11 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   const cwd = tempDir("scaffold");
   const firstPlan = planPaperScaffold(scaffoldOptions(cwd));
   assert.equal(firstPlan.ok, true);
-  assert.equal(firstPlan.summary.create, 14);
+  assert.equal(firstPlan.summary.create, 17);
   assert.equal(JSON.stringify(firstPlan).includes("_plannedFiles"), false);
   const firstWrite = writePaperScaffold(firstPlan);
   assert.equal(firstWrite.ok, true);
-  assert.equal(firstWrite.written.length, 14);
+  assert.equal(firstWrite.written.length, 17);
   const provisioning = JSON.parse(
     fs.readFileSync(
       path.join(cwd, ".buildchain", "paper", "provisioning-authority.json"),
@@ -341,6 +345,136 @@ test("paper migration converges existing repositories without rewriting content 
     preflight.checks.find((entry) => entry.id === "provisioning.authority")
       .status,
     "pass",
+  );
+});
+
+test("paper agent entry is managed, preserves repository instructions, and fails closed in CI", () => {
+  const cwd = tempDir("agent-entry");
+  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
+  initGit(cwd);
+  configureGit(cwd);
+  commitAll(cwd, "fixture: scaffold paper agent entry");
+
+  const runtimeSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], {
+    encoding: "utf8",
+  }).trim();
+  const entry = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "contract",
+  });
+  assert.equal(entry.contract, PAPER_AGENT_ENTRY_CONTRACT);
+  assert.equal(entry.ok, true);
+  const agentsPath = path.join(cwd, "AGENTS.md");
+  const originalAgents = fs.readFileSync(agentsPath, "utf8");
+  assert.match(originalAgents, new RegExp(PAPER_AGENT_ENTRY_SECTION_START));
+  assert.match(originalAgents, new RegExp(PAPER_AGENT_ENTRY_SECTION_END));
+
+  fs.writeFileSync(
+    agentsPath,
+    `Repository-owned instruction.\n\n${originalAgents}`,
+  );
+  commitAll(cwd, "docs: retain repository-owned instruction");
+  const migration = planPaperMigration({
+    cwd,
+    buildchainRoot: root,
+    buildchainVersion: packageVersion,
+    buildchainSha: runtimeSha,
+  });
+  assert.equal(migration.ok, true);
+  writePaperMigration(migration);
+  const migratedAgents = fs.readFileSync(agentsPath, "utf8");
+  assert.match(migratedAgents, /^Repository-owned instruction\./);
+  assert.equal(
+    migratedAgents.split(PAPER_AGENT_ENTRY_SECTION_START).length - 1,
+    1,
+  );
+
+  commitAll(cwd, "chore: migrate paper agent entry");
+  const remote = tempDir("agent-entry-remote");
+  execFileSync("git", ["init", "--bare", "-q", remote]);
+  execFileSync("git", ["branch", "-M", "dev/v0/v0.1"], { cwd });
+  execFileSync("git", ["remote", "add", "origin", remote], { cwd });
+  execFileSync("git", ["push", "-u", "origin", "dev/v0/v0.1"], { cwd });
+  execFileSync("git", ["switch", "-c", "feature/agent-entry"], { cwd });
+  const cliEntry = spawnSync(
+    process.execPath,
+    [
+      bin,
+      "paper",
+      "agent",
+      "verify",
+      "--cwd",
+      cwd,
+      "--offline",
+      "--json",
+    ],
+    { cwd: root, encoding: "utf8" },
+  );
+  assert.equal(cliEntry.status, 0, cliEntry.stderr || cliEntry.stdout);
+  assert.equal(JSON.parse(cliEntry.stdout).ok, true);
+
+  const acceptedCi = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "ci",
+    env: {
+      GITHUB_EVENT_NAME: "pull_request",
+      GITHUB_HEAD_REF: "feature/agent-entry",
+      GITHUB_BASE_REF: "dev/v0/v0.1",
+    },
+  });
+  assert.equal(acceptedCi.ok, true);
+  const wrongBase = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "ci",
+    env: {
+      GITHUB_EVENT_NAME: "pull_request",
+      GITHUB_HEAD_REF: "feature/agent-entry",
+      GITHUB_BASE_REF: "main",
+    },
+  });
+  assert.equal(wrongBase.ok, false);
+  assert.equal(
+    wrongBase.checks.find((check) => check.id === "agent-entry.work-context")
+      .status,
+    "fail",
+  );
+
+  const packagePath = path.join(cwd, "package.json");
+  const packageText = fs.readFileSync(packagePath, "utf8");
+  const packageJson = JSON.parse(packageText);
+  packageJson.scripts["paper:work:submit"] = "git push --force";
+  fs.writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
+  const bypass = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "contract",
+  });
+  assert.equal(bypass.ok, false);
+  assert.equal(
+    bypass.checks.find(
+      (check) => check.id === "agent-entry.script.paper:work:submit",
+    ).status,
+    "fail",
+  );
+
+  fs.writeFileSync(packagePath, packageText);
+  fs.writeFileSync(
+    agentsPath,
+    migratedAgents.replace(PAPER_AGENT_ENTRY_SECTION_END, ""),
+  );
+  commitAll(cwd, "fixture: malformed managed section");
+  assert.throws(
+    () =>
+      planPaperMigration({
+        cwd,
+        buildchainRoot: root,
+        buildchainVersion: packageVersion,
+        buildchainSha: runtimeSha,
+      }),
+    /incomplete Buildchain Paper agent-entry managed section/,
   );
 });
 
@@ -824,7 +958,9 @@ test("paper fleet audit and update converge data-driven worktrees only", () => {
   );
   fs.writeFileSync(
     verifyPath,
-    fs.readFileSync(verifyPath, "utf8").replace("@v2-alpha", `@${packageVersion}`),
+    fs
+      .readFileSync(verifyPath, "utf8")
+      .replace("@v2-alpha", `@${packageVersion}`),
   );
   commitAll(repositories[1], "test: repair legacy workflow drift");
 
@@ -926,6 +1062,7 @@ test("paper CLI emits stable JSON errors and every route", () => {
     "paper work submit",
     "paper fleet audit",
     "paper fleet update",
+    "paper agent verify",
     "paper preflight",
     "paper bootstrap npm",
     "paper build",

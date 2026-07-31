@@ -13,6 +13,7 @@ import {
   PAPER_SCAFFOLD_CONTRACT,
   PAPER_STATUS_CONTRACT,
   collectPaperPreflight,
+  resolvePaperBuildchainSha,
   collectPaperStatus,
   createPaperAlphaPlan,
   createPaperBuildPlan,
@@ -24,6 +25,7 @@ import {
   printPaperWorkFleetSummary,
   runPaperWorkFleetCli,
 } from "./paper-work-fleet-cli.mjs";
+import { runPaperAgentCli } from "./paper-agent-cli.mjs";
 
 function usage() {
   return `Usage:
@@ -38,6 +40,7 @@ function usage() {
                                [--execute] [--json]
   buildchain paper fleet audit [--root <dir>] [--offline] [--json]
   buildchain paper fleet update [--root <dir>] [--write] [--json]
+  buildchain paper agent verify [--cwd <dir>] [--offline] [--json]
   buildchain paper preflight [--cwd <dir>] [--offline] [--json]
   buildchain paper bootstrap npm [--cwd <dir>] [--package <name>]
                                   [--repository <owner/repo>] [--workflow <filename>]
@@ -455,6 +458,7 @@ export async function runPaperCli(
     buildchainSha = "",
   } = {},
 ) {
+  buildchainSha = resolvePaperBuildchainSha(buildchainRoot, buildchainSha);
   const [command = "", maybeSubcommand = "", ...rest] = args;
   const json = hasFlag(args, "json");
   try {
@@ -476,8 +480,12 @@ export async function runPaperCli(
       buildchainRef,
       buildchainSha,
     });
+    // prettier-ignore
+    const paperAgent = runPaperAgentCli({ command, subcommand: maybeSubcommand, args: effectiveArgs, cwd, buildchainRoot, buildchainVersion, buildchainRef, buildchainSha });
     let result;
-    if (workFleet.handled) {
+    if (paperAgent.handled) {
+      result = paperAgent.result;
+    } else if (workFleet.handled) {
       result = workFleet.result;
     } else if (command === "preflight") {
       result = collectPaperPreflight({
@@ -492,6 +500,11 @@ export async function runPaperCli(
           "https://registry.npmjs.org/",
         ),
         offline: hasFlag(effectiveArgs, "offline"),
+        agentEntryMode: hasFlag(effectiveArgs, "ci")
+          ? "ci"
+          : hasFlag(effectiveArgs, "agent-entry")
+            ? "local"
+            : "contract",
       });
     } else if (command === "bootstrap" && maybeSubcommand === "npm") {
       result = executePaperNpmBootstrap({
@@ -577,7 +590,7 @@ export async function runPaperCli(
         : plan;
     } else {
       throw new Error(
-        "usage: buildchain paper <scaffold|migrate|work start|work submit|fleet audit|fleet update|preflight|bootstrap npm|build|alpha|status|resume> ...",
+        "usage: buildchain paper <scaffold|migrate|work start|work submit|fleet audit|fleet update|agent verify|preflight|bootstrap npm|build|alpha|status|resume> ...",
       );
     }
     printResult(result, json);
