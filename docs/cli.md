@@ -123,13 +123,18 @@ predicate, platform manifest, Passport, and Buildchain evidence locally. See
 
 ### Governed paper lifecycle
 
-`buildchain paper` is the unified operator surface for a paper repository. Its
-eight subcommands return versioned JSON contracts with `--json`:
+`buildchain paper` is the unified operator surface for one paper repository or
+a discovered fleet. Every subcommand returns a versioned JSON contract with
+`--json`:
 
 ```bash
 buildchain paper scaffold --package @kungfu-tech/paper-example \
   --repository kungfu-systems/paper-example
 buildchain paper migrate --json
+buildchain paper work start golden-path --json
+buildchain paper work submit --json
+buildchain paper fleet audit --root ../papers --json
+buildchain paper fleet update --root ../paper-worktrees --json
 buildchain paper preflight --offline --json
 buildchain paper bootstrap npm --json
 buildchain paper build --json
@@ -142,9 +147,27 @@ The safety and authority boundary is explicit:
 
 - `scaffold` plans a 14-file, no-overwrite repository shape by default; add
   `--write` to create only missing files.
-- `migrate` plans the five Buildchain-owned control-file changes needed by an
-  existing paper repository. Add `--write` only after reviewing exact old and
-  new digests; paper content and publication configuration are never rewritten.
+- `migrate` plans the Buildchain-owned authority, workflow, contract lock,
+  version pin, and package control changes needed by an existing paper
+  repository. It pins an exact v3 dependency and adds pnpm-backed paper scripts.
+  Add `--write` only after reviewing exact old and new digests; paper content
+  and publication configuration are never rewritten. Refresh
+  `pnpm-lock.yaml` with `pnpm install --lockfile-only` after a write.
+- `work start` derives the protected development branch from the configured
+  publication semver line and creates a safe local work branch only when the
+  worktree is clean, the sole `origin` is the canonical `kungfu-systems`
+  repository, and local HEAD equals the exact remotely observed development
+  SHA. It never fetches or merges silently.
+- `work submit` accepts only an allowed non-protected work branch that contains
+  the exact remote development commit. It rejects divergent remote work,
+  wrong-base pull requests, dirty trees, forks, and ambiguous remotes; execution
+  uses a normal non-force push and opens or reuses a PR to the derived
+  development branch.
+- `fleet audit` discovers `paper-*` repositories from a root and emits one
+  deterministic audit root over exact runtime, dependency, lockfile, workflow,
+  authority, and repository observations. `fleet update` reuses the migration
+  contract for every discovered repository, remains dry-run by default, and
+  refuses protected or non-work branches.
 - The scaffolded `.buildchain/paper/provisioning-authority.json` binds both
   caller workflow byte digests, their exact reusable-workflow SHA, the runtime
   SHA, contract-lock bytes, npm registry and trusted-publisher coordinates, and
@@ -180,8 +203,9 @@ The ordered evidence states are `scaffolded`, `governed`, `admitted`,
 
 The corresponding Node surface is
 `@kungfu-tech/buildchain/paper`. Planning and status functions are read-only;
-`writePaperScaffold()` and `writePaperMigration()` are the bounded local
-writers, and
+`writePaperScaffold()`, `writePaperMigration()`, and
+`writePaperFleetUpdate()` are the bounded local writers. Work plans expose
+separate rechecking executors for local branch creation and normal push, and
 `executePaperNpmBootstrap()` preserves the same confirmation boundary used by
 the CLI.
 

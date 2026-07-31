@@ -78,6 +78,9 @@ function commandId(first = "", second = "", third = "") {
   if (head === "publication" && sub) return `publication-artifact-${sub}`;
   if (head === "publication") return "publication-artifact";
   if (head === "paper" && sub === "bootstrap" && normalizedLeaf === "npm") return "paper-bootstrap-npm";
+  if (head === "paper" && ["work", "fleet"].includes(sub) && normalizedLeaf) {
+    return `paper-${sub}-${normalizedLeaf}`;
+  }
   if (head === "paper" && sub) return `paper-${sub}`;
   if (head === "paper") return "paper";
   if (head === "build-contract") return "build-contract";
@@ -333,8 +336,26 @@ export function collectPublicSurfaceReverseAudit({
       mode: "closed-world-enumerable",
       scope: "Buildchain CLI usage/dispatch, reusable workflow inputs, action inputs, site pages, and documentation command references",
       residualRisk: [
-        "Shell commands delegated through helper scripts are only counted when exposed through bin/buildchain.mjs usage or docs.",
-        "YAML parsing is limited to first-class action/workflow inputs, not arbitrary step environment variables.",
+        {
+          id: "public-surface-helper-command-enumeration",
+          definedBy: "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+          riskType: "natural-language-semantic-risk",
+          trustImpact: "downgrade-warning",
+          machineProvability: "not-machine-verifiable",
+          agentAction: "semantic-review-required",
+          owner: "Buildchain maintainers",
+          reason: "Shell commands delegated through helper scripts are counted only when exposed through bin/buildchain.mjs usage or documentation.",
+        },
+        {
+          id: "public-surface-yaml-enumeration",
+          definedBy: "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+          riskType: "natural-language-semantic-risk",
+          trustImpact: "downgrade-warning",
+          machineProvability: "not-machine-verifiable",
+          agentAction: "semantic-review-required",
+          owner: "Buildchain maintainers",
+          reason: "YAML enumeration covers first-class action and workflow inputs, not arbitrary step environment variables.",
+        },
       ],
     },
   };

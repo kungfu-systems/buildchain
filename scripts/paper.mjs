@@ -6,21 +6,33 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   PAPER_ALPHA_PLAN_CONTRACT,
   PAPER_BUILD_PLAN_CONTRACT,
+  PAPER_FLEET_AUDIT_CONTRACT,
+  PAPER_FLEET_UPDATE_PLAN_CONTRACT,
   PAPER_MIGRATION_CONTRACT,
   PAPER_NPM_BOOTSTRAP_CONTRACT,
   PAPER_PREFLIGHT_CONTRACT,
   PAPER_RESUME_PLAN_CONTRACT,
   PAPER_SCAFFOLD_CONTRACT,
   PAPER_STATUS_CONTRACT,
+  PAPER_WORK_START_PLAN_CONTRACT,
+  PAPER_WORK_SUBMIT_PLAN_CONTRACT,
+  collectPaperFleetAudit,
   collectPaperPreflight,
   collectPaperStatus,
   createPaperAlphaPlan,
   createPaperBuildPlan,
   createPaperResumePlan,
+  createPaperWorkStartPlan,
+  createPaperWorkSubmitPlan,
+  discoverPaperFleet,
+  executePaperWorkStart,
+  executePaperWorkSubmitPush,
   executePaperNpmBootstrap,
+  planPaperFleetUpdate,
   planPaperMigration,
   planPaperScaffold,
   writePaperMigration,
+  writePaperFleetUpdate,
   writePaperScaffold,
 } from "../packages/core/paper.js";
 import { verifyPublicationReproducibility } from "../packages/core/publication-reproducibility.js";
@@ -32,6 +44,12 @@ function usage() {
                             [--version <semver>] [--site-base-url <url>]
                             [--buildchain-ref <ref>] [--write] [--json]
   buildchain paper migrate [--cwd <dir>] [--write] [--json]
+  buildchain paper work start <topic> [--cwd <dir>] [--branch <branch>]
+                              [--execute] [--json]
+  buildchain paper work submit [--cwd <dir>] [--title <title>] [--body <body>]
+                               [--execute] [--json]
+  buildchain paper fleet audit [--root <dir>] [--offline] [--json]
+  buildchain paper fleet update [--root <dir>] [--write] [--json]
   buildchain paper preflight [--cwd <dir>] [--offline] [--json]
   buildchain paper bootstrap npm [--cwd <dir>] [--package <name>]
                                   [--repository <owner/repo>] [--workflow <filename>]
@@ -49,7 +67,10 @@ function usage() {
 
 Safety:
   scaffold is a no-overwrite dry-run unless --write is present. migrate only
-  rewrites the five Buildchain-owned authority, workflow, lock, and version files.
+  rewrites only Buildchain-owned authority, workflow, lock, version, and package
+  control surfaces. work start/submit refuse dirty, stale, forked, ambiguous,
+  protected, or non-fast-forward sources. fleet update requires isolated work
+  branches and is a dry-run unless --write is present.
   npm bootstrap, Alpha PR creation, and resume dispatch never mutate externally
   unless --execute is present. Real npm bootstrap additionally requires the
   exact --confirm-public-package value.
@@ -116,6 +137,58 @@ function humanSummary(result) {
     }
     return;
   }
+  if (result.contract === PAPER_WORK_START_PLAN_CONTRACT) {
+    process.stdout.write(
+      `paper work start: ${result.ok ? (result.dryRun ? "ready" : "created") : "blocked"}\n`,
+    );
+    process.stdout.write(
+      `${result.source.developmentRef} -> ${result.target.branch || "<invalid>"}\n`,
+    );
+    for (const check of result.checks) {
+      process.stdout.write(
+        `- ${check.status}: ${check.id}: ${check.message}\n`,
+      );
+    }
+    return;
+  }
+  if (result.contract === PAPER_WORK_SUBMIT_PLAN_CONTRACT) {
+    process.stdout.write(
+      `paper work submit: ${result.ok ? (result.dryRun ? "ready" : result.pr?.url || "submitted") : "blocked"}\n`,
+    );
+    process.stdout.write(
+      `${result.source.branch} -> ${result.target.branch}\n`,
+    );
+    for (const check of result.checks) {
+      process.stdout.write(
+        `- ${check.status}: ${check.id}: ${check.message}\n`,
+      );
+    }
+    return;
+  }
+  if (result.contract === PAPER_FLEET_AUDIT_CONTRACT) {
+    process.stdout.write(
+      `paper fleet audit: ${result.summary.current}/${result.summary.repositories} current\n`,
+    );
+    process.stdout.write(`audit root: ${result.auditRoot}\n`);
+    for (const entry of result.repositories) {
+      process.stdout.write(
+        `- ${entry.ok ? "current" : "drifted"}: ${entry.name}\n`,
+      );
+    }
+    return;
+  }
+  if (result.contract === PAPER_FLEET_UPDATE_PLAN_CONTRACT) {
+    process.stdout.write(
+      `paper fleet update: ${result.ok ? (result.dryRun ? "ready" : "written") : "blocked"}\n`,
+    );
+    process.stdout.write(`plan root: ${result.planRoot}\n`);
+    for (const entry of result.plans) {
+      process.stdout.write(
+        `- ${entry.ok ? "ready" : "blocked"}: ${entry.cwd}\n`,
+      );
+    }
+    return;
+  }
   if (result.contract === PAPER_PREFLIGHT_CONTRACT) {
     process.stdout.write(
       `paper preflight: ${result.ok ? "ready" : "blocked"}\n`,
@@ -177,7 +250,8 @@ function printResult(result, json) {
   else humanSummary(result);
 }
 
-function githubPrRows({ cwd, repository, sourceRef, targetRef }) {
+function githubPrRows({ cwd, repository, sourceRef, targetRef = "" }) {
+  const targetArgs = targetRef ? ["--base", targetRef] : [];
   const query = commandResult(
     "gh",
     [
@@ -187,8 +261,7 @@ function githubPrRows({ cwd, repository, sourceRef, targetRef }) {
       repository,
       "--head",
       sourceRef,
-      "--base",
-      targetRef,
+      ...targetArgs,
       "--state",
       "open",
       "--json",
@@ -211,6 +284,74 @@ function githubPrRows({ cwd, repository, sourceRef, targetRef }) {
   } catch {
     return { ok: false, rows: [], errorCode: "github-pr-response-invalid" };
   }
+}
+
+function executeWorkSubmitPlan(plan, { title = "", body = "" } = {}) {
+  const pushed = executePaperWorkSubmitPush(plan);
+  if (!pushed.ok) return pushed;
+  if (plan.pullRequest?.url) {
+    return {
+      ...pushed,
+      reused: true,
+      pr: plan.pullRequest,
+    };
+  }
+  const prTitle =
+    title ||
+    `chore(paper): ${plan.source.branch.replace(/^[^/]+\//, "").replaceAll("-", " ")}`;
+  const prBody =
+    body ||
+    [
+      "## Summary",
+      "",
+      "Submit this Paper work branch through the protected Buildchain development path.",
+      "",
+      "## Safety",
+      "",
+      "- No direct push to a protected channel.",
+      "- No force push.",
+      "- Publication remains behind the accepted PR and release gates.",
+    ].join("\n");
+  const created = commandResult(
+    "gh",
+    [
+      "pr",
+      "create",
+      "--repo",
+      plan.repository,
+      "--base",
+      plan.target.branch,
+      "--head",
+      plan.source.branch,
+      "--title",
+      prTitle,
+      "--body",
+      prBody,
+    ],
+    { cwd: plan.cwd },
+  );
+  if (!created.ok) {
+    return {
+      ...pushed,
+      ok: false,
+      errorCode: created.error ? "gh-unavailable" : "github-pr-create-failed",
+      stderr: created.error || created.stderr,
+    };
+  }
+  const url =
+    created.stdout
+      .split(/\s+/)
+      .find((entry) => /^https:\/\/github\.com\//.test(entry)) || "";
+  return {
+    ...pushed,
+    ok: true,
+    reused: false,
+    pr: {
+      url,
+      headRefName: plan.source.branch,
+      baseRefName: plan.target.branch,
+    },
+  };
 }
 
 function githubBranchObservation({ cwd, repository, ref }) {
@@ -236,6 +377,143 @@ function githubBranchObservation({ cwd, repository, ref }) {
       : query.error
         ? "gh-unavailable"
         : "github-ref-query-failed",
+  };
+}
+
+function githubPaperGovernance({ cwd, repository }) {
+  const actions = commandResult(
+    "gh",
+    ["api", `repos/${repository}/actions/permissions/workflow`],
+    { cwd },
+  );
+  const listed = commandResult(
+    "gh",
+    ["api", `repos/${repository}/rulesets?includes_parents=true`],
+    { cwd },
+  );
+  if (!actions.ok || !listed.ok) {
+    return {
+      status: "fail",
+      errorCode:
+        actions.error || listed.error
+          ? "gh-unavailable"
+          : "github-governance-query-failed",
+      actions: null,
+      rulesets: [],
+      checks: [],
+    };
+  }
+  let actionsPolicy;
+  let rulesetRows;
+  try {
+    actionsPolicy = JSON.parse(actions.stdout || "{}");
+    rulesetRows = JSON.parse(listed.stdout || "[]");
+  } catch {
+    return {
+      status: "fail",
+      errorCode: "github-governance-response-invalid",
+      actions: null,
+      rulesets: [],
+      checks: [],
+    };
+  }
+  const rulesets = [];
+  for (const row of Array.isArray(rulesetRows) ? rulesetRows : []) {
+    if (!row?.id) continue;
+    const detail = commandResult(
+      "gh",
+      ["api", `repos/${repository}/rulesets/${row.id}`],
+      { cwd },
+    );
+    if (!detail.ok) continue;
+    try {
+      const value = JSON.parse(detail.stdout || "{}");
+      rulesets.push({
+        id: value.id,
+        name: value.name || "",
+        enforcement: value.enforcement || "",
+        target: value.target || "",
+        include: value.conditions?.ref_name?.include || [],
+        exclude: value.conditions?.ref_name?.exclude || [],
+        rules: (value.rules || []).map((rule) => ({
+          type: rule.type || "",
+          requiredApprovingReviewCount:
+            rule.parameters?.required_approving_review_count ?? null,
+          requiredStatusChecks:
+            rule.parameters?.required_status_checks?.map(
+              (entry) => entry.context || "",
+            ) || [],
+        })),
+      });
+    } catch {
+      // An invalid ruleset detail is represented by the failed coverage checks.
+    }
+  }
+  const active = rulesets.filter(
+    (entry) => entry.enforcement === "active" && entry.target === "branch",
+  );
+  const patterns = active.flatMap((entry) => entry.include);
+  const allBranches = patterns.includes("~ALL");
+  const covers = (family) =>
+    allBranches ||
+    patterns.some((entry) =>
+      [
+        `refs/heads/${family}/**`,
+        `refs/heads/${family}/*`,
+        `${family}/**`,
+        `${family}/*`,
+      ].includes(entry),
+    );
+  const rules = active.flatMap((entry) => entry.rules);
+  const ruleTypes = new Set(rules.map((entry) => entry.type));
+  const checks = [
+    {
+      id: "actions.default-workflow-permissions",
+      ok: actionsPolicy.default_workflow_permissions === "read",
+    },
+    {
+      id: "actions.pull-request-approval-disabled",
+      ok: actionsPolicy.can_approve_pull_request_reviews === false,
+    },
+    { id: "rulesets.dev-covered", ok: covers("dev") },
+    { id: "rulesets.alpha-covered", ok: covers("alpha") },
+    { id: "rulesets.release-covered", ok: covers("release") },
+    { id: "rulesets.deletion-blocked", ok: ruleTypes.has("deletion") },
+    {
+      id: "rulesets.force-push-blocked",
+      ok: ruleTypes.has("non_fast_forward"),
+    },
+    {
+      id: "rulesets.pull-request-review",
+      ok: rules.some(
+        (entry) =>
+          entry.type === "pull_request" &&
+          Number(entry.requiredApprovingReviewCount) >= 1,
+      ),
+    },
+    {
+      id: "rulesets.required-status-checks",
+      ok: rules.some(
+        (entry) =>
+          entry.type === "required_status_checks" &&
+          entry.requiredStatusChecks.length > 0,
+      ),
+    },
+  ].map((entry) => ({
+    ...entry,
+    status: entry.ok ? "pass" : "fail",
+  }));
+  return {
+    status: checks.every((entry) => entry.ok) ? "pass" : "fail",
+    errorCode: "",
+    actions: {
+      defaultWorkflowPermissions:
+        actionsPolicy.default_workflow_permissions || "",
+      canApprovePullRequestReviews:
+        actionsPolicy.can_approve_pull_request_reviews,
+    },
+    rulesets,
+    checks,
   };
 }
 
@@ -491,6 +769,90 @@ export async function runPaperCli(
         hasFlag(effectiveArgs, "write") || hasFlag(effectiveArgs, "execute")
           ? writePaperMigration(plan)
           : plan;
+    } else if (command === "work" && maybeSubcommand === "start") {
+      const topic = effectiveArgs[0]?.startsWith("--")
+        ? ""
+        : effectiveArgs[0] || "";
+      const plan = createPaperWorkStartPlan({
+        cwd,
+        topic,
+        branch: readFlag(effectiveArgs, "branch", ""),
+      });
+      result = hasFlag(effectiveArgs, "execute")
+        ? executePaperWorkStart(plan)
+        : plan;
+    } else if (command === "work" && maybeSubcommand === "submit") {
+      const repository = collectPaperStatus({ cwd }).identity.repository;
+      const branch = commandResult("git", ["branch", "--show-current"], {
+        cwd,
+      }).stdout;
+      const pullRequestObservation =
+        repository && branch
+          ? githubPrRows({ cwd, repository, sourceRef: branch })
+          : { ok: false, rows: [], errorCode: "paper-repository-unresolved" };
+      const plan = createPaperWorkSubmitPlan({
+        cwd,
+        pullRequests: pullRequestObservation.rows,
+        pullRequestObservation,
+      });
+      result = hasFlag(effectiveArgs, "execute")
+        ? executeWorkSubmitPlan(plan, {
+            title: readFlag(effectiveArgs, "title", ""),
+            body: readFlag(effectiveArgs, "body", ""),
+          })
+        : plan;
+    } else if (command === "fleet" && maybeSubcommand === "audit") {
+      const fleetRoot = path.resolve(readFlag(effectiveArgs, "root", cwd));
+      const repositories = discoverPaperFleet(fleetRoot);
+      const governance = {};
+      if (!hasFlag(effectiveArgs, "offline")) {
+        for (const repositoryCwd of repositories) {
+          const repository = collectPaperStatus({ cwd: repositoryCwd }).identity
+            .repository;
+          if (repository) {
+            governance[repository] = githubPaperGovernance({
+              cwd: repositoryCwd,
+              repository,
+            });
+          }
+        }
+      }
+      result = collectPaperFleetAudit({
+        root: fleetRoot,
+        repositories,
+        buildchainRoot,
+        buildchainVersion,
+        buildchainSha,
+        governance,
+      });
+    } else if (command === "fleet" && maybeSubcommand === "update") {
+      const options = {
+        root: path.resolve(readFlag(effectiveArgs, "root", cwd)),
+        buildchainRoot,
+        buildchainVersion,
+        buildchainSha,
+      };
+      const plan = planPaperFleetUpdate(options);
+      if (!hasFlag(effectiveArgs, "write")) {
+        result = plan;
+      } else {
+        result = writePaperFleetUpdate(plan);
+        for (const entry of result.results || []) {
+          if (!entry.ok) continue;
+          const lock = commandResult("pnpm", ["install", "--lockfile-only"], {
+            cwd: entry.cwd,
+          });
+          if (!lock.ok) {
+            result.ok = false;
+            result.errorCode = "paper-fleet-lock-refresh-failed";
+            result.lockFailure = {
+              cwd: entry.cwd,
+              stderr: lock.error || lock.stderr,
+            };
+            break;
+          }
+        }
+      }
     } else if (command === "preflight") {
       result = collectPaperPreflight({
         cwd,
@@ -591,7 +953,7 @@ export async function runPaperCli(
         : plan;
     } else {
       throw new Error(
-        "usage: buildchain paper <scaffold|migrate|preflight|bootstrap npm|build|alpha|status|resume> ...",
+        "usage: buildchain paper <scaffold|migrate|work start|work submit|fleet audit|fleet update|preflight|bootstrap npm|build|alpha|status|resume> ...",
       );
     }
     printResult(result, json);

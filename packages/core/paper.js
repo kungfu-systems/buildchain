@@ -35,6 +35,13 @@ export const PAPER_BUILD_PLAN_CONTRACT = "kungfu-buildchain-paper-build-plan";
 export const PAPER_ALPHA_PLAN_CONTRACT = "kungfu-buildchain-paper-alpha-plan";
 export const PAPER_RESUME_PLAN_CONTRACT = "kungfu-buildchain-paper-resume-plan";
 export const PAPER_VISIBILITY_CONTRACT = "kungfu-buildchain-paper-visibility";
+export const PAPER_WORK_START_PLAN_CONTRACT =
+  "kungfu-buildchain-paper-work-start-plan";
+export const PAPER_WORK_SUBMIT_PLAN_CONTRACT =
+  "kungfu-buildchain-paper-work-submit-plan";
+export const PAPER_FLEET_AUDIT_CONTRACT = "kungfu-buildchain-paper-fleet-audit";
+export const PAPER_FLEET_UPDATE_PLAN_CONTRACT =
+  "kungfu-buildchain-paper-fleet-update-plan";
 
 export const PAPER_STATE_ORDER = Object.freeze([
   "scaffolded",
@@ -93,6 +100,8 @@ const DEFAULT_TOOLCHAIN_COMMAND = "latexmk -pdf -outdir=_build paper/main.tex";
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/i;
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/i;
 const PACKAGE_PATTERN = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/i;
+const PAPER_WORK_BRANCH_PATTERN =
+  /^(?:feature|fix|docs|chore|ci|refactor)\/[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?(?:\/[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?)*$/;
 
 function toPosix(value) {
   return String(value || "")
@@ -541,16 +550,58 @@ clean:
 `;
 }
 
-function scaffoldPackageJson({ name, packageName, repository }) {
-  return jsonText({
-    name: packageName,
+function paperPackageScripts(current = {}) {
+  return {
+    ...current,
+    "buildchain:paper": "buildchain paper",
+    "paper:preflight": "buildchain paper preflight --json",
+    "paper:work:start": "buildchain paper work start",
+    "paper:work:submit": "buildchain paper work submit",
+    "paper:status": "buildchain paper status --json",
+  };
+}
+
+function managedPaperPackageJson(current, buildchainVersion) {
+  if (!/^3\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(buildchainVersion)) {
+    throw new Error(
+      "paper repositories require an exact Buildchain v3 version",
+    );
+  }
+  const packageManager = current.packageManager || "pnpm@11.7.0";
+  if (!packageManager.startsWith("pnpm@")) {
+    throw new Error("paper repositories require a pnpm packageManager");
+  }
+  return {
+    ...current,
     private: true,
-    description: `${name} publication source repository.`,
-    repository: {
-      type: "git",
-      url: `git+https://github.com/${repository}.git`,
+    scripts: paperPackageScripts(current.scripts),
+    devDependencies: {
+      ...(current.devDependencies || {}),
+      "@kungfu-tech/buildchain": buildchainVersion,
     },
-    license: "Apache-2.0",
+    packageManager,
+  };
+}
+
+function scaffoldPackageJson({
+  name,
+  packageName,
+  repository,
+  buildchainVersion,
+}) {
+  return jsonText({
+    ...managedPaperPackageJson(
+      {
+        name: packageName,
+        description: `${name} publication source repository.`,
+        repository: {
+          type: "git",
+          url: `git+https://github.com/${repository}.git`,
+        },
+        license: "Apache-2.0",
+      },
+      buildchainVersion,
+    ),
   });
 }
 
@@ -562,9 +613,10 @@ This repository is a Buildchain-governed publication artifact source.
 ## Local workflow
 
 \`\`\`sh
-buildchain paper preflight --json
-buildchain paper build
-buildchain paper status --json
+pnpm paper:preflight
+pnpm paper:work:start -- <topic>
+pnpm paper:work:submit
+make pdf
 \`\`\`
 
 The public package identity is \`${packageName}\`. Buildchain owns reproducible
@@ -644,8 +696,13 @@ function scaffoldFiles({
     acceptedAt,
   });
   const contractLockText = jsonText(contractLock);
-  const buildWorkflow = scaffoldBuildWorkflow(buildchainSha);
-  const releaseWorkflow = scaffoldReleaseWorkflow(buildchainSha);
+  const buildWorkflow = scaffoldBuildWorkflow(buildchainSha, {
+    artifactName: name,
+  });
+  const releaseWorkflow = scaffoldReleaseWorkflow(buildchainSha, {
+    artifactPaths: "_build/main.pdf",
+    releasePassportProductName: title,
+  });
   const provisioningAuthority = createPaperProvisioningAuthority({
     repository,
     packageName,
@@ -673,7 +730,15 @@ function scaffoldFiles({
     [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
     ["Makefile", scaffoldMakefile()],
-    ["package.json", scaffoldPackageJson({ name, packageName, repository })],
+    [
+      "package.json",
+      scaffoldPackageJson({
+        name,
+        packageName,
+        repository,
+        buildchainVersion,
+      }),
+    ],
     ["README.md", scaffoldReadme({ title, packageName })],
     ["docs/MAP.md", scaffoldMap()],
     ["paper/main.tex", scaffoldMainTex(title)],
@@ -953,12 +1018,21 @@ function migrationFiles({
     buildWorkflow,
     releaseWorkflow,
   });
+  const currentPackage = readJson(path.resolve(cwd, "package.json"));
+  if (!currentPackage.exists || currentPackage.error || !currentPackage.value) {
+    throw new Error("paper migration requires a valid package.json");
+  }
+  const packageJson = managedPaperPackageJson(
+    currentPackage.value,
+    runtimeIdentity.version,
+  );
   return new Map([
     [PAPER_PATHS.contractLock, contractLockText],
     [PAPER_PATHS.versionPin, `${runtimeIdentity.version}\n`],
     [PAPER_PATHS.buildWorkflow, buildWorkflow],
     [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
+    ["package.json", jsonText(packageJson)],
   ]);
 }
 
@@ -1063,6 +1137,12 @@ export function planPaperMigration({
               description:
                 "Write the reviewed Buildchain-owned control files without changing paper content or publication configuration.",
             },
+            {
+              id: "refresh-pnpm-lock",
+              command: "pnpm install --lockfile-only",
+              description:
+                "Bind the exact Buildchain v3 dependency into pnpm-lock.yaml after the reviewed package update.",
+            },
           ],
   };
   Object.defineProperty(result, "_plannedFiles", {
@@ -1130,6 +1210,678 @@ export function writePaperMigration(plan) {
           "Verify the migrated repository before any external mutation.",
       },
     ],
+  };
+}
+
+function rootedPlan(payload) {
+  return {
+    ...payload,
+    planRoot: sha256Text(stableJson(payload)),
+  };
+}
+
+function paperDevelopmentRef(cwd) {
+  const configResult = paperConfig(cwd);
+  if (configResult.error) throw new Error(configResult.error);
+  const parsed = parsePaperVersion(
+    configResult.loaded.config.publication.version,
+  );
+  return `dev/v${parsed.major}/v${parsed.major}.${parsed.minor}`;
+}
+
+function remoteBranchSha(cwd, branch) {
+  const result = gitResult(cwd, [
+    "ls-remote",
+    "--heads",
+    "origin",
+    `refs/heads/${branch}`,
+  ]);
+  const sha = result.stdout.split(/\s+/)[0] || "";
+  return {
+    observed: result.ok,
+    ok: result.ok && GIT_SHA_PATTERN.test(sha),
+    sha: GIT_SHA_PATTERN.test(sha) ? sha : "",
+    error: result.error || result.stderr,
+  };
+}
+
+function paperWorkSource(cwd) {
+  const repository = resolvePaperRepository(cwd);
+  const remotes = gitValue(cwd, ["remote"]).split(/\s+/).filter(Boolean).sort();
+  const originUrl = gitValue(cwd, ["config", "--get", "remote.origin.url"]);
+  const originRepository = normalizeRepository(originUrl);
+  return {
+    repository,
+    remotes,
+    originUrl,
+    originRepository,
+    canonical:
+      remotes.length === 1 &&
+      remotes[0] === "origin" &&
+      Boolean(repository) &&
+      repository === originRepository &&
+      repository.startsWith("kungfu-systems/"),
+    branch: gitValue(cwd, ["branch", "--show-current"]),
+    head: gitValue(cwd, ["rev-parse", "HEAD"]),
+    clean: gitResult(cwd, ["status", "--porcelain"]).stdout === "",
+  };
+}
+
+function workCheck(id, ok, message, correctiveCommand = "") {
+  return {
+    id,
+    status: ok ? "pass" : "fail",
+    message,
+    correctiveCommand: ok ? "" : correctiveCommand,
+  };
+}
+
+function normalizedWorkBranch(topic, explicitBranch = "") {
+  const candidate = explicitBranch
+    ? String(explicitBranch).trim()
+    : `feature/${String(topic || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9._/-]+/g, "-")
+        .replace(/^-+|-+$/g, "")}`;
+  return PAPER_WORK_BRANCH_PATTERN.test(candidate) ? candidate : "";
+}
+
+export function createPaperWorkStartPlan({
+  cwd = process.cwd(),
+  topic = "",
+  branch = "",
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const source = paperWorkSource(resolvedCwd);
+  const targetBranch = normalizedWorkBranch(topic, branch);
+  const developmentRef = paperDevelopmentRef(resolvedCwd);
+  const remoteDevelopment = remoteBranchSha(resolvedCwd, developmentRef);
+  const remoteTarget = targetBranch
+    ? remoteBranchSha(resolvedCwd, targetBranch)
+    : { ok: false, sha: "", error: "invalid work branch" };
+  const localTarget = targetBranch
+    ? gitValue(resolvedCwd, [
+        "rev-parse",
+        "--verify",
+        `refs/heads/${targetBranch}`,
+      ])
+    : "";
+  const remoteCommitPresent = remoteDevelopment.sha
+    ? gitResult(resolvedCwd, [
+        "cat-file",
+        "-e",
+        `${remoteDevelopment.sha}^{commit}`,
+      ]).ok
+    : false;
+  const checks = [
+    workCheck(
+      "repository.canonical-origin",
+      source.canonical,
+      "The paper repository has exactly one canonical kungfu-systems origin.",
+      "git remote -v",
+    ),
+    workCheck(
+      "source.clean",
+      source.clean,
+      "The worktree is clean.",
+      "git status --short",
+    ),
+    workCheck(
+      "source.development-ref",
+      source.branch === developmentRef,
+      `The current branch is the configured development ref ${developmentRef}.`,
+      `git switch ${developmentRef}`,
+    ),
+    workCheck(
+      "remote.development-ref",
+      remoteDevelopment.ok,
+      `origin/${developmentRef} resolves to an exact commit.`,
+      `git fetch origin ${developmentRef}`,
+    ),
+    workCheck(
+      "source.remote-aligned",
+      Boolean(remoteDevelopment.sha) && source.head === remoteDevelopment.sha,
+      "HEAD equals the exact remote development commit.",
+      `git fetch origin ${developmentRef} && git merge --ff-only origin/${developmentRef}`,
+    ),
+    workCheck(
+      "source.remote-commit-present",
+      remoteCommitPresent,
+      "The exact remote development commit is present locally.",
+      `git fetch origin ${developmentRef}`,
+    ),
+    workCheck(
+      "target.safe-name",
+      Boolean(targetBranch),
+      "The work branch uses an allowed non-protected prefix and safe slug.",
+      "use feature|fix|docs|chore|ci|refactor/<slug>",
+    ),
+    workCheck(
+      "target.absent",
+      Boolean(targetBranch) &&
+        remoteTarget.observed &&
+        !localTarget &&
+        !remoteTarget.sha,
+      "The work branch does not already exist locally or remotely.",
+      "choose a fresh work branch name",
+    ),
+  ];
+  const ok = checks.every((entry) => entry.status === "pass");
+  return rootedPlan({
+    schemaVersion: 1,
+    contract: PAPER_WORK_START_PLAN_CONTRACT,
+    ok,
+    cwd: resolvedCwd,
+    dryRun: true,
+    source: {
+      ...source,
+      developmentRef,
+      remoteDevelopmentSha: remoteDevelopment.sha,
+    },
+    target: { branch: targetBranch, startSha: remoteDevelopment.sha },
+    checks,
+    mutation: {
+      kind: "local-branch-create",
+      force: false,
+      command: targetBranch
+        ? `git switch -c ${targetBranch} ${remoteDevelopment.sha || `<origin/${developmentRef}>`}`
+        : "",
+    },
+    nextActions: ok
+      ? [
+          {
+            id: "create-work-branch",
+            command: `buildchain paper work start ${targetBranch} --branch ${targetBranch} --execute --json`,
+            description:
+              "Create the local work branch from the exact observed remote development commit.",
+          },
+        ]
+      : checks
+          .filter((entry) => entry.status === "fail")
+          .map((entry) => ({
+            id: `repair-${entry.id}`,
+            command: entry.correctiveCommand,
+            description: entry.message,
+          })),
+  });
+}
+
+export function executePaperWorkStart(plan) {
+  if (!plan || plan.contract !== PAPER_WORK_START_PLAN_CONTRACT || !plan.ok) {
+    return {
+      ...plan,
+      ok: false,
+      dryRun: false,
+      errorCode: "paper-work-start-blocked",
+    };
+  }
+  const fresh = createPaperWorkStartPlan({
+    cwd: plan.cwd,
+    branch: plan.target.branch,
+  });
+  if (!fresh.ok || fresh.planRoot !== plan.planRoot) {
+    return {
+      ...fresh,
+      ok: false,
+      dryRun: false,
+      errorCode: "paper-work-start-race",
+    };
+  }
+  const switched = gitResult(plan.cwd, [
+    "switch",
+    "-c",
+    plan.target.branch,
+    plan.target.startSha,
+  ]);
+  return {
+    ...fresh,
+    ok: switched.ok,
+    dryRun: false,
+    created: switched.ok,
+    errorCode: switched.ok ? "" : "paper-work-branch-create-failed",
+    stderr: switched.ok ? "" : switched.error || switched.stderr,
+  };
+}
+
+export function createPaperWorkSubmitPlan({
+  cwd = process.cwd(),
+  pullRequests = [],
+  pullRequestObservation = { ok: true },
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const source = paperWorkSource(resolvedCwd);
+  const developmentRef = paperDevelopmentRef(resolvedCwd);
+  const remoteDevelopment = remoteBranchSha(resolvedCwd, developmentRef);
+  const remoteWork = source.branch
+    ? remoteBranchSha(resolvedCwd, source.branch)
+    : { ok: false, sha: "", error: "detached head" };
+  const developmentAncestor =
+    Boolean(remoteDevelopment.sha) &&
+    gitResult(resolvedCwd, [
+      "merge-base",
+      "--is-ancestor",
+      remoteDevelopment.sha,
+      source.head,
+    ]).ok;
+  const remoteWorkAncestor =
+    remoteWork.observed &&
+    (!remoteWork.sha ||
+      gitResult(resolvedCwd, [
+        "merge-base",
+        "--is-ancestor",
+        remoteWork.sha,
+        source.head,
+      ]).ok);
+  const wrongBasePullRequests = pullRequests.filter(
+    (entry) =>
+      entry.headRefName === source.branch &&
+      entry.baseRefName !== developmentRef,
+  );
+  const matchingPullRequest = pullRequests.find(
+    (entry) =>
+      entry.headRefName === source.branch &&
+      entry.baseRefName === developmentRef,
+  );
+  const checks = [
+    workCheck(
+      "repository.canonical-origin",
+      source.canonical,
+      "The paper repository has exactly one canonical kungfu-systems origin.",
+      "git remote -v",
+    ),
+    workCheck(
+      "source.clean",
+      source.clean,
+      "The worktree is clean.",
+      "git status --short",
+    ),
+    workCheck(
+      "source.safe-work-branch",
+      PAPER_WORK_BRANCH_PATTERN.test(source.branch),
+      "The current branch is an allowed non-protected work branch.",
+      "buildchain paper work start <topic>",
+    ),
+    workCheck(
+      "source.committed",
+      GIT_SHA_PATTERN.test(source.head),
+      "The submitted source resolves to an exact commit.",
+      "git status --short",
+    ),
+    workCheck(
+      "remote.development-ref",
+      remoteDevelopment.ok,
+      `origin/${developmentRef} resolves to an exact commit.`,
+      `git fetch origin ${developmentRef}`,
+    ),
+    workCheck(
+      "source.contains-development",
+      developmentAncestor,
+      "The work branch contains the exact remote development commit.",
+      `git fetch origin ${developmentRef} && git rebase origin/${developmentRef}`,
+    ),
+    workCheck(
+      "remote.work-fast-forward",
+      remoteWorkAncestor,
+      "The remote work branch is absent or can be advanced without force.",
+      `git fetch origin ${source.branch}`,
+    ),
+    workCheck(
+      "pull-request.target",
+      wrongBasePullRequests.length === 0,
+      `No open pull request targets a branch other than ${developmentRef}.`,
+      "close or retarget the conflicting pull request",
+    ),
+    workCheck(
+      "pull-request.observed",
+      pullRequestObservation.ok === true,
+      "Open pull requests for the source branch were observed successfully.",
+      "gh auth status",
+    ),
+  ];
+  const ok = checks.every((entry) => entry.status === "pass");
+  return rootedPlan({
+    schemaVersion: 1,
+    contract: PAPER_WORK_SUBMIT_PLAN_CONTRACT,
+    ok,
+    cwd: resolvedCwd,
+    dryRun: true,
+    repository: source.repository,
+    source: {
+      branch: source.branch,
+      sha: source.head,
+      remoteSha: remoteWork.sha,
+    },
+    target: { branch: developmentRef, sha: remoteDevelopment.sha },
+    pullRequest: matchingPullRequest || null,
+    checks,
+    mutation: {
+      kind: "normal-push-and-pull-request",
+      force: false,
+      pushCommand: `git push --set-upstream origin HEAD:refs/heads/${source.branch}`,
+      pullRequestCommand: matchingPullRequest
+        ? ""
+        : `gh pr create --repo ${source.repository} --base ${developmentRef} --head ${source.branch}`,
+    },
+    nextActions: ok
+      ? [
+          {
+            id: matchingPullRequest ? "reuse-pull-request" : "submit-work",
+            command: matchingPullRequest
+              ? ""
+              : "buildchain paper work submit --execute --json",
+            description: matchingPullRequest
+              ? "Continue the existing correctly targeted pull request."
+              : "Push without force and open a pull request to the configured development ref.",
+            url: matchingPullRequest?.url || "",
+          },
+        ]
+      : checks
+          .filter((entry) => entry.status === "fail")
+          .map((entry) => ({
+            id: `repair-${entry.id}`,
+            command: entry.correctiveCommand,
+            description: entry.message,
+          })),
+  });
+}
+
+export function executePaperWorkSubmitPush(plan) {
+  if (!plan || plan.contract !== PAPER_WORK_SUBMIT_PLAN_CONTRACT || !plan.ok) {
+    return {
+      ...plan,
+      ok: false,
+      dryRun: false,
+      pushed: false,
+      errorCode: "paper-work-submit-blocked",
+    };
+  }
+  const currentHead = gitValue(plan.cwd, ["rev-parse", "HEAD"]);
+  const currentBranch = gitValue(plan.cwd, ["branch", "--show-current"]);
+  const currentClean =
+    gitResult(plan.cwd, ["status", "--porcelain"]).stdout === "";
+  const target = remoteBranchSha(plan.cwd, plan.target.branch);
+  if (
+    currentHead !== plan.source.sha ||
+    currentBranch !== plan.source.branch ||
+    !currentClean ||
+    target.sha !== plan.target.sha
+  ) {
+    return {
+      ...plan,
+      ok: false,
+      dryRun: false,
+      pushed: false,
+      errorCode: "paper-work-submit-race",
+    };
+  }
+  const pushed = gitResult(plan.cwd, [
+    "push",
+    "--set-upstream",
+    "origin",
+    `HEAD:refs/heads/${plan.source.branch}`,
+  ]);
+  return {
+    ...plan,
+    ok: pushed.ok,
+    dryRun: false,
+    pushed: pushed.ok,
+    errorCode: pushed.ok ? "" : "paper-work-push-failed",
+    stderr: pushed.ok ? "" : pushed.error || pushed.stderr,
+  };
+}
+
+export function discoverPaperFleet(root = process.cwd()) {
+  const resolvedRoot = path.resolve(root);
+  if (
+    !fs.existsSync(resolvedRoot) ||
+    !fs.statSync(resolvedRoot).isDirectory()
+  ) {
+    throw new Error("paper fleet root must be an existing directory");
+  }
+  return fs
+    .readdirSync(resolvedRoot, { withFileTypes: true })
+    .filter(
+      (entry) =>
+        entry.isDirectory() &&
+        entry.name.startsWith("paper-") &&
+        fs.existsSync(path.join(resolvedRoot, entry.name, ".git")),
+    )
+    .map((entry) => path.join(resolvedRoot, entry.name))
+    .sort();
+}
+
+function paperFleetEntry({
+  cwd,
+  buildchainRoot,
+  buildchainVersion,
+  buildchainSha,
+}) {
+  const source = paperWorkSource(cwd);
+  const packageSource = readJson(path.resolve(cwd, "package.json"));
+  const pinPath = path.resolve(cwd, PAPER_PATHS.versionPin);
+  const lockPath = path.resolve(cwd, "pnpm-lock.yaml");
+  let expected = new Map();
+  let expectedError = "";
+  try {
+    expected = migrationFiles({
+      cwd,
+      buildchainRoot,
+      buildchainVersion,
+      buildchainSha,
+    });
+  } catch (error) {
+    expectedError = error.message;
+  }
+  const managed = [...expected].map(([relativePath, contents]) => {
+    const target = path.resolve(cwd, relativePath);
+    const current =
+      fs.existsSync(target) && fs.statSync(target).isFile()
+        ? fs.readFileSync(target, "utf8")
+        : undefined;
+    return {
+      path: relativePath,
+      status:
+        current === undefined
+          ? "missing"
+          : current === contents
+            ? "current"
+            : "drifted",
+      expectedSha256: sha256Text(contents),
+      currentSha256: current === undefined ? "" : sha256Text(current),
+    };
+  });
+  const packageJson = packageSource.value || {};
+  const dependency =
+    packageJson.devDependencies?.["@kungfu-tech/buildchain"] || "";
+  const lockText = fs.existsSync(lockPath)
+    ? fs.readFileSync(lockPath, "utf8")
+    : "";
+  const checks = [
+    workCheck(
+      "repository.canonical-origin",
+      source.canonical,
+      "Repository identity resolves to the canonical kungfu-systems origin.",
+      "git remote -v",
+    ),
+    workCheck(
+      "package.buildchain-v3",
+      dependency === buildchainVersion && /^3\./.test(dependency),
+      "package.json pins the exact Buildchain v3 runtime.",
+      "buildchain paper migrate --write --json",
+    ),
+    workCheck(
+      "package.pnpm-lock",
+      Boolean(lockText) &&
+        lockText.includes("@kungfu-tech/buildchain") &&
+        lockText.includes(buildchainVersion),
+      "pnpm-lock.yaml binds the Buildchain dependency.",
+      "pnpm install --lockfile-only",
+    ),
+    workCheck(
+      "runtime.version-pin",
+      fs.existsSync(pinPath) &&
+        fs.readFileSync(pinPath, "utf8").trim() === buildchainVersion,
+      "The repository version pin equals the exact Buildchain runtime.",
+      "buildchain paper migrate --write --json",
+    ),
+    workCheck(
+      "managed-surfaces.current",
+      !expectedError && managed.every((entry) => entry.status === "current"),
+      "Every Buildchain-owned paper control surface matches v3.",
+      "buildchain paper migrate --write --json",
+    ),
+  ];
+  return {
+    name: path.basename(cwd),
+    cwd,
+    repository: source.repository,
+    branch: source.branch,
+    head: source.head,
+    clean: source.clean,
+    package: packageJson.name || "",
+    buildchainDependency: dependency,
+    expectedError,
+    managed,
+    checks,
+    ok: checks.every((entry) => entry.status === "pass"),
+  };
+}
+
+export function collectPaperFleetAudit({
+  root = process.cwd(),
+  repositories = [],
+  buildchainRoot = process.cwd(),
+  buildchainVersion = "",
+  buildchainSha = "",
+  governance = {},
+} = {}) {
+  const resolvedRoot = path.resolve(root);
+  const paths = (
+    repositories.length > 0
+      ? repositories.map((entry) => path.resolve(entry))
+      : discoverPaperFleet(resolvedRoot)
+  ).sort();
+  const entries = paths.map((cwd) =>
+    paperFleetEntry({
+      cwd,
+      buildchainRoot,
+      buildchainVersion,
+      buildchainSha,
+    }),
+  );
+  const governanceEntries = entries.map((entry) => ({
+    repository: entry.repository,
+    ...(governance[entry.repository] || { status: "unobserved" }),
+  }));
+  const payload = {
+    schemaVersion: 1,
+    contract: PAPER_FLEET_AUDIT_CONTRACT,
+    ok:
+      entries.length > 0 &&
+      entries.every((entry) => entry.ok) &&
+      governanceEntries.every((entry) =>
+        ["pass", "unobserved"].includes(entry.status),
+      ),
+    root: resolvedRoot,
+    runtime: {
+      version: buildchainVersion,
+      sha: buildchainSha || runtimeGitSha(buildchainRoot, buildchainVersion),
+    },
+    summary: {
+      repositories: entries.length,
+      current: entries.filter((entry) => entry.ok).length,
+      drifted: entries.filter((entry) => !entry.ok).length,
+      governanceObserved: governanceEntries.filter(
+        (entry) => entry.status !== "unobserved",
+      ).length,
+    },
+    repositories: entries,
+    governance: governanceEntries,
+  };
+  return {
+    ...payload,
+    auditRoot: sha256Text(stableJson(payload)),
+  };
+}
+
+export function planPaperFleetUpdate(options = {}) {
+  const audit = collectPaperFleetAudit(options);
+  const plans = audit.repositories.map((entry) => {
+    if (!PAPER_WORK_BRANCH_PATTERN.test(entry.branch)) {
+      return {
+        contract: PAPER_MIGRATION_CONTRACT,
+        ok: false,
+        cwd: entry.cwd,
+        dryRun: true,
+        error:
+          "paper fleet update requires an allowed non-protected work branch",
+        changes: [],
+      };
+    }
+    try {
+      return planPaperMigration({
+        cwd: entry.cwd,
+        buildchainRoot: options.buildchainRoot,
+        buildchainVersion: options.buildchainVersion,
+        buildchainSha: options.buildchainSha,
+      });
+    } catch (error) {
+      return {
+        contract: PAPER_MIGRATION_CONTRACT,
+        ok: false,
+        cwd: entry.cwd,
+        dryRun: true,
+        error: error.message,
+        changes: [],
+      };
+    }
+  });
+  return rootedPlan({
+    schemaVersion: 1,
+    contract: PAPER_FLEET_UPDATE_PLAN_CONTRACT,
+    ok: plans.length > 0 && plans.every((entry) => entry.ok),
+    root: audit.root,
+    dryRun: true,
+    auditRoot: audit.auditRoot,
+    runtime: audit.runtime,
+    plans,
+    nextActions: plans.every((entry) => entry.ok)
+      ? [
+          {
+            id: "write-fleet-update",
+            command: "buildchain paper fleet update --write --json",
+            description:
+              "Apply only reviewed Buildchain-owned control surfaces, then refresh each pnpm lockfile.",
+          },
+        ]
+      : [
+          {
+            id: "repair-blocked-repositories",
+            command: "git status --short",
+            description:
+              "Fleet update requires every target repository to be clean and rooted exactly.",
+          },
+        ],
+  });
+}
+
+export function writePaperFleetUpdate(plan) {
+  if (!plan || plan.contract !== PAPER_FLEET_UPDATE_PLAN_CONTRACT || !plan.ok) {
+    return {
+      ...plan,
+      ok: false,
+      dryRun: false,
+      results: [],
+      errorCode: "paper-fleet-update-blocked",
+    };
+  }
+  const results = plan.plans.map((entry) => writePaperMigration(entry));
+  return {
+    ...plan,
+    ok: results.every((entry) => entry.ok),
+    dryRun: false,
+    results,
   };
 }
 

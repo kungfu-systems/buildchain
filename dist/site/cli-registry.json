@@ -1356,6 +1356,42 @@
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
+      "id": "paper-fleet-audit",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper fleet audit [--root <dir>] [--offline] [--json]",
+      "purpose": "Discover Paper repositories and emit one deterministic v3 dependency, control-surface, and governance audit.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
+      "id": "paper-fleet-update",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper fleet update [--root <dir>] [--write] [--json]",
+      "purpose": "Plan or write a bounded v3 migration across isolated Paper work branches.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
       "id": "paper-migrate",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain paper migrate [--cwd <dir>] [--write] [--json]",
@@ -1433,6 +1469,42 @@
       "usage": "buildchain paper status [--cwd <dir>] [--json]",
       "purpose": "Report explicit evidence for every paper lifecycle state without unsupported inference.",
       "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
+      "id": "paper-work-start",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper work start <topic> [--cwd <dir>] [--branch <branch>] [--execute] [--json]",
+      "purpose": "Create a safe Paper work branch from the exact canonical remote development SHA.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
+      "id": "paper-work-submit",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper work submit [--cwd <dir>] [--title <title>] [--body <body>] [--execute] [--json]",
+      "purpose": "Push a Paper work branch without force and open or reuse the correctly targeted development PR.",
+      "capabilityGroup": "governance-versioning",
       "audience": [
         "agent",
         "operator"
