@@ -181,6 +181,12 @@ PNG ceilings are the next power of two above sixteen times the measured member
 bytes. The not-yet-produced WebP poster uses eight times the measured lossless
 PNG as its conservative proxy. The path-scoped qualification workflow
 regenerates the content-addressed evidence and fails on any byte or fact drift.
+Its matrix retains the original 1280x720 web-delivery baseline on the renderer
+that produced it and separately measures the responsive profile against a
+1920x1080 fixture and the first exact renderer release that emits both
+source-resolution and 720p renditions. This keeps historical budget evidence
+reproducible while giving the responsive contract its own immutable
+qualification root.
 
 ## Consumer Example
 
