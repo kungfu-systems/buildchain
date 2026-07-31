@@ -21,6 +21,10 @@ import {
   writePaperMigration,
   writePaperScaffold,
 } from "../packages/core/paper.js";
+import {
+  BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+  compileEffectiveGithubGovernancePolicy,
+} from "../packages/core/github-governance-authority.js";
 
 function commandResult(command, args, { cwd, timeout = 60000 } = {}) {
   const result = spawnSync(command, args, {
@@ -155,15 +159,11 @@ function compactRuleset(value) {
     name: value.name || "",
     enforcement: value.enforcement || "",
     target: value.target || "",
-    include: value.conditions?.ref_name?.include || [],
+    bypass_actors: value.bypass_actors || [],
+    conditions: value.conditions || {},
     rules: (value.rules || []).map((rule) => ({
       type: rule.type || "",
-      approvingReviews:
-        rule.parameters?.required_approving_review_count ?? null,
-      statusChecks:
-        rule.parameters?.required_status_checks?.map(
-          (entry) => entry.context || "",
-        ) || [],
+      parameters: rule.parameters || {},
     })),
   };
 }
@@ -196,61 +196,43 @@ function fetchRulesets(cwd, repository) {
   }
 }
 
-function refCovered(include, family) {
+function paperGovernanceTargetPolicies(repository) {
+  const name = String(repository || "").split("/")[1] || "";
   return (
-    include.includes("~ALL") ||
-    include.some((entry) =>
-      [
-        `refs/heads/${family}/**`,
-        `refs/heads/${family}/*`,
-        `${family}/**`,
-        `${family}/*`,
-      ].includes(entry),
-    )
+    BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.repositoryAdmission
+      .publicAuthoritativeTargets[name] || []
+  ).filter((entry) => /^(dev|alpha|release)\//.test(entry.targetRef));
+}
+
+function bindingKey(entry) {
+  return `${entry.context}:${entry.appId ?? ""}`;
+}
+
+function sameBindings(observed, expected) {
+  const left = (observed || []).map(bindingKey).sort();
+  const right = (expected || []).map(bindingKey).sort();
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function bypassAllowed(observed, allowed) {
+  return (observed || []).every((actor) =>
+    (allowed || []).some(
+      (candidate) =>
+        candidate.actorType === actor.actorType &&
+        candidate.actorId === actor.actorId &&
+        candidate.bypassMode === actor.bypassMode,
+    ),
   );
 }
 
-function familyProtectionChecks(active, family) {
-  const rules = active
-    .filter((entry) => refCovered(entry.include, family))
-    .flatMap((entry) => entry.rules);
-  return [
-    { id: `rulesets.${family}-covered`, ok: rules.length > 0 },
-    {
-      id: `rulesets.${family}-deletion-blocked`,
-      ok: rules.some((entry) => entry.type === "deletion"),
-    },
-    {
-      id: `rulesets.${family}-force-push-blocked`,
-      ok: rules.some((entry) => entry.type === "non_fast_forward"),
-    },
-    {
-      id: `rulesets.${family}-pull-request-review`,
-      ok: rules.some(
-        (entry) =>
-          entry.type === "pull_request" && Number(entry.approvingReviews) >= 1,
-      ),
-    },
-    {
-      id: `rulesets.${family}-required-status-checks`,
-      ok: rules.some(
-        (entry) =>
-          entry.type === "required_status_checks" &&
-          entry.statusChecks.length > 0,
-      ),
-    },
-  ];
-}
-
-function protectionChecks(actions, rulesets) {
-  const active = rulesets.filter(
-    (entry) => entry.enforcement === "active" && entry.target === "branch",
-  );
-  const families = ["dev", "alpha", "release"];
-  const familyChecks = families.flatMap((family) =>
-    familyProtectionChecks(active, family),
-  );
-  return [
+export function evaluatePaperGithubGovernance({
+  repository,
+  actions = {},
+  rulesets = [],
+  protections = {},
+} = {}) {
+  const targetPolicies = paperGovernanceTargetPolicies(repository);
+  const checks = [
     {
       id: "actions.default-workflow-permissions",
       ok: actions.default_workflow_permissions === "read",
@@ -259,8 +241,85 @@ function protectionChecks(actions, rulesets) {
       id: "actions.pull-request-approval-disabled",
       ok: actions.can_approve_pull_request_reviews === false,
     },
-    ...familyChecks,
-  ].map((entry) => ({ ...entry, status: entry.ok ? "pass" : "fail" }));
+  ];
+  const targets = targetPolicies.map((expected) => {
+    const observation = protections[expected.targetRef] || {};
+    const effective = compileEffectiveGithubGovernancePolicy({
+      branch: expected.targetRef,
+      defaultBranch: "",
+      protectedBranch: observation.ok === true,
+      protection: observation.protection || null,
+      rulesets,
+    });
+    const targetChecks = [
+      ["observed", observation.ok === true],
+      ["native-pull-request", effective.nativePullRequestRequired === true],
+      ["approving-review", Number(effective.requiredApprovals) >= 1],
+      ["code-owner-review", effective.codeOwnerReviewRequired === true],
+      [
+        "fresh-review",
+        effective.dismissStaleReviews === true ||
+          effective.requireLastPushApproval === true,
+      ],
+      ["administrator-enforcement", effective.enforceAdmins === true],
+      ["conversation-resolution", effective.conversationResolution === true],
+      [
+        "required-check-bindings",
+        sameBindings(
+          effective.requiredCheckBindings,
+          expected.requiredCheckBindings,
+        ),
+      ],
+      [
+        "strict-required-checks",
+        effective.strictRequiredChecks === expected.strictRequiredChecks,
+      ],
+      ["force-push-blocked", effective.allowForcePushes === false],
+      ["deletion-blocked", effective.allowDeletions === false],
+      [
+        "bypass-policy",
+        bypassAllowed(effective.bypassActors, expected.allowedBypassActors),
+      ],
+    ].map(([id, ok]) => ({
+      id: `protection.${expected.targetRef}.${id}`,
+      ok,
+    }));
+    checks.push(...targetChecks);
+    return {
+      targetRef: expected.targetRef,
+      status: targetChecks.every((entry) => entry.ok) ? "pass" : "fail",
+      effectivePolicy: effective,
+    };
+  });
+  const normalizedChecks = checks.map((entry) => ({
+    ...entry,
+    status: entry.ok ? "pass" : "fail",
+  }));
+  return {
+    status:
+      targetPolicies.length > 0 && normalizedChecks.every((entry) => entry.ok)
+        ? "pass"
+        : "fail",
+    checks: normalizedChecks,
+    targets,
+  };
+}
+
+function fetchProtection(cwd, repository, targetRef) {
+  const result = commandResult(
+    "gh",
+    [
+      "api",
+      `repos/${repository}/branches/${encodeURIComponent(targetRef)}/protection`,
+    ],
+    { cwd },
+  );
+  if (!result.ok) return { ok: false, protection: null };
+  try {
+    return { ok: true, protection: JSON.parse(result.stdout || "{}") };
+  } catch {
+    return { ok: false, protection: null };
+  }
 }
 
 function githubGovernance(cwd, repository) {
@@ -270,6 +329,13 @@ function githubGovernance(cwd, repository) {
     { cwd },
   );
   const rulesets = fetchRulesets(cwd, repository);
+  const targets = paperGovernanceTargetPolicies(repository);
+  const protections = Object.fromEntries(
+    targets.map((entry) => [
+      entry.targetRef,
+      fetchProtection(cwd, repository, entry.targetRef),
+    ]),
+  );
   if (!actions.ok || !rulesets.ok) {
     return {
       status: "fail",
@@ -281,13 +347,17 @@ function githubGovernance(cwd, repository) {
   }
   try {
     const policy = JSON.parse(actions.stdout || "{}");
-    const checks = protectionChecks(policy, rulesets.rows);
+    const evaluation = evaluatePaperGithubGovernance({
+      repository,
+      actions: policy,
+      rulesets: rulesets.rows,
+      protections,
+    });
     return {
-      status: checks.every((entry) => entry.ok) ? "pass" : "fail",
+      ...evaluation,
       errorCode: "",
       actions: policy,
       rulesets: rulesets.rows,
-      checks,
     };
   } catch {
     return {
