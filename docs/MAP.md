@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-documentation-map
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Documentation Map
 
 Start here. Find the question you have; follow it to the document that answers
@@ -10,7 +28,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 - `stable` - current and holds.
 - `draft` - exists, rough or incomplete.
 - `to write` - planned; the material exists but is not yet a single doc.
-- `retired` - intentionally not part of the active Buildchain v2 surface.
+- `retired` - intentionally not part of the active Buildchain v3 surface.
 
 ## Capability Coverage
 
@@ -118,7 +136,7 @@ replace them.
 | How do I automatically qualify alpha candidates and publish the newest non-revoked qualified candidate at a fixed window? | [`stable-candidate-patrol.md`](stable-candidate-patrol.md) | use | preview |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
-| How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md), [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
+| How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md), [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md), [`../actions/github-artifact-attestation/README.md`](../actions/github-artifact-attestation/README.md), [`../actions/macos-credential-island/README.md`](../actions/macos-credential-island/README.md); `dist/site/workflow-registry.json#actions` is authoritative for the six-entry inventory. | use | stable |
 | How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
 | What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md), [`../fixtures/publication-artifact-shaped/README.md`](../fixtures/publication-artifact-shaped/README.md) | verify | stable |
 | What license and contribution terms apply? | [`../LICENSE`](../LICENSE) + [`../LICENSE-POLICY.md`](../LICENSE-POLICY.md) | use | stable |
@@ -129,14 +147,14 @@ replace them.
 
 - **ABV / old workflows / old action repositories** -> [`release-governance.md`](release-governance.md)
   and [`migration-inventory.md`](migration-inventory.md).
-- **v2 / v3-alpha / v2.0 / v2.0-alpha / exact tags / floating tags** ->
+- **v3 / v3-alpha / v3.0 / v3.0-alpha / exact tags / floating tags** ->
   [`release-governance.md`](release-governance.md) and
   [`release-flow.md`](release-flow.md).
 - **Buildchain self-dogfood / released alpha canary / stable compatibility lane** ->
   [`release-governance.md`](release-governance.md#buildchain-alpha-self-dogfood).
 - **qualified alpha ledger / scheduled stable selection / hold and revoke** ->
   [`stable-candidate-patrol.md`](stable-candidate-patrol.md).
-- **v2.1 vs v2.2 / when to open a new minor line** ->
+- **v3.1 vs v3.2 / when to open a new minor line** ->
   [`versioning.md`](versioning.md).
 - **dry-run / what would happen if this channel PR merges** -> [`cli.md`](cli.md)
   and [`release-flow.md`](release-flow.md).

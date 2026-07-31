@@ -1,6 +1,24 @@
+---
+status: active
+period: ongoing
+theme: buildchain-lifecycle-protocol
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Lifecycle Protocol
 
-Buildchain uses `.buildchain/buildchain.toml` as the v2 repository configuration format.
+Buildchain uses `.buildchain/buildchain.toml` as the v3 repository configuration format.
 The file is optional for simple JavaScript repositories, but it is the preferred
 way to describe release version state and lifecycle commands when a project is
 not a plain pnpm, npm, or yarn workspace.
@@ -10,7 +28,7 @@ For compatibility, Buildchain still reads a legacy root `buildchain.toml` when
 `.buildchain/` layout so all Buildchain-owned local state lives under one
 directory.
 
-Only TOML is supported in v2. YAML, JSON, and JavaScript config files are not
+Only TOML is supported in v3. YAML, JSON, and JavaScript config files are not
 loaded.
 
 ## Minimal File

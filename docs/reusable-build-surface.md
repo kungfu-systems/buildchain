@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -18,7 +18,7 @@ ai_provenance:
 
 # Reusable Build Surface
 
-Buildchain v2 provides a reusable build workflow for repositories that need
+Buildchain v3 provides a reusable build workflow for repositories that need
 Buildchain's release semantics but cannot be described as a simple Node package.
 The first target shape is `libnode`: expensive native builds, multiple operating
 systems, self-hosted runner labels, and release artifacts that must be auditable.
@@ -31,9 +31,8 @@ only signs and verifies immutable data. See
 
 ## Automatic Channel Router
 
-The preferred consumer surface is one reusable workflow call. After v2.12
-reaches the stable major ref, consumers keep this configuration for both alpha
-development and stable release work:
+The preferred consumer surface is one reusable workflow call. Consumers keep
+this configuration for both alpha development and stable release work:
 
 ```yaml
 jobs:
@@ -79,10 +78,10 @@ with:
   buildchain-channel: stable
 ```
 
-During the v2.12 prerelease evaluation window, canaries use
-`build.yml@v3-alpha`. The same router then selects `v3-alpha` or stable `v2` as
-the runtime. Production consumers should adopt `build.yml@v3` after the router
-has reached stable; this keeps the routing shell itself on a stable ref.
+During v3 prerelease evaluation windows, canaries use `build.yml@v3-alpha`.
+The same router then selects `v3-alpha` or stable `v3` as the runtime.
+Production consumers use `build.yml@v3`; this keeps the routing shell itself on
+a stable ref.
 
 The router is generated from `.build.yml`'s input/output surface. Run
 `node scripts/generate-channel-build-workflow.mjs` after changing the advanced
@@ -122,6 +121,27 @@ jobs:
 | `kungfu-v4-self-hosted` | Kungfu Linux x64, macOS ARM64, and Windows x64 self-hosted runner labels                                       |
 | `kungfu-v4-native`      | Kungfu Linux x64, Linux ARM64, macOS ARM64, and Windows x64; Linux ARM64 uses GitHub-hosted `ubuntu-24.04-arm` |
 | `custom`                | Requires `platforms-json`                                                                                      |
+
+Set `self-hosted-offline-fallback: true` to inspect every exact-label
+self-hosted lane from the trusted Buildchain workflow shell before the matrix
+starts. A lane with no matching online runner is replaced independently by its
+supported GitHub-hosted runner: Kungfu Linux x64 uses `ubuntu-24.04`, macOS ARM64
+uses `macos-15`, and Windows x64 uses `windows-2022`. Online-but-busy runners
+remain online and keep their declared self-hosted route. Organization-owned
+repositories inspect organization runner inventory so selected-repository runner
+groups are not mistaken for an empty repository runner inventory. If the
+inventory token, permission, or API is unavailable, Buildchain preserves the
+original matrix instead of guessing that the fleet is offline. The public
+workflow output `runner-routing-json` records only de-identified counts,
+inventory scope, and routing decisions.
+
+```yaml
+with:
+  runner-preset: kungfu-v4-native
+  self-hosted-offline-fallback: true
+secrets:
+  BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.KUNGFU_GITHUB_TOKEN }}
+```
 
 Callers can still provide a custom matrix with `platforms-json`. Each platform
 object has:
@@ -275,16 +295,23 @@ Allowed override refs are deliberately narrow:
 | `<40-character SHA>`                    | Exact immutable Buildchain runtime commit              |
 
 Override requests fail closed unless the event is `workflow_dispatch` and the
-actor has write, maintain, or admin permission on the caller repository.
+actor has write, maintain, or admin permission on the caller repository. One
+non-override exact-pin case is also admitted: when the reusable workflow itself
+is invoked from an exact Buildchain SHA and `buildchain-ref` names that identical
+SHA, the run records `pinned-self`. The input cannot select code other than the
+already-running workflow shell, so protected push and pull-request publication
+jobs can retain one immutable runtime root. Different SHA and train requests
+still fail closed outside trusted manual dispatch.
+
 Pull requests, including same-repository pull requests and fork-originated pull
-requests, cannot use `buildchain-ref` override. This keeps automated PR builds on
-the stable runtime surface.
+requests, cannot select an independent `buildchain-ref` override. This keeps
+automated PR builds on the stable or exact pinned-self runtime surface.
 
 Every run resolves the runtime ref to an immutable SHA before checkout. The job
 summary and aggregate build summary record the workflow shell ref, requested
 runtime ref, resolved runtime ref, runtime SHA, stability class, trust decision,
 and rollback ref. Train refs are development validation refs: they do not move
-`v2`, `vX.Y`, `vX.Y-alpha`, npm dist-tags, or production release refs, and they
+`v3`, `vX.Y`, `vX.Y-alpha`, npm dist-tags, or production release refs, and they
 must not be pinned as long-term production dependencies.
 
 Runtime override validates Buildchain runtime scripts, CLI code, local actions,
@@ -304,13 +331,13 @@ major line, and compatibility policy they reviewed.
 
 The reusable build trust gate checks this lock before any heavy matrix job:
 
-1. resolve the Buildchain runtime ref, for example `v2`, to an immutable SHA;
+1. resolve the Buildchain runtime ref, for example `v3`, to an immutable SHA;
 2. read `dist/site/buildchain-contract.json` from that checked-out Buildchain
    ref;
 3. read the consumer's `.buildchain/contract-lock.json`;
 4. compare the accepted contract with the current contract.
 
-SHA drift alone is not a failure. `v2` is expected to advance. Buildchain only
+SHA drift alone is not a failure. `v3` is expected to advance. Buildchain only
 fails fast when the accepted contract is no longer compatible, for example a
 required input is removed, a required output disappears, a protected behavior
 promise changes, or the major line changes. Additive changes such as optional
@@ -466,6 +493,33 @@ Runtime checkout evidence is uploaded separately as `runtime-checkout.json`,
 including cache transport, fallback attempts, and exact runtime `HEAD`
 verification, even when a later lifecycle step fails.
 
+## Auditable Compiler Cache
+
+Consumers can prepare `sccache` on selected platforms after the install
+lifecycle and before compilation:
+
+```yaml
+with:
+  compiler-cache-provider: sccache
+  compiler-cache-platforms-json: '["windows-x64"]'
+  compiler-cache-required: true
+```
+
+The consumer remains responsible for installing and pinning the tool before
+the preparation step. Buildchain probes its version, runs `sccache
+--zero-stats`, and writes
+`compiler-cache-preparation.json`. The receipt binds the source commit/tree,
+Buildchain runtime, platform, cache profile, and any declared dependency,
+toolchain, or policy roots. It resets counters only; it does not delete cached
+compiler outputs.
+
+Final diagnostics admit sccache hit/miss outcomes as current-run evidence only
+when that preparation receipt is present and valid. A bare `sccache
+--show-stats` result without the reset receipt remains cumulative and is
+reported as unavailable for the current run. The preparation receipt is copied
+into the small diagnostics artifact and sealed by
+`diagnostics-manifest.json`.
+
 When a Buildchain maintainer asks for downstream validation, the expected
 request is:
 
@@ -562,7 +616,11 @@ lifecycle and before verification. Buildchain binds the exact artifact bytes or 
 the caller repository, source commit, source tree, immutable runtime, platform,
 and requested signature semantics, then publishes a deterministic
 `<artifact>-signing-request-<platform>-<source-sha>` request. No consumer
-workflow step is required.
+workflow step is required. The lifecycle runner automatically adds declarations
+selected for the current platform to the `build` manifest scan, including
+subjects outside the caller's ordinary `artifact-paths`; this extends the
+evidence preimage without silently adding those subjects to the ordinary
+artifact upload.
 
 The request root is a Buildchain-owned generated output. After the declaration,
 lifecycle manifest, and source paths pass validation, sealing replaces that root
@@ -636,6 +694,17 @@ signed product tree and records `compound-notary-ticket-online`. A generic
 archive container cannot carry a stapled ticket and is not itself a Gatekeeper
 execution target; Gatekeeper evaluates the extracted signed code. Archive path
 and symlink validation fail closed before any payload is signed.
+
+For a declared `app-bundle`, the same protected authority extracts the sealed
+application, derives and verifies its bundle identity, signs nested native code,
+submits both the application and disk image for notarization, staples and
+Gatekeeper-assesses both deliverables, and returns a ZIP, DMG, evidence document,
+and source-bound manifest. The reusable workflow verifies those returned bytes
+on GitHub-hosted infrastructure, adds them to the normal macOS platform payload,
+and publishes a separate `<artifact>-macos-credential-<source-sha>` projection
+for release pipelines that consume the credential-island evidence contract.
+Consumers declare the `.app` under `[[signing.artifacts]]`; they do not configure
+an environment, certificate, notary credential, or authority workflow.
 
 The durable v3 authority runtime is
 `authority/v3/v3.0/artifact-signing`. It is channel-neutral: alpha and stable
@@ -902,15 +971,14 @@ promotion starts:
   `vN`, and `buildchain-stable-contract-lock-path`.
 
 The generated router also owns the stable-shell layout transition through
-`.buildchain/promotion-shell-routing.json`. Stable `v2.14.13` contains the hidden
-advanced workflow, so the stable lane calls that workflow at the exact immutable
-SHA behind the released `v2` state and forwards the complete internal promotion
-identity surface. The logical shell identity remains `vN`, and the router
-retains it in the public audit outputs. The internal advanced-shell call receives
-the exact call ref selected by the routing configuration, so its called-workflow
-ref check and checkout SHA both bind to the same immutable identity. Updating the
-routing pin after a stable release does not require any consumer declaration
-change.
+`.buildchain/promotion-shell-routing.json`. The v3 stable and alpha lanes call
+the hidden advanced workflow at the exact immutable SHA behind their selected
+v3 channel state and forward the complete internal promotion identity surface.
+The logical shell identity remains `vN`, and the router retains it in the public
+audit outputs. The internal advanced-shell call receives the exact call ref
+selected by the routing configuration, so its called-workflow ref check and
+checkout SHA both bind to the same immutable identity. Updating a routing pin
+after a release does not require any consumer declaration change.
 
 The router resolves immutable SHAs and the selected lock digest before candidate
 download. The advanced shell verifies the same router, shell, runtime, lock,
@@ -982,7 +1050,7 @@ main`, marks the rest as `role: platform`, and passes the generated
 side effect. Downloaded platform manifests are still passed into the release
 passport unless `release-passport-platform-manifest-paths` is set explicitly.
 The same Buildchain contract lock check runs before release-candidate
-resolution and before publish. A compatible `v2` drift leaves an issue in the
+resolution and before publish. A compatible `v3` drift leaves an issue in the
 consumer repository but does not trigger a second heavy build; an incompatible
 drift fails before publish side effects.
 
@@ -1147,7 +1215,7 @@ Supported placeholders are `{artifact}`, `{artifactName}`, `{platform}`,
 `{platformId}`, `{platformName}`, `{sha}`, `{shortSha}`, `{ref}`, `{runId}`,
 and `{runAttempt}`. Invalid GitHub artifact name characters are normalized to
 `-`, so `{ref}` remains deterministic even for refs such as
-`refs/heads/dev/v2/v2.0`.
+`refs/heads/dev/v3/v3.0`.
 
 Each platform also writes and uploads:
 

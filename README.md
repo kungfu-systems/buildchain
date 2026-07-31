@@ -191,6 +191,27 @@ npx @kungfu-tech/buildchain validate --require-version-state
 npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
 ```
 
+Bootstrap and inspect a governed paper repository through one interface:
+
+```bash
+npx @kungfu-tech/buildchain paper scaffold \
+  --package @kungfu-tech/paper-example \
+  --repository kungfu-systems/paper-example
+pnpm add -D @kungfu-tech/buildchain@<exact-v3-version>
+pnpm exec buildchain paper work start <topic>
+pnpm exec buildchain paper work submit
+pnpm exec buildchain paper preflight --offline
+pnpm exec buildchain paper status
+```
+
+The paper surface is dry-run first. Add `--write` only to create missing
+scaffold files. `work start` and `work submit` validate the canonical remote,
+exact development SHA, clean source, safe branch, and fast-forward boundary
+before changing local or GitHub state. External mutations such as npm
+bootstrap, Alpha PR creation, and release resumption require `--execute`. See
+[`docs/publication-artifacts.md`](docs/publication-artifacts.md) for the
+evidence-state model and operator flow.
+
 Buildchain supports package and non-package projects through
 `.buildchain/buildchain.toml`. Legacy root `buildchain.toml` files remain
 readable, but new consumers should keep Buildchain-owned files under
@@ -212,12 +233,22 @@ plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
 gates preserve product-owned qualification and support decisions; they do not
 turn a schema-valid record into certification or shipped support.
 
-Buildchain's active GitHub Action surface is deliberately small:
+Buildchain's action registry currently contains six active entries. Four are
+direct consumer integration actions:
 
 - `actions/validate-config`
 - `actions/run-lifecycle`
 - `actions/promote-buildchain-ref`
 - `actions/report-buildchain-issue`
+
+Two additional release-authority components are also registered and versioned:
+
+- `actions/github-artifact-attestation`
+- `actions/macos-credential-island`
+
+`dist/site/workflow-registry.json#actions` is the machine-readable inventory;
+this split keeps the older four-action consumer list from being mistaken for
+the complete current registry.
 
 The active reusable workflow surfaces are:
 

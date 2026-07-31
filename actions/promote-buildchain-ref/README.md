@@ -1,28 +1,46 @@
+---
+status: active
+period: ongoing
+theme: buildchain-ref-promotion-action
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # promote-buildchain-ref
 
 Internal buildchain action for promoting verified buildchain release-line and
 compatibility refs from buildchain release channels:
 
-- `alpha/v2/v2.0` creates or reuses the next exact prerelease tag such as
-  `v2.0.1-alpha.0`, writes that version into package version state, points the
+- `alpha/v3/v3.0` creates or reuses the next exact prerelease tag such as
+  `v3.0.3-alpha.0`, writes that version into package version state, points the
   alpha and dev channel branches at the version commit, then promotes
-  `v2.0-alpha` and, when this is the highest published alpha minor, `v3-alpha`;
-- `release/v2/v2.0` creates or reuses the next exact release tag such as
-  `v2.0.0`, writes that version into package version state, points the release
+  `v3.0-alpha` and, when this is the highest published alpha minor, `v3-alpha`;
+- `release/v3/v3.0` creates or reuses the next exact release tag such as
+  `v3.0.2`, writes that version into package version state, points the release
   channel branch and release tags at the release commit, then prepares a second
-  source commit for the next exact prerelease tag such as `v2.0.1-alpha.0` and
-  points the alpha/dev channel branches plus `v2.0-alpha` at that prerelease
-  commit, and moves `v3-alpha` only if no higher v2 minor has published an alpha;
+  source commit for the next exact prerelease tag such as `v3.0.3-alpha.0` and
+  points the alpha/dev channel branches plus `v3.0-alpha` at that prerelease
+  commit, and moves `v3-alpha` only if no higher v3 minor has published an alpha;
 - `publish-gate/major` accepts a reviewed PR from a production release line such
-  as `release/v2/v2.0`, writes the next major production version such as
-  `v3.0.0`, points `publish-gate/major`, `release/v3/v3.0`, `v3.0`, and `v3`
-  at that release commit, then prepares `v3.0.1-alpha.0` for
-  `alpha/v3/v3.0`, `dev/v3/v3.0`, `v3.0-alpha`, and `v3-alpha`. The older `major-gate`
+  as `release/v3/v3.0`, writes the next major production version such as
+  `v4.0.0`, points `publish-gate/major`, `release/v4/v4.0`, `v4.0`, and `v4`
+  at that release commit, then prepares `v4.0.1-alpha.0` for
+  `alpha/v4/v4.0`, `dev/v4/v4.0`, `v4.0-alpha`, and `v4-alpha`. The older `major-gate`
   branch name is a compatibility alias only.
 
 The release branch name defines the minor line. For example,
-`release/v2/v2.1` creates `v2.1.N`, promotes `v2.1`, and promotes `v2` only
-when the next minor tag such as `v2.2` does not already exist.
+`release/v3/v3.1` creates `v3.1.N`, promotes `v3.1`, and promotes `v3` only
+when the next minor tag such as `v3.2` does not already exist.
 
 The action updates version state in `lerna.json`, root `package.json`, and
 workspace package manifests discovered from package manager metadata
@@ -134,7 +152,7 @@ trusted channel workflow:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
     generated-ref-update-token: ${{ github.token }}
     sha: ${{ github.sha }}
-    target-ref: release/v2/v2.0
+    target-ref: release/v3/v3.0
     publish-transaction: "true"
     publish-mode: publish-final-version
     publish-auth: trusted-publishing
@@ -219,6 +237,10 @@ and fail before publish-gate side effects if it no longer matches:
     promote-only-release-candidate: "true"
     release-candidate-passport-path: .buildchain/artifacts/release-candidate-passport.json
     release-candidate-build-summary-path: .buildchain/artifacts/build-summary.json
+    release-candidate-family-evidence-required: "true"
+    release-candidate-family-evidence-root: sha256:<initiative-family-root>
+    release-candidate-family-initiative-id: 2026-07-30-example-initiative
+    release-candidate-family-assignment-id: 2026-07-30-example-release
 ```
 
 The action validates repository, channel, source identity, platform matrix, and
@@ -228,6 +250,14 @@ identity accepts the exact source SHA, the PR merge ref SHA, or the promoted
 channel HEAD's Git tree SHA matching the passport tree hash. If validation
 fails, run or attach the verified channel PR build first instead of promoting a
 stale or unproven artifact set.
+
+The four family-evidence inputs are optional. When enabled, the action requires
+the candidate passport to carry the exact
+`kungfu-buildchain-initiative-family-release-evidence/v1` envelope and checks
+its family root, Initiative id, and Assignment id before any promotion
+mutation. Buildchain only transports and validates this adapter-edge release
+evidence; Kungfu Work Control remains authoritative for native Family State v1
+and its additive v2 typed envelope.
 
 When enabled, the action creates or resumes a release transaction keyed by
 repository, version, source SHA, and target ref. It persists that transaction to
@@ -243,6 +273,16 @@ consumer-owned lifecycle with the original transaction environment before
 Passport collection. This is explicit opt-in because registry publication and
 other provider mutations must not be replayed blindly; the option rejects
 `promote-existing-version`.
+
+Build-once callers additionally pass `publish-sealed-bundle-root` and
+`publish-sealed-bundle-manifest`. The action verifies the typed manifest and
+persists every declared file below
+`sealed-bundle/<candidate-root>/files/` on the same durable ref before it starts
+the publish command. A fresh runner can omit both inputs: the action restores
+the exact binary bundle into `.buildchain/recovered-publication/<version>/`,
+re-verifies it, and exports the recovered npm tarball through
+`BUILDCHAIN_SEALED_NPM_TARBALL` with its exact integrity and SHA-256. This path
+never repacks the npm tarball.
 
 The action runs `lifecycle.publish` from `buildchain.toml` or the explicit
 `publish-command` input, then validates publish evidence before exact tags and
@@ -275,6 +315,10 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_SEALED_BUNDLE_ROOT
+BUILDCHAIN_SEALED_NPM_TARBALL
+BUILDCHAIN_SEALED_NPM_INTEGRITY
+BUILDCHAIN_SEALED_NPM_SHA256
 BUILDCHAIN_REQUIRED_ARTIFACTS
 ```
 
@@ -287,11 +331,17 @@ before `lifecycle.publish`. Requirement descriptors may omit `digest`; final
 publish evidence may not.
 
 The action outputs `transaction-id`, `transaction-state`,
+`transaction-publication-state`, `transaction-sealed-bundle-root`,
+`transaction-resume-command`,
 `transaction-exact-tag`, `public-release-tag`, `transaction-release-sha`,
 `transaction-state-ref`, `transaction-state-sha`, `transaction-state-path`,
 `publish-evidence-path`, and `release-passport-path`, `release-passport-output-dir`,
 `release-passport-state-sha`, and `finalization-needed`.
 `transaction-state-ref` is the durable recovery location.
+`transaction-publication-state` provides the stable
+`prepared`, `sealed`, `package-published`, `alpha-complete`, or
+`release-complete` operator view. `transaction-resume-command` is the exact
+consumer-facing resume entrypoint bound into the sealed manifest.
 `release-passport-state-sha` is the durable ref commit after the generated
 `release-passport/*` files have been uploaded into that recovery ref.
 `finalization-needed=true` means publish evidence is valid, but protected branch
@@ -311,7 +361,11 @@ package releases, `public-release-tag` is derived
 from the published package version, while `transaction-exact-tag` remains the
 internal Buildchain transaction ref for recovery and audit. If the transaction is
 not complete yet, the action defers GitHub Release publication to the next
-idempotent promotion run.
+idempotent promotion run. When sealed release assets are present, those restored
+files replace caller-supplied artifact paths. After upload succeeds, the action
+writes the `github_release` milestone back to the durable transaction; an
+interruption before that write is safe to retry because release creation and
+asset replacement are idempotent.
 
 After a publish transaction reaches `complete`, the action generates the unified
 `buildchain-release-passport` in `.buildchain/release-passport` by default and
@@ -351,6 +405,23 @@ requires a `verified` verdict, complete platform coverage, a clean exact source
 revision, and then binds the result into `buildchain.release.json`. Missing,
 stale, falsified, incomplete, dirty, or tampered Passport evidence fails the
 release transaction closed.
+Set `release-passport-evidence-jsons` to newline-separated product-owned release
+evidence attachment indexes. Each JSON document must declare `schemaVersion`, a
+stable `id`, a product contract, and the exact release source SHA, tag, and
+channel. Buildchain copies and hashes the documents, verifies their coordinates
+against the final Passport, and retains them in the release evidence bundle
+without interpreting product-specific or legal claims.
+
+When release coordinates are not known until promotion, set
+`release-passport-attachment-command`. Buildchain supplies
+`BUILDCHAIN_RELEASE_SOURCE_SHA`, `BUILDCHAIN_RELEASE_TAG`,
+`BUILDCHAIN_RELEASE_CHANNEL`, `BUILDCHAIN_RELEASE_VERSION`,
+`BUILDCHAIN_RELEASE_DEPLOYMENT_COORDINATE`, `BUILDCHAIN_RELEASE_TARGET_REF`, and
+`BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR`; the command must emit a JSON array or
+an object with a non-empty `files` array. Direct Action callers may still use
+the v2 alias `release-passport-evidence-command`. Reusable v3 workflows reserve
+that older name for the distinct post-activation released-evidence command.
+
 Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
 "true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
 inside the final version-state workspace, after the release transaction has
@@ -446,15 +517,15 @@ so the mutation path cannot widen the authority descriptor.
 
 The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
-release tags are minor/major tags such as `v2.0` and `v2`, and floating alpha
-tags are minor-line tags such as `v2.0-alpha` plus cross-minor major tags such
+release tags are minor/major tags such as `v3.0` and `v3`, and floating alpha
+tags are minor-line tags such as `v3.0-alpha` plus cross-minor major tags such
 as `v3-alpha`. A major alpha tag only moves for the highest minor in that major
 with a published alpha, so older-line maintenance cannot roll consumers back.
 Bare tags such as `1.0.0` are not
 maintained as buildchain release entrypoints.
 
 Repository rulesets should protect exact tags, not every `v*` tag. A ruleset
-such as `refs/tags/v*` also protects floating channel tags like `v2.0-alpha` and `v3-alpha`,
+such as `refs/tags/v*` also protects floating channel tags like `v3.0-alpha` and `v3-alpha`,
 which Buildchain must update after exact tags and publish evidence are durable.
 Use an exact-tag rule such as `refs/tags/v*.*.*` for immutable evidence tags and
 leave floating channel tags mutable for the promotion token.

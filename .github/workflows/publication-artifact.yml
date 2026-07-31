@@ -216,9 +216,16 @@ jobs:
             let runtimeFullRef = runtimeRef;
             let runtimeClass = normalizeClass(runtimeRef);
             const officialChannel = officialChannelRef.test(requested);
-            let runtimeOverride = requested !== "" && !officialChannel;
+            const pinnedSelfRuntime =
+              sameRepositoryWorkflow &&
+              exactSha.test(requested) &&
+              exactSha.test(shellRef) &&
+              requested.toLowerCase() === shellRef.toLowerCase();
+            let runtimeOverride = requested !== "" && !officialChannel && !pinnedSelfRuntime;
             let trustDecision = officialChannel
               ? "official-channel"
+              : pinnedSelfRuntime
+                ? "pinned-self"
               : runtimeOverride
                 ? "override-requested"
                 : "stable-default";
@@ -459,7 +466,15 @@ jobs:
           ].join("\n"));
           NODE
 
-      - name: Build publication
+      - name: Hydrate cumulative publication registry
+        if: ${{ inputs.prepare-paper-package }}
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/publication-registry-hydrate.mjs"
+          --cwd .
+
+      - name: Prove publication reproducibility
         id: build
         if: ${{ steps.toolchain.outputs.command != '' }}
         shell: bash
@@ -470,25 +485,30 @@ jobs:
           BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST: ${{ steps.toolchain.outputs.digest }}
           BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND: ${{ steps.toolchain.outputs.command }}
           BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF: ${{ steps.toolchain.outputs.image-ref }}
+          INPUT_PACKAGE_NAME: ${{ inputs.package-name }}
+          INPUT_PREPARE_PAPER_PACKAGE: ${{ inputs.prepare-paper-package }}
         run: |
           set -euo pipefail
-          if [ "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE" = "latex-docker" ]; then
-            docker pull "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF"
-            workspace_rel="${PWD#"$GITHUB_WORKSPACE"}"
-            workspace_rel="${workspace_rel#/}"
-            docker_workdir="/workspace"
-            if [ -n "$workspace_rel" ]; then
-              docker_workdir="/workspace/$workspace_rel"
+          mkdir -p .buildchain
+          package_args=()
+          if [ -n "$INPUT_PACKAGE_NAME" ]; then
+            package_args+=(--package-name "$INPUT_PACKAGE_NAME")
+          fi
+          qualification_args=()
+          if [ "$INPUT_PREPARE_PAPER_PACKAGE" != "true" ]; then
+            qualification_args+=(--allow-unpinned-toolchain)
+          fi
+          if ! node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" \
+              publication-artifact reproducibility \
+              --cwd . \
+              --source-sha "${GITHUB_SHA}" \
+              --promote \
+              "${package_args[@]}" \
+              "${qualification_args[@]}" \
+              --json > .buildchain/publication-reproducibility-result.json; then
+            if [ -f .buildchain/publication-reproducibility-result.json ]; then
+              cat .buildchain/publication-reproducibility-result.json
             fi
-            docker run --rm \
-              -v "$GITHUB_WORKSPACE:/workspace" \
-              -w "$docker_workdir" \
-              "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF" \
-              bash -lc "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND"
-          elif [ "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE" = "custom-command" ]; then
-            bash -lc "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND"
-          else
-            echo "::error::unsupported publication toolchain: $BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE"
             exit 1
           fi
 
@@ -499,38 +519,32 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: ${{ inputs.verify-command }}
 
-      - name: Hydrate cumulative publication registry
-        if: ${{ inputs.prepare-paper-package }}
-        shell: bash
-        working-directory: ${{ inputs.working-directory }}
-        run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/publication-registry-hydrate.mjs"
-          --cwd .
-
-      - name: Collect publication artifact manifest
+      - name: Read qualified publication artifact manifest
         id: manifest
         shell: bash
         working-directory: ${{ inputs.working-directory }}
         env:
-          BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE: ${{ steps.toolchain.outputs.type }}
-          BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE: ${{ steps.toolchain.outputs.image }}
-          BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST: ${{ steps.toolchain.outputs.digest }}
-          BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND: ${{ steps.toolchain.outputs.command }}
+          INPUT_PREPARE_PAPER_PACKAGE: ${{ inputs.prepare-paper-package }}
         run: |
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" publication-artifact manifest \
-            --cwd . \
-            --source-sha "${GITHUB_SHA}" \
-            --json > "${GITHUB_WORKSPACE}/.buildchain/publication-result.json"
           node <<'NODE'
           const fs = require("node:fs");
-          const result = JSON.parse(fs.readFileSync(`${process.env.GITHUB_WORKSPACE}/.buildchain/publication-result.json`, "utf8"));
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-path=${result.manifestPath}\n`);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `passport-path=${result.passportPath}\n`);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `registry-path=${result.registryPath || ""}\n`);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-json=${JSON.stringify(result.manifest)}\n`);
+          const receipt = JSON.parse(fs.readFileSync(".buildchain/publication/reproducibility-receipt.json", "utf8"));
+          const requireQualifying = process.env.INPUT_PREPARE_PAPER_PACKAGE === "true";
+          if (receipt.status !== "passed" || (requireQualifying && receipt.qualifying !== true)) {
+            throw new Error(`publication reproducibility receipt is not qualifying: ${receipt.status}`);
+          }
+          const publication = receipt.builds?.[0]?.publication || {};
+          if (!publication.manifestPath || !publication.passportPath) {
+            throw new Error("publication reproducibility receipt is missing manifest paths");
+          }
+          const manifest = JSON.parse(fs.readFileSync(publication.manifestPath, "utf8"));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-path=${publication.manifestPath}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `passport-path=${publication.passportPath}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `registry-path=${publication.registryPath || ""}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-json=${JSON.stringify(manifest)}\n`);
           NODE
 
-      - name: Prepare deterministic npm paper package
+      - name: Bind qualified npm paper package
         id: package
         if: ${{ inputs.prepare-paper-package }}
         shell: bash
@@ -542,22 +556,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p .buildchain/paper-release
-          package_args=()
-          if [ -n "$INPUT_PACKAGE_NAME" ]; then
-            package_args+=(--package-name "$INPUT_PACKAGE_NAME")
-          fi
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" publication-artifact npm-package \
-            --cwd . \
-            --output-dir .buildchain/publication/npm-package \
-            "${package_args[@]}" \
-            --json > .buildchain/paper-release/package-result.json
           node --input-type=module <<'NODE'
           import fs from "node:fs";
           import path from "node:path";
           import { spawnSync } from "node:child_process";
 
-          const result = JSON.parse(fs.readFileSync(".buildchain/paper-release/package-result.json", "utf8"));
-          const packageDir = path.resolve(result.outputDir);
+          const receipt = JSON.parse(fs.readFileSync(".buildchain/publication/reproducibility-receipt.json", "utf8"));
+          if (receipt.status !== "passed" || receipt.qualifying !== true) {
+            throw new Error(`publication reproducibility receipt is not qualifying: ${receipt.status}`);
+          }
+          const qualified = receipt.builds?.[0];
+          const packageDir = path.resolve(".buildchain/publication/npm-package");
+          const packageJson = JSON.parse(fs.readFileSync(path.join(packageDir, "package.json"), "utf8"));
+          if (process.env.INPUT_PACKAGE_NAME && process.env.INPUT_PACKAGE_NAME !== packageJson.name) {
+            throw new Error(`qualified package name mismatch: expected ${process.env.INPUT_PACKAGE_NAME}, got ${packageJson.name}`);
+          }
           const pack = spawnSync("npm", ["pack", "--dry-run", "--json", "--registry=https://registry.npmjs.org/"], {
             cwd: packageDir,
             encoding: "utf8",
@@ -566,14 +579,17 @@ jobs:
           const packResult = JSON.parse(pack.stdout);
           const first = Array.isArray(packResult) ? packResult[0] : packResult;
           if (!first?.integrity) throw new Error("npm pack --dry-run did not report sha512 integrity");
+          if (first.integrity !== qualified?.npmPackage?.integrity) {
+            throw new Error(`qualified npm integrity changed: ${qualified?.npmPackage?.integrity || "(missing)"} != ${first.integrity}`);
+          }
           const targetRef = process.env.INPUT_TARGET_REF || "";
           const channel = targetRef.startsWith("release/") ? "release" : "alpha";
           const distTag = process.env.INPUT_PUBLISH_DIST_TAG || (channel === "release" ? "latest" : "alpha");
           const requiredArtifacts = [{
             group: "node",
             kind: "npm",
-            name: result.package.name,
-            ref: result.package.version,
+            name: packageJson.name,
+            ref: packageJson.version,
             digest: first.integrity,
             integrity: first.integrity,
             role: "main",
@@ -584,18 +600,24 @@ jobs:
             contract: "kungfu-buildchain-paper-release-build-summary",
             repository: process.env.GITHUB_REPOSITORY || "",
             sourceSha: process.env.GITHUB_SHA || "",
-            package: { name: result.package.name, version: result.package.version },
-            publication: {
-              manifestPath: ".buildchain/publication/publication-artifact.json",
-              passportPath: ".buildchain/publication/publication-artifact-passport.json",
-              registryPath: result.publication?.registryPath || "",
-              primaryArtifact: result.publication?.primaryArtifact || "",
+            package: { name: packageJson.name, version: packageJson.version },
+            reproducibility: {
+              receiptPath: ".buildchain/publication/reproducibility-receipt.json",
+              receiptDigest: receipt.receiptDigest,
+              npmIntegrity: qualified.npmPackage.integrity,
+              npmSha256: qualified.npmPackage.sha256,
             },
-            platforms: [{ id: "paper", manifestPath: ".buildchain/publication/publication-artifact.json" }],
+            publication: {
+              manifestPath: qualified.publication.manifestPath,
+              passportPath: qualified.publication.passportPath,
+              registryPath: qualified.publication.registryPath || "",
+              primaryArtifact: qualified.artifacts?.[0]?.path || "",
+            },
+            platforms: [{ id: "paper", manifestPath: qualified.publication.manifestPath }],
           }, null, 2)}\n`);
           const output = process.env.GITHUB_OUTPUT;
-          fs.appendFileSync(output, `package-name=${result.package.name}\n`);
-          fs.appendFileSync(output, `package-version=${result.package.version}\n`);
+          fs.appendFileSync(output, `package-name=${packageJson.name}\n`);
+          fs.appendFileSync(output, `package-version=${packageJson.version}\n`);
           fs.appendFileSync(output, `dist-tag=${distTag}\n`);
           NODE
 
@@ -625,7 +647,7 @@ jobs:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
             [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.runtime-checkout.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || 'failure' }}"},{"id":"build","status":"${{ steps.build.outcome }}"},{"id":"verify","status":"${{ steps.verify.outcome }}"},{"id":"collect","status":"${{ (steps.manifest.outcome == 'success' && (!inputs.prepare-paper-package || steps.package.outcome == 'success')) && 'success' || 'failure' }}"},{"id":"aggregate","status":"${{ steps.artifact-upload.outcome }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.manifest.outcome == 'success' && format('[{{"kind":"publication-manifest","path":"{0}/{1}"}},{{"kind":"publication-passport","path":"{0}/{2}"}}]', inputs.working-directory, steps.manifest.outputs.manifest-path, steps.manifest.outputs.passport-path) || '[]' }}
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.manifest.outcome == 'success' && format('[{{"kind":"publication-manifest","path":"{0}/{1}"}},{{"kind":"publication-passport","path":"{0}/{2}"}},{{"kind":"publication-reproducibility","path":"{0}/.buildchain/publication/reproducibility-receipt.json"}}]', inputs.working-directory, steps.manifest.outputs.manifest-path, steps.manifest.outputs.passport-path) || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.artifact-upload.outcome == 'success' && '' || 'publication-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Publication artifact did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-publication-controller-receipt-${{ steps.controller-identities.outputs.source-sha }}

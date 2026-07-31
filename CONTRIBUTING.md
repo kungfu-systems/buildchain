@@ -120,7 +120,7 @@ release/vX/vX.Y -> publish-gate/major
   branch prefixes, max merges, and dry-run are all declared inputs.
 - When a Buildchain change needs downstream validation before stable refs move,
   publish a temporary runtime train ref such as
-  `train/v2/v2.3/<capability>` and ask consumers to run trusted
+  `train/v3/v3.0/<capability>` and ask consumers to run trusted
   `workflow_dispatch` with `buildchain-ref` set to that train. Keep the pull
   request against the `dev/*` branch; the train is only a validation pointer,
   not a pending merge target. After validation succeeds, merge into the active

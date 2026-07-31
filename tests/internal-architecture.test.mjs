@@ -15,9 +15,10 @@ const index = JSON.parse(
 test("internal architecture index covers implementations, tests, and dependency direction", () => {
   assert.deepEqual(checkInternalArchitecture({ root, index }), {
     schemaVersion: 1,
-    capabilities: 5,
-    implementations: 8,
+    capabilities: 12,
+    implementations: 24,
     dependencyRules: 4,
+    dependencyCycles: 0,
   });
 });
 
@@ -40,5 +41,22 @@ test("internal architecture check rejects a capability without regression tests"
   assert.throws(
     () => checkInternalArchitecture({ root, index: missingTests }),
     /promotion-policy: test mapping is empty/,
+  );
+});
+
+test("internal architecture check rejects dependency cycles", () => {
+  const sourceOverrides = new Map([
+    [
+      "actions/promote-buildchain-ref/internal/promotion-policy.js",
+      'import "./version-state.js";\n',
+    ],
+    [
+      "actions/promote-buildchain-ref/internal/version-state.js",
+      'import "./promotion-policy.js";\n',
+    ],
+  ]);
+  assert.throws(
+    () => checkInternalArchitecture({ root, index, sourceOverrides }),
+    /internal dependency cycle: .*promotion-policy\.js.*version-state\.js/s,
   );
 });

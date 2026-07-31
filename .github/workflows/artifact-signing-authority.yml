@@ -128,6 +128,7 @@ jobs:
           name: authority-intake-${{ inputs.correlation-id }}
           path: .buildchain/authority-intake
       - name: Materialize sealed unsigned Apple artifact
+        if: ${{ matrix.request.kind != 'app-bundle' }}
         run: node scripts/materialize-artifact-signing-request.mjs
         env:
           BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
@@ -135,6 +136,7 @@ jobs:
           BUILDCHAIN_SIGNING_EXPECTED_PROFILE: apple-developer-id
           BUILDCHAIN_UNSIGNED_OUTPUT: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
       - name: Developer ID sign and notarize Apple artifact
+        if: ${{ matrix.request.kind != 'app-bundle' }}
         run: bash scripts/sign-macos-mach-o-request.sh
         env:
           BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
@@ -147,13 +149,37 @@ jobs:
           BUILDCHAIN_APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
           BUILDCHAIN_APPLE_NOTARY_KEY_ID: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
           BUILDCHAIN_APPLE_NOTARY_ISSUER: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
+      - name: Developer ID sign, notarize, and staple Apple application
+        if: ${{ matrix.request.kind == 'app-bundle' }}
+        id: app-signing
+        uses: ./actions/macos-credential-island
+        with:
+          input-root: .buildchain/authority-intake
+          output-root: .buildchain/native-work/${{ matrix.request.slug }}/credential-artifact
+          source-repository: ${{ inputs.source-repository }}
+          source-sha: ${{ matrix.request.sourceSha }}
+          source-tree-sha: ${{ matrix.request.sourceTreeSha }}
+          source-ref: ${{ matrix.request.sourceSha }}
+          buildchain-runtime-sha: ${{ inputs.expected-runtime-sha }}
+          artifact-name: native-${{ matrix.request.slug }}-credential
+          platform-id: ${{ matrix.request.platformId }}-credential
+          artifact-id: ${{ matrix.request.id }}
+          artifact-relative-output: product/release
+          expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
+          certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+          certificate-p12-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
+          certificate-password: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
+          notary-api-key-p8-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
+          notary-api-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
+          notary-api-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
       - name: Seal native signed result
         run: node scripts/finalize-native-artifact-signing-result.mjs
         env:
           BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
           BUILDCHAIN_SIGNING_REQUEST_PATH: ${{ matrix.request.request }}
-          BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
-          BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ matrix.request.slug }}/provider-evidence.json
+          BUILDCHAIN_SIGNED_PAYLOAD: ${{ matrix.request.kind == 'app-bundle' && steps.app-signing.outputs.zip-path || format('.buildchain/native-work/{0}/signed-payload', matrix.request.slug) }}
+          BUILDCHAIN_SIGNING_EVIDENCE: ${{ matrix.request.kind == 'app-bundle' && steps.app-signing.outputs.evidence-path || format('.buildchain/native-work/{0}/provider-evidence.json', matrix.request.slug) }}
+          BUILDCHAIN_SIGNING_CREDENTIAL_ARTIFACT_ROOT: ${{ matrix.request.kind == 'app-bundle' && steps.app-signing.outputs.artifact-root || '' }}
           BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/provider-results/${{ matrix.request.slug }}
       - uses: actions/upload-artifact@v7.0.1
         with:

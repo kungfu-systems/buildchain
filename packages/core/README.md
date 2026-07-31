@@ -24,6 +24,13 @@ Current shared surfaces:
   through `@kungfu-tech/buildchain/badges`.
 - publication artifact manifests, source bundles, and publication artifact
   passports through `@kungfu-tech/buildchain/publication-artifact`.
+- two-clean-build byte reproducibility receipts through
+  `@kungfu-tech/buildchain/publication-reproducibility`.
+- build-once publication bundle manifests and exact-byte verification through
+  `@kungfu-tech/buildchain/publication-sealed-bundle`.
+- governed Paper work-branch start/submit, fleet audit/update, scaffold,
+  preflight, status, npm bootstrap, build, Alpha, and resume plans through
+  `@kungfu-tech/buildchain/paper`.
 
 ## Toolkit Imports
 
@@ -56,15 +63,20 @@ import {
 CommonJS scripts can use dynamic imports for the same package surfaces:
 
 ```js
-const { createBuildchainLogger } = await import("@kungfu-tech/buildchain/logging");
-const { collectRunnerDiagnostics } = await import("@kungfu-tech/buildchain/diagnostics");
+const { createBuildchainLogger } =
+  await import("@kungfu-tech/buildchain/logging");
+const { collectRunnerDiagnostics } =
+  await import("@kungfu-tech/buildchain/diagnostics");
 ```
 
 Build facts consumers can collect source-bound module/product facts before
 publishing and pass those facts into the release passport:
 
 ```js
-import { collectModuleBuildFacts, writeBuildFacts } from "@kungfu-tech/buildchain/build-facts";
+import {
+  collectModuleBuildFacts,
+  writeBuildFacts,
+} from "@kungfu-tech/buildchain/build-facts";
 
 const fact = collectModuleBuildFacts({ moduleId: "native-core" });
 writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
@@ -94,6 +106,48 @@ import { writePublicationArtifact } from "@kungfu-tech/buildchain/publication-ar
 writePublicationArtifact({ sourceSha: process.env.GITHUB_SHA });
 ```
 
+Before publication admission, prove the exact PDF, source bundle, manifests,
+and npm tarball twice from the same Git commit:
+
+```js
+import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
+
+const receipt = verifyPublicationReproducibility({
+  sourceSha: process.env.GITHUB_SHA,
+  promote: true,
+});
+if (!receipt.qualifying) throw new Error("publication is not reproducible");
+```
+
+Bind the promoted bytes into the durable build-once publication envelope:
+
+```js
+import {
+  createPublicationSealedBundle,
+  verifyPublicationSealedBundle,
+} from "@kungfu-tech/buildchain/publication-sealed-bundle";
+```
+
+The sealed manifest names the exact npm tarball and release assets. Promotion
+persists those binary files before registry publication and verifies them again
+when a fresh runner resumes.
+
+Paper automation can use the same typed contracts as the CLI:
+
+```js
+import {
+  collectPaperPreflight,
+  collectPaperStatus,
+  planPaperMigration,
+  planPaperScaffold,
+  writePaperMigration,
+} from "@kungfu-tech/buildchain/paper";
+```
+
+Planning and observation are side-effect free. `writePaperScaffold()` and
+`writePaperMigration()` perform the bounded local writes, while external
+mutations remain explicit CLI operations guarded by `--execute`.
+
 Web-surface validation stays in core because both local scripts and GitHub
 Actions need the same fail-closed interpretation of project, channel, deploy,
 retention, and staging security declarations.
@@ -102,7 +156,10 @@ README badge consumers should import the public badge subpath and treat
 Markdown as a projection of the returned facts:
 
 ```js
-import { collectBadgeBundleFacts, renderBadgeBundleBlock } from "@kungfu-tech/buildchain/badges";
+import {
+  collectBadgeBundleFacts,
+  renderBadgeBundleBlock,
+} from "@kungfu-tech/buildchain/badges";
 
 const facts = await collectBadgeBundleFacts({ cwd: process.cwd() });
 const markdown = renderBadgeBundleBlock(facts);

@@ -31,6 +31,7 @@ export const IMPACT_LEDGER_CONTRACT = "kungfu-buildchain-impact";
 export const AGENT_INDEX_CONTRACT = "kungfu-buildchain-agent-index";
 export const PRODUCT_MECHANISM_CONTRACT = "kungfu-buildchain-product-mechanism";
 export const RELEASE_CHECK_REPORT_CONTRACT = "kungfu-buildchain-release-check-report";
+export const RELEASE_EVIDENCE_ATTACHMENT_CONTRACT = "kungfu-buildchain-release-evidence-attachment";
 export const KFD2_RELEASE_TRUST_PASSPORT_CONTRACT = "kungfu-buildchain-kfd-2-release-trust-passport-audit";
 export const KFD2_TRUST_PROOF_CONTRACT = "kungfu-buildchain-kfd-2-trust-proof";
 export const INVARIANT_PASSPORT_GATE_CONTRACT = "buildchain.invariant-passport-gate/v1";
@@ -42,6 +43,7 @@ const CONTRACTS = new Set([
   IMPACT_LEDGER_CONTRACT,
   AGENT_INDEX_CONTRACT,
   PRODUCT_MECHANISM_CONTRACT,
+  RELEASE_EVIDENCE_ATTACHMENT_CONTRACT,
 ]);
 
 function nowIso() {
@@ -247,6 +249,65 @@ function writeJsonFile(filePath, value) {
 function writeTextFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, value.endsWith("\n") ? value : `${value}\n`);
+}
+
+function normalizeReleaseEvidenceAttachment(meta, {
+  cwd,
+  expectedSourceSha,
+  expectedTag,
+  expectedChannel,
+  index,
+} = {}) {
+  const document = meta?.value;
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new Error(`releaseEvidenceJsons[${index}] must be a JSON object`);
+  }
+  const inputPath = resolveJsonInputPath(meta.path, { cwd });
+  if (!inputPath) {
+    throw new Error(`releaseEvidenceJsons[${index}] must be an existing JSON file path`);
+  }
+  if (Number(document.schemaVersion) !== 1) {
+    throw new Error(`releaseEvidenceJsons[${index}].schemaVersion must be 1`);
+  }
+  const id = nonEmptyString(document.id, `releaseEvidenceJsons[${index}].id`);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(id)) {
+    throw new Error(`releaseEvidenceJsons[${index}].id must use only letters, digits, dot, underscore, or hyphen`);
+  }
+  const contract = nonEmptyString(document.contract, `releaseEvidenceJsons[${index}].contract`);
+  const release = document.release;
+  if (!release || typeof release !== "object" || Array.isArray(release)) {
+    throw new Error(`releaseEvidenceJsons[${index}].release must be a JSON object`);
+  }
+  const sourceSha = nonEmptyString(release.sourceSha, `releaseEvidenceJsons[${index}].release.sourceSha`);
+  const tag = nonEmptyString(release.tag, `releaseEvidenceJsons[${index}].release.tag`);
+  const channel = nonEmptyString(release.channel, `releaseEvidenceJsons[${index}].release.channel`);
+  if (!/^[0-9a-f]{40}$/i.test(sourceSha)) {
+    throw new Error(`releaseEvidenceJsons[${index}].release.sourceSha must be a full 40-character Git SHA`);
+  }
+  if (!expectedSourceSha || sourceSha !== expectedSourceSha) {
+    throw new Error(`releaseEvidenceJsons[${index}].release.sourceSha must match the release passport source SHA`);
+  }
+  if (!expectedTag || tag !== expectedTag) {
+    throw new Error(`releaseEvidenceJsons[${index}].release.tag must match the release passport tag`);
+  }
+  if (!expectedChannel || channel !== expectedChannel) {
+    throw new Error(`releaseEvidenceJsons[${index}].release.channel must match the release passport channel`);
+  }
+  const relativePath = `release-evidence-${id}.json`;
+  return {
+    document,
+    inputPath,
+    reference: {
+      schemaVersion: 1,
+      contract: RELEASE_EVIDENCE_ATTACHMENT_CONTRACT,
+      id,
+      kind: optionalString(document.kind || "product-release-evidence"),
+      documentContract: contract,
+      path: relativePath,
+      sha256: sha256Text(stableJson(document)),
+      release: { sourceSha, tag, channel },
+    },
+  };
 }
 
 function inferPlatformFromName(name) {
@@ -1165,6 +1226,7 @@ export function createReleasePassport({
   kfdSupport = undefined,
   kfdSupportEvidencePath = "",
   invariantPassports = undefined,
+  releaseEvidence = [],
   kfdAgentHubEvidence = undefined,
   kfdAgentHubEvidencePath = "",
   controllerReceipts = [],
@@ -1366,6 +1428,7 @@ export function createReleasePassport({
     ...(normalizedKfdSupport ? { kfdSupport: normalizedKfdSupport } : {}),
     ...(normalizedKfdAgentHub ? { kfdAgentHub: normalizedKfdAgentHub } : {}),
     ...(invariantPassports ? { invariantPassports } : {}),
+    ...(releaseEvidence.length > 0 ? { releaseEvidence } : {}),
     ...(normalizedControllerReceipts.length > 0 ? { controllerReceipts: normalizedControllerReceipts } : {}),
     ...(normalizedGitHubArtifactAttestations.length > 0
       ? { githubArtifactAttestations: normalizedGitHubArtifactAttestations }
@@ -1414,6 +1477,7 @@ export function createReleasePassport({
       kfdSupport: normalizedKfdSupport ? optionalString(kfdSupportEvidencePath || "kfd-support.json") : "",
       kfdAgentHub: normalizedKfdAgentHub ? optionalString(kfdAgentHubEvidencePath || "kfd-agent-hub-evidence.json") : "",
       invariantPassports: invariantPassports ? "invariantPassports" : "",
+      releaseEvidence: releaseEvidence.map((entry) => entry.path),
       impact: impactPath,
       checkReport: checkReportPath,
       agentIndex: agentIndexPath,
@@ -1458,6 +1522,7 @@ export function collectGitHubReleasePassport({
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
   invariantPassportCommand = "",
+  releaseEvidenceJsons = [],
   kfdAgentHubEvidenceJson = "",
   controllerReceiptReferences = [],
   githubArtifactAttestationPolicyJsons = [],
@@ -1533,6 +1598,15 @@ export function collectGitHubReleasePassport({
   });
   if (invariantPassportCommandMeta.value) invariantPassportMetas.push(invariantPassportCommandMeta);
   const invariantPassports = createInvariantPassportGate(invariantPassportMetas);
+  const releaseEvidenceMetas = (releaseEvidenceJsons || [])
+    .filter(Boolean)
+    .map((evidenceJson) =>
+      parseJsonInputWithMeta(evidenceJson, undefined, {
+        cwd,
+        label: "releaseEvidenceJsons entry",
+      }),
+    )
+    .filter((meta) => meta.value);
   const kfdAgentHubEvidenceMeta = parseJsonInputWithMeta(
     kfdAgentHubEvidenceJson,
     undefined,
@@ -1560,6 +1634,28 @@ export function collectGitHubReleasePassport({
   ];
   const resolvedTag = tag || release.tag_name || release.name || "";
   const resolvedOutputDir = path.resolve(cwd, outputDir);
+  const resolvedChannel = optionalString(releaseExtra.channel || publish.channel);
+  const releaseEvidenceAttachments = releaseEvidenceMetas.map((meta, index) =>
+    normalizeReleaseEvidenceAttachment(meta, {
+      cwd,
+      expectedSourceSha: sourceSha,
+      expectedTag: resolvedTag,
+      expectedChannel: resolvedChannel,
+      index,
+    }),
+  );
+  const releaseEvidenceIds = new Set();
+  for (const { reference } of releaseEvidenceAttachments) {
+    if (releaseEvidenceIds.has(reference.id)) {
+      throw new Error(`release evidence attachment id must be unique: ${reference.id}`);
+    }
+    releaseEvidenceIds.add(reference.id);
+  }
+  for (const { inputPath, reference } of releaseEvidenceAttachments) {
+    const destinationPath = path.join(resolvedOutputDir, reference.path);
+    fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+    fs.copyFileSync(inputPath, destinationPath);
+  }
   const resolvedCheckedAt = optionalString(checkedAt) || nowIso();
   const productMechanism = defaultProductMechanism({ repository, productName });
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: resolvedTag, sourceSha, workflow });
@@ -1638,6 +1734,7 @@ export function collectGitHubReleasePassport({
     kfdSupport,
     kfdSupportEvidencePath: kfdSupport ? "kfd-support.json" : "",
     invariantPassports,
+    releaseEvidence: releaseEvidenceAttachments.map(({ reference }) => reference),
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value
       ? { ...kfdAgentHubEvidenceMeta, path: "kfd-agent-hub-evidence.json" }
       : undefined,
@@ -1661,6 +1758,7 @@ export function collectGitHubReleasePassport({
     productMechanism,
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value,
     kfdSupportEvidence: kfdSupport,
+    releaseEvidenceDocuments: releaseEvidenceAttachments,
     checkedAt: resolvedCheckedAt,
   });
   const files = {
@@ -1682,7 +1780,9 @@ export function collectGitHubReleasePassport({
     schemaVersion: 1,
     contract: "kungfu-buildchain-release-passport-collection",
     outputDir: resolvedOutputDir,
-    files: Object.keys(files).concat("llms.txt"),
+    files: Object.keys(files)
+      .concat(releaseEvidenceAttachments.map(({ reference }) => reference.path))
+      .concat("llms.txt"),
     passport,
     artifactEvidence,
     checkReport,
@@ -1957,18 +2057,17 @@ function findEvidenceForArtifact(artifact, evidenceIndex) {
   return undefined;
 }
 
-export function createReleaseCheckReport({
+function validateReleaseEvidenceContracts({
   passport,
   artifactEvidence,
-  publishEvidence,
   impact,
   agentIndex,
   productMechanism,
   kfdAgentHubEvidence,
   kfdSupportEvidence,
-  checkedAt = nowIso(),
-} = {}) {
-  const issues = [];
+  checkedAt,
+  issues,
+}) {
   validateContract(passport, RELEASE_PASSPORT_CONTRACT, "passport", issues);
   validateContract(artifactEvidence, ARTIFACT_EVIDENCE_CONTRACT, "artifactEvidence", issues);
   validateContract(impact, IMPACT_LEDGER_CONTRACT, "impact", issues);
@@ -2026,79 +2125,142 @@ export function createReleaseCheckReport({
       ));
     }
   }
+}
 
-  const tag = passport?.release?.tag || "";
-  if (!tag) {
-    issues.push(issue("error", "release.tag", "release.tag is required"));
-  }
-  if (!passport?.release?.sourceSha) {
-    issues.push(issue("warning", "release.sourceSha", "release.sourceSha is recommended"));
-  }
-  const artifacts = Array.isArray(passport?.artifacts) ? passport.artifacts : [];
-  const normalizedPublishEvidence = normalizePublishEvidence(publishEvidence);
-  const publishEvidenceSupplied =
-    Boolean(passport?.evidence?.publishEvidence) ||
-    (publishEvidence && typeof publishEvidence === "object" && Object.keys(publishEvidence).length > 0);
+function validateReleaseEvidenceAttachments({
+  passport,
+  artifactEvidence,
+  normalizedPublishEvidence,
+  releaseEvidenceDocuments,
+  issues,
+}) {
   const evidenceArtifacts = [
     ...(Array.isArray(artifactEvidence?.artifacts) ? artifactEvidence.artifacts : []),
     ...(normalizedPublishEvidence?.artifacts || []),
   ];
-  if (publishEvidenceSupplied || passport?.packageSet) {
-    const checkPublishField = (value, label) => {
-      if (!value) {
-        issues.push(issue("error", `publishEvidence.${label}`, `publishEvidence.${label} is required`));
+  const releaseEvidence = Array.isArray(passport?.releaseEvidence) ? passport.releaseEvidence : [];
+  const releaseEvidenceByCoordinate = new Map(
+    releaseEvidenceDocuments.map((entry) => [
+      `${entry?.reference?.id || ""}\0${entry?.reference?.path || ""}`,
+      entry,
+    ]),
+  );
+  const releaseEvidenceIds = new Set();
+  const releaseEvidencePaths = new Set();
+  for (const [index, reference] of releaseEvidence.entries()) {
+    const label = `releaseEvidence[${index}]`;
+    if (!reference || typeof reference !== "object" || Array.isArray(reference)) {
+      issues.push(issue("error", `${label}.object`, `${label} must be a JSON object`));
+      continue;
+    }
+    if (reference.contract !== RELEASE_EVIDENCE_ATTACHMENT_CONTRACT) {
+      issues.push(issue("error", `${label}.contract`, `${label}.contract must be ${RELEASE_EVIDENCE_ATTACHMENT_CONTRACT}`));
+    }
+    if (!reference.id || !reference.path || !reference.sha256 || !reference.documentContract) {
+      issues.push(issue("error", `${label}.identity`, `${label} must include id, path, sha256, and documentContract`));
+      continue;
+    }
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(reference.id)) {
+      issues.push(issue("error", `${label}.id`, `${label}.id must use only letters, digits, dot, underscore, or hyphen`));
+    }
+    const expectedPath = `release-evidence-${reference.id}.json`;
+    if (reference.path !== expectedPath) {
+      issues.push(issue("error", `${label}.path`, `${label}.path must be ${expectedPath}`));
+    }
+    if (releaseEvidenceIds.has(reference.id)) {
+      issues.push(issue("error", `${label}.id`, `${label}.id must be unique`));
+    }
+    if (releaseEvidencePaths.has(reference.path)) {
+      issues.push(issue("error", `${label}.path`, `${label}.path must be unique`));
+    }
+    releaseEvidenceIds.add(reference.id);
+    releaseEvidencePaths.add(reference.path);
+    const loaded = releaseEvidenceByCoordinate.get(`${reference.id}\0${reference.path}`);
+    if (!loaded?.document) {
+      issues.push(issue("error", `${label}.missing`, `${label} document is not independently retrievable`, {
+        id: reference.id,
+        path: reference.path,
+      }));
+      continue;
+    }
+    const document = loaded.document;
+    if (document.contract !== reference.documentContract) {
+      issues.push(issue("error", `${label}.documentContract`, `${label} document contract differs from its passport reference`));
+    }
+    const digest = sha256Text(stableJson(document));
+    if (digest !== reference.sha256) {
+      issues.push(issue("error", `${label}.sha256`, `${label} document digest differs from its passport reference`));
+    }
+    for (const field of ["sourceSha", "tag", "channel"]) {
+      const expected = passport?.release?.[field] || "";
+      const declared = document?.release?.[field] || "";
+      if (!declared || declared !== expected || reference?.release?.[field] !== expected) {
+        issues.push(issue("error", `${label}.release.${field}`, `${label} ${field} must match the release passport`));
       }
-    };
-    if (Number(normalizedPublishEvidence?.schema) !== 1) {
-      issues.push(issue("error", "publishEvidence.schema", "publishEvidence.schema must be 1"));
-    }
-    checkPublishField(normalizedPublishEvidence?.version, "version");
-    checkPublishField(normalizedPublishEvidence?.channel, "channel");
-    checkPublishField(normalizedPublishEvidence?.sourceSha, "sourceSha");
-    checkPublishField(normalizedPublishEvidence?.releaseSha, "releaseSha");
-    checkPublishField(normalizedPublishEvidence?.targetRef, "targetRef");
-    checkPublishField(normalizedPublishEvidence?.releaseMaterialSha, "releaseMaterialSha");
-    checkPublishField(normalizedPublishEvidence?.publishToolingSha, "publishToolingSha");
-    if (!Array.isArray(normalizedPublishEvidence?.artifacts) || normalizedPublishEvidence.artifacts.length === 0) {
-      issues.push(issue("error", "publishEvidence.artifacts", "publishEvidence.artifacts must include published artifacts"));
-    }
-    if ((normalizedPublishEvidence?.artifacts || []).some((artifact) => artifact.action)) {
-      try {
-        const validation = validateTransactionPublishEvidence({
-          evidence: publishEvidence,
-          version: normalizedPublishEvidence.version,
-          channel: normalizedPublishEvidence.channel,
-          sourceSha: normalizedPublishEvidence.sourceSha,
-          releaseSha: normalizedPublishEvidence.releaseSha,
-          targetRef: normalizedPublishEvidence.targetRef,
-          releaseMaterialSha: normalizedPublishEvidence.releaseMaterialSha,
-          publishToolingSha: normalizedPublishEvidence.publishToolingSha,
-        });
-        for (const error of validation.errors) {
-          issues.push(issue("error", "publishEvidence.artifactProvenance", error));
-        }
-      } catch (error) {
-        issues.push(issue(
-          "error",
-          "publishEvidence.artifactProvenance",
-          `publish artifact provenance is invalid: ${error.message}`,
-        ));
-      }
-    }
-    if (passport?.release?.sourceSha && normalizedPublishEvidence?.sourceSha && passport.release.sourceSha !== normalizedPublishEvidence.sourceSha) {
-      issues.push(issue("error", "publishEvidence.sourceSha.mismatch", "publishEvidence.sourceSha must match passport.release.sourceSha"));
-    }
-    if (passport?.release?.releaseSha && normalizedPublishEvidence?.releaseSha && passport.release.releaseSha !== normalizedPublishEvidence.releaseSha) {
-      issues.push(issue("error", "publishEvidence.releaseSha.mismatch", "publishEvidence.releaseSha must match passport.release.releaseSha"));
-    }
-    if (passport?.release?.targetRef && normalizedPublishEvidence?.targetRef && passport.release.targetRef !== normalizedPublishEvidence.targetRef) {
-      issues.push(issue("error", "publishEvidence.targetRef.mismatch", "publishEvidence.targetRef must match passport.release.targetRef"));
     }
   }
+  return { evidenceArtifacts, releaseEvidence };
+}
+
+function validatePublishEvidenceSection({ passport, publishEvidence, normalizedPublishEvidence, issues }) {
+  const publishEvidenceSupplied =
+    Boolean(passport?.evidence?.publishEvidence) ||
+    (publishEvidence && typeof publishEvidence === "object" && Object.keys(publishEvidence).length > 0);
+  if (!publishEvidenceSupplied && !passport?.packageSet) {
+    return;
+  }
+  const checkPublishField = (value, label) => {
+    if (!value) {
+      issues.push(issue("error", `publishEvidence.${label}`, `publishEvidence.${label} is required`));
+    }
+  };
+  if (Number(normalizedPublishEvidence?.schema) !== 1) {
+    issues.push(issue("error", "publishEvidence.schema", "publishEvidence.schema must be 1"));
+  }
+  for (const field of ["version", "channel", "sourceSha", "releaseSha", "targetRef", "releaseMaterialSha", "publishToolingSha"]) {
+    checkPublishField(normalizedPublishEvidence?.[field], field);
+  }
+  if (!Array.isArray(normalizedPublishEvidence?.artifacts) || normalizedPublishEvidence.artifacts.length === 0) {
+    issues.push(issue("error", "publishEvidence.artifacts", "publishEvidence.artifacts must include published artifacts"));
+  }
+  if ((normalizedPublishEvidence?.artifacts || []).some((artifact) => artifact.action)) {
+    try {
+      const validation = validateTransactionPublishEvidence({
+        evidence: publishEvidence,
+        version: normalizedPublishEvidence.version,
+        channel: normalizedPublishEvidence.channel,
+        sourceSha: normalizedPublishEvidence.sourceSha,
+        releaseSha: normalizedPublishEvidence.releaseSha,
+        targetRef: normalizedPublishEvidence.targetRef,
+        releaseMaterialSha: normalizedPublishEvidence.releaseMaterialSha,
+        publishToolingSha: normalizedPublishEvidence.publishToolingSha,
+      });
+      for (const error of validation.errors) {
+        issues.push(issue("error", "publishEvidence.artifactProvenance", error));
+      }
+    } catch (error) {
+      issues.push(issue(
+        "error",
+        "publishEvidence.artifactProvenance",
+        `publish artifact provenance is invalid: ${error.message}`,
+      ));
+    }
+  }
+  for (const field of ["sourceSha", "releaseSha", "targetRef"]) {
+    if (passport?.release?.[field] && normalizedPublishEvidence?.[field] && passport.release[field] !== normalizedPublishEvidence[field]) {
+      issues.push(issue(
+        "error",
+        `publishEvidence.${field}.mismatch`,
+        `publishEvidence.${field} must match passport.release.${field}`,
+      ));
+    }
+  }
+}
+
+function validateReleaseArtifacts({ artifacts, evidenceIndex, issues }) {
   if (artifacts.length === 0) {
     issues.push(issue("error", "artifacts.empty", "release passport must list at least one artifact"));
   }
-  const evidenceIndex = indexEvidenceArtifacts(evidenceArtifacts);
   for (const artifact of artifacts) {
     if (!artifact.name) {
       issues.push(issue("error", "artifact.name", "artifact name is required"));
@@ -2119,15 +2281,7 @@ export function createReleaseCheckReport({
     if (artifact.digest && evidenceDigest && artifact.digest !== evidenceDigest && artifact.digest !== `sha256:${evidenceDigest}`) {
       issues.push(issue("error", "artifact.digest.mismatch", `artifact ${artifact.name} digest differs between passport and evidence`));
     }
-    for (const field of [
-      "action",
-      "platform",
-      "contract_major",
-      "parent_digest",
-      "content",
-      "release",
-      "verification",
-    ]) {
+    for (const field of ["action", "platform", "contract_major", "parent_digest", "content", "release", "verification"]) {
       if (
         Object.prototype.hasOwnProperty.call(evidence, field) &&
         stableJson(artifact[field]) !== stableJson(evidence[field])
@@ -2140,47 +2294,54 @@ export function createReleaseCheckReport({
       }
     }
   }
-  if (passport?.packageSet) {
-    const main = passport.packageSet.main || {};
-    const checkPackageEntry = (entry, label, role) => {
-      if (!entry.name || !entry.version) {
-        issues.push(issue("error", `${label}.identity`, `${label} must include name and version`));
-      }
-      if (!entry.distTag) {
-        issues.push(issue("error", `${label}.distTag`, `${label} must include distTag`));
-      }
-      if (!entry.digest) {
-        issues.push(issue("error", `${label}.digest`, `${label} must include digest`));
-      }
-      if (entry.name && entry.version) {
-        const artifact = findEvidenceForArtifact({
-          group: "node",
-          kind: "npm",
-          name: entry.name,
-          ref: entry.version,
-          digest: entry.digest,
-        }, evidenceIndex);
-        if (!artifact) {
-          issues.push(issue("error", `${label}.artifact`, `${label} must have matching npm artifact evidence`, {
-            role,
-            name: entry.name,
-            version: entry.version,
-          }));
-        }
-      }
-    };
-    checkPackageEntry(main, "packageSet.main", "main");
-    const platforms = Array.isArray(passport.packageSet.platforms) ? passport.packageSet.platforms : [];
-    if (platforms.length < 3) {
-      issues.push(issue("error", "packageSet.platforms", "packageSet must include at least three platform packages"));
-    }
-    for (const [index, entry] of platforms.entries()) {
-      checkPackageEntry(entry, `packageSet.platforms[${index}]`, "platform");
-    }
-    if (!Array.isArray(passport?.publish?.packages) || passport.publish.packages.length !== 1 + platforms.length) {
-      issues.push(issue("error", "publish.packages", "publish.packages must summarize main and platform packages"));
-    }
+}
+
+function validatePackageSet({ passport, evidenceIndex, issues }) {
+  if (!passport?.packageSet) {
+    return;
   }
+  const main = passport.packageSet.main || {};
+  const checkPackageEntry = (entry, label, role) => {
+    if (!entry.name || !entry.version) {
+      issues.push(issue("error", `${label}.identity`, `${label} must include name and version`));
+    }
+    if (!entry.distTag) {
+      issues.push(issue("error", `${label}.distTag`, `${label} must include distTag`));
+    }
+    if (!entry.digest) {
+      issues.push(issue("error", `${label}.digest`, `${label} must include digest`));
+    }
+    if (entry.name && entry.version) {
+      const artifact = findEvidenceForArtifact({
+        group: "node",
+        kind: "npm",
+        name: entry.name,
+        ref: entry.version,
+        digest: entry.digest,
+      }, evidenceIndex);
+      if (!artifact) {
+        issues.push(issue("error", `${label}.artifact`, `${label} must have matching npm artifact evidence`, {
+          role,
+          name: entry.name,
+          version: entry.version,
+        }));
+      }
+    }
+  };
+  checkPackageEntry(main, "packageSet.main", "main");
+  const platforms = Array.isArray(passport.packageSet.platforms) ? passport.packageSet.platforms : [];
+  if (platforms.length < 3) {
+    issues.push(issue("error", "packageSet.platforms", "packageSet must include at least three platform packages"));
+  }
+  for (const [index, entry] of platforms.entries()) {
+    checkPackageEntry(entry, `packageSet.platforms[${index}]`, "platform");
+  }
+  if (!Array.isArray(passport?.publish?.packages) || passport.publish.packages.length !== 1 + platforms.length) {
+    issues.push(issue("error", "publish.packages", "publish.packages must summarize main and platform packages"));
+  }
+}
+
+function validateReleaseState({ passport, issues }) {
   if (passport?.trustedPublishing) {
     if (!passport.trustedPublishing.provider) {
       issues.push(issue("error", "trustedPublishing.provider", "trustedPublishing.provider is required"));
@@ -2198,17 +2359,10 @@ export function createReleaseCheckReport({
     } else if (passport.transaction.state !== "complete") {
       issues.push(issue("error", "transaction.state", "release passport transaction state must be complete"));
     }
-    if (!passport.transaction.exactTag) {
-      issues.push(issue("error", "transaction.exactTag", "transaction.exactTag is required"));
-    }
-    if (!passport.transaction.releaseSha) {
-      issues.push(issue("error", "transaction.releaseSha", "transaction.releaseSha is required"));
-    }
-    if (!passport.transaction.releaseMaterialSha) {
-      issues.push(issue("error", "transaction.releaseMaterialSha", "transaction.releaseMaterialSha is required"));
-    }
-    if (!passport.transaction.stateRef) {
-      issues.push(issue("error", "transaction.stateRef", "transaction.stateRef is required"));
+    for (const field of ["exactTag", "releaseSha", "releaseMaterialSha", "stateRef"]) {
+      if (!passport.transaction[field]) {
+        issues.push(issue("error", `transaction.${field}`, `transaction.${field} is required`));
+      }
     }
   }
   if (passport?.anchorManifest) {
@@ -2219,77 +2373,92 @@ export function createReleaseCheckReport({
       issues.push(issue("error", "anchorManifest.fields", "anchorManifest.fields must be an object"));
     }
   }
-  if (passport?.versionMaterial) {
-    if (passport.versionMaterial.contract !== "kungfu-buildchain-anchored-version-material/v1") {
-      issues.push(issue(
-        "error",
-        "versionMaterial.contract",
-        "versionMaterial contract must be kungfu-buildchain-anchored-version-material/v1",
-      ));
-    }
-    if (!passport.versionMaterial.alpha?.tree || !passport.versionMaterial.release?.tree) {
-      issues.push(issue(
-        "error",
-        "versionMaterial.tree",
-        "versionMaterial must record alpha and release tree identities",
-      ));
-    }
-    const allowedPaths = Array.isArray(passport.versionMaterial.allowedPaths)
-      ? passport.versionMaterial.allowedPaths
-      : [];
-    const derivedFiles = Array.isArray(passport.versionMaterial.derivedFiles)
-      ? passport.versionMaterial.derivedFiles
-      : [];
-    for (const [index, file] of derivedFiles.entries()) {
-      if (!file?.path || !file?.sha256 || !allowedPaths.includes(file.path)) {
-        issues.push(issue(
-          "error",
-          `versionMaterial.derivedFiles[${index}]`,
-          "derived version material must have a path, digest, and matching allowed path",
-        ));
-      }
-    }
-    for (const side of ["alpha", "release"]) {
-      const material = Array.isArray(passport.versionMaterial[side]?.material)
-        ? passport.versionMaterial[side].material
-        : [];
-      for (const [index, file] of material.entries()) {
-        if (
-          !file?.path ||
-          !allowedPaths.includes(file.path) ||
-          file.present !== true ||
-          !/^sha256:[0-9a-f]{64}$/.test(file.sha256 || "")
-        ) {
-          issues.push(issue(
-            "error",
-            `versionMaterial.${side}.material[${index}]`,
-            "version material must have an allowed path, present bytes, and sha256 digest",
-          ));
-        }
-      }
-    }
-  }
   if (!passport?.runnerPolicy?.productionDefault) {
     issues.push(issue("warning", "runnerPolicy.productionDefault", "runner policy should record the production default"));
   }
+}
+
+function validateVersionMaterial({ passport, issues }) {
+  if (!passport?.versionMaterial) {
+    return;
+  }
+  if (passport.versionMaterial.contract !== "kungfu-buildchain-anchored-version-material/v1") {
+    issues.push(issue(
+      "error",
+      "versionMaterial.contract",
+      "versionMaterial contract must be kungfu-buildchain-anchored-version-material/v1",
+    ));
+  }
+  if (!passport.versionMaterial.alpha?.tree || !passport.versionMaterial.release?.tree) {
+    issues.push(issue(
+      "error",
+      "versionMaterial.tree",
+      "versionMaterial must record alpha and release tree identities",
+    ));
+  }
+  const allowedPaths = Array.isArray(passport.versionMaterial.allowedPaths)
+    ? passport.versionMaterial.allowedPaths
+    : [];
+  const derivedFiles = Array.isArray(passport.versionMaterial.derivedFiles)
+    ? passport.versionMaterial.derivedFiles
+    : [];
+  for (const [index, file] of derivedFiles.entries()) {
+    if (!file?.path || !file?.sha256 || !allowedPaths.includes(file.path)) {
+      issues.push(issue(
+        "error",
+        `versionMaterial.derivedFiles[${index}]`,
+        "derived version material must have a path, digest, and matching allowed path",
+      ));
+    }
+  }
+  for (const side of ["alpha", "release"]) {
+    const material = Array.isArray(passport.versionMaterial[side]?.material)
+      ? passport.versionMaterial[side].material
+      : [];
+    for (const [index, file] of material.entries()) {
+      if (
+        !file?.path ||
+        !allowedPaths.includes(file.path) ||
+        file.present !== true ||
+        !/^sha256:[0-9a-f]{64}$/.test(file.sha256 || "")
+      ) {
+        issues.push(issue(
+          "error",
+          `versionMaterial.${side}.material[${index}]`,
+          "version material must have an allowed path, present bytes, and sha256 digest",
+        ));
+      }
+    }
+  }
+}
+
+function createReleaseImpactContext({ passport, impact }) {
   const surfaceImpacts = Array.isArray(impact?.surfaceImpacts) ? impact.surfaceImpacts : [];
   const passportSurfaceImpacts = Array.isArray(passport?.surfaceImpacts) ? passport.surfaceImpacts : [];
   const impactRelease = impact?.release && typeof impact.release === "object" && !Array.isArray(impact.release)
     ? impact.release
     : {};
-  const impactVersion = optionalString(impactRelease.version);
-  const impactLine = optionalString(impactRelease.line);
   const passportVersion = optionalString(passport?.release?.publishedVersion || passport?.release?.package?.version);
   const passportTargetRef = optionalString(passport?.release?.targetRef || passport?.release?.target_ref);
   const passportTargetLineMatch = passportTargetRef.match(/^(?:alpha|release)\/v(\d+)\/v\1\.(\d+)$/);
-  const passportLine = optionalString(
-    passport?.release?.line ||
-    (passportTargetLineMatch ? `v${passportTargetLineMatch[1]}.${passportTargetLineMatch[2]}` : ""),
-  );
-  const impactClassification = normalizeImpactLevel(impact?.classification);
-  const declaredFinalImpact = normalizeImpactLevel(impact?.versionImpact?.final || impact?.classification);
-  const computedFinalImpact = highestImpactLevel(surfaceImpacts.map((entry) => entry.impact));
-  const requiredSurfaceImpacts = surfaceImpactRequirement({ passport, impact });
+  return {
+    surfaceImpacts,
+    passportSurfaceImpacts,
+    impactVersion: optionalString(impactRelease.version),
+    impactLine: optionalString(impactRelease.line),
+    passportVersion,
+    passportLine: optionalString(
+      passport?.release?.line ||
+      (passportTargetLineMatch ? `v${passportTargetLineMatch[1]}.${passportTargetLineMatch[2]}` : ""),
+    ),
+    impactClassification: normalizeImpactLevel(impact?.classification),
+    declaredFinalImpact: normalizeImpactLevel(impact?.versionImpact?.final || impact?.classification),
+    computedFinalImpact: highestImpactLevel(surfaceImpacts.map((entry) => entry.impact)),
+    requiredSurfaceImpacts: surfaceImpactRequirement({ passport, impact }),
+  };
+}
+
+function validatePassportTrustSections({ passport, issues }) {
   const kfd1Metadata = resolveKfd1Metadata();
   issues.push(...validateKfd1ReleaseGateEvidence(passport?.[kfd1Metadata.key], { metadata: kfd1Metadata }));
   validateKfd2ReleaseTrustPassportAudit(passport?.["kfd-2"], issues);
@@ -2305,35 +2474,51 @@ export function createReleaseCheckReport({
       issues.push(issue("error", "kfd-3.metadata", error.message));
     }
   }
-  if (passport?.invariantPassports) {
-    const section = passport.invariantPassports;
-    if (section.contract !== INVARIANT_PASSPORT_GATE_CONTRACT) {
-      issues.push(issue("error", "invariantPassports.contract", `invariantPassports.contract must be ${INVARIANT_PASSPORT_GATE_CONTRACT}`));
-    }
-    if (section.result !== "passed") {
-      issues.push(issue("error", "invariantPassports.result", "invariantPassports.result must be passed"));
-    }
-    if (!Array.isArray(section.passports) || section.passports.length === 0) {
-      issues.push(issue("error", "invariantPassports.empty", "invariantPassports must contain at least one verified passport"));
-    }
-    const acceptedSourceShas = new Set([
-      passport?.release?.sourceSha,
-      passport?.release?.builtSourceSha,
-      passport?.release?.promotionChannelSha,
-    ].filter(Boolean));
-    for (const [index, entry] of (section.passports || []).entries()) {
-      const prefix = `invariantPassports.passports[${index}]`;
-      if (entry.verdict !== "verified") issues.push(issue("error", `${prefix}.verdict`, `${prefix}.verdict must be verified`));
-      if (entry.coverage?.complete !== true) issues.push(issue("error", `${prefix}.coverage`, `${prefix}.coverage.complete must be true`));
-      if (entry.source?.dirty !== false) issues.push(issue("error", `${prefix}.source.dirty`, `${prefix}.source.dirty must be false`));
-      if (acceptedSourceShas.size > 0 && !acceptedSourceShas.has(entry.source?.revision)) {
-        issues.push(issue("error", `${prefix}.source.revision`, `${prefix}.source.revision must match a release source identity`));
-      }
-      if (!/^sha256:[0-9a-f]{64}$/.test(optionalString(entry.passportRoot))) issues.push(issue("error", `${prefix}.passportRoot`, `${prefix}.passportRoot is invalid`));
-      if (!Array.isArray(entry.platforms) || entry.platforms.length === 0) issues.push(issue("error", `${prefix}.platforms`, `${prefix}.platforms must be non-empty`));
-      if (!Array.isArray(entry.residualRisk)) issues.push(issue("error", `${prefix}.residualRisk`, `${prefix}.residualRisk must be an array`));
-    }
+  if (!passport?.invariantPassports) {
+    return;
   }
+  const section = passport.invariantPassports;
+  if (section.contract !== INVARIANT_PASSPORT_GATE_CONTRACT) {
+    issues.push(issue("error", "invariantPassports.contract", `invariantPassports.contract must be ${INVARIANT_PASSPORT_GATE_CONTRACT}`));
+  }
+  if (section.result !== "passed") {
+    issues.push(issue("error", "invariantPassports.result", "invariantPassports.result must be passed"));
+  }
+  if (!Array.isArray(section.passports) || section.passports.length === 0) {
+    issues.push(issue("error", "invariantPassports.empty", "invariantPassports must contain at least one verified passport"));
+  }
+  const acceptedSourceShas = new Set([
+    passport?.release?.sourceSha,
+    passport?.release?.builtSourceSha,
+    passport?.release?.promotionChannelSha,
+  ].filter(Boolean));
+  for (const [index, entry] of (section.passports || []).entries()) {
+    const prefix = `invariantPassports.passports[${index}]`;
+    if (entry.verdict !== "verified") issues.push(issue("error", `${prefix}.verdict`, `${prefix}.verdict must be verified`));
+    if (entry.coverage?.complete !== true) issues.push(issue("error", `${prefix}.coverage`, `${prefix}.coverage.complete must be true`));
+    if (entry.source?.dirty !== false) issues.push(issue("error", `${prefix}.source.dirty`, `${prefix}.source.dirty must be false`));
+    if (acceptedSourceShas.size > 0 && !acceptedSourceShas.has(entry.source?.revision)) {
+      issues.push(issue("error", `${prefix}.source.revision`, `${prefix}.source.revision must match a release source identity`));
+    }
+    if (!/^sha256:[0-9a-f]{64}$/.test(optionalString(entry.passportRoot))) issues.push(issue("error", `${prefix}.passportRoot`, `${prefix}.passportRoot is invalid`));
+    if (!Array.isArray(entry.platforms) || entry.platforms.length === 0) issues.push(issue("error", `${prefix}.platforms`, `${prefix}.platforms must be non-empty`));
+    if (!Array.isArray(entry.residualRisk)) issues.push(issue("error", `${prefix}.residualRisk`, `${prefix}.residualRisk must be an array`));
+  }
+}
+
+function validateReleaseImpact({ passport, impact, context, issues }) {
+  const {
+    surfaceImpacts,
+    passportSurfaceImpacts,
+    impactVersion,
+    impactLine,
+    passportVersion,
+    passportLine,
+    impactClassification,
+    declaredFinalImpact,
+    computedFinalImpact,
+    requiredSurfaceImpacts,
+  } = context;
   if (impactVersion) {
     if (!impactLine) {
       issues.push(issue("error", "impact.release.line", "version-bound impact requires release.line"));
@@ -2397,6 +2582,21 @@ export function createReleaseCheckReport({
   if (passport?.versionImpact?.final && impact?.versionImpact?.final && passport.versionImpact.final !== impact.versionImpact.final) {
     issues.push(issue("error", "passport.versionImpact.final", "passport.versionImpact.final must match impact.versionImpact.final"));
   }
+}
+
+function buildReleaseCheckReport({
+  checkedAt,
+  issues,
+  requiredSurfaceImpacts,
+  artifacts,
+  evidenceArtifacts,
+  passport,
+  impact,
+  agentIndex,
+  productMechanism,
+  surfaceImpacts,
+  releaseEvidence,
+}) {
   const ok = issues.every((entry) => entry.level !== "error");
   return {
     schemaVersion: 1,
@@ -2423,9 +2623,76 @@ export function createReleaseCheckReport({
       surfaceImpactsRequired: requiredSurfaceImpacts.required,
       surfaceImpactCount: surfaceImpacts.length,
       versionImpact: impact?.versionImpact?.final || "",
+      releaseEvidenceCount: releaseEvidence.length,
     },
     issues,
   };
+}
+
+export function createReleaseCheckReport({
+  passport,
+  artifactEvidence,
+  publishEvidence,
+  impact,
+  agentIndex,
+  productMechanism,
+  kfdAgentHubEvidence,
+  kfdSupportEvidence,
+  releaseEvidenceDocuments = [],
+  checkedAt = nowIso(),
+} = {}) {
+  const issues = [];
+  validateReleaseEvidenceContracts({
+    passport,
+    artifactEvidence,
+    impact,
+    agentIndex,
+    productMechanism,
+    kfdAgentHubEvidence,
+    kfdSupportEvidence,
+    checkedAt,
+    issues,
+  });
+
+  const tag = passport?.release?.tag || "";
+  if (!tag) {
+    issues.push(issue("error", "release.tag", "release.tag is required"));
+  }
+  if (!passport?.release?.sourceSha) {
+    issues.push(issue("warning", "release.sourceSha", "release.sourceSha is recommended"));
+  }
+  const artifacts = Array.isArray(passport?.artifacts) ? passport.artifacts : [];
+  const normalizedPublishEvidence = normalizePublishEvidence(publishEvidence);
+  const { evidenceArtifacts, releaseEvidence } = validateReleaseEvidenceAttachments({
+    passport,
+    artifactEvidence,
+    normalizedPublishEvidence,
+    releaseEvidenceDocuments,
+    issues,
+  });
+  validatePublishEvidenceSection({ passport, publishEvidence, normalizedPublishEvidence, issues });
+  const evidenceIndex = indexEvidenceArtifacts(evidenceArtifacts);
+  validateReleaseArtifacts({ artifacts, evidenceIndex, issues });
+  validatePackageSet({ passport, evidenceIndex, issues });
+  validateReleaseState({ passport, issues });
+  validateVersionMaterial({ passport, issues });
+  const impactContext = createReleaseImpactContext({ passport, impact });
+  const { requiredSurfaceImpacts, surfaceImpacts } = impactContext;
+  validatePassportTrustSections({ passport, issues });
+  validateReleaseImpact({ passport, impact, context: impactContext, issues });
+  return buildReleaseCheckReport({
+    checkedAt,
+    issues,
+    requiredSurfaceImpacts,
+    artifacts,
+    evidenceArtifacts,
+    passport,
+    impact,
+    agentIndex,
+    productMechanism,
+    surfaceImpacts,
+    releaseEvidence,
+  });
 }
 
 export async function readJsonFromLocation(
@@ -2518,6 +2785,20 @@ export async function verifyReleasePassport({
     kfdSupportEvidenceLocation
       ? await readJsonFromLocation(kfdSupportEvidenceLocation)
       : await resolveSiblingJson(basePath, passport.evidence?.kfdSupport) || undefined;
+  const releaseEvidenceDocuments = [];
+  for (const reference of Array.isArray(passport.releaseEvidence) ? passport.releaseEvidence : []) {
+    const id = String(reference?.id || "");
+    const expectedPath = `release-evidence-${id}.json`;
+    const safePath =
+      /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(id) &&
+      reference?.path === expectedPath;
+    releaseEvidenceDocuments.push({
+      reference,
+      document: safePath
+        ? await resolveSiblingJson(basePath, reference.path)
+        : undefined,
+    });
+  }
   return createReleaseCheckReport({
     passport,
     artifactEvidence,
@@ -2527,6 +2808,7 @@ export async function verifyReleasePassport({
     productMechanism,
     kfdAgentHubEvidence,
     kfdSupportEvidence,
+    releaseEvidenceDocuments,
     checkedAt,
   });
 }

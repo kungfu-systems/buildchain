@@ -8,14 +8,20 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d9ae3dea43788f32b8a65bcc50044bb29fb268a354b5b1fe3558cb4250e2b83b",
+      "digest": "sha256:728cea6d09cfe3714a6e95e5ce7c02ab200c6d53823c5ab0e4a2ff3b01eb6e08",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/badges",
@@ -28,7 +34,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/build-facts",
@@ -41,20 +53,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d9ae3dea43788f32b8a65bcc50044bb29fb268a354b5b1fe3558cb4250e2b83b",
+      "digest": "sha256:728cea6d09cfe3714a6e95e5ce7c02ab200c6d53823c5ab0e4a2ff3b01eb6e08",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -67,7 +91,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-verification-envelope",
@@ -80,7 +110,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/github-artifact-attestation",
@@ -93,7 +129,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-signing",
@@ -106,7 +148,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-signing-result",
@@ -119,7 +167,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/detached-artifact-signature",
@@ -132,7 +186,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/anchored-version-material",
@@ -145,20 +205,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:325ec94cd696d84dfb084add313b3110bde410db0a5822e1fecd3988fef51022",
+      "digest": "sha256:b36bbd70ebd7dffdba2ab3161cbea8adfed0cd72b418ba587a4d0e5aecbd94dc",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/candidate-timeline",
@@ -171,7 +243,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/channel-candidate",
@@ -184,20 +262,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/cache-evidence",
       "export": "./cache-evidence",
       "target": "./packages/core/cache-evidence.js",
-      "digest": "sha256:9f8453c53d7f31bccbfc9cdf5c5e62578d531c08fd213416845f753f92ee1d2e",
+      "digest": "sha256:9b19957c2f42c20bcc36621741381e471133ad02647d7ffa0d98a7eca49c126d",
       "summary": "Content-addressed cache operation receipts and source/platform-bound evidence-set verification APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
@@ -210,20 +300,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
-      "digest": "sha256:be62d59d4a6e18e8fe96a98539012cd8db82976eea2593540db80a8522d52e73",
+      "digest": "sha256:21d14194f9b876927c54b53cecf8265b23085b05f98d57c5526ef2a4a033962f",
       "summary": "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/homebrew",
@@ -236,7 +338,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/issue-reporting",
@@ -249,7 +357,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/kfd",
@@ -262,7 +376,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/kfd-product-gates",
@@ -275,7 +395,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/kfd-agent-hub",
@@ -288,7 +414,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/buildchain-layout",
@@ -301,7 +433,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-line-bootstrap",
@@ -314,7 +452,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/readme-badges",
@@ -327,20 +471,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:680a821f732f3da344c0ecc7a6c8f4178ac268694c43890f677e4c05ad5c3a7e",
+      "digest": "sha256:d8c73e29d45f93e45efd77ce80a1a0ef0153123c8e350958f710500f418f8315",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/logging",
@@ -353,7 +509,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/portable-dev-cache",
@@ -366,20 +528,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/publication-artifact",
       "export": "./publication-artifact",
       "target": "./packages/core/publication-artifact.js",
-      "digest": "sha256:3c565ff115c1d6b161311227f99e3b2bbc0142f2be09cd95e07f35b1f168beef",
+      "digest": "sha256:d6213ebc05edd8d37fe61efdc5daac62063da73c9cd33bf182febdad4e1713a0",
       "summary": "Publication artifact manifest, source bundle, and publication passport APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/publication-package",
@@ -392,20 +566,89 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-reproducibility",
+      "export": "./publication-reproducibility",
+      "target": "./packages/core/publication-reproducibility.js",
+      "digest": "sha256:ce857ae600c4abb88b21c180c68f014044b3ea673c97b32227806c7bd91f6879",
+      "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-sealed-bundle",
+      "export": "./publication-sealed-bundle",
+      "target": "./packages/core/publication-sealed-bundle.js",
+      "digest": "sha256:9b1405a04548c9a87863c2cf410224f6cd7b44e06b76e0de0f7b8052029bc92d",
+      "summary": "Build-once publication bundle manifests and exact-byte resume verification APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/paper",
+      "export": "./paper",
+      "target": "./packages/core/paper.js",
+      "digest": "sha256:9e92cd56383d09ea020f7e9b80bc87ae61ab1e66f4cd771dcb5e918708b7bbc4",
+      "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication-authority.js",
-      "digest": "sha256:c1b9e696669d4e6ee661ec0528244509b6b0f832ec4fad16386344b90ad91367",
+      "digest": "sha256:8d00e41772b01064a96c6962ccad6db9cc555f91a5eb5966da3357b83d10f082",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
@@ -418,7 +661,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
@@ -431,20 +680,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:4aa2aeeb39516ae17db4d671ee8ce5fdce552a969db9858d8128f1a897acee89",
+      "digest": "sha256:5fc4c3b26d2fb0ea1b30f1e8913fd3a3fb7a8f69689f0f9ad2cff1a7555e7799",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/kfd-gate",
@@ -457,20 +718,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release-candidate.js",
-      "digest": "sha256:8d47b3dc103be8056fd2c4adec637efc663896dfd55d27a4642d0ee49ad0ded2",
+      "digest": "sha256:5ca9d360681ee0a508c3533416d2e591723289bc398e2575dbfac3c0cbf3358b",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/stable-candidate-ledger",
@@ -483,20 +756,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:46f9f5dd3c27da361b9b4dad88df6630d77d025e13a7c3711cc844ed598d449d",
+      "digest": "sha256:f177e3a60a1463db9a83b04a00f5cf0a015d68281da0d545245760856f6dfaf0",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-passport-contract",
@@ -509,20 +794,32 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
-      "digest": "sha256:74eecd2917cabbf9b2e2f7c37c75bb924ecaaa72d0b94255d5c5ab01820c26f2",
+      "digest": "sha256:a74aa99143964266c0076697e949dd423a8a71f63969913b847aaa740e76073c",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-activation-transaction",
@@ -535,7 +832,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/surface-manifest",
@@ -548,7 +851,13 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
@@ -561,14 +870,20 @@
         "developer",
         "agent"
       ],
-      "maturity": "stable"
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     }
   ],
   "docs": [
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:49da688f9f8b726a9169a3e4b246cb6ef07c6c626ea15c22f0b26ba1a37a58b4"
+      "digest": "sha256:9afe80ef29fb5cce140ffc7980c41172495878726e5504e47914b8dc7af8fc1f"
     },
     {
       "id": "build-facts",

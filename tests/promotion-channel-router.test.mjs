@@ -89,6 +89,40 @@ test("train and exact-SHA overrides retain auto-only selection and target shell 
   );
 });
 
+test("an exact runtime pin matching the reusable workflow SHA is not an override", () => {
+  const sha = "a".repeat(40);
+  assert.deepEqual(resolvePromotionChannel({
+    ...base,
+    targetRef: "alpha/v3/v3.0",
+    requestedRef: sha,
+    routerRef: sha,
+    routerSha: sha.toUpperCase(),
+  }), {
+    targetRef: "alpha/v3/v3.0",
+    publicationChannel: "alpha",
+    channel: "alpha",
+    major: 3,
+    shellRef: "v3-alpha",
+    runtimeRef: sha,
+    overrideUsed: false,
+    selectionSource: "trusted-router-sha",
+    reason: `explicit Buildchain runtime ref ${sha} matches the reusable workflow SHA`,
+  });
+});
+
+test("a matching workflow ref cannot authorize a different runtime SHA", () => {
+  const requestedRef = "a".repeat(40);
+  const result = resolvePromotionChannel({
+    ...base,
+    targetRef: "alpha/v3/v3.0",
+    requestedRef,
+    routerRef: requestedRef,
+    routerSha: "b".repeat(40),
+  });
+  assert.equal(result.overrideUsed, true);
+  assert.equal(result.selectionSource, "explicit-buildchain-ref");
+});
+
 test("floating promotion refs resolve once even when the ref moves during routing", async () => {
   const firstV3 = "1".repeat(40);
   const movedV3 = "2".repeat(40);

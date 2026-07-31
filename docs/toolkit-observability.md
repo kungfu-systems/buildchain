@@ -1,3 +1,21 @@
+---
+status: draft
+period: ongoing
+theme: buildchain-observability
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Toolkit Observability
 
 Buildchain ships a small logging toolkit for repository workflows and project
@@ -232,6 +250,10 @@ are recorded as unavailable instead of failing the diagnostics artifact. Call
 compiler cache data. Native diagnostics also expose `compilerCaches` and
 `nativeCacheDirs` as top-level fields in each diagnostics artifact and aggregate
 summary, so reviewers do not have to dig through nested cache sections first.
+For reusable builds, sccache outcomes enter structured current-run evidence only
+when a sibling `compiler-cache-preparation.json` proves the counters were reset
+after install and before build; cumulative stats without that receipt remain
+explicitly unavailable.
 
 Process samples are intentionally summarized before they become long-lived
 artifacts. The summary records requested parallelism, the source of that value

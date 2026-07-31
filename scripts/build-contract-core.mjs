@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { macosJitRunnerLabel } from "./aws-macos-jit-core.mjs";
+import { windowsJitRunnerLabel } from "./aws-windows-jit-core.mjs";
 
 export const RUNNER_PRESETS = Object.freeze({
   "github-hosted": [
@@ -58,6 +60,36 @@ export const RUNNER_PRESETS = Object.freeze({
       name: "Windows x64",
       platform: "windows",
       runner: '["self-hosted","Windows","X64","kungfu-build-v4-windows-x64"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+  ],
+  "aws-us-codebuild-linux": [
+    {
+      id: "linux-x64",
+      name: "Linux x64 (AWS CodeBuild burst)",
+      platform: "linux",
+      provider: "aws-codebuild",
+      runner: '["aws-codebuild-dynamic"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+  ],
+  "aws-us-ec2-windows-jit": [
+    {
+      id: "windows-x64",
+      name: "Windows x64 (AWS EC2 one-job JIT)",
+      platform: "windows",
+      provider: "aws-ec2-windows-jit",
+      runner: '["self-hosted","Windows","X64","aws-ec2-jit-dynamic"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
+    },
+  ],
+  "aws-us-ec2-macos-jit": [
+    {
+      id: "macos-arm64",
+      name: "macOS ARM64 (AWS EC2 Dedicated Host one-job JIT)",
+      platform: "macos",
+      provider: "aws-ec2-macos-jit",
+      runner: '["self-hosted","macOS","ARM64","aws-ec2-jit-dynamic"]',
       capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
     },
   ],
@@ -759,6 +791,8 @@ function normalizePlatform(platform, index) {
   }
   const normalized = { id, name, runner };
   if (platform?.platform !== undefined) normalized.platform = String(platform.platform || "").trim();
+  if (platform?.provider !== undefined) normalized.provider = String(platform.provider || "").trim();
+  if (platform?.project !== undefined) normalized.project = String(platform.project || "").trim();
   normalized.capabilities = capabilities.sort();
   if (platform?.required === false) normalized.required = false;
   return normalized;
@@ -767,6 +801,9 @@ function normalizePlatform(platform, index) {
 export function resolveRunnerMatrix({
   runnerPreset = "github-hosted",
   platformsJson = "",
+  awsCodeBuildProject = "",
+  awsEc2WindowsRunnerLabel = "",
+  awsEc2MacosRunnerLabel = "",
   linuxContainerPreset = "",
   linuxContainerImage = "",
 } = {}) {
@@ -812,18 +849,44 @@ export function resolveRunnerMatrix({
   if (!platforms) {
     throw new Error(`unsupported runner-preset: ${preset}`);
   }
+  let resolvedPlatforms = platforms;
+  if (preset === "aws-us-codebuild-linux") {
+    const project = String(awsCodeBuildProject || "").trim();
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{1,149}$/.test(project)) {
+      throw new Error(
+        "runner-preset=aws-us-codebuild-linux requires a valid aws-codebuild-project",
+      );
+    }
+    resolvedPlatforms = platforms.map((platform) => ({ ...platform, project }));
+  }
+  if (preset === "aws-us-ec2-windows-jit") {
+    const runnerLabel = windowsJitRunnerLabel(awsEc2WindowsRunnerLabel);
+    resolvedPlatforms = platforms.map((platform) => ({
+      ...platform,
+      runnerLabel,
+      runner: JSON.stringify(["self-hosted", "Windows", "X64", runnerLabel]),
+    }));
+  }
+  if (preset === "aws-us-ec2-macos-jit") {
+    const runnerLabel = macosJitRunnerLabel(awsEc2MacosRunnerLabel);
+    resolvedPlatforms = platforms.map((platform) => ({
+      ...platform,
+      runnerLabel,
+      runner: JSON.stringify(["self-hosted", "macOS", "ARM64", runnerLabel]),
+    }));
+  }
   const containerPlatforms = linuxContainer.enabled
-    ? platforms.filter(platformIsLinux)
+    ? resolvedPlatforms.filter(platformIsLinux)
     : [];
   const nativePlatforms = linuxContainer.enabled
-    ? platforms.filter((platform) => !platformIsLinux(platform))
-    : platforms;
+    ? resolvedPlatforms.filter((platform) => !platformIsLinux(platform))
+    : resolvedPlatforms;
   return {
     source: "runner-preset",
     runnerPreset: preset,
-    platforms,
-    platformsJson: JSON.stringify(platforms),
-    platformCount: platforms.length,
+    platforms: resolvedPlatforms,
+    platformsJson: JSON.stringify(resolvedPlatforms),
+    platformCount: resolvedPlatforms.length,
     nativePlatforms,
     nativePlatformsJson: JSON.stringify(nativePlatforms),
     nativePlatformCount: nativePlatforms.length,

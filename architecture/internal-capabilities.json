@@ -2,8 +2,23 @@
   "schemaVersion": 1,
   "coverageRoots": [
     "actions/promote-buildchain-ref/internal",
+    "bin/buildchain.mjs",
     "bin/internal",
+    "packages/core/release-passport.js",
+    "packages/core/buildchain-contract.js",
+    "packages/core/paper-fleet.js",
+    "packages/core/paper-repository.js",
+    "packages/core/paper-work.js",
+    "packages/core/public-surface-cli.js",
+    "scripts/authorize-promotion-runtime-override.cjs",
+    "scripts/build-contract-core.mjs",
+    "scripts/buildchain-cli-help.mjs",
+    "scripts/generate-channel-build-workflow.mjs",
     "scripts/promotion-routing-evidence.mjs",
+    "scripts/paper-work-fleet-cli.mjs",
+    "scripts/run-lifecycle-core.mjs",
+    "scripts/web-surface-core.mjs",
+    "scripts/web-surface.mjs",
     "scripts/verify-promotion-router-binding.sh"
   ],
   "dependencyRules": [
@@ -23,31 +38,27 @@
     {
       "id": "cli-handlers-do-not-depend-on-entrypoint",
       "sources": ["bin/internal"],
-      "allowedRelativeTargets": [
-        "bin/internal",
-        "packages/core",
-        "scripts"
-      ]
+      "allowedRelativeTargets": ["bin/internal", "packages/core", "scripts"]
     },
     {
       "id": "workflow-helpers-stay-below-workflow-delivery",
       "sources": [
-        "scripts/promotion-routing-evidence.mjs"
+        "scripts/promotion-routing-evidence.mjs",
+        "scripts/authorize-promotion-runtime-override.cjs"
       ],
-      "allowedRelativeTargets": [
-        "packages/core",
-        "scripts"
-      ]
+      "allowedRelativeTargets": ["packages/core", "scripts"]
     }
   ],
   "capabilities": [
     {
       "id": "promotion-policy",
+      "owner": "Buildchain maintainers",
       "implementation": [
         "actions/promote-buildchain-ref/internal/promotion-policy.js"
       ],
       "tests": [
-        "tests/promote-buildchain-ref.test.mjs"
+        "tests/promote-buildchain-ref.test.mjs",
+        "tests/promotion-responsibilities.test.mjs"
       ],
       "contracts": [
         "actions/promote-buildchain-ref/action.yml",
@@ -56,6 +67,7 @@
     },
     {
       "id": "promotion-version-state",
+      "owner": "Buildchain maintainers",
       "implementation": [
         "actions/promote-buildchain-ref/internal/version-state.js"
       ],
@@ -70,34 +82,30 @@
     },
     {
       "id": "promotion-github-transaction-store",
+      "owner": "Buildchain maintainers",
       "implementation": [
         "actions/promote-buildchain-ref/internal/durable-transaction-store.js",
         "actions/promote-buildchain-ref/internal/github-adapter.js"
       ],
       "tests": [
-        "tests/promote-buildchain-ref.test.mjs"
+        "tests/promote-buildchain-ref.test.mjs",
+        "tests/promotion-responsibilities.test.mjs"
       ],
-      "contracts": [
-        "actions/promote-buildchain-ref/lib.js"
-      ]
+      "contracts": ["actions/promote-buildchain-ref/lib.js"]
     },
     {
       "id": "cli-trust-release-dispatch",
+      "owner": "Buildchain maintainers",
       "implementation": [
         "bin/internal/cli-options.mjs",
         "bin/internal/trust-release-cli.mjs"
       ],
-      "tests": [
-        "tests/cli.test.mjs",
-        "tests/public-surface-audit.test.mjs"
-      ],
-      "contracts": [
-        "bin/buildchain.mjs",
-        "docs/cli.md"
-      ]
+      "tests": ["tests/cli.test.mjs", "tests/public-surface-audit.test.mjs"],
+      "contracts": ["bin/buildchain.mjs", "docs/cli.md"]
     },
     {
       "id": "release-workflow-promotion-routing",
+      "owner": "Buildchain maintainers",
       "implementation": [
         "scripts/promotion-routing-evidence.mjs",
         "scripts/verify-promotion-router-binding.sh"
@@ -109,6 +117,102 @@
       "contracts": [
         ".github/workflows/.release-candidate-promote.yml",
         ".github/workflows/release-candidate-promote.yml"
+      ]
+    },
+    {
+      "id": "release-passport-verification",
+      "owner": "Buildchain release trust maintainers",
+      "implementation": ["packages/core/release-passport.js"],
+      "tests": [
+        "tests/release-passport.test.mjs",
+        "tests/release-passport-contract.test.mjs"
+      ],
+      "contracts": [
+        "docs/release-passport.md",
+        "dist/site/release-passport-check-manifest.json"
+      ]
+    },
+    {
+      "id": "cli-command-registry",
+      "owner": "Buildchain CLI maintainers",
+      "implementation": [
+        "bin/buildchain.mjs",
+        "bin/internal/command-registry.mjs"
+      ],
+      "tests": ["tests/command-registry.test.mjs", "tests/cli.test.mjs"],
+      "contracts": ["docs/cli.md", "dist/site/cli-registry.json"]
+    },
+    {
+      "id": "reusable-build-orchestration",
+      "owner": "Buildchain workflow maintainers",
+      "implementation": [
+        "scripts/generate-channel-build-workflow.mjs",
+        "scripts/run-lifecycle-core.mjs"
+      ],
+      "tests": [
+        "tests/build-surface.test.mjs",
+        "tests/controller-evidence.test.mjs"
+      ],
+      "contracts": [
+        ".github/workflows/.build.yml",
+        ".github/workflows/build.yml"
+      ]
+    },
+    {
+      "id": "web-surface-delivery",
+      "owner": "Buildchain web-surface maintainers",
+      "implementation": [
+        "scripts/web-surface-core.mjs",
+        "scripts/web-surface.mjs"
+      ],
+      "tests": [
+        "tests/web-surface.test.mjs",
+        "tests/web-surface-publication-authority.test.mjs"
+      ],
+      "contracts": [".github/workflows/.web-surface.yml"]
+    },
+    {
+      "id": "shared-build-contract",
+      "owner": "Buildchain contract maintainers",
+      "implementation": [
+        "packages/core/buildchain-contract.js",
+        "scripts/build-contract-core.mjs"
+      ],
+      "tests": [
+        "tests/buildchain-contract.test.mjs",
+        "tests/build-surface.test.mjs"
+      ],
+      "contracts": [
+        "dist/site/buildchain-contract.json",
+        "docs/runtime-train-validation.md"
+      ]
+    },
+    {
+      "id": "promotion-runtime-override-authorization",
+      "owner": "Buildchain release governance maintainers",
+      "implementation": ["scripts/authorize-promotion-runtime-override.cjs"],
+      "tests": ["tests/authorize-promotion-runtime-override.test.mjs"],
+      "contracts": [".github/workflows/release-candidate-promote.yml"]
+    },
+    {
+      "id": "paper-fleet-golden-path",
+      "owner": "Buildchain Paper maintainers",
+      "implementation": [
+        "packages/core/paper-fleet.js",
+        "packages/core/paper-repository.js",
+        "packages/core/paper-work.js",
+        "packages/core/public-surface-cli.js",
+        "scripts/buildchain-cli-help.mjs",
+        "scripts/paper-work-fleet-cli.mjs"
+      ],
+      "tests": [
+        "tests/cli.test.mjs",
+        "tests/paper.test.mjs",
+        "tests/public-surface-audit.test.mjs"
+      ],
+      "contracts": [
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json"
       ]
     }
   ]

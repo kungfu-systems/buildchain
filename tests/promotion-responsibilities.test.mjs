@@ -1,0 +1,104 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {
+  createDurableTransactionOperations,
+  createRefMutationOperations,
+} from "../actions/promote-buildchain-ref/lib.js";
+
+test("ref mutation responsibility plans provider operations without mutating during dry-run", async () => {
+  const requests = [];
+  const updates = [];
+  const octokit = {
+    rest: {
+      git: {
+        listMatchingRefs: async (request) => {
+          requests.push(request);
+          return request.ref.startsWith("tags/")
+            ? { data: [{ ref: "refs/tags/v3.0.2-alpha.4" }] }
+            : {
+                data: [
+                  { ref: "refs/heads/buildchain/release-state/3-0-alpha-4" },
+                ],
+              };
+        },
+      },
+    },
+  };
+  const operations = createRefMutationOperations({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: "a".repeat(40),
+    dryRun: true,
+    rule: { major: 3, minor: 0, releasePrefix: "v3.0" },
+    updates,
+  });
+
+  assert.equal((await operations.listLineRefs()).length, 2);
+  await operations.ensureTag("v3.0.2-alpha.4");
+  await operations.updateTag("v3-alpha");
+  await operations.updateDefaultBranch("dev/v3/v3.0");
+
+  assert.deepEqual(requests, [
+    {
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      ref: "tags/v3.0.",
+    },
+    {
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      ref: "heads/buildchain/release-state/3-0-",
+    },
+  ]);
+  assert.deepEqual(
+    updates.map(({ action }) => action),
+    ["dry-run", "dry-run", "dry-run-default-branch"],
+  );
+});
+
+test("durable transaction responsibility emits an auditable dry-run plan and enforces the expected version", async () => {
+  const updates = [];
+  const operations = createDurableTransactionOperations({
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: "a".repeat(40),
+    targetRef: "alpha/v3/v3.0",
+    dryRun: true,
+    cwd: process.cwd(),
+    publishTransaction: true,
+    expectedPublicationVersion: "3.0.2-alpha.4",
+    rule: { channel: "alpha", releasePrefix: "v3.0" },
+    updates,
+  });
+
+  assert.equal(
+    await operations.executePublishTransaction({
+      version: "3.0.2-alpha.4",
+      exactTag: "v3.0.2-alpha.4",
+      channel: "alpha",
+      line: "v3.0",
+      releaseSha: "b".repeat(40),
+    }),
+    undefined,
+  );
+  assert.deepEqual(updates, [
+    {
+      action: "dry-run-publish-transaction",
+      version: "3.0.2-alpha.4",
+      tag: "v3.0.2-alpha.4",
+      publicTag: "v3.0.2-alpha.4",
+      sha: "b".repeat(40),
+    },
+  ]);
+  await assert.rejects(
+    operations.executePublishTransaction({
+      version: "3.0.2-alpha.5",
+      exactTag: "v3.0.2-alpha.5",
+      channel: "alpha",
+      line: "v3.0",
+      releaseSha: "c".repeat(40),
+    }),
+    /expected 3\.0\.2-alpha\.4, got 3\.0\.2-alpha\.5/,
+  );
+});

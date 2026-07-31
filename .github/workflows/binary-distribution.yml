@@ -10,7 +10,7 @@ on:
       tag:
         description: "Release tag to model when manually testing the binary distribution lane"
         required: true
-        default: "v2.2.0-alpha.0"
+        default: "v3.0.2-alpha.4"
       upload-release:
         description: "Deprecated and fail-closed. Product upload moved to Binary Release Assets."
         required: true

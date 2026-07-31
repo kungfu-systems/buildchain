@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -31,9 +31,9 @@ on.
 | Minor | New compatible welded surface: reusable workflow output, CLI command family, config protocol, published subpath, evidence file, runner contract, or agent-readable artifact. |
 | Major | Breaking semantic change, removed stable surface, changed branch/tag governance, or incompatible protocol rewrite.                                                           |
 
-Kungfu minor lines are long-lived trains. `v2.0`, `v2.1`, and `v2.2` can each
-receive many patch releases. The major ref, such as `v2`, points at the
-selected stable major entrypoint; the minor ref, such as `v2.2`, points at the
+Kungfu minor lines are long-lived trains. `v3.0`, `v3.1`, and `v3.2` can each
+receive many patch releases. The major ref, such as `v3`, points at the
+selected stable major entrypoint; the minor ref, such as `v3.2`, points at the
 latest stable production patch for that minor line.
 
 ## Welded Surfaces
@@ -79,6 +79,8 @@ repository changes are patch".
 
 | Date       | Action       | Line    | Faces                                                                                                                                                                        | Class    | Rationale                                                                                                                                                                                                                                                                                                                              | PR    |
 | ---------- | ------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| 2026-07-31 | extend-minor | `v3.0`  | auditable-demo-workflow, auditable-demo-media-profile, auditable-demo-media-receipt                                                                                          | additive | Add an opt-in responsive profile that binds source-resolution and exact 1280x720 MP4/WebM/GIF renditions to one Gate and receipt while rejecting upscales, aspect-ratio drift, and profile changes between Gate-only and full-render paths.                                                                                              |       |
+| 2026-07-31 | extend-minor | `v3.0`  | release-candidate-family-evidence, release-passport-evidence-attachment, promotion-action, release-passport-cli                                                             | additive | Restore all-ref v2 parity for optional Initiative-family candidate binding and typed product-owned release evidence attachments while retaining Kungfu native Family State authority and the newer v3 post-activation released-evidence stage.                                                                                         | #2089 |
 | 2026-07-30 | extend-minor | `v3.0`  | reusable-build-workflow, observed-evidence-bundle, release-passport-json-reader, web-surface-release-governance                                                               | additive | Add bounded artifact compression and remote-read controls plus transactional derived evidence projections while repairing release-PR runtime handoff so production remains protected-main-only.                                                                                                                                       |       |
 | 2026-07-29 | extend-minor | `v3.0`  | artifact-signing-config, apple-developer-id-authority, artifact-signing-evidence                                                                                             | additive | Extend the consumer-neutral signing declaration to macOS compound archives, including nested wheel Mach-O signing, PEP 427 RECORD repair, safe archive reconstruction, and whole-product notarization under the same protected authority.                                                                                              |       |
 | 2026-07-28 | extend-minor | `v3.0`  | auditable-demo-workflow, auditable-demo-media-profile, auditable-demo-media-receipt                                                                                          | additive | Add opt-in archive, web-delivery, and site-hero profiles; independently bind codec, container, audio, layout, byte-budget, role, and fast-start facts into a v2 media receipt while preserving the existing archive default.                                                                                                           |       |

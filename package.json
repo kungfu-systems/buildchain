@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "3.0.3-alpha.0",
+  "version": "3.0.3-alpha.3",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -41,6 +41,9 @@
     "./portable-dev-cache": "./packages/core/portable-dev-cache.js",
     "./publication-artifact": "./packages/core/publication-artifact.js",
     "./publication-package": "./packages/core/publication-package.js",
+    "./publication-reproducibility": "./packages/core/publication-reproducibility.js",
+    "./publication-sealed-bundle": "./packages/core/publication-sealed-bundle.js",
+    "./paper": "./packages/core/paper.js",
     "./publication-authority": "./packages/core/publication-authority.js",
     "./publication-control-plane-audit": "./packages/core/publication-control-plane-audit.js",
     "./buildchain-publication-authority": "./packages/core/buildchain-publication-authority.js",
@@ -105,7 +108,8 @@
   },
   "packageManager": "pnpm@11.7.0",
   "scripts": {
-    "check": "node scripts/check-internal-architecture.mjs && node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && node scripts/check-action-bundles.mjs",
+    "check": "pnpm run check:static && node scripts/check-maintainability.mjs && node scripts/check-internal-architecture.mjs && node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && node scripts/check-action-bundles.mjs",
+    "check:static": "node scripts/check-javascript-syntax.mjs && prettier --check architecture/*.json bin/internal/command-registry.mjs scripts/authorize-promotion-runtime-override.cjs scripts/check-javascript-syntax.mjs scripts/check-maintainability.mjs scripts/maintainability-metrics.mjs tests/authorize-promotion-runtime-override.test.mjs tests/command-registry.test.mjs tests/maintainability.test.mjs tests/promotion-responsibilities.test.mjs",
     "check:workflows": "bash scripts/check-workflows.sh",
     "generate:site": "node scripts/generate-site-bundle.mjs",
     "check:site": "node scripts/generate-site-bundle.mjs --check",
@@ -116,11 +120,9 @@
     "pack:check": "npm pack --dry-run --json --registry=https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
     "prettier": "^3.9.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.0",
-    "vitest": "^4.1.9"
+    "typescript": "^5.9.0"
   },
   "dependencies": {
     "@kungfu-tech/kfd": "1.0.0-alpha.47",

@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-cli
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Buildchain CLI, npm Package, and Toolkit API
 
 Buildchain is published as the public npm package
@@ -76,6 +94,8 @@ import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
 import { verifyGitHubArtifactAttestationEvidence } from "@kungfu-tech/buildchain/github-artifact-attestation";
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
+import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
+import { collectPaperStatus } from "@kungfu-tech/buildchain/paper";
 import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
 import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
 import { createBuildchainLayoutDiscovery } from "@kungfu-tech/buildchain/buildchain-layout";
@@ -100,6 +120,94 @@ GitHub permission set before the Release Passport is collected.
 with the exact signer/source policy and then verifies the retained bundle,
 predicate, platform manifest, Passport, and Buildchain evidence locally. See
 [`github-artifact-attestation.md`](github-artifact-attestation.md).
+
+### Governed paper lifecycle
+
+`buildchain paper` is the unified operator surface for one paper repository or
+a discovered fleet. Every subcommand returns a versioned JSON contract with
+`--json`:
+
+```bash
+buildchain paper scaffold --package @kungfu-tech/paper-example \
+  --repository kungfu-systems/paper-example
+buildchain paper migrate --json
+buildchain paper work start golden-path --json
+buildchain paper work submit --json
+buildchain paper fleet audit --root ../papers --json
+buildchain paper fleet update --root ../paper-worktrees --json
+buildchain paper preflight --offline --json
+buildchain paper bootstrap npm --json
+buildchain paper build --json
+buildchain paper alpha --json
+buildchain paper status --json
+buildchain paper resume --json
+```
+
+The safety and authority boundary is explicit:
+
+- `scaffold` plans a 14-file, no-overwrite repository shape by default; add
+  `--write` to create only missing files.
+- `migrate` plans the Buildchain-owned authority, workflow, contract lock,
+  version pin, and package control changes needed by an existing paper
+  repository. It pins an exact v3 dependency and adds pnpm-backed paper scripts.
+  Add `--write` only after reviewing exact old and new digests; paper content
+  and publication configuration are never rewritten. Refresh
+  `pnpm-lock.yaml` with `pnpm install --lockfile-only` after a write.
+- `work start` derives the protected development branch from the configured
+  publication semver line and creates a safe local work branch only when the
+  worktree is clean, the sole `origin` is the canonical `kungfu-systems`
+  repository, and local HEAD equals the exact remotely observed development
+  SHA. It never fetches or merges silently.
+- `work submit` accepts only an allowed non-protected work branch that contains
+  the exact remote development commit. It rejects divergent remote work,
+  wrong-base pull requests, dirty trees, forks, and ambiguous remotes; execution
+  uses a normal non-force push and opens or reuses a PR to the derived
+  development branch.
+- `fleet audit` discovers `paper-*` repositories from a root and emits one
+  deterministic audit root over exact runtime, dependency, lockfile, workflow,
+  authority, and repository observations. `fleet update` reuses the migration
+  contract for every discovered repository, remains dry-run by default, and
+  refuses protected or non-work branches.
+- The scaffolded `.buildchain/paper/provisioning-authority.json` binds both
+  caller workflow byte digests, their exact reusable-workflow SHA, the runtime
+  SHA, contract-lock bytes, npm registry and trusted-publisher coordinates, and
+  the repository Actions/generated-write policy under one digest. A floating
+  Buildchain ref cannot change release policy after that authority is accepted.
+- `preflight` separates local readiness from readiness for external mutation.
+  `--offline` skips live GitHub and npm observations without treating them as
+  local failures. Live readiness requires default workflow permissions `read`,
+  Actions pull-request approval disabled, and GitHub App or equivalent narrow
+  generated-write credential metadata.
+- `bootstrap npm` always performs npm pack and publish dry-runs first. A real
+  public bootstrap requires both `--execute` and
+  `--confirm-public-package <exact-name>`, uses only the official npm registry,
+  fixes the bootstrap version at `0.0.0-bootstrap.0`, and returns only npm URLs
+  observed from command output. Success requires public package readback and
+  the exact repository/workflow/environment trusted-publisher binding. For
+  GitHub, the npm coordinate is the workflow filename (`paper-release.yml`),
+  not its `.github/workflows/` repository path.
+- `build` plans the two-clean-build reproducibility proof. Add `--execute` to
+  create and verify the sealed publication bundle.
+- `alpha` plans or opens the protected Alpha pull request; it never merges,
+  publishes, or advances a floating ref.
+- `status` reports only evidence found in the repository or external
+  observations. It never infers a later lifecycle state from an earlier one.
+- `resume` plans or dispatches the repository's thin release workflow; the
+  protected workflow remains the release authority.
+
+The ordered evidence states are `scaffolded`, `governed`, `admitted`,
+`bootstrapped`, `trust-bound`, `content-ready`, `artifact-sealed`,
+`package-published`, `alpha-complete`, `staging-visible`, and
+`production-visible`. A state can be `satisfied`, `not-reached`, `blocked`, or
+`unknown`; consumers must not collapse those distinctions.
+
+The corresponding Node surface is
+`@kungfu-tech/buildchain/paper`. Planning and status functions are read-only;
+`writePaperScaffold()`, `writePaperMigration()`, and
+`writePaperFleetUpdate()` are the bounded local writers. Work plans expose
+separate rechecking executors for local branch creation and normal push, and
+`executePaperNpmBootstrap()` preserves the same confirmation boundary used by
+the CLI.
 
 `buildchain layout` is the stable machine question for repository layout. Tools
 such as Shifu should call it instead of copying `.buildchain/` path constants:
@@ -249,9 +357,9 @@ branch action, and initial version before any GitHub mutation happens:
 
 ```bash
 buildchain release line open \
-  --major 2 \
-  --minor 10 \
-  --source-ref release/v2/v2.9 \
+  --major 3 \
+  --minor 1 \
+  --source-ref release/v3/v3.0 \
   --json
 ```
 
@@ -264,9 +372,9 @@ reconciliation succeeds, and opens the first dev-to-alpha channel PR:
 
 ```bash
 buildchain release line open \
-  --major 2 \
-  --minor 10 \
-  --source-ref release/v2/v2.9 \
+  --major 3 \
+  --minor 1 \
+  --source-ref release/v3/v3.0 \
   --write \
   --json
 ```
@@ -284,7 +392,9 @@ import {
   assertPublicSurfaceReverseAudit,
 } from "@kungfu-tech/buildchain/public-surface-audit";
 
-assertPublicSurfaceReverseAudit(collectPublicSurfaceReverseAudit({ root: process.cwd() }));
+assertPublicSurfaceReverseAudit(
+  collectPublicSurfaceReverseAudit({ root: process.cwd() }),
+);
 ```
 
 `buildchain kfd` is the product-facing KFD namespace. Schema commands expose the
@@ -398,7 +508,10 @@ The event protocol is JSONL and is also available from the SDK:
 ```js
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 
-const logger = createBuildchainLogger({ source: "user", component: "native-build" });
+const logger = createBuildchainLogger({
+  source: "user",
+  component: "native-build",
+});
 logger.mark("configure.ready", { phase: "configure" });
 ```
 
@@ -530,6 +643,24 @@ buildchain publication-artifact manifest \
   --json
 ```
 
+Run the fail-closed clean-room gate before Alpha or release admission:
+
+```bash
+buildchain publication-artifact reproducibility \
+  --source-sha "$(git rev-parse HEAD)" \
+  --promote \
+  --json
+```
+
+The command checks two independent clones of the exact commit, isolates caches,
+derives `SOURCE_DATE_EPOCH` from Git, and compares every declared artifact,
+source bundle, publication evidence file, npm package file, and actual npm
+tarball. It writes
+`.buildchain/publication/reproducibility-receipt.json`. Only a byte-identical
+build using the digest-pinned `latex-docker` toolchain is qualifying.
+`--allow-unpinned-toolchain` exists for local diagnostics and never changes the
+receipt's `qualifying` field.
+
 Generate the Buildchain-owned npm paper package contents from declared
 publication facts:
 
@@ -629,7 +760,7 @@ buildchain collect github-release \
   --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
   --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
   --kfd-3-artifact-verify-cmd "kungfu agent verify --json" \
-  --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
+  --release-extra-json '{"channel":"release","targetRef":"release/v3/v3.0"}' \
   --output-dir .buildchain/release-passport
 ```
 
@@ -880,9 +1011,9 @@ Buildchain's own npm package is published from
 `.github/workflows/buildchain-ref-promotion.yml`, inside the same publish
 transaction that promotes release refs:
 
-- `v2.0.13-alpha.0` publishes to npm with dist-tag `alpha`.
-- `v2.0.13` publishes to npm with dist-tag `latest`.
-- moving refs such as `v2`, `v2.0`, and `v2.0-alpha` do not match the publish
+- `v3.0.3-alpha.0` publishes to npm with dist-tag `alpha`.
+- `v3.0.2` publishes to npm with dist-tag `latest`.
+- moving refs such as `v3`, `v3.0`, and `v3.0-alpha` do not match the publish
   workflow and do not publish.
 
 The promotion workflow uses npm Trusted Publishing through GitHub Actions OIDC.

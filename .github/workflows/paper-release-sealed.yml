@@ -112,8 +112,20 @@ on:
         type: boolean
         required: false
     secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
+      BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID:
+        description: "Preferred GitHub App client ID for generated repository writes"
+        required: false
+      BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY:
+        description: "Preferred GitHub App private key for generated repository writes"
+        required: false
+      BUILDCHAIN_GENERATED_WRITE_TOKEN:
+        description: "Equivalent narrow token fallback for generated repository writes"
+        required: false
       BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Optional bypass-capable token used only for generated protected ref updates"
+        description: "Deprecated compatibility alias for a narrow generated-write token"
         required: false
     outputs:
       package-name:
@@ -191,7 +203,7 @@ jobs:
     permissions:
       actions: read
       checks: write
-      contents: write
+      contents: read
       id-token: write
       issues: write
       pull-requests: write
@@ -221,6 +233,45 @@ jobs:
           ref: ${{ needs.publication-candidate.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Resolve generated-write authority config
+        id: generated-write-config
+        env:
+          APP_CLIENT_ID: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${APP_CLIENT_ID}" ] && [ -n "${APP_PRIVATE_KEY}" ]; then
+            echo "app-configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "app-configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create generated-write GitHub App token
+        id: generated-write-app-token
+        if: ${{ steps.generated-write-config.outputs.app-configured == 'true' }}
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          client-id: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-checks: write
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Require narrow generated-write authority
+        env:
+          APP_TOKEN: ${{ steps.generated-write-app-token.outputs.token }}
+          NARROW_TOKEN: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_TOKEN}" ] && [ -z "${NARROW_TOKEN}" ]; then
+            echo "::error::paper release requires a GitHub App token or equivalent narrow generated-write token; github.token fallback is forbidden"
+            exit 1
+          fi
 
       - name: Download admitted publication candidate
         uses: actions/download-artifact@v7.0.0
@@ -253,6 +304,10 @@ jobs:
             buildPublicationArtifactCandidate,
             resolvePublicationCandidateFile,
           } from "./.buildchain/runtime/scripts/publication-artifact-candidate.mjs";
+          import {
+            createPublicationSealedBundle,
+            verifyPublicationSealedBundle,
+          } from "./.buildchain/runtime/packages/core/publication-sealed-bundle.js";
 
           const root = ".buildchain/admitted/artifact";
           const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
@@ -273,8 +328,6 @@ jobs:
             root,
             resolvePublicationCandidateFile(bundle.evidence.files, candidatePath),
           );
-          const packageResultPath = exactPath(".buildchain/paper-release/package-result.json");
-          const packageResult = JSON.parse(fs.readFileSync(packageResultPath, "utf8"));
           const packageJsonPath = exactPath(".buildchain/publication/npm-package/package.json");
           const packageDir = path.dirname(packageJsonPath);
           const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
@@ -284,6 +337,27 @@ jobs:
           const manifestPath = exactPath(".buildchain/publication/publication-artifact.json");
           const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
           const releaseAssets = (manifest.artifacts || []).map((entry) => exactPath(entry.path));
+          const reproducibilityPath = exactPath(".buildchain/publication/reproducibility-receipt.json");
+          const reproducibility = JSON.parse(fs.readFileSync(reproducibilityPath, "utf8"));
+          const qualifiedNpm = reproducibility.builds?.[0]?.npmPackage;
+          if (!qualifiedNpm?.filename || !qualifiedNpm?.integrity) {
+            throw new Error("qualified reproducibility receipt is missing npm tarball identity");
+          }
+          const npmTarballCandidatePath = `.buildchain/publication/npm-tarball/${qualifiedNpm.filename}`;
+          exactPath(npmTarballCandidatePath);
+          const sealedBundle = createPublicationSealedBundle({
+            candidate: bundle.candidate,
+            packageName: packageJson.name,
+            packageVersion: packageJson.version,
+            npmTarballPath: npmTarballCandidatePath,
+            npmIntegrity: qualifiedNpm.integrity,
+            releaseAssetPaths: (manifest.artifacts || []).map((entry) => entry.path),
+            githubReleaseRequired: ${{ inputs.github-release }},
+          });
+          verifyPublicationSealedBundle({ bundleRoot: root, manifest: sealedBundle });
+          const sealedBundlePath = ".buildchain/admitted/sealed-bundle.json";
+          fs.mkdirSync(path.dirname(sealedBundlePath), { recursive: true });
+          fs.writeFileSync(sealedBundlePath, `${JSON.stringify(sealedBundle, null, 2)}\n`);
           const requiredArtifactsPath = exactPath(".buildchain/paper-release/publish-required-artifacts.json");
           const buildSummaryPath = exactPath(".buildchain/paper-release/build-summary.json");
           const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
@@ -294,11 +368,12 @@ jobs:
           output.write(`exact-tag=v${packageJson.version}\n`);
           output.write(`manifest-path=${manifestPath}\n`);
           output.write(`build-summary-path=${buildSummaryPath}\n`);
+          output.write(`sealed-bundle-root=${path.resolve(root)}\n`);
+          output.write(`sealed-bundle-manifest=${path.resolve(sealedBundlePath)}\n`);
           output.write(`required-artifacts-json=${JSON.stringify(JSON.parse(fs.readFileSync(requiredArtifactsPath, "utf8")))}\n`);
           const marker = `EOF_ASSETS_${Date.now()}`;
           output.write(`github-release-artifact-paths<<${marker}\n${releaseAssets.join("\n")}\n${marker}\n`);
           output.end();
-          void packageResult;
           NODE
 
       - name: Resolve protected publication target
@@ -322,12 +397,8 @@ jobs:
       - name: Ensure publish-gate ref locks admitted commit
         id: publish-gate
         uses: actions/github-script@v8
-        env:
-          CHANNEL: ${{ steps.target.outputs.channel }}
-          TARGET_REF: ${{ steps.target.outputs.ref }}
-          TARGET_SHA: ${{ steps.target.outputs.sha }}
-          VERSION: ${{ steps.candidate.outputs.package-version }}
         with:
+          github-token: ${{ steps.generated-write-app-token.outputs.token || secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           script: |
             const gateRef = `publish-gate/${process.env.CHANNEL}/${process.env.TARGET_REF.replace(/^(alpha|release)\//, "")}/${process.env.VERSION}`;
             const ref = `heads/${gateRef}`;
@@ -343,12 +414,17 @@ jobs:
             core.setOutput("ref", gateRef);
             core.setOutput("sha", process.env.TARGET_SHA);
             core.setOutput("locked", "true");
+        env:
+          CHANNEL: ${{ steps.target.outputs.channel }}
+          TARGET_REF: ${{ steps.target.outputs.ref }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          VERSION: ${{ steps.candidate.outputs.package-version }}
 
       - name: Publish admitted npm package and GitHub Release assets
         id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ github.token }}
+          token: ${{ steps.generated-write-app-token.outputs.token || secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           sha: ${{ steps.target.outputs.sha }}
           target-ref: ${{ steps.target.outputs.ref }}
           tags: ${{ steps.candidate.outputs.exact-tag }}
@@ -356,8 +432,8 @@ jobs:
           require-governance: "true"
           require-version-state: "false"
           required-status-check: ${{ inputs.required-status-check }}
-          generated-status-check-token: ${{ github.token }}
-          generated-ref-update-token: ${{ github.token }}
+          generated-status-check-token: ${{ steps.generated-write-app-token.outputs.token || secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          generated-ref-update-token: ${{ steps.generated-write-app-token.outputs.token || secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
@@ -366,6 +442,8 @@ jobs:
           publish-command: >-
             node "${{ github.workspace }}/.buildchain/runtime/scripts/npm-publish-transaction.mjs"
             --cwd "${{ steps.candidate.outputs.package-dir }}"
+          publish-sealed-bundle-root: ${{ steps.candidate.outputs.sealed-bundle-root }}
+          publish-sealed-bundle-manifest: ${{ steps.candidate.outputs.sealed-bundle-manifest }}
           publish-required-artifacts-json: ${{ steps.candidate.outputs.required-artifacts-json }}
           publish-mode: "publish-final-version"
           publish-auth: "trusted-publishing"
