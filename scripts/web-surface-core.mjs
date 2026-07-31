@@ -434,22 +434,33 @@ function publicationImmutablePolicy({ artifactRoot, binding }) {
     throw new Error(`invalid publication archive manifest ${toPosix(path.relative(artifactRoot, manifestFile))}: ${error.message}`);
   }
   if (manifest?.archivePolicy?.contract !== PUBLICATION_ARCHIVE_POLICY_CONTRACT) return null;
-  const declaredPrefixes = [...new Set((manifest.publications || []).flatMap((publication) =>
-    (publication.versions || []).map((version) => immutablePrefix(
-      version.immutablePath,
-      `publication ${publication.id || "unknown"} immutablePath`,
-    )),
-  ))].sort();
+  const declaredVersions = (manifest.publications || []).flatMap((publication) =>
+    (publication.versions || []).map((version) => ({
+      prefix: immutablePrefix(
+        version.immutablePath,
+        `publication ${publication.id || "unknown"} immutablePath`,
+      ),
+      materialized: Object.hasOwn(version, "immutableIndex"),
+    })),
+  );
+  const declaredPrefixes = [...new Set(declaredVersions.map((entry) => entry.prefix))].sort();
   if (declaredPrefixes.length === 0) {
     throw new Error("publication archive policy must declare at least one immutable version prefix");
   }
-  for (const prefix of declaredPrefixes) {
+  const hasMaterializationEnvelope = declaredVersions.some((entry) => entry.materialized);
+  const materializedPrefixes = [...new Set(
+    (hasMaterializationEnvelope
+      ? declaredVersions.filter((entry) => entry.materialized)
+      : declaredVersions
+    ).map((entry) => entry.prefix),
+  )].sort();
+  for (const prefix of materializedPrefixes) {
     if (!fs.existsSync(path.join(surfaceRoot, prefix))) {
-      throw new Error(`declared immutable publication prefix does not exist in artifact: ${prefix}`);
+      throw new Error(`materialized immutable publication prefix does not exist in artifact: ${prefix}`);
     }
   }
   const preservedRoots = declaredPrefixes;
-  const uploadRoots = binding.publicationFastPath?.immutablePrefixes || preservedRoots;
+  const uploadRoots = binding.publicationFastPath?.immutablePrefixes || materializedPrefixes;
   if (binding.publicationFastPath) {
     for (const prefix of uploadRoots) {
       if (!declaredPrefixes.includes(prefix)) {
@@ -472,6 +483,7 @@ function publicationImmutablePolicy({ artifactRoot, binding }) {
     manifestPath: toPosix(path.relative(artifactRoot, manifestFile)),
     preservedRoots,
     declaredPrefixes,
+    materializedPrefixes,
     uploadRoots,
     files,
     fastPath: binding.publicationFastPath || undefined,
