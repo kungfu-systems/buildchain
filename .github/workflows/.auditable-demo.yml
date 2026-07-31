@@ -25,6 +25,11 @@ on:
         description: "Executable project-relative adapter; receives --artifact-root, --output, and --source-coordinate"
         type: string
         required: true
+      adapter-arguments-json:
+        description: "Optional bounded JSON argv suffix passed literally to the checked-in adapter; coordinate flags are reserved"
+        default: "[]"
+        type: string
+        required: false
       renderer-image:
         description: "Immutable demo renderer image@sha256:digest coordinate"
         type: string
@@ -209,6 +214,7 @@ jobs:
         shell: bash
         env:
           ADAPTER_PATH: ${{ inputs.adapter-path }}
+          ADAPTER_ARGUMENTS_JSON: ${{ inputs.adapter-arguments-json }}
         run: |
           set -euo pipefail
           node .buildchain/runtime/scripts/auditable-demo.mjs run-adapter \
@@ -216,6 +222,7 @@ jobs:
             --artifact-root "${GITHUB_WORKSPACE}/source-artifact" \
             --source-coordinate "${GITHUB_WORKSPACE}/gate-work/source-artifact.json" \
             --adapter "${ADAPTER_PATH}" \
+            --adapter-arguments-json "${ADAPTER_ARGUMENTS_JSON}" \
             --output "${GITHUB_WORKSPACE}/gate-work/adapter-output" \
             --diagnostics "${GITHUB_WORKSPACE}/gate-diagnostics"
 

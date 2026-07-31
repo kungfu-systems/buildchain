@@ -554,6 +554,7 @@
         "path": ".github/workflows/.auditable-demo.yml",
         "reusable": true,
         "inputs": [
+          "adapter-arguments-json",
           "adapter-path",
           "artifact-retention-days",
           "buildchain-repository",
@@ -565,7 +566,7 @@
           "source-artifact-name",
           "source-ref"
         ],
-        "inputCount": 10,
+        "inputCount": 11,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -4445,8 +4446,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "2b47852fc43da46d58bff16fd62f892fa56b49f629a29649d10d017d40573a58",
-    "pageRegistryDigest": "f1efa194af473028839fd0ad6644eee1f375363e710f22da5905d6fcf51ba947"
+    "workflowRegistryDigest": "d43ea82f2f13898b70f127a0aaca112d27bdeb306490e9a39dd349864f7bd78c",
+    "pageRegistryDigest": "c89f4f565281deafcc9cf190365c89233e125f883dba93fca64de22230a604e9"
   },
   "comparison": {
     "missingCliRegistry": [],

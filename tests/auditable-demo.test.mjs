@@ -9,6 +9,7 @@ import {
   finalizeMedia,
   inspectIsoBmffFastStart,
   inspectRendererMedia,
+  parseAdapterArguments,
   prepareSmoke,
   qualifyMediaFixture,
   runAdapter,
@@ -283,6 +284,7 @@ fs.writeFileSync(path.join(values["--output"], "public-projection.json"), JSON.s
   }]
 }) + "\\n");
 if (!process.env.HOME || process.env.TZ !== "UTC" || process.env.SOURCE_DATE_EPOCH !== "0") process.exit(9);
+if (values["--demo-id"] !== "agent-work-lab") process.exit(10);
 `);
   fs.chmodSync(adapter, 0o755);
 
@@ -291,15 +293,34 @@ if (!process.env.HOME || process.env.TZ !== "UTC" || process.env.SOURCE_DATE_EPO
     "--artifact-root": artifact,
     "--source-coordinate": coordinate,
     "--adapter": "adapter.mjs",
+    "--adapter-arguments-json": '["--demo-id","agent-work-lab"]',
     "--output": output,
     "--diagnostics": diagnostics,
   });
 
-  assert.equal(
-    JSON.parse(fs.readFileSync(path.join(diagnostics, "adapter.json"), "utf8")).exitCode,
-    0,
+  const execution = JSON.parse(
+    fs.readFileSync(path.join(diagnostics, "adapter.json"), "utf8"),
   );
+  assert.equal(execution.exitCode, 0);
+  assert.deepEqual(execution.arguments, ["--demo-id", "agent-work-lab"]);
+  assert.match(execution.argumentsRoot, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(fs.readFileSync(path.join(output, "complete-transcript.txt"), "utf8"), "artifact qualified\n");
+});
+
+test("adapter argument vectors are bounded literal argv and cannot replace coordinates", () => {
+  assert.deepEqual(
+    parseAdapterArguments('["--demo-id","status-snapshot"]'),
+    ["--demo-id", "status-snapshot"],
+  );
+  for (const [value, expected] of [
+    ["not-json", /valid JSON/u],
+    ['{"demo":"status"}', /must be an array/u],
+    ['["--demo-id","line\\nbreak"]', /argument 1 is invalid/u],
+    ['["--output","elsewhere"]', /reserved coordinate/u],
+    [JSON.stringify(Array(33).fill("x")), /at most 32/u],
+  ]) {
+    assert.throws(() => parseAdapterArguments(value), expected);
+  }
 });
 
 test("adapter output is strict and smoke input is bounded", (t) => {
