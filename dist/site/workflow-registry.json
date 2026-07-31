@@ -8,6 +8,7 @@
       "path": ".github/workflows/.auditable-demo.yml",
       "reusable": true,
       "inputs": [
+        "adapter-arguments-json",
         "adapter-path",
         "artifact-retention-days",
         "buildchain-repository",
@@ -19,7 +20,7 @@
         "source-artifact-name",
         "source-ref"
       ],
-      "inputCount": 10,
+      "inputCount": 11,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
