@@ -127,10 +127,13 @@ self-hosted lane from the trusted Buildchain workflow shell before the matrix
 starts. A lane with no matching online runner is replaced independently by its
 supported GitHub-hosted runner: Kungfu Linux x64 uses `ubuntu-24.04`, macOS ARM64
 uses `macos-15`, and Windows x64 uses `windows-2022`. Online-but-busy runners
-remain online and keep their declared self-hosted route. If the inventory token,
-permission, or API is unavailable, Buildchain preserves the original matrix
-instead of guessing that the fleet is offline. The public workflow output
-`runner-routing-json` records only de-identified counts and routing decisions.
+remain online and keep their declared self-hosted route. Organization-owned
+repositories inspect organization runner inventory so selected-repository runner
+groups are not mistaken for an empty repository runner inventory. If the
+inventory token, permission, or API is unavailable, Buildchain preserves the
+original matrix instead of guessing that the fleet is offline. The public
+workflow output `runner-routing-json` records only de-identified counts,
+inventory scope, and routing decisions.
 
 ```yaml
 with:
