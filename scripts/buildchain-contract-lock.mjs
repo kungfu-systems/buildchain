@@ -131,7 +131,7 @@ export function writeBuildchainContractLock({
   output = env("BUILDCHAIN_CONTRACT_LOCK_PATH", BUILDCHAIN_CONTRACT_LOCK_PATH),
   currentContractPath = env("BUILDCHAIN_CONTRACT_CURRENT_PATH", "dist/site/buildchain-contract.json"),
   runtimeRoot = env("BUILDCHAIN_RUNTIME_ROOT", process.cwd()),
-  buildchainRef = env("BUILDCHAIN_RUNTIME_REF", "v2"),
+  buildchainRef = env("BUILDCHAIN_RUNTIME_REF", "v3"),
   resolvedSha = env("BUILDCHAIN_RUNTIME_SHA"),
   compatibilityPolicy = env("BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY", "major-compatible"),
   acceptedAt = env("BUILDCHAIN_CONTRACT_ACCEPTED_AT") || new Date().toISOString(),

@@ -681,6 +681,7 @@
           "publish-registry",
           "publish-source-ref",
           "release-candidate",
+          "release-candidate-family-evidence-json",
           "requested-parallelism",
           "require-build",
           "require-install",
@@ -700,7 +701,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 81,
+        "inputCount": 82,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -950,11 +951,17 @@
           "publish-transaction-override",
           "release-activation-command",
           "release-activation-receipt-set-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-evidence-path",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -977,7 +984,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 88,
+        "inputCount": 94,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1491,6 +1498,7 @@
           "publish-registry",
           "publish-source-ref",
           "release-candidate",
+          "release-candidate-family-evidence-json",
           "requested-parallelism",
           "require-build",
           "require-install",
@@ -1510,7 +1518,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 84,
+        "inputCount": 85,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2188,11 +2196,17 @@
           "publish-transaction-override",
           "release-activation-command",
           "release-activation-receipt-set-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-evidence-path",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -2215,7 +2229,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 80,
+        "inputCount": 86,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2518,12 +2532,19 @@
           "publish-transaction-override",
           "reconciliation-workspace",
           "release-candidate-build-summary-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-passport-path",
           "release-candidate-version",
           "release-material-sha",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-build-summary-path",
           "release-passport-buildchain-self-kfd",
+          "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-github-artifact-attestation-policy-jsons",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -2551,7 +2572,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 69
+        "inputCount": 76
       },
       {
         "id": "report-buildchain-issue",
@@ -4447,8 +4468,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "16ce35de4c98f241852a94d7b1a4ebfb9b3f5514193d9b7cbed5f65358b2b0f2",
-    "pageRegistryDigest": "6acaafd3bfb40a2b2436101f79f1d71c7f09c528b58e4dcc0f6aa4bedbd7172e"
+    "workflowRegistryDigest": "01eb60229fca0d02b1ef7c2fd6d7a14e83cf68fc88e215c2e900bd80825f7641",
+    "pageRegistryDigest": "c3170262cbba13ea01cee8572920e0fd5f79254387e4844f217bc6ab0219ac80"
   },
   "comparison": {
     "missingCliRegistry": [],

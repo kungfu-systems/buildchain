@@ -202,6 +202,7 @@ async function dispatchTrustReleaseCommand({ command, args, runScript, packageVe
       kfdProductGateJsons: readRepeatedFlag(collectArgs, "kfd-product-gate-json"),
       invariantPassportJsons: readRepeatedFlag(collectArgs, "invariant-passport-json"),
       invariantPassportCommand: readFlag(collectArgs, "invariant-passport-cmd", ""),
+      releaseEvidenceJsons: readRepeatedFlag(collectArgs, "release-evidence-json"),
       githubArtifactAttestationPolicyJsons: readRepeatedFlag(
         collectArgs,
         "github-artifact-attestation-policy-json",

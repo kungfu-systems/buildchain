@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-cli
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Buildchain CLI, npm Package, and Toolkit API
 
 Buildchain is published as the public npm package
@@ -315,9 +333,9 @@ branch action, and initial version before any GitHub mutation happens:
 
 ```bash
 buildchain release line open \
-  --major 2 \
-  --minor 10 \
-  --source-ref release/v2/v2.9 \
+  --major 3 \
+  --minor 1 \
+  --source-ref release/v3/v3.0 \
   --json
 ```
 
@@ -330,9 +348,9 @@ reconciliation succeeds, and opens the first dev-to-alpha channel PR:
 
 ```bash
 buildchain release line open \
-  --major 2 \
-  --minor 10 \
-  --source-ref release/v2/v2.9 \
+  --major 3 \
+  --minor 1 \
+  --source-ref release/v3/v3.0 \
   --write \
   --json
 ```
@@ -718,7 +736,7 @@ buildchain collect github-release \
   --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
   --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
   --kfd-3-artifact-verify-cmd "kungfu agent verify --json" \
-  --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
+  --release-extra-json '{"channel":"release","targetRef":"release/v3/v3.0"}' \
   --output-dir .buildchain/release-passport
 ```
 
@@ -969,9 +987,9 @@ Buildchain's own npm package is published from
 `.github/workflows/buildchain-ref-promotion.yml`, inside the same publish
 transaction that promotes release refs:
 
-- `v2.0.13-alpha.0` publishes to npm with dist-tag `alpha`.
-- `v2.0.13` publishes to npm with dist-tag `latest`.
-- moving refs such as `v2`, `v2.0`, and `v2.0-alpha` do not match the publish
+- `v3.0.3-alpha.0` publishes to npm with dist-tag `alpha`.
+- `v3.0.2` publishes to npm with dist-tag `latest`.
+- moving refs such as `v3`, `v3.0`, and `v3.0-alpha` do not match the publish
   workflow and do not publish.
 
 The promotion workflow uses npm Trusted Publishing through GitHub Actions OIDC.

@@ -41,6 +41,21 @@ contains:
 - normalized platform matrix and artifact summaries;
 - the hash of the aggregate `build-summary.json`.
 
+## Initiative-family release evidence
+
+A consumer may pass `release-candidate-family-evidence-json` to the reusable
+build. Buildchain normalizes that value as
+`kungfu-buildchain-initiative-family-release-evidence/v1`, binds it into the
+candidate hash, and carries it unchanged into publication authority. The
+envelope can identify one Initiative family root plus the exact Initiative and
+Assignment responsible for the release; continuation evidence can also bind
+the previous family root.
+
+This is an adapter-edge release contract, not a second Work Control authority.
+The immutable native Family State v1 projection and the additive Family State
+v2 typed envelope remain owned by Kungfu. Buildchain only proves that the
+release candidate consumed the caller-supplied family evidence exactly.
+
 Promotion workflows that should not rebuild artifacts can enable:
 
 ```yaml
@@ -52,6 +67,10 @@ Promotion workflows that should not rebuild artifacts can enable:
     promote-only-release-candidate: "true"
     release-candidate-passport-path: .buildchain/artifacts/release-candidate-passport.json
     release-candidate-build-summary-path: .buildchain/artifacts/build-summary.json
+    release-candidate-family-evidence-required: "true"
+    release-candidate-family-evidence-root: sha256:<initiative-family-root>
+    release-candidate-family-initiative-id: 2026-07-30-example-initiative
+    release-candidate-family-assignment-id: 2026-07-30-example-release
 ```
 
 With `promote-only-release-candidate: "true"`, promotion fails before
@@ -81,6 +100,11 @@ tarball bytes, marks `publish-package-main` as `role: main`, and marks every
 other package as `role: platform`. Consumer workflows therefore stay
 declarative and do not need their own artifact download or publish-evidence
 generation scripts.
+
+When `release-candidate-family-evidence-required` is true, the promotion
+boundary additionally requires the exact family root and may require the
+Initiative and Assignment ids. Missing, mismatched, or source-drifted family
+evidence fails before version-state, release-state, tag, or branch mutation.
 
 Because a channel merge can trigger promotion before its PR-stage matrix has
 finished uploading evidence, the resolver waits up to ten minutes for the exact

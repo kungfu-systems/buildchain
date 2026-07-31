@@ -104,10 +104,8 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
   assert.equal(inventory.policy.unclassifiedV2TokensAllowed, false);
 
   const allowedClassifications = new Set([
-    "artifact-version-example",
     "legacy-compatibility-action",
     "legacy-compatibility-ref",
-    "public-contract-compatibility-fallback",
     "retired-input-tombstone",
     "retired-path-tombstone",
     "third-party-action-version",
@@ -1048,6 +1046,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-invariant-passport-jsons: \$\{\{ inputs\.release-passport-invariant-passport-jsons \}\}/);
   assert.match(workflow, /release-passport-invariant-passport-command:/);
   assert.match(workflow, /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/);
+  assert.match(workflow, /release-passport-evidence-jsons:/);
+  assert.match(workflow, /release-passport-evidence-jsons: \$\{\{ inputs\.release-passport-evidence-jsons \}\}/);
+  assert.match(workflow, /release-passport-attachment-command:/);
+  assert.match(workflow, /release-passport-attachment-command: \$\{\{ inputs\.release-passport-attachment-command \}\}/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
   assert.match(workflow, /github-artifact-attestation-policy-json:/);
@@ -1167,6 +1169,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
+  assert.match(workflow, /release-candidate-family-evidence-required:/);
+  assert.match(workflow, /release-candidate-family-evidence-root:/);
+  assert.match(workflow, /release-candidate-family-initiative-id:/);
+  assert.match(workflow, /release-candidate-family-assignment-id:/);
   assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
   assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
   assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \|\| steps\.rc\.outputs\.publish-required-artifacts-json \}\}/);
@@ -2529,6 +2535,22 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     }),
     { ok: true, decision: "official-channel" },
   );
+  assert.deepEqual(
+    resolveRuntimeSelection({
+      requestedRef: "a".repeat(40),
+      workflowRef: `kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@${"a".repeat(40)}`,
+    }),
+    {
+      requestedRef: "a".repeat(40),
+      runtimeRef: "a".repeat(40),
+      runtimeFullRef: "a".repeat(40),
+      runtimeClass: "exact-sha",
+      runtimeOverride: false,
+      workflowShellRef: "a".repeat(40),
+      rollbackRef: "a".repeat(40),
+      trustDecision: "pinned-self",
+    },
+  );
   assert.equal(
     normalizeRequestedRuntimeRef("refs/heads/train/v2/v2.3/runtime-loader").ref,
     "train/v2/v2.3/runtime-loader",
@@ -2555,6 +2577,24 @@ test("runtime selection accepts official channels and gates train or SHA overrid
       decision: "rejected-untrusted-event",
       reason: "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
     },
+  );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "push",
+      sameRepositoryWorkflow: true,
+      workflowShellSha: "a".repeat(40),
+    }),
+    { ok: true, decision: "pinned-self" },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "push",
+      sameRepositoryWorkflow: true,
+      workflowShellSha: "b".repeat(40),
+    }).ok,
+    false,
   );
   assert.deepEqual(
     validateRuntimeOverrideTrust({
@@ -2624,7 +2664,17 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
     assert.match(workflow, /process\.env\.BUILDCHAIN_WORKFLOW_REF \|\| process\.env\.GITHUB_WORKFLOW_REF/);
     assert.match(workflow, /const officialChannelRef = \/\^v\\d\+/);
     assert.match(workflow, /const officialChannel = officialChannelRef\.test\(requested\)/);
-    assert.match(workflow, /requested !== "" && !officialChannel/);
+    if (
+      workflowFile === ".github/workflows/paper-release.yml" ||
+      workflowFile === ".github/workflows/publication-artifact.yml"
+    ) {
+      assert.match(workflow, /const pinnedSelfRuntime =/);
+      assert.match(workflow, /requested\.toLowerCase\(\) === shellRef\.toLowerCase\(\)/);
+      assert.match(workflow, /requested !== "" && !officialChannel && !pinnedSelfRuntime/);
+      assert.match(workflow, /\? "pinned-self"/);
+    } else {
+      assert.match(workflow, /requested !== "" && !officialChannel/);
+    }
     assert.match(workflow, /\? "official-channel"/);
     assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
   }
@@ -2899,6 +2949,7 @@ test("reusable build exposes release-candidate passport outputs", () => {
   );
 
   assert.match(workflow, /release-candidate:/);
+  assert.match(workflow, /release-candidate-family-evidence-json:/);
   assert.match(workflow, /github-artifact-attestation-subject-path:/);
   assert.match(workflow, /github-artifact-attestation-signer-sha:/);
   assert.match(workflow, /BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA:/);
@@ -2913,6 +2964,7 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /release-candidate-passport-json/);
   assert.match(workflow, /gate-profile-aggregate-json:/);
   assert.match(workflow, /BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON/);
+  assert.match(workflow, /BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON/);
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
 });
 
@@ -3100,6 +3152,10 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /reconciliation-workspace:/);
   assert.match(action, /release-candidate-passport-path:/);
   assert.match(action, /release-candidate-build-summary-path:/);
+  assert.match(action, /release-candidate-family-evidence-required:/);
+  assert.match(action, /release-candidate-family-evidence-root:/);
+  assert.match(action, /release-candidate-family-initiative-id:/);
+  assert.match(action, /release-candidate-family-assignment-id:/);
   assert.match(action, /release-passport-kfd-1-witness-jsons:/);
   assert.match(action, /release-passport-kfd-2-claim-jsons:/);
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
@@ -3109,10 +3165,17 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-product-gate-jsons:/);
   assert.match(action, /release-passport-invariant-passport-jsons:/);
   assert.match(action, /release-passport-invariant-passport-command:/);
+  assert.match(action, /release-passport-evidence-jsons:/);
+  assert.match(action, /release-passport-attachment-command:/);
+  assert.match(action, /release-passport-evidence-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(action, /publish-rematerialize-on-resume:/);
   assert.match(action, /release-passport-github-artifact-attestation-policy-jsons:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
+  assert.match(implementation, /releaseCandidateFamilyEvidenceRequired/);
+  assert.match(implementation, /releaseCandidateFamilyEvidenceRoot/);
+  assert.match(implementation, /releaseCandidateFamilyInitiativeId/);
+  assert.match(implementation, /releaseCandidateFamilyAssignmentId/);
   assert.match(implementation, /reconciliationWorkspace/);
   assert.match(implementation, /releasePassportKfd1WitnessJsons/);
   assert.match(implementation, /releasePassportKfd2ClaimJsons/);
@@ -3123,16 +3186,21 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfdProductGateJsons/);
   assert.match(implementation, /releasePassportInvariantPassportJsons/);
   assert.match(implementation, /releasePassportInvariantPassportCommand/);
+  assert.match(implementation, /releasePassportEvidenceJsons/);
+  assert.match(implementation, /releasePassportAttachmentCommand/);
   assert.match(implementation, /releasePassportBuildchainSelfKfd/);
   assert.match(implementation, /publishRematerializeOnResume/);
   assert.match(implementation, /releasePassportGitHubArtifactAttestationPolicyJsons/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
+  assert.match(docs, /release-candidate-family-evidence-required: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
   assert.match(docs, /release-passport-kfd-support-matrix-json/);
   assert.match(docs, /release-passport-kfd-product-gate-jsons/);
   assert.match(docs, /release-passport-invariant-passport-command/);
+  assert.match(docs, /release-passport-evidence-jsons/);
+  assert.match(docs, /release-passport-attachment-command/);
   assert.match(docs, /publish-rematerialize-on-resume: true/);
 });
 
@@ -4139,8 +4207,8 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(stableLock.buildchain.majorLine, "v3");
   assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.equal(
-    stableLock.buildchain.compatibilityDigest,
     alphaLock.buildchain.compatibilityDigest,
+    currentContract.compatibilityDigest,
   );
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),

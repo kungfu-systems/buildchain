@@ -1,6 +1,24 @@
+---
+status: active
+period: ongoing
+theme: buildchain-config-validation-action
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # validate-config
 
-Buildchain v2 action for validating `buildchain.toml` without running lifecycle
+Buildchain v3 action for validating `.buildchain/buildchain.toml` without running lifecycle
 commands.
 
 Use this action during repository migration when a heavyweight project needs to

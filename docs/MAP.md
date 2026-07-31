@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-documentation-map
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Documentation Map
 
 Start here. Find the question you have; follow it to the document that answers
@@ -10,7 +28,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 - `stable` - current and holds.
 - `draft` - exists, rough or incomplete.
 - `to write` - planned; the material exists but is not yet a single doc.
-- `retired` - intentionally not part of the active Buildchain v2 surface.
+- `retired` - intentionally not part of the active Buildchain v3 surface.
 
 ## Capability Coverage
 
@@ -129,14 +147,14 @@ replace them.
 
 - **ABV / old workflows / old action repositories** -> [`release-governance.md`](release-governance.md)
   and [`migration-inventory.md`](migration-inventory.md).
-- **v2 / v3-alpha / v2.0 / v2.0-alpha / exact tags / floating tags** ->
+- **v3 / v3-alpha / v3.0 / v3.0-alpha / exact tags / floating tags** ->
   [`release-governance.md`](release-governance.md) and
   [`release-flow.md`](release-flow.md).
 - **Buildchain self-dogfood / released alpha canary / stable compatibility lane** ->
   [`release-governance.md`](release-governance.md#buildchain-alpha-self-dogfood).
 - **qualified alpha ledger / scheduled stable selection / hold and revoke** ->
   [`stable-candidate-patrol.md`](stable-candidate-patrol.md).
-- **v2.1 vs v2.2 / when to open a new minor line** ->
+- **v3.1 vs v3.2 / when to open a new minor line** ->
   [`versioning.md`](versioning.md).
 - **dry-run / what would happen if this channel PR merges** -> [`cli.md`](cli.md)
   and [`release-flow.md`](release-flow.md).

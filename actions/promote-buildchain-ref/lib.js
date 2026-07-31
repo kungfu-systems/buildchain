@@ -464,6 +464,10 @@ function validatePromotionReleaseCandidate({
   sourceHeadSha,
   sourceTreeSha = "",
   requirePlatforms = true,
+  requireFamilyEvidence = false,
+  familyEvidenceRoot = "",
+  familyInitiativeId = "",
+  familyAssignmentId = "",
 }) {
   const resolvedPassportPath = resolveMaybeRelative(cwd, passportPath);
   if (!fs.existsSync(resolvedPassportPath)) {
@@ -483,6 +487,10 @@ function validatePromotionReleaseCandidate({
     version,
     buildSummary,
     requirePlatforms,
+    requireFamilyEvidence,
+    familyEvidenceRoot,
+    familyInitiativeId,
+    familyAssignmentId,
   });
   const acceptedSourceShas = [
     passport.source?.headSha,
@@ -507,6 +515,7 @@ function validatePromotionReleaseCandidate({
     candidateHash: passport.candidateHash || "",
     platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
     gateProfileEvidence: passport.gateProfileEvidence,
+    familyEvidence: passport.familyEvidence,
     controllerReceipts: passport.controllerReceipts || [],
     builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
     builtSourceTreeSha: passport.source?.treeHash || "",
@@ -1590,6 +1599,60 @@ function generateBuildchainSelfKfdInputs({ cwd, outputDir = ".buildchain/kfd", s
   };
 }
 
+function generateReleaseEvidenceInputs({
+  command,
+  cwd,
+  sourceSha,
+  tag,
+  channel,
+  version,
+  deploymentCoordinate,
+  targetRef,
+  outputDir,
+}) {
+  if (!command) {
+    return [];
+  }
+  let parsed;
+  try {
+    const output = execSync(command, {
+      cwd,
+      env: {
+        ...process.env,
+        BUILDCHAIN_RELEASE_SOURCE_SHA: sourceSha,
+        BUILDCHAIN_RELEASE_TAG: tag,
+        BUILDCHAIN_RELEASE_CHANNEL: channel,
+        BUILDCHAIN_RELEASE_VERSION: version,
+        BUILDCHAIN_RELEASE_DEPLOYMENT_COORDINATE: deploymentCoordinate,
+        BUILDCHAIN_RELEASE_TARGET_REF: targetRef,
+        BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR: outputDir,
+      },
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    parsed = JSON.parse(output);
+  } catch (error) {
+    const message = error.stderr?.toString?.().trim() || error.message;
+    throw new Error(`release passport attachment command failed: ${message}`);
+  }
+  const files = Array.isArray(parsed) ? parsed : parsed?.files;
+  if (!Array.isArray(files) || files.length === 0) {
+    throw new Error(
+      "release passport attachment command must emit a JSON array or an object with a non-empty files array",
+    );
+  }
+  return files.map((file, index) => {
+    const normalized = String(file || "").trim();
+    const resolved = normalized ? resolveMaybeRelative(cwd, normalized) : "";
+    if (!resolved || !fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+      throw new Error(
+        `release passport attachment command files[${index}] does not exist: ${normalized || "<empty>"}`,
+      );
+    }
+    return resolved;
+  });
+}
+
 async function collectAndPersistReleasePassport({
   result,
   owner,
@@ -1615,6 +1678,8 @@ async function collectAndPersistReleasePassport({
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
   invariantPassportCommand = "",
+  releaseEvidenceJsons = [],
+  releaseEvidenceCommand = "",
   buildchainSelfKfd = false,
   githubArtifactAttestationPolicyJsons = [],
   enabled = true,
@@ -1648,6 +1713,17 @@ async function collectAndPersistReleasePassport({
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
   const publicReleaseTag = publicReleaseTagForTransaction(result.transaction);
+  const generatedReleaseEvidenceJsons = generateReleaseEvidenceInputs({
+    command: releaseEvidenceCommand,
+    cwd,
+    sourceSha: passportSourceSha,
+    tag: publicReleaseTag,
+    channel,
+    version: publishedVersion,
+    deploymentCoordinate: `github-release:${owner}/${repo}@${publicReleaseTag}`,
+    targetRef,
+    outputDir: resolvedOutputDir,
+  });
   const inferredImpactJson = createTreeEquivalentReleaseImpact({
     channel,
     version: publishedVersion,
@@ -1722,6 +1798,10 @@ async function collectAndPersistReleasePassport({
     kfdProductGateJsons,
     invariantPassportJsons,
     invariantPassportCommand,
+    releaseEvidenceJsons: [
+      ...releaseEvidenceJsons,
+      ...generatedReleaseEvidenceJsons,
+    ],
     githubArtifactAttestationPolicyJsons,
     buildSummaryJson,
     platformManifestJsons: platformManifests,
@@ -2973,12 +3053,18 @@ async function promoteBuildchainRefs({
   releasePassportKfdProductGateJsons = "",
   releasePassportInvariantPassportJsons = "",
   releasePassportInvariantPassportCommand = "",
+  releasePassportEvidenceJsons = "",
+  releasePassportAttachmentCommand = "",
   releasePassportBuildchainSelfKfd = false,
   releasePassportGitHubArtifactAttestationPolicyJsons = "",
   promoteOnlyReleaseCandidate = false,
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releaseCandidateVersion = "",
+  releaseCandidateFamilyEvidenceRequired = false,
+  releaseCandidateFamilyEvidenceRoot = "",
+  releaseCandidateFamilyInitiativeId = "",
+  releaseCandidateFamilyAssignmentId = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
   runId = process.env.GITHUB_RUN_ID || "",
   publishTransactionOverride = false,
@@ -3125,6 +3211,10 @@ async function promoteBuildchainRefs({
       version: releaseCandidateVersion,
       sourceHeadSha: sha,
       sourceTreeSha: targetCommitInfo.treeSha,
+      requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
+      familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
+      familyInitiativeId: releaseCandidateFamilyInitiativeId,
+      familyAssignmentId: releaseCandidateFamilyAssignmentId,
     });
     updates.push({
       action: "verified-release-candidate",
@@ -4659,6 +4749,7 @@ async function promoteBuildchainRefs({
     passportKfdSupportMatrixJson = releasePassportKfdSupportMatrixJson,
     passportKfdProductGateJsons = splitPathList(releasePassportKfdProductGateJsons),
     passportInvariantPassportJsons = splitPathList(releasePassportInvariantPassportJsons),
+    passportReleaseEvidenceJsons = splitPathList(releasePassportEvidenceJsons),
     passportReleaseCandidateValidation = releaseCandidateValidation,
   } = {}) => {
     latestPublishTransaction = await completeTransactionFinalization(latestPublishTransaction, actor, runId);
@@ -4690,6 +4781,8 @@ async function promoteBuildchainRefs({
       kfdProductGateJsons: passportKfdProductGateJsons,
       invariantPassportJsons: passportInvariantPassportJsons,
       invariantPassportCommand: releasePassportInvariantPassportCommand,
+      releaseEvidenceJsons: passportReleaseEvidenceJsons,
+      releaseEvidenceCommand: releasePassportAttachmentCommand,
       buildchainSelfKfd: Boolean(releasePassportBuildchainSelfKfd),
       githubArtifactAttestationPolicyJsons: splitPathList(
         releasePassportGitHubArtifactAttestationPolicyJsons,
@@ -6037,6 +6130,7 @@ export {
   alignMajorBootstrapReleaseImpact,
   versionVerificationAllowedPathsForPromotion,
   resolveReleaseImpactInput,
+  generateReleaseEvidenceInputs,
   createTreeEquivalentReleaseImpact,
   releasePassportArtifactFiles,
   validatePromotionReleaseCandidate,

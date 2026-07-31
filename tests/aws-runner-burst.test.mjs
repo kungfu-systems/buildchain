@@ -196,3 +196,15 @@ test("CodeBuild stack is credential-free, bounded, and fail closed", () => {
     /PERSONAL_ACCESS_TOKEN|AWS_ACCESS_KEY_ID|SecretAccessKey|ssh-rsa/,
   );
 });
+
+test("CodeConnections example stays within the AWS 32-character name limit", () => {
+  const guide = fs.readFileSync(
+    path.join(root, "docs/aws-us-elastic-runner-burst-plane.md"),
+    "utf8",
+  );
+  assert.match(guide, /burst_connection_name=kungfu-linux-burst-poc/);
+  assert.doesNotMatch(
+    guide,
+    /burst_connection_name=kungfu-buildchain-linux-burst-poc/,
+  );
+});

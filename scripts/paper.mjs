@@ -446,7 +446,7 @@ export async function runPaperCli(
       "..",
     ),
     buildchainVersion = "",
-    buildchainRef = "v2",
+    buildchainRef = "v3",
     buildchainSha = "",
   } = {},
 ) {

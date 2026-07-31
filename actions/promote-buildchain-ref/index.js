@@ -315,6 +315,10 @@ async function main() {
   const releasePassportKfdProductGateJsons = core.getInput("release-passport-kfd-product-gate-jsons");
   const releasePassportInvariantPassportJsons = core.getInput("release-passport-invariant-passport-jsons");
   const releasePassportInvariantPassportCommand = core.getInput("release-passport-invariant-passport-command");
+  const releasePassportEvidenceJsons = core.getInput("release-passport-evidence-jsons");
+  const releasePassportAttachmentCommand =
+    core.getInput("release-passport-attachment-command") ||
+    core.getInput("release-passport-evidence-command");
   const releasePassportBuildchainSelfKfd = core.getBooleanInput("release-passport-buildchain-self-kfd");
   const releasePassportGitHubArtifactAttestationPolicyJsons = core.getInput(
     "release-passport-github-artifact-attestation-policy-jsons",
@@ -329,6 +333,10 @@ async function main() {
   const releaseCandidatePassportPath = core.getInput("release-candidate-passport-path");
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
   const releaseCandidateVersion = core.getInput("release-candidate-version");
+  const releaseCandidateFamilyEvidenceRequired = core.getBooleanInput("release-candidate-family-evidence-required");
+  const releaseCandidateFamilyEvidenceRoot = core.getInput("release-candidate-family-evidence-root");
+  const releaseCandidateFamilyInitiativeId = core.getInput("release-candidate-family-initiative-id");
+  const releaseCandidateFamilyAssignmentId = core.getInput("release-candidate-family-assignment-id");
   const octokit = github.getOctokit(token);
   const statusCheckOctokit =
     generatedStatusCheckToken === token ? octokit : github.getOctokit(generatedStatusCheckToken);
@@ -413,12 +421,18 @@ async function main() {
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
     releasePassportInvariantPassportCommand,
+    releasePassportEvidenceJsons,
+    releasePassportAttachmentCommand,
     releasePassportBuildchainSelfKfd,
     releasePassportGitHubArtifactAttestationPolicyJsons,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,
     releaseCandidateVersion,
+    releaseCandidateFamilyEvidenceRequired,
+    releaseCandidateFamilyEvidenceRoot,
+    releaseCandidateFamilyInitiativeId,
+    releaseCandidateFamilyAssignmentId,
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
     publishTransactionOverride,
