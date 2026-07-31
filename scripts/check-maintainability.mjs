@@ -18,6 +18,36 @@ function gitOutput(root, args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" });
 }
 
+function revisionAvailable(root, revision) {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${revision}^{commit}`], {
+      cwd: root,
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function ensureRevisionAvailable(root, revision) {
+  if (revisionAvailable(root, revision)) return false;
+  try {
+    gitOutput(root, ["fetch", "--no-tags", "--depth=1", "origin", revision]);
+  } catch (error) {
+    const detail = String(error?.stderr || error?.message || error).trim();
+    throw new Error(
+      `maintainability enforcement revision ${revision} is unavailable and could not be fetched from origin${detail ? `: ${detail}` : ""}`,
+    );
+  }
+  if (!revisionAvailable(root, revision)) {
+    throw new Error(
+      `maintainability enforcement revision ${revision} is unavailable after a successful origin fetch`,
+    );
+  }
+  return true;
+}
+
 function sourceMetricsAtRevision(root, revision) {
   const files = gitOutput(root, ["ls-tree", "-r", "--name-only", revision])
     .split("\n")
@@ -277,6 +307,10 @@ function checkMaintainability({ root = process.cwd() } = {}) {
   const policy = readJson(root, "architecture/maintainability-policy.json");
   const baseline = readJson(root, policy.baseline);
   const enforcementRevision = policy.enforcementRevision || baseline.revision;
+  const hydratedEnforcementRevision = ensureRevisionAvailable(
+    root,
+    enforcementRevision,
+  );
   const current = collectMaintainabilityMetrics({ root });
   const baselineFiles = sourceMetricsAtRevision(root, enforcementRevision);
   const issues = evaluateMaintainability({ current, baselineFiles, policy });
@@ -290,6 +324,7 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     schemaVersion: 1,
     baselineRevision: baseline.revision,
     enforcementRevision,
+    hydratedEnforcementRevision,
     trackedFiles: current.repository.trackedFiles,
     sourceFiles: current.repository.handMaintainedSourceFiles,
     publicSurface: current.publicSurface,
@@ -315,6 +350,7 @@ if (
 
 export {
   checkMaintainability,
+  ensureRevisionAvailable,
   evaluateMaintainability,
   evaluatePublicSurface,
   sourceMetricsAtRevision,
