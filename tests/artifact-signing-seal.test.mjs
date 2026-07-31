@@ -166,6 +166,119 @@ kind = "archive"
   }
 });
 
+test("declared signing directories do not require duplicate artifact-path configuration", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-signing-declared-directory-"),
+  );
+  try {
+    const subject = path.join(workspace, "dist", "consumer.bundle");
+    const published = path.join(workspace, "release", "consumer.tar.gz");
+    fs.mkdirSync(subject, { recursive: true });
+    fs.mkdirSync(path.dirname(published), { recursive: true });
+    fs.writeFileSync(path.join(subject, "consumer"), "native-binary\n");
+    fs.writeFileSync(path.join(subject, "metadata.json"), "{}\n");
+    fs.writeFileSync(published, "published-archive\n");
+    fs.writeFileSync(
+      path.join(workspace, "buildchain.toml"),
+      `schema = 1
+
+[[signing.artifacts]]
+id = "consumer-bundle"
+path = "dist/consumer.bundle"
+kind = "directory"
+`,
+    );
+    fs.writeFileSync(
+      path.join(workspace, "manifest.json"),
+      `${JSON.stringify({
+        platform: { id: "linux-x64", os: "linux", arch: "x64" },
+        files: [
+          {
+            path: "release/consumer.tar.gz",
+            size: fs.statSync(published).size,
+            sha256: sha256(published),
+          },
+        ],
+      })}\n`,
+    );
+
+    const outputRoot = path.join(workspace, ".buildchain", "signing");
+    const index = sealArtifactSigningRequests({
+      workspace,
+      manifestPath: "manifest.json",
+      outputRoot,
+      repository: "kungfu-systems/consumer",
+      sourceSha: SOURCE_SHA,
+      sourceTreeSha: TREE_SHA,
+      runtimeSha: RUNTIME_SHA,
+      platformId: "linux-x64",
+    });
+
+    assert.equal(index.requests.length, 1);
+    const request = JSON.parse(
+      fs.readFileSync(path.join(outputRoot, index.requests[0].path), "utf8"),
+    );
+    assert.equal(request.artifact.path, "dist/consumer.bundle");
+    assert.equal(request.artifact.kind, "directory");
+    assert.equal(request.artifact.transport.format, "tar");
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("signing request sealing rejects partial lifecycle manifest coverage", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-signing-partial-manifest-"),
+  );
+  try {
+    const subject = path.join(workspace, "dist", "consumer.bundle");
+    fs.mkdirSync(subject, { recursive: true });
+    const first = path.join(subject, "consumer");
+    fs.writeFileSync(first, "native-binary\n");
+    fs.writeFileSync(path.join(subject, "metadata.json"), "{}\n");
+    fs.writeFileSync(
+      path.join(workspace, "buildchain.toml"),
+      `schema = 1
+
+[[signing.artifacts]]
+id = "consumer-bundle"
+path = "dist/consumer.bundle"
+kind = "directory"
+`,
+    );
+    fs.writeFileSync(
+      path.join(workspace, "manifest.json"),
+      `${JSON.stringify({
+        platform: { id: "linux-x64", os: "linux", arch: "x64" },
+        files: [
+          {
+            path: "dist/consumer.bundle/consumer",
+            size: fs.statSync(first).size,
+            sha256: sha256(first),
+          },
+        ],
+      })}\n`,
+    );
+
+    assert.throws(
+      () =>
+        sealArtifactSigningRequests({
+          workspace,
+          manifestPath: "manifest.json",
+          outputRoot: ".buildchain/signing",
+          repository: "kungfu-systems/consumer",
+          sourceSha: SOURCE_SHA,
+          sourceTreeSha: TREE_SHA,
+          runtimeSha: RUNTIME_SHA,
+          platformId: "linux-x64",
+        }),
+      /only partially represented in lifecycle manifest/,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("signing request sealing refuses an output root that contains sources", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-signing-unsafe-output-"),
