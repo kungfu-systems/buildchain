@@ -15,6 +15,12 @@ function normalized(value) {
   return String(value ?? "").trim();
 }
 
+function sameExactSha(left, right) {
+  const first = normalized(left).toLowerCase();
+  const second = normalized(right).toLowerCase();
+  return /^[0-9a-f]{40}$/.test(first) && first === second;
+}
+
 function targetIntent(targetRef, requestedPublicationChannel = "") {
   const ref = normalized(targetRef).replace(/^refs\/heads\//, "");
   const target = TARGETS.find((entry) => entry.pattern.test(ref));
@@ -36,6 +42,7 @@ export function resolvePromotionChannel({
   publicationChannel = "",
   targetRef = "",
   routerRef = "",
+  routerSha = "",
   packageVersion = "",
 } = {}) {
   const intent = targetIntent(targetRef, publicationChannel);
@@ -47,8 +54,10 @@ export function resolvePromotionChannel({
     routerRef,
     packageVersion,
   });
-  const overrideUsed = selected.channel === "override";
-  if (!overrideUsed && selected.channel !== intent.shellChannel) {
+  const trustedRouterPin = selected.channel === "override"
+    && sameExactSha(selected.buildchainRef, routerSha);
+  const overrideUsed = selected.channel === "override" && !trustedRouterPin;
+  if (!overrideUsed && !trustedRouterPin && selected.channel !== intent.shellChannel) {
     throw new Error(
       `promotion target ${intent.targetRef} requires ${intent.shellChannel} shell/runtime, got ${selected.channel}`,
     );
@@ -62,8 +71,10 @@ export function resolvePromotionChannel({
     shellRef,
     runtimeRef: selected.buildchainRef,
     overrideUsed,
-    selectionSource: selected.selectionSource,
-    reason: selected.reason,
+    selectionSource: trustedRouterPin ? "trusted-router-sha" : selected.selectionSource,
+    reason: trustedRouterPin
+      ? `explicit Buildchain runtime ref ${selected.buildchainRef} matches the reusable workflow SHA`
+      : selected.reason,
   };
 }
 
@@ -108,6 +119,7 @@ function main() {
     publicationChannel: args["publication-channel"],
     targetRef: args["target-ref"],
     routerRef: args["router-ref"],
+    routerSha: args["router-sha"],
     packageVersion: readPackageVersion(cwd),
   });
   if (process.env.GITHUB_OUTPUT) writeOutputs(process.env.GITHUB_OUTPUT, result);
