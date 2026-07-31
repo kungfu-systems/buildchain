@@ -65,6 +65,7 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.doesNotMatch(workflow, /generated-ref-update-token:.*github\.token/);
   assert.match(workflow, /github\.token fallback is forbidden/);
   assert.match(workflow, /Verify candidate bytes against sealed capability/);
+  assert.doesNotMatch(workflow, /paper-release\/package-result\.json/);
   assert.match(
     workflow,
     /capability\.artifactDigest !== bundle\.candidate\.candidateDigest/,
