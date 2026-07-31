@@ -4470,7 +4470,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
     "workflowRegistryDigest": "c65687f6629f8f428b2853756576b61147b96d02936ed27ca901b6fdf990cd85",
-    "pageRegistryDigest": "16f8d617e857bd01cacd32e882940ed9f1189c17b7affbf01a6b3a3f177b6f7e"
+    "pageRegistryDigest": "ad6cbf9554df01b98bf705c1708020bebbda7296aa028343b76f0bbd09cbfb52"
   },
   "comparison": {
     "missingCliRegistry": [],
