@@ -33,6 +33,11 @@ const target = (
   strictRequiredChecks,
   allowedBypassActors,
 });
+const paperTargets = (mainCheck) => [
+  target("main", [check(mainCheck)], false),
+  ...["dev", "alpha", "release"].map((family) =>
+    target(`${family}/v0/v0.1`, [check("check / check")], true)),
+];
 const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   ".github": [
     target("main", [check("governance")], false),
@@ -92,31 +97,11 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
     target("dev/v1/v1.0", [check("Signed-off commits"), check("check")], true),
     target("alpha/v1/v1.0", [check("Signed-off commits"), check("check")], false),
   ],
-  "paper-episodes-to-primitives": [
-    target("main", [check("governance")], false),
-    target("dev/v0/v0.1", [check("check / check")], true),
-    target("alpha/v0/v0.1", [check("check / check")], true),
-  ],
-  "paper-kfd-foundation-real-world-agent-work": [
-    target("main", [check("check / check")], false),
-    target("dev/v0/v0.1", [check("check / check")], true),
-    target("alpha/v0/v0.1", [check("check / check")], true),
-  ],
-  "paper-kfd-machine-life-roadmap": [
-    target("main", [check("check / check")], false),
-    target("dev/v0/v0.1", [check("check / check")], true),
-    target("alpha/v0/v0.1", [check("check / check")], true),
-  ],
-  "paper-kungfu-product-white-paper": [
-    target("main", [check("check / check")], false),
-    target("dev/v0/v0.1", [check("check / check")], true),
-    target("alpha/v0/v0.1", [check("check / check")], true),
-  ],
-  "paper-observer-declared-timelines": [
-    target("main", [check("check / check")], false),
-    target("dev/v0/v0.1", [check("check / check")], true),
-    target("alpha/v0/v0.1", [check("check / check")], true),
-  ],
+  "paper-episodes-to-primitives": paperTargets("governance"),
+  "paper-kfd-foundation-real-world-agent-work": paperTargets("check / check"),
+  "paper-kfd-machine-life-roadmap": paperTargets("check / check"),
+  "paper-kungfu-product-white-paper": paperTargets("check / check"),
+  "paper-observer-declared-timelines": paperTargets("check / check"),
   "site-kungfu-tech": [
     target("main", [check("web-surface / Record web-surface controller receipt")], false),
   ],

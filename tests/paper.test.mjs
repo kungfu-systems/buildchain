@@ -41,6 +41,7 @@ import {
   transitionReleaseTransaction,
   writeReleaseTransaction,
 } from "../packages/core/publish-transaction.js";
+import { evaluatePaperGithubGovernance } from "../scripts/paper-work-fleet-cli.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -797,6 +798,59 @@ test("paper fleet audit and update converge data-driven worktrees only", () => {
       "@kungfu-tech/buildchain"
     ],
     packageVersion,
+  );
+});
+
+test("paper fleet governance accepts classic exact-branch protection and requires release", () => {
+  const classic = {
+    required_status_checks: {
+      strict: true,
+      contexts: ["check / check"],
+      checks: [{ context: "check / check", app_id: 15368 }],
+    },
+    required_pull_request_reviews: {
+      dismiss_stale_reviews: true,
+      require_code_owner_reviews: true,
+      required_approving_review_count: 1,
+      require_last_push_approval: true,
+      bypass_pull_request_allowances: { users: [], teams: [], apps: [] },
+    },
+    enforce_admins: { enabled: true },
+    required_conversation_resolution: { enabled: true },
+    allow_force_pushes: { enabled: false },
+    allow_deletions: { enabled: false },
+  };
+  const protections = Object.fromEntries(
+    ["dev", "alpha", "release"].map((family) => [
+      `${family}/v0/v0.1`,
+      { ok: true, protection: classic },
+    ]),
+  );
+  const options = {
+    repository: "kungfu-systems/paper-kfd-machine-life-roadmap",
+    actions: {
+      default_workflow_permissions: "read",
+      can_approve_pull_request_reviews: false,
+    },
+    protections,
+  };
+  const current = evaluatePaperGithubGovernance(options);
+  assert.equal(current.status, "pass", JSON.stringify(current, null, 2));
+  assert.equal(current.targets.length, 3);
+
+  const missingRelease = evaluatePaperGithubGovernance({
+    ...options,
+    protections: {
+      ...protections,
+      "release/v0/v0.1": { ok: false, protection: null },
+    },
+  });
+  assert.equal(missingRelease.status, "fail");
+  assert.equal(
+    missingRelease.checks.find(
+      (entry) => entry.id === "protection.release/v0/v0.1.observed",
+    ).status,
+    "fail",
   );
 });
 
