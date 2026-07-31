@@ -112,6 +112,9 @@ on:
         type: boolean
         required: false
     secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
       BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID:
         description: "Preferred GitHub App client ID for generated repository writes"
         required: false

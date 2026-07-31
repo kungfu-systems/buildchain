@@ -1479,9 +1479,10 @@
         "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
         "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
         "BUILDCHAIN_GENERATED_WRITE_TOKEN",
-        "BUILDCHAIN_PROMOTION_TOKEN"
+        "BUILDCHAIN_PROMOTION_TOKEN",
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
       ],
-      "secretCount": 4,
+      "secretCount": 5,
       "outputs": [
         "github-release-url",
         "package-name",
