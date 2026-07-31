@@ -4612,6 +4612,85 @@ test("runLifecycle writes deterministic artifact manifest", () => {
   }
 });
 
+test("runLifecycle binds platform signing declarations outside upload paths", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-signing-lifecycle-"),
+  );
+  try {
+    const consumer = path.join(workspace, "consumer");
+    const releaseArtifact = path.join(consumer, "release", "checksums.txt");
+    const frameworkBinary = path.join(
+      consumer,
+      "dist",
+      "Kungfu Episodes.app",
+      "Contents",
+      "Frameworks",
+      "Electron Framework.framework",
+      "Versions",
+      "A",
+      "Electron Framework",
+    );
+    fs.mkdirSync(path.dirname(releaseArtifact), { recursive: true });
+    fs.mkdirSync(path.dirname(frameworkBinary), { recursive: true });
+    fs.writeFileSync(releaseArtifact, "release\n");
+    fs.writeFileSync(frameworkBinary, "nested-native-code\n");
+    fs.writeFileSync(
+      path.join(consumer, "buildchain.toml"),
+      `schema = 1
+
+[[signing.artifacts]]
+id = "desktop-macos-arm64"
+path = "dist/Kungfu Episodes.app"
+kind = "app-bundle"
+platforms = ["macos-arm64"]
+`,
+    );
+
+    runLifecycle({
+      cwd: consumer,
+      workspace,
+      stageName: "build",
+      platformId: "macos-arm64",
+      artifactPaths: ["consumer/release"],
+      manifestPath: ".buildchain/artifacts/macos-arm64/manifest.json",
+    });
+    const macManifest = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/macos-arm64/manifest.json"),
+        "utf8",
+      ),
+    );
+    assert.deepEqual(
+      macManifest.files.map((entry) => entry.path),
+      [
+        "consumer/dist/Kungfu Episodes.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework",
+        "consumer/release/checksums.txt",
+      ],
+    );
+
+    runLifecycle({
+      cwd: consumer,
+      workspace,
+      stageName: "build",
+      platformId: "linux-x64",
+      artifactPaths: ["consumer/release"],
+      manifestPath: ".buildchain/artifacts/linux-x64/manifest.json",
+    });
+    const linuxManifest = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/manifest.json"),
+        "utf8",
+      ),
+    );
+    assert.deepEqual(
+      linuxManifest.files.map((entry) => entry.path),
+      ["consumer/release/checksums.txt"],
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("runLifecycle command override inherits declared stage shell and lifecycle env", () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-command-override-"));
   const fixture = path.join(workspace, "fixture");

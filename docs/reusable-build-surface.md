@@ -616,7 +616,11 @@ lifecycle and before verification. Buildchain binds the exact artifact bytes or 
 the caller repository, source commit, source tree, immutable runtime, platform,
 and requested signature semantics, then publishes a deterministic
 `<artifact>-signing-request-<platform>-<source-sha>` request. No consumer
-workflow step is required.
+workflow step is required. The lifecycle runner automatically adds declarations
+selected for the current platform to the `build` manifest scan, including
+subjects outside the caller's ordinary `artifact-paths`; this extends the
+evidence preimage without silently adding those subjects to the ordinary
+artifact upload.
 
 The request root is a Buildchain-owned generated output. After the declaration,
 lifecycle manifest, and source paths pass validation, sealing replaces that root
