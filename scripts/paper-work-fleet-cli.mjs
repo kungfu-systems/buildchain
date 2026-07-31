@@ -210,16 +210,46 @@ function refCovered(include, family) {
   );
 }
 
+function familyProtectionChecks(active, family) {
+  const rules = active
+    .filter((entry) => refCovered(entry.include, family))
+    .flatMap((entry) => entry.rules);
+  return [
+    { id: `rulesets.${family}-covered`, ok: rules.length > 0 },
+    {
+      id: `rulesets.${family}-deletion-blocked`,
+      ok: rules.some((entry) => entry.type === "deletion"),
+    },
+    {
+      id: `rulesets.${family}-force-push-blocked`,
+      ok: rules.some((entry) => entry.type === "non_fast_forward"),
+    },
+    {
+      id: `rulesets.${family}-pull-request-review`,
+      ok: rules.some(
+        (entry) =>
+          entry.type === "pull_request" && Number(entry.approvingReviews) >= 1,
+      ),
+    },
+    {
+      id: `rulesets.${family}-required-status-checks`,
+      ok: rules.some(
+        (entry) =>
+          entry.type === "required_status_checks" &&
+          entry.statusChecks.length > 0,
+      ),
+    },
+  ];
+}
+
 function protectionChecks(actions, rulesets) {
   const active = rulesets.filter(
     (entry) => entry.enforcement === "active" && entry.target === "branch",
   );
   const families = ["dev", "alpha", "release"];
-  const familyChecks = families.map((family) => ({
-    id: `rulesets.${family}-covered`,
-    ok: active.some((entry) => refCovered(entry.include, family)),
-  }));
-  const rules = active.flatMap((entry) => entry.rules);
+  const familyChecks = families.flatMap((family) =>
+    familyProtectionChecks(active, family),
+  );
   return [
     {
       id: "actions.default-workflow-permissions",
@@ -230,29 +260,6 @@ function protectionChecks(actions, rulesets) {
       ok: actions.can_approve_pull_request_reviews === false,
     },
     ...familyChecks,
-    {
-      id: "rulesets.deletion-blocked",
-      ok: rules.some((entry) => entry.type === "deletion"),
-    },
-    {
-      id: "rulesets.force-push-blocked",
-      ok: rules.some((entry) => entry.type === "non_fast_forward"),
-    },
-    {
-      id: "rulesets.pull-request-review",
-      ok: rules.some(
-        (entry) =>
-          entry.type === "pull_request" && Number(entry.approvingReviews) >= 1,
-      ),
-    },
-    {
-      id: "rulesets.required-status-checks",
-      ok: rules.some(
-        (entry) =>
-          entry.type === "required_status_checks" &&
-          entry.statusChecks.length > 0,
-      ),
-    },
   ].map((entry) => ({ ...entry, status: entry.ok ? "pass" : "fail" }));
 }
 
