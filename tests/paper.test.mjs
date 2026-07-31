@@ -132,6 +132,10 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
     releaseWorkflow,
     new RegExp(`buildchain-ref: ${provisioning.runtime.resolvedSha}`),
   );
+  assert.match(
+    releaseWorkflow,
+    /permissions:\n      actions: read\n      checks: write\n      contents: read\n      id-token: write\n      issues: write\n      pull-requests: write/,
+  );
   assert.doesNotMatch(releaseWorkflow, /BUILDCHAIN_PROMOTION_TOKEN/);
 
   initGit(cwd);
