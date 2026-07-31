@@ -46,6 +46,24 @@ function plannedManagedSurfaces(options) {
   }
 }
 
+function legacyBuildchainWorkflowRefs(cwd) {
+  const workflowRoot = path.resolve(cwd, ".github", "workflows");
+  if (!fs.existsSync(workflowRoot)) return [];
+  return fs
+    .readdirSync(workflowRoot, { withFileTypes: true })
+    .filter(
+      (entry) =>
+        entry.isFile() && /\.ya?ml$/i.test(entry.name),
+    )
+    .filter((entry) =>
+      /uses:\s*kungfu-systems\/buildchain\/[^\s]+@v2(?:[-.][^\s]+)?/i.test(
+        fs.readFileSync(path.join(workflowRoot, entry.name), "utf8"),
+      ),
+    )
+    .map((entry) => `.github/workflows/${entry.name}`)
+    .sort();
+}
+
 function paperFleetEntry({
   cwd,
   buildchainRoot,
@@ -78,6 +96,7 @@ function paperFleetEntry({
   const lockText = fs.existsSync(lockPath)
     ? fs.readFileSync(lockPath, "utf8")
     : "";
+  const legacyWorkflows = legacyBuildchainWorkflowRefs(cwd);
   const checks = [
     workCheck(
       "repository.canonical-origin",
@@ -112,6 +131,12 @@ function paperFleetEntry({
       "Every Buildchain-owned paper control surface matches v3.",
       "buildchain paper migrate --write --json",
     ),
+    workCheck(
+      "workflows.buildchain-v2-absent",
+      legacyWorkflows.length === 0,
+      "No workflow calls a Buildchain v2 reusable surface.",
+      "buildchain paper migrate --write --json",
+    ),
   ];
   return {
     name: path.basename(cwd),
@@ -124,6 +149,7 @@ function paperFleetEntry({
     buildchainDependency: dependency,
     expectedError: expected.error,
     managed,
+    legacyWorkflows,
     checks,
     ok: checks.every((entry) => entry.status === "pass"),
   };
