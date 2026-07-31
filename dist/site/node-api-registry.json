@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:4bba7592fc802304515eef453293be16685f700d38f644a1ad0bc2b8eb8652d9",
+      "digest": "sha256:728cea6d09cfe3714a6e95e5ce7c02ab200c6d53823c5ab0e4a2ff3b01eb6e08",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -65,7 +65,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:4bba7592fc802304515eef453293be16685f700d38f644a1ad0bc2b8eb8652d9",
+      "digest": "sha256:728cea6d09cfe3714a6e95e5ce7c02ab200c6d53823c5ab0e4a2ff3b01eb6e08",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -483,7 +483,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:4344a5503ce3baa01fc33e034f3a66fa270aecfb5aebe212b91658c2204f38e5",
+      "digest": "sha256:d8c73e29d45f93e45efd77ce80a1a0ef0153123c8e350958f710500f418f8315",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -616,7 +616,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:b94f946b8d05876ff6c46d701e02e8fea8946d70d6c538e62e9cd535b6519d4a",
+      "digest": "sha256:8c8484ae8eaec9065f32cd5cb8a90b85d7bfae00c066dfcf416971243591b61d",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [

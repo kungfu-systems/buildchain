@@ -632,8 +632,6 @@ export {
 export {
   PAPER_ALPHA_PLAN_CONTRACT,
   PAPER_BUILD_PLAN_CONTRACT,
-  PAPER_FLEET_AUDIT_CONTRACT,
-  PAPER_FLEET_UPDATE_PLAN_CONTRACT,
   PAPER_MIGRATION_CONTRACT,
   PAPER_NPM_BOOTSTRAP_CONTRACT,
   PAPER_PATHS,
@@ -643,28 +641,18 @@ export {
   PAPER_STATE_ORDER,
   PAPER_STATUS_CONTRACT,
   PAPER_VISIBILITY_CONTRACT,
-  PAPER_WORK_START_PLAN_CONTRACT,
-  PAPER_WORK_SUBMIT_PLAN_CONTRACT,
-  collectPaperFleetAudit,
   collectPaperPreflight,
   collectPaperStatus,
   createPaperAlphaPlan,
   createPaperBuildPlan,
   createPaperResumePlan,
-  createPaperWorkStartPlan,
-  createPaperWorkSubmitPlan,
-  discoverPaperFleet,
-  executePaperWorkStart,
-  executePaperWorkSubmitPush,
   executePaperNpmBootstrap,
   planPaperMigration,
-  planPaperFleetUpdate,
   planPaperScaffold,
   resolvePaperRepository,
   writePaperMigration,
-  writePaperFleetUpdate,
   writePaperScaffold,
-} from "./paper.js";
+} from "./paper.js"; export * from "./paper-work.js"; export * from "./paper-fleet.js";
 
 export {
   SURFACE_TIMESTAMP_POLICY_CONTRACT,
