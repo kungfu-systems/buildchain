@@ -197,13 +197,18 @@ Bootstrap and inspect a governed paper repository through one interface:
 npx @kungfu-tech/buildchain paper scaffold \
   --package @kungfu-tech/paper-example \
   --repository kungfu-systems/paper-example
-npx @kungfu-tech/buildchain paper preflight --offline
-npx @kungfu-tech/buildchain paper status
+pnpm add -D @kungfu-tech/buildchain@<exact-v3-version>
+pnpm exec buildchain paper work start <topic>
+pnpm exec buildchain paper work submit
+pnpm exec buildchain paper preflight --offline
+pnpm exec buildchain paper status
 ```
 
 The paper surface is dry-run first. Add `--write` only to create missing
-scaffold files; external mutations such as npm bootstrap, Alpha PR creation,
-and release resumption require `--execute`. See
+scaffold files. `work start` and `work submit` validate the canonical remote,
+exact development SHA, clean source, safe branch, and fast-forward boundary
+before changing local or GitHub state. External mutations such as npm
+bootstrap, Alpha PR creation, and release resumption require `--execute`. See
 [`docs/publication-artifacts.md`](docs/publication-artifacts.md) for the
 evidence-state model and operator flow.
 

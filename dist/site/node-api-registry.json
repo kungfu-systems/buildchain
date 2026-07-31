@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:ad56044fe0c4ee1bb99a79195efb3d01da1bb1a7fabd393094c4fb94d97d5b87",
+      "digest": "sha256:728cea6d09cfe3714a6e95e5ce7c02ab200c6d53823c5ab0e4a2ff3b01eb6e08",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -65,7 +65,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:ad56044fe0c4ee1bb99a79195efb3d01da1bb1a7fabd393094c4fb94d97d5b87",
+      "digest": "sha256:728cea6d09cfe3714a6e95e5ce7c02ab200c6d53823c5ab0e4a2ff3b01eb6e08",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -483,7 +483,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:da96db43564bff353b4e6a87c0b9e8a566f597a8b0a15a05e3e9efc0fbcc0cc8",
+      "digest": "sha256:d8c73e29d45f93e45efd77ce80a1a0ef0153123c8e350958f710500f418f8315",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -616,8 +616,8 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:af6ad934478f68cde03535b5c431303a37b0ad804a6b0a9fa3610f900c5ff9c3",
-      "summary": "Unified paper scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
+      "digest": "sha256:8c8484ae8eaec9065f32cd5cb8a90b85d7bfae00c066dfcf416971243591b61d",
+      "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
@@ -883,7 +883,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:60c6b00e0dbf60f0b7ba8c3c549027925d94a6bdf8a2af3f8e35d24ef1dd50ba"
+      "digest": "sha256:9afe80ef29fb5cce140ffc7980c41172495878726e5504e47914b8dc7af8fc1f"
     },
     {
       "id": "build-facts",

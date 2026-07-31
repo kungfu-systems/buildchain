@@ -21,21 +21,39 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "98c799afb5f2ad4491e674327546563046e5c74605a3be732e51e5c581dfc9cd",
+    "sha256": "af5cb9990177c134c9de2a03cd21bba16258e4ead0e8c7d01c94446d8cff8760",
     "summary": {
-      "cliCommandCount": 107,
+      "cliCommandCount": 111,
       "workflowCount": 57,
       "actionCount": 6,
       "sitePageCount": 60,
-      "docCommandRefCount": 311,
+      "docCommandRefCount": 315,
       "failureCount": 0
     },
     "auditBoundary": {
       "mode": "closed-world-enumerable",
       "scope": "Buildchain CLI usage/dispatch, reusable workflow inputs, action inputs, site pages, and documentation command references",
       "residualRisk": [
-        "Shell commands delegated through helper scripts are only counted when exposed through bin/buildchain.mjs usage or docs.",
-        "YAML parsing is limited to first-class action/workflow inputs, not arbitrary step environment variables."
+        {
+          "id": "public-surface-helper-command-enumeration",
+          "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+          "riskType": "natural-language-semantic-risk",
+          "trustImpact": "downgrade-warning",
+          "machineProvability": "not-machine-verifiable",
+          "agentAction": "semantic-review-required",
+          "owner": "Buildchain maintainers",
+          "reason": "Shell commands delegated through helper scripts are counted only when exposed through bin/buildchain.mjs usage or documentation."
+        },
+        {
+          "id": "public-surface-yaml-enumeration",
+          "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+          "riskType": "natural-language-semantic-risk",
+          "trustImpact": "downgrade-warning",
+          "machineProvability": "not-machine-verifiable",
+          "agentAction": "semantic-review-required",
+          "owner": "Buildchain maintainers",
+          "reason": "YAML enumeration covers first-class action and workflow inputs, not arbitrary step environment variables."
+        }
       ]
     }
   },
@@ -228,21 +246,39 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "98c799afb5f2ad4491e674327546563046e5c74605a3be732e51e5c581dfc9cd",
+      "sha256": "af5cb9990177c134c9de2a03cd21bba16258e4ead0e8c7d01c94446d8cff8760",
       "summary": {
-        "cliCommandCount": 107,
+        "cliCommandCount": 111,
         "workflowCount": 57,
         "actionCount": 6,
         "sitePageCount": 60,
-        "docCommandRefCount": 311,
+        "docCommandRefCount": 315,
         "failureCount": 0
       },
       "auditBoundary": {
         "mode": "closed-world-enumerable",
         "scope": "Buildchain CLI usage/dispatch, reusable workflow inputs, action inputs, site pages, and documentation command references",
         "residualRisk": [
-          "Shell commands delegated through helper scripts are only counted when exposed through bin/buildchain.mjs usage or docs.",
-          "YAML parsing is limited to first-class action/workflow inputs, not arbitrary step environment variables."
+          {
+            "id": "public-surface-helper-command-enumeration",
+            "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+            "riskType": "natural-language-semantic-risk",
+            "trustImpact": "downgrade-warning",
+            "machineProvability": "not-machine-verifiable",
+            "agentAction": "semantic-review-required",
+            "owner": "Buildchain maintainers",
+            "reason": "Shell commands delegated through helper scripts are counted only when exposed through bin/buildchain.mjs usage or documentation."
+          },
+          {
+            "id": "public-surface-yaml-enumeration",
+            "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+            "riskType": "natural-language-semantic-risk",
+            "trustImpact": "downgrade-warning",
+            "machineProvability": "not-machine-verifiable",
+            "agentAction": "semantic-review-required",
+            "owner": "Buildchain maintainers",
+            "reason": "YAML enumeration covers first-class action and workflow inputs, not arbitrary step environment variables."
+          }
         ]
       }
     },
@@ -2753,6 +2789,30 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:paper-fleet-audit",
+          "name": "buildchain paper fleet audit [--root <dir>] [--offline] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-fleet-update",
+          "name": "buildchain paper fleet update [--root <dir>] [--write] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:paper-migrate",
           "name": "buildchain paper migrate [--cwd <dir>] [--write] [--json]",
           "kind": "cli-command",
@@ -2803,6 +2863,30 @@
         {
           "id": "cli:paper-status",
           "name": "buildchain paper status [--cwd <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-work-start",
+          "name": "buildchain paper work start <topic> [--cwd <dir>] [--branch <branch>] [--execute] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:paper-work-submit",
+          "name": "buildchain paper work submit [--cwd <dir>] [--title <title>] [--body <body>] [--execute] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -5924,6 +6008,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 379
+    "publicSurfaceCount": 383
   }
 }
