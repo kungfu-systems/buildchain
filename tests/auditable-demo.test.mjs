@@ -778,6 +778,47 @@ test("checked-in media evidence binds measured byte budgets", () => {
   }
 });
 
+test("checked-in responsive evidence binds one exact 1080p and 720p renderer cut", () => {
+  const evidence = JSON.parse(fs.readFileSync(
+    new URL(
+      "../contracts/evidence/auditable-demo-responsive-web-delivery-v1.json",
+      import.meta.url,
+    ),
+    "utf8",
+  ));
+  const { evidenceRoot, ...body } = evidence;
+  assert.equal(evidenceRoot, sha256(Buffer.from(stableJson(body))));
+  assert.equal(
+    evidence.renderer.image,
+    "ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:b70a2f5631665f685280bc9d7434c5ed5cf48b760b728873734d0c47bff72b25",
+  );
+  assert.equal(evidence.renderer.sourceRef, "refs/tags/v1.3.0-alpha.20");
+  assert.equal(
+    evidence.renderer.sourceSha,
+    "b3cebc2deb5f140af74db24b1b45233ac6733ef1",
+  );
+  const roles = new Map(
+    evidence.qualification.renditions.map((entry) => [entry.role, entry]),
+  );
+  for (const role of ["primary-video", "alternate-video", "evidence-poster"]) {
+    assert.equal(roles.get(role).width, 1920);
+    assert.equal(roles.get(role).height, 1080);
+    assert.equal(roles.get(role).dimensionPolicy, "scene-exact");
+  }
+  for (const role of [
+    "responsive-primary-video",
+    "responsive-alternate-video",
+    "readme-compatibility",
+  ]) {
+    assert.equal(roles.get(role).width, 1280);
+    assert.equal(roles.get(role).height, 720);
+    assert.equal(
+      roles.get(role).dimensionPolicy,
+      "exact-downscale-same-aspect",
+    );
+  }
+});
+
 test("web-delivery qualification rejects false or incomplete media claims", (t) => {
   const root = temporaryDirectory(t);
   const input = path.join(root, "input");
