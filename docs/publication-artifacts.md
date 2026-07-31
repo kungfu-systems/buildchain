@@ -358,6 +358,33 @@ Operationally, responsibility remains split:
 - the papers site consumes publication evidence and owns reader-facing
   rendering.
 
+Daily work begins and ends through the repository-pinned v3 CLI:
+
+```sh
+pnpm paper:work:start -- golden-path
+# edit, test, and commit paper source
+pnpm paper:work:submit
+```
+
+The start plan derives `dev/vN/vN.M` from `publication.version` and requires
+local HEAD to equal the exact canonical remote development SHA. The submit plan
+allows only a non-protected work branch containing that SHA, a clean committed
+tree, a normal fast-forward push, and a pull request back to the same derived
+development branch. Neither command force-pushes, guesses a fork target, or
+silently fetches and merges stale state.
+
+Maintainers can inspect a sibling fleet without per-repository command copies:
+
+```sh
+buildchain paper fleet audit --root /path/to/papers --json
+buildchain paper fleet update --root /path/to/isolated-paper-worktrees --json
+```
+
+Fleet update is dry-run first and accepts only isolated work branches. Its
+typed plan carries exact-old and expected-new digests for the same owned
+surfaces as `paper migrate`; `--write` also refreshes each pnpm lockfile. It
+never rewrites paper content or publication configuration.
+
 Run a local readiness check without network observations:
 
 ```sh

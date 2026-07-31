@@ -12,14 +12,21 @@ import {
   PAPER_PROVISIONING_CONTRACT,
   PAPER_STATE_ORDER,
   PAPER_VISIBILITY_CONTRACT,
+  collectPaperFleetAudit,
   collectPaperPreflight,
   collectPaperStatus,
   createPaperAlphaPlan,
   createPaperResumePlan,
+  createPaperWorkStartPlan,
+  createPaperWorkSubmitPlan,
+  executePaperWorkStart,
+  executePaperWorkSubmitPush,
   executePaperNpmBootstrap,
   planPaperMigration,
+  planPaperFleetUpdate,
   planPaperScaffold,
   writePaperMigration,
+  writePaperFleetUpdate,
   writePaperScaffold,
 } from "../packages/core/paper.js";
 import {
@@ -34,6 +41,7 @@ import {
   transitionReleaseTransaction,
   writeReleaseTransaction,
 } from "../packages/core/publish-transaction.js";
+import { evaluatePaperGithubGovernance } from "../scripts/paper-work-fleet-cli.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -62,6 +70,29 @@ function scaffoldOptions(cwd) {
 
 function initGit(cwd) {
   execFileSync("git", ["init", "-q"], { cwd });
+}
+
+function configureGit(cwd) {
+  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd });
+  execFileSync("git", ["config", "user.email", "buildchain@example.test"], {
+    cwd,
+  });
+}
+
+function commitAll(cwd, message) {
+  execFileSync("git", ["add", "."], { cwd });
+  execFileSync("git", ["commit", "-qm", message], { cwd });
+}
+
+function attachCanonicalTestOrigin(cwd, repository) {
+  const bare = tempDir("remote");
+  execFileSync("git", ["init", "--bare", "-q"], { cwd: bare });
+  const githubUrl = `https://github.com/${repository}.git`;
+  execFileSync("git", ["remote", "add", "origin", githubUrl], { cwd });
+  execFileSync("git", ["config", `url.file://${bare}/.insteadOf`, githubUrl], {
+    cwd,
+  });
+  return bare;
 }
 
 function writeJson(cwd, relativePath, value) {
@@ -649,7 +680,181 @@ esac
   }
 });
 
-test("paper CLI emits stable JSON errors and all eight routes", () => {
+test("paper work plans start from exact remote dev truth and submit without force", () => {
+  const cwd = tempDir("work-plan");
+  const options = {
+    ...scaffoldOptions(cwd),
+    repository: "kungfu-systems/paper-work-plan",
+  };
+  writePaperScaffold(planPaperScaffold(options));
+  initGit(cwd);
+  configureGit(cwd);
+  commitAll(cwd, "test: initialize paper");
+  attachCanonicalTestOrigin(cwd, options.repository);
+  execFileSync("git", ["branch", "-M", "dev/v0/v0.1"], { cwd });
+  execFileSync("git", ["push", "-u", "origin", "dev/v0/v0.1"], { cwd });
+
+  const start = createPaperWorkStartPlan({
+    cwd,
+    topic: "golden-path",
+  });
+  assert.equal(start.ok, true);
+  assert.equal(start.target.branch, "feature/golden-path");
+  assert.equal(start.mutation.force, false);
+  assert.match(start.planRoot, /^sha256:[0-9a-f]{64}$/);
+  const started = executePaperWorkStart(start);
+  assert.equal(started.ok, true);
+  assert.equal(started.created, true);
+
+  fs.writeFileSync(path.join(cwd, "work.txt"), "work\n");
+  commitAll(cwd, "test: add paper work");
+  const wrongTarget = createPaperWorkSubmitPlan({
+    cwd,
+    pullRequests: [
+      {
+        headRefName: "feature/golden-path",
+        baseRefName: "main",
+        url: "https://example.test/wrong",
+      },
+    ],
+  });
+  assert.equal(wrongTarget.ok, false);
+  assert.equal(
+    wrongTarget.checks.find((entry) => entry.id === "pull-request.target")
+      .status,
+    "fail",
+  );
+  const unobservedPullRequests = createPaperWorkSubmitPlan({
+    cwd,
+    pullRequestObservation: { ok: false },
+  });
+  assert.equal(unobservedPullRequests.ok, false);
+  assert.equal(
+    unobservedPullRequests.checks.find(
+      (entry) => entry.id === "pull-request.observed",
+    ).status,
+    "fail",
+  );
+
+  const submit = createPaperWorkSubmitPlan({ cwd });
+  assert.equal(submit.ok, true);
+  assert.equal(submit.mutation.force, false);
+  const pushed = executePaperWorkSubmitPush(submit);
+  assert.equal(pushed.ok, true);
+  assert.equal(pushed.pushed, true);
+});
+
+test("paper fleet audit and update converge data-driven worktrees only", () => {
+  const fleetRoot = tempDir("fleet");
+  const repositories = ["paper-one", "paper-two"].map((name) => {
+    const cwd = path.join(fleetRoot, name);
+    fs.mkdirSync(cwd);
+    writePaperScaffold(
+      planPaperScaffold({
+        ...scaffoldOptions(cwd),
+        name,
+        packageName: `@example/${name}`,
+        repository: `kungfu-systems/${name}`,
+      }),
+    );
+    fs.writeFileSync(
+      path.join(cwd, "pnpm-lock.yaml"),
+      `lockfileVersion: '9.0'\n# @kungfu-tech/buildchain ${packageVersion}\n`,
+    );
+    initGit(cwd);
+    configureGit(cwd);
+    commitAll(cwd, "test: initialize paper");
+    attachCanonicalTestOrigin(cwd, `kungfu-systems/${name}`);
+    execFileSync("git", ["branch", "-M", "feature/fleet-update"], { cwd });
+    return cwd;
+  });
+
+  const current = collectPaperFleetAudit({
+    root: fleetRoot,
+    buildchainRoot: root,
+    buildchainVersion: packageVersion,
+  });
+  assert.equal(current.summary.repositories, 2);
+  assert.equal(current.summary.current, 2, JSON.stringify(current, null, 2));
+  assert.match(current.auditRoot, /^sha256:[0-9a-f]{64}$/);
+
+  const packagePath = path.join(repositories[0], "package.json");
+  const driftedPackage = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  driftedPackage.devDependencies["@kungfu-tech/buildchain"] = "2.12.0-alpha.1";
+  fs.writeFileSync(packagePath, `${JSON.stringify(driftedPackage, null, 2)}\n`);
+  commitAll(repositories[0], "test: add legacy runtime drift");
+
+  const plan = planPaperFleetUpdate({
+    root: fleetRoot,
+    buildchainRoot: root,
+    buildchainVersion: packageVersion,
+  });
+  assert.equal(plan.ok, true);
+  assert.equal(plan.plans.length, 2);
+  const updated = writePaperFleetUpdate(plan);
+  assert.equal(updated.ok, true);
+  assert.equal(
+    JSON.parse(fs.readFileSync(packagePath, "utf8")).devDependencies[
+      "@kungfu-tech/buildchain"
+    ],
+    packageVersion,
+  );
+});
+
+test("paper fleet governance accepts classic exact-branch protection and requires release", () => {
+  const classic = {
+    required_status_checks: {
+      strict: true,
+      contexts: ["check / check"],
+      checks: [{ context: "check / check", app_id: 15368 }],
+    },
+    required_pull_request_reviews: {
+      dismiss_stale_reviews: true,
+      require_code_owner_reviews: true,
+      required_approving_review_count: 1,
+      require_last_push_approval: true,
+      bypass_pull_request_allowances: { users: [], teams: [], apps: [] },
+    },
+    enforce_admins: { enabled: true },
+    required_conversation_resolution: { enabled: true },
+    allow_force_pushes: { enabled: false },
+    allow_deletions: { enabled: false },
+  };
+  const protections = Object.fromEntries(
+    ["dev", "alpha", "release"].map((family) => [
+      `${family}/v0/v0.1`,
+      { ok: true, protection: classic },
+    ]),
+  );
+  const options = {
+    repository: "kungfu-systems/paper-kfd-machine-life-roadmap",
+    actions: {
+      default_workflow_permissions: "read",
+      can_approve_pull_request_reviews: false,
+    },
+    protections,
+  };
+  const current = evaluatePaperGithubGovernance(options);
+  assert.equal(current.status, "pass", JSON.stringify(current, null, 2));
+  assert.equal(current.targets.length, 3);
+
+  const missingRelease = evaluatePaperGithubGovernance({
+    ...options,
+    protections: {
+      ...protections,
+      "release/v0/v0.1": { ok: false, protection: null },
+    },
+  });
+  assert.equal(missingRelease.status, "fail");
+  assert.equal(
+    missingRelease.checks.find(
+      (entry) => entry.id === "protection.release/v0/v0.1.observed",
+    ).status,
+    "fail",
+  );
+});
+
+test("paper CLI emits stable JSON errors and every route", () => {
   const failure = spawnSync(
     process.execPath,
     [bin, "paper", "scaffold", "--json"],
@@ -667,6 +872,10 @@ test("paper CLI emits stable JSON errors and all eight routes", () => {
   for (const route of [
     "paper scaffold",
     "paper migrate",
+    "paper work start",
+    "paper work submit",
+    "paper fleet audit",
+    "paper fleet update",
     "paper preflight",
     "paper bootstrap npm",
     "paper build",

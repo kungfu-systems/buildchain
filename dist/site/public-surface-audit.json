@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 107,
+    "cliCommandCount": 111,
     "workflowCount": 57,
     "actionCount": 6,
     "sitePageCount": 60,
-    "docCommandRefCount": 311,
+    "docCommandRefCount": 315,
     "failureCount": 0
   },
   "enumerated": {
@@ -388,6 +388,16 @@
         "usage": "buildchain paper build [--cwd <dir>] [--execute] [--json]"
       },
       {
+        "id": "paper-fleet-audit",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper fleet audit [--root <dir>] [--offline] [--json]"
+      },
+      {
+        "id": "paper-fleet-update",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper fleet update [--root <dir>] [--write] [--json]"
+      },
+      {
         "id": "paper-migrate",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper migrate [--cwd <dir>] [--write] [--json]"
@@ -411,6 +421,16 @@
         "id": "paper-status",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper status [--cwd <dir>] [--json]"
+      },
+      {
+        "id": "paper-work-start",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper work start <topic> [--cwd <dir>] [--branch <branch>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-work-submit",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper work submit [--cwd <dir>] [--title <title>] [--body <body>] [--execute] [--json]"
       },
       {
         "id": "portable-cache",
@@ -4013,6 +4033,26 @@
         "command": "buildchain paper build --json"
       },
       {
+        "id": "paper-fleet-audit",
+        "path": "docs/cli.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/cli.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
         "id": "paper-migrate",
         "path": "docs/cli.md",
         "command": "buildchain paper migrate --json"
@@ -4025,11 +4065,6 @@
       {
         "id": "paper-preflight",
         "path": "docs/publication-artifacts.md",
-        "command": "buildchain paper preflight --offline"
-      },
-      {
-        "id": "paper-preflight",
-        "path": "README.md",
         "command": "buildchain paper preflight --offline"
       },
       {
@@ -4058,9 +4093,14 @@
         "command": "buildchain paper status --json"
       },
       {
-        "id": "paper-status",
-        "path": "README.md",
-        "command": "buildchain paper status"
+        "id": "paper-work-start",
+        "path": "docs/cli.md",
+        "command": "buildchain paper work start"
+      },
+      {
+        "id": "paper-work-submit",
+        "path": "docs/cli.md",
+        "command": "buildchain paper work submit"
       },
       {
         "id": "paper",
@@ -4468,9 +4508,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "d7e8b86baa70f65617f2cafe24bb448d1ce56c3221c8b5a96217fe892b080520",
+    "cliRegistryDigest": "48cb548303c6773a09257bca5699f0d5e84639a083c85e566446efb740d34578",
     "workflowRegistryDigest": "9500a8099e10c5328b6e051445dba3c18cf0eb31eec3655b6554b111417f9abd",
-    "pageRegistryDigest": "02f8a3c24c8fbb9840e04d0d5605d662a72c174e2f355078af8d8b24d9fe5fc9"
+    "pageRegistryDigest": "76d2cc04d6bff33c9e8842eedee7e0a78506ba8a99f4c89a429c1c4e5042e90c"
   },
   "comparison": {
     "missingCliRegistry": [],
@@ -4483,8 +4523,26 @@
     "mode": "closed-world-enumerable",
     "scope": "Buildchain CLI usage/dispatch, reusable workflow inputs, action inputs, site pages, and documentation command references",
     "residualRisk": [
-      "Shell commands delegated through helper scripts are only counted when exposed through bin/buildchain.mjs usage or docs.",
-      "YAML parsing is limited to first-class action/workflow inputs, not arbitrary step environment variables."
+      {
+        "id": "public-surface-helper-command-enumeration",
+        "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+        "riskType": "natural-language-semantic-risk",
+        "trustImpact": "downgrade-warning",
+        "machineProvability": "not-machine-verifiable",
+        "agentAction": "semantic-review-required",
+        "owner": "Buildchain maintainers",
+        "reason": "Shell commands delegated through helper scripts are counted only when exposed through bin/buildchain.mjs usage or documentation."
+      },
+      {
+        "id": "public-surface-yaml-enumeration",
+        "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+        "riskType": "natural-language-semantic-risk",
+        "trustImpact": "downgrade-warning",
+        "machineProvability": "not-machine-verifiable",
+        "agentAction": "semantic-review-required",
+        "owner": "Buildchain maintainers",
+        "reason": "YAML enumeration covers first-class action and workflow inputs, not arbitrary step environment variables."
+      }
     ]
   }
 }

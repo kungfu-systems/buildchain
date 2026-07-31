@@ -213,7 +213,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:60c6b00e0dbf60f0b7ba8c3c549027925d94a6bdf8a2af3f8e35d24ef1dd50ba"
+      "digest": "sha256:9afe80ef29fb5cce140ffc7980c41172495878726e5504e47914b8dc7af8fc1f"
     },
     {
       "id": "build-facts",

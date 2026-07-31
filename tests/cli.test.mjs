@@ -1856,7 +1856,7 @@ test("standalone binary builder resolves Windows package manager shims", () => {
 
 test("standalone binary runs public CLI without imported script entrypoint side effects", { timeout: 180_000 }, () => {
   const outputDir = tempDir("standalone-entrypoint");
-  const version = "2.12.1-alpha.entry-guard";
+  const version = "3.0.2-alpha.entry-guard";
   execFileSync(process.execPath, [
     path.join(root, "scripts", "build-standalone-binary.mjs"),
     "--version",

@@ -652,7 +652,7 @@ export {
   resolvePaperRepository,
   writePaperMigration,
   writePaperScaffold,
-} from "./paper.js";
+} from "./paper.js"; export * from "./paper-work.js"; export * from "./paper-fleet.js";
 
 export {
   SURFACE_TIMESTAMP_POLICY_CONTRACT,

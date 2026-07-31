@@ -6,10 +6,16 @@
     "bin/internal",
     "packages/core/release-passport.js",
     "packages/core/buildchain-contract.js",
+    "packages/core/paper-fleet.js",
+    "packages/core/paper-repository.js",
+    "packages/core/paper-work.js",
+    "packages/core/public-surface-cli.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
+    "scripts/buildchain-cli-help.mjs",
     "scripts/generate-channel-build-workflow.mjs",
     "scripts/promotion-routing-evidence.mjs",
+    "scripts/paper-work-fleet-cli.mjs",
     "scripts/run-lifecycle-core.mjs",
     "scripts/web-surface-core.mjs",
     "scripts/web-surface.mjs",
@@ -187,6 +193,27 @@
       "implementation": ["scripts/authorize-promotion-runtime-override.cjs"],
       "tests": ["tests/authorize-promotion-runtime-override.test.mjs"],
       "contracts": [".github/workflows/release-candidate-promote.yml"]
+    },
+    {
+      "id": "paper-fleet-golden-path",
+      "owner": "Buildchain Paper maintainers",
+      "implementation": [
+        "packages/core/paper-fleet.js",
+        "packages/core/paper-repository.js",
+        "packages/core/paper-work.js",
+        "packages/core/public-surface-cli.js",
+        "scripts/buildchain-cli-help.mjs",
+        "scripts/paper-work-fleet-cli.mjs"
+      ],
+      "tests": [
+        "tests/cli.test.mjs",
+        "tests/paper.test.mjs",
+        "tests/public-surface-audit.test.mjs"
+      ],
+      "contracts": [
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json"
+      ]
     }
   ]
 }
