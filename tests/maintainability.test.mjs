@@ -9,6 +9,7 @@ import {
   collectMaintainabilityMetrics,
 } from "../scripts/maintainability-metrics.mjs";
 import {
+  ensureMaintainabilityRevisionsAvailable,
   ensureRevisionAvailable,
   evaluatePublicSurface,
   evaluateMaintainability,
@@ -29,6 +30,11 @@ const baseline = JSON.parse(
 function git(cwd, args) {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 }
+
+ensureMaintainabilityRevisionsAvailable(root, {
+  baselineRevision: baseline.revision,
+  enforcementRevision: policy.enforcementRevision || baseline.revision,
+});
 
 test("exact-head maintainability baseline is reproducible", () => {
   const report = collectMaintainabilityMetrics({
@@ -116,7 +122,25 @@ test("baseline revision source metrics remain available from Git", () => {
   assert.equal(files["packages/core/release-passport.js"].lines, 2577);
 });
 
-test("missing enforcement revision is hydrated in a bounded shallow fetch", () => {
+test("Linux standalone binary dependency remains reproducible from the lockfile", () => {
+  const lockfile = fs.readFileSync(path.join(root, "pnpm-lock.yaml"), "utf8");
+  const entries = [...lockfile.matchAll(/^  '@esbuild\/linux-x64@[^']+':$/gmu)];
+  assert.equal(
+    entries.length,
+    2,
+    "pnpm-lock.yaml must retain both package and snapshot entries for @esbuild/linux-x64",
+  );
+  assert.match(
+    lockfile,
+    /'@esbuild\/linux-x64@[^']+':\n    resolution: \{integrity: [^}]+\}\n    engines: \{node: '[^']+'\}\n    cpu: \[x64\]\n    os: \[linux\]/u,
+  );
+  assert.match(
+    lockfile,
+    /esbuild@[^:]+:\n    optionalDependencies:[\s\S]*?      '@esbuild\/linux-x64': [^\n]+/u,
+  );
+});
+
+test("missing maintainability revisions are hydrated in bounded shallow fetches", () => {
   const fixtureRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-maintainability-shallow-"),
   );
@@ -129,6 +153,9 @@ test("missing enforcement revision is hydrated in a bounded shallow fetch", () =
   fs.writeFileSync(path.join(source, "fixture.txt"), "baseline\n");
   git(source, ["add", "fixture.txt"]);
   git(source, ["commit", "-m", "baseline"]);
+  const baselineRevision = git(source, ["rev-parse", "HEAD"]);
+  fs.writeFileSync(path.join(source, "fixture.txt"), "enforcement\n");
+  git(source, ["commit", "-am", "enforcement"]);
   const enforcementRevision = git(source, ["rev-parse", "HEAD"]);
   fs.writeFileSync(path.join(source, "fixture.txt"), "head\n");
   git(source, ["commit", "-am", "head"]);
@@ -149,8 +176,17 @@ test("missing enforcement revision is hydrated in a bounded shallow fetch", () =
       ),
     /Command failed/u,
   );
-  assert.equal(ensureRevisionAvailable(shallow, enforcementRevision), true);
+  const hydrated = ensureMaintainabilityRevisionsAvailable(shallow, {
+    baselineRevision,
+    enforcementRevision,
+  });
+  assert.deepEqual(hydrated, {
+    [baselineRevision]: true,
+    [enforcementRevision]: true,
+  });
+  assert.equal(git(shallow, ["cat-file", "-t", baselineRevision]), "commit");
   assert.equal(git(shallow, ["cat-file", "-t", enforcementRevision]), "commit");
+  assert.equal(ensureRevisionAvailable(shallow, baselineRevision), false);
   assert.equal(ensureRevisionAvailable(shallow, enforcementRevision), false);
 });
 
