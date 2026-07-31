@@ -423,6 +423,38 @@ function copyFile(source, target) {
   fs.copyFileSync(source, target);
 }
 
+function parseAdapterArguments(value = "[]") {
+  let parsed;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    invariant(false, "adapter arguments must be valid JSON");
+  }
+  invariant(
+    Array.isArray(parsed) && parsed.length <= 32,
+    "adapter arguments must be an array with at most 32 entries",
+  );
+  const reserved = new Set([
+    "--artifact-root",
+    "--output",
+    "--source-coordinate",
+  ]);
+  for (const [index, argument] of parsed.entries()) {
+    invariant(
+      typeof argument === "string"
+        && argument.length > 0
+        && argument.length <= 256
+        && !/[\0\r\n]/.test(argument),
+      `adapter argument ${index} is invalid`,
+    );
+    invariant(
+      !reserved.has(argument),
+      `adapter argument ${index} attempts to override a reserved coordinate`,
+    );
+  }
+  return parsed;
+}
+
 function runAdapter(values) {
   const sourceRoot = path.resolve(required(values, "--source-root"));
   const artifactRoot = path.resolve(required(values, "--artifact-root"));
@@ -430,6 +462,9 @@ function runAdapter(values) {
   const diagnostics = path.resolve(required(values, "--diagnostics"));
   const sourceCoordinate = path.resolve(required(values, "--source-coordinate"));
   const adapterRelative = required(values, "--adapter");
+  const adapterArguments = parseAdapterArguments(
+    values["--adapter-arguments-json"] || "[]",
+  );
   const adapter = resolveInside(sourceRoot, adapterRelative, "adapter path");
   const metadata = fs.lstatSync(adapter);
   invariant(metadata.isFile() && !metadata.isSymbolicLink(), "adapter must be a regular non-symlink file");
@@ -456,7 +491,15 @@ function runAdapter(values) {
   try {
     const result = spawnSync(
       adapter,
-      ["--artifact-root", artifactRoot, "--output", output, "--source-coordinate", sourceCoordinate],
+      [
+        "--artifact-root",
+        artifactRoot,
+        "--output",
+        output,
+        "--source-coordinate",
+        sourceCoordinate,
+        ...adapterArguments,
+      ],
       { cwd: sourceRoot, env: environment, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
     );
     fs.writeFileSync(path.join(diagnostics, "adapter.stdout.log"), result.stdout || "");
@@ -473,6 +516,8 @@ function runAdapter(values) {
       schema: "buildchain.auditable-demo-adapter-execution/v1",
       path: adapterRelative,
       sha256: sha256(readRegular(adapter, "adapter", 4 * 1024 * 1024)),
+      arguments: adapterArguments,
+      argumentsRoot: sha256(Buffer.from(stableJson(adapterArguments))),
       exitCode: 0,
     });
   } finally {
@@ -1025,6 +1070,10 @@ function finalizeGate(values) {
     adapter: {
       path: adapterRelative,
       sha256: readJson(path.join(diagnostics, "adapter.json"), "adapter execution").sha256,
+      argumentsRoot: readJson(
+        path.join(diagnostics, "adapter.json"),
+        "adapter execution",
+      ).argumentsRoot,
     },
     renderer: {
       image: rendererImage,
@@ -1199,6 +1248,7 @@ export {
   inspectIsoBmffFastStart,
   inspectMediaFile,
   inspectRendererMedia,
+  parseAdapterArguments,
   qualifyMediaFixture,
   prepareSmoke,
   runAdapter,

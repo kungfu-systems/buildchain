@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-25
+  generated_at: 2026-07-31
   invisible_context_boundary: No hidden model build, parameter count, or private corpus is asserted.
 ---
 
@@ -60,6 +60,15 @@ The adapter must not rebuild or rerun the product. It receives:
 --output PATH
 --source-coordinate PATH
 ```
+
+Consumers with one shared adapter for several deterministic demos may also set
+`adapter-arguments-json` to a bounded JSON array. Buildchain parses the array,
+rejects malformed values, newlines, NUL bytes, more than 32 arguments, values
+longer than 256 bytes, and attempts to override the three coordinate flags
+above, then appends the accepted strings directly to the adapter argv. It never
+evaluates a shell command. The exact argument vector and its content root are
+retained in `adapter.json`; the Gate receipt binds that root. Adapter arguments
+select consumer-owned capture behavior only and grant no authority.
 
 `--source-coordinate` identifies the caller repository, run, artifact id,
 artifact name, upload digest, expiry, and exact source SHA. The workflow finds
@@ -201,6 +210,7 @@ jobs:
       source-artifact-name: ${{ needs.build.outputs.artifact-name }}
       source-artifact-digest: ${{ needs.build.outputs.artifact-digest }}
       adapter-path: scripts/auditable-demo-adapter
+      adapter-arguments-json: '["--demo-id","agent-work-lab"]'
       renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:RENDERER_DIGEST
       render-media: false
       media-profile: archive-v1
