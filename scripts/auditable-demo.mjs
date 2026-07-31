@@ -535,8 +535,8 @@ function prepareSmoke(values) {
   const scene = {
     schema: "build-images.demo-scene/v1",
     id: identifier,
-    width: 640,
-    height: 360,
+    width: 1280,
+    height: 720,
     fps: 5,
     durationMs: 1000,
     title: `${normalized.scene.title.slice(0, 96)} gate smoke`,
@@ -883,6 +883,38 @@ function constraintsForAdditionalRendition(entry, policy) {
   throw new Error(`additional rendition MIME type is not allowed: ${entry.mimeType}`);
 }
 
+function expectedRenditionDimensions(rule, scene) {
+  if (rule.dimensions === undefined) {
+    return {
+      policy: "scene-exact",
+      width: scene.width,
+      height: scene.height,
+    };
+  }
+  exactKeys(
+    rule.dimensions,
+    ["policy", "width", "height"],
+    [],
+    `${rule.path}.dimensions`,
+  );
+  invariant(
+    rule.dimensions.policy === "exact-downscale-same-aspect",
+    `${rule.path} dimension policy is unsupported`,
+  );
+  const width = integer(rule.dimensions.width, 1, 16384, `${rule.path}.dimensions.width`);
+  const height = integer(rule.dimensions.height, 1, 16384, `${rule.path}.dimensions.height`);
+  invariant(width <= scene.width && height <= scene.height, `${rule.path} dimensions would upscale the scene`);
+  invariant(
+    width * scene.height === height * scene.width,
+    `${rule.path} dimensions drift from the scene aspect ratio`,
+  );
+  return {
+    policy: rule.dimensions.policy,
+    width,
+    height,
+  };
+}
+
 function qualifyRendererOutput(renderOutput, manifest, scene, profileId, inspectMedia, inspectionRoot = "") {
   const loaded = loadMediaProfile(profileId);
   const { profile, catalog } = loaded;
@@ -932,12 +964,16 @@ function qualifyRendererOutput(renderOutput, manifest, scene, profileId, inspect
     }
     const facts = profile.mode === "web-delivery" ? inspectMedia(target) : {};
     if (profile.mode === "web-delivery") {
+      const expectedDimensions = expectedRenditionDimensions(rule, scene);
       invariant(facts && typeof facts === "object", `${rule.path} inspection is missing`);
       invariant(facts.container === rule.container, `${rule.path} container mismatch`);
       invariant(facts.videoCodec === rule.videoCodec, `${rule.path} video codec mismatch`);
       if (rule.pixelFormat) invariant(facts.pixelFormat === rule.pixelFormat, `${rule.path} pixel format mismatch`);
       invariant(facts.audioStreams === rule.audioStreams, `${rule.path} audio stream policy failed`);
-      invariant(facts.width === scene.width && facts.height === scene.height, `${rule.path} dimensions mismatch`);
+      invariant(
+        facts.width === expectedDimensions.width && facts.height === expectedDimensions.height,
+        `${rule.path} dimensions mismatch`,
+      );
       if (facts.durationMs > 0) {
         invariant(
           Math.abs(facts.durationMs - scene.durationMs) <= catalog.qualification.durationToleranceMs,
@@ -961,6 +997,9 @@ function qualifyRendererOutput(renderOutput, manifest, scene, profileId, inspect
       root: declared.root,
       bytes: declared.bytes,
       maximumBytes: rule.maximumBytes || 0,
+      dimensionPolicy: profile.mode === "web-delivery"
+        ? expectedRenditionDimensions(rule, scene).policy
+        : "not-qualified",
       ...facts,
     });
   }
@@ -1031,12 +1070,28 @@ function finalizeGate(values) {
   const rendererImage = required(values, "--renderer-image");
   const adapterRelative = required(values, "--adapter");
   const sourceSha = required(values, "--source-sha");
+  const mediaProfile = values["--media-profile"] || "archive-v1";
   invariant(/^[0-9a-f]{40}$/.test(sourceSha), "source SHA must be exact");
   const normalized = validateAdapterOutput(adapterOutput);
-  verifyRendererOutput(smokeOutput, rendererImage, {
+  const selectedProfile = loadMediaProfile(mediaProfile).profile;
+  const mediaInspectionPath = values["--media-inspection"]
+    ? path.resolve(values["--media-inspection"])
+    : "";
+  const mediaInspection = selectedProfile.mode === "web-delivery"
+    ? loadMediaInspection(
+      required({ "--media-inspection": mediaInspectionPath }, "--media-inspection"),
+      smokeOutput,
+      rendererImage,
+    )
+    : null;
+  const verifiedSmoke = verifyRendererOutput(smokeOutput, rendererImage, {
     scene: path.join(smokeInput, "scene.json"),
     transcript: path.join(smokeInput, "complete-transcript.txt"),
     projection: path.join(smokeInput, "public-projection.json"),
+  }, {
+    mediaProfile,
+    inspectMedia: mediaInspection?.inspectMedia,
+    inspectionRoot: mediaInspection?.inspectionRoot || "",
   });
   const sourceCoordinate = validateSourceCoordinate(readJson(sourceCoordinatePath, "source artifact coordinate"));
   invariant(sourceCoordinate.sourceSha === sourceSha, "source artifact coordinate SHA mismatch");
@@ -1078,6 +1133,8 @@ function finalizeGate(values) {
     renderer: {
       image: rendererImage,
       smokeManifestRoot: sha256(readRegular(path.join(smokeOutput, "manifest.json"), "smoke manifest")),
+      mediaProfile,
+      mediaQualificationRoot: verifiedSmoke.qualification.qualificationRoot,
     },
     qualifiedInputs: {
       transcript: sha256(readRegular(path.join(output, "complete-transcript.txt"), "transcript")),
@@ -1109,12 +1166,18 @@ function verifyGate(values) {
   const expectedRoot = required(values, "--expected-root");
   const expectedImage = required(values, "--renderer-image");
   const expectedSourceSha = required(values, "--source-sha");
+  const expectedMediaProfile = values["--media-profile"] || "archive-v1";
   invariant(DIGEST_PATTERN.test(expectedRoot), "expected gate root must be sha256");
   invariant(verifyChecksums(bundle) === expectedRoot, "gate bundle root mismatch");
   const receipt = readJson(path.join(bundle, "gate-receipt.json"), "gate receipt");
   invariant(receipt.schema === "buildchain.auditable-demo-gate/v1" && receipt.status === "passed", "gate did not pass");
   invariant(receipt.sourceSha === expectedSourceSha, "gate source SHA mismatch");
   invariant(receipt.renderer?.image === expectedImage, "gate renderer image mismatch");
+  invariant(receipt.renderer?.mediaProfile === expectedMediaProfile, "gate media profile mismatch");
+  invariant(
+    DIGEST_PATTERN.test(receipt.renderer?.mediaQualificationRoot || ""),
+    "gate media qualification root is invalid",
+  );
   const normalized = validateAdapterOutput(bundle, false);
   invariant(
     receipt.qualifiedInputs?.transcript === sha256(readRegular(path.join(bundle, "complete-transcript.txt"), "transcript"))
@@ -1162,6 +1225,7 @@ function finalizeMedia(values) {
     "--expected-root": gateRoot,
     "--renderer-image": rendererImage,
     "--source-sha": sourceSha,
+    "--media-profile": mediaProfile,
   });
   const terminalCapturePath = path.join(gateBundle, "terminal-capture.json");
   const verifiedRenderer = verifyRendererOutput(renderOutput, rendererImage, {
