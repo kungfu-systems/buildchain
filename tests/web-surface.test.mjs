@@ -1047,6 +1047,13 @@ test("publication package-pin fast path touches one surface and bounded files on
         throw new Error("managed-network health must not require public fetch");
       },
     });
+    const root = health.checks.find((check) => check.surface === "buildchain" && check.kind === "root");
+    assert.equal(health.status, "passed");
+    assert.equal(root.evidence.status, "pass");
+    assert.deepEqual(root.evidence.requiredActions, [
+      "sync-publication-fast-path",
+      "write-deployment-manifest",
+    ]);
     assert.equal(
       health.checks.find((check) => check.surface === "__immutable__").status,
       "pass",

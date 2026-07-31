@@ -1753,11 +1753,6 @@ function htmlLikeResponse(response, url = "") {
   return String(contentType).toLowerCase().includes("text/html") || /\/$|\.html(?:$|[?#])/.test(String(url || ""));
 }
 
-const managedNetworkRequiredEvidence = [
-  "sync-static-artifact",
-  "write-deployment-manifest",
-];
-
 function operationEvidenceStatus(operation, { plannedEvidence = false } = {}) {
   if (plannedEvidence && operation.status === undefined) {
     return true;
@@ -1766,6 +1761,12 @@ function operationEvidenceStatus(operation, { plannedEvidence = false } = {}) {
 }
 
 function managedNetworkHealthEvidence({ target, result, plan }) {
+  const requiredActions = [
+    target.publicationFastPath
+      ? "sync-publication-fast-path"
+      : "sync-static-artifact",
+    "write-deployment-manifest",
+  ];
   const operationSource = Array.isArray(result?.operations) && result.operations.length > 0
     ? "apply-result"
     : "deploy-plan";
@@ -1778,7 +1779,7 @@ function managedNetworkHealthEvidence({ target, result, plan }) {
       .filter((operation) => operationEvidenceStatus(operation, { plannedEvidence: operationSource === "deploy-plan" }))
       .map((operation) => operation.action),
   );
-  const missingActions = managedNetworkRequiredEvidence.filter((action) => !presentActions.has(action));
+  const missingActions = requiredActions.filter((action) => !presentActions.has(action));
   const missingFields = [];
   if (!target.manifestKey) missingFields.push("manifestKey");
   if (!target.bucket) missingFields.push("bucket");
@@ -1786,7 +1787,7 @@ function managedNetworkHealthEvidence({ target, result, plan }) {
   return {
     source: operationSource,
     actions: [...presentActions].sort(),
-    requiredActions: managedNetworkRequiredEvidence,
+    requiredActions,
     missingActions,
     missingFields,
     status: missingActions.length === 0 && missingFields.length === 0 ? "pass" : "fail",
@@ -1966,6 +1967,7 @@ export async function checkWebSurfaceHealth({
           manifestKey: binding.manifestKey || "",
           bucket: binding.bucket || "",
           objectPrefix: binding.objectPrefix || "",
+          publicationFastPath: binding.publicationFastPath || null,
         }));
       })
     : Object.entries(urls).map(([surface, url]) => ({
