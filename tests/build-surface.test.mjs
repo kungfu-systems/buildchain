@@ -776,6 +776,10 @@ test("publication artifact workflow exposes paper artifact contract", () => {
   assert.match(workflow, /verify-command:/);
   assert.match(workflow, /publication-artifact reproducibility/);
   assert.match(workflow, /--promote/);
+  assert.match(
+    workflow,
+    /cat \.buildchain\/publication-reproducibility-result\.json[\s\S]*exit 1/,
+  );
   assert.match(workflow, /reproducibility-receipt\.json/);
   assert.match(workflow, /receipt\.qualifying !== true/);
   assert.match(workflow, /qualified npm integrity changed/);
