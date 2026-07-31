@@ -172,11 +172,30 @@ function runtimeGitSha(buildchainRoot, buildchainVersion = "") {
   return GIT_SHA_PATTERN.test(gitHead) ? gitHead : "";
 }
 
-function runtimeAcceptedAt(buildchainRoot, sha) {
+function runtimeAcceptedAt(buildchainRoot, sha, buildchainVersion = "") {
   if (!sha) return "1970-01-01T00:00:00.000Z";
   const value = gitValue(buildchainRoot, ["show", "-s", "--format=%cI", sha]);
-  if (!value) return "1970-01-01T00:00:00.000Z";
-  const parsed = new Date(value);
+  let acceptedAt = value;
+  if (!acceptedAt && buildchainVersion) {
+    const identity = buildchainPackageIdentity(
+      buildchainRoot,
+      buildchainVersion,
+    );
+    const observed = commandResult(
+      "npm",
+      [
+        "view",
+        `${identity.name}@${identity.version}`,
+        "time",
+        "--json",
+        `--registry=${NPM_REGISTRY}`,
+      ],
+      { cwd: buildchainRoot },
+    );
+    const published = observed.ok ? safeParseJson(observed.stdout) : null;
+    acceptedAt = String(published?.[identity.version] || "");
+  }
+  const parsed = new Date(acceptedAt);
   return Number.isNaN(parsed.valueOf())
     ? "1970-01-01T00:00:00.000Z"
     : parsed.toISOString();
@@ -613,9 +632,9 @@ function scaffoldFiles({
   ).value;
   const acceptedAt =
     existingLock?.buildchain?.acceptedAt ||
-    runtimeAcceptedAt(buildchainRoot, buildchainSha);
+    runtimeAcceptedAt(buildchainRoot, buildchainSha, buildchainVersion);
   const contractLock = createBuildchainContractLock({
-    buildchainRef: buildchainSha,
+    buildchainRef,
     resolvedSha: buildchainSha,
     contractWorld,
     acceptedAt,
@@ -918,13 +937,17 @@ function migrationFiles({
     path.resolve(cwd, PAPER_PATHS.contractLock),
   ).value;
   const contractLock = createBuildchainContractLock({
-    buildchainRef: runtimeSha,
+    buildchainRef: "v3",
     resolvedSha: runtimeSha,
     contractWorld: runtimeContractWorld(buildchainRoot),
     acceptedAt:
       existingLock?.buildchain?.resolvedSha === runtimeSha
         ? existingLock.buildchain.acceptedAt
-        : runtimeAcceptedAt(buildchainRoot, runtimeSha),
+        : runtimeAcceptedAt(
+            buildchainRoot,
+            runtimeSha,
+            runtimeIdentity.version,
+          ),
   });
   const contractLockText = jsonText(contractLock);
   const buildWorkflow = scaffoldBuildWorkflow(runtimeSha, {
@@ -951,7 +974,7 @@ function migrationFiles({
     currentPackage.value,
     runtimeIdentity.version,
   );
-  return new Map([
+  const files = new Map([
     [PAPER_PATHS.contractLock, contractLockText],
     [PAPER_PATHS.versionPin, `${runtimeIdentity.version}\n`],
     [PAPER_PATHS.buildWorkflow, buildWorkflow],
@@ -959,6 +982,18 @@ function migrationFiles({
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
     ["package.json", jsonText(packageJson)],
   ]);
+  const verifyWorkflowPath = path.resolve(cwd, PAPER_PATHS.verifyWorkflow);
+  if (fs.existsSync(verifyWorkflowPath)) {
+    const currentVerifyWorkflow = fs.readFileSync(verifyWorkflowPath, "utf8");
+    const migratedVerifyWorkflow = currentVerifyWorkflow.replace(
+      /(uses:\s*kungfu-systems\/buildchain\/\.github\/workflows\/check\.yml@)[^\s]+/g,
+      `$1${runtimeSha}`,
+    );
+    if (migratedVerifyWorkflow !== currentVerifyWorkflow) {
+      files.set(PAPER_PATHS.verifyWorkflow, migratedVerifyWorkflow);
+    }
+  }
+  return files;
 }
 
 export function planPaperMigration({

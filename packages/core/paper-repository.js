@@ -9,6 +9,7 @@ export const PAPER_PATHS = Object.freeze({
   versionPin: ".buildchain-version",
   contractLock: ".buildchain/contract-lock.json",
   buildWorkflow: ".github/workflows/build.yml",
+  verifyWorkflow: ".github/workflows/verify.yml",
   releaseWorkflow: ".github/workflows/paper-release.yml",
   reproducibilityReceipt:
     ".buildchain/publication/reproducibility-receipt.json",
