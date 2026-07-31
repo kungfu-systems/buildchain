@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { execFileSync } from "node:child_process";
 import {
   analyzeJavaScript,
   collectMaintainabilityMetrics,
 } from "../scripts/maintainability-metrics.mjs";
 import {
+  ensureRevisionAvailable,
   evaluatePublicSurface,
   evaluateMaintainability,
   sourceMetricsAtRevision,
@@ -22,6 +25,10 @@ const policy = JSON.parse(
 const baseline = JSON.parse(
   fs.readFileSync(path.join(root, policy.baseline), "utf8"),
 );
+
+function git(cwd, args) {
+  return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+}
 
 test("exact-head maintainability baseline is reproducible", () => {
   const report = collectMaintainabilityMetrics({
@@ -107,6 +114,44 @@ test("baseline revision source metrics remain available from Git", () => {
   const files = sourceMetricsAtRevision(root, baseline.revision);
   assert.equal(files["actions/promote-buildchain-ref/lib.js"].lines, 5854);
   assert.equal(files["packages/core/release-passport.js"].lines, 2577);
+});
+
+test("missing enforcement revision is hydrated in a bounded shallow fetch", () => {
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-maintainability-shallow-"),
+  );
+  const source = path.join(fixtureRoot, "source");
+  const shallow = path.join(fixtureRoot, "shallow");
+  fs.mkdirSync(source);
+  git(source, ["init", "--initial-branch=main"]);
+  git(source, ["config", "user.name", "Buildchain Test"]);
+  git(source, ["config", "user.email", "buildchain-test@example.invalid"]);
+  fs.writeFileSync(path.join(source, "fixture.txt"), "baseline\n");
+  git(source, ["add", "fixture.txt"]);
+  git(source, ["commit", "-m", "baseline"]);
+  const enforcementRevision = git(source, ["rev-parse", "HEAD"]);
+  fs.writeFileSync(path.join(source, "fixture.txt"), "head\n");
+  git(source, ["commit", "-am", "head"]);
+  git(fixtureRoot, [
+    "clone",
+    "--depth=1",
+    "--branch=main",
+    `file://${source}`,
+    shallow,
+  ]);
+
+  assert.throws(
+    () =>
+      execFileSync(
+        "git",
+        ["cat-file", "-e", `${enforcementRevision}^{commit}`],
+        { cwd: shallow, stdio: "ignore" },
+      ),
+    /Command failed/u,
+  );
+  assert.equal(ensureRevisionAvailable(shallow, enforcementRevision), true);
+  assert.equal(git(shallow, ["cat-file", "-t", enforcementRevision]), "commit");
+  assert.equal(ensureRevisionAvailable(shallow, enforcementRevision), false);
 });
 
 test("public surface lifecycle metadata preserves baseline contracts", () => {
