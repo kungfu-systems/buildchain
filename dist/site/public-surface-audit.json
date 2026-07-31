@@ -554,6 +554,7 @@
         "path": ".github/workflows/.auditable-demo.yml",
         "reusable": true,
         "inputs": [
+          "adapter-arguments-json",
           "adapter-path",
           "artifact-retention-days",
           "buildchain-repository",
@@ -565,7 +566,7 @@
           "source-artifact-name",
           "source-ref"
         ],
-        "inputCount": 10,
+        "inputCount": 11,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -651,6 +652,9 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "compiler-cache-platforms-json",
+          "compiler-cache-provider",
+          "compiler-cache-required",
           "control-runner-json",
           "credential-island-caller-owned",
           "credential-island-environment",
@@ -696,7 +700,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 78,
+        "inputCount": 81,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1458,6 +1462,9 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "compiler-cache-platforms-json",
+          "compiler-cache-provider",
+          "compiler-cache-required",
           "control-runner-json",
           "credential-island-caller-owned",
           "credential-island-environment",
@@ -1503,7 +1510,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 81,
+        "inputCount": 84,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2446,6 +2453,7 @@
         "id": "macos-credential-island",
         "path": "actions/macos-credential-island/action.yml",
         "inputs": [
+          "artifact-id",
           "artifact-name",
           "artifact-relative-output",
           "artifact-stem",
@@ -2467,7 +2475,7 @@
           "source-sha",
           "source-tree-sha"
         ],
-        "inputCount": 20
+        "inputCount": 21
       },
       {
         "id": "promote-buildchain-ref",
@@ -4439,8 +4447,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "53a221b92266e2847b800e94ca94d3afa099eaf553313d012b40fa9b1fc3b70a",
-    "pageRegistryDigest": "969c21883e01ff29af9eeb22d1659db505740293dea78144fc708715ea41d900"
+    "workflowRegistryDigest": "16ce35de4c98f241852a94d7b1a4ebfb9b3f5514193d9b7cbed5f65358b2b0f2",
+    "pageRegistryDigest": "6acaafd3bfb40a2b2436101f79f1d71c7f09c528b58e4dcc0f6aa4bedbd7172e"
   },
   "comparison": {
     "missingCliRegistry": [],

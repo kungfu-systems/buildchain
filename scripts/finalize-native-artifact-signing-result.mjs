@@ -37,6 +37,8 @@ export function finalizeNativeArtifactSigningResult({
   requestPath = process.env.BUILDCHAIN_SIGNING_REQUEST_PATH,
   signedPayload = process.env.BUILDCHAIN_SIGNED_PAYLOAD,
   evidencePath = process.env.BUILDCHAIN_SIGNING_EVIDENCE,
+  credentialArtifactRoot =
+    process.env.BUILDCHAIN_SIGNING_CREDENTIAL_ARTIFACT_ROOT,
   outputRoot = process.env.BUILDCHAIN_SIGNING_RESULT_ROOT,
   checks = process.env.BUILDCHAIN_SIGNING_VERIFICATION_CHECKS,
 } = {}) {
@@ -74,13 +76,71 @@ export function finalizeNativeArtifactSigningResult({
   const evidenceOutput = path.join(resultDirectory, "provider-evidence.json");
   fs.copyFileSync(evidenceSource, evidenceOutput, fs.constants.COPYFILE_EXCL);
   const evidenceDocument = JSON.parse(fs.readFileSync(evidenceOutput, "utf8"));
-  if (
-    evidenceDocument.status !== "passed" ||
-    evidenceDocument.provider !== request.signature.provider
-  ) {
+  const appBundleResult = request.artifact.kind === "app-bundle";
+  const providerEvidencePassed = appBundleResult
+    ? evidenceDocument.schema ===
+        "buildchain.macos-credential-island-evidence/v1" &&
+      evidenceDocument.status === "accepted" &&
+      evidenceDocument.source?.repository === request.source.repository &&
+      evidenceDocument.source?.sha === request.source.sha &&
+      evidenceDocument.source?.treeSha === request.source.treeSha &&
+      evidenceDocument.buildchain?.runtimeSha === request.runtime.sha &&
+      evidenceDocument.app?.architecture === request.artifact.arch &&
+      evidenceDocument.notarization?.application?.status === "Accepted" &&
+      evidenceDocument.notarization?.diskImage?.status === "Accepted"
+    : evidenceDocument.status === "passed" &&
+      evidenceDocument.provider === request.signature.provider;
+  if (!providerEvidencePassed) {
     throw new Error(
       "provider evidence does not prove the requested native signature",
     );
+  }
+  let credentialOutput = "";
+  let credentialEvidence = [];
+  if (appBundleResult) {
+    const credentialSource = path.resolve(
+      required(
+        credentialArtifactRoot,
+        "credential artifact root for app-bundle result",
+      ),
+    );
+    const credentialManifest = path.join(credentialSource, "manifest.json");
+    if (!fs.statSync(credentialManifest).isFile())
+      throw new Error("credential artifact manifest is missing");
+    credentialOutput = path.join(resultDirectory, "credential-artifact");
+    fs.cpSync(credentialSource, credentialOutput, {
+      recursive: true,
+      force: false,
+      errorOnExist: true,
+    });
+    const manifestOutput = path.join(credentialOutput, "manifest.json");
+    const manifest = JSON.parse(fs.readFileSync(manifestOutput, "utf8"));
+    if (!Array.isArray(manifest.files) || manifest.files.length === 0)
+      throw new Error("credential artifact manifest contains no files");
+    credentialEvidence = [
+      {
+        kind: "credential-artifact-manifest",
+        path: "credential-artifact/manifest.json",
+        digest: sha256File(manifestOutput),
+      },
+      ...manifest.files.map((file, index) => {
+        const filePath = resolveBelow(
+          credentialOutput,
+          file.path,
+          `credential artifact file ${index}`,
+        );
+        const observed = sha256File(filePath);
+        if (observed !== `sha256:${String(file.sha256 || "").toLowerCase()}`)
+          throw new Error(
+            `credential artifact file digest mismatch: ${file.path}`,
+          );
+        return {
+          kind: `credential-artifact-${index}`,
+          path: `credential-artifact/${String(file.path).replaceAll("\\", "/")}`,
+          digest: observed,
+        };
+      }),
+    ];
   }
   const evidence = [
     {
@@ -88,6 +148,7 @@ export function finalizeNativeArtifactSigningResult({
       path: "provider-evidence.json",
       digest: sha256File(evidenceOutput),
     },
+    ...credentialEvidence,
   ];
   const payloadDigest = sha256File(payloadPath);
   const receipt = createArtifactSigningReceipt({
@@ -116,6 +177,15 @@ export function finalizeNativeArtifactSigningResult({
       ...evidenceDocument.checks
         .map((value) => String(value).trim())
         .filter(Boolean),
+    );
+  }
+  if (verificationChecks.length === 0 && appBundleResult) {
+    verificationChecks.push(
+      ...Object.entries(evidenceDocument.verification || {})
+        .filter(([, passed]) => passed === true)
+        .map(([name]) => name),
+      "application-notarytool-accepted",
+      "disk-image-notarytool-accepted",
     );
   }
   if (verificationChecks.length === 0)
@@ -160,6 +230,7 @@ export function finalizeNativeArtifactSigningResult({
   writeGitHubOutputs({
     "result-root": resultDirectory,
     "result-index": path.join(resultDirectory, "index.json"),
+    "credential-artifact-root": credentialOutput,
   });
   return index;
 }

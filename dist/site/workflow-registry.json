@@ -8,6 +8,7 @@
       "path": ".github/workflows/.auditable-demo.yml",
       "reusable": true,
       "inputs": [
+        "adapter-arguments-json",
         "adapter-path",
         "artifact-retention-days",
         "buildchain-repository",
@@ -19,7 +20,7 @@
         "source-artifact-name",
         "source-ref"
       ],
-      "inputCount": 10,
+      "inputCount": 11,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -111,6 +112,9 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "compiler-cache-platforms-json",
+        "compiler-cache-provider",
+        "compiler-cache-required",
         "control-runner-json",
         "credential-island-caller-owned",
         "credential-island-environment",
@@ -156,7 +160,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 78,
+      "inputCount": 81,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -981,6 +985,9 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "compiler-cache-platforms-json",
+        "compiler-cache-provider",
+        "compiler-cache-required",
         "control-runner-json",
         "credential-island-caller-owned",
         "credential-island-environment",
@@ -1026,7 +1033,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 81,
+      "inputCount": 84,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2074,6 +2081,7 @@
       "id": "macos-credential-island",
       "path": "actions/macos-credential-island/action.yml",
       "inputs": [
+        "artifact-id",
         "artifact-name",
         "artifact-relative-output",
         "artifact-stem",
@@ -2095,7 +2103,7 @@
         "source-sha",
         "source-tree-sha"
       ],
-      "inputCount": 20,
+      "inputCount": 21,
       "capabilityGroup": "api-cli-reference",
       "status": "active"
     },

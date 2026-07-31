@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -484,6 +484,33 @@ Runtime checkout evidence is uploaded separately as `runtime-checkout.json`,
 including cache transport, fallback attempts, and exact runtime `HEAD`
 verification, even when a later lifecycle step fails.
 
+## Auditable Compiler Cache
+
+Consumers can prepare `sccache` on selected platforms after the install
+lifecycle and before compilation:
+
+```yaml
+with:
+  compiler-cache-provider: sccache
+  compiler-cache-platforms-json: '["windows-x64"]'
+  compiler-cache-required: true
+```
+
+The consumer remains responsible for installing and pinning the tool before
+the preparation step. Buildchain probes its version, runs `sccache
+--zero-stats`, and writes
+`compiler-cache-preparation.json`. The receipt binds the source commit/tree,
+Buildchain runtime, platform, cache profile, and any declared dependency,
+toolchain, or policy roots. It resets counters only; it does not delete cached
+compiler outputs.
+
+Final diagnostics admit sccache hit/miss outcomes as current-run evidence only
+when that preparation receipt is present and valid. A bare `sccache
+--show-stats` result without the reset receipt remains cumulative and is
+reported as unavailable for the current run. The preparation receipt is copied
+into the small diagnostics artifact and sealed by
+`diagnostics-manifest.json`.
+
 When a Buildchain maintainer asks for downstream validation, the expected
 request is:
 
@@ -654,6 +681,17 @@ signed product tree and records `compound-notary-ticket-online`. A generic
 archive container cannot carry a stapled ticket and is not itself a Gatekeeper
 execution target; Gatekeeper evaluates the extracted signed code. Archive path
 and symlink validation fail closed before any payload is signed.
+
+For a declared `app-bundle`, the same protected authority extracts the sealed
+application, derives and verifies its bundle identity, signs nested native code,
+submits both the application and disk image for notarization, staples and
+Gatekeeper-assesses both deliverables, and returns a ZIP, DMG, evidence document,
+and source-bound manifest. The reusable workflow verifies those returned bytes
+on GitHub-hosted infrastructure, adds them to the normal macOS platform payload,
+and publishes a separate `<artifact>-macos-credential-<source-sha>` projection
+for release pipelines that consume the credential-island evidence contract.
+Consumers declare the `.app` under `[[signing.artifacts]]`; they do not configure
+an environment, certificate, notary credential, or authority workflow.
 
 The durable v3 authority runtime is
 `authority/v3/v3.0/artifact-signing`. It is channel-neutral: alpha and stable

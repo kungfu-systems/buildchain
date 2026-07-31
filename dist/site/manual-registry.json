@@ -23,7 +23,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:6af21e489bc3d2e9e2d01838926f1fbab6d74d92446d1f9cfc5eb08e090dd3a5",
+      "digest": "sha256:704d1a04fc9e3680e11dab8c9ead9325f7800c330c94731c71499c0413674282",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -220,7 +220,7 @@
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "digest": "sha256:d7f4179c3912d7bbc5940bfba69e674fb03d020a740063c0b877a171bd5789e3",
+      "digest": "sha256:1a08331cdca2b48e622ecbb799a7465a59cc4a779dd73d36f559f9bc1b98578c",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
@@ -360,7 +360,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:d010fcf796c4b06cc961b6d5e4221fb987986fdce8a0c8533510529e3af029a9",
+      "digest": "sha256:6a7ea4c8e83b0421b2049656c00d45c2cf4330517d5e4d913943c32eaf01c48e",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",

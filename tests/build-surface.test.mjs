@@ -553,13 +553,28 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /checkout-cache-fetch-attempts:/);
   assert.match(workflow, /shifu-cache-profile-ref:/);
   assert.match(workflow, /shifu-cache-profile-digest:/);
+  assert.match(workflow, /compiler-cache-provider:/);
+  assert.match(workflow, /compiler-cache-platforms-json:/);
+  assert.match(workflow, /compiler-cache-required:/);
   assert.equal(
     (workflow.match(/SHIFU_CACHE_PROFILE_REF:/g) || []).length,
     6,
   );
   assert.equal(
     (workflow.match(/SHIFU_CACHE_PROFILE_DIGEST:/g) || []).length,
-    6,
+    8,
+  );
+  assert.equal(
+    (workflow.match(/Prepare auditable compiler cache/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime\/scripts\/compiler-cache-evidence\.mjs prepare/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/compiler-cache-preparation\.json/g) || []).length,
+    5,
   );
   assert.equal(
     (workflow.match(/BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS:/g) || []).length,
@@ -4351,6 +4366,17 @@ test("runLifecycle writes deterministic artifact manifest", () => {
       verification: { head: "2".repeat(40), tree: "3".repeat(40), headOk: true, treeOk: true },
       durationMs: 123,
     })}\n`);
+    fs.writeFileSync(
+      path.join(workspace, ".buildchain/diagnostics/compiler-cache-preparation.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "kungfu-buildchain-compiler-cache-preparation",
+        provider: "sccache",
+        status: "prepared",
+        action: { statsReset: true },
+        root: `sha256:${"4".repeat(64)}`,
+      })}\n`,
+    );
     runLifecycle({
       cwd: fixture,
       stageName: "install",
@@ -4452,6 +4478,10 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/linux-x64/process-summary.json");
     assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/linux-x64/process-samples.jsonl");
     assert.equal(diagnostics.links.sourceCheckout, ".buildchain/artifacts/linux-x64/source-checkout.json");
+    assert.equal(
+      diagnostics.links.compilerCachePreparation,
+      ".buildchain/artifacts/linux-x64/compiler-cache-preparation.json",
+    );
     const diagnosticsManifest = JSON.parse(
       fs.readFileSync(
         path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json"),
@@ -4461,10 +4491,17 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnosticsManifest.contract, BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT);
     assert.equal(diagnosticsManifest.artifactName, "libnode-shaped-linux-x64-abc123");
     assert.equal(diagnosticsManifest.platformId, "linux-x64");
-    assert.equal(diagnosticsManifest.fileCount, 5);
+    assert.equal(diagnosticsManifest.fileCount, 6);
     assert.deepEqual(
       diagnosticsManifest.files.map((file) => file.kind),
-      ["diagnostics", "events", "process-summary", "process-samples", "source-checkout"],
+      [
+        "diagnostics",
+        "events",
+        "process-summary",
+        "process-samples",
+        "source-checkout",
+        "compiler-cache-preparation",
+      ],
     );
     assert.ok(diagnosticsManifest.files.every((file) => file.bytes > 0));
     assert.ok(diagnosticsManifest.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)));
@@ -4477,6 +4514,14 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-summary.json")));
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-samples.jsonl")));
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/source-checkout.json")));
+    assert.ok(
+      fs.existsSync(
+        path.join(
+          workspace,
+          ".buildchain/artifacts/linux-x64/compiler-cache-preparation.json",
+        ),
+      ),
+    );
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });

@@ -258,6 +258,18 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "compiler-cache-platforms-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-provider": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-required": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "control-runner-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -484,7 +496,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:dd7f9f5a64447323743a7f8a58ca4a373e4491cc03895d6bfa459e23e8723d20"
+      "digest": "sha256:639fa3c45634bde0ec488b5770e0698b8f77b117ce9c72a9a7724373af43964f"
     },
     {
       "schemaVersion": 1,
@@ -678,6 +690,18 @@
         },
         "checkout-cache-timeout-seconds": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-platforms-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-provider": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-required": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "control-runner-json": {
@@ -882,7 +906,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f8993d324d4b87ac25fb8a0869acf605c8b3538d8a2914a1da9d6bc0a95d4cea"
+      "digest": "sha256:ac47a3886dc333fc6675b0c223ce21b5a4a5cf8c6099f03e5e002d48987d2218"
     },
     {
       "schemaVersion": 1,
@@ -2233,5 +2257,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:6feab3c1d351b561dd995f01d4a3c0aca06df42ff71544c0fba15dcb56bb37a5"
+  "digest": "sha256:c7254ed278afadac680c2e8c3f5b0c333e3b7a51a20e9946af1fc340e628a8c9"
 }
