@@ -409,6 +409,7 @@ jobs:
       contents: read
       id-token: write
       issues: write
+      pull-requests: write
     with:
       buildchain-ref: ${buildchainSha}
       buildchain-contract-lock-path: .buildchain/contract-lock.json
