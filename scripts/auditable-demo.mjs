@@ -22,7 +22,14 @@ const REQUIRED_ADAPTER_FILES = [
   "public-projection.json",
   "scene.json",
 ];
-const OPTIONAL_ADAPTER_FILES = ["terminal-capture.json"];
+const OPTIONAL_ADAPTER_FILES = [
+  "terminal-capture.json",
+  "complete-transcript-720p.txt",
+  "public-projection-720p.json",
+  "scene-720p.json",
+  "terminal-capture-720p.json",
+  "rendition-set.json",
+];
 const MAX_TERMINAL_CAPTURE_BYTES = 4 * 1024 * 1024;
 const MAX_TERMINAL_CAPTURE_EVENTS = 10_000;
 const TERMINAL_CAPTURE_NON_AUTHORITIES = [
@@ -34,6 +41,11 @@ const TERMINAL_CAPTURE_NON_AUTHORITIES = [
   "registry-history",
   "scan-output",
   "standalone-generation",
+];
+const RENDITION_SET_NON_AUTHORITIES = [
+  "publication-authority",
+  "runtime-authority",
+  ...TERMINAL_CAPTURE_NON_AUTHORITIES,
 ];
 
 function invariant(condition, message) {
@@ -324,6 +336,71 @@ function validateTerminalCapture(value, scene) {
   return value;
 }
 
+function validateRenditionSet(output) {
+  const manifestPath = path.join(output, "rendition-set.json");
+  if (!fs.existsSync(manifestPath)) return null;
+  const value = readJson(manifestPath, "rendition set");
+  exactKeys(value, ["schema", "renditions", "authority"], [], "renditionSet");
+  invariant(
+    value.schema === "kungfu.auditable-demo.rendition-set/v1",
+    "unsupported rendition set schema",
+  );
+  exactKeys(value.authority, ["classification", "grants", "nonAuthorities"], [], "renditionSet.authority");
+  invariant(
+    value.authority.classification === "capture-routing-metadata"
+      && Array.isArray(value.authority.grants)
+      && value.authority.grants.length === 0
+      && JSON.stringify(value.authority.nonAuthorities) === JSON.stringify(RENDITION_SET_NON_AUTHORITIES),
+    "rendition set authority boundary is invalid",
+  );
+  invariant(Array.isArray(value.renditions) && value.renditions.length === 2, "rendition set must contain exactly two captures");
+  const expected = [
+    {
+      id: "1080p", role: "primary", transcript: "complete-transcript.txt",
+      projection: "public-projection.json", scene: "scene.json", terminalCapture: "terminal-capture.json",
+      width: 1920, height: 1080,
+    },
+    {
+      id: "720p", role: "responsive", transcript: "complete-transcript-720p.txt",
+      projection: "public-projection-720p.json", scene: "scene-720p.json", terminalCapture: "terminal-capture-720p.json",
+      width: 1280, height: 720,
+    },
+  ];
+  const normalized = value.renditions.map((entry, index) => {
+    const label = `renditionSet.renditions[${index}]`;
+    exactKeys(entry, ["id", "role", "transcript", "projection", "scene", "terminalCapture", "captureRoot"], [], label);
+    const declaration = expected[index];
+    for (const key of ["id", "role", "transcript", "projection", "scene", "terminalCapture"]) {
+      invariant(entry[key] === declaration[key], `${label}.${key} is not the exact native rendition contract`);
+    }
+    const transcriptBytes = readRegular(path.join(output, entry.transcript), `${label} transcript`, 4 * 1024 * 1024);
+    const transcript = decodeUtf8(transcriptBytes, `${label} transcript`).replace(/\r\n/g, "\n");
+    invariant(transcript.trim().length > 0, `${label} transcript must not be empty`);
+    const lines = transcript.endsWith("\n") ? transcript.slice(0, -1).split("\n") : transcript.split("\n");
+    const scene = validateScene(readJson(path.join(output, entry.scene), `${label} scene`));
+    invariant(scene.width === declaration.width && scene.height === declaration.height, `${label} scene dimensions are not native`);
+    const projection = validateProjection(readJson(path.join(output, entry.projection), `${label} projection`), scene, lines.length);
+    const captureBytes = readRegular(path.join(output, entry.terminalCapture), `${label} terminal capture`, MAX_TERMINAL_CAPTURE_BYTES);
+    const capture = validateTerminalCapture(JSON.parse(decodeUtf8(captureBytes, `${label} terminal capture`)), scene);
+    invariant(entry.captureRoot === sha256(captureBytes), `${label}.captureRoot mismatch`);
+    return { ...entry, transcript, lines, scene, projection, capture };
+  });
+  invariant(
+    normalized[0].captureRoot !== normalized[1].captureRoot,
+    "native rendition capture roots must be distinct",
+  );
+  invariant(
+    JSON.stringify(normalized[0].capture.dimensions) !== JSON.stringify(normalized[1].capture.dimensions),
+    "native rendition PTY dimensions must be distinct",
+  );
+  invariant(
+    normalized[0].projection.evidenceClass === normalized[1].projection.evidenceClass
+      && normalized[0].projection.claimBoundary === normalized[1].projection.claimBoundary,
+    "native rendition evidence boundaries must match",
+  );
+  return { schema: value.schema, renditions: normalized, authority: value.authority };
+}
+
 function validateSourceCoordinate(value) {
   exactKeys(
     value,
@@ -381,6 +458,11 @@ function validateAdapterOutput(output, strict = true) {
   const terminalCapture = fs.existsSync(terminalCapturePath)
     ? validateTerminalCapture(readJson(terminalCapturePath, "terminal capture"), scene)
     : null;
+  const renditionSet = validateRenditionSet(output);
+  invariant(
+    !renditionSet || terminalCapture,
+    "rendition set requires the primary terminal capture",
+  );
   if (strict) {
     const allowed = new Set([...REQUIRED_ADAPTER_FILES, ...OPTIONAL_ADAPTER_FILES]);
     for (const member of listFiles(output)) invariant(allowed.has(member), `undeclared adapter output: ${member}`);
@@ -391,6 +473,7 @@ function validateAdapterOutput(output, strict = true) {
     scene,
     projection,
     terminalCapture,
+    renditionSet,
   };
 }
 
@@ -1047,6 +1130,21 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     const observed = manifest.inputs?.[key]?.root;
     invariant(observed === sha256(readRegular(filePath, `${key} input`)), `renderer ${key} input root mismatch`);
   }
+  if (expectedInputs.renditionSet) {
+    invariant(
+      manifest.derivation?.policy === "independent-native-frame-sets/v1",
+      "renderer did not use independent native frame sets",
+    );
+    invariant(
+      Array.isArray(manifest.inputs?.renditions)
+        && manifest.inputs.renditions.length === 2
+        && manifest.inputs.renditions[0]?.role === "primary"
+        && manifest.inputs.renditions[1]?.role === "responsive"
+        && manifest.inputs.renditions[0]?.terminalCapture?.root
+          !== manifest.inputs.renditions[1]?.terminalCapture?.root,
+      "renderer native rendition inputs are not independently bound",
+    );
+  }
   const probe = readJson(path.join(renderOutput, "media-probe.json"), "media probe");
   invariant(probe.schema === "build-images.demo-media-probe/v1" && probe.passed === true, "renderer media probe failed");
   const qualification = qualifyRendererOutput(
@@ -1099,11 +1197,10 @@ function finalizeGate(values) {
   fs.writeFileSync(path.join(output, "complete-transcript.txt"), normalized.transcript);
   writeJson(path.join(output, "scene.json"), normalized.scene);
   writeJson(path.join(output, "public-projection.json"), normalized.projection);
-  if (normalized.terminalCapture) {
-    copyFile(
-      path.join(adapterOutput, "terminal-capture.json"),
-      path.join(output, "terminal-capture.json"),
-    );
+  for (const name of OPTIONAL_ADAPTER_FILES) {
+    if (fs.existsSync(path.join(adapterOutput, name))) {
+      copyFile(path.join(adapterOutput, name), path.join(output, name));
+    }
   }
   copyFile(sourceCoordinatePath, path.join(output, "source-artifact.json"));
   copyFile(path.join(diagnostics, "adapter.json"), path.join(output, "adapter.json"));
@@ -1145,6 +1242,22 @@ function finalizeGate(values) {
           terminalCapture: {
             schema: normalized.terminalCapture.schema,
             root: sha256(readRegular(path.join(output, "terminal-capture.json"), "terminal capture")),
+          },
+        }
+        : {}),
+      ...(normalized.renditionSet
+        ? {
+          renditionSet: {
+            schema: normalized.renditionSet.schema,
+            root: sha256(readRegular(path.join(output, "rendition-set.json"), "rendition set")),
+            renditions: normalized.renditionSet.renditions.map((rendition) => ({
+              id: rendition.id,
+              role: rendition.role,
+              captureRoot: rendition.captureRoot,
+              sceneRoot: sha256(readRegular(path.join(output, rendition.scene), `${rendition.id} scene`)),
+              transcriptRoot: sha256(readRegular(path.join(output, rendition.transcript), `${rendition.id} transcript`)),
+              projectionRoot: sha256(readRegular(path.join(output, rendition.projection), `${rendition.id} projection`)),
+            })),
           },
         }
         : {}),
@@ -1198,6 +1311,27 @@ function verifyGate(values) {
       "gate terminal capture root mismatch",
     );
   }
+  const qualifiedRenditionSet = receipt.qualifiedInputs?.renditionSet;
+  invariant(
+    Boolean(qualifiedRenditionSet) === Boolean(normalized.renditionSet),
+    "gate rendition set presence drifted",
+  );
+  if (normalized.renditionSet) {
+    invariant(
+      qualifiedRenditionSet.schema === normalized.renditionSet.schema
+        && qualifiedRenditionSet.root === sha256(readRegular(path.join(bundle, "rendition-set.json"), "rendition set"))
+        && JSON.stringify(qualifiedRenditionSet.renditions)
+          === JSON.stringify(normalized.renditionSet.renditions.map((rendition) => ({
+            id: rendition.id,
+            role: rendition.role,
+            captureRoot: rendition.captureRoot,
+            sceneRoot: sha256(readRegular(path.join(bundle, rendition.scene), `${rendition.id} scene`)),
+            transcriptRoot: sha256(readRegular(path.join(bundle, rendition.transcript), `${rendition.id} transcript`)),
+            projectionRoot: sha256(readRegular(path.join(bundle, rendition.projection), `${rendition.id} projection`)),
+          }))),
+      "gate native rendition roots mismatch",
+    );
+  }
   invariant(receipt.qualifiedInputs.evidenceClass === normalized.projection.evidenceClass, "gate evidence class drifted");
 }
 
@@ -1228,12 +1362,16 @@ function finalizeMedia(values) {
     "--media-profile": mediaProfile,
   });
   const terminalCapturePath = path.join(gateBundle, "terminal-capture.json");
+  const renditionSetPath = path.join(gateBundle, "rendition-set.json");
   const verifiedRenderer = verifyRendererOutput(renderOutput, rendererImage, {
     scene: path.join(gateBundle, "scene.json"),
     transcript: path.join(gateBundle, "complete-transcript.txt"),
     projection: path.join(gateBundle, "public-projection.json"),
     ...(fs.existsSync(terminalCapturePath)
       ? { terminalCapture: terminalCapturePath }
+      : {}),
+    ...(fs.existsSync(renditionSetPath)
+      ? { renditionSet: renditionSetPath }
       : {}),
   }, {
     mediaProfile,

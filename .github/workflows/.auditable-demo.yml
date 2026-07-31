@@ -389,7 +389,9 @@ jobs:
           mkdir -p render-work
           chmod 0777 render-work
           capture_args=()
-          if [ -f "${GITHUB_WORKSPACE}/gate-bundle/terminal-capture.json" ]; then
+          if [ -f "${GITHUB_WORKSPACE}/gate-bundle/rendition-set.json" ]; then
+            capture_args=(--terminal-capture /input/terminal-capture.json --rendition-set /input/rendition-set.json)
+          elif [ -f "${GITHUB_WORKSPACE}/gate-bundle/terminal-capture.json" ]; then
             capture_args=(--terminal-capture /input/terminal-capture.json)
           fi
           docker run --rm --network none --read-only \
