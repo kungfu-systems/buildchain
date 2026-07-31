@@ -32,14 +32,34 @@ on:
         type: string
         required: false
       runner-preset:
-        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, or custom with platforms-json"
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, aws-us-codebuild-linux, aws-us-ec2-windows-jit, aws-us-ec2-macos-jit, or custom with platforms-json"
         default: "github-hosted"
+        type: string
+        required: false
+      aws-codebuild-project:
+        description: "Required CodeBuild project name for the explicit aws-us-codebuild-linux burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-windows-runner-label:
+        description: "Required unique card-scoped JIT label for the explicit aws-us-ec2-windows-jit burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-macos-runner-label:
+        description: "Required unique campaign-scoped JIT label for the explicit aws-us-ec2-macos-jit burst preset"
+        default: ""
         type: string
         required: false
       platforms-json:
         description: "Optional custom JSON array of platform objects: id, name, runner JSON string"
         default: ""
         type: string
+        required: false
+      self-hosted-offline-fallback:
+        description: "Route each supported exact-label self-hosted lane to its GitHub-hosted runner when no matching runner is online"
+        default: false
+        type: boolean
         required: false
       control-runner-json:
         description: "JSON runner-label array for trusted control-plane jobs"
@@ -356,8 +376,28 @@ on:
         default: ""
         type: string
         required: false
+      compiler-cache-provider:
+        description: "Audited compiler cache provider prepared before build: none or sccache"
+        default: "none"
+        type: string
+        required: false
+      compiler-cache-platforms-json:
+        description: "JSON array of platform ids on which compiler-cache preparation is enabled"
+        default: "[]"
+        type: string
+        required: false
+      compiler-cache-required:
+        description: "Fail the selected platform before build when the compiler cache cannot be prepared"
+        default: false
+        type: boolean
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-evidence-json:
+        description: "Optional exact Initiative-family release evidence JSON embedded in the release-candidate passport"
         default: ""
         type: string
         required: false
@@ -379,7 +419,7 @@ on:
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
         required: false
       BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
+        description: "Standard Buildchain control-plane token used only for protected runner inventory, dispatch, and central authority retrieval"
         required: false
     outputs:
       runner-preset:
@@ -388,6 +428,9 @@ on:
       platforms-json:
         description: "Resolved platform matrix JSON"
         value: ${{ jobs.resolve-contract.outputs.platforms-json }}
+      runner-routing-json:
+        description: "De-identified self-hosted availability and offline fallback decision"
+        value: ${{ jobs.resolve-contract.outputs.runner-routing-json }}
       platform-count:
         description: "Resolved platform count"
         value: ${{ jobs.resolve-contract.outputs.platform-count }}
@@ -551,13 +594,13 @@ jobs:
         env:
           BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
           BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
-          BUILDCHAIN_DEFAULT_REF: v2
+          BUILDCHAIN_DEFAULT_REF: v3
           BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}
         with:
           script: |
             const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
             const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
-            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v3").trim();
             const [runtimeOwner, runtimeRepo] = repository.split("/");
             if (!runtimeOwner || !runtimeRepo) {
               throw new Error(`invalid buildchain repository: ${repository}`);
@@ -709,6 +752,9 @@ jobs:
             .buildchain/workflow-shell/scripts/locked-source-checkout.mjs
             .buildchain/workflow-shell/scripts/artifact-signing-delegation.mjs
             .buildchain/workflow-shell/scripts/build-contract-core.mjs
+            .buildchain/workflow-shell/scripts/aws-runner-burst-core.mjs
+            .buildchain/workflow-shell/scripts/aws-windows-jit-core.mjs
+            .buildchain/workflow-shell/scripts/aws-macos-jit-core.mjs
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -1044,18 +1090,19 @@ jobs:
     needs:
       - trust-gate
     outputs:
-      runner-preset: ${{ steps.runners.outputs.runner-preset }}
-      platforms-json: ${{ steps.runners.outputs.platforms-json }}
-      platform-count: ${{ steps.runners.outputs.platform-count }}
-      platform-source: ${{ steps.runners.outputs.platform-source }}
-      native-platforms-json: ${{ steps.runners.outputs.native-platforms-json }}
-      native-platform-count: ${{ steps.runners.outputs.native-platform-count }}
-      container-platforms-json: ${{ steps.runners.outputs.container-platforms-json }}
-      container-platform-count: ${{ steps.runners.outputs.container-platform-count }}
-      linux-container-enabled: ${{ steps.runners.outputs.linux-container-enabled }}
-      linux-container-preset: ${{ steps.runners.outputs.linux-container-preset }}
-      linux-container-image: ${{ steps.runners.outputs.linux-container-image }}
-      linux-container-source: ${{ steps.runners.outputs.linux-container-source }}
+      runner-preset: ${{ steps.routed-runners.outputs.runner-preset || steps.runners.outputs.runner-preset }}
+      platforms-json: ${{ steps.routed-runners.outputs.platforms-json || steps.runners.outputs.platforms-json }}
+      platform-count: ${{ steps.routed-runners.outputs.platform-count || steps.runners.outputs.platform-count }}
+      platform-source: ${{ steps.routed-runners.outputs.platform-source || steps.runners.outputs.platform-source }}
+      native-platforms-json: ${{ steps.routed-runners.outputs.native-platforms-json || steps.runners.outputs.native-platforms-json }}
+      native-platform-count: ${{ steps.routed-runners.outputs.native-platform-count || steps.runners.outputs.native-platform-count }}
+      container-platforms-json: ${{ steps.routed-runners.outputs.container-platforms-json || steps.runners.outputs.container-platforms-json }}
+      container-platform-count: ${{ steps.routed-runners.outputs.container-platform-count || steps.runners.outputs.container-platform-count }}
+      linux-container-enabled: ${{ steps.routed-runners.outputs.linux-container-enabled || steps.runners.outputs.linux-container-enabled }}
+      linux-container-preset: ${{ steps.routed-runners.outputs.linux-container-preset || steps.runners.outputs.linux-container-preset }}
+      linux-container-image: ${{ steps.routed-runners.outputs.linux-container-image || steps.runners.outputs.linux-container-image }}
+      linux-container-source: ${{ steps.routed-runners.outputs.linux-container-source || steps.runners.outputs.linux-container-source }}
+      runner-routing-json: ${{ steps.offline-fallback.outputs.routing-json || '{"schema":"buildchain.runner-offline-routing/v1","status":"disabled","routes":[]}' }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -1071,6 +1118,37 @@ jobs:
         env:
           BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
           BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
+          BUILDCHAIN_AWS_CODEBUILD_PROJECT: ${{ inputs.aws-codebuild-project }}
+          BUILDCHAIN_AWS_EC2_WINDOWS_RUNNER_LABEL: ${{ inputs.aws-ec2-windows-runner-label }}
+          BUILDCHAIN_AWS_EC2_MACOS_RUNNER_LABEL: ${{ inputs.aws-ec2-macos-runner-label }}
+          BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
+          BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
+
+      - name: Checkout trusted runner-routing shell
+        if: ${{ inputs.self-hosted-offline-fallback }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/runner-routing-shell
+          persist-credentials: false
+
+      - name: Route offline self-hosted lanes
+        if: ${{ inputs.self-hosted-offline-fallback }}
+        id: offline-fallback
+        run: node .buildchain/runner-routing-shell/scripts/route-offline-runners.mjs
+        env:
+          BUILDCHAIN_RUNNER_PRESET: custom
+          BUILDCHAIN_PLATFORMS_JSON: ${{ steps.runners.outputs.platforms-json }}
+          BUILDCHAIN_RUNNER_INVENTORY_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+
+      - name: Resolve routed runner matrix
+        if: ${{ inputs.self-hosted-offline-fallback }}
+        id: routed-runners
+        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode runners
+        env:
+          BUILDCHAIN_RUNNER_PRESET: custom
+          BUILDCHAIN_PLATFORMS_JSON: ${{ steps.offline-fallback.outputs.platforms-json }}
           BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
           BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
@@ -1226,7 +1304,7 @@ jobs:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
-    runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    runs-on: ${{ matrix.platform.provider == 'aws-codebuild' && format('codebuild-{0}-{1}-{2}', matrix.platform.project, github.run_id, github.run_attempt) || fromJSON(matrix.platform.runner) }}
     timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
     env:
       CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
@@ -1337,6 +1415,45 @@ jobs:
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
+      - name: Record AWS burst runner provenance
+        if: ${{ matrix.platform.provider == 'aws-codebuild' }}
+        run: node .buildchain/runtime/scripts/aws-runner-burst.mjs evidence
+        env:
+          BUILDCHAIN_BURST_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
+          BUILDCHAIN_BURST_PROVIDER: ${{ matrix.platform.provider }}
+          BUILDCHAIN_BURST_PROJECT: ${{ matrix.platform.project }}
+          BUILDCHAIN_BURST_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_BURST_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_BURST_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_BURST_RUN_ID: ${{ github.run_id }}
+          BUILDCHAIN_BURST_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILDCHAIN_BURST_JOB: ${{ github.job }}
+
+      - name: Record AWS Windows JIT runner provenance
+        if: ${{ matrix.platform.provider == 'aws-ec2-windows-jit' }}
+        shell: pwsh
+        run: node .buildchain/runtime/scripts/aws-windows-jit.mjs evidence
+        env:
+          BUILDCHAIN_WINDOWS_JIT_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-windows-jit.json
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_EXPECTED_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+
+      - name: Record AWS macOS JIT runner provenance
+        if: ${{ matrix.platform.provider == 'aws-ec2-macos-jit' }}
+        run: node .buildchain/runtime/scripts/aws-macos-jit.mjs evidence
+        env:
+          BUILDCHAIN_MACOS_JIT_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-macos-jit.json
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_EXPECTED_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+
+      - name: Prepare AWS CodeBuild native toolchain
+        if: ${{ matrix.platform.provider == 'aws-codebuild' }}
+        run: node .buildchain/runtime/scripts/aws-codebuild-toolchain.mjs prepare
+        env:
+          BUILDCHAIN_BURST_TOOLCHAIN_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
+
       - name: Resolve artifact contract
         id: artifact-contract
         run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
@@ -1357,6 +1474,7 @@ jobs:
           BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
           BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
           BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1371,6 +1489,22 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-install.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-install.json
+
+      - name: Prepare auditable compiler cache
+        if: ${{ inputs.compiler-cache-provider != 'none' && contains(fromJSON(inputs.compiler-cache-platforms-json), matrix.platform.id) }}
+        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs prepare
+        env:
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
+          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ inputs.compiler-cache-required }}
+          BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH: .buildchain/diagnostics/compiler-cache-preparation.json
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
 
       - name: Run build lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -1633,6 +1767,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
@@ -1683,9 +1818,39 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload AWS burst runner provenance
+        if: ${{ always() && matrix.platform.provider == 'aws-codebuild' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-aws-runner-burst-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload AWS Windows JIT runner provenance
+        if: ${{ always() && matrix.platform.provider == 'aws-ec2-windows-jit' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-aws-windows-jit-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-windows-jit.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload AWS macOS JIT runner provenance
+        if: ${{ always() && matrix.platform.provider == 'aws-ec2-macos-jit' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-aws-macos-jit-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-macos-jit.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -1788,6 +1953,7 @@ jobs:
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1802,6 +1968,19 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-install.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-install.json
+
+      - name: Prepare auditable compiler cache
+        if: ${{ inputs.compiler-cache-provider != 'none' && contains(fromJSON(inputs.compiler-cache-platforms-json), matrix.platform.id) }}
+        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs prepare
+        env:
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
+          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ inputs.compiler-cache-required }}
+          BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH: .buildchain/diagnostics/compiler-cache-preparation.json
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
 
       - name: Run build lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -2011,6 +2190,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
@@ -2059,6 +2239,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
@@ -2270,6 +2451,7 @@ jobs:
 
       - name: Verify and import final signed bytes on GitHub-hosted infrastructure
         if: ${{ steps.delegation.outputs.request-count != '0' }}
+        id: import-signing-results
         run: node .buildchain/runtime/scripts/import-artifact-signing-results.mjs
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ steps.delegation.outputs.working-directory }}
@@ -2319,6 +2501,26 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true
 
+      - name: Publish native signed macOS application payload
+        if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.import-signing-results.outputs.credential-artifact-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+
+      - name: Publish native signed macOS application manifest
+        if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-manifest-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.import-signing-results.outputs.credential-manifest-path }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Publish final signed artifact manifest
         if: ${{ steps.delegation.outputs.request-count != '0' }}
         uses: actions/upload-artifact@v7.0.1
@@ -2343,6 +2545,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
@@ -2422,6 +2625,34 @@ jobs:
           name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
+      - name: Resolve source-bound application identity
+        id: credential-identity
+        shell: bash
+        env:
+          BUILDCHAIN_CREDENTIAL_INPUT_ROOT: .buildchain/credential-island-input
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { loadCredentialInput } from "./.buildchain/runtime/actions/macos-credential-island/lib.js";
+
+          const sealed = loadCredentialInput(
+            process.env.BUILDCHAIN_CREDENTIAL_INPUT_ROOT,
+            {
+              repository: process.env.BUILDCHAIN_SOURCE_REPOSITORY,
+              sourceSha: process.env.BUILDCHAIN_SOURCE_SHA,
+              sourceTreeSha: process.env.BUILDCHAIN_SOURCE_TREE_SHA,
+            },
+          );
+          const bundleId = String(sealed.manifest.app.bundleId || "").trim();
+          if (!/^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/u.test(bundleId)) {
+            throw new Error("sealed application bundle identifier is invalid");
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `bundle-id=${bundleId}\n`);
+          NODE
+
       - name: Sign, notarize, staple, and verify
         id: credential-island
         uses: ./.buildchain/runtime/actions/macos-credential-island
@@ -2436,7 +2667,7 @@ jobs:
           artifact-name: ${{ steps.names.outputs.artifact-name }}
           platform-id: ${{ inputs.credential-island-macos-platform-id }}-credential
           artifact-relative-output: product/release
-          expected-bundle-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID }}
+          expected-bundle-id: ${{ steps.credential-identity.outputs.bundle-id }}
           expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
           certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
           certificate-p12-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
@@ -2702,6 +2933,7 @@ jobs:
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ inputs.gate-profile-aggregate-json }}
+          BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON: ${{ inputs.release-candidate-family-evidence-json }}
           BUILDCHAIN_CONTROLLER_RECEIPT_JSON: ${{ steps.release-candidate-controller-receipt.outputs.controller-receipt-json }}
           BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}

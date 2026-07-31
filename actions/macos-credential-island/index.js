@@ -25,6 +25,7 @@ import {
   requirePattern,
   requireRepository,
   requireSha,
+  resolveExpectedBundleId,
   rewriteWheelRecord,
   resolveInside,
   safeArtifactName,
@@ -337,7 +338,7 @@ async function main() {
   );
   const sourceRef = input("source-ref", false);
   const artifactName = safeArtifactName(input("artifact-name"));
-  const expectedBundleId = input("expected-bundle-id");
+  const configuredBundleId = input("expected-bundle-id", false);
   const expectedTeamId = requirePattern(
     input("expected-team-id"),
     TEAM_ID_PATTERN,
@@ -377,8 +378,10 @@ async function main() {
     sourceTreeSha,
     runtimeSha,
     platformId: input("platform-id", false),
-    bundleId: expectedBundleId,
+    artifactId: input("artifact-id", false),
   });
+  const declaredBundleId =
+    String(sealed.manifest.app.bundleId || "").trim() || configuredBundleId;
   const artifactStem = safeArtifactStem(
     input("artifact-stem", false) || sealed.manifest.app.productName,
   );
@@ -426,9 +429,10 @@ async function main() {
       throw new Error("sealed archive must contain exactly one top-level app");
     }
     assertContainedSymlinks(appPath);
-    if (plistValue(appPath, "CFBundleIdentifier") !== expectedBundleId) {
-      throw new Error("extracted app bundle identifier mismatch");
-    }
+    const expectedBundleId = resolveExpectedBundleId(
+      declaredBundleId,
+      plistValue(appPath, "CFBundleIdentifier"),
+    );
     const productVersion = plistValue(appPath, "CFBundleShortVersionString");
     const artifactVersion = safeArtifactStem(productVersion);
 

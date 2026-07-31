@@ -122,6 +122,26 @@ on:
         default: "Build"
         type: string
         required: false
+      release-candidate-family-evidence-required:
+        description: "Require exact Initiative-family evidence before protected promotion"
+        default: false
+        type: boolean
+        required: false
+      release-candidate-family-evidence-root:
+        description: "Optional expected Initiative-family evidence content root"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-initiative-id:
+        description: "Optional expected Initiative identity"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-assignment-id:
+        description: "Optional expected child Assignment identity"
+        default: ""
+        type: string
+        required: false
       artifact-patterns:
         description: "Newline-separated payload artifact patterns expected from the RC bundle"
         default: ""
@@ -324,6 +344,16 @@ on:
         required: false
       release-passport-invariant-passport-command:
         description: "Product-owned command that emits a canonical invariant Passport JSON document"
+        default: ""
+        type: string
+        required: false
+      release-passport-evidence-jsons:
+        description: "Newline- or comma-separated product-owned release evidence attachment paths bound to the exact release coordinates"
+        default: ""
+        type: string
+        required: false
+      release-passport-attachment-command:
+        description: "Product-owned command that emits generated release evidence attachment paths as JSON"
         default: ""
         type: string
         required: false
@@ -1548,6 +1578,8 @@ jobs:
           release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
           release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
           release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
+          release-passport-evidence-jsons: ${{ inputs.release-passport-evidence-jsons }}
+          release-passport-attachment-command: ${{ inputs.release-passport-attachment-command }}
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           release-passport-github-artifact-attestation-policy-jsons: ${{ steps.attestation-policy.outputs.path }}
           github-release: ${{ inputs.github-release }}
@@ -1558,6 +1590,10 @@ jobs:
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
+          release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
+          release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
+          release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
+          release-candidate-family-assignment-id: ${{ inputs.release-candidate-family-assignment-id }}
 
       - name: Stage sealed GitHub artifact attestation inputs
         id: attestation-input

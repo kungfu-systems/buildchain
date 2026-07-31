@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-25
+  generated_at: 2026-07-31
   invisible_context_boundary: No hidden model build, parameter count, or private corpus is asserted.
 ---
 
@@ -60,6 +60,15 @@ The adapter must not rebuild or rerun the product. It receives:
 --output PATH
 --source-coordinate PATH
 ```
+
+Consumers with one shared adapter for several deterministic demos may also set
+`adapter-arguments-json` to a bounded JSON array. Buildchain parses the array,
+rejects malformed values, newlines, NUL bytes, more than 32 arguments, values
+longer than 256 bytes, and attempts to override the three coordinate flags
+above, then appends the accepted strings directly to the adapter argv. It never
+evaluates a shell command. The exact argument vector and its content root are
+retained in `adapter.json`; the Gate receipt binds that root. Adapter arguments
+select consumer-owned capture behavior only and grant no authority.
 
 `--source-coordinate` identifies the caller repository, run, artifact id,
 artifact name, upload digest, expiry, and exact source SHA. The workflow finds
@@ -134,6 +143,7 @@ shell fragments, arbitrary profile paths, or transcoding instructions.
 | --- | --- |
 | `archive-v1` | Default compatibility contract. Retains the exact renderer outputs and classifies GIF as README compatibility evidence without making a browser-delivery claim. |
 | `web-delivery-v1` | Independently qualifies H.264 MP4 and VP9 WebM playback sources, forbids audio, requires exact scene dimensions and bounded duration/frame-rate drift, checks per-rendition byte ceilings, and proves MP4 `moov` precedes `mdat`. PNG remains the lossless evidence poster. |
+| `responsive-web-delivery-v1` | Extends `web-delivery-v1` with exact 1280x720 H.264 MP4 and VP9 WebM responsive sources plus a 1280x720 README GIF while keeping the primary MP4/WebM and evidence poster at the source scene dimensions. Every declared downscale must preserve the scene aspect ratio and may never upscale. |
 | `site-hero-v1` | Extends `web-delivery-v1` and additionally requires a qualified WebP browser poster. The current Build Images v1 renderer does not emit that member, so selecting this profile fails closed until the producer adds it. |
 
 For web-delivery profiles, Buildchain runs its own fixed `ffprobe` invocation
@@ -147,16 +157,22 @@ field remains supporting evidence, never sufficient authority.
 
 The default `archive-v1` path preserves the existing v1 media receipt exactly.
 An explicitly selected web-delivery profile emits a v2 media receipt with a
-content-addressed rendition list and explicit roles and MIME types. Agents and
-site builds select `primary-video`,
-`alternate-video`, `browser-poster`, or evidence-only roles from that receipt;
-they do not infer semantics from extensions or filenames. Additional responsive
-renditions are accepted only when the immutable renderer manifest declares the
-bounded `build-images.auditable-demo-web-delivery/v1` role and MIME metadata and
-the selected Buildchain profile supplies the byte ceiling; producer metadata
-cannot raise that ceiling. Unbound outputs,
-duplicate singleton roles, unknown profiles, or unsupported required versions
-fail closed.
+content-addressed rendition list and explicit roles, MIME types, dimensions,
+and dimension policy. Agents and site builds select `primary-video`,
+`alternate-video`, `responsive-primary-video`,
+`responsive-alternate-video`, `browser-poster`, or evidence-only roles from
+that receipt; they do not infer semantics from extensions or filenames.
+Profile-declared responsive renditions must match their exact dimensions,
+remain within the source scene, and preserve its aspect ratio. Additional
+producer-declared renditions remain bounded by the selected profile and cannot
+raise their own byte ceiling. Unbound outputs, implicit upscales, aspect-ratio
+drift, duplicate singleton roles, unknown profiles, or unsupported required
+versions fail closed.
+
+The required Gate binds the exact selected media profile and the smoke media
+qualification root before optional full rendering starts. Gate-only validation
+and full rendering therefore exercise the same profile contract; a later media
+job cannot silently switch rendition authority.
 
 Initial byte ceilings are derived from the checked-in
 `auditable-demo-web-delivery-v1` fixture rendered by Build Images
@@ -165,6 +181,12 @@ PNG ceilings are the next power of two above sixteen times the measured member
 bytes. The not-yet-produced WebP poster uses eight times the measured lossless
 PNG as its conservative proxy. The path-scoped qualification workflow
 regenerates the content-addressed evidence and fails on any byte or fact drift.
+Its matrix retains the original 1280x720 web-delivery baseline on the renderer
+that produced it and separately measures the responsive profile against a
+1920x1080 fixture and the first exact renderer release that emits both
+source-resolution and 720p renditions. This keeps historical budget evidence
+reproducible while giving the responsive contract its own immutable
+qualification root.
 
 ## Consumer Example
 
@@ -201,6 +223,7 @@ jobs:
       source-artifact-name: ${{ needs.build.outputs.artifact-name }}
       source-artifact-digest: ${{ needs.build.outputs.artifact-digest }}
       adapter-path: scripts/auditable-demo-adapter
+      adapter-arguments-json: '["--demo-id","agent-work-lab"]'
       renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:RENDERER_DIGEST
       render-media: false
       media-profile: archive-v1

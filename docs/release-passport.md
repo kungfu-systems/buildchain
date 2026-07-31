@@ -99,6 +99,10 @@ Additive passport sections:
   semantic Passport root, exact clean source revision, complete platform
   coverage, verdict, and residual risk. Buildchain owns release admission, not
   the meaning of the product invariants.
+- `releaseEvidence`: typed references to product-owned JSON evidence copied
+  beside the Passport. Buildchain does not interpret product or legal meaning;
+  it binds each document's canonical JSON digest and exact source SHA, tag, and
+  channel, then independently re-verifies the sibling document.
 - `githubArtifactAttestations`: expected GitHub keyless attestation identities
   for Linux release artifacts, including subject, caller source, original build
   evidence, exact Buildchain signer workflow digest, and least-privilege

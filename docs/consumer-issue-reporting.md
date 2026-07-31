@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-consumer-issue-reporting
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Consumer Issue Reporting
 
 Buildchain ships a first-class issue reporting surface for consumer workflows.
@@ -73,7 +91,7 @@ const result = await reportBuildchainIssue({
   token: process.env.BUILDCHAIN_ISSUE_TOKEN,
   summary: "Native artifact manifest is incomplete",
   failureCode: "native-manifest-incomplete",
-  buildchainRef: "v2",
+  buildchainRef: "v3",
   diagnosticsPath: ".buildchain/artifacts/diagnostics.json",
 });
 ```

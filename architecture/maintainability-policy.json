@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-maintainability-policy",
+  "baseline": "architecture/maintainability-baseline.json",
+  "enforcementRevision": "969e6ec1315fc7395bce198e3e5252181bf4eb93",
+  "sourceBudgets": {
+    "newFileLines": 600,
+    "newFunctionLines": 180,
+    "newFunctionComplexity": 25,
+    "existingDebtPolicy": "no-widening"
+  },
+  "approvedExistingDebtTransitions": {
+    "actions/promote-buildchain-ref/lib.js": {
+      "maxLines": 6952,
+      "rationale": "Named responsibility factories preserve both the audited legacy promotion implementation and the sealed-publication and family-evidence behavior already present at the enforcement revision, while the terminal orchestration budget drops from 3066 lines to at most 600. This exact post-integration ceiling cannot grow implicitly."
+    },
+    "bin/buildchain.mjs": {
+      "maxLines": 1946,
+      "rationale": "The runtime entrypoint now binds every compatibility command and alias, including the upstream paper command, through the tested command registry; this exact post-integration wiring ceiling cannot grow implicitly."
+    },
+    "packages/core/release-passport.js": {
+      "maxLines": 2859,
+      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification while the terminal report constructor drops from 470 lines to at most 180. This exact post-integration ceiling cannot grow implicitly."
+    },
+    "scripts/check-internal-architecture.mjs": {
+      "maxFunctionComplexity": 37,
+      "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
+    },
+    "scripts/check-inventory.mjs": {
+      "maxLines": 1440,
+      "rationale": "Public lifecycle fields are checked for every generated CLI, Node API, action, and workflow entry after integrating the latest upstream inventory; this exact post-integration ceiling cannot grow implicitly."
+    },
+    "scripts/generate-site-bundle.mjs": {
+      "maxLines": 1502,
+      "rationale": "Lifecycle metadata and CLI registry parity are generated centrally across the latest upstream public surface while the largest generator function remains at or below its prior size and complexity ceilings."
+    }
+  },
+  "approvedExtractedDebt": {
+    "actions/promote-buildchain-ref/lib.js#createRefMutationOperations": {
+      "maxLines": 627,
+      "maxComplexity": 1,
+      "rationale": "Transplanted legacy ref and provider mutation operations; independently tested and prevented from growing beyond this exact extraction point."
+    },
+    "actions/promote-buildchain-ref/lib.js#createReconciliationOperations": {
+      "maxLines": 672,
+      "maxComplexity": 1,
+      "rationale": "Transplanted legacy reconciliation operations; isolated from orchestration and prevented from growing beyond this exact extraction point."
+    },
+    "actions/promote-buildchain-ref/lib.js#createVersionStateOperations": {
+      "maxLines": 392,
+      "maxComplexity": 1,
+      "rationale": "Transplanted legacy version-state operations; isolated from orchestration and prevented from growing beyond this exact extraction point."
+    },
+    "actions/promote-buildchain-ref/lib.js#createDurableTransactionOperations": {
+      "maxLines": 295,
+      "maxComplexity": 1,
+      "rationale": "Transplanted legacy durable transaction and Passport operations; independently tested and prevented from growing beyond this exact extraction point."
+    },
+    "actions/promote-buildchain-ref/lib.js#promoteMajorChannel": {
+      "maxLines": 480,
+      "maxComplexity": 66,
+      "rationale": "Existing major-channel behavior moved intact behind a named channel handler; this exact inherited debt ceiling cannot grow."
+    },
+    "actions/promote-buildchain-ref/lib.js#promoteAlphaChannel": {
+      "maxLines": 521,
+      "maxComplexity": 93,
+      "rationale": "Existing alpha-channel behavior moved intact behind a named channel handler; this exact inherited debt ceiling cannot grow."
+    },
+    "actions/promote-buildchain-ref/lib.js#promoteReleaseChannel": {
+      "maxLines": 521,
+      "maxComplexity": 80,
+      "rationale": "Existing release-channel behavior moved intact behind a named channel handler; this exact inherited debt ceiling cannot grow."
+    },
+    "bin/buildchain.mjs#runRegisteredCommand": {
+      "maxLines": 443,
+      "maxComplexity": 110,
+      "rationale": "The pre-existing CLI dispatcher was renamed and bounded behind the canonical registry without changing its compatibility branches."
+    },
+    "packages/core/release-passport.js#validateReleaseEvidenceAttachments": {
+      "maxLines": 74,
+      "maxComplexity": 26,
+      "rationale": "Upstream release-evidence attachment validation was moved intact into a named validator during integration; its exact complexity ceiling cannot grow."
+    }
+  },
+  "selectedFunctionBudgets": {
+    "promoteBuildchainRefs": {
+      "file": "actions/promote-buildchain-ref/lib.js",
+      "lines": 600,
+      "complexity": 50
+    },
+    "createReleaseCheckReport": {
+      "file": "packages/core/release-passport.js",
+      "lines": 180,
+      "complexity": 25
+    }
+  },
+  "publicSurfacePolicy": {
+    "newOnly": true,
+    "requiredLifecycleFields": [
+      "owner",
+      "maturity",
+      "introducedVersion",
+      "compatibilityPromise",
+      "deprecationReplacement",
+      "sunsetCondition",
+      "capabilityGroup",
+      "nonDuplicationRationale"
+    ]
+  },
+  "architecturePolicy": {
+    "requireCapabilityOwner": true,
+    "requireImplementationTestContractMapping": true,
+    "dependencyCycles": 0,
+    "forbiddenDirectionChanges": 0
+  }
+}

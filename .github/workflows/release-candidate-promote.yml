@@ -83,6 +83,26 @@ on:
         default: "Build"
         type: string
         required: false
+      release-candidate-family-evidence-required:
+        description: "Require exact Initiative-family evidence before protected promotion"
+        default: false
+        type: boolean
+        required: false
+      release-candidate-family-evidence-root:
+        description: "Optional expected Initiative-family evidence content root"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-initiative-id:
+        description: "Optional expected Initiative identity"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-assignment-id:
+        description: "Optional expected child Assignment identity"
+        default: ""
+        type: string
+        required: false
       artifact-patterns:
         description: "Newline-separated payload artifact patterns expected from the RC bundle"
         default: ""
@@ -285,6 +305,16 @@ on:
         required: false
       release-passport-invariant-passport-command:
         description: "Product-owned command that emits a canonical invariant Passport JSON document"
+        default: ""
+        type: string
+        required: false
+      release-passport-evidence-jsons:
+        description: "Newline- or comma-separated product-owned release evidence attachment paths bound to the exact release coordinates"
+        default: ""
+        type: string
+        required: false
+      release-passport-attachment-command:
+        description: "Product-owned command that emits generated release evidence attachment paths as JSON"
         default: ""
         type: string
         required: false
@@ -607,24 +637,15 @@ jobs:
           --publication-channel "${{ inputs.channel }}"
           --target-ref "${{ inputs.target-ref || github.ref_name }}"
           --router-ref "${{ steps.router.outputs.ref }}"
+          --router-sha "${{ steps.router.outputs.sha }}"
 
       - name: Authorize trusted runtime override
         if: ${{ steps.route.outputs.override-used == 'true' }}
         uses: actions/github-script@v8
         with:
           script: |
-            if (context.eventName !== "workflow_dispatch") {
-              throw new Error("promotion runtime override is only allowed for trusted workflow_dispatch runs");
-            }
-            const permission = await github.rest.repos.getCollaboratorPermissionLevel({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              username: context.actor,
-            });
-            const level = permission.data.user?.permissions || permission.data.permission || "none";
-            if (!["write", "maintain", "admin"].includes(level)) {
-              throw new Error(`promotion runtime override requires write, maintain, or admin permission; actor has ${level}`);
-            }
+            const script = require(process.env.GITHUB_WORKSPACE + "/.buildchain/router/scripts/authorize-promotion-runtime-override.cjs");
+            await script.authorizePromotionRuntimeOverride({ github, context });
 
       - name: Resolve immutable promotion identities
         id: identities
@@ -763,6 +784,10 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       release-candidate-workflow-file: ${{ inputs.release-candidate-workflow-file }}
       release-candidate-workflow-name: ${{ inputs.release-candidate-workflow-name }}
+      release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
+      release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
+      release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
+      release-candidate-family-assignment-id: ${{ inputs.release-candidate-family-assignment-id }}
       artifact-patterns: ${{ inputs.artifact-patterns }}
       required-status-check: ${{ inputs.required-status-check }}
       branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
@@ -804,6 +829,8 @@ jobs:
       release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
       release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
       release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
+      release-passport-evidence-jsons: ${{ inputs.release-passport-evidence-jsons }}
+      release-passport-attachment-command: ${{ inputs.release-passport-attachment-command }}
       release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
       github-artifact-attestation-policy-json: ${{ inputs.github-artifact-attestation-policy-json }}
       github-artifact-attestation-environment: ${{ inputs.github-artifact-attestation-environment }}
@@ -868,6 +895,10 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       release-candidate-workflow-file: ${{ inputs.release-candidate-workflow-file }}
       release-candidate-workflow-name: ${{ inputs.release-candidate-workflow-name }}
+      release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
+      release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
+      release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
+      release-candidate-family-assignment-id: ${{ inputs.release-candidate-family-assignment-id }}
       artifact-patterns: ${{ inputs.artifact-patterns }}
       required-status-check: ${{ inputs.required-status-check }}
       branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
@@ -903,6 +934,8 @@ jobs:
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
       release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
       release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
+      release-passport-evidence-jsons: ${{ inputs.release-passport-evidence-jsons }}
+      release-passport-attachment-command: ${{ inputs.release-passport-attachment-command }}
       release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
       release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths }}
       required-artifact-count: ${{ inputs.required-artifact-count }}

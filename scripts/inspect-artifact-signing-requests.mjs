@@ -92,6 +92,13 @@ export function inspectArtifactSigningRequests({
             .split(path.sep)
             .join("/") || ".",
         kind: request.artifact.kind,
+        platform: request.artifact.platform,
+        arch: request.artifact.arch || "",
+        platformId: [request.artifact.platform, request.artifact.arch]
+          .filter(Boolean)
+          .join("-"),
+        sourceSha: request.source.sha,
+        sourceTreeSha: request.source.treeSha,
         transportFormat: request.artifact.transport?.format || "",
       };
       if (request.signature.profile === "detached-signature-v1")

@@ -178,6 +178,18 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "aws-codebuild-project": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-macos-runner-label": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-windows-runner-label": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "build-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -244,6 +256,18 @@
         },
         "checkout-cache-timeout-seconds": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-platforms-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-provider": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-required": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "control-runner-json": {
@@ -350,6 +374,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-evidence-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "requested-parallelism": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -387,6 +415,10 @@
           "source": "workflow-call-input"
         },
         "sample-process-tree": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "self-hosted-offline-fallback": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -468,7 +500,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:c9c8c1493e95aecfc1a2ec092f9490c1e16b9a9cdc1e3673bf6bdd329baac523"
+      "digest": "sha256:2e4c9e9af2162de2333c9b57bffcff77a76e9ed384b9f001ab8ef63d527197f9"
     },
     {
       "schemaVersion": 1,
@@ -572,6 +604,18 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "aws-codebuild-project": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-macos-runner-label": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "aws-ec2-windows-runner-label": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "build-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -650,6 +694,18 @@
         },
         "checkout-cache-timeout-seconds": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-platforms-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-provider": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "compiler-cache-required": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "control-runner-json": {
@@ -756,6 +812,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-evidence-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "requested-parallelism": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -793,6 +853,10 @@
           "source": "workflow-call-input"
         },
         "sample-process-tree": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "self-hosted-offline-fallback": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -850,7 +914,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:eac228a4746684d61d9664e8bce63e20d4b1e7bea0afd8718c8584cef941a95d"
+      "digest": "sha256:105eed3eb8f772d4ed93d43e7da404d849b92eafab1b461c7a9b7cb94a8a6b3b"
     },
     {
       "schemaVersion": 1,
@@ -1875,6 +1939,22 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-assignment-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-evidence-required": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-evidence-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-initiative-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "release-candidate-workflow-file": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1887,11 +1967,19 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-passport-attachment-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-passport-buildchain-self-kfd": {
           "classification": "included",
           "source": "workflow-call-input"
         },
         "release-passport-evidence-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-passport-evidence-jsons": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -2021,7 +2109,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:00baae93d9ed75129fdaed6fcc33285e515b8c7de84816831a39e660941dd7ae"
+      "digest": "sha256:f54bccee97644d190b450e4ed810b516af64ed5d265ea76cd541a11cbbd51cdb"
     },
     {
       "schemaVersion": 1,
@@ -2059,6 +2147,10 @@
         },
         "downstream-target": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "downstream-update-command": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "downstream-verify-command": {
@@ -2148,7 +2240,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f97656a8df0758c8e404d5b7c387529256a1ec45d1748f8efb6847a3256b1216"
+      "digest": "sha256:aff7a9f6bcf96d7a9d406e490868288f3acef104e53eddddc5782b8a2b5b4fa5"
     },
     {
       "schemaVersion": 1,
@@ -2197,5 +2289,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:f18f3b706683ae34168ed582d0b51f2d7d2574d627dda4c7b667d01f86623331"
+  "digest": "sha256:3564f3c38f8c070280ea9cf5dee810d466b40e72ce80104b15776365dfdf9b60"
 }

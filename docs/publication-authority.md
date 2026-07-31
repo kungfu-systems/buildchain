@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -212,7 +212,7 @@ providers select an explicit adapter:
 ```bash
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
-  --branch dev/v2/v2.12 \
+  --branch dev/v3/v3.0 \
   --source-sha <exact-merged-branch-sha> \
   --workflow .github/workflows/release-candidate-promote.yml \
   --workflow-ref <exact-buildchain-sha> \
@@ -223,7 +223,7 @@ buildchain audit publication-control-plane \
 # Optional stronger external evidence; generate the JSON outside the workflow.
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
-  --branch dev/v2/v2.12 \
+  --branch dev/v3/v3.0 \
   --workflow .github/workflows/release-candidate-promote.yml \
   --publisher-workflow .github/workflows/buildchain-ref-promotion.yml \
   --job promote \
@@ -232,7 +232,7 @@ buildchain audit publication-control-plane \
 
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
-  --branch release/v2/v2.12 \
+  --branch release/v3/v3.0 \
   --workflow .github/workflows/.binary-release-assets.yml \
   --job publish \
   --environment buildchain-release-assets \

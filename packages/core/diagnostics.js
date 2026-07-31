@@ -645,27 +645,84 @@ function observedMetric(unit, value, source, evidenceRoot) {
   };
 }
 
-function cacheStatsCount(stats, names) {
-  return names.reduce((sum, name) => sum + Number(stats?.[name] || 0), 0);
+function numericTotal(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (value && typeof value === "object") {
+    return Object.values(value).reduce((sum, entry) => sum + numericTotal(entry), 0);
+  }
+  return 0;
 }
 
-function compilerCacheOutcome(compilerCaches) {
+function cacheStatsCount(stats, names) {
+  return names.reduce((sum, name) => sum + numericTotal(stats?.[name]), 0);
+}
+
+function compilerCacheObservation(compilerCaches, compilerCachePreparation) {
+  const preparationValid =
+    compilerCachePreparation?.contract ===
+      "kungfu-buildchain-compiler-cache-preparation" &&
+    compilerCachePreparation?.provider === "sccache" &&
+    compilerCachePreparation?.status === "prepared" &&
+    compilerCachePreparation?.action?.statsReset === true &&
+    /^sha256:[0-9a-f]{64}$/.test(compilerCachePreparation?.root || "");
+  const sccache = compilerCaches?.sccache;
+  if (preparationValid && sccache?.available && sccache.stats) {
+    const stats = sccache.stats.stats || sccache.stats;
+    return {
+      provider: "sccache",
+      producer: "sccache",
+      source: "sccache-current-run-stats",
+      stats,
+      hits: cacheStatsCount(stats, [
+        "cache_hits",
+        "cache_hit",
+        "cache_hits_count",
+        "cache_hit_count",
+      ]),
+      misses: cacheStatsCount(stats, [
+        "cache_misses",
+        "cache_miss",
+        "cache_misses_count",
+        "cache_miss_count",
+      ]),
+    };
+  }
   const logStats = compilerCaches?.ccache?.logStats;
-  if (!logStats?.available || !logStats.stats) return "unavailable";
-  const hits = cacheStatsCount(logStats.stats, [
-    "direct_cache_hit",
-    "preprocessed_cache_hit",
-  ]);
-  const misses = cacheStatsCount(logStats.stats, ["cache_miss"]);
-  if (hits > 0 && misses > 0) return "partial";
-  if (hits > 0) return "hit";
-  if (misses > 0) return "miss";
+  if (logStats?.available && logStats.stats) {
+    return {
+      provider: "ccache",
+      producer: "ccache",
+      source: "ccache-current-run-stats-log",
+      stats: logStats.stats,
+      hits: cacheStatsCount(logStats.stats, [
+        "direct_cache_hit",
+        "preprocessed_cache_hit",
+      ]),
+      misses: cacheStatsCount(logStats.stats, ["cache_miss"]),
+    };
+  }
+  return {
+    provider: sccache?.available ? "sccache" : "compiler-cache",
+    producer: "unavailable",
+    source: sccache?.available ? "sccache-cumulative-stats" : "compiler-cache-diagnostics",
+    stats: undefined,
+    hits: 0,
+    misses: 0,
+  };
+}
+
+function compilerCacheOutcome(observation) {
+  if (!observation?.stats) return "unavailable";
+  if (observation.hits > 0 && observation.misses > 0) return "partial";
+  if (observation.hits > 0) return "hit";
+  if (observation.misses > 0) return "miss";
   return "bypassed";
 }
 
-function createStructuredCacheEvidence({
+export function createStructuredCacheEvidence({
   sourceCheckout,
   compilerCaches,
+  compilerCachePreparation,
   platform,
   env = process.env,
 }) {
@@ -696,6 +753,9 @@ function createStructuredCacheEvidence({
       ? { policyRoot: env.BUILDCHAIN_CACHE_POLICY_ROOT }
       : {}),
     ...(policyRoot ? { cacheProfileRoot: policyRoot } : {}),
+    ...(compilerCachePreparation?.root
+      ? { compilerCachePreparationRoot: compilerCachePreparation.root }
+      : {}),
   };
   const operations = [];
   if (sourceCheckout) {
@@ -780,53 +840,65 @@ function createStructuredCacheEvidence({
       }),
     );
   }
-  const compilerEvidenceRoot = cacheEvidenceDigest(compilerCaches || {});
+  const compilerObservation = compilerCacheObservation(
+    compilerCaches,
+    compilerCachePreparation,
+  );
+  const compilerEvidenceRoot = cacheEvidenceDigest({
+    compilerCaches: compilerCaches || {},
+    compilerCachePreparation: compilerCachePreparation || null,
+  });
+  const compilerMetricReason = compilerObservation.stats
+    ? `${compilerObservation.provider} current-run stats do not expose this metric`
+    : compilerObservation.provider === "sccache"
+      ? "sccache stats were not admitted without a current-run reset preparation receipt"
+      : "compiler cache current-run stats were unavailable";
   operations.push(
     createCacheOperationReceipt({
       operationId: `compiler-cache:${platform}`,
       operation: "restore",
-      provider: compilerCaches?.ccache?.available ? "ccache" : "compiler-cache",
-      producer: compilerCaches?.ccache?.available ? "ccache" : "unavailable",
+      provider: compilerObservation.provider,
+      producer: compilerObservation.producer,
       platform,
-      cacheKey: policyRoot || null,
+      cacheKey: compilerCachePreparation?.root || policyRoot || null,
       cacheRoot: policyRoot || null,
-      outcome: compilerCacheOutcome(compilerCaches),
+      outcome: compilerCacheOutcome(compilerObservation),
       bindings,
       metrics: {
         lookupDuration: unavailableMetric(
           "ms",
-          "ccache stats log exposes outcomes but not lookup duration",
-          "ccache-stats-log",
+          compilerMetricReason,
+          compilerObservation.source,
           compilerEvidenceRoot,
         ),
         restoreDuration: unavailableMetric(
           "ms",
-          "ccache stats log exposes outcomes but not transfer duration",
-          "ccache-stats-log",
+          compilerMetricReason,
+          compilerObservation.source,
           compilerEvidenceRoot,
         ),
         saveDuration: unavailableMetric(
           "ms",
-          "ccache stats log exposes writes but not save duration",
-          "ccache-stats-log",
+          compilerMetricReason,
+          compilerObservation.source,
           compilerEvidenceRoot,
         ),
         restoredBytes: unavailableMetric(
           "bytes",
-          "ccache does not expose per-run restored bytes",
-          "ccache-stats-log",
+          compilerMetricReason,
+          compilerObservation.source,
           compilerEvidenceRoot,
         ),
         writtenBytes: unavailableMetric(
           "bytes",
-          "ccache does not expose per-run written bytes",
-          "ccache-stats-log",
+          compilerMetricReason,
+          compilerObservation.source,
           compilerEvidenceRoot,
         ),
         savedTime: unavailableMetric(
           "ms",
-          "ccache does not report evidence-backed compile time saved",
-          "ccache-stats-log",
+          compilerMetricReason,
+          compilerObservation.source,
           compilerEvidenceRoot,
         ),
       },
@@ -1343,6 +1415,7 @@ export function createDiagnosticsArtifact({
   processSummary = undefined,
   requestedParallelism = 0,
   sourceCheckout = undefined,
+  compilerCachePreparation = undefined,
   links = {},
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
@@ -1370,6 +1443,7 @@ export function createDiagnosticsArtifact({
     cacheEvidence: createStructuredCacheEvidence({
       sourceCheckout,
       compilerCaches,
+      compilerCachePreparation,
       platform,
     }),
     nativeCacheDirs: native.cacheDirs || [],
@@ -1377,6 +1451,7 @@ export function createDiagnosticsArtifact({
     lifecycleObservability: lifecycleObservability || summarizeLifecycleObservability({ events, logPath }),
     process: processSummary || summarizeProcessSamples({ samples: processSamples, requestedParallelism }),
     ...(sourceCheckout ? { sourceCheckout } : {}),
+    ...(compilerCachePreparation ? { compilerCachePreparation } : {}),
     links,
   };
 }

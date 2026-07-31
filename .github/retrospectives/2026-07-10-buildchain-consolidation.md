@@ -45,7 +45,10 @@ These are observed facts, not estimates:
   period. In that sample, 443 titles matched promotion, release, version-state,
   preparation, or state-synchronization work.
 - The generated public registries exposed 74 CLI command entries, 23 Node API
-  exports, 37 workflow entries, and 4 active actions.
+  exports, 37 workflow entries, and 4 active actions. This is a historical
+  snapshot of the four consumer-facing actions at that reviewed commit, not
+  the current registry count; the v3 registry now distinguishes those four
+  from two release-authority action components.
 - The largest hand-maintained implementation and test surfaces included:
   - `tests/promote-buildchain-ref.test.mjs`: 7,390 lines;
   - `actions/promote-buildchain-ref/lib.js`: 5,147 lines;

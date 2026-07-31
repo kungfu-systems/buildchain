@@ -48,14 +48,34 @@ on:
         type: string
         required: false
       runner-preset:
-        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, or custom with platforms-json"
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, aws-us-codebuild-linux, aws-us-ec2-windows-jit, aws-us-ec2-macos-jit, or custom with platforms-json"
         default: "github-hosted"
+        type: string
+        required: false
+      aws-codebuild-project:
+        description: "Required CodeBuild project name for the explicit aws-us-codebuild-linux burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-windows-runner-label:
+        description: "Required unique card-scoped JIT label for the explicit aws-us-ec2-windows-jit burst preset"
+        default: ""
+        type: string
+        required: false
+      aws-ec2-macos-runner-label:
+        description: "Required unique campaign-scoped JIT label for the explicit aws-us-ec2-macos-jit burst preset"
+        default: ""
         type: string
         required: false
       platforms-json:
         description: "Optional custom JSON array of platform objects: id, name, runner JSON string"
         default: ""
         type: string
+        required: false
+      self-hosted-offline-fallback:
+        description: "Route each supported exact-label self-hosted lane to its GitHub-hosted runner when no matching runner is online"
+        default: false
+        type: boolean
         required: false
       control-runner-json:
         description: "JSON runner-label array for trusted control-plane jobs"
@@ -372,8 +392,28 @@ on:
         default: ""
         type: string
         required: false
+      compiler-cache-provider:
+        description: "Audited compiler cache provider prepared before build: none or sccache"
+        default: "none"
+        type: string
+        required: false
+      compiler-cache-platforms-json:
+        description: "JSON array of platform ids on which compiler-cache preparation is enabled"
+        default: "[]"
+        type: string
+        required: false
+      compiler-cache-required:
+        description: "Fail the selected platform before build when the compiler cache cannot be prepared"
+        default: false
+        type: boolean
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-evidence-json:
+        description: "Optional exact Initiative-family release evidence JSON embedded in the release-candidate passport"
         default: ""
         type: string
         required: false
@@ -395,7 +435,7 @@ on:
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
         required: false
       BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Standard Buildchain control-plane token used only to dispatch and retrieve central authority results"
+        description: "Standard Buildchain control-plane token used only for protected runner inventory, dispatch, and central authority retrieval"
         required: false
     outputs:
       buildchain-channel:
@@ -413,6 +453,9 @@ on:
       platforms-json:
         description: "Resolved platform matrix JSON"
         value: ${{ jobs.build.outputs.platforms-json }}
+      runner-routing-json:
+        description: "De-identified self-hosted availability and offline fallback decision"
+        value: ${{ jobs.build.outputs.runner-routing-json }}
       platform-count:
         description: "Resolved platform count"
         value: ${{ jobs.build.outputs.platform-count }}
@@ -709,7 +752,11 @@ jobs:
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
+      aws-codebuild-project: ${{ inputs.aws-codebuild-project }}
+      aws-ec2-windows-runner-label: ${{ inputs.aws-ec2-windows-runner-label }}
+      aws-ec2-macos-runner-label: ${{ inputs.aws-ec2-macos-runner-label }}
       platforms-json: ${{ inputs.platforms-json }}
+      self-hosted-offline-fallback: ${{ inputs.self-hosted-offline-fallback }}
       control-runner-json: ${{ inputs.control-runner-json }}
       fail-fast: ${{ inputs.fail-fast }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
@@ -775,7 +822,11 @@ jobs:
       cache-dependency-lock-root: ${{ inputs.cache-dependency-lock-root }}
       cache-toolchain-root: ${{ inputs.cache-toolchain-root }}
       cache-policy-root: ${{ inputs.cache-policy-root }}
+      compiler-cache-provider: ${{ inputs.compiler-cache-provider }}
+      compiler-cache-platforms-json: ${{ inputs.compiler-cache-platforms-json }}
+      compiler-cache-required: ${{ inputs.compiler-cache-required }}
       gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
+      release-candidate-family-evidence-json: ${{ inputs.release-candidate-family-evidence-json }}
     secrets: inherit
 
   controller-receipt:

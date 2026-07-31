@@ -167,6 +167,8 @@ test("authority intake routes native profiles without accepting source substitut
     assert.equal(matrices.windows.length, 1);
     assert.equal(matrices.macos.length, 0);
     assert.equal(matrices.detached.length, 0);
+    assert.equal(matrices.windows[0].platformId, "windows");
+    assert.equal(matrices.windows[0].sourceSha, "1".repeat(40));
     assert.throws(
       () =>
         inspectArtifactSigningRequests({
@@ -177,6 +179,144 @@ test("authority intake routes native profiles without accepting source substitut
     );
   } finally {
     fs.rmSync(value.root, { recursive: true, force: true });
+  }
+});
+
+test("native authority binds and projects a notarized app release payload", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-native-app-signing-"),
+  );
+  try {
+    const input = path.join(root, "input");
+    const requestDirectory = path.join(input, "app");
+    fs.mkdirSync(requestDirectory, { recursive: true });
+    const unsignedTransport = path.join(requestDirectory, "subject.ditto.zip");
+    fs.writeFileSync(unsignedTransport, "unsigned-app-transport");
+    const request = createArtifactSigningRequest({
+      source: {
+        repository: "kungfu-systems/kungfu",
+        sha: "1".repeat(40),
+        treeSha: "2".repeat(40),
+      },
+      runtime: { sha: "3".repeat(40) },
+      artifact: {
+        id: "kungfu-app",
+        path: "product/dist/desktop/mac-arm64/Kungfu Episodes.app",
+        platform: "macos",
+        arch: "arm64",
+        kind: "app-bundle",
+        bytes: 42,
+        digest: `sha256:${"4".repeat(64)}`,
+        transport: {
+          file: "app/subject.ditto.zip",
+          format: "ditto-zip",
+          bytes: fs.statSync(unsignedTransport).size,
+          digest: digest(fs.readFileSync(unsignedTransport)),
+        },
+      },
+    });
+    fs.writeFileSync(
+      path.join(requestDirectory, "request.json"),
+      `${JSON.stringify(request, null, 2)}\n`,
+    );
+    fs.writeFileSync(
+      path.join(input, "index.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "kungfu-buildchain-artifact-signing-request-index/v1",
+        requests: [{
+          id: request.artifact.id,
+          digest: request.digest,
+          path: "app/request.json",
+          required: true,
+        }],
+      }, null, 2)}\n`,
+    );
+
+    const credential = path.join(root, "credential");
+    const release = path.join(credential, "product", "release");
+    fs.mkdirSync(release, { recursive: true });
+    const zip = path.join(release, "Kungfu-Episodes-4.0.0-alpha.1-macos-arm64.zip");
+    const dmg = path.join(release, "Kungfu-Episodes-4.0.0-alpha.1-macos-arm64.dmg");
+    const evidencePath = path.join(release, "credential-island-evidence.json");
+    fs.writeFileSync(zip, "signed-stapled-app-zip");
+    fs.writeFileSync(dmg, "signed-stapled-dmg");
+    fs.writeFileSync(evidencePath, `${JSON.stringify({
+      schema: "buildchain.macos-credential-island-evidence/v1",
+      status: "accepted",
+      source: {
+        repository: request.source.repository,
+        sha: request.source.sha,
+        treeSha: request.source.treeSha,
+      },
+      buildchain: { runtimeSha: request.runtime.sha },
+      app: { architecture: "arm64" },
+      notarization: {
+        application: { id: "a", status: "Accepted" },
+        diskImage: { id: "b", status: "Accepted" },
+      },
+      verification: {
+        codesignStrict: true,
+        hardenedRuntime: true,
+        appStaple: true,
+        appGatekeeper: true,
+        dmgStaple: true,
+        dmgGatekeeper: true,
+      },
+    }, null, 2)}\n`);
+    const files = [zip, dmg, evidencePath].map((file) => ({
+      path: path.relative(credential, file).split(path.sep).join("/"),
+      size: fs.statSync(file).size,
+      sha256: digest(fs.readFileSync(file)).slice("sha256:".length),
+    }));
+    fs.writeFileSync(
+      path.join(credential, "manifest.json"),
+      `${JSON.stringify({ files }, null, 2)}\n`,
+    );
+
+    const output = path.join(root, "output");
+    finalizeNativeArtifactSigningResult({
+      requestRoot: input,
+      requestPath: "app/request.json",
+      signedPayload: zip,
+      evidencePath,
+      credentialArtifactRoot: credential,
+      outputRoot: output,
+    });
+    assert.equal(
+      verifyArtifactSigningResults({ requestRoot: input, resultRoot: output }).ok,
+      true,
+    );
+
+    const consumer = path.join(root, "consumer");
+    fs.mkdirSync(path.join(consumer, "product", "release"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(consumer, "product", "release", "existing.txt"),
+      "existing",
+    );
+    const imported = importArtifactSigningResults({
+      workspace: consumer,
+      requestRoot: input,
+      resultRoot: output,
+      evidenceRoot: ".buildchain/artifacts/signing/macos-arm64",
+    });
+    assert.equal(imported.credentialArtifacts.length, 1);
+    assert.equal(
+      fs.readFileSync(path.join(consumer, "product", "release", path.basename(dmg)), "utf8"),
+      "signed-stapled-dmg",
+    );
+    fs.appendFileSync(
+      path.join(output, "credential-artifact", "product", "release", path.basename(dmg)),
+      "tamper",
+    );
+    assert.throws(
+      () => verifyArtifactSigningResults({ requestRoot: input, resultRoot: output }),
+      /result evidence digest mismatch/,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
 
@@ -223,6 +363,10 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(
     workflow,
     /BUILDCHAIN_ARTIFACT_KIND: \$\{\{ matrix\.request\.kind \}\}/,
+  );
+  assert.match(
+    workflow,
+    /Developer ID sign, notarize, and staple Apple application[\s\S]*uses: \.\/actions\/macos-credential-island/,
   );
   assert.match(macos, /codesign --verify --strict/);
   assert.match(macos, /notarytool submit/);

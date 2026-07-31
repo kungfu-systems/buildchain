@@ -1,0 +1,463 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Bounded single-host macOS EC2 one-job JIT runner control plane for trusted
+  kungfu-systems/kungfu qualification campaigns.
+
+Parameters:
+  GitHubOidcProviderArn:
+    Type: String
+    AllowedPattern: "^arn:aws:iam::[0-9]{12}:oidc-provider/token\\.actions\\.githubusercontent\\.com$"
+  Repository:
+    Type: String
+    Default: kungfu-systems/kungfu
+    AllowedPattern: "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+  TrustedRef:
+    Type: String
+    Default: refs/heads/dev/v4/v4.0
+    AllowedPattern: "^refs/heads/[A-Za-z0-9._/-]+$"
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+  BudgetLimitUsd:
+    Type: Number
+    Default: 25
+    MinValue: 1
+    MaxValue: 25
+  MinimumHostAllocationHours:
+    Type: Number
+    Default: 24
+    MinValue: 24
+    MaxValue: 24
+  MaximumHostAllocationHours:
+    Type: Number
+    Default: 30
+    MinValue: 24
+    MaxValue: 30
+
+Resources:
+  RunnerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Outbound-only AWS macOS JIT runner
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+          Description: Outbound package, GitHub Actions, and AWS API access
+      Tags:
+        - Key: Name
+          Value: kungfu-buildchain-macos-jit
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:provider
+          Value: macos-ec2-jit
+
+  EvidenceBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-runner-diagnostics
+            Status: Enabled
+            ExpirationInDays: 30
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:provider
+          Value: macos-ec2-jit
+
+  EvidenceBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref EvidenceBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource:
+              - !GetAtt EvidenceBucket.Arn
+              - !Sub "${EvidenceBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
+  RunnerInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      Policies:
+        - PolicyName: consume-one-macos-jit-config
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:DeleteParameter
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kungfu/burst/macos/*"
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: !Sub "${EvidenceBucket.Arn}/macos/*"
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:provider
+          Value: macos-ec2-jit
+
+  RunnerInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref RunnerInstanceRole
+
+  GitHubProvisionerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub "repo:${Repository}:ref:${TrustedRef}"
+      Policies:
+        - PolicyName: operate-one-card-owned-macos-jit-host
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:AllocateHosts
+                  - ec2:RunInstances
+                  - ec2:CreateTags
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestTag/kungfu:plane: aws-us-elastic-runner-burst
+                    aws:RequestTag/kungfu:provider: macos-ec2-jit
+              - Effect: Allow
+                Action:
+                  - ec2:TerminateInstances
+                  - ec2:ReleaseHosts
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    ec2:ResourceTag/kungfu:plane: aws-us-elastic-runner-burst
+                    ec2:ResourceTag/kungfu:provider: macos-ec2-jit
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeHosts
+                  - ec2:DescribeImages
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                  - ec2:DescribeVolumes
+                  - ec2:DescribeTags
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                  - ssm:SendCommand
+                  - ssm:GetCommandInvocation
+                Resource: "*"
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt RunnerInstanceRole.Arn
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: ec2.amazonaws.com
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:provider
+          Value: macos-ec2-jit
+
+  ReaperRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        - PolicyName: reap-only-card-owned-macos-jit
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeHosts
+                  - ec2:DescribeInstances
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ec2:TerminateInstances
+                  - ec2:ReleaseHosts
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    ec2:ResourceTag/kungfu:plane: aws-us-elastic-runner-burst
+                    ec2:ResourceTag/kungfu:provider: macos-ec2-jit
+              - Effect: Allow
+                Action: ssm:DeleteParameter
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kungfu/burst/macos/*"
+
+  ReaperLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /kungfu/buildchain/aws-us-macos-jit/reaper
+      RetentionInDays: 30
+
+  Reaper:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - ReaperLogGroup
+    Properties:
+      Runtime: python3.14
+      Handler: index.handler
+      Role: !GetAtt ReaperRole.Arn
+      Timeout: 60
+      Environment:
+        Variables:
+          MINIMUM_HOST_HOURS: !Ref MinimumHostAllocationHours
+          MAXIMUM_HOST_HOURS: !Ref MaximumHostAllocationHours
+          PARAMETER_PREFIX: /kungfu/burst/macos/
+      Code:
+        ZipFile: |
+          import datetime
+          import os
+          import boto3
+          import botocore
+
+          ec2 = boto3.client("ec2")
+          ssm = boto3.client("ssm")
+          MIN_AGE = int(os.environ["MINIMUM_HOST_HOURS"]) * 3600
+          MAX_AGE = int(os.environ["MAXIMUM_HOST_HOURS"]) * 3600
+          PREFIX = os.environ["PARAMETER_PREFIX"]
+
+          def tags(resource):
+              return {row["Key"]: row["Value"] for row in resource.get("Tags", [])}
+
+          def handler(event, context):
+              now = datetime.datetime.now(datetime.timezone.utc)
+              kill_all = bool(event.get("Records"))
+              instance_response = ec2.describe_instances(Filters=[
+                  {"Name": "tag:kungfu:plane", "Values": ["aws-us-elastic-runner-burst"]},
+                  {"Name": "tag:kungfu:provider", "Values": ["macos-ec2-jit"]},
+                  {"Name": "instance-state-name", "Values": ["pending", "running", "stopping", "stopped"]},
+              ])
+              instances = [
+                  instance
+                  for reservation in instance_response.get("Reservations", [])
+                  for instance in reservation.get("Instances", [])
+              ]
+              victims = []
+              parameters = []
+              for instance in instances:
+                  instance_tags = tags(instance)
+                  expired = (now - instance["LaunchTime"]).total_seconds() >= MAX_AGE
+                  if kill_all or expired or instance["State"]["Name"] == "stopped":
+                      victims.append(instance["InstanceId"])
+                      parameter = instance_tags.get("kungfu:jit-parameter", "")
+                      if parameter.startswith(PREFIX):
+                          parameters.append(parameter)
+              if victims:
+                  ec2.terminate_instances(InstanceIds=victims)
+              for parameter in sorted(set(parameters)):
+                  try:
+                      ssm.delete_parameter(Name=parameter)
+                  except ssm.exceptions.ParameterNotFound:
+                      pass
+
+              host_response = ec2.describe_hosts(Filters=[
+                  {"Name": "tag:kungfu:plane", "Values": ["aws-us-elastic-runner-burst"]},
+                  {"Name": "tag:kungfu:provider", "Values": ["macos-ec2-jit"]},
+              ])
+              released = []
+              for host in host_response.get("Hosts", []):
+                  age = (now - host["AllocationTime"]).total_seconds()
+                  host_instances = host.get("Instances", [])
+                  can_release = not host_instances and age >= MIN_AGE
+                  if can_release:
+                      try:
+                          ec2.release_hosts(HostIds=[host["HostId"]])
+                          released.append(host["HostId"])
+                      except botocore.exceptions.ClientError:
+                        pass
+              print({
+                  "killAll": kill_all,
+                  "observedInstances": len(instances),
+                  "terminatedInstances": victims,
+                  "deletedJitParameters": len(set(parameters)),
+                  "observedHosts": len(host_response.get("Hosts", [])),
+                  "releasedHosts": released,
+              })
+              return {"terminatedInstances": victims, "releasedHosts": released}
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:provider
+          Value: macos-ec2-jit
+
+  ReaperSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(10 minutes)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt Reaper.Arn
+          Id: reap-expired-macos-jit
+
+  ReaperSchedulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Reaper
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ReaperSchedule.Arn
+
+  KillSwitchTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:provider
+          Value: macos-ec2-jit
+
+  KillSwitchSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: lambda
+      TopicArn: !Ref KillSwitchTopic
+      Endpoint: !GetAtt Reaper.Arn
+
+  KillSwitchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Reaper
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref KillSwitchTopic
+
+  KillSwitchTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref KillSwitchTopic
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowBudgets
+            Effect: Allow
+            Principal:
+              Service: budgets.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref KillSwitchTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+
+  BurstBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: kungfu-buildchain-macos-jit-actual-spend
+        BudgetLimit:
+          Amount: !Ref BudgetLimitUsd
+          Unit: USD
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        CostFilters:
+          TagKeyValue:
+            - user:kungfu:provider$macos-ec2-jit
+      NotificationsWithSubscribers:
+        - Notification:
+            ComparisonOperator: GREATER_THAN
+            NotificationType: ACTUAL
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: SNS
+              Address: !Ref KillSwitchTopic
+        - Notification:
+            ComparisonOperator: GREATER_THAN
+            NotificationType: ACTUAL
+            Threshold: 95
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: SNS
+              Address: !Ref KillSwitchTopic
+
+Outputs:
+  SubnetId:
+    Value: !Ref SubnetId
+  SecurityGroupId:
+    Value: !Ref RunnerSecurityGroup
+  InstanceProfileArn:
+    Value: !GetAtt RunnerInstanceProfile.Arn
+  InstanceProfileName:
+    Value: !Ref RunnerInstanceProfile
+  InstanceRoleArn:
+    Value: !GetAtt RunnerInstanceRole.Arn
+  GitHubProvisionerRoleArn:
+    Value: !GetAtt GitHubProvisionerRole.Arn
+  EvidenceBucket:
+    Value: !Ref EvidenceBucket
+  ReaperFunction:
+    Value: !Ref Reaper
+  KillSwitchTopic:
+    Value: !Ref KillSwitchTopic

@@ -23,6 +23,7 @@ import {
   parseIdentityListing,
   parseNotaryResult,
   parseNotarySubmission,
+  resolveExpectedBundleId,
   rewriteWheelRecord,
   safeArtifactName,
   safeArtifactStem,
@@ -36,6 +37,19 @@ import {
 
 const SOURCE_SHA = "1".repeat(40);
 const TREE_SHA = "2".repeat(40);
+
+test("credential island derives application identity from sealed input", () => {
+  assert.equal(resolveExpectedBundleId("", "com.kungfu.app"), "com.kungfu.app");
+  assert.equal(resolveExpectedBundleId("com.kungfu.app", ""), "com.kungfu.app");
+  assert.throws(
+    () => resolveExpectedBundleId("com.other.app", "com.kungfu.app"),
+    /bundle identifier mismatch/u,
+  );
+  assert.throws(
+    () => resolveExpectedBundleId("", "invalid bundle id"),
+    /invalid format/u,
+  );
+});
 
 function fixture() {
   const root = fs.mkdtempSync(
@@ -616,6 +630,14 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.ok(containerBuildJob);
   assert.match(action, /post: "dist\/cleanup\.js"/);
   assert.match(action, /certificate-p12-base64/);
+  assert.match(
+    action,
+    /expected-bundle-id:[\s\S]*?required: false[\s\S]*?default: ""/u,
+  );
+  assert.match(
+    implementation,
+    /resolveExpectedBundleId\([\s\S]*?plistValue\(appPath, "CFBundleIdentifier"\)/u,
+  );
   for (const label of [
     "create temporary keychain",
     "unlock temporary keychain",

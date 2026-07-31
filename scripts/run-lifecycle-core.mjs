@@ -130,6 +130,16 @@ function collectArtifactFiles(root, patterns) {
   return [...files].sort();
 }
 
+function signingArtifactPathsForPlatform({ loadedConfig, cwd, platformId }) {
+  const declarations = loadedConfig?.config?.signing?.artifacts || [];
+  return declarations
+    .filter(
+      (entry) =>
+        entry.platforms.length === 0 || entry.platforms.includes(platformId),
+    )
+    .map((entry) => path.resolve(cwd, entry.path));
+}
+
 function readProcessSummaryArtifact(filePath) {
   if (!filePath) {
     return undefined;
@@ -435,11 +445,35 @@ export function runLifecycle({
   const resolvedDiagnosticsProcessSamplesPath = path.join(diagnosticsDir, "process-samples.jsonl");
   const resolvedSourceCheckoutPath = path.resolve(resolvedWorkspace, ".buildchain/diagnostics/source-checkout.json");
   const resolvedDiagnosticsSourceCheckoutPath = path.join(diagnosticsDir, "source-checkout.json");
+  const resolvedCompilerCachePreparationPath = path.resolve(
+    resolvedWorkspace,
+    process.env.BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH ||
+      ".buildchain/diagnostics/compiler-cache-preparation.json",
+  );
+  const compilerCachePreparationRelative = path.relative(
+    resolvedWorkspace,
+    resolvedCompilerCachePreparationPath,
+  );
+  if (
+    compilerCachePreparationRelative.startsWith("..") ||
+    path.isAbsolute(compilerCachePreparationRelative)
+  ) {
+    throw new Error(
+      "BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH must remain inside the workflow workspace",
+    );
+  }
+  const resolvedDiagnosticsCompilerCachePreparationPath = path.join(
+    diagnosticsDir,
+    "compiler-cache-preparation.json",
+  );
   const resolvedDiagnosticsManifestPath = path.join(diagnosticsDir, "diagnostics-manifest.json");
   const relativeDiagnosticsEventsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsEventsPath));
   const relativeDiagnosticsProcessSummaryPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSummaryPath));
   const relativeDiagnosticsProcessSamplesPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSamplesPath));
   const relativeDiagnosticsSourceCheckoutPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsSourceCheckoutPath));
+  const relativeDiagnosticsCompilerCachePreparationPath = toPosix(
+    path.relative(resolvedWorkspace, resolvedDiagnosticsCompilerCachePreparationPath),
+  );
   const relativeDiagnosticsManifestPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsManifestPath));
   const logRunId = crypto.randomUUID();
   const frameworkLog = createBuildchainLogger({
@@ -622,9 +656,22 @@ export function runLifecycle({
   const sourceCheckoutArtifact = fs.existsSync(resolvedSourceCheckoutPath)
     ? JSON.parse(fs.readFileSync(resolvedSourceCheckoutPath, "utf8"))
     : undefined;
+  const compilerCachePreparationArtifact = fs.existsSync(resolvedCompilerCachePreparationPath)
+    ? JSON.parse(fs.readFileSync(resolvedCompilerCachePreparationPath, "utf8"))
+    : undefined;
   fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
   const scanStartedAt = Date.now();
-  const files = collectArtifactFiles(resolvedWorkspace, artifactPaths);
+  const signingArtifactPaths = stageName === "build"
+    ? signingArtifactPathsForPlatform({
+        loadedConfig,
+        cwd: resolvedCwd,
+        platformId,
+      })
+    : [];
+  const files = collectArtifactFiles(resolvedWorkspace, [
+    ...artifactPaths,
+    ...signingArtifactPaths,
+  ]);
   const manifestFiles = files.map((file) => {
     const stat = fs.statSync(file);
     return {
@@ -743,6 +790,7 @@ export function runLifecycle({
       lifecycleObservability,
       processSummary: processSummaryArtifact?.summary,
       sourceCheckout: sourceCheckoutArtifact,
+      compilerCachePreparation: compilerCachePreparationArtifact,
       links: {
         artifactName,
         platformId,
@@ -757,6 +805,9 @@ export function runLifecycle({
         ...(processSummaryArtifact ? { diagnosticsProcessSummary: relativeDiagnosticsProcessSummaryPath } : {}),
         ...(processSummaryArtifact?.samplesPath ? { diagnosticsProcessSamples: relativeDiagnosticsProcessSamplesPath } : {}),
         ...(sourceCheckoutArtifact ? { sourceCheckout: relativeDiagnosticsSourceCheckoutPath } : {}),
+        ...(compilerCachePreparationArtifact
+          ? { compilerCachePreparation: relativeDiagnosticsCompilerCachePreparationPath }
+          : {}),
       },
     }),
   );
@@ -778,6 +829,12 @@ export function runLifecycle({
   if (sourceCheckoutArtifact) {
     copyIfExists(resolvedSourceCheckoutPath, resolvedDiagnosticsSourceCheckoutPath);
   }
+  if (compilerCachePreparationArtifact) {
+    copyIfExists(
+      resolvedCompilerCachePreparationPath,
+      resolvedDiagnosticsCompilerCachePreparationPath,
+    );
+  }
   writeDiagnosticsSidecarManifest(resolvedDiagnosticsManifestPath, {
     workspace: resolvedWorkspace,
     artifactName,
@@ -789,6 +846,10 @@ export function runLifecycle({
       { kind: "process-summary", filePath: resolvedDiagnosticsProcessSummaryPath },
       { kind: "process-samples", filePath: resolvedDiagnosticsProcessSamplesPath },
       { kind: "source-checkout", filePath: resolvedDiagnosticsSourceCheckoutPath },
+      {
+        kind: "compiler-cache-preparation",
+        filePath: resolvedDiagnosticsCompilerCachePreparationPath,
+      },
     ],
   });
   console.log(`buildchain_manifest=${path.relative(resolvedWorkspace, resolvedManifestPath)}`);

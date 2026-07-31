@@ -3,6 +3,7 @@ import path from "node:path";
 import { writeReleaseTransaction } from "../../../packages/core/publish-transaction.js";
 import {
   decodeGitBlob,
+  decodeGitBlobBuffer,
   getGitCommitWithRetry,
   getGitRefOrUndefined,
   githubRetryDelayMs,
@@ -27,6 +28,7 @@ async function restoreDurableReleaseTransaction({
   stateRef,
   statePath,
   evidencePath,
+  sealedBundleRoot = "",
 }) {
   if (!octokit || !stateRef) {
     return undefined;
@@ -72,6 +74,55 @@ async function restoreDurableReleaseTransaction({
     );
     fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
     fs.writeFileSync(evidencePath, decodeGitBlob(evidenceBlob));
+  }
+  if (record.sealed_bundle?.root) {
+    if (!sealedBundleRoot) {
+      throw new Error(
+        `durable release transaction ${stateRef} requires a sealed bundle recovery root`,
+      );
+    }
+    const durablePath = String(record.sealed_bundle.durablePath || "")
+      .replace(/^\/+|\/+$/g, "");
+    if (!durablePath || durablePath.split("/").includes("..")) {
+      throw new Error(
+        `durable release transaction ${stateRef} has an unsafe sealed bundle path`,
+      );
+    }
+    const resolvedBundleRoot = path.resolve(sealedBundleRoot);
+    for (const [index, file] of (record.sealed_bundle.files || []).entries()) {
+      const relativePath = String(file.path || "").replaceAll("\\", "/");
+      if (
+        !relativePath ||
+        relativePath.startsWith("/") ||
+        relativePath.split("/").some((part) => part === ".." || part === "")
+      ) {
+        throw new Error(
+          `durable release transaction ${stateRef} has an unsafe sealed file path at ${index}`,
+        );
+      }
+      const durableFilePath = `${durablePath}/files/${relativePath}`;
+      const entry = entryByPath.get(durableFilePath);
+      if (!entry) {
+        throw new Error(
+          `durable release transaction ${stateRef} is missing sealed bundle file ${relativePath}`,
+        );
+      }
+      const { data: blob } = await retryGitHubOperation(
+        `git.getBlob ${stateRef}/${durableFilePath}`,
+        () =>
+          octokit.rest.git.getBlob({
+            owner,
+            repo,
+            file_sha: entry.sha,
+          }),
+      );
+      const target = path.resolve(resolvedBundleRoot, relativePath);
+      if (!target.startsWith(`${resolvedBundleRoot}${path.sep}`)) {
+        throw new Error(`sealed bundle recovery path escapes root: ${relativePath}`);
+      }
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, decodeGitBlobBuffer(blob));
+    }
   }
 
   return record;
@@ -175,13 +226,26 @@ async function persistDurableReleaseTransaction({
     if (!file?.path) {
       continue;
     }
+    const sourcePath = file.sourcePath ? path.resolve(cwd, file.sourcePath) : "";
+    if (
+      sourcePath &&
+      (!fs.existsSync(sourcePath) || !fs.statSync(sourcePath).isFile())
+    ) {
+      throw new Error(
+        `durable release transaction extra file is missing: ${sourcePath}`,
+      );
+    }
+    const content = sourcePath
+      ? fs.readFileSync(sourcePath).toString("base64")
+      : String(file.content || "");
+    const encoding = sourcePath ? "base64" : "utf-8";
     const blob = await retryGitHubOperation(
       `git.createBlob ${transaction.state_ref}/${file.path}`,
       () => octokit.rest.git.createBlob({
         owner,
         repo,
-        content: String(file.content || ""),
-        encoding: "utf-8",
+        content,
+        encoding,
       }),
     );
     treeEntries.push({

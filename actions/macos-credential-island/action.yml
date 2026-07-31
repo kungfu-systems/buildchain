@@ -30,9 +30,14 @@ inputs:
     description: "Credential-island platform id; defaults to the sealed platform plus -credential"
     required: false
     default: ""
+  artifact-id:
+    description: "Optional declared artifact id when the generic input contains multiple signing requests"
+    required: false
+    default: ""
   expected-bundle-id:
-    description: "Expected application bundle identifier"
-    required: true
+    description: "Optional expected application bundle identifier; defaults to the source-bound sealed application identity"
+    required: false
+    default: ""
   expected-team-id:
     description: "Expected Apple Developer team identifier"
     required: true

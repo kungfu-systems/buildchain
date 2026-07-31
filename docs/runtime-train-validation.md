@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-runtime-train-validation
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Runtime Train Validation
 
 Buildchain consumers should keep stable workflow refs such as `@v3` in
@@ -23,7 +41,7 @@ train/v3/v3.0/<capability>
 
 It is a validation pointer, not a release channel:
 
-- it does not move `v2`, `vX.Y`, `vX.Y-alpha`, exact tags, npm dist-tags, or
+- it does not move `v3`, `vX.Y`, `vX.Y-alpha`, exact tags, npm dist-tags, or
   production refs;
 - it must not be pinned as a long-term production dependency;
 - it should point at the Buildchain commit that downstream maintainers are
@@ -140,7 +158,7 @@ summary. The evidence should include:
 
 ## Trust and limitation
 
-Official floating channel refs such as `v2` and `v3-alpha` may be selected on
+Official floating channel refs such as `v3` and `v3-alpha` may be selected on
 pull requests and pushes. Train refs and arbitrary exact-SHA overrides still
 fail closed unless the event is `workflow_dispatch` and the actor has write,
 maintain, or admin permission on the caller repository. Pull requests,

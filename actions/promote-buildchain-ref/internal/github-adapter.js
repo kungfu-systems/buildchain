@@ -21,12 +21,16 @@ function nonFastForwardUpdateRejected(error) {
   return status === 422 && /Update is not a fast forward/i.test(message);
 }
 
-function decodeGitBlob(blob) {
+function decodeGitBlobBuffer(blob) {
   const content = blob?.content || "";
   return Buffer.from(
     content.replace(/\n/g, ""),
     blob?.encoding === "base64" ? "base64" : "utf8",
-  ).toString("utf8");
+  );
+}
+
+function decodeGitBlob(blob) {
+  return decodeGitBlobBuffer(blob).toString("utf8");
 }
 
 function transientGitHubReadError(error) {
@@ -192,6 +196,7 @@ async function listPullRequestsAssociatedWithCommitWithRetry({
 export {
   collectRemoteVersionMaterial,
   decodeGitBlob,
+  decodeGitBlobBuffer,
   getGitCommitWithRetry,
   getGitRefOrUndefined,
   githubRetryDelayMs,
