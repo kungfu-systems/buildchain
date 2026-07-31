@@ -2081,6 +2081,7 @@
       "id": "macos-credential-island",
       "path": "actions/macos-credential-island/action.yml",
       "inputs": [
+        "artifact-id",
         "artifact-name",
         "artifact-relative-output",
         "artifact-stem",
@@ -2102,7 +2103,7 @@
         "source-sha",
         "source-tree-sha"
       ],
-      "inputCount": 20,
+      "inputCount": 21,
       "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
