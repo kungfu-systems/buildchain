@@ -177,7 +177,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
-      "auditDigest": "sha256:97e824ed5d6e231e8a35171b1209e58a608d34393021655efe42ac534bac45b9"
+      "auditDigest": "sha256:96a41b4a1d03b01e5fe3d25d0d13df32880a24586a1efeeeeb754eeb0d96e1cd"
     },
     {
       "contractVersion": 1,
@@ -510,7 +510,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:a3e783f0093465731bbebe0e67b269487980ad755ba77ad72d72c107d28b20d8"
+      "auditDigest": "sha256:f177e3a60a1463db9a83b04a00f5cf0a015d68281da0d545245760856f6dfaf0"
     },
     {
       "contractVersion": 1,
@@ -559,7 +559,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:a3e783f0093465731bbebe0e67b269487980ad755ba77ad72d72c107d28b20d8"
+      "auditDigest": "sha256:f177e3a60a1463db9a83b04a00f5cf0a015d68281da0d545245760856f6dfaf0"
     },
     {
       "contractVersion": 1,
@@ -619,7 +619,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:6cf01ff6f74fb7b5f2b24b77b12c8843f9f1760a7e9de92ed44c78a3d9c2ff03"
+      "auditDigest": "sha256:d05fb5cd9c99ee3765b83727b96d9fea15ab166443e91744da88cabd11b214a0"
     },
     {
       "contractVersion": 1,
@@ -709,7 +709,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:e303cb23489834b001748d4cc86144567e830498fadb590d183e2ebc6756611c"
+      "auditDigest": "sha256:a1b7fd11b698523b408f4395cd2fc766596cca7ec1723ea48291a509e9352f09"
     },
     {
       "contractVersion": 1,
@@ -731,7 +731,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:07865b820d4df73fb9e4f71e5a27ad0d9d607b1e60e6c6ab3204c89b24d223cb"
+      "auditDigest": "sha256:74658c9b6795f7ba88421e13e1ddfdd3e25884b35d680a5b8ba1cf699f09c2a4"
     },
     {
       "contractVersion": 1,
@@ -3522,5 +3522,5 @@
     }
   ],
   "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
-  "contractDigest": "sha256:27bd4c3eded126261f02a62be10f125538d788e5e26dd0055200df88a4d0bfd5"
+  "contractDigest": "sha256:c96c1f1753ab65c05fb616db7ec64839b9032bcf87a46e99eab3b93097302577"
 }

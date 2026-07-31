@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fbf9cd5249511ed7a4dbcf21741267ea7b642d6f8ff9b232c488dede8a05d2fb"
+      "digest": "sha256:430eed733bfcbebd853da9c60a687822dab73689d7fb9ad2e9a760af279415e5"
     },
     {
       "id": "auditable-demo",

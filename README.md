@@ -228,12 +228,22 @@ plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
 gates preserve product-owned qualification and support decisions; they do not
 turn a schema-valid record into certification or shipped support.
 
-Buildchain's active GitHub Action surface is deliberately small:
+Buildchain's action registry currently contains six active entries. Four are
+direct consumer integration actions:
 
 - `actions/validate-config`
 - `actions/run-lifecycle`
 - `actions/promote-buildchain-ref`
 - `actions/report-buildchain-issue`
+
+Two additional release-authority components are also registered and versioned:
+
+- `actions/github-artifact-attestation`
+- `actions/macos-credential-island`
+
+`dist/site/workflow-registry.json#actions` is the machine-readable inventory;
+this split keeps the older four-action consumer list from being mistaken for
+the complete current registry.
 
 The active reusable workflow surfaces are:
 

@@ -34,6 +34,10 @@ import {
 } from "../packages/core/public-surface-audit.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 import { projectHomepageIntro } from "./site-bundle-homepage.mjs";
+import {
+  BUILDCHAIN_COMMAND_REGISTRY,
+  resolveBuildchainCommand,
+} from "../bin/internal/command-registry.mjs";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
@@ -322,6 +326,18 @@ function capabilityGroup(id) {
   return id;
 }
 
+function publicSurfaceLifecycle({ owner, maturity, nonDuplicationRationale }) {
+  return {
+    owner,
+    maturity,
+    introducedVersion: "pre-3.0.2-alpha.4",
+    compatibilityPromise: "preserved-through-the-v3-major-line",
+    deprecationReplacement: "",
+    sunsetCondition: "explicit-breaking-change-review-in-a-future-major-line",
+    nonDuplicationRationale,
+  };
+}
+
 const manualMetaById = new Map(Object.entries({
   map: { capabilityGroup: "getting-started", audience: ["agent", "consumer"], maturity: "stable", order: 10 },
   install: { capabilityGroup: "getting-started", audience: ["consumer"], maturity: "stable", order: 20 },
@@ -577,6 +593,45 @@ function nodeApiMeta(exportName) {
   return { capabilityGroup: capabilityGroup(meta.group), summary: meta.summary, audience: ["developer", "agent"], maturity: "stable" };
 }
 
+function createCliRegistry(packageJson) {
+  const commands = enumerateCliCommandsFromBin({ root });
+  const documentedTopLevelCommands = new Set();
+  for (const entry of commands) {
+    const command = entry.usage.split(/\s+/)[1] || "";
+    const registration = resolveBuildchainCommand(command);
+    if (!registration) {
+      throw new Error(`CLI help documents an unregistered top-level command: ${command}`);
+    }
+    documentedTopLevelCommands.add(registration.id);
+  }
+  for (const entry of BUILDCHAIN_COMMAND_REGISTRY) {
+    if (!documentedTopLevelCommands.has(entry.id)) {
+      throw new Error(`CLI runtime command is absent from help enumeration: ${entry.id}`);
+    }
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-cli-registry",
+    binary: "buildchain",
+    npmPackage: packageJson.name,
+    commandSource: "bin/internal/command-registry.mjs plus bin/buildchain.mjs help enumeration",
+    commands: commands.map((entry) => {
+      const meta = cliCommandMeta(entry.id);
+      return {
+        ...entry,
+        purpose: meta.purpose,
+        capabilityGroup: meta.capabilityGroup,
+        audience: meta.audience,
+        ...publicSurfaceLifecycle({
+          owner: "buildchain-cli",
+          maturity: meta.maturity,
+          nonDuplicationRationale: "Existing command identity retained for CLI compatibility and discoverability.",
+        }),
+      };
+    }),
+  };
+}
+
 function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nodeApiRegistry, workflowRegistry }) {
   const groupCounts = new Map(CAPABILITY_GROUPS.map((group) => [group.id, {
     manualCount: 0,
@@ -792,23 +847,7 @@ function buildSiteBundle() {
     artifactDigestScope: "npm package dist/site JSON files",
   });
 
-  const cliRegistry = {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-cli-registry",
-    binary: "buildchain",
-    npmPackage: packageJson.name,
-    commandSource: "bin/buildchain.mjs reverse enumeration",
-    commands: enumerateCliCommandsFromBin({ root }).map((entry) => {
-      const meta = cliCommandMeta(entry.id);
-      return {
-        ...entry,
-        purpose: meta.purpose,
-        capabilityGroup: meta.capabilityGroup,
-        audience: meta.audience,
-        maturity: meta.maturity,
-      };
-    }),
-  };
+  const cliRegistry = createCliRegistry(packageJson);
 
   const manualRegistry = {
     schemaVersion: 1,
@@ -887,7 +926,11 @@ function buildSiteBundle() {
           summary: meta.summary,
           capabilityGroup: meta.capabilityGroup,
           audience: meta.audience,
-          maturity: meta.maturity,
+          ...publicSurfaceLifecycle({
+            owner: "buildchain-core",
+            maturity: meta.maturity,
+            nonDuplicationRationale: "Existing package subpath retained as the canonical API boundary for this capability.",
+          }),
         };
       }),
     docs: [
@@ -950,6 +993,11 @@ function buildSiteBundle() {
           status: statusById.get(entry.id) || "active",
         }),
         status: statusById.get(entry.id) || "active",
+        ...publicSurfaceLifecycle({
+          owner: "buildchain-workflows",
+          maturity: statusById.get(entry.id) || "active",
+          nonDuplicationRationale: "Existing workflow identity retained for caller compatibility and repository orchestration.",
+        }),
       };
     }),
     actionSource: "actions/*/action.yml reverse input enumeration",
@@ -957,6 +1005,11 @@ function buildSiteBundle() {
       ...entry,
       capabilityGroup: actionCapabilityGroup(entry.id),
       status: "active",
+      ...publicSurfaceLifecycle({
+        owner: "buildchain-actions",
+        maturity: "stable",
+        nonDuplicationRationale: "Existing action identity retained as the canonical composite or JavaScript action boundary.",
+      }),
     })),
   };
   const controllerRegistry = createControllerRegistry({ workflows: workflowRegistry.workflows });

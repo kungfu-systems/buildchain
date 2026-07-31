@@ -101,6 +101,10 @@ import {
   TRUST_RELEASE_COMMANDS,
   dispatchTrustReleaseCommand,
 } from "./internal/trust-release-cli.mjs";
+import {
+  BUILDCHAIN_COMMAND_REGISTRY,
+  dispatchRegisteredCommand,
+} from "./internal/command-registry.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -1476,8 +1480,7 @@ async function runProcessTreeSample(sampleArgs = []) {
   return report;
 }
 
-async function main(argv = process.argv.slice(2)) {
-  const [command, ...args] = argv;
+async function runRegisteredCommand(command, args) {
   if (!command || command === "-h" || command === "--help" || command === "help") {
     process.stdout.write(usage());
     return;
@@ -1919,6 +1922,22 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   throw new Error(`unsupported buildchain command: ${command}`);
+}
+
+const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze(Object.fromEntries(
+  BUILDCHAIN_COMMAND_REGISTRY.map((entry) => [
+    entry.id,
+    (args) => runRegisteredCommand(entry.id, args),
+  ]),
+));
+
+async function main(argv = process.argv.slice(2)) {
+  const [command = "help", ...args] = argv;
+  return dispatchRegisteredCommand({
+    command,
+    args,
+    handlers: BUILDCHAIN_COMMAND_HANDLERS,
+  });
 }
 
 main().catch((error) => {
