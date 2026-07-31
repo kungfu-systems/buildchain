@@ -11,6 +11,8 @@ import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
 import { runReleaseGovernanceCli } from "../scripts/reconcile-release-governance.mjs";
 import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
+import { runPublicationReproducibilityCli } from "../scripts/publication-reproducibility.mjs";
+import { runPaperCli } from "../scripts/paper.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { detectPackageManager } from "../packages/core/package-manager.js";
 import {
@@ -99,9 +101,14 @@ import {
   TRUST_RELEASE_COMMANDS,
   dispatchTrustReleaseCommand,
 } from "./internal/trust-release-cli.mjs";
+import {
+  BUILDCHAIN_COMMAND_REGISTRY,
+  dispatchRegisteredCommand,
+} from "./internal/command-registry.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
+const embeddedSourceSha = process.env.BUILDCHAIN_EMBEDDED_SOURCE_SHA || "";
 
 function usage() {
   return `Usage:
@@ -164,6 +171,7 @@ function usage() {
                                     [--kfd-product-gate-json <json-or-path>]...
                                     [--invariant-passport-json <json-or-path>]...
                                     [--invariant-passport-cmd <command>]
+                                    [--release-evidence-json <json-or-path>]...
                                     [--github-artifact-attestation-policy-json <json-or-path>]...
                                     [--kfd-agent-hub-evidence-json <json-or-path>]
                                     [--base-passport-json <json-or-path>] [--require-base-kfd]
@@ -294,6 +302,20 @@ function usage() {
                                            [--registry-output <file>] [--source-bundle <file>]
                                            [--no-source-bundle] [--json]
   buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]
+  buildchain publication-artifact reproducibility [--cwd <dir>] [--source-sha <sha>]
+                                                   [--output <file>] [--promote]
+                                                   [--no-toolchain-pull]
+                                                   [--allow-unpinned-toolchain] [--json]
+  buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]
+  buildchain paper migrate [--cwd <dir>] [--write] [--json]
+  buildchain paper preflight [--cwd <dir>] [--offline] [--json]
+  buildchain paper bootstrap npm [--cwd <dir>] [--execute]
+                                  [--confirm-public-package <name>] [--json]
+  buildchain paper build [--cwd <dir>] [--execute] [--json]
+  buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]
+                          [--execute] [--json]
+  buildchain paper status [--cwd <dir>] [--json]
+  buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]
   buildchain release-propagation <plan|write-lock> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
@@ -329,6 +351,8 @@ Examples:
   buildchain infra-contract --mode propagation-apply --propagation-plan <plan.json> --dry-run true
   buildchain infra-contract --mode evidence-bundle --artifact <artifact.json> --propagation-result <result.json>
   buildchain publication-artifact manifest --source-sha <sha> --json
+  buildchain paper preflight --json
+  buildchain paper status --json
   buildchain release-propagation plan --graph graph.json --upstream-release release.json --json
   buildchain kfd status --json
   buildchain kfd schema list --json
@@ -1456,8 +1480,7 @@ async function runProcessTreeSample(sampleArgs = []) {
   return report;
 }
 
-async function main(argv = process.argv.slice(2)) {
-  const [command, ...args] = argv;
+async function runRegisteredCommand(command, args) {
   if (!command || command === "-h" || command === "--help" || command === "help") {
     process.stdout.write(usage());
     return;
@@ -1814,7 +1837,22 @@ async function main(argv = process.argv.slice(2)) {
       runPublicationPackageCli(args.slice(1));
       return;
     }
+    if (args[0] === "reproducibility" || args[0] === "reproducible") {
+      runPublicationReproducibilityCli(args.slice(1));
+      return;
+    }
     runPublicationArtifactCli(args);
+    return;
+  }
+
+  if (command === "paper") {
+    await runPaperCli(args, {
+      buildchainRoot: root,
+      buildchainVersion: packageVersion(),
+      buildchainRef: process.env.BUILDCHAIN_RUNTIME_REF || "v3",
+      buildchainSha:
+        process.env.BUILDCHAIN_RUNTIME_SHA || embeddedSourceSha || "",
+    });
     return;
   }
 
@@ -1884,6 +1922,22 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   throw new Error(`unsupported buildchain command: ${command}`);
+}
+
+const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze(Object.fromEntries(
+  BUILDCHAIN_COMMAND_REGISTRY.map((entry) => [
+    entry.id,
+    (args) => runRegisteredCommand(entry.id, args),
+  ]),
+));
+
+async function main(argv = process.argv.slice(2)) {
+  const [command = "help", ...args] = argv;
+  return dispatchRegisteredCommand({
+    command,
+    args,
+    handlers: BUILDCHAIN_COMMAND_HANDLERS,
+  });
 }
 
 main().catch((error) => {

@@ -18,13 +18,14 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   assert.equal(report.status, "passed");
   assert.equal(report.summary.failureCount, 0);
   const cliCommands = enumerateCliCommandsFromBin({ root });
-  assert.equal(cliCommands.length, 97);
+  assert.equal(cliCommands.length, 107);
   assert.ok(cliCommands.some((entry) => entry.id === "release-line-open"));
   assert.ok(cliCommands.some((entry) => entry.id === "collect"));
   assert.ok(cliCommands.some((entry) => entry.id === "kfd-4-gate"));
   assert.ok(cliCommands.some((entry) => entry.id === "kfd-5-gate"));
   assert.ok(cliCommands.some((entry) => entry.id === "kfd-7-gate"));
   assert.ok(cliCommands.some((entry) => entry.id === "kfd-support"));
+  assert.ok(cliCommands.some((entry) => entry.id === "paper-migrate"));
   const buildWorkflow = enumerateWorkflowInputs({ root }).find((entry) => entry.id === ".build");
   assert.ok(buildWorkflow?.reusable);
   assert.ok(buildWorkflow.inputCount > 0);

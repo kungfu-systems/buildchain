@@ -4,10 +4,37 @@ import test from "node:test";
 import {
   createGitHubQualificationClient,
   normalizeStableCandidateQualificationOptions,
+  resolveStableCandidateQualificationCandidate,
   runStableCandidateQualification,
 } from "../scripts/stable-candidate-qualification.mjs";
 
 const SHA = "a".repeat(40);
+
+test("binds automatic qualification to the exact alpha proved by self-dogfood", () => {
+  assert.equal(resolveStableCandidateQualificationCandidate({
+    eventName: "workflow_run",
+    selfDogfoodEvidence: {
+      contract: "kungfu-buildchain-alpha-self-dogfood",
+      status: "passed",
+      observed: { alpha: { ref: "v3-alpha", sha: SHA, expectedSha: SHA } },
+    },
+  }), SHA);
+  assert.throws(() => resolveStableCandidateQualificationCandidate({
+    eventName: "workflow_run",
+    selfDogfoodEvidence: {
+      contract: "kungfu-buildchain-alpha-self-dogfood",
+      status: "passed",
+      observed: { alpha: { ref: "v3-alpha", sha: SHA, expectedSha: "b".repeat(40) } },
+    },
+  }), /does not bind observed and expected/);
+});
+
+test("keeps manual qualification bound to its explicit immutable candidate", () => {
+  assert.equal(resolveStableCandidateQualificationCandidate({
+    eventName: "workflow_dispatch",
+    inputCandidateSha: SHA,
+  }), SHA);
+});
 
 function fakeClient(overrides = {}) {
   const calls = [];

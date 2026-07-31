@@ -233,18 +233,16 @@ function verifyLifecycleBinding({
   );
   const relativeSubject = toPosix(path.relative(workspace, subjectPath));
   const files = descriptor.entries.filter(
-    (entry) => entry.type !== "directory",
+    (entry) => entry.type !== "directory" && entry.type !== "symlink",
   );
+  let matchedFiles = 0;
   for (const entry of files) {
-    if (entry.type === "symlink") continue;
     const manifestPath = fs.statSync(subjectPath).isFile()
       ? relativeSubject
       : `${relativeSubject}/${entry.path}`;
     const observed = byPath.get(manifestPath);
-    if (!observed)
-      throw new Error(
-        `signed artifact file is absent from lifecycle manifest: ${manifestPath}`,
-      );
+    if (!observed) continue;
+    matchedFiles += 1;
     if (
       `sha256:${observed.sha256}` !== entry.digest ||
       Number(observed.size) !== entry.bytes
@@ -253,6 +251,15 @@ function verifyLifecycleBinding({
         `signed artifact file does not match lifecycle manifest: ${manifestPath}`,
       );
     }
+  }
+  // A signing declaration is an independent artifact inventory and must not
+  // require consumers to repeat its path in workflow artifact-paths. When the
+  // lifecycle manifest does cover the subject, require complete coverage so a
+  // truncated or stale manifest cannot weaken the exact descriptor binding.
+  if (matchedFiles !== 0 && matchedFiles !== files.length) {
+    throw new Error(
+      `signed artifact is only partially represented in lifecycle manifest: ${relativeSubject}`,
+    );
   }
 }
 

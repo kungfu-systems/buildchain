@@ -34,6 +34,10 @@ import {
 } from "../packages/core/public-surface-audit.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 import { projectHomepageIntro } from "./site-bundle-homepage.mjs";
+import {
+  BUILDCHAIN_COMMAND_REGISTRY,
+  resolveBuildchainCommand,
+} from "../bin/internal/command-registry.mjs";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
@@ -322,6 +326,18 @@ function capabilityGroup(id) {
   return id;
 }
 
+function publicSurfaceLifecycle({ owner, maturity, nonDuplicationRationale }) {
+  return {
+    owner,
+    maturity,
+    introducedVersion: "pre-3.0.2-alpha.4",
+    compatibilityPromise: "preserved-through-the-v3-major-line",
+    deprecationReplacement: "",
+    sunsetCondition: "explicit-breaking-change-review-in-a-future-major-line",
+    nonDuplicationRationale,
+  };
+}
+
 const manualMetaById = new Map(Object.entries({
   map: { capabilityGroup: "getting-started", audience: ["agent", "consumer"], maturity: "stable", order: 10 },
   install: { capabilityGroup: "getting-started", audience: ["consumer"], maturity: "stable", order: 20 },
@@ -477,12 +493,22 @@ function cliCommandMeta(id) {
     "portable-cache-plan": { group: "observability-diagnostics", purpose: "Validate a consumer-neutral cache manifest and emit exact GitHub Actions cache inputs." },
     "portable-cache-receipt": { group: "observability-diagnostics", purpose: "Seal exact, compatible, miss, or corrupt provider evidence against one cache plan." },
     "npm-dry-run": { group: "release-passport-trust", purpose: "Verify npm publish shape before a release transaction." },
+    paper: { group: "reusable-build", purpose: "Inspect the unified paper repository and publication command families." },
+    "paper-alpha": { group: "release-passport-trust", purpose: "Plan or open the protected dev-to-alpha paper publication PR without direct publication." },
+    "paper-bootstrap-npm": { group: "release-passport-trust", purpose: "Dry-run or explicitly bootstrap the public npm package and bind GitHub Trusted Publishing." },
+    "paper-build": { group: "reusable-build", purpose: "Plan or execute the existing two-clean-build reproducibility gate for a paper." },
+    "paper-migrate": { group: "getting-started", purpose: "Plan or write the bounded Buildchain-owned control-file migration for an existing paper repository." },
+    "paper-preflight": { group: "reusable-build", purpose: "Report exact source, runtime, permission, npm trust, deterministic build, and release-state readiness." },
+    "paper-resume": { group: "release-passport-trust", purpose: "Plan or dispatch recovery of the exact existing sealed paper release transaction." },
+    "paper-scaffold": { group: "getting-started", purpose: "Plan or write an idempotent, no-overwrite, release-ready paper repository scaffold." },
+    "paper-status": { group: "reusable-build", purpose: "Report explicit evidence for every paper lifecycle state without unsupported inference." },
     "publish-source": { group: "release-passport-trust", purpose: "Create, inspect, or verify publish-gate source-lock refs." },
     "publication-artifact": { group: "reusable-build", purpose: "Generate publication artifact manifests, passports, and source bundles for paper/report repositories." },
     "publication-artifact-manifest": { group: "reusable-build", purpose: "Write a site-consumable publication artifact manifest, publication passport, and source bundle." },
     "publication-artifact-npm-package": { group: "reusable-build", purpose: "Synthesize the declared npm paper package from a publication artifact manifest, passport, registry, source bundle, and primary artifact." },
     project: { group: "release-passport-trust", purpose: "Inspect read-only consumer projection command families." },
     "project-kfx-admission": { group: "release-passport-trust", purpose: "Project one verified sealed envelope into direct KFX admission inputs without reconstructing evidence." },
+    "publication-artifact-reproducibility": { group: "reusable-build", purpose: "Prove exact PDF, source bundle, publication evidence, and npm tarball bytes across two independent clean builds." },
     "release-dry-run": { group: "governance-versioning", purpose: "Explain what a channel merge would publish before the PR is merged." },
     "release-line-open": { group: "governance-versioning", purpose: "Plan or write the initial version-state commit for a new minor release line." },
     "release-governance": { group: "governance-versioning", purpose: "Reconcile a managed branch's Buildchain aggregate check to an already-tested pull request SHA." },
@@ -527,6 +553,9 @@ function nodeApiMeta(exportName) {
     "./portable-dev-cache": { group: "observability-diagnostics", summary: "Portable dependency/compiler cache plan, exact-root verification, and provider receipt APIs." },
     "./publication-artifact": { group: "reusable-build", summary: "Publication artifact manifest, source bundle, and publication passport APIs." },
     "./publication-package": { group: "reusable-build", summary: "Publication npm package synthesis APIs for Buildchain-managed paper release presets." },
+    "./publication-reproducibility": { group: "reusable-build", summary: "Two-clean-build publication byte reproducibility receipt APIs." },
+    "./publication-sealed-bundle": { group: "reusable-build", summary: "Build-once publication bundle manifests and exact-byte resume verification APIs." },
+    "./paper": { group: "reusable-build", summary: "Unified paper scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs." },
     "./publication-authority": { group: "release-passport-trust", summary: "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs." },
     "./publication-control-plane-audit": { group: "release-passport-trust", summary: "Read-only publication control-plane snapshot evaluation APIs." },
     "./buildchain-publication-authority": { group: "release-passport-trust", summary: "Buildchain-owned closed-world publication authority descriptor registry." },
@@ -562,6 +591,45 @@ function nodeApiMeta(exportName) {
     throw new Error(`missing Node API capability metadata: ${exportName}`);
   }
   return { capabilityGroup: capabilityGroup(meta.group), summary: meta.summary, audience: ["developer", "agent"], maturity: "stable" };
+}
+
+function createCliRegistry(packageJson) {
+  const commands = enumerateCliCommandsFromBin({ root });
+  const documentedTopLevelCommands = new Set();
+  for (const entry of commands) {
+    const command = entry.usage.split(/\s+/)[1] || "";
+    const registration = resolveBuildchainCommand(command);
+    if (!registration) {
+      throw new Error(`CLI help documents an unregistered top-level command: ${command}`);
+    }
+    documentedTopLevelCommands.add(registration.id);
+  }
+  for (const entry of BUILDCHAIN_COMMAND_REGISTRY) {
+    if (!documentedTopLevelCommands.has(entry.id)) {
+      throw new Error(`CLI runtime command is absent from help enumeration: ${entry.id}`);
+    }
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-cli-registry",
+    binary: "buildchain",
+    npmPackage: packageJson.name,
+    commandSource: "bin/internal/command-registry.mjs plus bin/buildchain.mjs help enumeration",
+    commands: commands.map((entry) => {
+      const meta = cliCommandMeta(entry.id);
+      return {
+        ...entry,
+        purpose: meta.purpose,
+        capabilityGroup: meta.capabilityGroup,
+        audience: meta.audience,
+        ...publicSurfaceLifecycle({
+          owner: "buildchain-cli",
+          maturity: meta.maturity,
+          nonDuplicationRationale: "Existing command identity retained for CLI compatibility and discoverability.",
+        }),
+      };
+    }),
+  };
 }
 
 function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nodeApiRegistry, workflowRegistry }) {
@@ -779,23 +847,7 @@ function buildSiteBundle() {
     artifactDigestScope: "npm package dist/site JSON files",
   });
 
-  const cliRegistry = {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-cli-registry",
-    binary: "buildchain",
-    npmPackage: packageJson.name,
-    commandSource: "bin/buildchain.mjs reverse enumeration",
-    commands: enumerateCliCommandsFromBin({ root }).map((entry) => {
-      const meta = cliCommandMeta(entry.id);
-      return {
-        ...entry,
-        purpose: meta.purpose,
-        capabilityGroup: meta.capabilityGroup,
-        audience: meta.audience,
-        maturity: meta.maturity,
-      };
-    }),
-  };
+  const cliRegistry = createCliRegistry(packageJson);
 
   const manualRegistry = {
     schemaVersion: 1,
@@ -874,7 +926,11 @@ function buildSiteBundle() {
           summary: meta.summary,
           capabilityGroup: meta.capabilityGroup,
           audience: meta.audience,
-          maturity: meta.maturity,
+          ...publicSurfaceLifecycle({
+            owner: "buildchain-core",
+            maturity: meta.maturity,
+            nonDuplicationRationale: "Existing package subpath retained as the canonical API boundary for this capability.",
+          }),
         };
       }),
     docs: [
@@ -937,6 +993,11 @@ function buildSiteBundle() {
           status: statusById.get(entry.id) || "active",
         }),
         status: statusById.get(entry.id) || "active",
+        ...publicSurfaceLifecycle({
+          owner: "buildchain-workflows",
+          maturity: statusById.get(entry.id) || "active",
+          nonDuplicationRationale: "Existing workflow identity retained for caller compatibility and repository orchestration.",
+        }),
       };
     }),
     actionSource: "actions/*/action.yml reverse input enumeration",
@@ -944,6 +1005,11 @@ function buildSiteBundle() {
       ...entry,
       capabilityGroup: actionCapabilityGroup(entry.id),
       status: "active",
+      ...publicSurfaceLifecycle({
+        owner: "buildchain-actions",
+        maturity: "stable",
+        nonDuplicationRationale: "Existing action identity retained as the canonical composite or JavaScript action boundary.",
+      }),
     })),
   };
   const controllerRegistry = createControllerRegistry({ workflows: workflowRegistry.workflows });

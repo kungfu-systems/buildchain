@@ -5,16 +5,16 @@
     "ref": "v3-alpha",
     "resolvedSha": "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:23e2f34e279ef3fa97b660050ecf966eefa374b21d792f0a183eecbf84f83f0b",
-    "compatibilityDigest": "sha256:199fd83a7da33b0f654692ca973b33155e376ed50f0ce1f5864e1b6b18e0500a",
+    "contractDigest": "sha256:a0e2e0050ce6652b4bf715c9477c329acbad2ca4e7dfe5cd18d0d421ab457881",
+    "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
     "majorLine": "v3",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-07-25T06:20:00.000Z",
+    "acceptedAt": "2026-07-30T22:57:06.000Z",
     "surfaces": [
       {
         "id": "reusable-build",
         "kind": "workflow",
-        "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
+        "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa"
       },
       {
         "id": "channel-build-router",
@@ -34,7 +34,7 @@
       {
         "id": "web-surface",
         "kind": "workflow",
-        "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace"
+        "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960"
       },
       {
         "id": "promote-buildchain-ref-action",
@@ -104,7 +104,7 @@
       {
         "id": "controller:build-lifecycle",
         "kind": "controller",
-        "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1"
+        "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb"
       },
       {
         "id": "controller:build-channel-router",

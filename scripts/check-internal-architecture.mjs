@@ -42,6 +42,52 @@ function resolveImportTarget(root, sourcePath, specifier) {
   return normalizeRelative(root, absolute);
 }
 
+function resolveGraphTarget(root, sourcePath, specifier, implementationPaths) {
+  const target = resolveImportTarget(root, sourcePath, specifier);
+  return [
+    target,
+    `${target}.js`,
+    `${target}.mjs`,
+    `${target}.cjs`,
+    `${target}/index.js`,
+    `${target}/index.mjs`,
+  ].find((candidate) => implementationPaths.has(candidate));
+}
+
+function dependencyCycles(graph) {
+  const cycles = [];
+  const visited = new Set();
+  const active = new Set();
+  const stack = [];
+  const canonical = new Set();
+  const visit = (node) => {
+    if (active.has(node)) {
+      const start = stack.indexOf(node);
+      const cycle = [...stack.slice(start), node];
+      const members = cycle.slice(0, -1);
+      const rotations = members.map((_, index) => [
+        ...members.slice(index),
+        ...members.slice(0, index),
+      ].join(" -> "));
+      const key = rotations.sort()[0];
+      if (!canonical.has(key)) {
+        canonical.add(key);
+        cycles.push(cycle);
+      }
+      return;
+    }
+    if (visited.has(node)) return;
+    visited.add(node);
+    active.add(node);
+    stack.push(node);
+    for (const target of graph.get(node) || []) visit(target);
+    stack.pop();
+    active.delete(node);
+  };
+  for (const node of [...graph.keys()].sort()) visit(node);
+  return cycles;
+}
+
 function assertIndexShape(index) {
   if (index?.schemaVersion !== 1) {
     throw new Error("internal architecture index schemaVersion must be 1");
@@ -74,6 +120,9 @@ function checkInternalArchitecture({
       continue;
     }
     capabilityIds.add(capability.id);
+    if (!capability.owner || typeof capability.owner !== "string") {
+      issues.push(`${capability.id}: owner is empty`);
+    }
     if (!Array.isArray(capability.implementation) || capability.implementation.length === 0) {
       issues.push(`${capability.id}: implementation mapping is empty`);
     }
@@ -139,6 +188,22 @@ function checkInternalArchitecture({
     }
   }
 
+  const graph = new Map([...expectedImplementation].map((file) => [file, new Set()]));
+  for (const sourcePath of expectedImplementation) {
+    if (![".js", ".mjs", ".cjs"].includes(path.extname(sourcePath))) continue;
+    const source = sourceOverrides.has(sourcePath)
+      ? sourceOverrides.get(sourcePath)
+      : fs.readFileSync(path.resolve(root, sourcePath), "utf8");
+    for (const specifier of relativeImports(source)) {
+      const target = resolveGraphTarget(root, sourcePath, specifier, expectedImplementation);
+      if (target) graph.get(sourcePath).add(target);
+    }
+  }
+  const cycles = dependencyCycles(graph);
+  for (const cycle of cycles) {
+    issues.push(`internal dependency cycle: ${cycle.join(" -> ")}`);
+  }
+
   if (issues.length > 0) {
     throw new Error(
       `internal architecture check failed:\n- ${issues.join("\n- ")}`,
@@ -149,6 +214,7 @@ function checkInternalArchitecture({
     capabilities: index.capabilities.length,
     implementations: expectedImplementation.size,
     dependencyRules: index.dependencyRules.length,
+    dependencyCycles: cycles.length,
   };
 }
 
@@ -160,7 +226,8 @@ if (
     const report = checkInternalArchitecture();
     console.log(
       `internal architecture check passed: ${report.capabilities} capabilities, ` +
-        `${report.implementations} implementations, ${report.dependencyRules} dependency rules`,
+        `${report.implementations} implementations, ${report.dependencyRules} dependency rules, ` +
+        `${report.dependencyCycles} cycles`,
     );
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
@@ -168,4 +235,4 @@ if (
   }
 }
 
-export { checkInternalArchitecture, relativeImports };
+export { checkInternalArchitecture, dependencyCycles, relativeImports };

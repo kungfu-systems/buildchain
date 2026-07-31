@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-maintainability-baseline",
+  "revision": "53923edcff7bbadba9f2320f704ad1a36be7b33d",
+  "collectedOn": "2026-07-31",
+  "repository": {
+    "trackedFiles": 607,
+    "handMaintainedSourceFiles": 179,
+    "handMaintainedSourceLines": 73848,
+    "testFiles": 75,
+    "testLines": 45573,
+    "workflowFiles": 57,
+    "workflowLines": 18631,
+    "documentationFiles": 69,
+    "documentationLines": 14025,
+    "generatedFiles": 7,
+    "generatedBytes": 3824982
+  },
+  "publicSurface": {
+    "cliCommands": 97,
+    "nodeApiExports": 43,
+    "workflows": 57,
+    "actions": 6,
+    "reverseAuditFailures": 0
+  },
+  "architecture": {
+    "capabilities": 5,
+    "implementationMappings": 8,
+    "testMappings": 8,
+    "dependencyRules": 4,
+    "dependencyCycles": 0
+  },
+  "hotspots": {
+    "promoteBuildchainRefs": {
+      "file": "actions/promote-buildchain-ref/lib.js",
+      "lines": 3066,
+      "complexity": 262
+    },
+    "createReleaseCheckReport": {
+      "file": "packages/core/release-passport.js",
+      "lines": 470,
+      "complexity": 155
+    }
+  },
+  "doneCheck": {
+    "command": "pnpm run check",
+    "tests": 989,
+    "skipped": 0,
+    "wallSeconds": 29.46
+  }
+}

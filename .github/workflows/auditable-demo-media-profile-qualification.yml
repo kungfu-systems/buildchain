@@ -7,7 +7,9 @@ on:
       - ".github/workflows/auditable-demo-media-profile-qualification.yml"
       - "contracts/auditable-demo-media-profiles-v1.json"
       - "contracts/evidence/auditable-demo-web-delivery-v1.json"
+      - "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json"
       - "contracts/fixtures/auditable-demo-web-delivery-v1/**"
+      - "contracts/fixtures/auditable-demo-responsive-web-delivery-v1/**"
       - "scripts/auditable-demo.mjs"
   push:
     branches:
@@ -17,24 +19,46 @@ on:
       - ".github/workflows/auditable-demo-media-profile-qualification.yml"
       - "contracts/auditable-demo-media-profiles-v1.json"
       - "contracts/evidence/auditable-demo-web-delivery-v1.json"
+      - "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json"
       - "contracts/fixtures/auditable-demo-web-delivery-v1/**"
+      - "contracts/fixtures/auditable-demo-responsive-web-delivery-v1/**"
       - "scripts/auditable-demo.mjs"
   workflow_dispatch:
 
 permissions:
   contents: read
 
-env:
-  RENDERER_IMAGE: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:cb5e1dec368d21c7d4e8baded99ac75f12f7eff0d19505751888cf974086efa6
-  RENDERER_SOURCE_REPOSITORY: kungfu-systems/build-images
-  RENDERER_SOURCE_REF: refs/tags/v1.3.0-alpha.16
-  RENDERER_SOURCE_SHA: 999b370743f3e64e4f0b634d5131bd1d3d6b83ba
-
 jobs:
   qualify:
-    name: qualify-web-delivery-v1
+    name: qualify-${{ matrix.profile }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: web-delivery-v1
+            fixture: auditable-demo-web-delivery-v1
+            evidence: auditable-demo-web-delivery-v1.json
+            artifactName: auditable-demo-web-delivery-v1
+            rendererImage: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:cb5e1dec368d21c7d4e8baded99ac75f12f7eff0d19505751888cf974086efa6
+            rendererSourceRef: refs/tags/v1.3.0-alpha.16
+            rendererSourceSha: 999b370743f3e64e4f0b634d5131bd1d3d6b83ba
+          - profile: responsive-web-delivery-v1
+            fixture: auditable-demo-responsive-web-delivery-v1
+            evidence: auditable-demo-responsive-web-delivery-v1.json
+            artifactName: auditable-demo-responsive-web-delivery-v1
+            rendererImage: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:b70a2f5631665f685280bc9d7434c5ed5cf48b760b728873734d0c47bff72b25
+            rendererSourceRef: refs/tags/v1.3.0-alpha.20
+            rendererSourceSha: b3cebc2deb5f140af74db24b1b45233ac6733ef1
+    env:
+      MEDIA_PROFILE: ${{ matrix.profile }}
+      MEDIA_FIXTURE: ${{ matrix.fixture }}
+      EVIDENCE_FILE: ${{ matrix.evidence }}
+      RENDERER_IMAGE: ${{ matrix.rendererImage }}
+      RENDERER_SOURCE_REPOSITORY: kungfu-systems/build-images
+      RENDERER_SOURCE_REF: ${{ matrix.rendererSourceRef }}
+      RENDERER_SOURCE_SHA: ${{ matrix.rendererSourceSha }}
     steps:
       - name: Checkout exact source
         uses: actions/checkout@v7.0.0
@@ -49,7 +73,7 @@ jobs:
           chmod 0777 .buildchain/media-profile/render
           docker run --rm --network none --read-only \
             --tmpfs /tmp:rw,noexec,nosuid,size=512m \
-            --volume "${GITHUB_WORKSPACE}/contracts/fixtures/auditable-demo-web-delivery-v1:/input:ro" \
+            --volume "${GITHUB_WORKSPACE}/contracts/fixtures/${MEDIA_FIXTURE}:/input:ro" \
             --volume "${GITHUB_WORKSPACE}/.buildchain/media-profile/render:/output" \
             "${RENDERER_IMAGE}" \
             demo-renderer \
@@ -84,7 +108,7 @@ jobs:
           node scripts/auditable-demo.mjs qualify-media-fixture \
             --render-output .buildchain/media-profile/render \
             --media-inspection .buildchain/media-profile/inspection/media-inspection.json \
-            --media-profile web-delivery-v1 \
+            --media-profile "${MEDIA_PROFILE}" \
             --renderer-image "${RENDERER_IMAGE}" \
             --renderer-source-repository "${RENDERER_SOURCE_REPOSITORY}" \
             --renderer-source-ref "${RENDERER_SOURCE_REF}" \
@@ -94,14 +118,16 @@ jobs:
             .buildchain/media-profile/evidence.json
 
       - name: Verify the checked-in measurement baseline
-        if: ${{ hashFiles('contracts/evidence/auditable-demo-web-delivery-v1.json') != '' }}
-        run: diff -u contracts/evidence/auditable-demo-web-delivery-v1.json .buildchain/media-profile/evidence.json
+        run: |
+          if [ -f "contracts/evidence/${EVIDENCE_FILE}" ]; then
+            diff -u "contracts/evidence/${EVIDENCE_FILE}" .buildchain/media-profile/evidence.json
+          fi
 
       - name: Upload qualification evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: auditable-demo-web-delivery-v1-${{ github.sha }}
+          name: ${{ matrix.artifactName }}-${{ github.sha }}
           path: |
             .buildchain/media-profile/evidence.json
             .buildchain/media-profile/inspection/media-inspection.json

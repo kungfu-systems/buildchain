@@ -62,6 +62,12 @@ inputs:
   publish-evidence-path:
     description: "Path to publish evidence JSON. Defaults to .buildchain/release-evidence/<tag>/evidence.json"
     default: ""
+  publish-sealed-bundle-root:
+    description: "Root containing the exact qualified publication candidate bytes; restored from durable state on resume"
+    default: ""
+  publish-sealed-bundle-manifest:
+    description: "Qualified content-addressed sealed publication bundle manifest"
+    default: ""
   transaction-state-path:
     description: "Path to release transaction state JSON. Defaults to .buildchain/release-state/<tag>.json"
     default: ""
@@ -173,6 +179,15 @@ inputs:
   release-passport-invariant-passport-command:
     description: "Product-owned command that emits a canonical invariant Passport JSON document"
     default: ""
+  release-passport-evidence-jsons:
+    description: "Newline- or comma-separated product-owned release evidence attachment paths; each must bind the exact source SHA, tag, and channel"
+    default: ""
+  release-passport-attachment-command:
+    description: "Product-owned command that writes release evidence attachments and emits JSON with a files array"
+    default: ""
+  release-passport-evidence-command:
+    description: "Deprecated direct-action alias for release-passport-attachment-command; reusable workflows reserve this name for post-activation released evidence"
+    default: ""
   release-passport-buildchain-self-kfd:
     description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
     default: "false"
@@ -203,6 +218,18 @@ inputs:
   release-candidate-version:
     description: "Optional expected product version recorded in the release-candidate passport"
     default: ""
+  release-candidate-family-evidence-required:
+    description: "Require exact Initiative-family evidence in the release-candidate passport"
+    default: "false"
+  release-candidate-family-evidence-root:
+    description: "Optional expected Initiative-family evidence content root"
+    default: ""
+  release-candidate-family-initiative-id:
+    description: "Optional expected Initiative identity"
+    default: ""
+  release-candidate-family-assignment-id:
+    description: "Optional expected child Assignment identity"
+    default: ""
 outputs:
   failure-message:
     description: "Single-line promotion failure passed to workflow-friction reporting"
@@ -216,6 +243,12 @@ outputs:
     description: "Stable release transaction identity"
   transaction-state:
     description: "Final release transaction state"
+  transaction-publication-state:
+    description: "Stable external publication state such as sealed, package-published, alpha-complete, or repair-required"
+  transaction-sealed-bundle-root:
+    description: "Content root of the durable build-once publication bundle"
+  transaction-resume-command:
+    description: "Exact resume command bound to the durable state ref"
   transaction-exact-tag:
     description: "Exact release or prerelease tag governed by the transaction"
   planned-publication-version:

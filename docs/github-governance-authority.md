@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -234,7 +234,7 @@ branch; unrelated rules and conditions are preserved in place.
 ```bash
 buildchain github-governance ruleset-policy-plan \
   --repository kungfu-systems/buildchain \
-  --branch alpha/v2/v2.14 \
+  --branch alpha/v3/v3.0 \
   --ruleset-id 19518955 \
   --snapshot-output ruleset-rollback.json \
   --plan-output ruleset-rollout.json

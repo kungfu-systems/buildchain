@@ -4,11 +4,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { parseTags, promoteBuildchainRefs } from "./lib.js";
-import {
-  explainReleaseLineDryRun,
-  formatReleaseLineDryRun,
-} from "../../packages/core/release-line-dry-run.js";
+import { parseTags, promoteBuildchainRefs, recordGitHubReleaseTransactionCompletion } from "./lib.js";
+import { explainReleaseLineDryRun, formatReleaseLineDryRun } from "../../packages/core/release-line-dry-run.js";
 import { ensureGitHubRelease } from "../../scripts/ensure-github-release.mjs";
 
 export function plannedPublicationExactTag(plannedPublication = {}) {
@@ -67,7 +64,10 @@ export function validateRequiredPublishSourceLock({
         !!parsed.channel,
         "publish.source_ref",
         "publish source ref uses publish-gate/{alpha,release,major}",
-        { sourceRef: parsed.sourceRef || publishSourceRef || "", channel: parsed.channel },
+        {
+          sourceRef: parsed.sourceRef || publishSourceRef || "",
+          channel: parsed.channel,
+        },
       ),
       checkSourceLock(
         /^[0-9a-f]{40}$/i.test(String(effectiveSha)),
@@ -277,6 +277,8 @@ async function main() {
   const publishCommand = core.getInput("publish-command");
   const publishEvidencePath = core.getInput("publish-evidence-path");
   const transactionStatePath = core.getInput("transaction-state-path");
+  const publishSealedBundleRoot = core.getInput("publish-sealed-bundle-root");
+  const publishSealedBundleManifest = core.getInput("publish-sealed-bundle-manifest");
   const publishRequiredArtifactsJson = core.getInput("publish-required-artifacts-json");
   const publishMode = core.getInput("publish-mode");
   const publishAuth = core.getInput("publish-auth");
@@ -313,6 +315,10 @@ async function main() {
   const releasePassportKfdProductGateJsons = core.getInput("release-passport-kfd-product-gate-jsons");
   const releasePassportInvariantPassportJsons = core.getInput("release-passport-invariant-passport-jsons");
   const releasePassportInvariantPassportCommand = core.getInput("release-passport-invariant-passport-command");
+  const releasePassportEvidenceJsons = core.getInput("release-passport-evidence-jsons");
+  const releasePassportAttachmentCommand =
+    core.getInput("release-passport-attachment-command") ||
+    core.getInput("release-passport-evidence-command");
   const releasePassportBuildchainSelfKfd = core.getBooleanInput("release-passport-buildchain-self-kfd");
   const releasePassportGitHubArtifactAttestationPolicyJsons = core.getInput(
     "release-passport-github-artifact-attestation-policy-jsons",
@@ -327,6 +333,10 @@ async function main() {
   const releaseCandidatePassportPath = core.getInput("release-candidate-passport-path");
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
   const releaseCandidateVersion = core.getInput("release-candidate-version");
+  const releaseCandidateFamilyEvidenceRequired = core.getBooleanInput("release-candidate-family-evidence-required");
+  const releaseCandidateFamilyEvidenceRoot = core.getInput("release-candidate-family-evidence-root");
+  const releaseCandidateFamilyInitiativeId = core.getInput("release-candidate-family-initiative-id");
+  const releaseCandidateFamilyAssignmentId = core.getInput("release-candidate-family-assignment-id");
   const octokit = github.getOctokit(token);
   const statusCheckOctokit =
     generatedStatusCheckToken === token ? octokit : github.getOctokit(generatedStatusCheckToken);
@@ -378,6 +388,8 @@ async function main() {
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
+    publishSealedBundleRoot,
+    publishSealedBundleManifest,
     publishRequiredArtifactsJson,
     publishMode,
     publishAuth,
@@ -409,12 +421,18 @@ async function main() {
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
     releasePassportInvariantPassportCommand,
+    releasePassportEvidenceJsons,
+    releasePassportAttachmentCommand,
     releasePassportBuildchainSelfKfd,
     releasePassportGitHubArtifactAttestationPolicyJsons,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,
     releaseCandidateVersion,
+    releaseCandidateFamilyEvidenceRequired,
+    releaseCandidateFamilyEvidenceRoot,
+    releaseCandidateFamilyInitiativeId,
+    releaseCandidateFamilyAssignmentId,
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
     publishTransactionOverride,
@@ -432,6 +450,9 @@ async function main() {
   core.setOutput("next-anchor-required", String(result.nextAlphaRequired === true));
   core.setOutput("transaction-id", result.publishTransaction?.id || "");
   core.setOutput("transaction-state", result.publishTransaction?.state || "");
+  core.setOutput("transaction-publication-state", result.publishTransaction?.publicationState || "");
+  core.setOutput("transaction-sealed-bundle-root", result.publishTransaction?.sealedBundleRoot || "");
+  core.setOutput("transaction-resume-command", result.publishTransaction?.resumeCommand || "");
   core.setOutput("transaction-exact-tag", result.publishTransaction?.exactTag || "");
   const plannedPublication = result.updates.find(
     (update) => update.action === "dry-run-publish-transaction",
@@ -472,9 +493,26 @@ async function main() {
         publishEvidencePath: result.publishTransaction?.evidencePath || "",
         releasePassportPath: result.publishTransaction?.releasePassportPath || "",
         releasePassportOutputDir: result.publishTransaction?.releasePassportOutputDir || "",
-        additionalAssetPaths: githubReleaseArtifactPaths,
+        additionalAssetPaths: result.publishTransaction?.sealedReleaseAssetPaths?.length
+          ? result.publishTransaction.sealedReleaseAssetPaths
+          : githubReleaseArtifactPaths,
       });
-      core.info(`github release ${githubReleaseResult.action}: ${githubReleaseResult.tag} (${githubReleaseResult.assetCount} assets)`);
+      const completion = await recordGitHubReleaseTransactionCompletion({
+        octokit,
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        cwd: process.cwd(),
+        statePath: result.publishTransaction.statePath,
+        evidencePath: result.publishTransaction.evidencePath,
+        release: githubReleaseResult,
+      });
+      result.publishTransaction.publicationState = completion.transaction.publication_state;
+      result.publishTransaction.stateSha = completion.durable?.sha || "";
+      core.setOutput("transaction-publication-state", completion.transaction.publication_state);
+      core.setOutput("transaction-state-sha", completion.durable?.sha || "");
+      core.info(
+        `github release ${githubReleaseResult.action}: ${githubReleaseResult.tag} (${githubReleaseResult.assetCount} assets)`,
+      );
     } else {
       core.info(
         `github-release=true is waiting for a complete release transaction before creating or updating the public GitHub Release; transaction-state=${result.publishTransaction?.state || ""} finalization-needed=${result.publishTransaction?.finalizationNeeded === true}`,

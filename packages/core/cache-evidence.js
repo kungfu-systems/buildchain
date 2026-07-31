@@ -88,6 +88,7 @@ function normalizeBindings(bindings = {}) {
       "policyRoot",
       "platformRoot",
       "cacheProfileRoot",
+      "compilerCachePreparationRoot",
     ]),
     "bindings",
   );

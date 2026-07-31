@@ -10,6 +10,7 @@ export const EVIDENCE_CONTRACT =
 export const SHA1_PATTERN = /^[0-9a-f]{40}$/i;
 export const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/i;
 export const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+export const BUNDLE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/;
 export const TEAM_ID_PATTERN = /^[A-Z0-9]{10}$/;
 export const API_KEY_ID_PATTERN = /^[A-Z0-9]{10}$/;
 export const API_ISSUER_PATTERN = /^[0-9a-f-]{36}$/i;
@@ -50,6 +51,24 @@ export function requireSha(value, label) {
 
 export function requireRepository(value) {
   return requirePattern(value, REPOSITORY_PATTERN, "source-repository");
+}
+
+export function resolveExpectedBundleId(configuredValue, sealedValue) {
+  const configured = String(configuredValue || "").trim();
+  const sealed = String(sealedValue || "").trim();
+  const resolved = requirePattern(
+    sealed || configured,
+    BUNDLE_ID_PATTERN,
+    "expected-bundle-id",
+  );
+  if (
+    configured &&
+    requirePattern(configured, BUNDLE_ID_PATTERN, "expected-bundle-id") !==
+      resolved
+  ) {
+    throw new Error("credential input bundle identifier mismatch");
+  }
+  return resolved;
 }
 
 export function safeArtifactStem(value) {
@@ -311,11 +330,13 @@ export function loadArtifactSigningInput(inputRoot, expected = {}) {
       request: JSON.parse(fs.readFileSync(requestPath, "utf8")),
     }))
     .filter(
-      ({ request }) => request.signature?.profile === "apple-developer-id",
+      ({ request }) =>
+        request.signature?.profile === "apple-developer-id" &&
+        (!expected.artifactId || request.artifact?.id === expected.artifactId),
     );
   if (candidates.length !== 1) {
     throw new Error(
-      `expected one apple-developer-id request.json under input-root, found ${candidates.length}`,
+      `expected one matching apple-developer-id request.json under input-root, found ${candidates.length}`,
     );
   }
   const { requestPath, request } = candidates[0];

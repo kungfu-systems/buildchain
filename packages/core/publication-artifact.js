@@ -253,7 +253,7 @@ export function createPublicationSourceBundle({
 } = {}) {
   const outputPath = path.resolve(cwd, output);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  const paths = sourcePaths.length > 0 ? sourcePaths : ["."];
+  const paths = [...(sourcePaths.length > 0 ? sourcePaths : ["."])].sort();
   execFileSync("git", [
     "archive",
     "--format=tar.gz",
@@ -500,11 +500,6 @@ function mergePublicationRegistryVersions({ registries = [], publicationId }) {
   for (const registry of registries) {
     if (registry.publication?.id !== publicationId) {
       throw new Error(`publication archive registry id mismatch: expected ${publicationId}, got ${registry.publication?.id || "(missing)"}`);
-    }
-    if (registry.historyPolicy === "cumulative-authenticated-hydration") {
-      const declaredVersions = new Set(registry.versions.map((record) => String(record?.version || "")));
-      const missingVersions = [...versions.keys()].filter((version) => !declaredVersions.has(version));
-      if (missingVersions.length > 0) throw new Error(`cumulative publication archive registry dropped accepted versions: ${missingVersions.join(", ")}`);
     }
     for (const record of registry.versions) {
       const version = String(record?.version || "").trim();

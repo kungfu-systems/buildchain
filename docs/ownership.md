@@ -1,8 +1,26 @@
+---
+status: active
+period: ongoing
+theme: buildchain-ownership-and-migration
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Ownership And Migration Rules
 
 ## Source Of Truth
 
-Buildchain v2 workflow and action design lands in this repository. Standalone
+Buildchain v3 workflow and action design lands in this repository. Standalone
 `workflows` and `action-*` repositories are historical rollback anchors.
 Buildchain only ships the native action surface required for config validation,
 lifecycle execution, and release ref promotion.
