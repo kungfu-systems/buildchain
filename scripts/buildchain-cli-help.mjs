@@ -199,6 +199,7 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain paper work submit [--cwd <dir>] [--title <title>] [--body <body>] [--execute] [--json]
   buildchain paper fleet audit [--root <dir>] [--offline] [--json]
   buildchain paper fleet update [--root <dir>] [--write] [--json]
+  buildchain paper agent verify [--cwd <dir>] [--offline] [--json]
   buildchain paper preflight [--cwd <dir>] [--offline] [--json]
   buildchain paper bootstrap npm [--cwd <dir>] [--execute]
                                   [--confirm-public-package <name>] [--json]

@@ -1302,6 +1302,24 @@
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
+      "id": "paper-agent",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain paper agent verify [--cwd <dir>] [--offline] [--json]",
+      "purpose": "Verify the mandatory managed Paper agent entry contract on an existing work branch.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
       "id": "paper-alpha",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]",
