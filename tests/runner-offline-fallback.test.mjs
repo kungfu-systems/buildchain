@@ -58,28 +58,32 @@ test("missing permission fails closed to the declared self-hosted matrix", async
   assert.equal(resolved.fallbackCount, 0);
   assert.equal(resolved.platformsJson, base.platformsJson);
   assert.equal(resolved.routing.status, "unavailable");
-  assert.equal(
-    resolved.routing.reason,
-    "repository-runner-inventory-unavailable",
-  );
+  assert.equal(resolved.routing.reason, "runner-inventory-unavailable");
 });
 
 test("runner inventory pagination preserves exact-label observations", async () => {
   const base = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-native" });
   const macos = JSON.parse(base.platforms[2].runner);
   let requests = 0;
+  const requestedUrls = [];
   const resolved = await resolveOfflineRunnerFallback({
     runnerPreset: "kungfu-v4-native",
     repository: "kungfu-systems/kungfu",
     token: "fixture-token",
-    fetchImpl: async () => {
+    fetchImpl: async (url) => {
       requests += 1;
+      requestedUrls.push(url);
       return {
         ok: true,
         async json() {
+          if (requests === 1) {
+            return {
+              owner: { login: "kungfu-systems", type: "Organization" },
+            };
+          }
           return {
             runners:
-              requests === 1
+              requests === 2
                 ? Array.from({ length: 100 }, () => ({
                     status: "offline",
                     busy: false,
@@ -97,10 +101,57 @@ test("runner inventory pagination preserves exact-label observations", async () 
       };
     },
   });
-  assert.equal(requests, 2);
+  assert.equal(requests, 3);
+  assert.match(requestedUrls[0], /\/repos\/kungfu-systems\/kungfu$/);
+  assert.match(requestedUrls[1], /\/orgs\/kungfu-systems\/actions\/runners\?/);
   assert.equal(resolved.fallbackCount, 2);
+  assert.equal(resolved.routing.inventoryScope, "organization");
   assert.equal(
     JSON.parse(resolved.platformsJson)[2].runner,
     base.platforms[2].runner,
+  );
+});
+
+test("organization runner inventory prevents false offline fallback", async () => {
+  const base = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-native" });
+  const windows = JSON.parse(base.platforms[3].runner);
+  const requestedUrls = [];
+  const resolved = await resolveOfflineRunnerFallback({
+    runnerPreset: "kungfu-v4-native",
+    repository: "kungfu-systems/kungfu",
+    token: "fixture-token",
+    fetchImpl: async (url) => {
+      requestedUrls.push(url);
+      return {
+        ok: true,
+        async json() {
+          if (requestedUrls.length === 1) {
+            return {
+              owner: { login: "kungfu-systems", type: "Organization" },
+            };
+          }
+          return {
+            runners: [
+              {
+                status: "online",
+                busy: false,
+                labels: labelObjects(windows),
+              },
+            ],
+          };
+        },
+      };
+    },
+  });
+  assert.equal(resolved.fallbackCount, 2);
+  assert.equal(resolved.routing.inventoryScope, "organization");
+  assert.equal(
+    JSON.parse(resolved.platformsJson)[3].runner,
+    base.platforms[3].runner,
+  );
+  assert.ok(
+    requestedUrls.every(
+      (url) => !url.includes("/repos/kungfu-systems/kungfu/actions/runners"),
+    ),
   );
 });
