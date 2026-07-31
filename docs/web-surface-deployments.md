@@ -513,6 +513,14 @@ plan. The fast path narrows bytes; it does not weaken channel controls.
 `production-visible` remain separate facts, and a package qualification never
 authorizes production by itself.
 
+Publication manifests may retain release history without rematerializing every
+historical package into the current site artifact. When at least one version
+declares `immutableIndex`, Buildchain treats that field as the materialization
+envelope: all declared version prefixes remain protected from deletion, while
+only prefixes with `immutableIndex` must exist locally and are eligible for
+upload. Manifests without the envelope retain the legacy rule that every
+declared prefix must exist.
+
 For multi-surface sites, each surface host is treated as a root-relative view
 of that surface's artifact path prefix. For example, a `buildchain` surface with
 `path = "/buildchain/"` and preview URL

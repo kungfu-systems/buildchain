@@ -1054,6 +1054,79 @@ test("publication package-pin fast path touches one surface and bounded files on
   });
 });
 
+test("publication package-pin fast path preserves metadata-only historical prefixes", async () => {
+  await withFixtureAsync(async (fixture) => {
+    const surfaceRoot = path.join(fixture, "dist", "buildchain");
+    const currentPrefix = path.join(surfaceRoot, "archive", "paper", "v1.0.0");
+    fs.mkdirSync(currentPrefix, { recursive: true });
+    fs.mkdirSync(path.join(surfaceRoot, "paper", "latest"), { recursive: true });
+    fs.writeFileSync(path.join(currentPrefix, "index.html"), "current immutable reader\n");
+    fs.writeFileSync(path.join(currentPrefix, "main.pdf"), "current immutable pdf\n");
+    fs.writeFileSync(path.join(surfaceRoot, "index.html"), "paper shelf\n");
+    fs.writeFileSync(path.join(surfaceRoot, "paper", "latest", "index.html"), "latest paper\n");
+    fs.writeFileSync(
+      path.join(surfaceRoot, "manifest.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "consumer-publication-archive-surface",
+        archivePolicy: {
+          contract: "kungfu-buildchain-publication-archive-policy",
+          deploymentBoundary: "append-only immutable version prefixes",
+        },
+        publications: [{
+          id: "paper",
+          versions: [
+            { version: "0.9.0", immutablePath: "/archive/paper/v0.9.0/" },
+            {
+              version: "1.0.0",
+              immutablePath: "/archive/paper/v1.0.0/",
+              immutableIndex: { path: "index.html" },
+            },
+          ],
+        }],
+      }, null, 2)}\n`,
+    );
+    fs.writeFileSync(
+      path.join(fixture, "dist", "manifest.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "consumer-generated-site-manifest",
+        publicationFastPath: {
+          contract: "kungfu-buildchain-publication-package-pin-fast-path",
+          mode: "package-pin-only",
+          targetSurface: "buildchain",
+          qualificationRoot: `sha256:${"a".repeat(64)}`,
+          immutablePrefixes: ["archive/paper/v1.0.0"],
+          mutableFiles: ["index.html", "manifest.json", "paper/latest/index.html"],
+          invalidationPaths: ["/", "/archive/paper/v1.0.0/*", "/paper/latest/*"],
+        },
+      }, null, 2)}\n`,
+    );
+
+    const plan = planWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      deployedAt: "2026-07-01T00:00:00.000Z",
+    });
+    const binding = plan.surfaceBindings[0];
+    assert.deepEqual(binding.immutablePublication.preservedRoots, [
+      "archive/paper/v0.9.0",
+      "archive/paper/v1.0.0",
+    ]);
+    assert.deepEqual(binding.immutablePublication.materializedPrefixes, [
+      "archive/paper/v1.0.0",
+    ]);
+    assert.deepEqual(binding.immutablePublication.uploadRoots, [
+      "archive/paper/v1.0.0",
+    ]);
+    assert.deepEqual(
+      binding.immutablePublication.files.map((file) => file.path),
+      ["archive/paper/v1.0.0/index.html", "archive/paper/v1.0.0/main.pdf"],
+    );
+  });
+});
+
 test("web-surface deploy apply fails closed when saved plan artifact drifted", () => {
   withFixture((fixture) => {
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
