@@ -37,15 +37,27 @@ function ensureRevisionAvailable(root, revision) {
   } catch (error) {
     const detail = String(error?.stderr || error?.message || error).trim();
     throw new Error(
-      `maintainability enforcement revision ${revision} is unavailable and could not be fetched from origin${detail ? `: ${detail}` : ""}`,
+      `maintainability revision ${revision} is unavailable and could not be fetched from origin${detail ? `: ${detail}` : ""}`,
     );
   }
   if (!revisionAvailable(root, revision)) {
     throw new Error(
-      `maintainability enforcement revision ${revision} is unavailable after a successful origin fetch`,
+      `maintainability revision ${revision} is unavailable after a successful origin fetch`,
     );
   }
   return true;
+}
+
+function ensureMaintainabilityRevisionsAvailable(
+  root,
+  { baselineRevision, enforcementRevision },
+) {
+  return Object.fromEntries(
+    [...new Set([baselineRevision, enforcementRevision])].map((revision) => [
+      revision,
+      ensureRevisionAvailable(root, revision),
+    ]),
+  );
 }
 
 function sourceMetricsAtRevision(root, revision) {
@@ -307,10 +319,10 @@ function checkMaintainability({ root = process.cwd() } = {}) {
   const policy = readJson(root, "architecture/maintainability-policy.json");
   const baseline = readJson(root, policy.baseline);
   const enforcementRevision = policy.enforcementRevision || baseline.revision;
-  const hydratedEnforcementRevision = ensureRevisionAvailable(
-    root,
+  const hydratedRevisions = ensureMaintainabilityRevisionsAvailable(root, {
+    baselineRevision: baseline.revision,
     enforcementRevision,
-  );
+  });
   const current = collectMaintainabilityMetrics({ root });
   const baselineFiles = sourceMetricsAtRevision(root, enforcementRevision);
   const issues = evaluateMaintainability({ current, baselineFiles, policy });
@@ -324,7 +336,8 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     schemaVersion: 1,
     baselineRevision: baseline.revision,
     enforcementRevision,
-    hydratedEnforcementRevision,
+    hydratedBaselineRevision: hydratedRevisions[baseline.revision],
+    hydratedEnforcementRevision: hydratedRevisions[enforcementRevision],
     trackedFiles: current.repository.trackedFiles,
     sourceFiles: current.repository.handMaintainedSourceFiles,
     publicSurface: current.publicSurface,
@@ -350,6 +363,7 @@ if (
 
 export {
   checkMaintainability,
+  ensureMaintainabilityRevisionsAvailable,
   ensureRevisionAvailable,
   evaluateMaintainability,
   evaluatePublicSurface,

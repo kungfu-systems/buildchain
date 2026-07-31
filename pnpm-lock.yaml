@@ -192,6 +192,12 @@ packages:
     cpu: [s390x]
     os: [linux]
 
+  '@esbuild/linux-x64@0.27.7':
+    resolution: {integrity: sha512-hzznmADPt+OmsYzw1EE33ccA+HPdIqiCRq7cQeL1Jlq2gb1+OyWBkMCrYGBJ+sxVzve2ZJEVeePbLM2iEIZSxA==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [linux]
+
   '@esbuild/netbsd-arm64@0.27.7':
     resolution: {integrity: sha512-b6pqtrQdigZBwZxAn1UpazEisvwaIDvdbMbmrly7cDTMFnw/+3lVxxCTGOrkPVnsYIosJJXAsILG9XcQS+Yu6w==}
     engines: {node: '>=18'}
@@ -815,6 +821,9 @@ snapshots:
   '@esbuild/linux-s390x@0.27.7':
     optional: true
 
+  '@esbuild/linux-x64@0.27.7':
+    optional: true
+
   '@esbuild/netbsd-arm64@0.27.7':
     optional: true
 
@@ -1048,6 +1057,7 @@ snapshots:
       '@esbuild/linux-ppc64': 0.27.7
       '@esbuild/linux-riscv64': 0.27.7
       '@esbuild/linux-s390x': 0.27.7
+      '@esbuild/linux-x64': 0.27.7
       '@esbuild/netbsd-arm64': 0.27.7
       '@esbuild/netbsd-x64': 0.27.7
       '@esbuild/openbsd-arm64': 0.27.7
