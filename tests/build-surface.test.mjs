@@ -814,6 +814,10 @@ test("paper release workflow publishes declared npm package with source lock and
     path.join(root, ".github/workflows/paper-release.yml"),
     "utf8",
   );
+  const sealedWorkflow = fs.readFileSync(
+    path.join(root, ".github/workflows/paper-release-sealed.yml"),
+    "utf8",
+  );
   const docs = fs.readFileSync(
     path.join(root, "docs/publication-artifacts.md"),
     "utf8",
@@ -848,6 +852,14 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /writeMultiline\("github-release-artifact-paths", releaseArtifactPaths\)/);
   assert.match(workflow, /github-release-artifact-paths: \$\{\{ steps\.package\.outputs\.github-release-artifact-paths \}\}/);
   assert.match(workflow, /permissions:\n  contents: read/);
+  assert.match(
+    sealedWorkflow,
+    /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:[\s\S]*required: false/,
+  );
+  assert.match(
+    sealedWorkflow,
+    /uses: \.\/\.github\/workflows\/\.publication-authority\.yml[\s\S]*secrets: inherit/,
+  );
   assert.match(workflow, /name: Seal paper publication capability/);
   assert.match(
     workflow,
