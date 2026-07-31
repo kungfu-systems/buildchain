@@ -114,6 +114,66 @@ test("release evidence attachment rejects stale release coordinates", () => {
   );
 });
 
+test("release evidence verifier rejects duplicate ids and non-sibling paths", async () => {
+  const cwd = tempDir("release-evidence-verifier-binding");
+  const assetsDir = path.join(cwd, "dist");
+  const sourceSha = "a".repeat(40);
+  const tag = "v4.0.0-alpha.1";
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "kungfu.tar.gz"), "release artifact\n");
+  const evidencePath = writeJson(path.join(cwd, "product-evidence.json"), {
+    schemaVersion: 1,
+    contract: "fixture-product-release-evidence",
+    id: "fixture-product",
+    release: { sourceSha, tag, channel: "alpha" },
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag,
+    sourceSha,
+    assetsDir,
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({ channel: "alpha" }),
+    releaseEvidenceJsons: [evidencePath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const original = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  const duplicate = structuredClone(original);
+  duplicate.releaseEvidence.push(structuredClone(duplicate.releaseEvidence[0]));
+  writeJson(passportPath, duplicate);
+  const duplicateReport = await verifyReleasePassport({
+    passportLocation: passportPath,
+  });
+  assert.equal(duplicateReport.ok, false);
+  assert.equal(
+    duplicateReport.issues.some(
+      (entry) => entry.code === "releaseEvidence[1].id",
+    ),
+    true,
+  );
+
+  const escaped = structuredClone(original);
+  escaped.releaseEvidence[0].path = "../product-evidence.json";
+  writeJson(passportPath, escaped);
+  const escapedReport = await verifyReleasePassport({
+    passportLocation: passportPath,
+  });
+  assert.equal(escapedReport.ok, false);
+  assert.equal(
+    escapedReport.issues.some(
+      (entry) => entry.code === "releaseEvidence[0].path",
+    ),
+    true,
+  );
+  assert.equal(
+    escapedReport.issues.some(
+      (entry) => entry.code === "releaseEvidence[0].missing",
+    ),
+    true,
+  );
+});
+
 function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
   if (value && typeof value === "object") {

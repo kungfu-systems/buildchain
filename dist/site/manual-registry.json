@@ -360,7 +360,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:7b29cb27600daca5810992304a4688a8523c8012a8eeb09807957c0bcd5cf8e3",
+      "digest": "sha256:833567484ba55caca266ea5d93630e9e8d4af569792f4ee5edcdf801ba081ec9",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",

@@ -330,11 +330,13 @@ export function loadArtifactSigningInput(inputRoot, expected = {}) {
       request: JSON.parse(fs.readFileSync(requestPath, "utf8")),
     }))
     .filter(
-      ({ request }) => request.signature?.profile === "apple-developer-id",
+      ({ request }) =>
+        request.signature?.profile === "apple-developer-id" &&
+        (!expected.artifactId || request.artifact?.id === expected.artifactId),
     );
   if (candidates.length !== 1) {
     throw new Error(
-      `expected one apple-developer-id request.json under input-root, found ${candidates.length}`,
+      `expected one matching apple-developer-id request.json under input-root, found ${candidates.length}`,
     );
   }
   const { requestPath, request } = candidates[0];

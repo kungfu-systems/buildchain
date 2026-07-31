@@ -688,6 +688,17 @@ archive container cannot carry a stapled ticket and is not itself a Gatekeeper
 execution target; Gatekeeper evaluates the extracted signed code. Archive path
 and symlink validation fail closed before any payload is signed.
 
+For a declared `app-bundle`, the same protected authority extracts the sealed
+application, derives and verifies its bundle identity, signs nested native code,
+submits both the application and disk image for notarization, staples and
+Gatekeeper-assesses both deliverables, and returns a ZIP, DMG, evidence document,
+and source-bound manifest. The reusable workflow verifies those returned bytes
+on GitHub-hosted infrastructure, adds them to the normal macOS platform payload,
+and publishes a separate `<artifact>-macos-credential-<source-sha>` projection
+for release pipelines that consume the credential-island evidence contract.
+Consumers declare the `.app` under `[[signing.artifacts]]`; they do not configure
+an environment, certificate, notary credential, or authority workflow.
+
 The durable v3 authority runtime is
 `authority/v3/v3.0/artifact-signing`. It is channel-neutral: alpha and stable
 release work use the same protected `buildchain-artifact-signing` environment

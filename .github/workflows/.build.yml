@@ -2451,6 +2451,7 @@ jobs:
 
       - name: Verify and import final signed bytes on GitHub-hosted infrastructure
         if: ${{ steps.delegation.outputs.request-count != '0' }}
+        id: import-signing-results
         run: node .buildchain/runtime/scripts/import-artifact-signing-results.mjs
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ steps.delegation.outputs.working-directory }}
@@ -2499,6 +2500,26 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true
+
+      - name: Publish native signed macOS application payload
+        if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.import-signing-results.outputs.credential-artifact-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+
+      - name: Publish native signed macOS application manifest
+        if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-manifest-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.import-signing-results.outputs.credential-manifest-path }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Publish final signed artifact manifest
         if: ${{ steps.delegation.outputs.request-count != '0' }}

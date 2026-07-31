@@ -2145,9 +2145,14 @@ export function createReleaseCheckReport({
     ...(normalizedPublishEvidence?.artifacts || []),
   ];
   const releaseEvidence = Array.isArray(passport?.releaseEvidence) ? passport.releaseEvidence : [];
-  const releaseEvidenceById = new Map(
-    releaseEvidenceDocuments.map((entry) => [entry?.reference?.id || "", entry]),
+  const releaseEvidenceByCoordinate = new Map(
+    releaseEvidenceDocuments.map((entry) => [
+      `${entry?.reference?.id || ""}\0${entry?.reference?.path || ""}`,
+      entry,
+    ]),
   );
+  const releaseEvidenceIds = new Set();
+  const releaseEvidencePaths = new Set();
   for (const [index, reference] of releaseEvidence.entries()) {
     const label = `releaseEvidence[${index}]`;
     if (!reference || typeof reference !== "object" || Array.isArray(reference)) {
@@ -2161,7 +2166,24 @@ export function createReleaseCheckReport({
       issues.push(issue("error", `${label}.identity`, `${label} must include id, path, sha256, and documentContract`));
       continue;
     }
-    const loaded = releaseEvidenceById.get(reference.id);
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(reference.id)) {
+      issues.push(issue("error", `${label}.id`, `${label}.id must use only letters, digits, dot, underscore, or hyphen`));
+    }
+    const expectedPath = `release-evidence-${reference.id}.json`;
+    if (reference.path !== expectedPath) {
+      issues.push(issue("error", `${label}.path`, `${label}.path must be ${expectedPath}`));
+    }
+    if (releaseEvidenceIds.has(reference.id)) {
+      issues.push(issue("error", `${label}.id`, `${label}.id must be unique`));
+    }
+    if (releaseEvidencePaths.has(reference.path)) {
+      issues.push(issue("error", `${label}.path`, `${label}.path must be unique`));
+    }
+    releaseEvidenceIds.add(reference.id);
+    releaseEvidencePaths.add(reference.path);
+    const loaded = releaseEvidenceByCoordinate.get(
+      `${reference.id}\0${reference.path}`,
+    );
     if (!loaded?.document) {
       issues.push(issue("error", `${label}.missing`, `${label} document is not independently retrievable`, {
         id: reference.id,
@@ -2663,9 +2685,16 @@ export async function verifyReleasePassport({
       : await resolveSiblingJson(basePath, passport.evidence?.kfdSupport) || undefined;
   const releaseEvidenceDocuments = [];
   for (const reference of Array.isArray(passport.releaseEvidence) ? passport.releaseEvidence : []) {
+    const id = String(reference?.id || "");
+    const expectedPath = `release-evidence-${id}.json`;
+    const safePath =
+      /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(id) &&
+      reference?.path === expectedPath;
     releaseEvidenceDocuments.push({
       reference,
-      document: await resolveSiblingJson(basePath, reference.path),
+      document: safePath
+        ? await resolveSiblingJson(basePath, reference.path)
+        : undefined,
     });
   }
   return createReleaseCheckReport({

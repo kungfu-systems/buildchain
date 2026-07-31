@@ -2467,6 +2467,7 @@
         "id": "macos-credential-island",
         "path": "actions/macos-credential-island/action.yml",
         "inputs": [
+          "artifact-id",
           "artifact-name",
           "artifact-relative-output",
           "artifact-stem",
@@ -2488,7 +2489,7 @@
           "source-sha",
           "source-tree-sha"
         ],
-        "inputCount": 20
+        "inputCount": 21
       },
       {
         "id": "promote-buildchain-ref",
@@ -4467,8 +4468,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "347c579c2ca3d0d7195aa521cc40e4ad99e2cf1315d4b5510c38446baa19a072",
-    "pageRegistryDigest": "80b824ba490cb8b52d58730c1b3b3d6a3d6d9c5eace767aeaa270924e16c0965"
+    "workflowRegistryDigest": "01eb60229fca0d02b1ef7c2fd6d7a14e83cf68fc88e215c2e900bd80825f7641",
+    "pageRegistryDigest": "c3170262cbba13ea01cee8572920e0fd5f79254387e4844f217bc6ab0219ac80"
   },
   "comparison": {
     "missingCliRegistry": [],

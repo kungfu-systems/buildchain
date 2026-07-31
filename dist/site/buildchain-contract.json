@@ -52,7 +52,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:2eeacb97cc2fecc26547948dc23325d6c6ee7f66fb15097101f4fb1059515194"
+      "auditDigest": "sha256:8d0ef9c8048a107dc6fb418d93d9a799e27bf8f94dc008cbe4001255c54004f8"
     },
     {
       "contractVersion": 1,
@@ -451,7 +451,7 @@
         "temporary keychain and API key material are cleaned in both main and post phases"
       ],
       "breakingDigest": "sha256:61866985864205770c70cbe14c3c60f479512a32c0b007b5fd6d8d65132ff8be",
-      "auditDigest": "sha256:24b0b6302e36ab0df556c5b473e616a3041070ef24f017ad8a41899a1136004d"
+      "auditDigest": "sha256:60c44e35de1788c4c4c2529cb491914054df0b604539758e230ff31ad6dfdab2"
     },
     {
       "contractVersion": 1,
@@ -510,7 +510,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:32bfec2359923d2c08abf4cfaba93d62b5dde59187153c10b23df0c1162dc9f6"
+      "auditDigest": "sha256:a3e783f0093465731bbebe0e67b269487980ad755ba77ad72d72c107d28b20d8"
     },
     {
       "contractVersion": 1,
@@ -559,7 +559,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:32bfec2359923d2c08abf4cfaba93d62b5dde59187153c10b23df0c1162dc9f6"
+      "auditDigest": "sha256:a3e783f0093465731bbebe0e67b269487980ad755ba77ad72d72c107d28b20d8"
     },
     {
       "contractVersion": 1,
@@ -709,7 +709,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:4fd34234083d417683af9685abb4ff7ff1dee371ab5e110a3c898555334f5822"
+      "auditDigest": "sha256:a89fd5ef9c0ee3fed066242fffb0932800def74dfe6f6def45f34e4a4457f3da"
     },
     {
       "contractVersion": 1,
@@ -731,7 +731,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:9e5250ddfe7ab41ad0936cfba5dea9e06539d1238ca0886ee88cb7373df27aea"
+      "auditDigest": "sha256:a3cf1b8f2e230521eeb5ddd6c60b57dcfea14fca92c81acc5cec61d5174003be"
     },
     {
       "contractVersion": 1,
@@ -1340,7 +1340,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:2eeacb97cc2fecc26547948dc23325d6c6ee7f66fb15097101f4fb1059515194"
+      "auditDigest": "sha256:8d0ef9c8048a107dc6fb418d93d9a799e27bf8f94dc008cbe4001255c54004f8"
     },
     {
       "contractVersion": 1,
@@ -3522,5 +3522,5 @@
     }
   ],
   "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
-  "contractDigest": "sha256:1f68dbe784bfe7f7bddd19734342d91123fcd049ad733655acf9b022697cf13c"
+  "contractDigest": "sha256:67e6d27be637386da43104016aab51bdbe492808031faef97f162ad4633c782d"
 }
