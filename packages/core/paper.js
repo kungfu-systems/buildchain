@@ -369,6 +369,7 @@ jobs:
   check:
     uses: kungfu-systems/buildchain/.github/workflows/check.yml@${buildchainSha}
     with:
+      buildchain-ref: ${buildchainSha}
       require-version-state: true
       upload-artifacts: true
 `;

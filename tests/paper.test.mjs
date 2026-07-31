@@ -320,6 +320,13 @@ test("paper migration converges existing repositories without rewriting content 
     ),
     new RegExp(`check\\.yml@${runtimeSha}`),
   );
+  assert.match(
+    fs.readFileSync(
+      path.join(cwd, ".github", "workflows", "verify.yml"),
+      "utf8",
+    ),
+    new RegExp(`buildchain-ref: ${runtimeSha}`),
+  );
   const migratedLock = JSON.parse(
     fs.readFileSync(
       path.join(cwd, ".buildchain", "contract-lock.json"),
@@ -399,16 +406,7 @@ test("paper agent entry is managed, preserves repository instructions, and fails
   execFileSync("git", ["switch", "-c", "feature/agent-entry"], { cwd });
   const cliEntry = spawnSync(
     process.execPath,
-    [
-      bin,
-      "paper",
-      "agent",
-      "verify",
-      "--cwd",
-      cwd,
-      "--offline",
-      "--json",
-    ],
+    [bin, "paper", "agent", "verify", "--cwd", cwd, "--offline", "--json"],
     { cwd: root, encoding: "utf8" },
   );
   assert.equal(cliEntry.status, 0, cliEntry.stderr || cliEntry.stdout);
