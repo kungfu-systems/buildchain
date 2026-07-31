@@ -40,7 +40,7 @@ on:
         type: boolean
         required: false
       media-profile:
-        description: "Buildchain-owned qualification profile: archive-v1, web-delivery-v1, or site-hero-v1"
+        description: "Buildchain-owned qualification profile: archive-v1, web-delivery-v1, responsive-web-delivery-v1, or site-hero-v1"
         default: "archive-v1"
         type: string
         required: false
@@ -259,6 +259,27 @@ jobs:
             --output /output \
             --renderer-image "${RENDERER_IMAGE}"
 
+      - name: Independently inspect Gate smoke media
+        if: ${{ inputs.media-profile != 'archive-v1' }}
+        shell: bash
+        env:
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+        run: |
+          set -euo pipefail
+          mkdir -p gate-work/smoke-inspection
+          chmod 0777 gate-work/smoke-inspection
+          docker run --rm --network none --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+            --volume "${GITHUB_WORKSPACE}/.buildchain/runtime:/buildchain:ro" \
+            --volume "${GITHUB_WORKSPACE}/gate-work/smoke-render:/media:ro" \
+            --volume "${GITHUB_WORKSPACE}/gate-work/smoke-inspection:/inspection" \
+            --entrypoint node \
+            "${RENDERER_IMAGE}" \
+            /buildchain/scripts/auditable-demo.mjs inspect-media \
+            --render-output /media \
+            --renderer-image "${RENDERER_IMAGE}" \
+            --output /inspection/media-inspection.json
+
       - name: Finalize content-addressed Gate bundle
         id: finalize
         shell: bash
@@ -266,8 +287,13 @@ jobs:
           ADAPTER_PATH: ${{ inputs.adapter-path }}
           RENDERER_IMAGE: ${{ inputs.renderer-image }}
           SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+          MEDIA_PROFILE: ${{ inputs.media-profile }}
         run: |
           set -euo pipefail
+          inspection_args=()
+          if [ -f "${GITHUB_WORKSPACE}/gate-work/smoke-inspection/media-inspection.json" ]; then
+            inspection_args=(--media-inspection "${GITHUB_WORKSPACE}/gate-work/smoke-inspection/media-inspection.json")
+          fi
           node .buildchain/runtime/scripts/auditable-demo.mjs finalize-gate \
             --adapter-output "${GITHUB_WORKSPACE}/gate-work/adapter-output" \
             --smoke-input "${GITHUB_WORKSPACE}/gate-work/smoke-input" \
@@ -277,6 +303,8 @@ jobs:
             --adapter "${ADAPTER_PATH}" \
             --renderer-image "${RENDERER_IMAGE}" \
             --source-sha "${SOURCE_SHA}" \
+            --media-profile "${MEDIA_PROFILE}" \
+            "${inspection_args[@]}" \
             --output "${GITHUB_WORKSPACE}/gate-bundle" \
             --github-output "${GITHUB_OUTPUT}"
 
@@ -340,6 +368,7 @@ jobs:
           GATE_ROOT: ${{ needs.gate.outputs.gate-root }}
           RENDERER_IMAGE: ${{ inputs.renderer-image }}
           SOURCE_SHA: ${{ needs.gate.outputs.source-sha }}
+          MEDIA_PROFILE: ${{ inputs.media-profile }}
         run: |
           set -euo pipefail
           mkdir -p render-diagnostics
@@ -347,7 +376,8 @@ jobs:
             --bundle "${GITHUB_WORKSPACE}/gate-bundle" \
             --expected-root "${GATE_ROOT}" \
             --renderer-image "${RENDERER_IMAGE}" \
-            --source-sha "${SOURCE_SHA}"
+            --source-sha "${SOURCE_SHA}" \
+            --media-profile "${MEDIA_PROFILE}"
 
       - name: Render qualified media with immutable network-disabled renderer
         shell: bash

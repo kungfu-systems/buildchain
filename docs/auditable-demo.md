@@ -143,6 +143,7 @@ shell fragments, arbitrary profile paths, or transcoding instructions.
 | --- | --- |
 | `archive-v1` | Default compatibility contract. Retains the exact renderer outputs and classifies GIF as README compatibility evidence without making a browser-delivery claim. |
 | `web-delivery-v1` | Independently qualifies H.264 MP4 and VP9 WebM playback sources, forbids audio, requires exact scene dimensions and bounded duration/frame-rate drift, checks per-rendition byte ceilings, and proves MP4 `moov` precedes `mdat`. PNG remains the lossless evidence poster. |
+| `responsive-web-delivery-v1` | Extends `web-delivery-v1` with exact 1280x720 H.264 MP4 and VP9 WebM responsive sources plus a 1280x720 README GIF while keeping the primary MP4/WebM and evidence poster at the source scene dimensions. Every declared downscale must preserve the scene aspect ratio and may never upscale. |
 | `site-hero-v1` | Extends `web-delivery-v1` and additionally requires a qualified WebP browser poster. The current Build Images v1 renderer does not emit that member, so selecting this profile fails closed until the producer adds it. |
 
 For web-delivery profiles, Buildchain runs its own fixed `ffprobe` invocation
@@ -156,16 +157,22 @@ field remains supporting evidence, never sufficient authority.
 
 The default `archive-v1` path preserves the existing v1 media receipt exactly.
 An explicitly selected web-delivery profile emits a v2 media receipt with a
-content-addressed rendition list and explicit roles and MIME types. Agents and
-site builds select `primary-video`,
-`alternate-video`, `browser-poster`, or evidence-only roles from that receipt;
-they do not infer semantics from extensions or filenames. Additional responsive
-renditions are accepted only when the immutable renderer manifest declares the
-bounded `build-images.auditable-demo-web-delivery/v1` role and MIME metadata and
-the selected Buildchain profile supplies the byte ceiling; producer metadata
-cannot raise that ceiling. Unbound outputs,
-duplicate singleton roles, unknown profiles, or unsupported required versions
-fail closed.
+content-addressed rendition list and explicit roles, MIME types, dimensions,
+and dimension policy. Agents and site builds select `primary-video`,
+`alternate-video`, `responsive-primary-video`,
+`responsive-alternate-video`, `browser-poster`, or evidence-only roles from
+that receipt; they do not infer semantics from extensions or filenames.
+Profile-declared responsive renditions must match their exact dimensions,
+remain within the source scene, and preserve its aspect ratio. Additional
+producer-declared renditions remain bounded by the selected profile and cannot
+raise their own byte ceiling. Unbound outputs, implicit upscales, aspect-ratio
+drift, duplicate singleton roles, unknown profiles, or unsupported required
+versions fail closed.
+
+The required Gate binds the exact selected media profile and the smoke media
+qualification root before optional full rendering starts. Gate-only validation
+and full rendering therefore exercise the same profile contract; a later media
+job cannot silently switch rendition authority.
 
 Initial byte ceilings are derived from the checked-in
 `auditable-demo-web-delivery-v1` fixture rendered by Build Images
