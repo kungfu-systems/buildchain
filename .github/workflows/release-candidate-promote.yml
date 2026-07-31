@@ -637,6 +637,7 @@ jobs:
           --publication-channel "${{ inputs.channel }}"
           --target-ref "${{ inputs.target-ref || github.ref_name }}"
           --router-ref "${{ steps.router.outputs.ref }}"
+          --router-sha "${{ steps.router.outputs.sha }}"
 
       - name: Authorize trusted runtime override
         if: ${{ steps.route.outputs.override-used == 'true' }}
