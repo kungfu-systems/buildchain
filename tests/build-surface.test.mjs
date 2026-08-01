@@ -4984,6 +4984,9 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     );
     process.env.BUILDCHAIN_ARTIFACT_NAME = "libnode";
     process.env.BUILDCHAIN_PLATFORM_COUNT = "1";
+    process.env.BUILDCHAIN_EXPECTED_PLATFORMS_JSON = '[{"id":"linux-x64"}]';
+    process.env.BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT = "0";
+    process.env.BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON = "[]";
     process.env.BUILDCHAIN_TRUSTED_EVENT = "true";
     process.env.BUILDCHAIN_PUBLISH_CHANNEL = "release";
     process.env.BUILDCHAIN_PUBLISH_ALLOWED = "true";
@@ -5034,6 +5037,104 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     assert.equal(summary.platforms[0].artifactName, "libnode-linux-x64-sha");
     assert.ok(summary.platforms[0].observability.lifecycle.stages.build);
     assert.equal(summary.platforms[0].expectedArtifacts.ok, true);
+  } finally {
+    process.env = originalEnv;
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("aggregate build summary selects only controller-declared platform manifests", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-summary-selection-"));
+  const originalEnv = { ...process.env };
+  try {
+    const inputRoot = path.join(workspace, ".buildchain/downloaded-manifests");
+    const writeManifest = (relativePath, platformId, artifactName = `kungfu-${platformId}`) => {
+      const target = path.join(inputRoot, relativePath);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "kungfu-buildchain-artifact",
+        artifactName,
+        platform: { id: platformId, name: platformId },
+        summary: { fileCount: 1, totalBytes: 32 },
+        expectedArtifacts: { ok: true },
+      }, null, 2)}\n`);
+    };
+    writeManifest("kungfu-manifest-linux-x64-sha/manifest.json", "linux-x64");
+    writeManifest("kungfu-manifest-macos-arm64-sha/macos-arm64/manifest.json", "macos-arm64");
+    writeManifest(
+      "kungfu-manifest-macos-credential-sha/manifest.json",
+      "macos-arm64-credential",
+    );
+    writeManifest(
+      "kungfu-manifest-macos-arm64-sha/signing/developer-id/manifest.json",
+      "signing-evidence",
+    );
+    const productManifest = path.join(
+      inputRoot,
+      "kungfu-manifest-macos-arm64-sha/signing/product/manifest.json",
+    );
+    fs.mkdirSync(path.dirname(productManifest), { recursive: true });
+    fs.writeFileSync(productManifest, "not a buildchain manifest\n");
+
+    process.env.BUILDCHAIN_SUMMARY_INPUT = inputRoot;
+    process.env.BUILDCHAIN_SUMMARY_OUTPUT = path.join(workspace, "build-summary.json");
+    process.env.BUILDCHAIN_ARTIFACT_NAME = "kungfu";
+    process.env.BUILDCHAIN_PLATFORM_COUNT = "2";
+    process.env.BUILDCHAIN_EXPECTED_PLATFORMS_JSON = JSON.stringify([
+      { id: "linux-x64" },
+      { id: "macos-arm64" },
+    ]);
+    process.env.BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT = "0";
+    process.env.BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON = "[]";
+    process.env.GITHUB_OUTPUT = path.join(workspace, "github-output.txt");
+
+    const summary = aggregateBuildSummaryCli();
+    assert.deepEqual(summary.platforms.map((entry) => entry.platform.id), [
+      "linux-x64",
+      "macos-arm64",
+    ]);
+    assert.equal(summary.platformCount, 2);
+
+    process.env.BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT = "1";
+    process.env.BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON = '["macos-arm64-credential"]';
+    const summaryWithCredentialIsland = aggregateBuildSummaryCli();
+    assert.deepEqual(summaryWithCredentialIsland.platforms.map((entry) => entry.platform.id), [
+      "linux-x64",
+      "macos-arm64",
+      "macos-arm64-credential",
+    ]);
+  } finally {
+    process.env = originalEnv;
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("aggregate build summary fails closed on duplicate declared platform manifests", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-summary-duplicate-"));
+  const originalEnv = { ...process.env };
+  try {
+    const inputRoot = path.join(workspace, "downloaded");
+    for (const directory of ["first", "second"]) {
+      const target = path.join(inputRoot, directory, "manifest.json");
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, `${JSON.stringify({
+        contract: "kungfu-buildchain-artifact",
+        artifactName: "kungfu-linux-x64",
+        platform: { id: "linux-x64", name: "Linux x64" },
+        summary: { fileCount: 1, totalBytes: 32 },
+      })}\n`);
+    }
+    process.env.BUILDCHAIN_SUMMARY_INPUT = inputRoot;
+    process.env.BUILDCHAIN_SUMMARY_OUTPUT = path.join(workspace, "summary.json");
+    process.env.BUILDCHAIN_PLATFORM_COUNT = "1";
+    process.env.BUILDCHAIN_EXPECTED_PLATFORMS_JSON = '[{"id":"linux-x64"}]';
+    process.env.BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT = "0";
+    process.env.BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON = "[]";
+    assert.throws(
+      () => aggregateBuildSummaryCli(),
+      /expected exactly one platform manifest for linux-x64, found 2/,
+    );
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
