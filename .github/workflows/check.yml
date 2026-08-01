@@ -140,6 +140,23 @@ jobs:
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
+      - name: Enforce Paper agent-entry and acceptance policy
+        id: paper-policy
+        shell: bash
+        env:
+          BUILDCHAIN_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        run: |
+          config="${BUILDCHAIN_WORKING_DIRECTORY}/.buildchain/buildchain.toml"
+          if [ -f "$config" ] && grep -Eq '^[[:space:]]*type[[:space:]]*=[[:space:]]*"publication-artifact"[[:space:]]*$' "$config"; then
+            node .buildchain/runtime/bin/buildchain.mjs paper preflight \
+              --cwd "$BUILDCHAIN_WORKING_DIRECTORY" \
+              --offline \
+              --ci \
+              --json
+          else
+            echo "Buildchain Paper policy: not applicable"
+          fi
+
       - name: Resolve check lifecycle mode
         id: lifecycle
         shell: bash

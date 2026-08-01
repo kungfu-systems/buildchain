@@ -6,6 +6,8 @@ import { loadBuildchainConfig } from "./buildchain-config.js";
 
 export const PAPER_PATHS = Object.freeze({
   config: ".buildchain/buildchain.toml",
+  agentEntry: ".buildchain/paper/agent-entry.json",
+  agentInstructions: "AGENTS.md",
   versionPin: ".buildchain-version",
   contractLock: ".buildchain/contract-lock.json",
   buildWorkflow: ".github/workflows/build.yml",

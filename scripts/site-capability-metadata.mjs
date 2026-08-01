@@ -97,6 +97,7 @@ export function cliCommandMeta(id) {
     "portable-cache-receipt": { group: "observability-diagnostics", purpose: "Seal exact, compatible, miss, or corrupt provider evidence against one cache plan." },
     "npm-dry-run": { group: "release-passport-trust", purpose: "Verify npm publish shape before a release transaction." },
     paper: { group: "reusable-build", purpose: "Inspect the unified paper repository and publication command families." },
+    "paper-agent": { group: "getting-started", purpose: "Verify the mandatory managed Paper agent entry contract on an existing work branch." },
     "paper-alpha": { group: "release-passport-trust", purpose: "Plan or open the protected dev-to-alpha paper publication PR without direct publication." },
     "paper-bootstrap-npm": { group: "release-passport-trust", purpose: "Dry-run or explicitly bootstrap the public npm package and bind GitHub Trusted Publishing." },
     "paper-build": { group: "reusable-build", purpose: "Plan or execute the existing two-clean-build reproducibility gate for a paper." },
@@ -199,4 +200,3 @@ export function nodeApiMeta(exportName) {
   }
   return { capabilityGroup: capabilityGroup(meta.group), summary: meta.summary, audience: ["developer", "agent"], maturity: "stable" };
 }
-
