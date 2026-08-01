@@ -8,6 +8,51 @@ function readEnv(name, fallback = "") {
   return process.env[name] || fallback;
 }
 
+function parsePlatformIds(name) {
+  const raw = readEnv(name, "").trim();
+  if (!raw) return [];
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed)) {
+    throw new Error(`${name} must be a JSON array`);
+  }
+  const ids = parsed.map((entry) => String(
+    typeof entry === "string" ? entry : entry?.id || "",
+  ).trim());
+  if (ids.some((id) => !id)) {
+    throw new Error(`${name} entries must declare non-empty platform ids`);
+  }
+  if (new Set(ids).size !== ids.length) {
+    throw new Error(`${name} must not contain duplicate platform ids`);
+  }
+  return ids;
+}
+
+function readManifest(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function selectPlatformManifests({ inputRoot, expectedPlatformIds }) {
+  const candidates = findJsonFiles(inputRoot)
+    .filter((file) => path.basename(file) === "manifest.json")
+    .sort()
+    .map((file) => ({ file, manifest: readManifest(file) }))
+    .filter(({ manifest }) => manifest?.contract === "kungfu-buildchain-artifact");
+  if (expectedPlatformIds.length === 0) return candidates;
+  return expectedPlatformIds.map((platformId) => {
+    const matches = candidates.filter(({ manifest }) => manifest.platform?.id === platformId);
+    if (matches.length !== 1) {
+      throw new Error(
+        `expected exactly one platform manifest for ${platformId}, found ${matches.length} under ${inputRoot}`,
+      );
+    }
+    return matches[0];
+  });
+}
+
 export function aggregateBuildSummaryCli() {
   const inputRoot = path.resolve(readEnv("BUILDCHAIN_SUMMARY_INPUT", ".buildchain/downloaded-manifests"));
   const outputPath = path.resolve(readEnv("BUILDCHAIN_SUMMARY_OUTPUT", ".buildchain/artifacts/build-summary.json"));
@@ -18,10 +63,28 @@ export function aggregateBuildSummaryCli() {
     throw new Error("BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT must be a non-negative integer");
   }
   const expectedManifestCount = expectedPlatformCount + additionalPlatformCount;
-  const manifestFiles = findJsonFiles(inputRoot)
-    .filter((file) => path.basename(file) === "manifest.json")
-    .sort();
-  const manifests = manifestFiles.map((file) => JSON.parse(fs.readFileSync(file, "utf8")));
+  const platformIds = parsePlatformIds("BUILDCHAIN_EXPECTED_PLATFORMS_JSON");
+  const additionalPlatformIds = parsePlatformIds("BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON");
+  if (platformIds.length > 0 && platformIds.length !== expectedPlatformCount) {
+    throw new Error(
+      `BUILDCHAIN_EXPECTED_PLATFORMS_JSON declares ${platformIds.length} platforms, expected ${expectedPlatformCount}`,
+    );
+  }
+  if (additionalPlatformIds.length !== additionalPlatformCount) {
+    throw new Error(
+      `BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON declares ${additionalPlatformIds.length} platforms, expected ${additionalPlatformCount}`,
+    );
+  }
+  const expectedPlatformIds = [...platformIds, ...additionalPlatformIds];
+  if (new Set(expectedPlatformIds).size !== expectedPlatformIds.length) {
+    throw new Error("declared platform ids must be unique across primary and additional platforms");
+  }
+  const selected = selectPlatformManifests({
+    inputRoot,
+    expectedPlatformIds,
+  });
+  const manifestFiles = selected.map(({ file }) => file);
+  const manifests = selected.map(({ manifest }) => manifest);
   if (expectedManifestCount > 0 && manifests.length !== expectedManifestCount) {
     throw new Error(
       `expected ${expectedManifestCount} platform manifests, found ${manifests.length} under ${inputRoot}`,
