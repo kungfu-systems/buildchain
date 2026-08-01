@@ -26,6 +26,11 @@ be diagnosed after the runner is released.
 The action writes both a full manifest and a compact summary. It also exposes
 the summary as outputs for reusable workflow callers:
 
+For a `build` stage, paths selected by `[[signing.artifacts]]` for the current
+`platform-id` are automatically included in the lifecycle manifest even when
+they sit outside `artifact-paths`. This binds every byte sent to the signing
+authority without changing which ordinary product paths the caller uploads.
+
 | Output | Meaning |
 | --- | --- |
 | `manifest-path` | Full manifest path |

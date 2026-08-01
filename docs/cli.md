@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-cli
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Buildchain CLI, npm Package, and Toolkit API
 
 Buildchain is published as the public npm package
@@ -105,13 +123,19 @@ predicate, platform manifest, Passport, and Buildchain evidence locally. See
 
 ### Governed paper lifecycle
 
-`buildchain paper` is the unified operator surface for a paper repository. Its
-eight subcommands return versioned JSON contracts with `--json`:
+`buildchain paper` is the unified operator surface for one paper repository or
+a discovered fleet. Every subcommand returns a versioned JSON contract with
+`--json`:
 
 ```bash
 buildchain paper scaffold --package @kungfu-tech/paper-example \
   --repository kungfu-systems/paper-example
 buildchain paper migrate --json
+buildchain paper agent verify --json
+buildchain paper work start golden-path --json
+buildchain paper work submit --json
+buildchain paper fleet audit --root ../papers --json
+buildchain paper fleet update --root ../paper-worktrees --json
 buildchain paper preflight --offline --json
 buildchain paper bootstrap npm --json
 buildchain paper build --json
@@ -122,16 +146,48 @@ buildchain paper resume --json
 
 The safety and authority boundary is explicit:
 
-- `scaffold` plans a 14-file, no-overwrite repository shape by default; add
+- `scaffold` plans a 17-file, no-overwrite repository shape by default; add
   `--write` to create only missing files.
-- `migrate` plans the five Buildchain-owned control-file changes needed by an
-  existing paper repository. Add `--write` only after reviewing exact old and
-  new digests; paper content and publication configuration are never rewritten.
+- `migrate` plans the Buildchain-owned authority, workflow, contract lock,
+  version pin, package, agent-entry policy, managed `AGENTS.md` section, and
+  required-check changes needed by an existing paper repository. It pins an
+  exact v3 dependency and adds pnpm-backed paper scripts.
+  Add `--write` only after reviewing exact old and new digests; paper content
+  and publication configuration are never rewritten. Refresh
+  `pnpm-lock.yaml` with `pnpm install --lockfile-only` after a write.
+- `agent verify` is the mandatory resume check on an existing work branch. It
+  verifies the digest-bound `.buildchain/paper/agent-entry.json`, the single
+  managed `AGENTS.md` section, exact package scripts and v3 dependency, runtime
+  source SHA, development target, and current branch lineage. `--ci` derives
+  the pull-request source and target from GitHub context and fails closed on a
+  non-work source branch or a target other than the configured development
+  line.
+- `work start` derives the protected development branch from the configured
+  publication semver line and creates a safe local work branch only when the
+  worktree is clean, the sole `origin` is the canonical `kungfu-systems`
+  repository, and local HEAD equals the exact remotely observed development
+  SHA. It never fetches or merges silently.
+- `work submit` accepts only an allowed non-protected work branch that contains
+  the exact remote development commit. It rejects divergent remote work,
+  wrong-base pull requests, dirty trees, forks, and ambiguous remotes; execution
+  uses a normal non-force push and opens or reuses a PR to the derived
+  development branch.
+- `fleet audit` discovers `paper-*` repositories from a root and emits one
+  deterministic audit root over exact runtime, dependency, lockfile, workflow,
+  authority, and repository observations. `fleet update` reuses the migration
+  contract for every discovered repository, remains dry-run by default, and
+  refuses protected or non-work branches.
 - The scaffolded `.buildchain/paper/provisioning-authority.json` binds both
-  caller workflow byte digests, their exact reusable-workflow SHA, the runtime
-  SHA, contract-lock bytes, npm registry and trusted-publisher coordinates, and
-  the repository Actions/generated-write policy under one digest. A floating
-  Buildchain ref cannot change release policy after that authority is accepted.
+  build/release caller workflow byte digests, the required verify caller, the
+  agent-entry policy and instructions, their exact reusable-workflow SHA, the
+  runtime SHA, contract-lock bytes, npm registry and trusted-publisher
+  coordinates, and the repository Actions/generated-write policy under one
+  digest. A floating Buildchain ref cannot change release policy after that
+  authority is accepted.
+- The reusable `check.yml` detects publication-artifact repositories and runs
+  `paper preflight --offline --ci` inside the existing required check context.
+  Skipping the local CLI therefore cannot admit a missing entry contract,
+  drifted Buildchain-owned surface, unsafe source branch, or wrong PR target.
 - `preflight` separates local readiness from readiness for external mutation.
   `--offline` skips live GitHub and npm observations without treating them as
   local failures. Live readiness requires default workflow permissions `read`,
@@ -162,8 +218,9 @@ The ordered evidence states are `scaffolded`, `governed`, `admitted`,
 
 The corresponding Node surface is
 `@kungfu-tech/buildchain/paper`. Planning and status functions are read-only;
-`writePaperScaffold()` and `writePaperMigration()` are the bounded local
-writers, and
+`writePaperScaffold()`, `writePaperMigration()`, and
+`writePaperFleetUpdate()` are the bounded local writers. Work plans expose
+separate rechecking executors for local branch creation and normal push, and
 `executePaperNpmBootstrap()` preserves the same confirmation boundary used by
 the CLI.
 
@@ -315,9 +372,9 @@ branch action, and initial version before any GitHub mutation happens:
 
 ```bash
 buildchain release line open \
-  --major 2 \
-  --minor 10 \
-  --source-ref release/v2/v2.9 \
+  --major 3 \
+  --minor 1 \
+  --source-ref release/v3/v3.0 \
   --json
 ```
 
@@ -330,9 +387,9 @@ reconciliation succeeds, and opens the first dev-to-alpha channel PR:
 
 ```bash
 buildchain release line open \
-  --major 2 \
-  --minor 10 \
-  --source-ref release/v2/v2.9 \
+  --major 3 \
+  --minor 1 \
+  --source-ref release/v3/v3.0 \
   --write \
   --json
 ```
@@ -718,7 +775,7 @@ buildchain collect github-release \
   --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
   --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
   --kfd-3-artifact-verify-cmd "kungfu agent verify --json" \
-  --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
+  --release-extra-json '{"channel":"release","targetRef":"release/v3/v3.0"}' \
   --output-dir .buildchain/release-passport
 ```
 
@@ -969,9 +1026,9 @@ Buildchain's own npm package is published from
 `.github/workflows/buildchain-ref-promotion.yml`, inside the same publish
 transaction that promotes release refs:
 
-- `v2.0.13-alpha.0` publishes to npm with dist-tag `alpha`.
-- `v2.0.13` publishes to npm with dist-tag `latest`.
-- moving refs such as `v2`, `v2.0`, and `v2.0-alpha` do not match the publish
+- `v3.0.3-alpha.0` publishes to npm with dist-tag `alpha`.
+- `v3.0.2` publishes to npm with dist-tag `latest`.
+- moving refs such as `v3`, `v3.0`, and `v3.0-alpha` do not match the publish
   workflow and do not publish.
 
 The promotion workflow uses npm Trusted Publishing through GitHub Actions OIDC.

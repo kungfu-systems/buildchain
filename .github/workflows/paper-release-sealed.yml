@@ -112,6 +112,9 @@ on:
         type: boolean
         required: false
     secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
       BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID:
         description: "Preferred GitHub App client ID for generated repository writes"
         required: false
@@ -325,8 +328,6 @@ jobs:
             root,
             resolvePublicationCandidateFile(bundle.evidence.files, candidatePath),
           );
-          const packageResultPath = exactPath(".buildchain/paper-release/package-result.json");
-          const packageResult = JSON.parse(fs.readFileSync(packageResultPath, "utf8"));
           const packageJsonPath = exactPath(".buildchain/publication/npm-package/package.json");
           const packageDir = path.dirname(packageJsonPath);
           const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
@@ -373,7 +374,6 @@ jobs:
           const marker = `EOF_ASSETS_${Date.now()}`;
           output.write(`github-release-artifact-paths<<${marker}\n${releaseAssets.join("\n")}\n${marker}\n`);
           output.end();
-          void packageResult;
           NODE
 
       - name: Resolve protected publication target

@@ -649,6 +649,7 @@ function validatePublicationEvidence(publicationEvidence, admission) {
     platformMatrix: passport.platformMatrix,
     buildchain: passport.buildchain,
     ...(passport.gateProfileEvidence ? { gateProfileEvidence: passport.gateProfileEvidence } : {}),
+    ...(passport.familyEvidence ? { familyEvidence: passport.familyEvidence } : {}),
     ...(passport.controllerReceipts ? { controllerReceipts: passport.controllerReceipts } : {}),
   });
   if (normalizeDigest(passport.candidateHash, "releaseCandidatePassport.candidateHash") !== candidateHash) {

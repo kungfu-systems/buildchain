@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-consumer-issue-action
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # report-buildchain-issue
 
 Create or update a Buildchain repository issue from a consumer workflow or from
@@ -76,7 +94,7 @@ steps:
       workflow: ${{ github.workflow }}
       run-id: ${{ github.run_id }}
       run-attempt: ${{ github.run_attempt }}
-      channel: alpha/v2/v2.4
+      channel: alpha/v3/v3.0
       source-sha: ${{ github.sha }}
       friction-class: duplicate-build
       related-runs-json: ${{ steps.classify.outputs.related-runs-json }}

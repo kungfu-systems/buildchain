@@ -29,6 +29,8 @@ export function generateReleaseCandidatePassportCli() {
   const gateAggregate = gateAggregateJson ? JSON.parse(gateAggregateJson) : undefined;
   const controllerReceiptJson = env("BUILDCHAIN_CONTROLLER_RECEIPT_JSON");
   const controllerReceipts = controllerReceiptJson ? [JSON.parse(controllerReceiptJson)] : [];
+  const familyEvidenceJson = env("BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON");
+  const familyEvidence = familyEvidenceJson ? JSON.parse(familyEvidenceJson) : undefined;
   const passport = createReleaseCandidatePassport({
     repository: env("GITHUB_REPOSITORY", buildSummary.git?.repository || ""),
     pullRequest: {
@@ -51,6 +53,7 @@ export function generateReleaseCandidatePassportCli() {
       workflowShellRef: env("BUILDCHAIN_WORKFLOW_SHELL_REF", buildSummary.runtime?.workflowShellRef || ""),
     },
     gateAggregate,
+    familyEvidence,
     controllerReceipts,
     workflow: {
       name: env("GITHUB_WORKFLOW"),
@@ -80,6 +83,7 @@ export function generateReleaseCandidatePassportCli() {
       candidateHash: passport.candidateHash,
       platformCount: passport.platformMatrix.length,
       gateProfileEvidence: passport.gateProfileEvidence,
+      familyEvidence: passport.familyEvidence,
       controllerReceipts: passport.controllerReceipts || [],
     }),
   });

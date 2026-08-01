@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-publish-transaction
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-31
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-31
+  invisible_context: not asserted
+---
+
 # Publish Transaction
 
 Buildchain release promotion is not just tag movement. A release can also publish
@@ -7,7 +25,7 @@ than Git refs because most registries are append-only: a failed rerun must know
 which artifacts already exist, which are still missing, and whether any existing
 artifact conflicts with the release material.
 
-Buildchain v2 models that work as a release transaction.
+Buildchain v3 models that work as a release transaction.
 
 ## Why This Exists
 
@@ -269,7 +287,7 @@ fields and required artifact identities before final refs move.
   "channel": "release",
   "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "release_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-  "target_ref": "release/v2/v2.0",
+  "target_ref": "release/v3/v3.0",
   "release_material_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "publish_tooling_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "artifacts": [
@@ -526,10 +544,10 @@ different SHA is a material conflict and blocks recovery.
 Local recovery commands operate on the same state/evidence files:
 
 ```bash
-node scripts/release-transaction.mjs inspect --version v2.0.11
-node scripts/release-transaction.mjs recover --version v2.0.11
-node scripts/release-transaction.mjs finalize --version v2.0.11
-node scripts/release-transaction.mjs abort --version v2.0.11 --superseded-by v2.0.12
+node scripts/release-transaction.mjs inspect --version v3.0.2
+node scripts/release-transaction.mjs recover --version v3.0.2
+node scripts/release-transaction.mjs finalize --version v3.0.2
+node scripts/release-transaction.mjs abort --version v3.0.2 --superseded-by v3.0.3
 ```
 
 The CLI is a diagnostic and local repair surface. It reports the durable
@@ -546,7 +564,7 @@ When no state file exists, creation commands also require:
 --repository kungfu-systems/buildchain \
 --source-sha <sha> \
 --release-sha <sha> \
---target-ref release/v2/v2.0 \
+--target-ref release/v3/v3.0 \
 --channel release
 ```
 

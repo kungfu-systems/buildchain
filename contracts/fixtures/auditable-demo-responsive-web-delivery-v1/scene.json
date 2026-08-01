@@ -1,0 +1,12 @@
+{
+  "schema": "build-images.demo-scene/v1",
+  "id": "buildchain-responsive-web-delivery-qualification",
+  "width": 1920,
+  "height": 1080,
+  "fps": 15,
+  "durationMs": 2500,
+  "title": "Buildchain responsive web delivery qualification",
+  "commandLabel": "buildchain qualify-media-fixture",
+  "background": "#0B1020",
+  "accent": "#67E8A5"
+}

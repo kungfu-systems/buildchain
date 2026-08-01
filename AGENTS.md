@@ -23,7 +23,7 @@ override that policy:
 uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
 ```
 
-During the v2.12 alpha evaluation window, canaries call the same router through
+During v3 prerelease evaluation windows, canaries call the same router through
 the matching prerelease ref:
 
 ```yaml
@@ -42,6 +42,19 @@ npx @kungfu-tech/buildchain init --type package
 npx @kungfu-tech/buildchain validate --require-version-state
 npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
 ```
+
+For governed Paper repositories, scaffold or migrate the repository once, then
+follow the generated `AGENTS.md` entry contract. Work begins and ends through
+the pinned pnpm scripts:
+
+```sh
+pnpm paper:agent:verify
+pnpm paper:work:start -- <topic> --execute --json
+pnpm paper:work:submit -- --execute --json
+```
+
+The reusable required check independently enforces the same contract and PR
+lineage, so local command use is never treated as remote acceptance evidence.
 
 See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-protocol.md),
 and [`docs/reusable-build-surface.md`](docs/reusable-build-surface.md) for the

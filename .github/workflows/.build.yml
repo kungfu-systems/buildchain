@@ -396,6 +396,11 @@ on:
         default: ""
         type: string
         required: false
+      release-candidate-family-evidence-json:
+        description: "Optional exact Initiative-family release evidence JSON embedded in the release-candidate passport"
+        default: ""
+        type: string
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -589,13 +594,13 @@ jobs:
         env:
           BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
           BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
-          BUILDCHAIN_DEFAULT_REF: v2
+          BUILDCHAIN_DEFAULT_REF: v3
           BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}
         with:
           script: |
             const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
             const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
-            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v3").trim();
             const [runtimeOwner, runtimeRepo] = repository.split("/");
             if (!runtimeOwner || !runtimeRepo) {
               throw new Error(`invalid buildchain repository: ${repository}`);
@@ -2446,6 +2451,7 @@ jobs:
 
       - name: Verify and import final signed bytes on GitHub-hosted infrastructure
         if: ${{ steps.delegation.outputs.request-count != '0' }}
+        id: import-signing-results
         run: node .buildchain/runtime/scripts/import-artifact-signing-results.mjs
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ steps.delegation.outputs.working-directory }}
@@ -2494,6 +2500,26 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true
+
+      - name: Publish native signed macOS application payload
+        if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.import-signing-results.outputs.credential-artifact-root }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+
+      - name: Publish native signed macOS application manifest
+        if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-manifest-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.import-signing-results.outputs.credential-manifest-path }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Publish final signed artifact manifest
         if: ${{ steps.delegation.outputs.request-count != '0' }}
@@ -2909,6 +2935,7 @@ jobs:
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ inputs.gate-profile-aggregate-json }}
+          BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON: ${{ inputs.release-candidate-family-evidence-json }}
           BUILDCHAIN_CONTROLLER_RECEIPT_JSON: ${{ steps.release-candidate-controller-receipt.outputs.controller-receipt-json }}
           BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}

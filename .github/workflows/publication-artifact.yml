@@ -216,9 +216,16 @@ jobs:
             let runtimeFullRef = runtimeRef;
             let runtimeClass = normalizeClass(runtimeRef);
             const officialChannel = officialChannelRef.test(requested);
-            let runtimeOverride = requested !== "" && !officialChannel;
+            const pinnedSelfRuntime =
+              sameRepositoryWorkflow &&
+              exactSha.test(requested) &&
+              exactSha.test(shellRef) &&
+              requested.toLowerCase() === shellRef.toLowerCase();
+            let runtimeOverride = requested !== "" && !officialChannel && !pinnedSelfRuntime;
             let trustDecision = officialChannel
               ? "official-channel"
+              : pinnedSelfRuntime
+                ? "pinned-self"
               : runtimeOverride
                 ? "override-requested"
                 : "stable-default";
@@ -491,14 +498,19 @@ jobs:
           if [ "$INPUT_PREPARE_PAPER_PACKAGE" != "true" ]; then
             qualification_args+=(--allow-unpinned-toolchain)
           fi
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" \
-            publication-artifact reproducibility \
-            --cwd . \
-            --source-sha "${GITHUB_SHA}" \
-            --promote \
-            "${package_args[@]}" \
-            "${qualification_args[@]}" \
-            --json > .buildchain/publication-reproducibility-result.json
+          if ! node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" \
+              publication-artifact reproducibility \
+              --cwd . \
+              --source-sha "${GITHUB_SHA}" \
+              --promote \
+              "${package_args[@]}" \
+              "${qualification_args[@]}" \
+              --json > .buildchain/publication-reproducibility-result.json; then
+            if [ -f .buildchain/publication-reproducibility-result.json ]; then
+              cat .buildchain/publication-reproducibility-result.json
+            fi
+            exit 1
+          fi
 
       - name: Verify publication
         id: verify

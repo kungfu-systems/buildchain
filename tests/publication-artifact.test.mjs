@@ -285,6 +285,39 @@ test("clean publication release hydrates cumulative registry history", () => {
   assert.equal(second.registry.registry.versions[0].immutableDigest, first.registry.registry.versions[0].immutableDigest);
 });
 
+test("clean publication release unions independently authenticated registry snapshots", () => {
+  const firstCwd = tempRepo();
+  const firstConfig = path.join(firstCwd, ".buildchain", "buildchain.toml");
+  fs.writeFileSync(firstConfig, fs.readFileSync(firstConfig, "utf8").replace('version = "0.1.0"', 'version = "0.1.0-alpha.1"'));
+  execFileSync("make", ["pdf"], { cwd: firstCwd });
+  const first = writePublicationArtifact({ cwd: firstCwd, sourceSha: "a".repeat(40), generatedAt: "2026-07-01T00:00:00.000Z" });
+
+  const secondCwd = tempRepo();
+  const secondConfig = path.join(secondCwd, ".buildchain", "buildchain.toml");
+  fs.writeFileSync(secondConfig, fs.readFileSync(secondConfig, "utf8").replace('version = "0.1.0"', 'version = "0.1.0-alpha.2"'));
+  execFileSync("make", ["pdf"], { cwd: secondCwd });
+  const second = writePublicationArtifact({ cwd: secondCwd, sourceSha: "b".repeat(40), generatedAt: "2026-07-02T00:00:00.000Z" });
+
+  const thirdCwd = tempRepo();
+  const thirdConfig = path.join(thirdCwd, ".buildchain", "buildchain.toml");
+  fs.writeFileSync(thirdConfig, fs.readFileSync(thirdConfig, "utf8").replace('version = "0.1.0"', 'version = "0.1.0-alpha.3"'));
+  execFileSync("make", ["pdf"], { cwd: thirdCwd });
+  const third = writePublicationArtifact({
+    cwd: thirdCwd,
+    sourceSha: "c".repeat(40),
+    generatedAt: "2026-07-03T00:00:00.000Z",
+    registryInputs: [
+      path.join(firstCwd, first.registryPath),
+      path.join(secondCwd, second.registryPath),
+    ],
+  });
+
+  assert.deepEqual(
+    third.registry.registry.versions.map((entry) => entry.version),
+    ["0.1.0-alpha.1", "0.1.0-alpha.2", "0.1.0-alpha.3"],
+  );
+});
+
 test("publication registry hydration rejects unverifiable registry digest", () => {
   const firstCwd = tempRepo();
   execFileSync("make", ["pdf"], { cwd: firstCwd });

@@ -87,33 +87,57 @@ export function routeOfflineRunners({
   };
 }
 
+async function fetchGitHubJson({ url, token, fetchImpl }) {
+  const response = await fetchImpl(url, {
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${token}`,
+      "x-github-api-version": "2022-11-28",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(
+      `runner inventory request failed with status ${response.status}`,
+    );
+  }
+  return response.json();
+}
+
 export async function listRepositoryRunners({
   repository,
   token,
   apiUrl = "https://api.github.com",
   fetchImpl = fetch,
 }) {
+  const repositoryPayload = await fetchGitHubJson({
+    url: `${apiUrl}/repos/${repository}`,
+    token,
+    fetchImpl,
+  });
+  const ownerLogin = String(repositoryPayload?.owner?.login || "").trim();
+  const ownerType = String(repositoryPayload?.owner?.type || "").trim();
+  const inventoryPath =
+    ownerType === "Organization" && ownerLogin
+      ? `/orgs/${ownerLogin}/actions/runners`
+      : `/repos/${repository}/actions/runners`;
   const runners = [];
   for (let page = 1; ; page += 1) {
-    const response = await fetchImpl(
-      `${apiUrl}/repos/${repository}/actions/runners?per_page=100&page=${page}`,
-      {
-        headers: {
-          accept: "application/vnd.github+json",
-          authorization: `Bearer ${token}`,
-          "x-github-api-version": "2022-11-28",
-        },
-      },
-    );
-    if (!response.ok) {
-      throw new Error(
-        `runner inventory request failed with status ${response.status}`,
-      );
-    }
-    const payload = await response.json();
+    const payload = await fetchGitHubJson({
+      url: `${apiUrl}${inventoryPath}?per_page=100&page=${page}`,
+      token,
+      fetchImpl,
+    });
     const pageRunners = Array.isArray(payload.runners) ? payload.runners : [];
     runners.push(...pageRunners);
-    if (pageRunners.length < 100) return runners;
+    if (pageRunners.length < 100) {
+      return {
+        runners,
+        inventoryScope:
+          ownerType === "Organization" && ownerLogin
+            ? "organization"
+            : "repository",
+      };
+    }
   }
 }
 
@@ -153,13 +177,23 @@ export async function resolveOfflineRunnerFallback({
     };
   }
   try {
-    const runners = await listRepositoryRunners({
+    const inventory = await listRepositoryRunners({
       repository,
       token,
       apiUrl,
       fetchImpl,
     });
-    return routeOfflineRunners({ platforms: base.platforms, runners });
+    const routed = routeOfflineRunners({
+      platforms: base.platforms,
+      runners: inventory.runners,
+    });
+    return {
+      ...routed,
+      routing: {
+        ...routed.routing,
+        inventoryScope: inventory.inventoryScope,
+      },
+    };
   } catch {
     return {
       platformsJson: base.platformsJson,
@@ -167,7 +201,7 @@ export async function resolveOfflineRunnerFallback({
       routing: {
         schema: "buildchain.runner-offline-routing/v1",
         status: "unavailable",
-        reason: "repository-runner-inventory-unavailable",
+        reason: "runner-inventory-unavailable",
         routes: [],
       },
     };

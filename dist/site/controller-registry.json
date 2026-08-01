@@ -374,6 +374,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-evidence-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "requested-parallelism": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -496,7 +500,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:639fa3c45634bde0ec488b5770e0698b8f77b117ce9c72a9a7724373af43964f"
+      "digest": "sha256:2e4c9e9af2162de2333c9b57bffcff77a76e9ed384b9f001ab8ef63d527197f9"
     },
     {
       "schemaVersion": 1,
@@ -808,6 +812,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-evidence-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "requested-parallelism": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -906,7 +914,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:ac47a3886dc333fc6675b0c223ce21b5a4a5cf8c6099f03e5e002d48987d2218"
+      "digest": "sha256:105eed3eb8f772d4ed93d43e7da404d849b92eafab1b461c7a9b7cb94a8a6b3b"
     },
     {
       "schemaVersion": 1,
@@ -1931,6 +1939,22 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "release-candidate-family-assignment-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-evidence-required": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-evidence-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-family-initiative-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "release-candidate-workflow-file": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1943,11 +1967,19 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-passport-attachment-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-passport-buildchain-self-kfd": {
           "classification": "included",
           "source": "workflow-call-input"
         },
         "release-passport-evidence-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-passport-evidence-jsons": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -2077,7 +2109,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:00baae93d9ed75129fdaed6fcc33285e515b8c7de84816831a39e660941dd7ae"
+      "digest": "sha256:f54bccee97644d190b450e4ed810b516af64ed5d265ea76cd541a11cbbd51cdb"
     },
     {
       "schemaVersion": 1,
@@ -2257,5 +2289,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:c7254ed278afadac680c2e8c3f5b0c333e3b7a51a20e9946af1fc340e628a8c9"
+  "digest": "sha256:3564f3c38f8c070280ea9cf5dee810d466b40e72ce80104b15776365dfdf9b60"
 }

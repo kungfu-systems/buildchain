@@ -130,6 +130,16 @@ function collectArtifactFiles(root, patterns) {
   return [...files].sort();
 }
 
+function signingArtifactPathsForPlatform({ loadedConfig, cwd, platformId }) {
+  const declarations = loadedConfig?.config?.signing?.artifacts || [];
+  return declarations
+    .filter(
+      (entry) =>
+        entry.platforms.length === 0 || entry.platforms.includes(platformId),
+    )
+    .map((entry) => path.resolve(cwd, entry.path));
+}
+
 function readProcessSummaryArtifact(filePath) {
   if (!filePath) {
     return undefined;
@@ -651,7 +661,17 @@ export function runLifecycle({
     : undefined;
   fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
   const scanStartedAt = Date.now();
-  const files = collectArtifactFiles(resolvedWorkspace, artifactPaths);
+  const signingArtifactPaths = stageName === "build"
+    ? signingArtifactPathsForPlatform({
+        loadedConfig,
+        cwd: resolvedCwd,
+        platformId,
+      })
+    : [];
+  const files = collectArtifactFiles(resolvedWorkspace, [
+    ...artifactPaths,
+    ...signingArtifactPaths,
+  ]);
   const manifestFiles = files.map((file) => {
     const stat = fs.statSync(file);
     return {

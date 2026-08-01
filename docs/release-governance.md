@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -18,7 +18,7 @@ ai_provenance:
 
 # Release Governance
 
-Buildchain v2 preserves the release semantics of the older ABV workflow while
+Buildchain v3 preserves the release semantics of the older ABV workflow while
 moving the implementation into one modern repository.
 
 The central idea is simple: a reviewed merge into a release channel is the
@@ -37,9 +37,9 @@ Kungfu release automation has to keep four facts aligned:
 
 If any one of these facts is updated by hand, the system can split:
 
-- a consumer can fetch `v2.0` and receive a tree whose package version still
+- a consumer can fetch `v3.0` and receive a tree whose package version still
   says the previous release;
-- a maintainer can move `v2` without producing an exact `v2.0.N` audit tag;
+- a maintainer can move `v3` without producing an exact `v3.0.N` audit tag;
 - an alpha can be promoted to production even though the release tree is not the
   same tree that was tested;
 - a protected branch merge can succeed while the follow-up version commit is
@@ -70,7 +70,7 @@ repositories that usually meant changing `lerna.json` and/or `package.json`.
 That commit is important because the tag alone is not enough evidence: the
 source tree should also declare the version that the tag advertises.
 
-Buildchain v2 treats that as a hard semantic requirement for its own release
+Buildchain v3 treats that as a hard semantic requirement for its own release
 line.
 
 ## Buildchain Implementation
@@ -133,7 +133,7 @@ older Buildchain aggregate context, inspect the exact candidate SHA first:
 GH_TOKEN="$(gh auth token)" npx @kungfu-tech/buildchain@latest \
   release-governance reconcile \
   --repository kungfu-systems/example \
-  --branch release/v2/v2.14 \
+  --branch release/v3/v3.0 \
   --candidate-sha <tested-pr-head-sha> \
   --json
 ```
@@ -181,32 +181,32 @@ workflow preflight cannot receive a second set of publication side effects.
 ## Version Lines
 
 Kungfu uses Python-like version lines where a minor line can represent a
-long-lived product train. A line such as `v2.0` can produce many production
+long-lived product train. A line such as `v3.0` can produce many production
 patch releases:
 
 ```text
-v2.0.0
-v2.0.1
-v2.0.2
+v3.0.0
+v3.0.1
+v3.0.2
 ...
-v2.0.1234
+v3.0.1234
 ```
 
 This is why Buildchain maintains both exact and floating refs:
 
-- `v2.0.2` is immutable release evidence;
-- `v2.0` is the latest production release on the `2.0` line;
-- `v2` is the selected stable major-line entrypoint;
-- `v2.0.3-alpha.0` is immutable alpha evidence;
-- `v2.0-alpha` is the latest test channel for the `2.0` line.
-- `v3-alpha` is the latest test channel on the highest published alpha minor in major `2`.
+- `v3.0.2` is immutable release evidence;
+- `v3.0` is the latest production release on the `3.0` line;
+- `v3` is the selected stable major-line entrypoint;
+- `v3.0.3-alpha.0` is immutable alpha evidence;
+- `v3.0-alpha` is the latest test channel for the `3.0` line.
+- `v3-alpha` is the latest test channel on the highest published alpha minor in major `3`.
 
 A release does not mean "minor is complete." It means "this patch on this minor
 line is now production."
 
 GitHub repository rules must preserve that distinction. Exact tags such as
-`v2.0.2` and `v2.0.3-alpha.0` should be immutable. Floating channel tags such as
-`v2`, `v2.0`, `v2.0-alpha`, and `v3-alpha` must remain movable by the Buildchain promotion
+`v3.0.2` and `v3.0.3-alpha.0` should be immutable. Floating channel tags such as
+`v3`, `v3.0`, `v3.0-alpha`, and `v3-alpha` must remain movable by the Buildchain promotion
 token after governance checks and publish evidence pass. A tag ruleset that
 protects every `refs/tags/v*` ref is too broad because it also locks the
 floating channel tags that Buildchain is required to update. Prefer exact-tag
@@ -239,7 +239,7 @@ line-specific dist-tag `vX.Y-alpha` so they cannot roll the global `alpha`
 channel backward. Exact prerelease versions remain installable directly.
 
 This keeps the test channel self-describing. If a consumer checks out
-`v2.0-alpha` or `v3-alpha`, the manifests and exact alpha tag agree. The major
+`v3.0-alpha` or `v3-alpha`, the manifests and exact alpha tag agree. The major
 alpha ref removes routine consumer edits when Buildchain opens a newer minor,
 while exact tags and SHAs remain the reproducible audit choice.
 
@@ -248,7 +248,7 @@ while exact tags and SHAs remain the reproducible audit choice.
 Buildchain continuously consumes its own current major alpha through
 `.github/workflows/buildchain-alpha-self-dogfood.yml`. Both lanes call the
 released channel router at `build.yml@v3-alpha`. The auto lane must resolve
-`v3-alpha`; the explicit stable lane must resolve `v2`. Both execute the same
+`v3-alpha`; the explicit stable lane must resolve `v3`. Both execute the same
 declared install, build, and verify fixture, proving that a single consumer
 surface routes to distinct released runtimes without duplicating lifecycle
 configuration in the consumer.
@@ -285,7 +285,7 @@ reviewed alpha SHA and compatibility digest; it does not replace the stable
 consumer lock. A later alpha with only compatible additive drift continues,
 while a changed breaking digest fails until the new alpha contract is reviewed.
 
-The evidence job resolves `v3-alpha` and `v2` through the GitHub refs API,
+The evidence job resolves `v3-alpha` and `v3` through the GitHub refs API,
 compares those immutable SHAs with the reusable workflow outputs, verifies the
 `alpha` and `stable` classifications, and uploads a JSON evidence artifact.
 The canary runs after successful Buildchain ref promotion, on a daily fallback
@@ -618,7 +618,7 @@ jobs:
       checks: read
       statuses: read
     with:
-      target-branch: dev/v2/v2.6
+      target-branch: dev/v3/v3.0
       required-status-checks: check / check
       ready-label: ready
       block-labels: blocked,do-not-merge
@@ -720,7 +720,7 @@ when that is explicitly allowed by the caller.
 
 ## Lifecycle Configuration
 
-`buildchain.toml` is the v2 user configuration format. It lets a repository
+`.buildchain/buildchain.toml` is the v3 user configuration format. It lets a repository
 declare version-state files and lifecycle commands without pretending every
 project is a Node workspace. Supported version files include JSON, TOML, and
 regex-based files such as `CMakeLists.txt` or `conanfile.py`.
@@ -785,13 +785,13 @@ bypass actor.
 
 When the loop succeeds, maintainers and consumers can rely on these facts:
 
-- every production release has an exact tag such as `v2.0.2`;
-- every production minor line has a floating tag such as `v2.0`;
-- every selected stable major has a floating tag such as `v2`;
+- every production release has an exact tag such as `v3.0.2`;
+- every production minor line has a floating tag such as `v3.0`;
+- every selected stable major has a floating tag such as `v3`;
 - every next-major release is driven by a reviewed `release -> publish-gate/major` PR,
   not a hidden manual button;
-- every test channel has an exact alpha tag such as `v2.0.3-alpha.0`;
-- every alpha minor line has a floating tag such as `v2.0-alpha`;
+- every test channel has an exact alpha tag such as `v3.0.3-alpha.0`;
+- every alpha minor line has a floating tag such as `v3.0-alpha`;
 - every major with a published alpha has a cross-minor floating tag such as `v3-alpha`, owned by its highest published alpha minor;
 - version manifests match the tag visible from the same commit;
 - production releases are derived from the alpha tree that was tested;
@@ -887,8 +887,8 @@ Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:
 
 ```text
-v2.0.0
-v2.0.1-alpha.0
+v3.0.0
+v3.0.1-alpha.0
 ```
 
 ## Operational Reading Order

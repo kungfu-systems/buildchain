@@ -1,12 +1,8 @@
-import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import {
-  loadBuildchainConfig,
-  validateBuildchainConfig,
-} from "./buildchain-config.js";
+import { validateBuildchainConfig } from "./buildchain-config.js";
 import {
   createBuildchainContractLock,
   createBuildchainContractWorld,
@@ -22,6 +18,62 @@ import {
   PUBLICATION_SEALED_BUNDLE_CONTRACT,
   verifyPublicationSealedBundle,
 } from "./publication-sealed-bundle.js";
+import {
+  PAPER_PATHS,
+  commandResult,
+  gitResult,
+  gitValue,
+  normalizeRepository,
+  paperConfig,
+  parsePaperVersion,
+  readJson,
+  resolvePaperRepository,
+  sha256Text,
+  stableJson,
+} from "./paper-repository.js";
+import {
+  PAPER_AGENT_ENTRY_CONTRACT,
+  collectPaperAgentEntry,
+  paperAgentEntryFiles,
+} from "./paper-agent-entry.js";
+import {
+  managedPaperPackageJson,
+  scaffoldMainTex,
+  scaffoldMakefile,
+  scaffoldMap,
+  scaffoldPackageJson,
+  scaffoldReadme,
+} from "./paper-scaffold-content.js";
+
+export { PAPER_PATHS, resolvePaperRepository } from "./paper-repository.js";
+export {
+  PAPER_AGENT_ENTRY_CONTRACT,
+  PAPER_AGENT_ENTRY_SCHEMA_VERSION,
+  PAPER_AGENT_ENTRY_SECTION_END,
+  PAPER_AGENT_ENTRY_SECTION_START,
+  collectPaperAgentEntry,
+  createPaperAgentEntry,
+  mergePaperAgentEntryInstructions,
+  paperAgentEntryFiles,
+  paperAgentEntryInstructions,
+  resolvePaperBuildchainSha,
+} from "./paper-agent-entry.js";
+export {
+  PAPER_WORK_START_PLAN_CONTRACT,
+  PAPER_WORK_SUBMIT_PLAN_CONTRACT,
+  createPaperWorkStartPlan,
+  createPaperWorkSubmitPlan,
+  executePaperWorkStart,
+  executePaperWorkSubmitPush,
+} from "./paper-work.js";
+export {
+  PAPER_FLEET_AUDIT_CONTRACT,
+  PAPER_FLEET_UPDATE_PLAN_CONTRACT,
+  collectPaperFleetAudit,
+  discoverPaperFleet,
+  planPaperFleetUpdate,
+  writePaperFleetUpdate,
+} from "./paper-fleet.js";
 
 export const PAPER_SCAFFOLD_CONTRACT = "kungfu-buildchain-paper-scaffold";
 export const PAPER_MIGRATION_CONTRACT = "kungfu-buildchain-paper-migration";
@@ -50,27 +102,14 @@ export const PAPER_STATE_ORDER = Object.freeze([
   "production-visible",
 ]);
 
-export const PAPER_PATHS = Object.freeze({
-  config: ".buildchain/buildchain.toml",
-  versionPin: ".buildchain-version",
-  contractLock: ".buildchain/contract-lock.json",
-  buildWorkflow: ".github/workflows/build.yml",
-  releaseWorkflow: ".github/workflows/paper-release.yml",
-  reproducibilityReceipt:
-    ".buildchain/publication/reproducibility-receipt.json",
-  sealedBundle: ".buildchain/admitted/sealed-bundle.json",
-  admission: ".buildchain/admitted/publication-admission.json",
-  capability: ".buildchain/admitted/publication-capability.json",
-  npmBootstrap: ".buildchain/paper/npm-bootstrap.json",
-  npmTrust: ".buildchain/paper/npm-trust.json",
-  provisioningAuthority: ".buildchain/paper/provisioning-authority.json",
-  visibility: ".buildchain/paper/visibility.json",
-});
 const PAPER_SCAFFOLD_PATHS = Object.freeze([
   PAPER_PATHS.config,
+  PAPER_PATHS.agentEntry,
+  PAPER_PATHS.agentInstructions,
   PAPER_PATHS.contractLock,
   PAPER_PATHS.versionPin,
   PAPER_PATHS.buildWorkflow,
+  PAPER_PATHS.verifyWorkflow,
   PAPER_PATHS.releaseWorkflow,
   PAPER_PATHS.provisioningAuthority,
   "Makefile",
@@ -100,44 +139,12 @@ function toPosix(value) {
     .join("/");
 }
 
-function stableJson(value) {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableJson).join(",")}]`;
-  }
-  if (value && typeof value === "object") {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-function sha256Text(value) {
-  return `sha256:${crypto.createHash("sha256").update(String(value)).digest("hex")}`;
-}
-
 function sha256File(filePath) {
   return `sha256:${crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex")}`;
 }
 
 function jsonText(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
-}
-
-function readJson(filePath) {
-  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-    return { exists: false, value: undefined, error: "" };
-  }
-  try {
-    return {
-      exists: true,
-      value: JSON.parse(fs.readFileSync(filePath, "utf8")),
-      error: "",
-    };
-  } catch (error) {
-    return { exists: true, value: undefined, error: error.message };
-  }
 }
 
 function existingFileFact(cwd, relativePath) {
@@ -158,51 +165,6 @@ function normalizePackageName(value, label = "package name") {
     throw new Error(`${label} is invalid`);
   }
   return normalized;
-}
-
-function normalizeRepository(value) {
-  const normalized = String(value || "")
-    .trim()
-    .replace(/^git\+/, "")
-    .replace(/^git@github\.com:/, "")
-    .replace(/^ssh:\/\/git@github\.com\//, "")
-    .replace(/^https?:\/\/github\.com\//, "")
-    .replace(/\.git$/, "")
-    .replace(/^\/+|\/+$/g, "");
-  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(normalized)) {
-    return "";
-  }
-  return normalized;
-}
-
-function commandResult(
-  command,
-  args,
-  { cwd, env = process.env, timeout = 15000 } = {},
-) {
-  const result = spawnSync(command, args, {
-    cwd,
-    env,
-    encoding: "utf8",
-    timeout,
-    maxBuffer: 2 * 1024 * 1024,
-  });
-  return {
-    ok: result.status === 0,
-    status: result.status ?? 1,
-    stdout: String(result.stdout || "").trim(),
-    stderr: String(result.stderr || "").trim(),
-    error: result.error?.message || "",
-  };
-}
-
-function gitResult(cwd, args) {
-  return commandResult("git", args, { cwd });
-}
-
-function gitValue(cwd, args) {
-  const result = gitResult(cwd, args);
-  return result.ok ? result.stdout : "";
 }
 
 function buildchainPackageIdentity(buildchainRoot, explicitVersion = "") {
@@ -238,11 +200,30 @@ function runtimeGitSha(buildchainRoot, buildchainVersion = "") {
   return GIT_SHA_PATTERN.test(gitHead) ? gitHead : "";
 }
 
-function runtimeAcceptedAt(buildchainRoot, sha) {
+function runtimeAcceptedAt(buildchainRoot, sha, buildchainVersion = "") {
   if (!sha) return "1970-01-01T00:00:00.000Z";
   const value = gitValue(buildchainRoot, ["show", "-s", "--format=%cI", sha]);
-  if (!value) return "1970-01-01T00:00:00.000Z";
-  const parsed = new Date(value);
+  let acceptedAt = value;
+  if (!acceptedAt && buildchainVersion) {
+    const identity = buildchainPackageIdentity(
+      buildchainRoot,
+      buildchainVersion,
+    );
+    const observed = commandResult(
+      "npm",
+      [
+        "view",
+        `${identity.name}@${identity.version}`,
+        "time",
+        "--json",
+        `--registry=${NPM_REGISTRY}`,
+      ],
+      { cwd: buildchainRoot },
+    );
+    const published = observed.ok ? safeParseJson(observed.stdout) : null;
+    acceptedAt = String(published?.[identity.version] || "");
+  }
+  const parsed = new Date(acceptedAt);
   return Number.isNaN(parsed.valueOf())
     ? "1970-01-01T00:00:00.000Z"
     : parsed.toISOString();
@@ -272,18 +253,6 @@ function runtimeLicenseText(buildchainRoot) {
 
 function tomlString(value) {
   return JSON.stringify(String(value || ""));
-}
-
-function texEscape(value) {
-  return String(value || "")
-    .replaceAll("\\", "\\textbackslash{}")
-    .replaceAll("&", "\\&")
-    .replaceAll("%", "\\%")
-    .replaceAll("$", "\\$")
-    .replaceAll("#", "\\#")
-    .replaceAll("_", "\\_")
-    .replaceAll("{", "\\{")
-    .replaceAll("}", "\\}");
 }
 
 function joinUrl(base, suffix = "") {
@@ -381,6 +350,31 @@ jobs:
 `;
 }
 
+function scaffoldVerifyWorkflow(buildchainSha) {
+  return `name: Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "dev/v*/v*"
+      - "alpha/v*/v*"
+      - "release/v*/v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: kungfu-systems/buildchain/.github/workflows/check.yml@${buildchainSha}
+    with:
+      buildchain-ref: ${buildchainSha}
+      require-version-state: true
+      upload-artifacts: true
+`;
+}
+
 function scaffoldReleaseWorkflow(
   buildchainSha,
   { artifactPaths = "_build/main.pdf", releasePassportProductName = "" } = {},
@@ -409,6 +403,7 @@ jobs:
       contents: read
       id-token: write
       issues: write
+      pull-requests: write
     with:
       buildchain-ref: ${buildchainSha}
       buildchain-contract-lock-path: .buildchain/contract-lock.json
@@ -417,6 +412,7 @@ jobs:
       verify-command: make check
       artifact-paths: ${JSON.stringify(artifactPaths)}
 ${passportInput}    secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: \${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
       BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
       BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
       BUILDCHAIN_GENERATED_WRITE_TOKEN: \${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
@@ -458,7 +454,10 @@ export function createPaperProvisioningAuthority({
   buildchainSha,
   contractLock,
   buildWorkflow,
+  verifyWorkflow,
   releaseWorkflow,
+  agentEntry,
+  agentInstructions,
   environment = "",
 }) {
   const policy = paperProvisioningPolicy();
@@ -484,12 +483,25 @@ export function createPaperProvisioningAuthority({
         reusablePath: ".github/workflows/publication-artifact.yml",
         reusableRef: buildchainSha,
       },
+      verify: {
+        path: PAPER_PATHS.verifyWorkflow,
+        sourceDigest: sha256Text(verifyWorkflow),
+        reusablePath: ".github/workflows/check.yml",
+        reusableRef: buildchainSha,
+      },
       release: {
         path: PAPER_PATHS.releaseWorkflow,
         sourceDigest: sha256Text(releaseWorkflow),
         reusablePath: ".github/workflows/paper-release-sealed.yml",
         reusableRef: buildchainSha,
       },
+    },
+    agentEntry: {
+      contract: PAPER_AGENT_ENTRY_CONTRACT,
+      policyPath: PAPER_PATHS.agentEntry,
+      policyDigest: sha256Text(agentEntry),
+      instructionsPath: PAPER_PATHS.agentInstructions,
+      instructionsDigest: sha256Text(agentInstructions),
     },
     admission: {
       contractLockPath: PAPER_PATHS.contractLock,
@@ -514,107 +526,6 @@ export function createPaperProvisioningAuthority({
   };
 }
 
-function scaffoldMakefile() {
-  const image = `${DEFAULT_TOOLCHAIN_IMAGE}@${DEFAULT_TOOLCHAIN_DIGEST}`;
-  return `.PHONY: check pdf clean
-
-BUILDER_IMAGE := ${image}
-SOURCE_DATE_EPOCH ?= 0
-
-check:
-\t@test -f paper/main.tex
-\t@test -f paper/references.bib
-\t@git diff --check
-
-pdf:
-\t@mkdir -p _build
-\tdocker run --rm --network=none \\
-\t\t-e SOURCE_DATE_EPOCH="$(SOURCE_DATE_EPOCH)" \\
-\t\t-e TZ=UTC -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e HOME=/tmp \\
-\t\t-v "$(CURDIR):/workspace" -w /workspace \\
-\t\t"$(BUILDER_IMAGE)" bash -lc '${DEFAULT_TOOLCHAIN_COMMAND}'
-
-clean:
-\trm -rf _build
-`;
-}
-
-function scaffoldPackageJson({ name, packageName, repository }) {
-  return jsonText({
-    name: packageName,
-    private: true,
-    description: `${name} publication source repository.`,
-    repository: {
-      type: "git",
-      url: `git+https://github.com/${repository}.git`,
-    },
-    license: "Apache-2.0",
-  });
-}
-
-function scaffoldReadme({ title, packageName }) {
-  return `# ${title}
-
-This repository is a Buildchain-governed publication artifact source.
-
-## Local workflow
-
-\`\`\`sh
-buildchain paper preflight --json
-buildchain paper build
-buildchain paper status --json
-\`\`\`
-
-The public package identity is \`${packageName}\`. Buildchain owns reproducible
-artifact generation, sealed publication, npm Trusted Publishing, and recovery;
-this repository owns the paper source and review history.
-
-See [docs/MAP.md](docs/MAP.md) for the repository map.
-`;
-}
-
-function scaffoldMap() {
-  return `# Repository Map
-
-- \`paper/main.tex\`: paper source entrypoint.
-- \`paper/references.bib\`: bibliography source.
-- \`.buildchain/buildchain.toml\`: publication identity, toolchain, package, and lifecycle contract.
-- \`.buildchain/contract-lock.json\`: accepted Buildchain runtime contract.
-- \`.github/workflows/build.yml\`: thin read-only build and reproducibility caller.
-- \`.github/workflows/paper-release.yml\`: thin protected sealed-release caller.
-
-The repository does not own npm transaction logic, publication authority,
-release-state recovery, or site deployment mechanics. Those remain Buildchain,
-npm/GitHub, and downstream site responsibilities respectively.
-`;
-}
-
-function scaffoldMainTex(title) {
-  return `\\documentclass[11pt]{article}
-\\usepackage[T1]{fontenc}
-\\usepackage{lmodern}
-\\usepackage{hyperref}
-
-\\title{${texEscape(title)}}
-\\author{}
-\\date{}
-
-\\begin{document}
-\\maketitle
-
-\\begin{abstract}
-Replace this paragraph with the paper abstract.
-\\end{abstract}
-
-\\section{Introduction}
-Replace this section with the reviewed paper content.
-
-\\bibliographystyle{plain}
-\\bibliography{paper/references}
-\\end{document}
-`;
-}
-
 function scaffoldFiles({
   buildchainRoot,
   buildchainVersion,
@@ -634,16 +545,30 @@ function scaffoldFiles({
   ).value;
   const acceptedAt =
     existingLock?.buildchain?.acceptedAt ||
-    runtimeAcceptedAt(buildchainRoot, buildchainSha);
+    runtimeAcceptedAt(buildchainRoot, buildchainSha, buildchainVersion);
   const contractLock = createBuildchainContractLock({
-    buildchainRef: buildchainSha,
+    buildchainRef,
     resolvedSha: buildchainSha,
     contractWorld,
     acceptedAt,
   });
   const contractLockText = jsonText(contractLock);
-  const buildWorkflow = scaffoldBuildWorkflow(buildchainSha);
-  const releaseWorkflow = scaffoldReleaseWorkflow(buildchainSha);
+  const buildWorkflow = scaffoldBuildWorkflow(buildchainSha, {
+    artifactName: name,
+  });
+  const releaseWorkflow = scaffoldReleaseWorkflow(buildchainSha, {
+    artifactPaths: "_build/main.pdf",
+    releasePassportProductName: title,
+  });
+  const verifyWorkflow = scaffoldVerifyWorkflow(buildchainSha);
+  const agentEntry = paperAgentEntryFiles({
+    cwd,
+    buildchainVersion,
+    buildchainSha,
+    developmentRef: `dev/v${parsePaperVersion(version).major}/v${
+      parsePaperVersion(version).major
+    }.${parsePaperVersion(version).minor}`,
+  });
   const provisioningAuthority = createPaperProvisioningAuthority({
     repository,
     packageName,
@@ -651,7 +576,10 @@ function scaffoldFiles({
     buildchainSha,
     contractLock: contractLockText,
     buildWorkflow,
+    verifyWorkflow,
     releaseWorkflow,
+    agentEntry: agentEntry.get(PAPER_PATHS.agentEntry),
+    agentInstructions: agentEntry.get(PAPER_PATHS.agentInstructions),
   });
   const licenseText = runtimeLicenseText(buildchainRoot);
   return new Map([
@@ -668,10 +596,27 @@ function scaffoldFiles({
     [PAPER_PATHS.contractLock, contractLockText],
     [PAPER_PATHS.versionPin, `${buildchainVersion}\n`],
     [PAPER_PATHS.buildWorkflow, buildWorkflow],
+    [PAPER_PATHS.verifyWorkflow, verifyWorkflow],
     [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
-    ["Makefile", scaffoldMakefile()],
-    ["package.json", scaffoldPackageJson({ name, packageName, repository })],
+    ...agentEntry,
+    [
+      "Makefile",
+      scaffoldMakefile({
+        image: DEFAULT_TOOLCHAIN_IMAGE,
+        digest: DEFAULT_TOOLCHAIN_DIGEST,
+        command: DEFAULT_TOOLCHAIN_COMMAND,
+      }),
+    ],
+    [
+      "package.json",
+      scaffoldPackageJson({
+        name,
+        packageName,
+        repository,
+        buildchainVersion,
+      }),
+    ],
     ["README.md", scaffoldReadme({ title, packageName })],
     ["docs/MAP.md", scaffoldMap()],
     ["paper/main.tex", scaffoldMainTex(title)],
@@ -688,7 +633,7 @@ export function planPaperScaffold({
   cwd = process.cwd(),
   buildchainRoot = process.cwd(),
   buildchainVersion = "",
-  buildchainRef = "v2",
+  buildchainRef = "v3",
   buildchainSha = "",
   name = path.basename(path.resolve(cwd)),
   title = "",
@@ -926,13 +871,17 @@ function migrationFiles({
     path.resolve(cwd, PAPER_PATHS.contractLock),
   ).value;
   const contractLock = createBuildchainContractLock({
-    buildchainRef: runtimeSha,
+    buildchainRef: "v3",
     resolvedSha: runtimeSha,
     contractWorld: runtimeContractWorld(buildchainRoot),
     acceptedAt:
       existingLock?.buildchain?.resolvedSha === runtimeSha
         ? existingLock.buildchain.acceptedAt
-        : runtimeAcceptedAt(buildchainRoot, runtimeSha),
+        : runtimeAcceptedAt(
+            buildchainRoot,
+            runtimeSha,
+            runtimeIdentity.version,
+          ),
   });
   const contractLockText = jsonText(contractLock);
   const buildWorkflow = scaffoldBuildWorkflow(runtimeSha, {
@@ -942,6 +891,12 @@ function migrationFiles({
     artifactPaths: config.publication.artifactPaths.join(","),
     releasePassportProductName: config.publication.title,
   });
+  const verifyWorkflow = scaffoldVerifyWorkflow(runtimeSha);
+  const agentEntry = paperAgentEntryFiles({
+    cwd,
+    buildchainVersion: runtimeIdentity.version,
+    buildchainSha: runtimeSha,
+  });
   const provisioningAuthority = createPaperProvisioningAuthority({
     repository,
     packageName,
@@ -949,15 +904,30 @@ function migrationFiles({
     buildchainSha: runtimeSha,
     contractLock: contractLockText,
     buildWorkflow,
+    verifyWorkflow,
     releaseWorkflow,
+    agentEntry: agentEntry.get(PAPER_PATHS.agentEntry),
+    agentInstructions: agentEntry.get(PAPER_PATHS.agentInstructions),
   });
-  return new Map([
+  const currentPackage = readJson(path.resolve(cwd, "package.json"));
+  if (!currentPackage.exists || currentPackage.error || !currentPackage.value) {
+    throw new Error("paper migration requires a valid package.json");
+  }
+  const packageJson = managedPaperPackageJson(
+    currentPackage.value,
+    runtimeIdentity.version,
+  );
+  const files = new Map([
     [PAPER_PATHS.contractLock, contractLockText],
     [PAPER_PATHS.versionPin, `${runtimeIdentity.version}\n`],
     [PAPER_PATHS.buildWorkflow, buildWorkflow],
+    [PAPER_PATHS.verifyWorkflow, verifyWorkflow],
     [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
+    ...agentEntry,
+    ["package.json", jsonText(packageJson)],
   ]);
+  return files;
 }
 
 export function planPaperMigration({
@@ -1061,6 +1031,12 @@ export function planPaperMigration({
               description:
                 "Write the reviewed Buildchain-owned control files without changing paper content or publication configuration.",
             },
+            {
+              id: "refresh-pnpm-lock",
+              command: "pnpm install --lockfile-only",
+              description:
+                "Bind the exact Buildchain v3 dependency into pnpm-lock.yaml after the reviewed package update.",
+            },
           ],
   };
   Object.defineProperty(result, "_plannedFiles", {
@@ -1129,26 +1105,6 @@ export function writePaperMigration(plan) {
       },
     ],
   };
-}
-
-function paperConfig(cwd) {
-  const loaded = loadBuildchainConfig(cwd);
-  if (!loaded) {
-    return {
-      loaded: undefined,
-      error: `${PAPER_PATHS.config} is missing`,
-    };
-  }
-  if (loaded.config.project?.type !== "publication-artifact") {
-    return {
-      loaded,
-      error: 'project.type must be "publication-artifact"',
-    };
-  }
-  if (!loaded.config.publication) {
-    return { loaded, error: "[publication] is missing" };
-  }
-  return { loaded, error: "" };
 }
 
 function state(id, status, reason, evidence = []) {
@@ -1589,20 +1545,6 @@ export function collectPaperStatus({ cwd = process.cwd() } = {}) {
   };
 }
 
-export function resolvePaperRepository(cwd = process.cwd()) {
-  const packagePath = path.resolve(cwd, "package.json");
-  const sourcePackage = readJson(packagePath).value;
-  const configured =
-    typeof sourcePackage?.repository === "string"
-      ? sourcePackage.repository
-      : sourcePackage?.repository?.url;
-  const fromPackage = normalizeRepository(configured);
-  if (fromPackage) return fromPackage;
-  return normalizeRepository(
-    gitValue(cwd, ["config", "--get", "remote.origin.url"]),
-  );
-}
-
 function validatePaperProvisioningAuthority(cwd) {
   const authorityPath = path.resolve(cwd, PAPER_PATHS.provisioningAuthority);
   const source = readJson(authorityPath);
@@ -1679,7 +1621,27 @@ function validatePaperProvisioningAuthority(cwd) {
       "paper release policy permits avoidable bookkeeping pull requests",
     );
   }
-  for (const workflow of [value.workflows?.build, value.workflows?.release]) {
+  if (value.agentEntry?.contract !== PAPER_AGENT_ENTRY_CONTRACT) {
+    errors.push("paper agent-entry authority contract mismatch");
+  }
+  for (const [entryPath, expectedDigest] of [
+    [value.agentEntry?.policyPath, value.agentEntry?.policyDigest],
+    [value.agentEntry?.instructionsPath, value.agentEntry?.instructionsDigest],
+  ]) {
+    if (!entryPath || !SHA256_PATTERN.test(String(expectedDigest || ""))) {
+      errors.push("paper agent-entry authority is incomplete");
+      continue;
+    }
+    const absolute = path.resolve(cwd, entryPath);
+    if (!fs.existsSync(absolute) || sha256File(absolute) !== expectedDigest) {
+      errors.push(`paper agent-entry source digest mismatch: ${entryPath}`);
+    }
+  }
+  for (const workflow of [
+    value.workflows?.build,
+    value.workflows?.verify,
+    value.workflows?.release,
+  ]) {
     if (!workflow?.path || !workflow?.sourceDigest) {
       errors.push("paper workflow authority is incomplete");
       continue;
@@ -1699,7 +1661,10 @@ function validatePaperProvisioningAuthority(cwd) {
         `paper workflow reusable source is not exact: ${workflow.path}`,
       );
     }
-    if (!text.includes(`buildchain-ref: ${value.runtime.resolvedSha}`)) {
+    if (
+      workflow.reusablePath !== ".github/workflows/check.yml" &&
+      !text.includes(`buildchain-ref: ${value.runtime.resolvedSha}`)
+    ) {
       errors.push(
         `paper workflow runtime input is not exact: ${workflow.path}`,
       );
@@ -2082,10 +2047,11 @@ export function collectPaperPreflight({
   cwd = process.cwd(),
   buildchainRoot = process.cwd(),
   buildchainVersion = "",
-  buildchainRef = "v2",
+  buildchainRef = "v3",
   buildchainSha = "",
   registry = NPM_REGISTRY,
   offline = false,
+  agentEntryMode = "contract",
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const status = collectPaperStatus({ cwd: resolvedCwd });
@@ -2105,6 +2071,11 @@ export function collectPaperPreflight({
     buildchainVersion,
     buildchainRef: provisioning.value?.runtime?.ref || buildchainRef,
     buildchainSha,
+  });
+  const agentEntry = collectPaperAgentEntry({
+    cwd: resolvedCwd,
+    buildchainSha: runtime.resolvedSha,
+    mode: agentEntryMode,
   });
   const lockPath = path.resolve(resolvedCwd, PAPER_PATHS.contractLock);
   let lockEvaluation = {
@@ -2212,6 +2183,11 @@ export function collectPaperPreflight({
     configResult.loaded?.config?.publication,
   );
   const checks = [
+    ...agentEntry.checks.map((entry) => ({
+      ...entry,
+      blocking: true,
+      scope: "local",
+    })),
     {
       id: "provisioning.authority",
       status: provisioning.valid ? "pass" : "fail",
@@ -2478,6 +2454,7 @@ export function collectPaperPreflight({
       policyDigest: provisioning.value?.policy?.policyDigest || "",
       errors: provisioning.errors,
     },
+    agentEntry,
     repositoryPermissions,
     repositoryActions,
     generatedWriteAuthority,
@@ -2522,23 +2499,6 @@ export function createPaperBuildPlan({
           "Run two independent clean builds and promote only byte-identical qualifying outputs.",
       },
     ],
-  };
-}
-
-function parsePaperVersion(version) {
-  const normalized = String(version || "")
-    .trim()
-    .replace(/^v/, "");
-  const match = normalized.match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/);
-  if (!match) {
-    throw new Error("publication.version must be semver before planning Alpha");
-  }
-  return {
-    version: normalized,
-    major: Number(match[1]),
-    minor: Number(match[2]),
-    patch: Number(match[3]),
-    prerelease: match[4] || "",
   };
 }
 

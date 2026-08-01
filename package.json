@@ -108,7 +108,8 @@
   },
   "packageManager": "pnpm@11.7.0",
   "scripts": {
-    "check": "node scripts/check-internal-architecture.mjs && node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && node scripts/check-action-bundles.mjs",
+    "check": "pnpm run check:static && node scripts/check-maintainability.mjs && node scripts/check-internal-architecture.mjs && node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && node scripts/check-action-bundles.mjs",
+    "check:static": "node scripts/check-javascript-syntax.mjs && prettier --check architecture/*.json bin/internal/command-registry.mjs scripts/authorize-promotion-runtime-override.cjs scripts/check-javascript-syntax.mjs scripts/check-maintainability.mjs scripts/maintainability-metrics.mjs tests/authorize-promotion-runtime-override.test.mjs tests/command-registry.test.mjs tests/maintainability.test.mjs tests/promotion-responsibilities.test.mjs",
     "check:workflows": "bash scripts/check-workflows.sh",
     "generate:site": "node scripts/generate-site-bundle.mjs",
     "check:site": "node scripts/generate-site-bundle.mjs --check",
@@ -119,11 +120,9 @@
     "pack:check": "npm pack --dry-run --json --registry=https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
     "prettier": "^3.9.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.0",
-    "vitest": "^4.1.9"
+    "typescript": "^5.9.0"
   },
   "dependencies": {
     "@kungfu-tech/kfd": "1.0.0-alpha.47",

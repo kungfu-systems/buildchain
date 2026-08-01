@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 107,
+    "cliCommandCount": 112,
     "workflowCount": 57,
     "actionCount": 6,
     "sitePageCount": 60,
-    "docCommandRefCount": 311,
+    "docCommandRefCount": 316,
     "failureCount": 0
   },
   "enumerated": {
@@ -373,6 +373,11 @@
         "usage": "buildchain paper"
       },
       {
+        "id": "paper-agent",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper agent verify [--cwd <dir>] [--offline] [--json]"
+      },
+      {
         "id": "paper-alpha",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]"
@@ -386,6 +391,16 @@
         "id": "paper-build",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper build [--cwd <dir>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper fleet audit [--root <dir>] [--offline] [--json]"
+      },
+      {
+        "id": "paper-fleet-update",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper fleet update [--root <dir>] [--write] [--json]"
       },
       {
         "id": "paper-migrate",
@@ -411,6 +426,16 @@
         "id": "paper-status",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper status [--cwd <dir>] [--json]"
+      },
+      {
+        "id": "paper-work-start",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper work start <topic> [--cwd <dir>] [--branch <branch>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-work-submit",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper work submit [--cwd <dir>] [--title <title>] [--body <body>] [--execute] [--json]"
       },
       {
         "id": "portable-cache",
@@ -681,6 +706,7 @@
           "publish-registry",
           "publish-source-ref",
           "release-candidate",
+          "release-candidate-family-evidence-json",
           "requested-parallelism",
           "require-build",
           "require-install",
@@ -700,7 +726,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 81,
+        "inputCount": 82,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -950,11 +976,17 @@
           "publish-transaction-override",
           "release-activation-command",
           "release-activation-receipt-set-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-evidence-path",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -977,7 +1009,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 88,
+        "inputCount": 94,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1491,6 +1523,7 @@
           "publish-registry",
           "publish-source-ref",
           "release-candidate",
+          "release-candidate-family-evidence-json",
           "requested-parallelism",
           "require-build",
           "require-install",
@@ -1510,7 +1543,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 84,
+        "inputCount": 85,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1897,9 +1930,10 @@
           "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
           "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
           "BUILDCHAIN_GENERATED_WRITE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN"
+          "BUILDCHAIN_PROMOTION_TOKEN",
+          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
-        "secretCount": 4,
+        "secretCount": 5,
         "outputs": [
           "github-release-url",
           "package-name",
@@ -2188,11 +2222,17 @@
           "publish-transaction-override",
           "release-activation-command",
           "release-activation-receipt-set-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-evidence-path",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -2215,7 +2255,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 80,
+        "inputCount": 86,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2453,6 +2493,7 @@
         "id": "macos-credential-island",
         "path": "actions/macos-credential-island/action.yml",
         "inputs": [
+          "artifact-id",
           "artifact-name",
           "artifact-relative-output",
           "artifact-stem",
@@ -2474,7 +2515,7 @@
           "source-sha",
           "source-tree-sha"
         ],
-        "inputCount": 20
+        "inputCount": 21
       },
       {
         "id": "promote-buildchain-ref",
@@ -2517,12 +2558,19 @@
           "publish-transaction-override",
           "reconciliation-workspace",
           "release-candidate-build-summary-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
           "release-candidate-passport-path",
           "release-candidate-version",
           "release-material-sha",
           "release-passport",
+          "release-passport-attachment-command",
           "release-passport-build-summary-path",
           "release-passport-buildchain-self-kfd",
+          "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
           "release-passport-github-artifact-attestation-policy-jsons",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
@@ -2550,7 +2598,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 69
+        "inputCount": 76
       },
       {
         "id": "report-buildchain-issue",
@@ -3965,6 +4013,11 @@
         "command": "buildchain npm dry-run"
       },
       {
+        "id": "paper-agent",
+        "path": "docs/cli.md",
+        "command": "buildchain paper agent verify"
+      },
+      {
         "id": "paper-alpha",
         "path": "docs/cli.md",
         "command": "buildchain paper alpha --json"
@@ -3990,6 +4043,26 @@
         "command": "buildchain paper build --json"
       },
       {
+        "id": "paper-fleet-audit",
+        "path": "docs/cli.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/cli.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
         "id": "paper-migrate",
         "path": "docs/cli.md",
         "command": "buildchain paper migrate --json"
@@ -4002,11 +4075,6 @@
       {
         "id": "paper-preflight",
         "path": "docs/publication-artifacts.md",
-        "command": "buildchain paper preflight --offline"
-      },
-      {
-        "id": "paper-preflight",
-        "path": "README.md",
         "command": "buildchain paper preflight --offline"
       },
       {
@@ -4035,9 +4103,14 @@
         "command": "buildchain paper status --json"
       },
       {
-        "id": "paper-status",
-        "path": "README.md",
-        "command": "buildchain paper status"
+        "id": "paper-work-start",
+        "path": "docs/cli.md",
+        "command": "buildchain paper work start"
+      },
+      {
+        "id": "paper-work-submit",
+        "path": "docs/cli.md",
+        "command": "buildchain paper work submit"
       },
       {
         "id": "paper",
@@ -4445,9 +4518,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "d43ea82f2f13898b70f127a0aaca112d27bdeb306490e9a39dd349864f7bd78c",
-    "pageRegistryDigest": "c89f4f565281deafcc9cf190365c89233e125f883dba93fca64de22230a604e9"
+    "cliRegistryDigest": "5a9eac28d00c78601d49226f8ba63896a0a22c51f6e5eff97f4cea5a572c355d",
+    "workflowRegistryDigest": "9500a8099e10c5328b6e051445dba3c18cf0eb31eec3655b6554b111417f9abd",
+    "pageRegistryDigest": "017ecd04f8dfecb9afc6e0df434eb606ae105db9694e8b6c943699217367ebf1"
   },
   "comparison": {
     "missingCliRegistry": [],
@@ -4460,8 +4533,26 @@
     "mode": "closed-world-enumerable",
     "scope": "Buildchain CLI usage/dispatch, reusable workflow inputs, action inputs, site pages, and documentation command references",
     "residualRisk": [
-      "Shell commands delegated through helper scripts are only counted when exposed through bin/buildchain.mjs usage or docs.",
-      "YAML parsing is limited to first-class action/workflow inputs, not arbitrary step environment variables."
+      {
+        "id": "public-surface-helper-command-enumeration",
+        "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+        "riskType": "natural-language-semantic-risk",
+        "trustImpact": "downgrade-warning",
+        "machineProvability": "not-machine-verifiable",
+        "agentAction": "semantic-review-required",
+        "owner": "Buildchain maintainers",
+        "reason": "Shell commands delegated through helper scripts are counted only when exposed through bin/buildchain.mjs usage or documentation."
+      },
+      {
+        "id": "public-surface-yaml-enumeration",
+        "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+        "riskType": "natural-language-semantic-risk",
+        "trustImpact": "downgrade-warning",
+        "machineProvability": "not-machine-verifiable",
+        "agentAction": "semantic-review-required",
+        "owner": "Buildchain maintainers",
+        "reason": "YAML enumeration covers first-class action and workflow inputs, not arbitrary step environment variables."
+      }
     ]
   }
 }

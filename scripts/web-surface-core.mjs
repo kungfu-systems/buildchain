@@ -434,22 +434,33 @@ function publicationImmutablePolicy({ artifactRoot, binding }) {
     throw new Error(`invalid publication archive manifest ${toPosix(path.relative(artifactRoot, manifestFile))}: ${error.message}`);
   }
   if (manifest?.archivePolicy?.contract !== PUBLICATION_ARCHIVE_POLICY_CONTRACT) return null;
-  const declaredPrefixes = [...new Set((manifest.publications || []).flatMap((publication) =>
-    (publication.versions || []).map((version) => immutablePrefix(
-      version.immutablePath,
-      `publication ${publication.id || "unknown"} immutablePath`,
-    )),
-  ))].sort();
+  const declaredVersions = (manifest.publications || []).flatMap((publication) =>
+    (publication.versions || []).map((version) => ({
+      prefix: immutablePrefix(
+        version.immutablePath,
+        `publication ${publication.id || "unknown"} immutablePath`,
+      ),
+      materialized: Object.hasOwn(version, "immutableIndex"),
+    })),
+  );
+  const declaredPrefixes = [...new Set(declaredVersions.map((entry) => entry.prefix))].sort();
   if (declaredPrefixes.length === 0) {
     throw new Error("publication archive policy must declare at least one immutable version prefix");
   }
-  for (const prefix of declaredPrefixes) {
+  const hasMaterializationEnvelope = declaredVersions.some((entry) => entry.materialized);
+  const materializedPrefixes = [...new Set(
+    (hasMaterializationEnvelope
+      ? declaredVersions.filter((entry) => entry.materialized)
+      : declaredVersions
+    ).map((entry) => entry.prefix),
+  )].sort();
+  for (const prefix of materializedPrefixes) {
     if (!fs.existsSync(path.join(surfaceRoot, prefix))) {
-      throw new Error(`declared immutable publication prefix does not exist in artifact: ${prefix}`);
+      throw new Error(`materialized immutable publication prefix does not exist in artifact: ${prefix}`);
     }
   }
   const preservedRoots = declaredPrefixes;
-  const uploadRoots = binding.publicationFastPath?.immutablePrefixes || preservedRoots;
+  const uploadRoots = binding.publicationFastPath?.immutablePrefixes || materializedPrefixes;
   if (binding.publicationFastPath) {
     for (const prefix of uploadRoots) {
       if (!declaredPrefixes.includes(prefix)) {
@@ -472,6 +483,7 @@ function publicationImmutablePolicy({ artifactRoot, binding }) {
     manifestPath: toPosix(path.relative(artifactRoot, manifestFile)),
     preservedRoots,
     declaredPrefixes,
+    materializedPrefixes,
     uploadRoots,
     files,
     fastPath: binding.publicationFastPath || undefined,
@@ -1741,11 +1753,6 @@ function htmlLikeResponse(response, url = "") {
   return String(contentType).toLowerCase().includes("text/html") || /\/$|\.html(?:$|[?#])/.test(String(url || ""));
 }
 
-const managedNetworkRequiredEvidence = [
-  "sync-static-artifact",
-  "write-deployment-manifest",
-];
-
 function operationEvidenceStatus(operation, { plannedEvidence = false } = {}) {
   if (plannedEvidence && operation.status === undefined) {
     return true;
@@ -1754,6 +1761,12 @@ function operationEvidenceStatus(operation, { plannedEvidence = false } = {}) {
 }
 
 function managedNetworkHealthEvidence({ target, result, plan }) {
+  const requiredActions = [
+    target.publicationFastPath
+      ? "sync-publication-fast-path"
+      : "sync-static-artifact",
+    "write-deployment-manifest",
+  ];
   const operationSource = Array.isArray(result?.operations) && result.operations.length > 0
     ? "apply-result"
     : "deploy-plan";
@@ -1766,7 +1779,7 @@ function managedNetworkHealthEvidence({ target, result, plan }) {
       .filter((operation) => operationEvidenceStatus(operation, { plannedEvidence: operationSource === "deploy-plan" }))
       .map((operation) => operation.action),
   );
-  const missingActions = managedNetworkRequiredEvidence.filter((action) => !presentActions.has(action));
+  const missingActions = requiredActions.filter((action) => !presentActions.has(action));
   const missingFields = [];
   if (!target.manifestKey) missingFields.push("manifestKey");
   if (!target.bucket) missingFields.push("bucket");
@@ -1774,7 +1787,7 @@ function managedNetworkHealthEvidence({ target, result, plan }) {
   return {
     source: operationSource,
     actions: [...presentActions].sort(),
-    requiredActions: managedNetworkRequiredEvidence,
+    requiredActions,
     missingActions,
     missingFields,
     status: missingActions.length === 0 && missingFields.length === 0 ? "pass" : "fail",
@@ -1954,6 +1967,7 @@ export async function checkWebSurfaceHealth({
           manifestKey: binding.manifestKey || "",
           bucket: binding.bucket || "",
           objectPrefix: binding.objectPrefix || "",
+          publicationFastPath: binding.publicationFastPath || null,
         }));
       })
     : Object.entries(urls).map(([surface, url]) => ({

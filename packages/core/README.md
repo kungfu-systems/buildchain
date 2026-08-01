@@ -28,8 +28,9 @@ Current shared surfaces:
   `@kungfu-tech/buildchain/publication-reproducibility`.
 - build-once publication bundle manifests and exact-byte verification through
   `@kungfu-tech/buildchain/publication-sealed-bundle`.
-- governed paper scaffold, preflight, status, npm bootstrap, build, Alpha, and
-  resume plans through `@kungfu-tech/buildchain/paper`.
+- governed Paper work-branch start/submit, fleet audit/update, scaffold,
+  preflight, status, npm bootstrap, build, Alpha, and resume plans through
+  `@kungfu-tech/buildchain/paper`.
 
 ## Toolkit Imports
 

@@ -244,7 +244,7 @@ burst_profile=us
 burst_region=us-east-1
 burst_stack=kungfu-buildchain-linux-burst-poc
 burst_project=kungfu-buildchain-linux-burst-poc
-burst_connection_name=kungfu-buildchain-linux-burst-poc
+burst_connection_name=kungfu-linux-burst-poc
 burst_change_set=phase1-linux-codebuild-poc
 
 aws --profile "$burst_profile" --region "$burst_region" \
@@ -258,6 +258,10 @@ aws --profile "$burst_profile" --region "$burst_region" \
 The returned connection is `PENDING` until an operator completes the GitHub App
 handshake in AWS. Read back `ConnectionStatus=AVAILABLE` before creating the
 change set. Do not put an OAuth token or GitHub token in the shell:
+
+AWS CodeConnections connection names are limited to 32 characters, so keep the
+shorter connection name even when the stack and project use the longer
+Buildchain-specific name.
 
 ```bash
 burst_connection_arn=REPLACE_WITH_AVAILABLE_CONNECTION_ARN
