@@ -79,7 +79,7 @@ on:
         required: false
         type: string
       agent-work-context-json:
-        description: "Optional exact Family State v2, WorkRef, and authority context; when present emits a resumable propagation work unit"
+        description: "Optional exact typed Family State, WorkRef, and authority context; when present emits a resumable propagation work unit"
         default: ""
         required: false
         type: string

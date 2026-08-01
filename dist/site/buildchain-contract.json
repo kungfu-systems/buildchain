@@ -3475,7 +3475,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd",
-      "auditDigest": "sha256:467fed04d74cc3c6f73899752b47a1cfd91755b492a1d9d4c239589f69d89f92"
+      "auditDigest": "sha256:ef845b25978cd63c0fc6cbc83271e30b245f9d8605c2c25ae7e87c13a35b1302"
     },
     {
       "contractVersion": 1,
@@ -3533,5 +3533,5 @@
     }
   ],
   "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691",
-  "contractDigest": "sha256:afa009e2f1c306e7f234b0df5af4bbf8cd287118f2b2b98a1b7bc4eea1e95a12"
+  "contractDigest": "sha256:00c37f8a663387831ba4d066056d0b21d4f3c5f3ea5b0cf84456af332cf8d87e"
 }
