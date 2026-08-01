@@ -113,6 +113,7 @@ const PAPER_SCAFFOLD_PATHS = Object.freeze([
   PAPER_PATHS.buildWorkflow,
   PAPER_PATHS.verifyWorkflow,
   PAPER_PATHS.releaseWorkflow,
+  PAPER_PATHS.pnpmWorkspace,
   PAPER_PATHS.provisioningAuthority,
   "Makefile",
   "package.json",
@@ -134,6 +135,7 @@ const DEFAULT_TOOLCHAIN_COMMAND = "latexmk -pdf -outdir=_build paper/main.tex";
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/i;
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/i;
 const PACKAGE_PATTERN = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/i;
+const BUILDCHAIN_PACKAGE_NAME = "@kungfu-tech/buildchain";
 
 function toPosix(value) {
   return String(value || "")
@@ -147,6 +149,66 @@ function sha256File(filePath) {
 
 function jsonText(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+function paperPnpmWorkspace(current, buildchainVersion) {
+  const entry = `${BUILDCHAIN_PACKAGE_NAME}@${buildchainVersion}`;
+  const source = String(current || "");
+  const lines = source ? source.replace(/\r\n/g, "\n").split("\n") : [];
+  if (lines.at(-1) === "") lines.pop();
+  const keyLines = lines
+    .map((line, index) =>
+      /^minimumReleaseAgeExclude:\s*(?:#.*)?$/.test(line) ? index : -1,
+    )
+    .filter((index) => index >= 0);
+  const unsupportedKey = lines.some(
+    (line) =>
+      /^minimumReleaseAgeExclude\s*:/.test(line) &&
+      !/^minimumReleaseAgeExclude:\s*(?:#.*)?$/.test(line),
+  );
+  if (unsupportedKey || keyLines.length > 1) {
+    throw new Error(
+      "paper migration requires minimumReleaseAgeExclude to be one top-level block sequence",
+    );
+  }
+  if (keyLines.length === 0) {
+    const prefix = lines.length > 0 ? [...lines, ""] : [];
+    return `${[...prefix, "minimumReleaseAgeExclude:", `  - '${entry}'`].join(
+      "\n",
+    )}\n`;
+  }
+  const keyIndex = keyLines[0];
+  let blockEnd = lines.length;
+  for (let index = keyIndex + 1; index < lines.length; index += 1) {
+    if (/^[^\s#]/.test(lines[index])) {
+      blockEnd = index;
+      break;
+    }
+  }
+  const retained = [];
+  for (const line of lines.slice(keyIndex + 1, blockEnd)) {
+    if (!line.trim() || /^\s*#/.test(line)) {
+      retained.push(line);
+      continue;
+    }
+    const item = line.match(/^\s*-\s+(.+?)\s*(?:#.*)?$/);
+    if (!item) {
+      throw new Error(
+        "paper migration requires minimumReleaseAgeExclude to contain scalar package entries",
+      );
+    }
+    const value = item[1]
+      .trim()
+      .replace(/^'(.*)'$/, "$1")
+      .replace(/^"(.*)"$/, "$1");
+    if (!value.startsWith(`${BUILDCHAIN_PACKAGE_NAME}@`)) retained.push(line);
+  }
+  return `${[
+    ...lines.slice(0, keyIndex + 1),
+    ...retained,
+    `  - '${entry}'`,
+    ...lines.slice(blockEnd),
+  ].join("\n")}\n`;
 }
 
 function existingFileFact(cwd, relativePath) {
@@ -604,6 +666,7 @@ function scaffoldFiles({
     [PAPER_PATHS.buildWorkflow, buildWorkflow],
     [PAPER_PATHS.verifyWorkflow, verifyWorkflow],
     [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
+    [PAPER_PATHS.pnpmWorkspace, paperPnpmWorkspace("", buildchainVersion)],
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
     ...agentEntry,
     [
@@ -925,12 +988,20 @@ function migrationFiles({
     currentPackage.value,
     runtimeIdentity.version,
   );
+  const pnpmWorkspacePath = path.resolve(cwd, PAPER_PATHS.pnpmWorkspace);
+  const pnpmWorkspace = paperPnpmWorkspace(
+    fs.existsSync(pnpmWorkspacePath)
+      ? fs.readFileSync(pnpmWorkspacePath, "utf8")
+      : "",
+    runtimeIdentity.version,
+  );
   const files = new Map([
     [PAPER_PATHS.contractLock, contractLockText],
     [PAPER_PATHS.versionPin, `${runtimeIdentity.version}\n`],
     [PAPER_PATHS.buildWorkflow, buildWorkflow],
     [PAPER_PATHS.verifyWorkflow, verifyWorkflow],
     [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
+    [PAPER_PATHS.pnpmWorkspace, pnpmWorkspace],
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
     ...agentEntry,
     ["package.json", jsonText(packageJson)],
