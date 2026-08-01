@@ -512,13 +512,13 @@ jobs:
           const crypto = require("crypto");
           const fs = require("fs");
           const path = require("path");
-          const { execFileSync } = require("child_process");
           const sha256File = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
-          const findOne = (name) => {
-            const rows = execFileSync("find", [".buildchain/admitted/artifact", "-type", "f", "-name", name], { encoding: "utf8" })
-              .trim().split("\n").filter(Boolean);
-            if (rows.length !== 1) throw new Error(`expected exactly one ${name}, found ${rows.length}`);
-            return rows[0];
+          const canonicalPublicationFile = (name) => {
+            const file = path.join(".buildchain/admitted/artifact/.buildchain/publication", name);
+            if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
+              throw new Error(`canonical publication file is missing: ${file}`);
+            }
+            return file;
           };
           const packageFact = JSON.parse(fs.readFileSync(".buildchain/published-package.json", "utf8"));
           if (packageFact.version !== process.env.PACKAGE_VERSION) throw new Error("npm version readback mismatch");
@@ -526,9 +526,9 @@ jobs:
           if (packageFact.gitHead !== process.env.SOURCE_SHA) throw new Error("npm gitHead readback does not match source SHA");
           if (process.env.RELEASE_TAG !== `v${process.env.PACKAGE_VERSION}`) throw new Error("public release tag does not match package version");
 
-          const manifestPath = findOne("publication-artifact.json");
-          const passportPath = findOne("publication-artifact-passport.json");
-          const registryPath = findOne("publication-registry.json");
+          const manifestPath = canonicalPublicationFile("publication-artifact.json");
+          const passportPath = canonicalPublicationFile("publication-artifact-passport.json");
+          const registryPath = canonicalPublicationFile("publication-registry.json");
           const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
           const archive = manifest.publication?.archive;
           if (!archive || archive.version !== process.env.PACKAGE_VERSION) throw new Error("publication archive identity mismatch");
