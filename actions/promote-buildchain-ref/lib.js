@@ -2187,6 +2187,7 @@ async function assertProviderEnforcedChannelTransaction({
   repo,
   targetRef,
   sourceSha,
+  expectedChannelSha = sourceSha,
   requiredStatusCheck,
 }) {
   const { data: branch } = await octokit.rest.repos.getBranch({
@@ -2240,7 +2241,7 @@ async function assertProviderEnforcedChannelTransaction({
   );
   const missing = [];
   if (branch.protected !== true) missing.push("must be provider-protected");
-  if (branch.commit?.sha !== sourceSha) missing.push("must still point at the admitted source SHA");
+  if (branch.commit?.sha !== expectedChannelSha) missing.push("must still point at the exact admitted channel head");
   if (protection.required_status_checks?.enforcement_level !== "everyone") {
     missing.push("must enforce required status checks for everyone");
   }
@@ -2269,6 +2270,7 @@ async function assertProtectedChannel({
   repo,
   targetRef,
   sourceSha,
+  expectedChannelSha = sourceSha,
   requiredStatusCheck = "check",
 }) {
   let protection;
@@ -2286,6 +2288,7 @@ async function assertProtectedChannel({
         repo,
         targetRef,
         sourceSha,
+        expectedChannelSha,
         requiredStatusCheck,
       });
     }
@@ -4827,6 +4830,7 @@ async function promoteBuildchainRefs({
       repo,
       targetRef,
       sourceSha: sha,
+      expectedChannelSha: advancedPublicationTransaction ? branchSha : sha,
       requiredStatusCheck,
     });
   }
