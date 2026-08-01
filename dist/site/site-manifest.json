@@ -53,7 +53,15 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f6e378d0d583568b0ee90c8805b83b6f0a4faf0d1efa6e4a995482b5ecb8f538"
+      "digest": "sha256:0731b18f6a7aa6a164197080fac3b57ff161640a28433c4cd26adcf145403fb5"
+    },
+    {
+      "id": "getting-started",
+      "title": "Golden Path",
+      "path": "docs/getting-started.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:806224481f542786ed2e60226417bd1ba673099a3110f564357792bdbf637403"
     },
     {
       "id": "auditable-demo",
@@ -181,7 +189,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:40831ce35dca6ac2a3a81d54a83fb0e5ab064137829a4f7844e5d80ba61aa65c"
+      "digest": "sha256:36a4e60e91f500ea1dcdbef97cd0250a2c26562b98d8d3622e8e0f9df2aad23b"
     },
     {
       "id": "migration-inventory",
@@ -213,7 +221,23 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:009640d0f4d5a670d8e5a73e4a14250d62c3cc0c3bd165aa84200e0098ef898e"
+      "digest": "sha256:0c8721e9c2f449e96aa8adefe99b016b193ab2876c02f3c61186794ac1873e90"
+    },
+    {
+      "id": "cli-reference",
+      "title": "Generated CLI reference",
+      "path": "docs/cli-reference.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:c728fe693ab591ab5b52f4276a817ec5a013c79833f0d20ca2cc137e85ae51ca"
+    },
+    {
+      "id": "node-api-reference",
+      "title": "Generated Node API reference",
+      "path": "docs/node-api-reference.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:1f5a957ff153b09b53090c46b04c276a02bdfc14a8f679a1911d1b5ec389f1ac"
     },
     {
       "id": "build-facts",
@@ -293,7 +317,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:5dd27f3c4a412a23093e5d33746a5d5d40353625c8ffe89a961978fc5de9c03e"
+      "digest": "sha256:bdb155e873f9c2ea5cd40bdde057d2c2f90322f0d4575de77fe1670bd040e643"
     },
     {
       "id": "web-surface-deployments",
