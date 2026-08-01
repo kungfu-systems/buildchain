@@ -47,6 +47,15 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.match(workflow, /Setup trusted-publishing Node\.js/);
   assert.match(workflow, /uses: actions\/setup-node@v6\.4\.0/);
   assert.match(workflow, /node-version: "24"/);
+  assert.match(workflow, /Install exact admitted Buildchain runtime dependencies/);
+  assert.match(
+    workflow,
+    /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/,
+  );
+  assert.ok(
+    workflow.indexOf("Install exact admitted Buildchain runtime dependencies") <
+      workflow.indexOf("Capture configured downstream propagation work"),
+  );
   assert.match(workflow, /BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID:/);
   assert.match(workflow, /BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY:/);
   assert.match(workflow, /BUILDCHAIN_GENERATED_WRITE_TOKEN:/);

@@ -8,7 +8,7 @@
     "maxHandMaintainedSourceFiles": 237,
     "maxHandMaintainedSourceLines": 92108,
     "maxWorkflowFiles": 57,
-    "maxWorkflowLines": 19648,
+    "maxWorkflowLines": 19652,
     "rationale": "The structural hardening, bounded AWS Windows JIT controller, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, documentation hardening, and audited sccache compiler binding may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds typed Work Control, deterministic recovery, npm and Git source coherence, production readback, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, effective Cargo/CMake compiler launchers, a nonzero cache-activity gate, and regression guards instead of duplicated delivery behavior; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
