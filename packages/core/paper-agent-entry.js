@@ -181,12 +181,8 @@ export function resolvePaperBuildchainSha(buildchainRoot, buildchainSha = "") {
   return GIT_SHA_PATTERN.test(observed) ? observed : "";
 }
 
-function expectedCiBranches(developmentRef) {
-  return [
-    developmentRef,
-    developmentRef.replace(/^dev\//, "alpha/"),
-    developmentRef.replace(/^dev\//, "release/"),
-  ];
+function expectedCiBranches(ref) {
+  return ["dev", "alpha", "release"].map((c) => ref.replace(/^dev/, c));
 }
 
 function ciContext({ env, developmentRef }) {
@@ -201,10 +197,13 @@ function ciContext({ env, developmentRef }) {
     env.GITHUB_REF_NAME || env.BUILDCHAIN_PAPER_REF_NAME || "",
   );
   const pullRequest = ["pull_request", "pull_request_target"].includes(event);
+  const channelBranches = expectedCiBranches(developmentRef);
+  const channelIndex = channelBranches.indexOf(targetBranch);
   const branchOk = pullRequest
-    ? PAPER_WORK_BRANCH_PATTERN.test(sourceBranch) &&
-      targetBranch === developmentRef
-    : expectedCiBranches(developmentRef).includes(refName);
+    ? (PAPER_WORK_BRANCH_PATTERN.test(sourceBranch) &&
+        targetBranch === developmentRef) ||
+      (channelIndex > 0 && sourceBranch === channelBranches[channelIndex - 1])
+    : channelBranches.includes(refName);
   return {
     mode: "ci",
     event,
@@ -214,8 +213,8 @@ function ciContext({ env, developmentRef }) {
     pullRequest,
     ok: branchOk,
     message: pullRequest
-      ? `Pull requests must use an allowed work branch and target ${developmentRef}.`
-      : `Channel checks must run on ${expectedCiBranches(developmentRef).join(", ")}.`,
+      ? `Pull requests must target ${developmentRef} from an allowed work branch or promote adjacent protected channels.`
+      : `Channel checks must run on ${channelBranches.join(", ")}.`,
   };
 }
 
