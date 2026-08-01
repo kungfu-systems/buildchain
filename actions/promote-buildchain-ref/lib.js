@@ -4748,6 +4748,7 @@ async function promoteBuildchainRefs({
     promotionGeneratedAt,
     releaseCandidateValidation,
     advancedPublicationTransaction,
+    advancedChannelSha: advancedPublicationTransaction ? branchSha : "",
     COMMIT_IDENTITY,
     fs,
     path,
