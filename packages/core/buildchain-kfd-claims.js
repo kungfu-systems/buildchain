@@ -411,7 +411,7 @@ export function createBuildchainPublicClaimDefinitions() {
     },
     {
       id: "claim:buildchain-release-propagation",
-      claim: "Buildchain can propagate upstream alpha or stable releases to downstream repositories while preserving release channels through exact release locks.",
+      claim: "Buildchain can propagate exact upstream releases as Family State v2 and WorkRef-bound, resumable downstream work that preserves protected review and completes only after production readback.",
       sourcePaths: [
         "packages/core/release-propagation.js",
         "scripts/release-propagation.mjs",

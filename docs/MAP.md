@@ -117,7 +117,7 @@ replace them.
 | How do I adopt the KFD Agent Hub profile with one declaration and one adapter? | [`kfd-agent-hub.md`](kfd-agent-hub.md) | verify/use | preview |
 | How do I keep `@v3` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
 | How do reusable workflows bind controller intent, source/runtime identity, outcomes, and receipt evidence? | [`controller-evidence.md`](controller-evidence.md) | verify/use | draft |
-| How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
+| How does an Agent propagate a finalized upstream release through downstream PR, deployment, production readback, and Work Control completion? | [`release-propagation.md`](release-propagation.md) | use/verify | preview |
 | How do paper or report repositories publish PDFs, metadata, source bundles, site-consumable manifests, npm packages, and GitHub Releases? | [`publication-artifacts.md`](publication-artifacts.md) | use | stable |
 | How do I generate KFD / Release Passport badge bundles without hand-maintaining Markdown? | [`readme-badges.md`](readme-badges.md) + [`cli.md`](cli.md) | use | stable |
 | How do I generate and verify a Homebrew tap from release passport evidence? | [`homebrew.md`](homebrew.md) + [`cli.md`](cli.md) | use/verify | stable |

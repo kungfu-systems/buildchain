@@ -90,6 +90,19 @@ test("sealed paper release separates read-only build, authority, and admitted pu
     /github-release-artifact-paths: \$\{\{ steps\.candidate\.outputs\.github-release-artifact-paths \}\}/,
   );
   assert.match(workflow, /publish-transaction-override: "true"/);
+  assert.match(workflow, /upstream-release-json:/);
+  assert.match(workflow, /npm view "\$\{PACKAGE_NAME\}@\$\{PACKAGE_VERSION\}" version dist\.integrity gitHead --json/);
+  assert.match(workflow, /packageFact\.gitHead !== process\.env\.SOURCE_SHA/);
+  assert.match(workflow, /remote_tag_sha.*SOURCE_SHA/s);
+  assert.match(workflow, /tagTargetSha: process\.env\.SOURCE_SHA/);
+  assert.match(workflow, /registry: \{ url: `\$\{releaseBase\}\/\$\{path\.basename\(registryPath\)\}`/);
+  assert.match(workflow, /paper-upstream-release-\$\{\{ steps\.candidate\.outputs\.package-version \}\}/);
+  assert.match(workflow, /kungfu-buildchain-paper-release-propagation/);
+  assert.match(workflow, /contents\/\.buildchain\/release-propagation\.json\?ref=\$\{SOURCE_SHA\}/);
+  assert.match(workflow, /release-propagation work create/);
+  assert.match(workflow, /release-propagation work status/);
+  assert.match(workflow, /paper-propagation-work-\$\{PACKAGE_VERSION\}-\$\{SOURCE_SHA\}/);
+  assert.match(workflow, /propagation-work-artifact:/);
   const publish = workflow.slice(workflow.indexOf("  publish:"));
   assert.doesNotMatch(
     publish,

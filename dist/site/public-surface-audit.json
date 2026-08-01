@@ -7,7 +7,7 @@
     "workflowCount": 57,
     "actionCount": 6,
     "sitePageCount": 60,
-    "docCommandRefCount": 316,
+    "docCommandRefCount": 324,
     "failureCount": 0
   },
   "enumerated": {
@@ -1938,10 +1938,12 @@
           "github-release-url",
           "package-name",
           "package-version",
+          "propagation-work-artifact",
           "public-release-tag",
-          "release-passport-path"
+          "release-passport-path",
+          "upstream-release-json"
         ],
-        "outputCount": 5
+        "outputCount": 7
       },
       {
         "id": "paper-release",
@@ -2350,6 +2352,8 @@
         "path": ".github/workflows/release-propagation.yml",
         "reusable": true,
         "inputs": [
+          "agent-work-context-json",
+          "agent-work-mode",
           "buildchain-ref",
           "buildchain-repository",
           "downstream-base-ref",
@@ -2368,7 +2372,7 @@
           "source-node",
           "upstream-release-json"
         ],
-        "inputCount": 17,
+        "inputCount": 19,
         "secrets": [
           "propagation-token"
         ],
@@ -2382,9 +2386,13 @@
           "controller-receipt-json",
           "controller-receipt-status",
           "propagation-receipt-digest",
-          "propagation-receipt-json"
+          "propagation-receipt-json",
+          "propagation-work-artifact",
+          "propagation-work-json",
+          "propagation-work-next-action",
+          "propagation-work-root"
         ],
-        "outputCount": 9
+        "outputCount": 13
       },
       {
         "id": "release-verify",
@@ -4263,6 +4271,46 @@
         "command": "buildchain release-propagation receipt"
       },
       {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work create"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work status"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work resume"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work claim"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work receipt"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work record"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work repair"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work complete"
+      },
+      {
         "id": "release-transaction",
         "path": "docs/cli.md",
         "command": "buildchain release"
@@ -4519,8 +4567,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5a9eac28d00c78601d49226f8ba63896a0a22c51f6e5eff97f4cea5a572c355d",
-    "workflowRegistryDigest": "9500a8099e10c5328b6e051445dba3c18cf0eb31eec3655b6554b111417f9abd",
-    "pageRegistryDigest": "017ecd04f8dfecb9afc6e0df434eb606ae105db9694e8b6c943699217367ebf1"
+    "workflowRegistryDigest": "745714c3f1dcb82ad075038b6fbe3989fd2d12780dc36d04f55c12fb0836bd99",
+    "pageRegistryDigest": "60e69c7f0f779bcc7fd9297319117816803b8772dc86607d78f80508bc882f97"
   },
   "comparison": {
     "missingCliRegistry": [],

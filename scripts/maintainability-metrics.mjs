@@ -174,10 +174,12 @@ function architectureSummary(root, revision = "") {
   const implementationPaths = new Set(
     index.capabilities.flatMap((entry) => entry.implementation || []),
   );
-  const graph = new Map(
-    [...implementationPaths].map((file) => [file, new Set()]),
+  const repositorySources = trackedFiles(root, revision).filter(
+    isHandMaintainedSource,
   );
-  for (const file of implementationPaths) {
+  const repositorySourceSet = new Set(repositorySources);
+  const graph = new Map(repositorySources.map((file) => [file, new Set()]));
+  for (const file of repositorySources) {
     if (!JS_EXTENSIONS.has(path.extname(file))) continue;
     for (const specifier of relativeImports(
       readTrackedFile(root, file, revision),
@@ -192,10 +194,20 @@ function architectureSummary(root, revision = "") {
         `${base}.cjs`,
         `${base}/index.js`,
         `${base}/index.mjs`,
-      ].find((candidate) => implementationPaths.has(candidate));
+      ].find((candidate) => repositorySourceSet.has(candidate));
       if (target) graph.get(file).add(target);
     }
   }
+  const exclusions = new Set(
+    (index.ownershipExclusions || []).map((entry) => entry.path),
+  );
+  const ownedSources = repositorySources.filter((file) =>
+    index.ownershipRules?.some((rule) =>
+      (rule.paths || []).some(
+        (prefix) => file === prefix || file.startsWith(`${prefix}/`),
+      ),
+    ),
+  ).length;
   return {
     capabilities: index.capabilities.length,
     implementationMappings: index.capabilities.reduce(
@@ -207,6 +219,14 @@ function architectureSummary(root, revision = "") {
       0,
     ),
     dependencyRules: index.dependencyRules.length,
+    repositorySources: repositorySources.length,
+    ownedSources,
+    excludedSources: repositorySources.filter((file) => exclusions.has(file))
+      .length,
+    dependencyEdges: [...graph.values()].reduce(
+      (total, targets) => total + targets.size,
+      0,
+    ),
     dependencyCycles: dependencyCycles(graph).length,
   };
 }
