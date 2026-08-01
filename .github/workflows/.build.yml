@@ -1215,61 +1215,17 @@ jobs:
       s3-prefix: ${{ steps.transfer.outputs.s3-prefix }}
       oidc-audience: ${{ steps.transfer.outputs.oidc-audience }}
     steps:
+      - name: Checkout artifact transfer workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/artifact-transfer-runtime
+          persist-credentials: false
+
       - name: Resolve artifact transfer mode
         id: transfer
-        shell: bash
-        run: |
-          mode="${INPUT_TRANSFER_MODE:-github-artifacts}"
-          case "${mode}" in
-            github-artifacts|s3-to-github-artifacts) ;;
-            *)
-              echo "::error::artifact-transfer-mode must be github-artifacts or s3-to-github-artifacts, got: ${mode}"
-              exit 1
-              ;;
-          esac
-          bucket="${INPUT_S3_BUCKET:-${VAR_S3_BUCKET:-}}"
-          region="${INPUT_S3_REGION:-${VAR_S3_REGION:-}}"
-          prefix="${INPUT_S3_PREFIX:-${VAR_S3_PREFIX:-buildchain-artifacts}}"
-          audience="${INPUT_OIDC_AUDIENCE:-${VAR_OIDC_AUDIENCE:-}}"
-          upload_role="${INPUT_S3_UPLOAD_ROLE_ARN:-${VAR_S3_UPLOAD_ROLE_ARN:-${SECRET_S3_UPLOAD_ROLE_ARN:-}}}"
-          download_role="${INPUT_S3_DOWNLOAD_ROLE_ARN:-${VAR_S3_DOWNLOAD_ROLE_ARN:-${SECRET_S3_DOWNLOAD_ROLE_ARN:-}}}"
-          shared_role="${INPUT_S3_ROLE_ARN:-${VAR_S3_ROLE_ARN:-${SECRET_S3_ROLE_ARN:-}}}"
-          if [ "${mode}" = "s3-to-github-artifacts" ]; then
-            if [ -z "${bucket}" ]; then
-              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-bucket or BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET"
-              exit 1
-            fi
-            if [ -z "${region}" ]; then
-              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-region or BUILDCHAIN_ARTIFACT_RELAY_S3_REGION"
-              exit 1
-            fi
-            if [ -z "${upload_role}${shared_role}" ]; then
-              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires an upload role ARN input, variable, or secret"
-              exit 1
-            fi
-            if [ -z "${download_role}${shared_role}" ]; then
-              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires a download role ARN input, variable, or secret"
-              exit 1
-            fi
-            if [ -z "${audience}" ]; then
-              case "${region}" in
-                cn-*) audience="sts.amazonaws.com.cn" ;;
-                *) audience="sts.amazonaws.com" ;;
-              esac
-            fi
-          else
-            bucket=""
-            region=""
-            prefix=""
-            audience=""
-          fi
-          {
-            echo "mode=${mode}"
-            echo "s3-bucket=${bucket}"
-            echo "s3-region=${region}"
-            echo "s3-prefix=${prefix}"
-            echo "oidc-audience=${audience}"
-          } >> "${GITHUB_OUTPUT}"
+        run: node .buildchain/artifact-transfer-runtime/scripts/resolve-artifact-transfer-mode.mjs
         env:
           INPUT_TRANSFER_MODE: ${{ inputs.artifact-transfer-mode }}
           INPUT_S3_BUCKET: ${{ inputs.artifact-relay-s3-bucket }}

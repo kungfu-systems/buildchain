@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import {
@@ -9,6 +10,32 @@ import {
 } from "../bin/internal/command-registry.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
+
+test("CLI runtime binds bounded command handlers without a monolithic dispatcher", () => {
+  const source = fs.readFileSync(
+    path.join(root, "bin", "buildchain.mjs"),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /runRegisteredCommand/u);
+  for (const entry of BUILDCHAIN_COMMAND_REGISTRY) {
+    if (
+      [
+        "audit",
+        "collect",
+        "create",
+        "explain",
+        "inspect",
+        "project",
+        "release",
+        "transaction",
+        "verify",
+      ].includes(entry.id)
+    ) {
+      continue;
+    }
+    assert.match(source, new RegExp(`${JSON.stringify(entry.id)}\\s*:`));
+  }
+});
 
 test("CLI command registry owns canonical names, aliases, help, and runtime dispatch", async () => {
   const names = BUILDCHAIN_COMMAND_REGISTRY.flatMap((entry) => [

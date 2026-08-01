@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:430eed733bfcbebd853da9c60a687822dab73689d7fb9ad2e9a760af279415e5",
+      "digest": "sha256:f6e378d0d583568b0ee90c8805b83b6f0a4faf0d1efa6e4a995482b5ecb8f538",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -136,7 +136,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:aea013d923a8d419fc76e99a81765f281640dd95141d32ae415b8572604e9d32",
+      "digest": "sha256:d9c9b4ba9dff6ed336b1ff31e5a02fcdf68dd013278caa86510e5fd0b50c4267",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",

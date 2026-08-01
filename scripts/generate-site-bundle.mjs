@@ -621,6 +621,21 @@ function createPublicationReleaseRegistry({ packageJson, timestampPolicy }) {
   };
 }
 
+const RELEASE_PROPAGATION_MODEL = {
+  graphContract: "kungfu-buildchain-release-propagation-graph",
+  planContract: "kungfu-buildchain-release-propagation-plan",
+  lockContract: "kungfu-buildchain-release-propagation-lock",
+  workContract: "kungfu-buildchain-release-propagation-work",
+  stageReceiptContract: "kungfu-buildchain-release-propagation-stage-receipt",
+  workControlBindings: [
+    "kungfu.assignment-graph.work-ref/v1",
+    "kungfu.work-control.initiative-family-state/v2",
+  ],
+  completionBoundary: "production-online-readback-plus-accepted-work-control-decision",
+  defaultChannelPolicy: "preserve",
+  defaultChannelMap: { alpha: "alpha", release: "release" },
+};
+
 function buildSiteBundle() {
   const packageJson = readJson("package.json");
   const inventory = readJson("tests/buildchain-inventory.json");
@@ -857,13 +872,7 @@ function buildSiteBundle() {
       schema: "schemas/release-passport-v1.schema.json",
       checkManifest: "release-passport-check-manifest.json",
     },
-    releasePropagation: {
-      graphContract: "kungfu-buildchain-release-propagation-graph",
-      planContract: "kungfu-buildchain-release-propagation-plan",
-      lockContract: "kungfu-buildchain-release-propagation-lock",
-      defaultChannelPolicy: "preserve",
-      defaultChannelMap: { alpha: "alpha", release: "release" },
-    },
+    releasePropagation: RELEASE_PROPAGATION_MODEL,
     npm: {
       package: packageJson.name,
       command: packageJson.bin?.buildchain || "",

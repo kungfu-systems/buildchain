@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:728cea6d09cfe3714a6e95e5ce7c02ab200c6d53823c5ab0e4a2ff3b01eb6e08",
+      "digest": "sha256:0a415732a05ad95fe9a8ae4da20df826f392c9c5227e9f0eee3722a3d97af49d",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -65,7 +65,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:728cea6d09cfe3714a6e95e5ce7c02ab200c6d53823c5ab0e4a2ff3b01eb6e08",
+      "digest": "sha256:0a415732a05ad95fe9a8ae4da20df826f392c9c5227e9f0eee3722a3d97af49d",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -293,7 +293,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:5237d49ad4bb4cc803bdeb96039967b1896145483f6d9f40c7e06e0303545457",
+      "digest": "sha256:8a5070254b58cf2ea4e4851b29de4edfcf618a7d6acfb2235e705246ce40e22a",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -616,7 +616,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:5ccd8a5d3a8b77573ce1fefd12ff2850740df122aae5156f1eeaa943fc09fefc",
+      "digest": "sha256:0d4490f46bf59e71597547322e75a3c58ea85b3a889b37afc991fbecd489e57f",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -768,7 +768,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:f177e3a60a1463db9a83b04a00f5cf0a015d68281da0d545245760856f6dfaf0",
+      "digest": "sha256:7d91592c518277646154ef5c7fde27d7101c87a0d7f69c90911ac0c7583c20ec",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -806,7 +806,7 @@
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
-      "digest": "sha256:a74aa99143964266c0076697e949dd423a8a71f63969913b847aaa740e76073c",
+      "digest": "sha256:647b8bc5e28a3f40a4f61a2e1e0c81948956e8359bd87903024de949ea92c015",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
       "audience": [
@@ -863,7 +863,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:14c595f8ab51f64c2fcde3c46729fe3ba6e7b20fcd89159780aa55e341013f75",
+      "digest": "sha256:3dbd4e195647e704eed63056c46ed8276a1507e871276b2a46c64a3710546aac",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
