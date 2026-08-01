@@ -616,7 +616,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:9e688fcac3409466a4d63040609d98186c8df84fb11a71133f1b469b37a97f94",
+      "digest": "sha256:0d4490f46bf59e71597547322e75a3c58ea85b3a889b37afc991fbecd489e57f",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -768,7 +768,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:f177e3a60a1463db9a83b04a00f5cf0a015d68281da0d545245760856f6dfaf0",
+      "digest": "sha256:7d91592c518277646154ef5c7fde27d7101c87a0d7f69c90911ac0c7583c20ec",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

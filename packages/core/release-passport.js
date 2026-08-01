@@ -1189,6 +1189,28 @@ export function createArtifactEvidence({ assets = [], repository = "", tag = "",
   };
 }
 
+function firstTruthy(...values) {
+  for (const value of values) {
+    if (value) return value;
+  }
+  return values.at(-1);
+}
+
+function releaseField(release, camelKey, snakeKey, ...fallbacks) {
+  return optionalString(firstTruthy(release[camelKey], release[snakeKey], ...fallbacks));
+}
+
+function optionalSections(entries) {
+  return Object.fromEntries(entries.filter(([, value]) => value && (!Array.isArray(value) || value.length > 0)));
+}
+
+function acceptedControllerSourceShas(input) {
+  const { treeEquivalent, builtSourceSha, promotionChannelSha, sourceSha, recoveryTreeEquivalent } = input;
+  return treeEquivalent && builtSourceSha && (promotionChannelSha === sourceSha || recoveryTreeEquivalent)
+    ? [builtSourceSha]
+    : [];
+}
+
 export function createReleasePassport({
   cwd = process.cwd(),
   repository = "",
@@ -1272,14 +1294,10 @@ export function createReleasePassport({
     kfd1Section: normalizedKfd1?.passportSection,
     kfd3Section: normalizedKfd3?.passportSection,
   });
-  const builtSourceSha = optionalString(release.builtSourceSha || release.built_source_sha);
-  const builtSourceTreeSha = optionalString(
-    release.builtSourceTreeSha || release.built_source_tree_sha,
-  );
-  const promotionChannelSha = optionalString(release.promotionChannelSha || release.promotion_channel_sha);
-  const promotionChannelTreeSha = optionalString(
-    release.promotionChannelTreeSha || release.promotion_channel_tree_sha,
-  );
+  const builtSourceSha = releaseField(release, "builtSourceSha", "built_source_sha");
+  const builtSourceTreeSha = releaseField(release, "builtSourceTreeSha", "built_source_tree_sha");
+  const promotionChannelSha = releaseField(release, "promotionChannelSha", "promotion_channel_sha");
+  const promotionChannelTreeSha = releaseField(release, "promotionChannelTreeSha", "promotion_channel_tree_sha");
   const treeEquivalent = release.treeEquivalent === true;
   const recoveryTreeEquivalent = Boolean(
     treeEquivalent &&
@@ -1291,11 +1309,13 @@ export function createReleasePassport({
     receipts: controllerReceipts,
     references: controllerReceiptReferences,
     expectedSourceSha: sourceSha,
-    acceptedSourceShas: treeEquivalent && builtSourceSha && (
-      promotionChannelSha === sourceSha || recoveryTreeEquivalent
-    )
-      ? [builtSourceSha]
-      : [],
+    acceptedSourceShas: acceptedControllerSourceShas({
+      treeEquivalent,
+      builtSourceSha,
+      promotionChannelSha,
+      sourceSha,
+      recoveryTreeEquivalent,
+    }),
     requirePassed: true,
   });
   const normalizedGitHubArtifactAttestations = (githubArtifactAttestations || [])
@@ -1306,37 +1326,13 @@ export function createReleasePassport({
     publishEvidence: normalizedPublishEvidence,
     publish,
   });
-  const releaseMaterialSha = optionalString(
-    release.releaseMaterialSha ||
-    release.release_material_sha ||
-    normalizedPublishEvidence?.releaseMaterialSha ||
-    normalizedTransaction?.releaseMaterialSha,
-  );
-  const releaseSha = optionalString(
-    release.releaseSha ||
-    release.release_sha ||
-    normalizedPublishEvidence?.releaseSha ||
-    normalizedTransaction?.releaseSha,
-  );
-  const targetRef = optionalString(release.targetRef || release.target_ref || normalizedPublishEvidence?.targetRef);
-  const packageDisplayVersion = optionalString(
-    packageVersion ||
-    normalizedPackageSet?.main?.version ||
-    normalizedPublishSummary?.packages?.find((entry) => entry.role === "main")?.publishedVersion ||
-    normalizedPublishEvidence?.version ||
-    normalizedTransaction?.version ||
-    readPackageVersion(cwd),
-  );
-  const publishedVersion = optionalString(
-    release.publishedVersion ||
-    release.published_version ||
-    packageDisplayVersion,
-  );
-  const internalVersion = optionalString(
-    release.internalVersion ||
-    release.internal_version ||
-    normalizedTransaction?.version,
-  );
+  const releaseMaterialSha = releaseField(release, "releaseMaterialSha", "release_material_sha", normalizedPublishEvidence?.releaseMaterialSha, normalizedTransaction?.releaseMaterialSha);
+  const releaseSha = releaseField(release, "releaseSha", "release_sha", normalizedPublishEvidence?.releaseSha, normalizedTransaction?.releaseSha);
+  const targetRef = releaseField(release, "targetRef", "target_ref", normalizedPublishEvidence?.targetRef);
+  const mainPublishedVersion = normalizedPublishSummary?.packages?.find((entry) => entry.role === "main")?.publishedVersion;
+  const packageDisplayVersion = optionalString(firstTruthy(packageVersion, normalizedPackageSet?.main?.version, mainPublishedVersion, normalizedPublishEvidence?.version, normalizedTransaction?.version, readPackageVersion(cwd)));
+  const publishedVersion = releaseField(release, "publishedVersion", "published_version", packageDisplayVersion);
+  const internalVersion = releaseField(release, "internalVersion", "internal_version", normalizedTransaction?.version);
   return {
     schemaVersion: 1,
     contract: RELEASE_PASSPORT_CONTRACT,
@@ -1344,7 +1340,7 @@ export function createReleasePassport({
     surfaceTimestampPolicy: createSurfaceTimestampPolicy({
       generatedAt,
       publishedAt: optionalString(release.publishedAt || release.published_at || normalizedPublishEvidence?.publishedAt),
-      sourceRevision: optionalString(sourceSha || releaseSha || normalizedTransaction?.releaseSha),
+      sourceRevision: optionalString(firstTruthy(sourceSha, releaseSha, normalizedTransaction?.releaseSha)),
       timestampPolicy: "ci-injected",
       deterministicInputs: [
         "release.sourceSha",
@@ -1366,14 +1362,14 @@ export function createReleasePassport({
     },
     release: {
       tag: normalizedTag,
-      publicTag: optionalString(release.publicTag || release.public_tag || normalizedTag),
-      internalTag: optionalString(release.internalTag || release.internal_tag || normalizedTag),
+      publicTag: releaseField(release, "publicTag", "public_tag", normalizedTag),
+      internalTag: releaseField(release, "internalTag", "internal_tag", normalizedTag),
       internalVersion,
       publishedVersion,
-      versionLabel: optionalString(release.versionLabel || release.version_label || publishedVersion || normalizedTag),
+      versionLabel: releaseField(release, "versionLabel", "version_label", publishedVersion, normalizedTag),
       line: optionalString(line),
       sourceSha: optionalString(sourceSha),
-      channel: optionalString(release.channel || normalizedPublishEvidence?.channel || publish.channel),
+      channel: optionalString(firstTruthy(release.channel, normalizedPublishEvidence?.channel, publish.channel)),
       targetRef,
       releaseSha,
       releaseMaterialSha,
@@ -1411,28 +1407,28 @@ export function createReleasePassport({
       compatibilityFixture: "self-hosted",
       note: "Runner facts are recorded in artifact evidence; the protocol does not require self-hosted runners.",
     },
-    ...(normalizedPackageSet ? { packageSet: normalizedPackageSet } : {}),
-    ...(normalizedPublishSummary ? { publish: normalizedPublishSummary } : {}),
-    ...(anchorManifest ? { anchorManifest } : {}),
-    ...(versionMaterial ? { versionMaterial } : {}),
-    ...(normalizedTrustedPublishing ? { trustedPublishing: normalizedTrustedPublishing } : {}),
-    ...(normalizedTransaction ? { transaction: normalizedTransaction } : {}),
-    ...(normalizedPromotionRouting ? { promotionRouting: normalizedPromotionRouting } : {}),
-    ...(normalizedBuildSummary ? { buildSummary: normalizedBuildSummary } : {}),
-    ...(normalizedBuildFacts.length > 0 ? { buildFacts: normalizedBuildFacts } : {}),
-    ...(normalizedPlatformArtifactManifests.length > 0 ? { platformArtifactManifests: normalizedPlatformArtifactManifests } : {}),
-    ...(normalizedDistTagPromotionEvidence ? { distTagPromotion: normalizedDistTagPromotionEvidence } : {}),
-    ...(normalizedKfd1 ? { [normalizedKfd1.key || kfd1Metadata.key]: normalizedKfd1.passportSection } : {}),
-    ...(normalizedKfd2 ? { "kfd-2": normalizedKfd2 } : {}),
-    ...(normalizedKfd3 ? { [normalizedKfd3.key || "kfd-3"]: normalizedKfd3.passportSection } : {}),
-    ...(normalizedKfdSupport ? { kfdSupport: normalizedKfdSupport } : {}),
-    ...(normalizedKfdAgentHub ? { kfdAgentHub: normalizedKfdAgentHub } : {}),
-    ...(invariantPassports ? { invariantPassports } : {}),
-    ...(releaseEvidence.length > 0 ? { releaseEvidence } : {}),
-    ...(normalizedControllerReceipts.length > 0 ? { controllerReceipts: normalizedControllerReceipts } : {}),
-    ...(normalizedGitHubArtifactAttestations.length > 0
-      ? { githubArtifactAttestations: normalizedGitHubArtifactAttestations }
-      : {}),
+    ...optionalSections([
+      ["packageSet", normalizedPackageSet],
+      ["publish", normalizedPublishSummary],
+      ["anchorManifest", anchorManifest],
+      ["versionMaterial", versionMaterial],
+      ["trustedPublishing", normalizedTrustedPublishing],
+      ["transaction", normalizedTransaction],
+      ["promotionRouting", normalizedPromotionRouting],
+      ["buildSummary", normalizedBuildSummary],
+      ["buildFacts", normalizedBuildFacts],
+      ["platformArtifactManifests", normalizedPlatformArtifactManifests],
+      ["distTagPromotion", normalizedDistTagPromotionEvidence],
+      [firstTruthy(normalizedKfd1?.key, kfd1Metadata.key), normalizedKfd1?.passportSection],
+      ["kfd-2", normalizedKfd2],
+      [firstTruthy(normalizedKfd3?.key, "kfd-3"), normalizedKfd3?.passportSection],
+      ["kfdSupport", normalizedKfdSupport],
+      ["kfdAgentHub", normalizedKfdAgentHub],
+      ["invariantPassports", invariantPassports],
+      ["releaseEvidence", releaseEvidence],
+      ["controllerReceipts", normalizedControllerReceipts],
+      ["githubArtifactAttestations", normalizedGitHubArtifactAttestations],
+    ]),
     versionImpact: normalizedImpact.versionImpact,
     surfaceImpacts: normalizedImpact.surfaceImpacts,
     artifacts: [

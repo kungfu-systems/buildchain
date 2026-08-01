@@ -1,156 +1,77 @@
-async function promoteMajorChannel(context) {
-  const {
-    octokit,
-    owner,
-    repo,
-    sha,
-    targetRef,
-    tags,
-    dryRun,
-    allowRepository,
-    cwd,
-    versionState,
-    requireVersionState,
-    requireGovernance,
-    verificationCommand,
-    requiredStatusCheck,
-    statusCheckOctokit,
-    pullRequestOctokit,
-    refUpdateOctokit,
-    branchProtectionBypassApps,
-    branchProtectionBypassUsers,
-    branchProtectionBypassTeams,
-    reconciliationWorkspace,
-    publishTransaction,
-    publishCommand,
-    publishEvidencePath,
-    transactionStatePath,
-    publishRequiredArtifactsJson,
-    releaseMaterialSha,
-    publishToolingSha,
-    publishMode,
-    publishAuth,
-    publishDistTag,
-    publishPackageSetOrder,
-    publishPackageMain,
-    publishRematerializeOnResume,
-    expectedPublicationVersion,
-    requirePublicationQualification,
-    publicationCapabilityJson,
-    publicationGateAggregateJson,
-    publicationQualificationReceiptJson,
-    publicationUsedQualificationNoncesJson,
-    publicationQualificationNow,
-    releasePassport,
-    releasePassportOutputDir,
-    releasePassportProductName,
-    releasePassportBuildSummaryPath,
-    releasePassportPlatformManifestPaths,
-    releasePassportImpactJson,
-    releasePassportPromotionRoutingJson,
-    releasePassportKfd1WitnessJsons,
-    releasePassportKfd2ClaimJsons,
-    releasePassportKfd3PrebuildWitnessJsons,
-    releasePassportKfd3ArtifactWitnessJsons,
-    releasePassportKfd3ArtifactVerifyCommand,
-    releasePassportKfdSupportMatrixJson,
-    releasePassportKfdProductGateJsons,
-    releasePassportInvariantPassportJsons,
-    releasePassportInvariantPassportCommand,
-    releasePassportBuildchainSelfKfd,
-    releasePassportGitHubArtifactAttestationPolicyJsons,
-    promoteOnlyReleaseCandidate,
-    releaseCandidatePassportPath,
-    releaseCandidateBuildSummaryPath,
-    releaseCandidateVersion,
-    actor,
-    runId,
-    publishTransactionOverride,
-    rule,
-    assertPublicationQualification,
-    requestedTags,
-    updates,
-    promotionGeneratedAt,
-    releaseCandidateValidation,
-    advancedPublicationTransaction,
-    lineRefs,
-    listLineRefs,
-    listMajorAlphaRefs,
-    ownsMajorAlphaFloatingTag,
-    ensureTag,
-    updateTag,
-    updateMajorAlphaFloatingTag,
-    readRefSha,
-    updateBranch,
-    updateDefaultBranch,
-    assertOnlyAllowedChangesBetween,
-    listChangedPathsBetweenTrees,
-    assertOnlyAllowedReleaseRecoveryChangesBetween,
-    findMatchingReleaseRecoveryPullRequest,
-    findMatchingTargetPullRequest,
-    findAlphaMaterialFromPromotionPullRequest,
-    assertPromotionPrOrVersionStateParent,
-    assertReleasePrOrVersionStateParent,
-    isSettledAlphaVersionState,
-    createVersionStateCommit,
-    shouldPromoteMajorTag,
-    executePublishTransaction,
-    markFinalizing,
-    markComplete,
-    withPublishTransaction,
-    getLatestPublishTransaction,
-    fs,
-    getCommitInfo,
-    getMajorGateSource,
-    getVersionStrategy,
-    loadBuildchainConfig,
-    materializeTransactionSourceWorkspace,
-    publicReleaseTagForTransaction,
-    readDurableTransactionForVersion,
-    releaseCommitIncludesTransactionHead,
-    selectAlphaTag,
-    selectReleaseTag,
-    stripTagPrefix,
-    transactionAcceptedExactTagShas,
-    transactionHasPublishedMaterial,
-  } = context;
-  const resolveMajorGateSource = async () => {
-    try {
-      return await getMajorGateSource({
-        octokit,
-        owner,
-        repo,
-        sha,
-        targetRef,
-      });
-    } catch (directError) {
-      const commit = await getCommitInfo(octokit, owner, repo, sha);
-      for (const parentSha of commit.parents) {
-        try {
-          return await getMajorGateSource({
-            octokit,
-            owner,
-            repo,
-            sha: parentSha,
-            targetRef,
-          });
-        } catch {
-          // Try the next parent before surfacing the direct lineage failure.
-        }
+async function resolveMajorGate(context) {
+  try {
+    return await context.getMajorGateSource({
+      octokit: context.octokit,
+      owner: context.owner,
+      repo: context.repo,
+      sha: context.sha,
+      targetRef: context.targetRef,
+    });
+  } catch (directError) {
+    const commit = await context.getCommitInfo(
+      context.octokit,
+      context.owner,
+      context.repo,
+      context.sha,
+    );
+    for (const parentSha of commit.parents) {
+      try {
+        return await context.getMajorGateSource({
+          octokit: context.octokit,
+          owner: context.owner,
+          repo: context.repo,
+          sha: parentSha,
+          targetRef: context.targetRef,
+        });
+      } catch {
+        // Try the next parent before surfacing the direct lineage failure.
       }
-      throw directError;
     }
-  };
-  const majorGate = await resolveMajorGateSource();
+    throw directError;
+  }
+}
+
+function containedMajorTransaction({
+  transaction,
+  version,
+  exactTag,
+  exactTagSha,
+  acceptedExactShas,
+  containsTransaction,
+  majorRule,
+  targetRef,
+  expectedPublicationVersion,
+  hasPublishedMaterial,
+}) {
+  return (
+    transaction &&
+    ["published", "finalizing", "complete"].includes(transaction.state || "") &&
+    hasPublishedMaterial &&
+    transaction.version === version &&
+    transaction.exact_tag === exactTag &&
+    transaction.target_ref === targetRef &&
+    transaction.channel === (majorRule.channel || "major") &&
+    transaction.line === majorRule.releasePrefix &&
+    (!expectedPublicationVersion ||
+      expectedPublicationVersion === transaction.version) &&
+    containsTransaction &&
+    (!exactTagSha || acceptedExactShas.includes(exactTagSha))
+      ? transaction
+      : undefined
+  );
+}
+
+async function planMajorRelease(context) {
+  const majorGate = await resolveMajorGate(context);
   const majorRule = {
-    ...rule,
+    ...context.rule,
     ...majorGate,
     majorAlphaTag: `v${majorGate.major}-alpha`,
     tags: [majorGate.majorTag, majorGate.minorTag],
   };
-  const refs = await listLineRefs(majorRule.releasePrefix);
-  const explicitReleaseTags = requestedTags
-    ? requestedTags.filter(
+  const refs = await context.listLineRefs(majorRule.releasePrefix);
+  const explicitReleaseTags = context.requestedTags
+    ? context.requestedTags.filter(
         (tag) =>
           !tag.includes("-alpha.") &&
           tag.startsWith(`${majorRule.releasePrefix}.`),
@@ -162,287 +83,301 @@ async function promoteMajorChannel(context) {
     );
   }
   const initialMajorTag = `${majorRule.releasePrefix}.0`;
-  const initialMajorVersion = stripTagPrefix(initialMajorTag);
+  const initialMajorVersion = context.stripTagPrefix(initialMajorTag);
   const initialMajorTransaction = explicitReleaseTags[0]
     ? undefined
-    : await readDurableTransactionForVersion({
-        octokit,
-        owner,
-        repo,
+    : await context.readDurableTransactionForVersion({
+        octokit: context.octokit,
+        owner: context.owner,
+        repo: context.repo,
         version: initialMajorVersion,
       });
   const initialMajorExactSha = initialMajorTransaction
-    ? await readRefSha(`tags/${initialMajorTag}`)
+    ? await context.readRefSha(`tags/${initialMajorTag}`)
     : undefined;
   const initialMajorContainsTransaction =
     initialMajorTransaction &&
-    ((await releaseCommitIncludesTransactionHead({
-      octokit,
-      owner,
-      repo,
-      releaseSha: sha,
+    ((await context.releaseCommitIncludesTransactionHead({
+      octokit: context.octokit,
+      owner: context.owner,
+      repo: context.repo,
+      releaseSha: context.sha,
       transactionReleaseSha: initialMajorTransaction.release_sha,
     })) ||
-      (await releaseCommitIncludesTransactionHead({
-        octokit,
-        owner,
-        repo,
-        releaseSha: sha,
+      (await context.releaseCommitIncludesTransactionHead({
+        octokit: context.octokit,
+        owner: context.owner,
+        repo: context.repo,
+        releaseSha: context.sha,
         transactionReleaseSha: initialMajorTransaction.release_material_sha,
       })));
-  const initialMajorAcceptedExactShas = transactionAcceptedExactTagShas(
+  const acceptedExactShas = context.transactionAcceptedExactTagShas(
     initialMajorTransaction,
-    sha,
+    context.sha,
   );
-  const containedPublishedMajorTransaction =
-    initialMajorTransaction &&
-    ["published", "finalizing", "complete"].includes(
-      initialMajorTransaction.state || "",
-    ) &&
-    transactionHasPublishedMaterial(initialMajorTransaction) &&
-    initialMajorTransaction.version === initialMajorVersion &&
-    initialMajorTransaction.exact_tag === initialMajorTag &&
-    initialMajorTransaction.target_ref === targetRef &&
-    initialMajorTransaction.channel === (majorRule.channel || "major") &&
-    initialMajorTransaction.line === majorRule.releasePrefix &&
-    (!expectedPublicationVersion ||
-      expectedPublicationVersion === initialMajorTransaction.version) &&
-    initialMajorContainsTransaction &&
-    (!initialMajorExactSha ||
-      initialMajorAcceptedExactShas.includes(initialMajorExactSha))
-      ? initialMajorTransaction
-      : undefined;
-  if (containedPublishedMajorTransaction && dryRun) {
-    updates.push({
+  const containedPublishedMajorTransaction = containedMajorTransaction({
+    transaction: initialMajorTransaction,
+    version: initialMajorVersion,
+    exactTag: initialMajorTag,
+    exactTagSha: initialMajorExactSha,
+    acceptedExactShas,
+    containsTransaction: initialMajorContainsTransaction,
+    majorRule,
+    targetRef: context.targetRef,
+    expectedPublicationVersion: context.expectedPublicationVersion,
+    hasPublishedMaterial:
+      context.transactionHasPublishedMaterial(initialMajorTransaction),
+  });
+  if (containedPublishedMajorTransaction && context.dryRun) {
+    context.updates.push({
       action: "dry-run-publish-transaction",
       version: containedPublishedMajorTransaction.version,
       tag: containedPublishedMajorTransaction.exact_tag,
-      publicTag: publicReleaseTagForTransaction(
+      publicTag: context.publicReleaseTagForTransaction(
         containedPublishedMajorTransaction,
       ),
       sha: containedPublishedMajorTransaction.release_sha,
       finalizationOnly: true,
     });
-    updates.push({
+    context.updates.push({
       action: "contained-published-transaction-finalization",
       tag: containedPublishedMajorTransaction.exact_tag,
       sourceSha: containedPublishedMajorTransaction.source_sha,
       releaseSha: containedPublishedMajorTransaction.release_sha,
-      currentChannelSha: sha,
+      currentChannelSha: context.sha,
       sha: containedPublishedMajorTransaction.release_sha,
     });
     return {
-      owner,
-      repo,
-      sourceSha: sha,
-      sha,
-      targetRef,
-      updates,
+      result: {
+        owner: context.owner,
+        repo: context.repo,
+        sourceSha: context.sha,
+        sha: context.sha,
+        targetRef: context.targetRef,
+        updates: context.updates,
+      },
     };
   }
   const selectedRelease = containedPublishedMajorTransaction
-    ? {
-        tag: containedPublishedMajorTransaction.exact_tag,
-        patch: 0,
-      }
+    ? { tag: containedPublishedMajorTransaction.exact_tag, patch: 0 }
     : explicitReleaseTags[0]
       ? {
           tag: explicitReleaseTags[0],
           patch: Number(explicitReleaseTags[0].split(".").pop()),
         }
-      : selectReleaseTag({
+      : context.selectReleaseTag({
           refs,
           releasePrefix: majorRule.releasePrefix,
-          sha,
+          sha: context.sha,
         });
   if (selectedRelease.patch !== 0) {
     throw new Error(
       `publish-gate/major promotion must create the first patch of the next major line; got ${selectedRelease.tag}`,
     );
   }
-  const releaseVersion = stripTagPrefix(selectedRelease.tag);
-  const releaseCommit = containedPublishedMajorTransaction
+  return { majorRule, refs, containedPublishedMajorTransaction, selectedRelease };
+}
+
+function majorCompletionOptions(context, plan, finalizationSource) {
+  if (!plan.containedPublishedMajorTransaction) {
+    return {
+      channel: plan.majorRule.channel || "major",
+      line: plan.majorRule.releasePrefix,
+    };
+  }
+  return {
+    channel: plan.majorRule.channel || "major",
+    line: plan.majorRule.releasePrefix,
+    passportCwd: finalizationSource?.workspace || context.cwd,
+    passportBuildSummaryPath: "",
+    passportPlatformManifestPaths: [],
+    passportPromotionRoutingJson: "",
+    passportKfd1WitnessJsons: [],
+    passportKfd2ClaimJsons: [],
+    passportKfdSupportMatrixJson: "",
+    passportKfdProductGateJsons: [],
+    passportKfd3PrebuildWitnessJsons: [],
+    passportKfd3ArtifactWitnessJsons: [],
+    passportInvariantPassportJsons: [],
+    passportReleaseCandidateValidation: null,
+  };
+}
+
+async function publishMajorRelease(context, plan) {
+  const releaseVersion = context.stripTagPrefix(plan.selectedRelease.tag);
+  const releaseCommit = plan.containedPublishedMajorTransaction
     ? {
-        sha: containedPublishedMajorTransaction.release_sha,
-        version: containedPublishedMajorTransaction.version,
+        sha: plan.containedPublishedMajorTransaction.release_sha,
+        version: plan.containedPublishedMajorTransaction.version,
         action: "contained-published-transaction",
-        publishVersion: containedPublishedMajorTransaction.version,
+        publishVersion: plan.containedPublishedMajorTransaction.version,
         files: [],
-        versionStrategy: getVersionStrategy(loadBuildchainConfig(cwd)),
+        versionStrategy: context.getVersionStrategy(
+          context.loadBuildchainConfig(context.cwd),
+        ),
       }
-    : await createVersionStateCommit({
-        baseSha: sha,
+    : await context.createVersionStateCommit({
+        baseSha: context.sha,
         version: releaseVersion,
-        message: `chore(release): release ${selectedRelease.tag}`,
+        message: `chore(release): release ${plan.selectedRelease.tag}`,
       });
   const releaseSha = releaseCommit.sha;
-  if (requireGovernance && !dryRun) {
-    if (releaseCommit.action === "existing") {
-      await assertPromotionPrOrVersionStateParent({
-        commitSha: sha,
-        targetRef,
-        allowedPaths: releaseCommit.files,
-      });
-    }
+  if (
+    context.requireGovernance &&
+    !context.dryRun &&
+    releaseCommit.action === "existing"
+  ) {
+    await context.assertPromotionPrOrVersionStateParent({
+      commitSha: context.sha,
+      targetRef: context.targetRef,
+      allowedPaths: releaseCommit.files,
+    });
   }
   let finalizationSource;
   try {
-    if (containedPublishedMajorTransaction && releasePassport) {
-      finalizationSource = await materializeTransactionSourceWorkspace({
-        octokit,
-        owner,
-        repo,
-        cwd,
-        sourceSha: containedPublishedMajorTransaction.source_sha,
+    if (plan.containedPublishedMajorTransaction && context.releasePassport) {
+      finalizationSource = await context.materializeTransactionSourceWorkspace({
+        octokit: context.octokit,
+        owner: context.owner,
+        repo: context.repo,
+        cwd: context.cwd,
+        sourceSha: plan.containedPublishedMajorTransaction.source_sha,
       });
     }
-    await executePublishTransaction({
+    await context.executePublishTransaction({
       version: releaseCommit.publishVersion || releaseVersion,
-      exactTag: selectedRelease.tag,
-      channel: majorRule.channel || "major",
-      line: majorRule.releasePrefix,
+      exactTag: plan.selectedRelease.tag,
+      channel: plan.majorRule.channel || "major",
+      line: plan.majorRule.releasePrefix,
       releaseSha,
-      sourceShaOverride: containedPublishedMajorTransaction?.source_sha || sha,
+      sourceShaOverride:
+        plan.containedPublishedMajorTransaction?.source_sha || context.sha,
       releaseMaterialShaOverride:
-        containedPublishedMajorTransaction?.release_material_sha ||
-        containedPublishedMajorTransaction?.release_sha ||
-        releaseMaterialSha,
+        plan.containedPublishedMajorTransaction?.release_material_sha ||
+        plan.containedPublishedMajorTransaction?.release_sha ||
+        context.releaseMaterialSha,
       publishToolingShaOverride:
-        containedPublishedMajorTransaction?.publish_tooling_sha ||
-        containedPublishedMajorTransaction?.release_sha ||
-        publishToolingSha,
+        plan.containedPublishedMajorTransaction?.publish_tooling_sha ||
+        plan.containedPublishedMajorTransaction?.release_sha ||
+        context.publishToolingSha,
       allowVersionStateFinalization:
         releaseCommit.action === "existing" ||
-        Boolean(containedPublishedMajorTransaction),
+        Boolean(plan.containedPublishedMajorTransaction),
     });
-    if (versionState) {
-      await markFinalizing();
-      if (!containedPublishedMajorTransaction) {
-        const gateUpdate = await updateBranch(
-          targetRef,
+    if (context.versionState) {
+      await context.markFinalizing();
+      if (!plan.containedPublishedMajorTransaction) {
+        const gateUpdate = await context.updateBranch(
+          context.targetRef,
           releaseSha,
           "updated",
           {
-            title: `Release ${selectedRelease.tag}`,
-            body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+            title: `Release ${plan.selectedRelease.tag}`,
+            body: `Create the generated version-state commit for ${plan.selectedRelease.tag}.`,
             allowPendingPullRequest: true,
           },
         );
         if (gateUpdate.pending) {
-          return withPublishTransaction(
-            {
-              owner,
-              repo,
-              sourceSha: sha,
-              sha: releaseSha,
-              targetRef,
-              pendingPullRequest:
-                gateUpdate.pullRequest.html_url || gateUpdate.pullRequest.url,
-              updates,
-            },
-            { finalizationNeeded: true },
-          );
+          return {
+            result: context.withPublishTransaction(
+              {
+                owner: context.owner,
+                repo: context.repo,
+                sourceSha: context.sha,
+                sha: releaseSha,
+                targetRef: context.targetRef,
+                pendingPullRequest:
+                  gateUpdate.pullRequest.html_url || gateUpdate.pullRequest.url,
+                updates: context.updates,
+              },
+              { finalizationNeeded: true },
+            ),
+          };
         }
       }
-      const releaseBranchUpdate = await updateBranch(
-        `release/v${majorRule.major}/v${majorRule.major}.0`,
+      const releaseBranchUpdate = await context.updateBranch(
+        `release/v${plan.majorRule.major}/v${plan.majorRule.major}.0`,
         releaseSha,
         "updated",
         {
-          title: `Release ${selectedRelease.tag}`,
-          body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+          title: `Release ${plan.selectedRelease.tag}`,
+          body: `Create the generated version-state commit for ${plan.selectedRelease.tag}.`,
           allowPendingPullRequest: true,
         },
       );
       if (releaseBranchUpdate.pending) {
-        return withPublishTransaction(
-          {
-            owner,
-            repo,
-            sourceSha: sha,
-            sha: releaseSha,
-            targetRef,
-            pendingPullRequest:
-              releaseBranchUpdate.pullRequest.html_url ||
-              releaseBranchUpdate.pullRequest.url,
-            updates,
-          },
-          { finalizationNeeded: true },
-        );
+        return {
+          result: context.withPublishTransaction(
+            {
+              owner: context.owner,
+              repo: context.repo,
+              sourceSha: context.sha,
+              sha: releaseSha,
+              targetRef: context.targetRef,
+              pendingPullRequest:
+                releaseBranchUpdate.pullRequest.html_url ||
+                releaseBranchUpdate.pullRequest.url,
+              updates: context.updates,
+            },
+            { finalizationNeeded: true },
+          ),
+        };
       }
     }
-    await markFinalizing();
-    await ensureTag(selectedRelease.tag, releaseSha, {
-      acceptedExistingShas: transactionAcceptedExactTagShas(
-        containedPublishedMajorTransaction,
+    await context.markFinalizing();
+    await context.ensureTag(plan.selectedRelease.tag, releaseSha, {
+      acceptedExistingShas: context.transactionAcceptedExactTagShas(
+        plan.containedPublishedMajorTransaction,
         releaseSha,
       ),
     });
-    await updateTag(majorRule.minorTag, releaseSha);
-    await updateTag(majorRule.majorTag, releaseSha);
-    await markComplete(
-      containedPublishedMajorTransaction
-        ? {
-            channel: majorRule.channel || "major",
-            line: majorRule.releasePrefix,
-            passportCwd: finalizationSource?.workspace || cwd,
-            passportBuildSummaryPath: "",
-            passportPlatformManifestPaths: [],
-            passportPromotionRoutingJson: "",
-            passportKfd1WitnessJsons: [],
-            passportKfd2ClaimJsons: [],
-            passportKfdSupportMatrixJson: "",
-            passportKfdProductGateJsons: [],
-            passportKfd3PrebuildWitnessJsons: [],
-            passportKfd3ArtifactWitnessJsons: [],
-            passportInvariantPassportJsons: [],
-            passportReleaseCandidateValidation: null,
-          }
-        : {
-            channel: majorRule.channel || "major",
-            line: majorRule.releasePrefix,
-          },
+    await context.updateTag(plan.majorRule.minorTag, releaseSha);
+    await context.updateTag(plan.majorRule.majorTag, releaseSha);
+    await context.markComplete(
+      majorCompletionOptions(context, plan, finalizationSource),
     );
   } finally {
     if (finalizationSource?.root) {
-      fs.rmSync(finalizationSource.root, {
+      context.fs.rmSync(finalizationSource.root, {
         recursive: true,
         force: true,
       });
     }
   }
-  if (containedPublishedMajorTransaction) {
-    updates.push({
+  if (plan.containedPublishedMajorTransaction) {
+    context.updates.push({
       action: "finalized-contained-published-transaction",
-      tag: containedPublishedMajorTransaction.exact_tag,
-      sourceSha: containedPublishedMajorTransaction.source_sha,
-      releaseSha: containedPublishedMajorTransaction.release_sha,
-      currentChannelSha: sha,
-      sha: containedPublishedMajorTransaction.release_sha,
+      tag: plan.containedPublishedMajorTransaction.exact_tag,
+      sourceSha: plan.containedPublishedMajorTransaction.source_sha,
+      releaseSha: plan.containedPublishedMajorTransaction.release_sha,
+      currentChannelSha: context.sha,
+      sha: plan.containedPublishedMajorTransaction.release_sha,
     });
   }
+  return { releaseCommit, releaseSha };
+}
 
-  if (releaseCommit.versionStrategy?.next === "manual") {
-    updates.push({
-      ref: `dev/v${majorRule.major}/v${majorRule.major}.0`,
+async function prepareMajorNextAlpha(context, plan, published) {
+  if (published.releaseCommit.versionStrategy?.next === "manual") {
+    context.updates.push({
+      ref: `dev/v${plan.majorRule.major}/v${plan.majorRule.major}.0`,
       action: "next-anchor-required",
-      versionStrategy: releaseCommit.versionStrategy.strategy,
-      manifest: releaseCommit.anchorManifest?.path,
-      sha: releaseSha,
+      versionStrategy: published.releaseCommit.versionStrategy.strategy,
+      manifest: published.releaseCommit.anchorManifest?.path,
+      sha: published.releaseSha,
     });
-    return withPublishTransaction({
-      owner,
-      repo,
-      sourceSha: sha,
-      sha: releaseSha,
+    return context.withPublishTransaction({
+      owner: context.owner,
+      repo: context.repo,
+      sourceSha: context.sha,
+      sha: published.releaseSha,
       nextAlphaRequired: true,
-      targetRef,
-      updates,
+      targetRef: context.targetRef,
+      updates: context.updates,
     });
   }
-
-  const explicitAlphaTags = requestedTags
-    ? requestedTags.filter((tag) => tag.includes("-alpha."))
+  const explicitAlphaTags = context.requestedTags
+    ? context.requestedTags.filter((tag) => tag.includes("-alpha."))
     : [];
   if (explicitAlphaTags.length > 1) {
     throw new Error(
@@ -451,34 +386,36 @@ async function promoteMajorChannel(context) {
   }
   const selectedNextAlpha = explicitAlphaTags[0]
     ? { tag: explicitAlphaTags[0] }
-    : selectAlphaTag({
-        refs,
-        releasePrefix: majorRule.releasePrefix,
-        sha: releaseSha,
+    : context.selectAlphaTag({
+        refs: plan.refs,
+        releasePrefix: plan.majorRule.releasePrefix,
+        sha: published.releaseSha,
         patchAfterRelease: 1,
       });
-  const nextAlphaVersion = stripTagPrefix(selectedNextAlpha.tag);
-  let nextAlphaSha = versionState ? selectedNextAlpha.sha : sha;
-  if (versionState && selectedNextAlpha.exists && nextAlphaSha) {
-    updates.push({
+  const nextAlphaVersion = context.stripTagPrefix(selectedNextAlpha.tag);
+  let nextAlphaSha = context.versionState
+    ? selectedNextAlpha.sha
+    : context.sha;
+  if (context.versionState && selectedNextAlpha.exists && nextAlphaSha) {
+    context.updates.push({
       version: nextAlphaVersion,
       action: "existing-version-state",
       sha: nextAlphaSha,
     });
-  } else if (versionState) {
-    const nextAlphaRef = `alpha/v${majorRule.major}/v${majorRule.major}.0`;
+  } else if (context.versionState) {
+    const nextAlphaRef = `alpha/v${plan.majorRule.major}/v${plan.majorRule.major}.0`;
     const nextAlphaBaseSha =
-      (await readRefSha(`heads/${nextAlphaRef}`)) || releaseSha;
-    const nextAlphaCommit = await createVersionStateCommit({
+      (await context.readRefSha(`heads/${nextAlphaRef}`)) || published.releaseSha;
+    const nextAlphaCommit = await context.createVersionStateCommit({
       baseSha: nextAlphaBaseSha,
       version: nextAlphaVersion,
       message: `chore(release): prepare ${selectedNextAlpha.tag}`,
     });
     nextAlphaSha = nextAlphaCommit.sha;
   }
-  if (versionState) {
-    const nextAlphaUpdate = await updateBranch(
-      `alpha/v${majorRule.major}/v${majorRule.major}.0`,
+  if (context.versionState) {
+    const nextAlphaUpdate = await context.updateBranch(
+      `alpha/v${plan.majorRule.major}/v${plan.majorRule.major}.0`,
       nextAlphaSha,
       "updated",
       {
@@ -488,41 +425,49 @@ async function promoteMajorChannel(context) {
       },
     );
     if (nextAlphaUpdate.pending) {
-      return withPublishTransaction(
+      return context.withPublishTransaction(
         {
-          owner,
-          repo,
-          sourceSha: sha,
-          sha: releaseSha,
+          owner: context.owner,
+          repo: context.repo,
+          sourceSha: context.sha,
+          sha: published.releaseSha,
           nextAlphaSha,
-          targetRef,
+          targetRef: context.targetRef,
           pendingPullRequest:
             nextAlphaUpdate.pullRequest.html_url ||
             nextAlphaUpdate.pullRequest.url,
-          updates,
+          updates: context.updates,
         },
         { finalizationNeeded: true },
       );
     }
-    const nextDevRef = `dev/v${majorRule.major}/v${majorRule.major}.0`;
-    await updateBranch(nextDevRef, nextAlphaSha, "updated", {
+    const nextDevRef = `dev/v${plan.majorRule.major}/v${plan.majorRule.major}.0`;
+    await context.updateBranch(nextDevRef, nextAlphaSha, "updated", {
       title: `Prepare ${selectedNextAlpha.tag}`,
       body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
     });
-    await updateDefaultBranch(nextDevRef);
+    await context.updateDefaultBranch(nextDevRef);
   }
-  await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
-  await updateTag(majorRule.alphaTag, nextAlphaSha);
-  await updateTag(majorRule.majorAlphaTag, nextAlphaSha);
-  return withPublishTransaction({
-    owner,
-    repo,
-    sourceSha: sha,
-    sha: releaseSha,
+  await context.ensureTag(selectedNextAlpha.tag, nextAlphaSha);
+  await context.updateTag(plan.majorRule.alphaTag, nextAlphaSha);
+  await context.updateTag(plan.majorRule.majorAlphaTag, nextAlphaSha);
+  return context.withPublishTransaction({
+    owner: context.owner,
+    repo: context.repo,
+    sourceSha: context.sha,
+    sha: published.releaseSha,
     nextAlphaSha,
-    targetRef,
-    updates,
+    targetRef: context.targetRef,
+    updates: context.updates,
   });
+}
+
+async function promoteMajorChannel(context) {
+  const plan = await planMajorRelease(context);
+  if (plan.result) return plan.result;
+  const published = await publishMajorRelease(context, plan);
+  if (published.result) return published.result;
+  return prepareMajorNextAlpha(context, plan, published);
 }
 
 export { promoteMajorChannel };

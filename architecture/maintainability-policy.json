@@ -69,21 +69,6 @@
       "maxComplexity": 1,
       "rationale": "Transplanted legacy durable transaction and Passport operations now live in an independently owned module; explicit dependency injection adds seams while this exact inherited ceiling cannot grow."
     },
-    "actions/promote-buildchain-ref/internal/promote-major-channel.js#promoteMajorChannel": {
-      "maxLines": 526,
-      "maxComplexity": 66,
-      "rationale": "Existing major-channel behavior moved intact into an independently owned channel module; dependency injection adds explicit seams while this exact inherited debt ceiling cannot grow."
-    },
-    "actions/promote-buildchain-ref/internal/promote-alpha-channel.js#promoteAlphaChannel": {
-      "maxLines": 580,
-      "maxComplexity": 93,
-      "rationale": "Existing alpha-channel behavior moved intact into an independently owned channel module; dependency injection adds explicit seams while this exact inherited debt ceiling cannot grow."
-    },
-    "actions/promote-buildchain-ref/internal/promote-release-channel.js#promoteReleaseChannel": {
-      "maxLines": 570,
-      "maxComplexity": 80,
-      "rationale": "Existing release-channel behavior moved intact into an independently owned channel module; dependency injection adds explicit seams while this exact inherited debt ceiling cannot grow."
-    },
     "packages/core/paper-npm-bootstrap.js#executePaperNpmBootstrap": {
       "maxLines": 490,
       "maxComplexity": 58,
@@ -105,6 +90,41 @@
       "file": "packages/core/release-passport.js",
       "lines": 180,
       "complexity": 25
+    },
+    "createReleasePassport": {
+      "file": "packages/core/release-passport.js",
+      "lines": 273,
+      "complexity": 44
+    },
+    "promoteMajorChannel": {
+      "file": "actions/promote-buildchain-ref/internal/promote-major-channel.js",
+      "lines": 7,
+      "complexity": 3
+    },
+    "promoteAlphaChannel": {
+      "file": "actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
+      "lines": 15,
+      "complexity": 3
+    },
+    "promoteReleaseChannel": {
+      "file": "actions/promote-buildchain-ref/internal/promote-release-channel.js",
+      "lines": 8,
+      "complexity": 2
+    },
+    "runPublishTransaction": {
+      "file": "actions/promote-buildchain-ref/lib.js",
+      "lines": 259,
+      "complexity": 33
+    },
+    "collectPaperStatus": {
+      "file": "packages/core/paper.js",
+      "lines": 190,
+      "complexity": 47
+    },
+    "collectPaperPreflight": {
+      "file": "packages/core/paper.js",
+      "lines": 178,
+      "complexity": 18
     }
   },
   "publicSurfacePolicy": {
