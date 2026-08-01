@@ -122,6 +122,23 @@
       "contracts": ["actions/promote-buildchain-ref/lib.js"]
     },
     {
+      "id": "promotion-channel-orchestration",
+      "owner": "Buildchain action maintainers",
+      "implementation": [
+        "actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
+        "actions/promote-buildchain-ref/internal/promote-major-channel.js",
+        "actions/promote-buildchain-ref/internal/promote-release-channel.js"
+      ],
+      "tests": [
+        "tests/promote-buildchain-ref.test.mjs",
+        "tests/promotion-responsibilities.test.mjs"
+      ],
+      "contracts": [
+        "actions/promote-buildchain-ref/action.yml",
+        "actions/promote-buildchain-ref/lib.js"
+      ]
+    },
+    {
       "id": "cli-trust-release-dispatch",
       "owner": "Buildchain maintainers",
       "implementation": [

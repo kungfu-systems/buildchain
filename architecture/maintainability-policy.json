@@ -64,20 +64,20 @@
       "maxComplexity": 1,
       "rationale": "Transplanted legacy durable transaction and Passport operations; independently tested and prevented from growing beyond this exact extraction point."
     },
-    "actions/promote-buildchain-ref/lib.js#promoteMajorChannel": {
-      "maxLines": 480,
+    "actions/promote-buildchain-ref/internal/promote-major-channel.js#promoteMajorChannel": {
+      "maxLines": 526,
       "maxComplexity": 66,
-      "rationale": "Existing major-channel behavior moved intact behind a named channel handler; this exact inherited debt ceiling cannot grow."
+      "rationale": "Existing major-channel behavior moved intact into an independently owned channel module; dependency injection adds explicit seams while this exact inherited debt ceiling cannot grow."
     },
-    "actions/promote-buildchain-ref/lib.js#promoteAlphaChannel": {
-      "maxLines": 521,
+    "actions/promote-buildchain-ref/internal/promote-alpha-channel.js#promoteAlphaChannel": {
+      "maxLines": 580,
       "maxComplexity": 93,
-      "rationale": "Existing alpha-channel behavior moved intact behind a named channel handler; this exact inherited debt ceiling cannot grow."
+      "rationale": "Existing alpha-channel behavior moved intact into an independently owned channel module; dependency injection adds explicit seams while this exact inherited debt ceiling cannot grow."
     },
-    "actions/promote-buildchain-ref/lib.js#promoteReleaseChannel": {
-      "maxLines": 521,
+    "actions/promote-buildchain-ref/internal/promote-release-channel.js#promoteReleaseChannel": {
+      "maxLines": 570,
       "maxComplexity": 80,
-      "rationale": "Existing release-channel behavior moved intact behind a named channel handler; this exact inherited debt ceiling cannot grow."
+      "rationale": "Existing release-channel behavior moved intact into an independently owned channel module; dependency injection adds explicit seams while this exact inherited debt ceiling cannot grow."
     },
     "packages/core/release-passport.js#validateReleaseEvidenceAttachments": {
       "maxLines": 74,

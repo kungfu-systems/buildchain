@@ -279,14 +279,22 @@ function evaluateMaintainability({ current, baselineFiles, policy }) {
         );
       }
       for (const entry of metrics.functions) {
-        if (entry.lines > budgets.newFunctionLines) {
+        const key = `${file}#${entry.name}`;
+        const approval = policy.approvedExtractedDebt?.[key];
+        if (approval && !String(approval.rationale || "").trim()) {
+          issues.push(`${key}: approved extracted debt requires a rationale`);
+        }
+        const allowedLines = approval?.maxLines ?? budgets.newFunctionLines;
+        const allowedComplexity =
+          approval?.maxComplexity ?? budgets.newFunctionComplexity;
+        if (entry.lines > allowedLines) {
           issues.push(
-            `${file}:${entry.start} ${entry.name} has ${entry.lines} lines; new-function budget is ${budgets.newFunctionLines}`,
+            `${file}:${entry.start} ${entry.name} has ${entry.lines} lines; new-function budget is ${allowedLines}`,
           );
         }
-        if (entry.complexity > budgets.newFunctionComplexity) {
+        if (entry.complexity > allowedComplexity) {
           issues.push(
-            `${file}:${entry.start} ${entry.name} has complexity ${entry.complexity}; new-function budget is ${budgets.newFunctionComplexity}`,
+            `${file}:${entry.start} ${entry.name} has complexity ${entry.complexity}; new-function budget is ${allowedComplexity}`,
           );
         }
       }

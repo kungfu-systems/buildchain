@@ -1,9 +1,51 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 import {
   createDurableTransactionOperations,
   createRefMutationOperations,
 } from "../actions/promote-buildchain-ref/lib.js";
+import { promoteAlphaChannel } from "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js";
+import { promoteMajorChannel } from "../actions/promote-buildchain-ref/internal/promote-major-channel.js";
+import { promoteReleaseChannel } from "../actions/promote-buildchain-ref/internal/promote-release-channel.js";
+
+const root = path.resolve(import.meta.dirname, "..");
+
+test("promotion facade delegates to independently owned channel modules", () => {
+  assert.equal(typeof promoteMajorChannel, "function");
+  assert.equal(typeof promoteAlphaChannel, "function");
+  assert.equal(typeof promoteReleaseChannel, "function");
+  const facade = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/lib.js"),
+    "utf8",
+  );
+  for (const channel of ["major", "alpha", "release"]) {
+    assert.match(
+      facade,
+      new RegExp(`from \\"\\./internal/promote-${channel}-channel\\.js\\"`),
+    );
+    assert.doesNotMatch(
+      facade,
+      new RegExp(
+        `function promote${channel[0].toUpperCase()}${channel.slice(1)}Channel`,
+      ),
+    );
+    const moduleLines = fs
+      .readFileSync(
+        path.join(
+          root,
+          `actions/promote-buildchain-ref/internal/promote-${channel}-channel.js`,
+        ),
+        "utf8",
+      )
+      .split("\n").length;
+    assert.ok(
+      moduleLines <= 600,
+      `${channel} channel module is ${moduleLines} lines`,
+    );
+  }
+});
 
 test("ref mutation responsibility plans provider operations without mutating during dry-run", async () => {
   const requests = [];

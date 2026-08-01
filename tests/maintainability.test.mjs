@@ -174,6 +174,22 @@ test("new-only budgets reject widened debt and oversized extracted units", () =>
       entry.includes("new.js:1 extracted has complexity 31"),
     ),
   );
+
+  fixturePolicy.approvedExtractedDebt["new.js#extracted"] = {
+    maxLines: 40,
+    maxComplexity: 31,
+    rationale:
+      "Fixture proving that explicitly bounded extracted debt remains auditable in a new module.",
+  };
+  const approvedIssues = evaluateMaintainability({
+    current,
+    baselineFiles,
+    policy: fixturePolicy,
+  });
+  assert.equal(
+    approvedIssues.some((entry) => entry.includes("new.js:1 extracted")),
+    false,
+  );
 });
 
 test("baseline revision source metrics remain available from Git", () => {
