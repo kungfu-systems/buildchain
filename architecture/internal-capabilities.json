@@ -7,8 +7,12 @@
     "packages/core/release-passport.js",
     "packages/core/buildchain-contract.js",
     "packages/core/paper-fleet.js",
+    "packages/core/paper-agent-entry.js",
+    "packages/core/paper-npm-bootstrap.js",
     "packages/core/paper-repository.js",
+    "packages/core/paper-scaffold-content.js",
     "packages/core/paper-work.js",
+    "packages/core/paper.js",
     "packages/core/public-surface-cli.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
@@ -17,7 +21,9 @@
     "scripts/promotion-routing-evidence.mjs",
     "scripts/paper-work-fleet-cli.mjs",
     "scripts/run-lifecycle-core.mjs",
+    "scripts/resolve-artifact-transfer-mode.mjs",
     "scripts/web-surface-core.mjs",
+    "scripts/web-surface-routing.mjs",
     "scripts/web-surface.mjs",
     "scripts/verify-promotion-router-binding.sh"
   ],
@@ -196,9 +202,11 @@
       "owner": "Buildchain workflow maintainers",
       "implementation": [
         "scripts/generate-channel-build-workflow.mjs",
+        "scripts/resolve-artifact-transfer-mode.mjs",
         "scripts/run-lifecycle-core.mjs"
       ],
       "tests": [
+        "tests/artifact-transfer-mode.test.mjs",
         "tests/build-surface.test.mjs",
         "tests/controller-evidence.test.mjs"
       ],
@@ -212,6 +220,7 @@
       "owner": "Buildchain web-surface maintainers",
       "implementation": [
         "scripts/web-surface-core.mjs",
+        "scripts/web-surface-routing.mjs",
         "scripts/web-surface.mjs"
       ],
       "tests": [
@@ -247,9 +256,13 @@
       "id": "paper-fleet-golden-path",
       "owner": "Buildchain Paper maintainers",
       "implementation": [
+        "packages/core/paper-agent-entry.js",
         "packages/core/paper-fleet.js",
+        "packages/core/paper-npm-bootstrap.js",
         "packages/core/paper-repository.js",
+        "packages/core/paper-scaffold-content.js",
         "packages/core/paper-work.js",
+        "packages/core/paper.js",
         "packages/core/public-surface-cli.js",
         "scripts/buildchain-cli-help.mjs",
         "scripts/paper-work-fleet-cli.mjs"
