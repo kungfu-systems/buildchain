@@ -265,6 +265,21 @@ jobs:
             const plan = JSON.parse(fs.readFileSync(".buildchain/release-propagation/plan.json", "utf8"));
             const target = plan.targets.find((entry) => entry.target === process.env.TARGET || entry.repository === process.env.TARGET);
             if (!target) throw new Error(`no propagation target matched ${process.env.TARGET}`);
+            const exactCoordinates = {
+              repository: target.repository,
+              baseRef: target.baseRef,
+              branch: target.branch,
+              lockPath: target.lockPath,
+            };
+            const callerCoordinates = {
+              repository: process.env.DOWNSTREAM_REPOSITORY,
+              baseRef: process.env.DOWNSTREAM_BASE_REF,
+              branch: process.env.BRANCH_OVERRIDE || target.branch,
+              lockPath: process.env.LOCK_PATH || target.lockPath,
+            };
+            if (JSON.stringify(callerCoordinates) !== JSON.stringify(exactCoordinates)) {
+              throw new Error(`downstream caller coordinates disagree with the exact propagation graph: ${JSON.stringify({ exactCoordinates, callerCoordinates })}`);
+            }
             const upstreamPackage = target.lock.upstream.package || {};
             const branch = process.env.BRANCH_OVERRIDE || target.branch;
             const profile = target.executionProfile || {};
@@ -273,6 +288,9 @@ jobs:
         env:
           TARGET: ${{ inputs.downstream-target }}
           BRANCH_OVERRIDE: ${{ inputs.downstream-branch }}
+          DOWNSTREAM_REPOSITORY: ${{ inputs.downstream-repository }}
+          DOWNSTREAM_BASE_REF: ${{ inputs.downstream-base-ref }}
+          LOCK_PATH: ${{ inputs.lock-path }}
 
       - name: Checkout downstream repository
         uses: actions/checkout@v7.0.0
@@ -414,7 +432,7 @@ jobs:
               --arg locator "$locator" \
               --arg repository "${{ inputs.downstream-repository }}" \
               --arg revision "$revision" \
-              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision}],failure:null}' \
+              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision,httpStatus:null,bytes:0}],failure:null}' \
               > .buildchain/release-propagation/receipt-input.json
             node .buildchain/runtime/bin/buildchain.mjs release-propagation work receipt \
               --work .buildchain/release-propagation/work.json \
@@ -432,7 +450,7 @@ jobs:
             mv .buildchain/release-propagation/work.next.json .buildchain/release-propagation/work.json
           }
           record_stage materialize release-lock "sha256:${LOCK_SHA}" "${{ steps.plan.outputs.lock_path }}" "${{ steps.branch.outputs.base_sha }}"
-          record_stage verify-release downstream-verification "sha256:${LOCK_SHA}" "buildchain://release-propagation/verify-release" "${{ steps.branch.outputs.base_sha }}"
+          record_stage verify-release release-contract-verification "sha256:${LOCK_SHA}" "buildchain://release-propagation/verify-release" "${{ steps.branch.outputs.base_sha }}"
 
       - name: Summarize release propagation
         id: summarize
@@ -628,7 +646,7 @@ jobs:
               --arg locator "$locator" \
               --arg repository "${{ inputs.downstream-repository }}" \
               --arg revision "$revision" \
-              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision}],failure:null}' \
+              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision,httpStatus:null,bytes:0}],failure:null}' \
               > .buildchain/release-propagation/receipt-input.json
             node .buildchain/runtime/bin/buildchain.mjs release-propagation work receipt \
               --work .buildchain/release-propagation/work.json \
@@ -648,7 +666,8 @@ jobs:
           pushed_sha="$(jq -r '.pushedSha' .buildchain/release-propagation/branch-reconciliation.json)"
           pr_url="$(jq -r '.pullRequest.url' .buildchain/release-propagation/branch-reconciliation.json)"
           pr_number="$(jq -r '.pullRequest.number' .buildchain/release-propagation/branch-reconciliation.json)"
-          record_stage push-branch git-branch "$pushed_sha" "github://${{ inputs.downstream-repository }}/tree/${{ steps.plan.outputs.branch }}" "$pushed_sha"
+          reconciliation="$(cat .buildchain/release-propagation/branch-reconciliation.json)"
+          record_stage push-branch git-branch-reconciliation "$reconciliation" "buildchain://release-propagation/branch-reconciliation" "$pushed_sha"
           record_stage pull-request github-pull-request "${{ inputs.downstream-repository }}#${pr_number}:${pr_url}" "$pr_url" "$pushed_sha"
 
       - name: Expose agent-native propagation work

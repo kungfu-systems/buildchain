@@ -19,6 +19,9 @@ import {
   verifyReleasePropagationWork,
   writeReleasePropagationLock,
 } from "@kungfu-tech/buildchain/release-propagation";
+import { sha256Json } from "../packages/core/release-propagation-common.js";
+import { contentRoot } from "../packages/core/release-propagation-work-control.js";
+import { withWorkRoot } from "../packages/core/release-propagation-work.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -90,20 +93,84 @@ function propagationWorkContext(mode = "execute") {
   };
 }
 
-function stageReceipt(work, outcome = "success", failure = null) {
+function stageReceipt(
+  work,
+  outcome = "success",
+  failure = null,
+  decision = null,
+  actorIdentity = "",
+) {
+  const stage = work.state.currentStage;
+  const kinds = {
+    materialize: "release-lock",
+    "verify-release": "release-contract-verification",
+    "push-branch": "git-branch-reconciliation",
+    "pull-request": "github-pull-request",
+    preview: "preview-deployment",
+    "independent-review": "github-pr-approval",
+    "protected-merge": "github-merge",
+    staging: "staging-deployment",
+    "production-release": "production-release-pr",
+    "production-deploy": "production-deployment",
+    complete: "work-control-decision",
+  };
+  const locators = {
+    materialize: work.downstream.lockPath,
+    "verify-release": "buildchain://release-propagation/verify-release",
+    "push-branch": "buildchain://release-propagation/branch-reconciliation",
+    "pull-request": `https://github.com/${work.downstream.repository}/pull/1`,
+    preview: `https://github.com/${work.downstream.repository}/actions/runs/1`,
+    "independent-review": `https://github.com/${work.downstream.repository}/pull/1#pullrequestreview-1`,
+    "protected-merge": `https://github.com/${work.downstream.repository}/commit/${"a".repeat(40)}`,
+    staging: `https://github.com/${work.downstream.repository}/actions/runs/2`,
+    "production-release": `https://github.com/${work.downstream.repository}/pull/2`,
+    "production-deploy": `https://github.com/${work.downstream.repository}/actions/runs/3`,
+    complete: "kungfu://decision/site-production-completion",
+  };
+  const evidence = stage === "online-readback"
+    ? [
+        ["production-status", work.downstream.executionProfile.productionStatusUrl],
+        ...work.downstream.executionProfile.readbackUrls.map((url) => ["online-artifact", url]),
+      ].map(([kind, locator]) => ({
+        kind,
+        root: shaRoot(`${kind}:${work.revision}:${outcome}`),
+        locator,
+        repository: work.downstream.repository,
+        revision: "a".repeat(40),
+        httpStatus: 200,
+        bytes: 128,
+      }))
+    : [{
+        kind: kinds[stage] || `${stage}-diagnostic`,
+        root: decision?.root || shaRoot(`${stage}:${work.revision}:${outcome}`),
+        locator: locators[stage] || `buildchain://release-propagation/${stage}`,
+        repository: work.downstream.repository,
+        revision: "a".repeat(40),
+        httpStatus: null,
+        bytes: 0,
+      }];
+  if (stage === "production-deploy") {
+    evidence.push({
+      kind: "rollback-coordinate",
+      root: shaRoot(`rollback:${work.revision}`),
+      locator: `https://github.com/${work.downstream.repository}/commit/${"b".repeat(40)}`,
+      repository: work.downstream.repository,
+      revision: "b".repeat(40),
+      httpStatus: null,
+      bytes: 0,
+    });
+  }
   return createReleasePropagationStageReceipt({
     work,
     outcome,
     observedAt: "2026-08-01T06:00:00.000Z",
-    actor: { kind: "agent", identity: "codex/pro-1802" },
-    summary: `${work.state.currentStage} ${outcome}`,
-    evidence: [{
-      kind: `${work.state.currentStage}-evidence`,
-      root: shaRoot(`${work.state.currentStage}:${work.revision}:${outcome}`),
-      locator: `github://kungfu-systems/site-libkungfu-dev/${work.state.currentStage}`,
-      repository: "kungfu-systems/site-libkungfu-dev",
-      revision: "a".repeat(40),
-    }],
+    actor: {
+      kind: "agent",
+      identity: actorIdentity
+        || (stage === "independent-review" ? "kungfu-origin/reviewer" : "codex/pro-1802"),
+    },
+    summary: `${stage} ${outcome}`,
+    evidence,
     failure,
   });
 }
@@ -168,6 +235,13 @@ test("release propagation rejects npm gitHead, exact tag, source SHA, and packag
       upstreamRelease: { ...release, tag: "v1.4.0-alpha" },
     }),
     /tag must exactly match/,
+  );
+  assert.throws(
+    () => planReleasePropagation({
+      graph: readJson("graph.json"),
+      upstreamRelease: { ...release, tagTargetSha: "e".repeat(40) },
+    }),
+    /tag target must match sourceSha/,
   );
 });
 
@@ -413,6 +487,32 @@ test("propagation work resumes retryable failure and completes only after online
   assert.equal(work.state.recoveryCursor.attempt, 2);
 
   while (work.state.currentStage !== "complete") {
+    if (work.state.currentStage === "independent-review") {
+      assert.throws(
+        () => stageReceipt(work, "success", null, null, "warrant-1"),
+        /must differ from the executing Warrant identity/,
+      );
+    }
+    if (work.state.currentStage === "online-readback") {
+      assert.throws(
+        () => createReleasePropagationStageReceipt({
+          work,
+          observedAt: "2026-08-01T06:00:00.000Z",
+          actor: { kind: "agent", identity: "codex/pro-1802" },
+          summary: "generic readback is not qualifying",
+          evidence: [{
+            kind: "online-readback-evidence",
+            root: shaRoot("generic-readback"),
+            locator: "github://generic/readback",
+            repository: work.downstream.repository,
+            revision: "a".repeat(40),
+            httpStatus: null,
+            bytes: 0,
+          }],
+        }),
+        /stage-specific evidence/,
+      );
+    }
     const receipt = stageReceipt(work);
     work = recordReleasePropagationStage({
       work,
@@ -430,17 +530,18 @@ test("propagation work resumes retryable failure and completes only after online
     /requires a Work Control completion decision/,
   );
 
-  const completionReceipt = stageReceipt(work);
+  const completionDecision = typedReference(
+    "decision",
+    "site-production-completion",
+    "accepted",
+    context.familyState,
+  );
+  const completionReceipt = stageReceipt(work, "success", null, completionDecision);
   work = completeReleasePropagationWork({
     work,
     expectedWorkRoot: work.contentRoot,
     receipt: completionReceipt,
-    completionDecision: typedReference(
-      "decision",
-      "site-production-completion",
-      "accepted",
-      context.familyState,
-    ),
+    completionDecision,
   });
   const completed = verifyReleasePropagationWork(work);
   assert.equal(completed.lifecycle, "complete");
@@ -467,6 +568,25 @@ test("propagation work fails closed on malformed WorkRef, floating base, and har
   );
 
   const context = propagationWorkContext();
+  const mismatchedPlan = structuredClone(plan);
+  mismatchedPlan.targets[0].lock.upstream.package = {
+    ...mismatchedPlan.targets[0].lock.upstream.package,
+  };
+  mismatchedPlan.targets[0].lock.upstream.sourceSha = "e".repeat(40);
+  mismatchedPlan.targets[0].lock.upstream.tagTargetSha = "e".repeat(40);
+  mismatchedPlan.targets[0].lock.upstream.package.gitHead = "e".repeat(40);
+  mismatchedPlan.targets[0].lock.lockSha256 = sha256Json({
+    ...mismatchedPlan.targets[0].lock,
+    lockSha256: undefined,
+  });
+  assert.throws(
+    () => createReleasePropagationWork({
+      plan: mismatchedPlan,
+      workContext: context,
+      expectedDownstreamBaseSha: "d".repeat(40),
+    }),
+    /upstream release disagrees with its lock/,
+  );
   let work = createReleasePropagationWork({
     plan,
     workContext: context,
@@ -490,6 +610,34 @@ test("propagation work fails closed on malformed WorkRef, floating base, and har
       receipt: stageReceipt(work, "repair"),
     }),
     /only retryable/,
+  );
+});
+
+test("propagation work rejects a forged latest expected-old receipt chain", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  let work = createReleasePropagationWork({
+    plan,
+    workContext: propagationWorkContext(),
+    expectedDownstreamBaseSha: "d".repeat(40),
+  });
+  work = recordReleasePropagationStage({
+    work,
+    expectedWorkRoot: work.contentRoot,
+    receipt: stageReceipt(work),
+  });
+  const forged = structuredClone(work);
+  const latest = forged.stageReceipts.at(-1);
+  latest.expectedWorkRoot = shaRoot("unrelated-work-cut");
+  const receiptBody = { ...latest };
+  delete receiptBody.receiptRoot;
+  latest.receiptRoot = contentRoot(receiptBody);
+  forged.state.recoveryCursor.lastReceiptRoot = latest.receiptRoot;
+  assert.throws(
+    () => verifyReleasePropagationWork(withWorkRoot(forged)),
+    /latest stage receipt does not bind the predecessor work root/,
   );
 });
 

@@ -55,6 +55,7 @@ export function recordReleasePropagationStage({ work, expectedWorkRoot, receipt 
     throw new Error("the complete stage requires a Work Control completion decision");
   }
   const normalizedReceipt = normalizeStageReceipt(receipt, {
+    work: current,
     workId: current.workId,
     expectedWorkRoot: current.contentRoot,
     expectedStage: current.state.currentStage,
@@ -91,6 +92,7 @@ export function repairReleasePropagationWork({ work, expectedWorkRoot, receipt }
     throw new Error("only retryable propagation failures can be repaired automatically");
   }
   const normalizedReceipt = normalizeStageReceipt(receipt, {
+    work: current,
     workId: current.workId,
     expectedWorkRoot: current.contentRoot,
     expectedStage: current.state.currentStage,
@@ -124,11 +126,15 @@ export function completeReleasePropagationWork({
     label: "completionDecision",
   });
   const normalizedReceipt = normalizeStageReceipt(receipt, {
+    work: current,
     workId: current.workId,
     expectedWorkRoot: current.contentRoot,
     expectedStage: "complete",
     allowedOutcomes: new Set(["success"]),
   });
+  if (!normalizedReceipt.evidence.some((entry) => entry.root === decision.root)) {
+    throw new Error("complete receipt must bind the accepted Work Control Decision root");
+  }
   const successor = successorWork(current);
   successor.stageReceipts.push(normalizedReceipt);
   successor.completionDecision = decision;

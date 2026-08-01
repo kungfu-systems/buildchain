@@ -3,17 +3,20 @@ import {
   assertPlainObject,
   assertString,
   normalizeChannel,
-  optionalString,
   sha256Json,
 } from "./release-propagation-common.js";
 import { normalizeExecutionProfile } from "./release-propagation-execution-profile.js";
-import { normalizeUpstreamRelease } from "./release-propagation-release.js";
+import {
+  normalizeUpstreamRelease,
+  verifyReleaseLockBinding,
+} from "./release-propagation-release.js";
 import { resolveWorkContext } from "./release-propagation-work-capture.js";
+import { normalizeStageReceipt } from "./release-propagation-stage-evidence.js";
+export { normalizeStageReceipt } from "./release-propagation-stage-evidence.js";
 import {
   assertCommitSha,
   assertContentRoot,
   assertExactFields,
-  assertIsoTimestamp,
   contentRoot,
   normalizeFamilyStateReference,
   normalizeTypedReference,
@@ -26,7 +29,6 @@ export {
   RELEASE_PROPAGATION_WORK_STAGES,
 } from "./release-propagation-work-constants.js";
 import {
-  FAILURE_DISPOSITIONS,
   RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT,
   RELEASE_PROPAGATION_WORK_CONTRACT,
   RELEASE_PROPAGATION_WORK_STAGES,
@@ -209,96 +211,6 @@ export function createReleasePropagationWork({
   return verifyReleasePropagationWork(withWorkRoot(initial)).work;
 }
 
-function normalizeEvidence(value, label) {
-  if (!Array.isArray(value) || value.length === 0) {
-    throw new Error(`${label} must be a non-empty array`);
-  }
-  return value.map((entry, index) => {
-    const evidence = assertExactFields(entry, ["kind", "root", "locator", "repository", "revision"], `${label}[${index}]`);
-    const locator = assertString(evidence.locator, `${label}[${index}].locator`);
-    if (/[?&](?:token|signature|x-amz-|x-goog-)/i.test(locator)) {
-      throw new Error(`${label}[${index}].locator must not contain signed or credential parameters`);
-    }
-    return {
-      kind: assertString(evidence.kind, `${label}[${index}].kind`),
-      root: assertContentRoot(evidence.root, `${label}[${index}].root`),
-      locator,
-      repository: optionalString(evidence.repository),
-      revision: optionalString(evidence.revision),
-    };
-  });
-}
-
-export function normalizeStageReceipt(value, { workId, expectedWorkRoot, expectedStage, allowedOutcomes }) {
-  const receipt = assertExactFields(value, [
-    "schemaVersion",
-    "contract",
-    "workId",
-    "expectedWorkRoot",
-    "stage",
-    "outcome",
-    "attempt",
-    "observedAt",
-    "actor",
-    "summary",
-    "evidence",
-    "failure",
-    "receiptRoot",
-  ], "stage receipt");
-  if (receipt.schemaVersion !== 1 || receipt.contract !== RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT) {
-    throw new Error("stage receipt must use the Buildchain release propagation stage receipt v1 contract");
-  }
-  if (receipt.workId !== workId || receipt.expectedWorkRoot !== expectedWorkRoot) {
-    throw new Error("stage receipt does not bind the expected propagation work cut");
-  }
-  if (receipt.stage !== expectedStage) {
-    throw new Error(`stage receipt must target current stage ${expectedStage}`);
-  }
-  if (!allowedOutcomes.has(receipt.outcome)) {
-    throw new Error(`stage receipt outcome must be one of ${[...allowedOutcomes].join(", ")}`);
-  }
-  if (!Number.isInteger(receipt.attempt) || receipt.attempt < 1) {
-    throw new Error("stage receipt attempt must be a positive integer");
-  }
-  const actor = assertExactFields(receipt.actor, ["kind", "identity"], "stage receipt actor");
-  const normalized = {
-    schemaVersion: 1,
-    contract: RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT,
-    workId,
-    expectedWorkRoot,
-    stage: expectedStage,
-    outcome: receipt.outcome,
-    attempt: receipt.attempt,
-    observedAt: assertIsoTimestamp(receipt.observedAt, "stage receipt observedAt"),
-    actor: {
-      kind: assertString(actor.kind, "stage receipt actor.kind"),
-      identity: assertString(actor.identity, "stage receipt actor.identity"),
-    },
-    summary: assertString(receipt.summary, "stage receipt summary"),
-    evidence: normalizeEvidence(receipt.evidence, "stage receipt evidence"),
-    failure: null,
-  };
-  if (receipt.outcome === "failure") {
-    const failure = assertExactFields(receipt.failure, ["class", "code", "summary"], "stage receipt failure");
-    const failureClass = assertString(failure.class, "stage receipt failure.class");
-    if (!FAILURE_DISPOSITIONS.has(failureClass)) {
-      throw new Error(`unsupported propagation failure class: ${failureClass}`);
-    }
-    normalized.failure = {
-      class: failureClass,
-      code: assertString(failure.code, "stage receipt failure.code"),
-      summary: assertString(failure.summary, "stage receipt failure.summary"),
-    };
-  } else if (receipt.failure !== null) {
-    throw new Error("successful or repair stage receipt cannot carry failure data");
-  }
-  const expectedReceiptRoot = contentRoot(normalized);
-  if (receipt.receiptRoot !== expectedReceiptRoot) {
-    throw new Error("stage receipt root does not verify");
-  }
-  return { ...normalized, receiptRoot: expectedReceiptRoot };
-}
-
 export function createReleasePropagationStageReceipt({
   work,
   stage,
@@ -326,6 +238,7 @@ export function createReleasePropagationStageReceipt({
   };
   const receipt = { ...body, receiptRoot: contentRoot(body) };
   return normalizeStageReceipt(receipt, {
+    work: verification.work,
     workId: verification.work.workId,
     expectedWorkRoot: verification.work.contentRoot,
     expectedStage: verification.currentStage,
@@ -372,7 +285,8 @@ function verifyWorkRelease(work) {
     ["releaseRoot", "release"],
     "release propagation work upstream",
   );
-  if (upstream.releaseRoot !== contentRoot(normalizeUpstreamRelease(upstream.release))) {
+  const normalizedRelease = normalizeUpstreamRelease(upstream.release);
+  if (upstream.releaseRoot !== contentRoot(normalizedRelease)) {
     throw new Error("release propagation work upstream root does not verify");
   }
   const downstream = assertExactFields(work.downstream, [
@@ -393,6 +307,12 @@ function verifyWorkRelease(work) {
       || downstream.releaseLock.propagation.propagationKey !== work.propagationKey) {
     throw new Error("release propagation work downstream lock identity disagrees with the work");
   }
+  verifyReleaseLockBinding({
+    release: normalizedRelease,
+    lock: downstream.releaseLock,
+    downstream,
+    propagationKey: work.propagationKey,
+  });
   const profile = normalizeExecutionProfile(
     downstream.executionProfile,
     "release propagation work downstream.executionProfile",
@@ -514,11 +434,23 @@ function verifyWorkReceipts(work, state, cursor, familyState) {
   }
   for (const receipt of work.stageReceipts) {
     normalizeStageReceipt(receipt, {
+      work,
       workId: work.workId,
       expectedWorkRoot: receipt.expectedWorkRoot,
       expectedStage: receipt.stage,
       allowedOutcomes: new Set(["success", "failure", "repair"]),
     });
+  }
+  const lastReceipt = work.stageReceipts.at(-1);
+  if (lastReceipt) {
+    if (lastReceipt.expectedWorkRoot !== work.previousWorkRoot) {
+      throw new Error("latest stage receipt does not bind the predecessor work root");
+    }
+    if (cursor.lastReceiptRoot !== lastReceipt.receiptRoot) {
+      throw new Error("recovery cursor does not bind the latest stage receipt");
+    }
+  } else if (cursor.lastReceiptRoot !== "") {
+    throw new Error("recovery cursor cannot name a receipt before any transition");
   }
   const successfulStages = work.stageReceipts
     .filter((receipt) => receipt.outcome === "success")

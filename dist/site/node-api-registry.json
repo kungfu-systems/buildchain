@@ -806,7 +806,7 @@
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
-      "digest": "sha256:0a8d3b39219a315a16e129104885e02996cc2822c4b71f85d3f500e867ee316a",
+      "digest": "sha256:647b8bc5e28a3f40a4f61a2e1e0c81948956e8359bd87903024de949ea92c015",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
       "audience": [

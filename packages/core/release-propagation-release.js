@@ -117,10 +117,17 @@ export function normalizeUpstreamRelease(input) {
     throw new Error("upstreamRelease.repository must be owner/repo");
   }
   const sourceSha = assertCommitSha(release.sourceSha || release.source_sha, "upstreamRelease.sourceSha");
+  const tagTargetSha = assertCommitSha(
+    release.tagTargetSha || release.tag_target_sha,
+    "upstreamRelease.tagTargetSha",
+  );
   const version = packageFact?.version || publicationArtifact?.version || "";
   const tag = assertString(release.tag, "upstreamRelease.tag");
   if (tag !== `v${version}`) {
     throw new Error("upstreamRelease.tag must exactly match the published version");
+  }
+  if (tagTargetSha !== sourceSha) {
+    throw new Error("upstreamRelease tag target must match sourceSha");
   }
   if (packageFact && packageFact.gitHead !== sourceSha) {
     throw new Error("upstreamRelease package gitHead must match sourceSha");
@@ -132,6 +139,7 @@ export function normalizeUpstreamRelease(input) {
     repository,
     channel: normalizeChannel(release.channel, "upstreamRelease.channel"),
     tag,
+    tagTargetSha,
     sourceSha,
     package: packageFact,
     publicationArtifact,
@@ -147,3 +155,42 @@ export function normalizeUpstreamRelease(input) {
   };
 }
 
+export function verifyReleaseLockBinding({ release, lock, downstream, propagationKey }) {
+  const normalizedRelease = normalizeUpstreamRelease(release);
+  const lockRelease = normalizeUpstreamRelease({
+    repository: lock.upstream?.repository,
+    channel: lock.upstream?.channel,
+    tag: lock.upstream?.tag,
+    tagTargetSha: lock.upstream?.tagTargetSha,
+    sourceSha: lock.upstream?.sourceSha,
+    package: lock.upstream?.package,
+    publicationArtifact: lock.upstream?.publicationArtifact,
+    releasePassport: lock.upstream?.releasePassport,
+    siteBundle: lock.upstream?.siteBundle,
+  });
+  if (JSON.stringify(lockRelease) !== JSON.stringify(normalizedRelease)) {
+    throw new Error("release propagation work upstream release disagrees with its lock");
+  }
+  const expectedCoordinates = {
+    target: lock.downstream?.node,
+    repository: lock.downstream?.repository,
+    channel: lock.downstream?.channel,
+    baseRef: lock.downstream?.baseRef,
+    branch: lock.propagation?.branch,
+    lockPath: lock.downstream?.lockPath,
+    propagationKey: lock.propagation?.propagationKey,
+  };
+  const actualCoordinates = {
+    target: downstream.target,
+    repository: downstream.repository,
+    channel: downstream.channel,
+    baseRef: downstream.baseRef,
+    branch: downstream.branch,
+    lockPath: downstream.lockPath,
+    propagationKey,
+  };
+  if (JSON.stringify(actualCoordinates) !== JSON.stringify(expectedCoordinates)) {
+    throw new Error("release propagation work downstream coordinates disagree with its lock");
+  }
+  return normalizedRelease;
+}

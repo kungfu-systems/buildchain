@@ -1938,11 +1938,12 @@
           "github-release-url",
           "package-name",
           "package-version",
+          "propagation-work-artifact",
           "public-release-tag",
           "release-passport-path",
           "upstream-release-json"
         ],
-        "outputCount": 6
+        "outputCount": 7
       },
       {
         "id": "paper-release",
@@ -4566,8 +4567,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5a9eac28d00c78601d49226f8ba63896a0a22c51f6e5eff97f4cea5a572c355d",
-    "workflowRegistryDigest": "f7ee4b85a179039ac13a2fe164fb9cf5e92d3e7efc18bb3b115dc869cc4b052b",
-    "pageRegistryDigest": "21e65434e5ce943d00d4886b190b3947e62defbf8fb06a593b978b02a010299a"
+    "workflowRegistryDigest": "745714c3f1dcb82ad075038b6fbe3989fd2d12780dc36d04f55c12fb0836bd99",
+    "pageRegistryDigest": "e317b194921f0ebf0729ba24aef90ae5735c845b6aacd4096915900d1dfe6305"
   },
   "comparison": {
     "missingCliRegistry": [],

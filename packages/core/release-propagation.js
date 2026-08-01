@@ -214,6 +214,7 @@ export function createReleasePropagationLock({
       repository: upstreamRelease.repository,
       channel: upstreamRelease.channel,
       tag: upstreamRelease.tag,
+      tagTargetSha: upstreamRelease.tagTargetSha,
       sourceSha: upstreamRelease.sourceSha,
       package: upstreamRelease.package,
       publicationArtifact: upstreamRelease.publicationArtifact,
@@ -434,6 +435,7 @@ export function createReleasePropagationReceipt({
     upstream: {
       repository: upstreamRelease.repository,
       tag: upstreamRelease.tag,
+      tagTargetSha: upstreamRelease.tagTargetSha,
       sourceSha: upstreamRelease.sourceSha,
       releasePassport: upstreamRelease.releasePassport,
     },

@@ -141,6 +141,9 @@ on:
       upstream-release-json:
         description: "Exact post-publication release envelope for downstream propagation"
         value: ${{ jobs.publish.outputs.upstream-release-json }}
+      propagation-work-artifact:
+        description: "Artifact containing one paused typed propagation work unit per configured downstream target"
+        value: ${{ jobs.publish.outputs.propagation-work-artifact }}
 
 permissions:
   contents: read
@@ -217,6 +220,7 @@ jobs:
       release-passport-path: ${{ steps.promote.outputs.release-passport-path }}
       github-release-url: ${{ steps.promote.outputs.github-release-url }}
       upstream-release-json: ${{ steps.upstream-release.outputs.json }}
+      propagation-work-artifact: ${{ steps.capture-propagation.outputs.artifact-name }}
     steps:
       - name: Setup trusted-publishing Node.js
         uses: actions/setup-node@v6.4.0
@@ -483,8 +487,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version dist.integrity gitHead --json \
-            --registry=https://registry.npmjs.org/ > .buildchain/published-package.json
+          published=false
+          for _ in 1 2 3 4 5 6; do
+            if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version dist.integrity gitHead --json \
+              --registry=https://registry.npmjs.org/ > .buildchain/published-package.json \
+              && jq -e --arg version "$PACKAGE_VERSION" --arg sha "$SOURCE_SHA" \
+                '.version == $version and .gitHead == $sha and (.dist.integrity | startswith("sha512-"))' \
+                .buildchain/published-package.json >/dev/null; then
+              published=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$published" != true ]; then
+            echo "::error::npm publication did not become coherently readable within the bounded retry window"
+            exit 1
+          fi
           remote_tag_sha="$(git ls-remote --tags origin "refs/tags/${RELEASE_TAG}" "refs/tags/${RELEASE_TAG}^{}" | tail -n 1 | cut -f1)"
           if [ "$remote_tag_sha" != "$SOURCE_SHA" ]; then
             echo "::error::published tag target does not match the exact paper source SHA"
@@ -522,6 +540,7 @@ jobs:
             repository: process.env.GITHUB_REPOSITORY,
             channel: process.env.CHANNEL,
             tag: process.env.RELEASE_TAG,
+            tagTargetSha: process.env.SOURCE_SHA,
             sourceSha: process.env.SOURCE_SHA,
             package: {
               name: process.env.PACKAGE_NAME,
@@ -564,4 +583,102 @@ jobs:
         with:
           name: paper-upstream-release-${{ steps.candidate.outputs.package-version }}-${{ steps.target.outputs.sha }}
           path: .buildchain/upstream-release.json
+          if-no-files-found: error
+
+      - name: Capture configured downstream propagation work
+        id: capture-propagation
+        if: ${{ !inputs.dry-run && steps.upstream-release.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          SOURCE_SHA: ${{ steps.target.outputs.sha }}
+          PACKAGE_VERSION: ${{ steps.candidate.outputs.package-version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          config_response=.buildchain/release-propagation-config-response.json
+          config_error=.buildchain/release-propagation-config-error.txt
+          if ! gh api \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/contents/.buildchain/release-propagation.json?ref=${SOURCE_SHA}" \
+            > "$config_response" 2> "$config_error"; then
+            if grep -q "HTTP 404" "$config_error"; then
+              echo "No managed Paper propagation config at the exact release SHA; capture is not configured."
+              echo "configured=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::failed to read the exact Paper propagation config"
+            exit 1
+          fi
+          jq -r .content "$config_response" | base64 --decode \
+            > .buildchain/release-propagation-config.json
+          node <<'NODE'
+          const fs = require("fs");
+          const config = JSON.parse(fs.readFileSync(".buildchain/release-propagation-config.json", "utf8"));
+          const expected = ["schemaVersion", "contract", "sourceNode", "graph", "targets"].sort();
+          if (JSON.stringify(Object.keys(config).sort()) !== JSON.stringify(expected)
+              || config.schemaVersion !== 1
+              || config.contract !== "kungfu-buildchain-paper-release-propagation") {
+            throw new Error("Paper propagation config must use the exact v1 contract");
+          }
+          if (!config.graph || typeof config.graph !== "object" || Array.isArray(config.graph)) {
+            throw new Error("Paper propagation config graph must be an object");
+          }
+          if (typeof config.sourceNode !== "string" || !config.sourceNode) {
+            throw new Error("Paper propagation sourceNode is required");
+          }
+          if (!Array.isArray(config.targets) || config.targets.length === 0
+              || config.targets.some((entry) => typeof entry !== "string" || !/^[A-Za-z0-9._-]+$/.test(entry))) {
+            throw new Error("Paper propagation targets must be non-empty canonical node ids");
+          }
+          const targets = [...new Set(config.targets)].sort();
+          if (JSON.stringify(targets) !== JSON.stringify(config.targets)) {
+            throw new Error("Paper propagation targets must be sorted and unique");
+          }
+          fs.writeFileSync(".buildchain/release-propagation-graph.json", `${JSON.stringify(config.graph, null, 2)}\n`);
+          fs.writeFileSync(".buildchain/release-propagation-targets.json", `${JSON.stringify(targets, null, 2)}\n`);
+          fs.writeFileSync(".buildchain/release-propagation-source-node.txt", `${config.sourceNode}\n`);
+          NODE
+          source_node="$(cat .buildchain/release-propagation-source-node.txt)"
+          node .buildchain/runtime/bin/buildchain.mjs release-propagation plan \
+            --graph .buildchain/release-propagation-graph.json \
+            --upstream-release .buildchain/upstream-release.json \
+            --source-node "$source_node" \
+            --output .buildchain/release-propagation-plan.json \
+            --json > .buildchain/release-propagation-plan.stdout.json
+          mkdir -p .buildchain/release-propagation-work
+          while IFS= read -r target; do
+            repository="$(jq -r --arg target "$target" '.targets[] | select(.target == $target) | .repository' .buildchain/release-propagation-plan.json)"
+            base_ref="$(jq -r --arg target "$target" '.targets[] | select(.target == $target) | .baseRef' .buildchain/release-propagation-plan.json)"
+            propagation_key="$(jq -r --arg target "$target" '.targets[] | select(.target == $target) | .propagationKey' .buildchain/release-propagation-plan.json)"
+            if [ -z "$repository" ] || [ -z "$base_ref" ] || ! [[ "$propagation_key" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "::error::configured propagation target is absent or ambiguous in the exact plan: $target"
+              exit 1
+            fi
+            base_sha="$(gh api "repos/${repository}/commits/${base_ref}" --jq .sha)"
+            target_dir=".buildchain/release-propagation-work/${propagation_key}"
+            mkdir -p "$target_dir"
+            node .buildchain/runtime/bin/buildchain.mjs release-propagation work create \
+              --plan .buildchain/release-propagation-plan.json \
+              --target "$target" \
+              --expected-downstream-base-sha "$base_sha" \
+              --output "$target_dir/work.json" \
+              --json > "$target_dir/work.stdout.json"
+            node .buildchain/runtime/bin/buildchain.mjs release-propagation work status \
+              --work "$target_dir/work.json" \
+              --json > "$target_dir/status.json"
+          done < <(jq -r '.[]' .buildchain/release-propagation-targets.json)
+          artifact_name="paper-propagation-work-${PACKAGE_VERSION}-${SOURCE_SHA}"
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+          echo "artifact-name=$artifact_name" >> "$GITHUB_OUTPUT"
+
+      - name: Upload configured downstream propagation work
+        if: ${{ !inputs.dry-run && steps.capture-propagation.outputs.configured == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.capture-propagation.outputs.artifact-name }}
+          path: |
+            .buildchain/release-propagation-config.json
+            .buildchain/release-propagation-plan.json
+            .buildchain/release-propagation-work/*/work.json
+            .buildchain/release-propagation-work/*/status.json
           if-no-files-found: error

@@ -1767,11 +1767,12 @@
         "github-release-url",
         "package-name",
         "package-version",
+        "propagation-work-artifact",
         "public-release-tag",
         "release-passport-path",
         "upstream-release-json"
       ],
-      "outputCount": 6,
+      "outputCount": 7,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active",

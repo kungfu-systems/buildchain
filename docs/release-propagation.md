@@ -67,6 +67,7 @@ The upstream release envelope is the post-finalization fact set:
   "channel": "alpha",
   "tag": "v1.4.0-alpha.3",
   "sourceSha": "1111111111111111111111111111111111111111",
+  "tagTargetSha": "1111111111111111111111111111111111111111",
   "package": {
     "name": "@kungfu-tech/kfd",
     "version": "1.4.0-alpha.3",
@@ -98,6 +99,7 @@ without npm package facts. The upstream envelope then includes
   "channel": "alpha",
   "tag": "v0.1.0-alpha.1",
   "sourceSha": "4444444444444444444444444444444444444444",
+  "tagTargetSha": "4444444444444444444444444444444444444444",
   "releasePassport": {
     "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/buildchain.release.json",
     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
@@ -289,6 +291,32 @@ identity. An executing input must carry an active Warrant at the same Family
 State fact world and cut, explicit production intent, and the complete supported
 action set. Buildchain never invents external Work Control authority.
 
+A managed Paper opts into automatic capture with a thin, source-controlled
+`.buildchain/release-propagation.json`. The sealed release workflow reads that
+exact file from the released Paper SHA only after npm, tag, Passport, and
+publication evidence agree. It emits one paused work artifact per declared
+target; publication itself does not open a Site PR.
+
+```json
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-paper-release-propagation",
+  "sourceNode": "paper-example",
+  "graph": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-release-propagation-graph",
+    "nodes": [],
+    "edges": []
+  },
+  "targets": ["site-libkungfu-dev"]
+}
+```
+
+Each graph target owns an exact GitHub web-surface execution profile: workflow,
+base and managed branch, lock path, consumer commands, production status URL,
+and production artifact readback URLs. The sealed workflow rejects extra config
+fields, unknown targets, or a target whose base revision cannot be resolved.
+
 The reusable workflow keeps its prior behavior when `agent-work-mode` is
 `legacy` (the default). Managed Paper callers set `capture-only`; an Agent later
 claims the emitted artifact and resumes from its machine-readable `next_action`.
@@ -313,6 +341,14 @@ expansion, and unknown failures stop at `needs-decision`. Release-contract
 mismatch, immutable-artifact conflict, and destructive recovery stop at a hard
 safety gate. Evidence locators containing signed or credential parameters are
 rejected.
+
+Successful stage receipts are typed, not generic progress notes. In particular,
+the pushed-branch receipt hashes the full expected-old branch reconciliation;
+review must come from an identity distinct from the execution Warrant; production
+deployment carries both deployment and rollback coordinates; and online readback
+must cover the exact execution-profile URLs with HTTP 200, observed non-zero
+bytes, and the exact deployed Git revision. The final receipt binds the accepted
+Work Control Decision root.
 
 ## Reusable Workflow
 
