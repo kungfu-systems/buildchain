@@ -9911,7 +9911,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 244
+        "line": 248
       },
       "example": "import { collectPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -18638,7 +18638,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:cf9cfb4062c2907b8aca8ab407ae733d82930c97eb919d1bdd80ace5776bbc7f"
+      "digest": "sha256:2df82d2f754898d2f463ec0795e20f903f534dd537ac971e62b140beb21d49ee"
     },
     {
       "id": "build-facts",
