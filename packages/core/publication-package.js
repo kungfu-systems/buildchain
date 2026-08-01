@@ -4,6 +4,7 @@ import path from "node:path";
 import { loadBuildchainConfig } from "./buildchain-config.js";
 
 export const PUBLICATION_NPM_PACKAGE_CONTRACT = "kungfu-buildchain-publication-npm-package";
+const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/i;
 
 function toPosix(value) {
   return String(value || "").split(path.sep).join("/");
@@ -154,6 +155,11 @@ export function preparePublicationNpmPackage({
   if (!fs.existsSync(passportFile)) {
     throw new Error(`publication passport is missing: ${facts.publication.passportPath}`);
   }
+  const manifest = readJson(manifestFile);
+  const gitHead = String(manifest.source?.sha || "").trim().toLowerCase();
+  if (!GIT_SHA_PATTERN.test(gitHead)) {
+    throw new Error("publication npm package requires an exact 40-character source Git SHA");
+  }
   if (!files.some((file) => file.path === facts.publication.primaryArtifact)) {
     throw new Error(`publication primary artifact is missing from npm package: ${facts.publication.primaryArtifact}`);
   }
@@ -174,6 +180,7 @@ export function preparePublicationNpmPackage({
     description: `${facts.publication.title} publication artifact package.`,
     license: sourcePackage.license || "UNLICENSED",
     repository,
+    gitHead,
     type: "module",
     files: [
       ".buildchain/publication/",
