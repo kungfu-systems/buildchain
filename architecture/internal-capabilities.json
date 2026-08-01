@@ -126,7 +126,11 @@
       "owner": "Buildchain maintainers",
       "implementation": [
         "bin/internal/cli-options.mjs",
-        "bin/internal/trust-release-cli.mjs"
+        "bin/internal/trust-release-command-handlers.mjs",
+        "bin/internal/trust-release-cli.mjs",
+        "bin/internal/trust-release-inspection-handlers.mjs",
+        "bin/internal/trust-release-release-handlers.mjs",
+        "bin/internal/trust-release-verification-handlers.mjs"
       ],
       "tests": ["tests/cli.test.mjs", "tests/public-surface-audit.test.mjs"],
       "contracts": ["bin/buildchain.mjs", "docs/cli.md"]

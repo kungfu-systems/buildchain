@@ -117,12 +117,17 @@ function assertIndexShape(index) {
 }
 
 function repositoryJavaScriptFiles(root) {
-  return execFileSync("git", ["ls-files", "-z"], {
-    cwd: root,
-    encoding: "utf8",
-  })
+  return execFileSync(
+    "git",
+    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+    {
+      cwd: root,
+      encoding: "utf8",
+    },
+  )
     .split("\0")
     .filter(Boolean)
+    .filter((file) => fs.existsSync(path.resolve(root, file)))
     .filter((file) => [".js", ".mjs", ".cjs"].includes(path.extname(file)))
     .filter((file) => !file.startsWith("tests/"))
     .filter((file) => !/(?:^|\/)tests?\//u.test(file))
@@ -351,4 +356,9 @@ if (
   }
 }
 
-export { checkInternalArchitecture, dependencyCycles, relativeImports };
+export {
+  checkInternalArchitecture,
+  dependencyCycles,
+  relativeImports,
+  repositoryJavaScriptFiles,
+};

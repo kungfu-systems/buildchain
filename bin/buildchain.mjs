@@ -102,10 +102,7 @@ import {
   TRUST_RELEASE_COMMANDS,
   dispatchTrustReleaseCommand,
 } from "./internal/trust-release-cli.mjs";
-import {
-  BUILDCHAIN_COMMAND_REGISTRY,
-  dispatchRegisteredCommand,
-} from "./internal/command-registry.mjs";
+import { dispatchRegisteredCommand } from "./internal/command-registry.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -1226,18 +1223,19 @@ async function runProcessTreeSample(sampleArgs = []) {
   return report;
 }
 
-async function runRegisteredCommand(command, args) {
-  if (!command || command === "-h" || command === "--help" || command === "help") {
+async function handleHelpCommand(args) {
     process.stdout.write(BUILDCHAIN_USAGE);
     return;
-  }
 
-  if (command === "version" || command === "--version" || command === "-v") {
+}
+
+async function handleVersionCommand(args) {
     process.stdout.write(`${packageVersion()}\n`);
     return;
-  }
 
-  if (command === "layout") {
+}
+
+async function handleLayoutCommand(args) {
     const result = createBuildchainLayoutDiscovery({
       cwd: readFlag(args, "cwd", process.cwd()),
       buildchainVersion: packageVersion(),
@@ -1251,9 +1249,10 @@ async function runRegisteredCommand(command, args) {
       process.stdout.write(`- Shifu jurisdiction: ${result.shifu.jurisdiction.field}=${result.shifu.jurisdiction.value}\n`);
     }
     return;
-  }
 
-  if (command === "portable-cache") {
+}
+
+async function handlePortableCacheCommand(args) {
     const [subcommand = "", ...cacheArgs] = args;
     if (subcommand === "plan") {
       const manifestValue = readFlag(cacheArgs, "manifest", "");
@@ -1296,9 +1295,10 @@ async function runRegisteredCommand(command, args) {
       return;
     }
     throw new Error("usage: buildchain portable-cache <plan|receipt> ...");
-  }
 
-  if (command === "candidate") {
+}
+
+async function handleCandidateCommand(args) {
     const [subcommand = "", ...candidateArgs] = args;
     if (subcommand !== "timeline") {
       throw new Error("usage: buildchain candidate timeline --input <file-or-json>");
@@ -1318,9 +1318,10 @@ async function runRegisteredCommand(command, args) {
       process.stdout.write(`wrote: ${output}\n`);
     }
     return;
-  }
 
-  if (command === "init") {
+}
+
+async function handleInitCommand(args) {
     const result = initBuildchainRepo({
       cwd: readFlag(args, "cwd", process.cwd()),
       type: readFlag(args, "type", "package"),
@@ -1331,9 +1332,10 @@ async function runRegisteredCommand(command, args) {
     });
     printJson(result);
     return;
-  }
 
-  if (command === "validate") {
+}
+
+async function handleValidateCommand(args) {
     const lifecycleStages = readFlag(args, "require-lifecycle-stages", "")
       .split(",")
       .map((entry) => entry.trim())
@@ -1343,9 +1345,10 @@ async function runRegisteredCommand(command, args) {
       requireLifecycleStages: lifecycleStages,
     }));
     return;
-  }
 
-  if (command === "doctor") {
+}
+
+async function handleDoctorCommand(args) {
     const result = runDoctor({
       cwd: readFlag(args, "cwd", process.cwd()),
       requirePublishSourceLock: readBooleanFlag(args, "require-publish-source-lock"),
@@ -1359,18 +1362,20 @@ async function runRegisteredCommand(command, args) {
       }
     }
     return;
-  }
 
-  if (command === "dev") {
+}
+
+async function handleDevCommand(args) {
     const [subcommand = "", ...devArgs] = args;
     if (subcommand !== "merge-queue") {
       throw new Error("usage: buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <path>...]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;
-  }
 
-  if (command === "log") {
+}
+
+async function handleLogCommand(args) {
     const [levelOrSubcommand = "info", ...logArgs] = args;
     if (levelOrSubcommand === "summary") {
       const logPath = defaultCliLogPath(logArgs);
@@ -1407,9 +1412,10 @@ async function runRegisteredCommand(command, args) {
       printJson(event);
     }
     return;
-  }
 
-  if (command === "diagnostics") {
+}
+
+async function handleDiagnosticsCommand(args) {
     const [subcommand = "", ...diagnosticsArgs] = args;
     if (subcommand !== "summary") {
       throw new Error("usage: buildchain diagnostics summary <diagnostics.json>...");
@@ -1438,28 +1444,32 @@ async function runRegisteredCommand(command, args) {
       }
     }
     return;
-  }
 
-  if (command === "facts") {
+}
+
+async function handleFactsCommand(args) {
     await runBuildFactsCli(args);
     return;
-  }
 
-  if (command === "kfd") {
+}
+
+async function handleKfdCommand(args) {
     await runKfdCli(args);
     return;
-  }
 
-  if (command === "sample") {
+}
+
+async function handleSampleCommand(args) {
     const [subcommand = "", ...sampleArgs] = args;
     if (subcommand !== "process-tree") {
       throw new Error("usage: buildchain sample process-tree -- <command> [args...]");
     }
     await runProcessTreeSample(sampleArgs);
     return;
-  }
 
-  if (command === "mark") {
+}
+
+async function handleMarkCommand(args) {
     const eventName = readFlag(args, "event", "");
     if (!eventName) {
       throw new Error("buildchain mark requires --event <name>");
@@ -1473,9 +1483,10 @@ async function runRegisteredCommand(command, args) {
       printJson(event);
     }
     return;
-  }
 
-  if (command === "span") {
+}
+
+async function handleSpanCommand(args) {
     const separator = args.indexOf("--");
     const spanArgs = separator === -1 ? args : args.slice(0, separator);
     const commandArgs = separator === -1 ? [] : args.slice(separator + 1);
@@ -1517,9 +1528,10 @@ async function runRegisteredCommand(command, args) {
       attributes: readAttributes(spanArgs),
     });
     return;
-  }
 
-  if (command === "lifecycle") {
+}
+
+async function handleLifecycleCommand(args) {
     const [subcommand, stageName = "", ...lifecycleArgs] = args;
     if (subcommand !== "run" || !stageName) {
       throw new Error("usage: buildchain lifecycle run <stage>");
@@ -1540,9 +1552,10 @@ async function runRegisteredCommand(command, args) {
     });
     printJson(manifest);
     return;
-  }
 
-  if (command === "npm") {
+}
+
+async function handleNpmCommand(args) {
     const [subcommand = "", ...npmArgs] = args;
     if (subcommand !== "dry-run") {
       throw new Error("usage: buildchain npm dry-run");
@@ -1561,24 +1574,28 @@ async function runRegisteredCommand(command, args) {
       process.stdout.write(`pack entries: ${result.pack.entryCount}\n`);
     }
     return;
-  }
 
-  if (TRUST_RELEASE_COMMANDS.has(command)) {
+}
+
+async function handleTrustReleaseCommand(args, { command }) {
     await dispatchTrustReleaseCommand({ command, args, runScript, packageVersion });
     return;
-  }
 
-  if (command === "web-surface") {
+}
+
+async function handleWebSurfaceCommand(args) {
     runScript("web-surface.mjs", args);
     return;
-  }
 
-  if (command === "infra-contract") {
+}
+
+async function handleInfraContractCommand(args) {
     runScript("infra-contract.mjs", args);
     return;
-  }
 
-  if (command === "publication-artifact" || command === "publication") {
+}
+
+async function handlePublicationArtifactCommand(args) {
     if (args[0] === "npm-package" || args[0] === "package") {
       runPublicationPackageCli(args.slice(1));
       return;
@@ -1589,9 +1606,10 @@ async function runRegisteredCommand(command, args) {
     }
     runPublicationArtifactCli(args);
     return;
-  }
 
-  if (command === "paper") {
+}
+
+async function handlePaperCommand(args) {
     await runPaperCli(args, {
       buildchainRoot: root,
       buildchainVersion: packageVersion(),
@@ -1600,39 +1618,46 @@ async function runRegisteredCommand(command, args) {
         process.env.BUILDCHAIN_RUNTIME_SHA || embeddedSourceSha || "",
     });
     return;
-  }
 
-  if (command === "release-propagation") {
+}
+
+async function handleReleasePropagationCommand(args) {
     runReleasePropagationCli(args);
     return;
-  }
 
-  if (command === "release-governance") {
+}
+
+async function handleReleaseGovernanceCommand(args) {
     await runReleaseGovernanceCli(args);
     return;
-  }
 
-  if (command === "github-governance") {
+}
+
+async function handleGitHubGovernanceCommand(args) {
     runScript("reconcile-github-governance.mjs", args);
     return;
-  }
 
-  if (command === "badges") {
+}
+
+async function handleBadgesCommand(args) {
     await runReadmeBadgesCli(args);
     return;
-  }
 
-  if (command === "homebrew") {
+}
+
+async function handleHomebrewCommand(args) {
     await runHomebrewCli(args);
     return;
-  }
 
-  if (command === "build-contract") {
+}
+
+async function handleBuildContractCommand(args) {
     runScript("resolve-build-contract.mjs", args);
     return;
-  }
 
-  if (command === "publish-source") {
+}
+
+async function handlePublishSourceCommand(args) {
     const [mode = "lock", ...publishArgs] = args;
     if (mode === "lock" || mode === "manifest") {
       runScript("resolve-publish-source.mjs", ["--mode", mode, ...publishArgs]);
@@ -1665,17 +1690,46 @@ async function runRegisteredCommand(command, args) {
       return;
     }
     throw new Error(`unsupported publish-source command: ${mode}`);
-  }
 
-  throw new Error(`unsupported buildchain command: ${command}`);
 }
 
-const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze(Object.fromEntries(
-  BUILDCHAIN_COMMAND_REGISTRY.map((entry) => [
-    entry.id,
-    (args) => runRegisteredCommand(entry.id, args),
-  ]),
-));
+const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
+  "help": handleHelpCommand,
+  "version": handleVersionCommand,
+  "layout": handleLayoutCommand,
+  "portable-cache": handlePortableCacheCommand,
+  "candidate": handleCandidateCommand,
+  "init": handleInitCommand,
+  "validate": handleValidateCommand,
+  "doctor": handleDoctorCommand,
+  "dev": handleDevCommand,
+  "log": handleLogCommand,
+  "diagnostics": handleDiagnosticsCommand,
+  "facts": handleFactsCommand,
+  "kfd": handleKfdCommand,
+  "sample": handleSampleCommand,
+  "mark": handleMarkCommand,
+  "span": handleSpanCommand,
+  "lifecycle": handleLifecycleCommand,
+  "npm": handleNpmCommand,
+  ...Object.fromEntries(
+    [...TRUST_RELEASE_COMMANDS].map((command) => [
+      command,
+      (args) => handleTrustReleaseCommand(args, { command }),
+    ]),
+  ),
+  "web-surface": handleWebSurfaceCommand,
+  "infra-contract": handleInfraContractCommand,
+  "publication-artifact": handlePublicationArtifactCommand,
+  "paper": handlePaperCommand,
+  "release-propagation": handleReleasePropagationCommand,
+  "release-governance": handleReleaseGovernanceCommand,
+  "github-governance": handleGitHubGovernanceCommand,
+  "badges": handleBadgesCommand,
+  "homebrew": handleHomebrewCommand,
+  "build-contract": handleBuildContractCommand,
+  "publish-source": handlePublishSourceCommand,
+});
 
 async function main(argv = process.argv.slice(2)) {
   const [command = "help", ...args] = argv;

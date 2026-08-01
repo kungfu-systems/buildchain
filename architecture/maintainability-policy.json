@@ -79,11 +79,6 @@
       "maxComplexity": 80,
       "rationale": "Existing release-channel behavior moved intact behind a named channel handler; this exact inherited debt ceiling cannot grow."
     },
-    "bin/buildchain.mjs#runRegisteredCommand": {
-      "maxLines": 443,
-      "maxComplexity": 110,
-      "rationale": "The pre-existing CLI dispatcher was renamed and bounded behind the canonical registry without changing its compatibility branches."
-    },
     "packages/core/release-passport.js#validateReleaseEvidenceAttachments": {
       "maxLines": 74,
       "maxComplexity": 26,
