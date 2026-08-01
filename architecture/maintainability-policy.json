@@ -2,7 +2,15 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-maintainability-policy",
   "baseline": "architecture/maintainability-baseline.json",
-  "enforcementRevision": "969e6ec1315fc7395bce198e3e5252181bf4eb93",
+  "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+  "repositoryBudgets": {
+    "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+    "maxHandMaintainedSourceFiles": 230,
+    "maxHandMaintainedSourceLines": 88000,
+    "maxWorkflowFiles": 57,
+    "maxWorkflowLines": 19269,
+    "rationale": "The structural hardening may add responsibility-owned modules but must remain below an exact repository-wide source ceiling and cannot grow the reusable workflow surface. Any wider ceiling requires an explicit reviewed policy change."
+  },
   "sourceBudgets": {
     "newFileLines": 600,
     "newFunctionLines": 180,

@@ -21,6 +21,34 @@
     "scripts/web-surface.mjs",
     "scripts/verify-promotion-router-binding.sh"
   ],
+  "ownershipRules": [
+    {
+      "id": "action-runtime-sources",
+      "owner": "Buildchain action maintainers",
+      "paths": ["actions"]
+    },
+    {
+      "id": "cli-sources",
+      "owner": "Buildchain CLI maintainers",
+      "paths": ["bin"]
+    },
+    {
+      "id": "fixture-sources",
+      "owner": "Buildchain fixture maintainers",
+      "paths": ["fixtures"]
+    },
+    {
+      "id": "core-library-sources",
+      "owner": "Buildchain core maintainers",
+      "paths": ["packages/core"]
+    },
+    {
+      "id": "workflow-runtime-sources",
+      "owner": "Buildchain workflow maintainers",
+      "paths": ["scripts"]
+    }
+  ],
+  "ownershipExclusions": [],
   "dependencyRules": [
     {
       "id": "core-does-not-depend-on-delivery-surfaces",

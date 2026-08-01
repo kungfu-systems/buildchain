@@ -17,9 +17,24 @@ test("internal architecture index covers implementations, tests, and dependency 
     schemaVersion: 1,
     capabilities: 12,
     implementations: 24,
+    repositorySources: 208,
+    ownedSources: 208,
+    excludedSources: 0,
+    dependencyEdges: 142,
     dependencyRules: 4,
     dependencyCycles: 0,
   });
+});
+
+test("internal architecture check rejects an unowned repository source", () => {
+  const unowned = structuredClone(index);
+  unowned.ownershipRules = unowned.ownershipRules.filter(
+    (entry) => entry.id !== "cli-sources",
+  );
+  assert.throws(
+    () => checkInternalArchitecture({ root, index: unowned }),
+    /repository source has no owner: bin\/buildchain\.mjs/,
+  );
 });
 
 test("internal architecture check rejects an internal-to-facade dependency", () => {
