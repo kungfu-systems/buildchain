@@ -4762,6 +4762,34 @@ test("reusable build bounds matrix jobs and lifecycle actions with one timeout i
   assert.match(action, /timeout-minutes:[\s\S]*?default: "120"/);
 });
 
+test("signed platform metadata artifacts exclude imported payload trees", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const stepBlock = (name) => {
+    const start = workflow.indexOf(`      - name: ${name}`);
+    assert.notEqual(start, -1, `missing workflow step: ${name}`);
+    const next = workflow.indexOf("\n      - name:", start + 1);
+    return workflow.slice(start, next === -1 ? workflow.length : next);
+  };
+
+  assert.doesNotMatch(
+    stepBlock("Publish final signed artifact manifest"),
+    /\.buildchain\/artifacts\/signing/,
+  );
+  assert.doesNotMatch(
+    stepBlock("Publish final signed diagnostics"),
+    /\.buildchain\/artifacts\/signing/,
+  );
+  assert.match(
+    workflow,
+    /\$\{\{ inputs\.artifact-name \}\}-credential-manifest-macos-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /\$\{BUILDCHAIN_ARTIFACT_NAME\}-credential-manifest-macos-\$\{BUILDCHAIN_SOURCE_SHA\}/,
+  );
+  assert.doesNotMatch(workflow, /-manifest-macos-credential-/);
+});
+
 test("runLifecycle samples a configured lifecycle stage", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-sampled-lifecycle-"),
