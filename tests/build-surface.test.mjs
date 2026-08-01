@@ -1112,6 +1112,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     "exact publication planning must install source dependencies before version-state verification",
   );
   assert.match(publicationPlan, /name: Validate consumer package manager contract/);
+  assert.match(publicationPlan, /publish-transaction-override: \$\{\{ inputs\.publish-transaction-override \}\}/);
   assert.match(publicationPlan, /corepack pnpm install --frozen-lockfile/);
   assert.doesNotMatch(publicationPlan, /corepack pnpm@11\.7\.0/);
   assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);

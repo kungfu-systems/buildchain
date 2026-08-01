@@ -894,8 +894,8 @@ jobs:
           require-version-state: "true"
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
+          publish-transaction-override: ${{ inputs.publish-transaction-override }}
           release-passport: "false"
-
       - name: Require an exact publication transaction version
         shell: bash
         env:
