@@ -321,7 +321,7 @@
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment"
       ],
       "breakingDigest": "sha256:425f8d3d1ba205dd6fe35a20f1dc6dad7d7c563872283e3af79fea4d5c475692",
-      "auditDigest": "sha256:38353cc5dc5520e6de84e387abafc6086a4b236e18be6521b00d43ad651582e4"
+      "auditDigest": "sha256:4f0051783d637ff25a1154379dc0eb77a246ad7aee18e12a5e8ff0107aa61a90"
     },
     {
       "contractVersion": 1,
@@ -3522,5 +3522,5 @@
     }
   ],
   "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
-  "contractDigest": "sha256:050cede0223bffcc0e8c643b500eb97d93ff6280a88db69f3f08fa836c04d58e"
+  "contractDigest": "sha256:972fdd7dde6e826c0b0ef0344a4b48ef88d246b8a011c8776451bcd8bac331e4"
 }
