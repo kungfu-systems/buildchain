@@ -222,7 +222,10 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
     releaseWorkflow,
     /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: \$\{\{ secrets\.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY \}\}/,
   );
-  assert.doesNotMatch(releaseWorkflow, /BUILDCHAIN_PROMOTION_TOKEN/);
+  assert.match(
+    releaseWorkflow,
+    /BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
 
   initGit(cwd);
   const validation = JSON.parse(
