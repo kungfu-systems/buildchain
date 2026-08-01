@@ -1231,8 +1231,7 @@ function releaseTransactionFacts(candidates, version) {
   };
 }
 
-export function collectPaperStatus({ cwd = process.cwd() } = {}) {
-  const resolvedCwd = path.resolve(cwd);
+function collectPaperGovernanceFacts(resolvedCwd) {
   const configResult = paperConfig(resolvedCwd);
   const loaded = configResult.loaded;
   const publication = loaded?.config?.publication;
@@ -1273,7 +1272,13 @@ export function collectPaperStatus({ cwd = process.cwd() } = {}) {
     gitRepo.ok &&
     gitRepo.stdout === "true",
   );
+  return {
+    configResult, loaded, publication, packageName, version, configFact,
+    scaffoldFacts, contractLockError, scaffoldOk, governedOk,
+  };
+}
 
+function collectPaperEvidenceFacts(resolvedCwd, publication, version) {
   const admissionInputs = [PAPER_PATHS.capability, PAPER_PATHS.admission].map(
     (relativePath) => ({
       relativePath,
@@ -1331,6 +1336,82 @@ export function collectPaperStatus({ cwd = process.cwd() } = {}) {
     visibility.value,
     "production",
   );
+  return {
+    admitted, bootstrapValue, trustValue, content, reproducibility, deterministic,
+    sealedOk, sealedError, candidates, transactionFacts, packagePublished,
+    alphaComplete, stagingVisible, productionVisible,
+  };
+}
+
+function paperStatusBlockingNextActions({ stateMap, deterministic, transactionFacts }) {
+  const actions = [];
+  if (!stateMap.scaffolded.satisfied) {
+    actions.push({
+      id: "scaffold-paper",
+      command: "buildchain paper scaffold --help",
+      description: "Plan a no-overwrite Buildchain paper scaffold.",
+    });
+  } else if (!stateMap.governed.satisfied) {
+    actions.push({
+      id: "restore-governance",
+      command: "buildchain paper preflight --json",
+      description:
+        "Repair the Git/contract-lock governance checks reported by preflight.",
+    });
+  } else if (!stateMap["content-ready"].satisfied) {
+    actions.push({
+      id: "complete-paper-content",
+      command: "make check",
+      description: "Add every declared paper source and metadata input.",
+    });
+  } else if (!deterministic) {
+    actions.push({
+      id: "build-reproducible-artifact",
+      command: "buildchain paper build --execute --json",
+      description:
+        "Run the existing two-clean-build reproducibility gate and promote exact bytes.",
+    });
+  } else if (
+    !stateMap.bootstrapped.satisfied ||
+    !stateMap["trust-bound"].satisfied
+  ) {
+    actions.push({
+      id: "bootstrap-npm",
+      command: "buildchain paper bootstrap npm --json",
+      description:
+        "Inspect the dry-run npm bootstrap and Trusted Publishing handoff.",
+    });
+  } else if (!stateMap["alpha-complete"].satisfied) {
+    actions.push({
+      id: transactionFacts.selected ? "resume-alpha" : "start-alpha",
+      command: transactionFacts.selected
+        ? "buildchain paper resume --json"
+        : "buildchain paper alpha --json",
+      description: transactionFacts.selected
+        ? "Resume the exact sealed release transaction."
+        : "Plan the protected dev-to-alpha publication PR.",
+    });
+  }
+  return actions;
+}
+
+export function collectPaperStatus({ cwd = process.cwd() } = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const governance = collectPaperGovernanceFacts(resolvedCwd);
+  const evidence = collectPaperEvidenceFacts(
+    resolvedCwd,
+    governance.publication,
+    governance.version,
+  );
+  const {
+    configResult, loaded, publication, packageName, version, configFact,
+    scaffoldFacts, contractLockError, scaffoldOk, governedOk,
+  } = governance;
+  const {
+    admitted, bootstrapValue, trustValue, content, reproducibility, deterministic,
+    sealedOk, sealedError, candidates, transactionFacts, packagePublished,
+    alphaComplete, stagingVisible, productionVisible,
+  } = evidence;
 
   const states = [
     state(
@@ -1440,54 +1521,7 @@ export function collectPaperStatus({ cwd = process.cwd() } = {}) {
   const highestEvidenceState =
     [...states].reverse().find((entry) => entry.satisfied)?.id || "none";
   const stateMap = Object.fromEntries(states.map((entry) => [entry.id, entry]));
-  const blockingNextActions = [];
-  if (!stateMap.scaffolded.satisfied) {
-    blockingNextActions.push({
-      id: "scaffold-paper",
-      command: "buildchain paper scaffold --help",
-      description: "Plan a no-overwrite Buildchain paper scaffold.",
-    });
-  } else if (!stateMap.governed.satisfied) {
-    blockingNextActions.push({
-      id: "restore-governance",
-      command: "buildchain paper preflight --json",
-      description:
-        "Repair the Git/contract-lock governance checks reported by preflight.",
-    });
-  } else if (!stateMap["content-ready"].satisfied) {
-    blockingNextActions.push({
-      id: "complete-paper-content",
-      command: "make check",
-      description: "Add every declared paper source and metadata input.",
-    });
-  } else if (!deterministic) {
-    blockingNextActions.push({
-      id: "build-reproducible-artifact",
-      command: "buildchain paper build --execute --json",
-      description:
-        "Run the existing two-clean-build reproducibility gate and promote exact bytes.",
-    });
-  } else if (
-    !stateMap.bootstrapped.satisfied ||
-    !stateMap["trust-bound"].satisfied
-  ) {
-    blockingNextActions.push({
-      id: "bootstrap-npm",
-      command: "buildchain paper bootstrap npm --json",
-      description:
-        "Inspect the dry-run npm bootstrap and Trusted Publishing handoff.",
-    });
-  } else if (!stateMap["alpha-complete"].satisfied) {
-    blockingNextActions.push({
-      id: transactionFacts.selected ? "resume-alpha" : "start-alpha",
-      command: transactionFacts.selected
-        ? "buildchain paper resume --json"
-        : "buildchain paper alpha --json",
-      description: transactionFacts.selected
-        ? "Resume the exact sealed release transaction."
-        : "Plan the protected dev-to-alpha publication PR.",
-    });
-  }
+  const blockingNextActions = paperStatusBlockingNextActions({ stateMap, deterministic, transactionFacts });
   return {
     schemaVersion: 1,
     contract: PAPER_STATUS_CONTRACT,
@@ -2051,146 +2085,8 @@ function localToolchainObservation(cwd, publication) {
   };
 }
 
-export function collectPaperPreflight({
-  cwd = process.cwd(),
-  buildchainRoot = process.cwd(),
-  buildchainVersion = "",
-  buildchainRef = "v3",
-  buildchainSha = "",
-  registry = NPM_REGISTRY,
-  offline = false,
-  agentEntryMode = "contract",
-} = {}) {
-  const resolvedCwd = path.resolve(cwd);
-  const status = collectPaperStatus({ cwd: resolvedCwd });
-  const provisioning = validatePaperProvisioningAuthority(resolvedCwd);
-  const configResult = paperConfig(resolvedCwd);
-  let validation;
-  let validationError = "";
-  try {
-    validation = validateBuildchainConfig(resolvedCwd, {
-      requireLifecycleStages: ["verify"],
-    });
-  } catch (error) {
-    validationError = error.message;
-  }
-  const runtime = runtimeFacts({
-    buildchainRoot,
-    buildchainVersion,
-    buildchainRef: provisioning.value?.runtime?.ref || buildchainRef,
-    buildchainSha,
-  });
-  const agentEntry = collectPaperAgentEntry({
-    cwd: resolvedCwd,
-    buildchainSha: runtime.resolvedSha,
-    mode: agentEntryMode,
-  });
-  const lockPath = path.resolve(resolvedCwd, PAPER_PATHS.contractLock);
-  let lockEvaluation = {
-    status: "missing-lock",
-    compatible: false,
-    drift: false,
-    reasons: ["Buildchain contract lock is missing"],
-  };
-  try {
-    const lock = readBuildchainContractLock(lockPath);
-    if (lock) {
-      const current = runtimeContractWorld(buildchainRoot);
-      lockEvaluation = evaluateBuildchainContractLock({
-        lock,
-        current,
-        runtimeRef: runtime.ref,
-        runtimeSha: runtime.resolvedSha,
-        runtimeClass: /alpha/i.test(runtime.ref) ? "alpha" : "stable",
-      });
-    }
-  } catch (error) {
-    lockEvaluation = {
-      status: "invalid-lock",
-      compatible: false,
-      drift: false,
-      reasons: [error.message],
-    };
-  }
-  const source = {
-    repositoryRoot: gitValue(resolvedCwd, ["rev-parse", "--show-toplevel"]),
-    head: gitValue(resolvedCwd, ["rev-parse", "HEAD"]),
-    tree: gitValue(resolvedCwd, ["rev-parse", "HEAD^{tree}"]),
-    branch: gitValue(resolvedCwd, ["branch", "--show-current"]),
-    clean: gitResult(resolvedCwd, ["status", "--porcelain"]).stdout === "",
-  };
-  const packageName = status.identity.package;
-  const repository = status.identity.repository;
-  const expectedPublisher = expectedPaperTrustedPublisher(provisioning.value, {
-    repository,
-    workflow: path.posix.basename(PAPER_PATHS.releaseWorkflow),
-  });
-  const npm =
-    offline || !packageName
-      ? {
-          package: {
-            status: "unknown",
-            exists: null,
-            version: "",
-            registry,
-            errorCode: offline ? "offline" : "package-unresolved",
-          },
-          auth: {
-            status: "unknown",
-            authenticated: null,
-            identity: "",
-            errorCode: offline ? "offline" : "package-unresolved",
-          },
-          trust: {
-            status: "unknown",
-            configured: null,
-            publishers: [],
-            errorCode: offline ? "offline" : "package-unresolved",
-          },
-        }
-      : {
-          package: liveNpmPackageObservation(
-            packageName,
-            registry,
-            resolvedCwd,
-          ),
-          auth: liveNpmAuthObservation(registry, resolvedCwd),
-          trust: liveNpmTrustObservation(
-            packageName,
-            registry,
-            resolvedCwd,
-            expectedPublisher,
-          ),
-        };
-  const repositoryPermissions = offline
-    ? {
-        status: "unknown",
-        repository,
-        canWrite: null,
-        errorCode: "offline",
-      }
-    : liveRepositoryPermissionObservation(repository, resolvedCwd);
-  const repositoryActions = offline
-    ? {
-        status: "unknown",
-        defaultWorkflowPermissions: "",
-        canApprovePullRequestReviews: null,
-        errorCode: "offline",
-      }
-    : liveRepositoryActionsPolicyObservation(repository, resolvedCwd);
-  const generatedWriteAuthority = offline
-    ? {
-        status: "unknown",
-        configured: null,
-        mode: "",
-        errorCode: "offline",
-      }
-    : liveGeneratedWriteAuthorityObservation(repository, resolvedCwd);
-  const toolchain = localToolchainObservation(
-    resolvedCwd,
-    configResult.loaded?.config?.publication,
-  );
-  const checks = [
+function paperPreflightLocalChecks({ agentEntry, provisioning, validationError, source, toolchain, runtime, lockEvaluation }) {
+  return [
     ...agentEntry.checks.map((entry) => ({
       ...entry,
       blocking: true,
@@ -2257,6 +2153,11 @@ export function collectPaperPreflight({
         ? `Buildchain runtime contract is ${lockEvaluation.status}.`
         : `Buildchain runtime contract is not admitted: ${(lockEvaluation.reasons || []).join("; ")}`,
     },
+  ];
+}
+
+function paperPreflightRepositoryChecks({ repositoryPermissions, repositoryActions, generatedWriteAuthority }) {
+  return [
     {
       id: "repository.write-permission",
       status:
@@ -2310,6 +2211,11 @@ export function collectPaperPreflight({
             ? "No GitHub App or compatible narrow generated-write credential is configured."
             : `Generated-write authority is unknown (${generatedWriteAuthority.errorCode}).`,
     },
+  ];
+}
+
+function paperPreflightPublicationChecks({ npm, status }) {
+  return [
     {
       id: "npm.package",
       status:
@@ -2366,24 +2272,19 @@ export function collectPaperPreflight({
           : `${status.conflicts.length} release-state conflict(s) require repair.`,
     },
   ];
-  const blockingChecks = checks.filter(
-    (entry) => entry.blocking && ["fail", "unknown"].includes(entry.status),
-  );
-  const externalMutationChecks = checks.filter(
-    (entry) =>
-      entry.scope === "external-mutation" &&
-      ["fail", "pending", "unknown"].includes(entry.status),
-  );
-  const nextActions = [];
+}
+
+function paperPreflightNextActions({ validationError, source, lockEvaluation, npm, repositoryActions, generatedWriteAuthority, status }) {
+  const actions = [];
   if (validationError) {
-    nextActions.push({
+    actions.push({
       id: "repair-config",
       command: "buildchain validate --require-lifecycle-stages verify",
       description: validationError,
     });
   }
   if (!source.clean) {
-    nextActions.push({
+    actions.push({
       id: "commit-source",
       command: "git status --short",
       description:
@@ -2391,7 +2292,7 @@ export function collectPaperPreflight({
     });
   }
   if (!lockEvaluation.compatible) {
-    nextActions.push({
+    actions.push({
       id: "refresh-contract-lock",
       command: "buildchain paper scaffold --json",
       description:
@@ -2399,7 +2300,7 @@ export function collectPaperPreflight({
     });
   }
   if (npm.package.exists === false || npm.trust.configured === false) {
-    nextActions.push({
+    actions.push({
       id: "bootstrap-npm",
       command: "buildchain paper bootstrap npm --json",
       description:
@@ -2411,7 +2312,7 @@ export function collectPaperPreflight({
     (repositoryActions.defaultWorkflowPermissions !== "read" ||
       repositoryActions.canApprovePullRequestReviews !== false)
   ) {
-    nextActions.push({
+    actions.push({
       id: "constrain-repository-actions",
       command: "",
       description:
@@ -2419,7 +2320,7 @@ export function collectPaperPreflight({
     });
   }
   if (generatedWriteAuthority.configured === false) {
-    nextActions.push({
+    actions.push({
       id: "configure-generated-write-authority",
       command: "",
       description:
@@ -2427,12 +2328,149 @@ export function collectPaperPreflight({
     });
   }
   if (status.deterministicBuild.status !== "qualifying") {
-    nextActions.push({
+    actions.push({
       id: "build-paper",
       command: "buildchain paper build --execute --json",
       description: "Run the existing qualifying two-clean-build gate.",
     });
   }
+  return actions;
+}
+
+export function collectPaperPreflight({
+  cwd = process.cwd(),
+  buildchainRoot = process.cwd(),
+  buildchainVersion = "",
+  buildchainRef = "v3",
+  buildchainSha = "",
+  registry = NPM_REGISTRY,
+  offline = false,
+  agentEntryMode = "contract",
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const status = collectPaperStatus({ cwd: resolvedCwd });
+  const provisioning = validatePaperProvisioningAuthority(resolvedCwd);
+  const configResult = paperConfig(resolvedCwd);
+  let validation;
+  let validationError = "";
+  try {
+    validation = validateBuildchainConfig(resolvedCwd, { requireLifecycleStages: ["verify"] });
+  } catch (error) {
+    validationError = error.message;
+  }
+  const runtime = runtimeFacts({
+    buildchainRoot, buildchainVersion,
+    buildchainRef: provisioning.value?.runtime?.ref || buildchainRef, buildchainSha,
+  });
+  const agentEntry = collectPaperAgentEntry({ cwd: resolvedCwd, buildchainSha: runtime.resolvedSha, mode: agentEntryMode });
+  const lockPath = path.resolve(resolvedCwd, PAPER_PATHS.contractLock);
+  let lockEvaluation = {
+    status: "missing-lock",
+    compatible: false,
+    drift: false,
+    reasons: ["Buildchain contract lock is missing"],
+  };
+  try {
+    const lock = readBuildchainContractLock(lockPath);
+    if (lock) {
+      const current = runtimeContractWorld(buildchainRoot);
+      lockEvaluation = evaluateBuildchainContractLock({
+        lock,
+        current,
+        runtimeRef: runtime.ref,
+        runtimeSha: runtime.resolvedSha,
+        runtimeClass: /alpha/i.test(runtime.ref) ? "alpha" : "stable",
+      });
+    }
+  } catch (error) {
+    lockEvaluation = {
+      status: "invalid-lock",
+      compatible: false,
+      drift: false,
+      reasons: [error.message],
+    };
+  }
+  const source = {
+    repositoryRoot: gitValue(resolvedCwd, ["rev-parse", "--show-toplevel"]),
+    head: gitValue(resolvedCwd, ["rev-parse", "HEAD"]),
+    tree: gitValue(resolvedCwd, ["rev-parse", "HEAD^{tree}"]),
+    branch: gitValue(resolvedCwd, ["branch", "--show-current"]),
+    clean: gitResult(resolvedCwd, ["status", "--porcelain"]).stdout === "",
+  };
+  const packageName = status.identity.package;
+  const repository = status.identity.repository;
+  const expectedPublisher = expectedPaperTrustedPublisher(provisioning.value, {
+    repository, workflow: path.posix.basename(PAPER_PATHS.releaseWorkflow),
+  });
+  const npm =
+    offline || !packageName
+      ? {
+          package: {
+            status: "unknown",
+            exists: null,
+            version: "",
+            registry,
+            errorCode: offline ? "offline" : "package-unresolved",
+          },
+          auth: {
+            status: "unknown",
+            authenticated: null,
+            identity: "",
+            errorCode: offline ? "offline" : "package-unresolved",
+          },
+          trust: {
+            status: "unknown",
+            configured: null,
+            publishers: [],
+            errorCode: offline ? "offline" : "package-unresolved",
+          },
+        }
+      : {
+          package: liveNpmPackageObservation(packageName, registry, resolvedCwd),
+          auth: liveNpmAuthObservation(registry, resolvedCwd),
+          trust: liveNpmTrustObservation(packageName, registry, resolvedCwd, expectedPublisher),
+        };
+  const repositoryPermissions = offline
+    ? {
+        status: "unknown",
+        repository,
+        canWrite: null,
+        errorCode: "offline",
+      }
+    : liveRepositoryPermissionObservation(repository, resolvedCwd);
+  const repositoryActions = offline
+    ? {
+        status: "unknown",
+        defaultWorkflowPermissions: "",
+        canApprovePullRequestReviews: null,
+        errorCode: "offline",
+      }
+    : liveRepositoryActionsPolicyObservation(repository, resolvedCwd);
+  const generatedWriteAuthority = offline
+    ? {
+        status: "unknown",
+        configured: null,
+        mode: "",
+        errorCode: "offline",
+      }
+    : liveGeneratedWriteAuthorityObservation(repository, resolvedCwd);
+  const toolchain = localToolchainObservation(resolvedCwd, configResult.loaded?.config?.publication);
+  const checks = [
+    ...paperPreflightLocalChecks({ agentEntry, provisioning, validationError, source, toolchain, runtime, lockEvaluation }),
+    ...paperPreflightRepositoryChecks({ repositoryPermissions, repositoryActions, generatedWriteAuthority }),
+    ...paperPreflightPublicationChecks({ npm, status }),
+  ];
+  const blockingChecks = checks.filter(
+    (entry) => entry.blocking && ["fail", "unknown"].includes(entry.status),
+  );
+  const externalMutationChecks = checks.filter(
+    (entry) =>
+      entry.scope === "external-mutation" &&
+      ["fail", "pending", "unknown"].includes(entry.status),
+  );
+  const nextActions = paperPreflightNextActions({
+    validationError, source, lockEvaluation, npm, repositoryActions, generatedWriteAuthority, status,
+  });
   return {
     schemaVersion: 1,
     contract: PAPER_PREFLIGHT_CONTRACT,

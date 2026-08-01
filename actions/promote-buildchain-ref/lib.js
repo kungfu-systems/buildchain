@@ -1061,7 +1061,7 @@ function sealedBundleDurableFiles(verification) {
   }));
 }
 
-async function runPublishTransaction({
+function preparePublishTransactionContext({
   octokit,
   owner,
   repo,
@@ -1166,6 +1166,21 @@ async function runPublishTransaction({
   const requestedBundleManifest = publishSealedBundleManifest
     ? JSON.parse(fs.readFileSync(path.resolve(cwd, publishSealedBundleManifest), "utf8"))
     : undefined;
+  return {
+    octokit, owner, repo, cwd, loadedConfig, targetRef, sourceSha, releaseSha,
+    version, exactTag, channel, line, publishCommand, publishRematerializeOnResume,
+    actor, runId, explicitOverride, allowVersionStateFinalization, promotionGeneratedAt,
+    repository, resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
+    existingNpmPromotion, expected, durableStateRef, requestedBundleRoot, requestedBundleManifest,
+  };
+}
+
+async function restorePublishTransactionContext(context) {
+  const {
+    octokit, owner, repo, cwd, version, channel, sourceSha, releaseSha, targetRef,
+    requiredArtifacts, expected, durableStateRef, resolvedStatePath, resolvedEvidencePath,
+    requestedBundleRoot, requestedBundleManifest,
+  } = context;
   const durableExisting = await restoreDurableReleaseTransaction({
     octokit,
     owner,
@@ -1229,6 +1244,38 @@ async function runPublishTransaction({
       requiredArtifacts,
     });
   }
+  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, existingEvidence, existingValidation };
+}
+
+async function canFinalizePublishVersionState({ context, error, existing }) {
+  const {
+    allowVersionStateFinalization, explicitOverride, version, exactTag, targetRef,
+    requiredArtifacts, octokit, owner, repo, releaseSha,
+  } = context;
+  if (
+    !(allowVersionStateFinalization || explicitOverride) ||
+    !materialErrorRequiresRepair(error) ||
+    existing?.version !== version ||
+    existing?.exact_tag !== exactTag ||
+    existing?.target_ref !== targetRef ||
+    !["published", "finalizing", "complete"].includes(existing.state || "") ||
+    !transactionCoversRequiredArtifacts(existing, requiredArtifacts)
+  ) {
+    return false;
+  }
+  const includesHead = (transactionReleaseSha) => releaseCommitIncludesTransactionHead({
+    octokit, owner, repo, releaseSha, transactionReleaseSha,
+  });
+  return (await includesHead(existing.release_sha)) || (await includesHead(existing.release_material_sha));
+}
+
+async function resolvePublishTransactionResume(context) {
+  const {
+    octokit, owner, repo, cwd, version, exactTag, targetRef, channel, releaseSha,
+    requiredArtifacts, expected, explicitOverride, allowVersionStateFinalization,
+    actor, runId, resolvedStatePath, resolvedEvidencePath, durableExisting, localExisting,
+  } = context;
+  let { existing, existingEvidence, existingValidation } = context;
   let versionStateFinalization = false;
   try {
     ensureTransactionCanResume({
@@ -1252,29 +1299,7 @@ async function runPublishTransaction({
       releaseMaterialSha: expected.releaseMaterialSha,
       requiredArtifacts,
     });
-    const canFinalizeVersionState =
-      (allowVersionStateFinalization || explicitOverride) &&
-      materialErrorRequiresRepair(error) &&
-      existing?.version === version &&
-      existing?.exact_tag === exactTag &&
-      existing?.target_ref === targetRef &&
-      ["published", "finalizing", "complete"].includes(existing.state || "") &&
-      transactionCoversRequiredArtifacts(existing, requiredArtifacts) &&
-      ((await releaseCommitIncludesTransactionHead({
-          octokit,
-          owner,
-          repo,
-          releaseSha,
-          transactionReleaseSha: existing.release_sha,
-        })) ||
-        (await releaseCommitIncludesTransactionHead({
-          octokit,
-          owner,
-          repo,
-          releaseSha,
-          transactionReleaseSha: existing.release_material_sha,
-        })
-      ));
+    const canFinalizeVersionState = await canFinalizePublishVersionState({ context, error, existing });
     const canReplaceStaleVersionState =
       canReplaceStaleVersionStateTransaction({
         error,
@@ -1311,6 +1336,59 @@ async function runPublishTransaction({
       fs.rmSync(resolvedEvidencePath, { force: true });
     }
   }
+  return { ...context, existing, existingEvidence, existingValidation, versionStateFinalization };
+}
+
+function publishTransactionEnvironment({
+  version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
+  releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
+  requiredArtifacts, publishContract,
+}) {
+  return {
+    BUILDCHAIN_VERSION: version,
+    BUILDCHAIN_CHANNEL: channel,
+    BUILDCHAIN_SOURCE_SHA: sourceSha,
+    BUILDCHAIN_TARGET_REF: targetRef,
+    BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
+    BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
+    BUILDCHAIN_RELEASE_SHA: releaseSha,
+    BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
+    BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
+    BUILDCHAIN_SITE_GENERATED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SITE_PUBLISHED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
+    BUILDCHAIN_SURFACE_GENERATED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
+    BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+    BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundleVerification?.root || "",
+    BUILDCHAIN_SEALED_NPM_TARBALL:
+      sealedBundleVerification?.npm.absolutePath || "",
+    BUILDCHAIN_SEALED_NPM_INTEGRITY:
+      sealedBundleVerification?.npm.integrity || "",
+    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundleVerification?.npm.sha256 || "",
+    BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
+    BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
+    BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
+    BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
+    BUILDCHAIN_PACKAGE_SET_ORDER: publishContract.packageSetOrder,
+    BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
+  };
+}
+
+async function runPublishTransaction(options) {
+  const prepared = preparePublishTransactionContext(options);
+  if (!prepared) return undefined;
+  const restored = await restorePublishTransactionContext(prepared);
+  const context = await resolvePublishTransactionResume(restored);
+  const {
+    octokit, owner, repo, cwd, loadedConfig, targetRef, sourceSha, releaseSha,
+    version, exactTag, channel, line, publishCommand, publishRematerializeOnResume,
+    actor, runId, explicitOverride, promotionGeneratedAt, repository,
+    resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
+    existingNpmPromotion, expected, durableExisting, existing, existingEvidence,
+    existingValidation, sealedBundleVerification, versionStateFinalization,
+  } = context;
   let transaction =
     existing ||
     createReleaseTransaction({
@@ -1380,34 +1458,7 @@ async function runPublishTransaction({
   let validation;
   let publishSource = existingEvidence ? "existing-evidence" : "";
   let distTagEvidencePath = "";
-  const publishEnvironment = {
-    BUILDCHAIN_VERSION: version,
-    BUILDCHAIN_CHANNEL: channel,
-    BUILDCHAIN_SOURCE_SHA: sourceSha,
-    BUILDCHAIN_TARGET_REF: targetRef,
-    BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
-    BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
-    BUILDCHAIN_RELEASE_SHA: releaseSha,
-    BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
-    BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
-    BUILDCHAIN_SITE_GENERATED_AT: promotionGeneratedAt,
-    BUILDCHAIN_SITE_PUBLISHED_AT: promotionGeneratedAt,
-    BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
-    BUILDCHAIN_SURFACE_GENERATED_AT: promotionGeneratedAt,
-    BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
-    BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
-    BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
-    BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundleVerification?.root || "",
-    BUILDCHAIN_SEALED_NPM_TARBALL: sealedBundleVerification?.npm.absolutePath || "",
-    BUILDCHAIN_SEALED_NPM_INTEGRITY: sealedBundleVerification?.npm.integrity || "",
-    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundleVerification?.npm.sha256 || "",
-    BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
-    BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
-    BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
-    BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
-    BUILDCHAIN_PACKAGE_SET_ORDER: publishContract.packageSetOrder,
-    BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
-  };
+  const publishEnvironment = publishTransactionEnvironment(context);
   try {
     const evidence = existingEvidence || readPublishEvidence(resolvedEvidencePath);
     if (evidence) {
