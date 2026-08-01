@@ -78,6 +78,16 @@ on:
         default: ""
         required: false
         type: string
+      agent-work-context-json:
+        description: "Optional exact typed Family State, WorkRef, and authority context; when present emits a resumable propagation work unit"
+        default: ""
+        required: false
+        type: string
+      agent-work-mode:
+        description: "legacy preserves existing execution; capture-only emits a paused typed work unit without downstream mutation"
+        default: "legacy"
+        required: false
+        type: string
       dry-run:
         description: "Plan and write lock without pushing a PR"
         default: true
@@ -115,6 +125,18 @@ on:
       propagation-receipt-digest:
         description: "Exact release propagation receipt SHA-256"
         value: ${{ jobs.propagate.outputs.propagation-receipt-digest }}
+      propagation-work-artifact:
+        description: "Agent-native propagation work artifact name"
+        value: ${{ jobs.propagate.outputs.propagation-work-artifact }}
+      propagation-work-json:
+        description: "Latest agent-native propagation work envelope"
+        value: ${{ jobs.propagate.outputs.propagation-work-json }}
+      propagation-work-root:
+        description: "Latest agent-native propagation work content root"
+        value: ${{ jobs.propagate.outputs.propagation-work-root }}
+      propagation-work-next-action:
+        description: "Next executable agent action"
+        value: ${{ jobs.propagate.outputs.propagation-work-next-action }}
 
 permissions:
   contents: write
@@ -147,6 +169,10 @@ jobs:
       controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
       propagation-receipt-json: ${{ steps.propagation-receipt.outputs.receipt-json }}
       propagation-receipt-digest: ${{ steps.propagation-receipt.outputs.receipt-digest }}
+      propagation-work-artifact: buildchain-release-propagation-work-${{ steps.plan.outputs.propagation_key }}
+      propagation-work-json: ${{ steps.propagation-work-output.outputs.work-json }}
+      propagation-work-root: ${{ steps.propagation-work-output.outputs.work-root }}
+      propagation-work-next-action: ${{ steps.propagation-work-output.outputs.next-action }}
     steps:
       - name: Checkout Buildchain runtime
         id: runtime
@@ -208,12 +234,20 @@ jobs:
         env:
           GRAPH_JSON: ${{ inputs.graph-json }}
           UPSTREAM_RELEASE_JSON: ${{ inputs.upstream-release-json }}
+          AGENT_WORK_CONTEXT_JSON: ${{ inputs.agent-work-context-json }}
+          AGENT_WORK_MODE: ${{ inputs.agent-work-mode }}
         run: |
           mkdir -p .buildchain/release-propagation
           node <<'NODE'
           const fs = require("fs");
+          if (!["legacy", "capture-only"].includes(process.env.AGENT_WORK_MODE)) {
+            throw new Error("agent-work-mode must be legacy or capture-only");
+          }
           fs.writeFileSync(".buildchain/release-propagation/graph.json", `${process.env.GRAPH_JSON}\n`);
           fs.writeFileSync(".buildchain/release-propagation/upstream-release.json", `${process.env.UPSTREAM_RELEASE_JSON}\n`);
+          if (process.env.AGENT_WORK_CONTEXT_JSON) {
+            fs.writeFileSync(".buildchain/release-propagation/work-context.json", `${process.env.AGENT_WORK_CONTEXT_JSON}\n`);
+          }
           NODE
 
       - name: Plan release propagation
@@ -231,13 +265,32 @@ jobs:
             const plan = JSON.parse(fs.readFileSync(".buildchain/release-propagation/plan.json", "utf8"));
             const target = plan.targets.find((entry) => entry.target === process.env.TARGET || entry.repository === process.env.TARGET);
             if (!target) throw new Error(`no propagation target matched ${process.env.TARGET}`);
+            const exactCoordinates = {
+              repository: target.repository,
+              baseRef: target.baseRef,
+              branch: target.branch,
+              lockPath: target.lockPath,
+            };
+            const callerCoordinates = {
+              repository: process.env.DOWNSTREAM_REPOSITORY,
+              baseRef: process.env.DOWNSTREAM_BASE_REF,
+              branch: process.env.BRANCH_OVERRIDE || target.branch,
+              lockPath: process.env.LOCK_PATH || target.lockPath,
+            };
+            if (JSON.stringify(callerCoordinates) !== JSON.stringify(exactCoordinates)) {
+              throw new Error(`downstream caller coordinates disagree with the exact propagation graph: ${JSON.stringify({ exactCoordinates, callerCoordinates })}`);
+            }
             const upstreamPackage = target.lock.upstream.package || {};
             const branch = process.env.BRANCH_OVERRIDE || target.branch;
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, `target=${target.target}\nrepository=${target.repository}\nchannel=${target.channel}\nlock_path=${target.lockPath}\nlock_sha=${target.lock.lockSha256}\npackage_name=${upstreamPackage.name || ""}\npackage_version=${upstreamPackage.version || ""}\npropagation_key=${target.propagationKey}\nbranch=${branch}\n`);
+            const profile = target.executionProfile || {};
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `target=${target.target}\nrepository=${target.repository}\nchannel=${target.channel}\nlock_path=${target.lockPath}\nlock_sha=${target.lock.lockSha256}\npackage_name=${upstreamPackage.name || ""}\npackage_version=${upstreamPackage.version || ""}\npropagation_key=${target.propagationKey}\nbranch=${branch}\nupdate_command=${profile.updateCommand || ""}\nprepare_command=${profile.prepareCommand || ""}\nverify_command=${profile.verifyCommand || ""}\n`);
           NODE
         env:
           TARGET: ${{ inputs.downstream-target }}
           BRANCH_OVERRIDE: ${{ inputs.downstream-branch }}
+          DOWNSTREAM_REPOSITORY: ${{ inputs.downstream-repository }}
+          DOWNSTREAM_BASE_REF: ${{ inputs.downstream-base-ref }}
+          LOCK_PATH: ${{ inputs.lock-path }}
 
       - name: Checkout downstream repository
         uses: actions/checkout@v7.0.0
@@ -256,6 +309,7 @@ jobs:
           BASE: ${{ inputs.downstream-base-ref }}
         run: |
           set -euo pipefail
+          base_sha="$(git rev-parse HEAD)"
           if git ls-remote --exit-code --heads origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
             git fetch --no-tags origin "refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
             git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
@@ -264,10 +318,36 @@ jobs:
             git checkout -B "$BRANCH" "$BASE"
             echo "state=created" >> "$GITHUB_OUTPUT"
           fi
+          echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Create agent-native propagation work
+        id: propagation-work
+        if: ${{ inputs.agent-work-mode == 'capture-only' || inputs.agent-work-context-json != '' }}
+        shell: bash
+        run: |
+          args=(
+            release-propagation work create
+            --plan .buildchain/release-propagation/plan.json
+            --target "${{ inputs.downstream-target }}"
+            --expected-downstream-base-sha "${{ steps.branch.outputs.base_sha }}"
+            --output .buildchain/release-propagation/work.json
+            --json
+          )
+          if [ -f .buildchain/release-propagation/work-context.json ]; then
+            args+=(--work-context .buildchain/release-propagation/work-context.json)
+          fi
+          node .buildchain/runtime/bin/buildchain.mjs "${args[@]}" \
+            > .buildchain/release-propagation/work.stdout.json
+          node <<'NODE'
+          const fs = require("fs");
+          const work = JSON.parse(fs.readFileSync(".buildchain/release-propagation/work.json", "utf8"));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `lifecycle=${work.state.lifecycle}\nexecute=${work.authority.mode === "execute"}\n`);
+          NODE
 
       - name: Write downstream release lock
         id: lock
+        if: ${{ (inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true' }}
         shell: bash
         run: |
           node .buildchain/runtime/bin/buildchain.mjs release-propagation write-lock \
@@ -284,7 +364,7 @@ jobs:
 
       - name: Apply consumer-owned downstream update
         id: downstream-update
-        if: ${{ inputs.downstream-update-command != '' }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-update-command != '' || steps.plan.outputs.update_command != '') }}
         shell: bash
         working-directory: downstream
         env:
@@ -293,24 +373,24 @@ jobs:
           BUILDCHAIN_PROPAGATION_KEY: ${{ steps.plan.outputs.propagation_key }}
           BUILDCHAIN_PROPAGATION_BRANCH: ${{ steps.plan.outputs.branch }}
           BUILDCHAIN_PROPAGATION_UPSTREAM_RELEASE_JSON: ${{ inputs.upstream-release-json }}
-          DOWNSTREAM_UPDATE_COMMAND: ${{ inputs.downstream-update-command }}
+          DOWNSTREAM_UPDATE_COMMAND: ${{ inputs.downstream-update-command || steps.plan.outputs.update_command }}
         run: bash --noprofile --norc -e -u -o pipefail -c "$DOWNSTREAM_UPDATE_COMMAND"
 
       - name: Prepare downstream release update
         id: prepare
-        if: ${{ inputs.downstream-prepare-command != '' }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-prepare-command != '' || steps.plan.outputs.prepare_command != '') }}
         shell: bash
         working-directory: downstream
         env:
           BUILDCHAIN_UPSTREAM_PACKAGE_NAME: ${{ steps.plan.outputs.package_name }}
           BUILDCHAIN_UPSTREAM_PACKAGE_VERSION: ${{ steps.plan.outputs.package_version }}
           BUILDCHAIN_UPSTREAM_RELEASE_LOCK: ${{ steps.plan.outputs.lock_path }}
-          BUILDCHAIN_DOWNSTREAM_PREPARE_COMMAND: ${{ inputs.downstream-prepare-command }}
+          BUILDCHAIN_DOWNSTREAM_PREPARE_COMMAND: ${{ inputs.downstream-prepare-command || steps.plan.outputs.prepare_command }}
         run: bash -euo pipefail -c "$BUILDCHAIN_DOWNSTREAM_PREPARE_COMMAND"
 
       - name: Refresh managed README badges
         id: badges
-        if: ${{ inputs.refresh-managed-readme-badges }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && inputs.refresh-managed-readme-badges }}
         shell: bash
         working-directory: downstream
         run: |
@@ -322,18 +402,59 @@ jobs:
 
       - name: Verify downstream release update
         id: verify
-        if: ${{ inputs.downstream-verify-command != '' }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-verify-command != '' || steps.plan.outputs.verify_command != '') }}
         shell: bash
         working-directory: downstream
         env:
           BUILDCHAIN_UPSTREAM_PACKAGE_NAME: ${{ steps.plan.outputs.package_name }}
           BUILDCHAIN_UPSTREAM_PACKAGE_VERSION: ${{ steps.plan.outputs.package_version }}
           BUILDCHAIN_UPSTREAM_RELEASE_LOCK: ${{ steps.plan.outputs.lock_path }}
-          BUILDCHAIN_DOWNSTREAM_VERIFY_COMMAND: ${{ inputs.downstream-verify-command }}
+          BUILDCHAIN_DOWNSTREAM_VERIFY_COMMAND: ${{ inputs.downstream-verify-command || steps.plan.outputs.verify_command }}
         run: bash -euo pipefail -c "$BUILDCHAIN_DOWNSTREAM_VERIFY_COMMAND"
+
+      - name: Record materialization and release verification
+        if: ${{ steps.propagation-work.outputs.execute == 'true' && steps.lock.outcome == 'success' && steps.downstream-update.outcome != 'failure' && steps.prepare.outcome != 'failure' && steps.badges.outcome != 'failure' && steps.verify.outcome != 'failure' }}
+        shell: bash
+        env:
+          LOCK_SHA: ${{ steps.lock.outputs.lock_sha }}
+        run: |
+          set -euo pipefail
+          record_stage() {
+            local stage="$1"
+            local kind="$2"
+            local evidence_root="$3"
+            local locator="$4"
+            local revision="$5"
+            jq -n \
+              --arg stage "$stage" \
+              --arg kind "$kind" \
+              --arg root "$evidence_root" \
+              --arg locator "$locator" \
+              --arg repository "${{ inputs.downstream-repository }}" \
+              --arg revision "$revision" \
+              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision,httpStatus:null,bytes:0,claims:null}],failure:null}' \
+              > .buildchain/release-propagation/receipt-input.json
+            node .buildchain/runtime/bin/buildchain.mjs release-propagation work receipt \
+              --work .buildchain/release-propagation/work.json \
+              --receipt-input .buildchain/release-propagation/receipt-input.json \
+              --output .buildchain/release-propagation/stage-receipt.json \
+              --json > .buildchain/release-propagation/stage-receipt.stdout.json
+            local expected_root
+            expected_root="$(jq -r .contentRoot .buildchain/release-propagation/work.json)"
+            node .buildchain/runtime/bin/buildchain.mjs release-propagation work record \
+              --work .buildchain/release-propagation/work.json \
+              --expected-work-root "$expected_root" \
+              --receipt .buildchain/release-propagation/stage-receipt.json \
+              --output .buildchain/release-propagation/work.next.json \
+              --json > .buildchain/release-propagation/work.next.stdout.json
+            mv .buildchain/release-propagation/work.next.json .buildchain/release-propagation/work.json
+          }
+          record_stage materialize release-lock "sha256:${LOCK_SHA}" "${{ steps.plan.outputs.lock_path }}" "${{ steps.branch.outputs.base_sha }}"
+          record_stage verify-release release-contract-verification "sha256:${LOCK_SHA}" "buildchain://release-propagation/verify-release" "${{ steps.branch.outputs.base_sha }}"
 
       - name: Summarize release propagation
         id: summarize
+        if: ${{ (inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true' }}
         shell: bash
         run: |
           {
@@ -350,6 +471,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Prepare propagation PR outcome
+        if: ${{ (inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true' }}
         shell: bash
         env:
           BRANCH: ${{ steps.plan.outputs.branch }}
@@ -366,7 +488,7 @@ jobs:
 
       - name: Create or update downstream PR
         id: open-pr
-        if: ${{ !inputs.dry-run }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && !inputs.dry-run }}
         shell: bash
         working-directory: downstream
         env:
@@ -485,7 +607,7 @@ jobs:
 
       - name: Create exact propagation receipt
         id: propagation-receipt
-        if: ${{ always() && steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && (inputs.dry-run || steps.open-pr.outcome == 'success') }}
+        if: ${{ always() && ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && (inputs.dry-run || steps.open-pr.outcome == 'success') }}
         shell: bash
         run: |
           node .buildchain/runtime/bin/buildchain.mjs release-propagation receipt \
@@ -504,6 +626,76 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `receipt-json=${JSON.stringify(receipt)}\nreceipt-digest=${receipt.receiptSha256}\n`);
           NODE
 
+      - name: Record pushed branch and pull request
+        if: ${{ steps.propagation-work.outputs.execute == 'true' && !inputs.dry-run && steps.open-pr.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          record_stage() {
+            local stage="$1"
+            local kind="$2"
+            local evidence_value="$3"
+            local locator="$4"
+            local revision="$5"
+            local digest
+            digest="$(printf '%s' "$evidence_value" | sha256sum | cut -d' ' -f1)"
+            jq -n \
+              --arg stage "$stage" \
+              --arg kind "$kind" \
+              --arg root "sha256:${digest}" \
+              --arg locator "$locator" \
+              --arg repository "${{ inputs.downstream-repository }}" \
+              --arg revision "$revision" \
+              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision,httpStatus:null,bytes:0,claims:null}],failure:null}' \
+              > .buildchain/release-propagation/receipt-input.json
+            node .buildchain/runtime/bin/buildchain.mjs release-propagation work receipt \
+              --work .buildchain/release-propagation/work.json \
+              --receipt-input .buildchain/release-propagation/receipt-input.json \
+              --output .buildchain/release-propagation/stage-receipt.json \
+              --json > .buildchain/release-propagation/stage-receipt.stdout.json
+            local expected_root
+            expected_root="$(jq -r .contentRoot .buildchain/release-propagation/work.json)"
+            node .buildchain/runtime/bin/buildchain.mjs release-propagation work record \
+              --work .buildchain/release-propagation/work.json \
+              --expected-work-root "$expected_root" \
+              --receipt .buildchain/release-propagation/stage-receipt.json \
+              --output .buildchain/release-propagation/work.next.json \
+              --json > .buildchain/release-propagation/work.next.stdout.json
+            mv .buildchain/release-propagation/work.next.json .buildchain/release-propagation/work.json
+          }
+          pushed_sha="$(jq -r '.pushedSha' .buildchain/release-propagation/branch-reconciliation.json)"
+          pr_url="$(jq -r '.pullRequest.url' .buildchain/release-propagation/branch-reconciliation.json)"
+          pr_number="$(jq -r '.pullRequest.number' .buildchain/release-propagation/branch-reconciliation.json)"
+          reconciliation="$(cat .buildchain/release-propagation/branch-reconciliation.json)"
+          record_stage push-branch git-branch-reconciliation "$reconciliation" "buildchain://release-propagation/branch-reconciliation" "$pushed_sha"
+          record_stage pull-request github-pull-request "${{ inputs.downstream-repository }}#${pr_number}:${pr_url}" "$pr_url" "$pushed_sha"
+
+      - name: Expose agent-native propagation work
+        id: propagation-work-output
+        if: ${{ always() && steps.propagation-work.outcome == 'success' }}
+        shell: bash
+        run: |
+          node .buildchain/runtime/bin/buildchain.mjs release-propagation work status \
+            --work .buildchain/release-propagation/work.json \
+            --json > .buildchain/release-propagation/work-status.json
+          node <<'NODE'
+          const fs = require("fs");
+          const work = JSON.parse(fs.readFileSync(".buildchain/release-propagation/work.json", "utf8"));
+          const status = JSON.parse(fs.readFileSync(".buildchain/release-propagation/work-status.json", "utf8"));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `work-json=${JSON.stringify(work)}\nwork-root=${work.contentRoot}\nnext-action=${status.nextAction.action}:${status.currentStage}\n`);
+          NODE
+
+      - name: Upload agent-native propagation work
+        if: ${{ always() && steps.propagation-work.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-propagation-work-${{ steps.plan.outputs.propagation_key }}
+          path: |
+            .buildchain/release-propagation/work.json
+            .buildchain/release-propagation/work-status.json
+            .buildchain/release-propagation/stage-receipt.json
+          if-no-files-found: error
+
       - name: Upload propagation plan
         id: propagation-upload
         uses: actions/upload-artifact@v4
@@ -518,7 +710,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || steps.runtime.outcome == 'failure' && 'failure' || steps.controller-identities.outcome }}"},{"id":"plan","status":"${{ steps.plan.outcome }}"},{"id":"write-lock","status":"${{ steps.lock.outcome }}"},{"id":"prepare-consumer","status":"${{ (steps.downstream-update.outcome == 'failure' || steps.prepare.outcome == 'failure') && 'failure' || (steps.downstream-update.outcome == 'success' || steps.prepare.outcome == 'success') && 'success' || 'skipped' }}"},{"id":"refresh-badges","status":"${{ steps.badges.outcome }}"},{"id":"verify-consumer","status":"${{ steps.verify.outcome }}"},{"id":"open-pr","status":"${{ steps.open-pr.outcome }}"},{"id":"aggregate","status":"${{ (steps.summarize.outcome == 'failure' || steps.propagation-receipt.outcome == 'failure' || steps.propagation-upload.outcome == 'failure') && 'failure' || (steps.summarize.outcome == 'success' && steps.propagation-receipt.outcome == 'success' && steps.propagation-upload.outcome == 'success') && 'success' || 'skipped' }}"}]
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || steps.runtime.outcome == 'failure' && 'failure' || steps.controller-identities.outcome }}"},{"id":"plan","status":"${{ steps.plan.outcome }}"},{"id":"emit-work","status":"${{ steps.propagation-work.outcome }}"},{"id":"write-lock","status":"${{ steps.lock.outcome }}"},{"id":"prepare-consumer","status":"${{ (steps.downstream-update.outcome == 'failure' || steps.prepare.outcome == 'failure') && 'failure' || (steps.downstream-update.outcome == 'success' || steps.prepare.outcome == 'success') && 'success' || 'skipped' }}"},{"id":"refresh-badges","status":"${{ steps.badges.outcome }}"},{"id":"verify-consumer","status":"${{ steps.verify.outcome }}"},{"id":"open-pr","status":"${{ steps.open-pr.outcome }}"},{"id":"aggregate","status":"${{ (steps.summarize.outcome == 'failure' || steps.propagation-receipt.outcome == 'failure' || steps.propagation-upload.outcome == 'failure') && 'failure' || (steps.summarize.outcome == 'success' && steps.propagation-receipt.outcome == 'success' && steps.propagation-upload.outcome == 'success') && 'success' || 'skipped' }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && steps.downstream-update.outcome != 'failure' && steps.prepare.outcome != 'failure' && steps.badges.outcome != 'failure' && steps.verify.outcome != 'failure' && steps.propagation-receipt.outcome == 'success' && !inputs.dry-run && '[{"kind":"propagation-plan","path":".buildchain/release-propagation/plan.json"},{"kind":"propagation-lock","path":".buildchain/release-propagation/write-lock.json"},{"kind":"propagation-branch-reconciliation","path":".buildchain/release-propagation/branch-reconciliation.json"}]' || steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && steps.downstream-update.outcome != 'failure' && steps.prepare.outcome != 'failure' && steps.badges.outcome != 'failure' && steps.verify.outcome != 'failure' && steps.propagation-receipt.outcome == 'success' && '[{"kind":"propagation-plan","path":".buildchain/release-propagation/plan.json"},{"kind":"propagation-lock","path":".buildchain/release-propagation/write-lock.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && steps.downstream-update.outcome != 'failure' && steps.prepare.outcome != 'failure' && steps.badges.outcome != 'failure' && steps.verify.outcome != 'failure' && steps.propagation-receipt.outcome == 'success' && '' || 'propagation-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release propagation did not complete successfully
@@ -534,7 +726,7 @@ jobs:
           if-no-files-found: error
 
       - name: Enforce qualifying release-propagation controller receipt
-        if: ${{ always() && steps.controller-plan.outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        if: ${{ always() && !(steps.propagation-work.outcome == 'success' && steps.propagation-work.outputs.execute != 'true') && steps.controller-plan.outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
         run: |
           echo "::error::release-propagation controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
           exit 1

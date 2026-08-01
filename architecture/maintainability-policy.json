@@ -5,11 +5,11 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 230,
-    "maxHandMaintainedSourceLines": 89257,
+    "maxHandMaintainedSourceFiles": 231,
+    "maxHandMaintainedSourceLines": 90903,
     "maxWorkflowFiles": 57,
-    "maxWorkflowLines": 19269,
-    "rationale": "The structural hardening and the bounded AWS Windows one-job JIT lifecycle controller may add responsibility-owned module seams but must remain below this exact repository-wide ceiling and cannot grow the reusable workflow surface. The allowance above the protected 87,250-line baseline covers explicit imports, exports, injected seams, extracted workflow logic, fail-closed cloud cleanup, and regression guards rather than duplicated behavior; any wider ceiling requires a reviewed policy change."
+    "maxWorkflowLines": 19634,
+    "rationale": "The structural hardening, bounded AWS Windows JIT controller, and agent-native Paper-to-Site propagation closure may add responsibility-owned modules and exact workflow evidence stages but must remain below these exact repository-wide ceilings. The new allowance binds typed Work Control, deterministic recovery, npm and Git source coherence, and production readback instead of duplicated delivery behavior; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -41,6 +41,107 @@
     "scripts/generate-site-bundle.mjs": {
       "maxLines": 1502,
       "rationale": "Lifecycle metadata and CLI registry parity are generated centrally across the latest upstream public surface while the largest generator function remains at or below its prior size and complexity ceilings."
+    }
+  },
+  "approvedPublicSurfaceTransitions": {
+    "workflow:paper-release-sealed": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "paper-release-sealed",
+        "path": ".github/workflows/paper-release-sealed.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-name",
+          "artifact-paths",
+          "artifact-retention-days",
+          "branch-protection-bypass-apps",
+          "branch-protection-bypass-teams",
+          "branch-protection-bypass-users",
+          "buildchain-contract-lock-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "github-governance-receipt-json",
+          "github-release",
+          "github-release-notes",
+          "github-release-title",
+          "package-name",
+          "publish-dist-tag",
+          "publisher-workflow-path",
+          "release-passport-impact-json",
+          "release-passport-output-dir",
+          "release-passport-product-name",
+          "required-status-check",
+          "target-ref",
+          "target-sha",
+          "toolchain-type",
+          "verify-command",
+          "working-directory"
+        ],
+        "secrets": [
+          "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
+          "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
+          "BUILDCHAIN_GENERATED_WRITE_TOKEN",
+          "BUILDCHAIN_PROMOTION_TOKEN",
+          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
+        ],
+        "outputs": [
+          "github-release-url",
+          "package-name",
+          "package-version",
+          "propagation-work-artifact",
+          "public-release-tag",
+          "release-passport-path",
+          "upstream-release-json"
+        ]
+      },
+      "rationale": "The sealed Paper release adds one exact upstream release envelope output after npm integrity, gitHead, tag target, Passport, and publication artifacts agree; all prior inputs, secrets, outputs, and behavior remain intact."
+    },
+    "workflow:release-propagation": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "release-propagation",
+        "path": ".github/workflows/release-propagation.yml",
+        "reusable": true,
+        "inputs": [
+          "agent-work-context-json",
+          "agent-work-mode",
+          "buildchain-ref",
+          "buildchain-repository",
+          "downstream-base-ref",
+          "downstream-branch",
+          "downstream-prepare-command",
+          "downstream-repository",
+          "downstream-target",
+          "downstream-update-command",
+          "downstream-verify-command",
+          "dry-run",
+          "graph-json",
+          "lock-path",
+          "pr-body",
+          "pr-title",
+          "refresh-managed-readme-badges",
+          "source-node",
+          "upstream-release-json"
+        ],
+        "secrets": ["propagation-token"],
+        "outputs": [
+          "controller-plan-artifact",
+          "controller-plan-digest",
+          "controller-plan-json",
+          "controller-receipt-artifact",
+          "controller-receipt-digest",
+          "controller-receipt-json",
+          "controller-receipt-status",
+          "propagation-receipt-digest",
+          "propagation-receipt-json",
+          "propagation-work-artifact",
+          "propagation-work-json",
+          "propagation-work-next-action",
+          "propagation-work-root"
+        ]
+      },
+      "rationale": "The agent-native extension adds one optional typed Work Control context input and exact work-state outputs while preserving every existing input, secret, output, path, and reusable-workflow behavior. The complete successor contract is pinned here so later drift remains fail-closed."
     }
   },
   "approvedExtractedDebt": {

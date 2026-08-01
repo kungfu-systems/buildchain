@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
+    "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "c6b4270f2416746b4faa0b57994d80378fb547b3c88f0283b8a9dee906f2ed21",
+    "sha256": "8d719b02e3482635f29fc89022437fc107cf618a4ea5a73ce0f54c17fe7d1072",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 57,
       "actionCount": 6,
       "sitePageCount": 60,
-      "docCommandRefCount": 316,
+      "docCommandRefCount": 324,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -211,7 +211,7 @@
     },
     {
       "id": "claim:buildchain-release-propagation",
-      "claim": "Buildchain can propagate upstream alpha or stable releases to downstream repositories while preserving release channels through exact release locks.",
+      "claim": "Buildchain can propagate exact upstream releases as Family State v2 and WorkRef-bound, resumable downstream work that preserves protected review and completes only after production readback.",
       "sourcePaths": [
         "packages/core/release-propagation.js",
         "scripts/release-propagation.mjs",
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "c6b4270f2416746b4faa0b57994d80378fb547b3c88f0283b8a9dee906f2ed21",
+      "sha256": "8d719b02e3482635f29fc89022437fc107cf618a4ea5a73ce0f54c17fe7d1072",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 57,
         "actionCount": 6,
         "sitePageCount": 60,
-        "docCommandRefCount": 316,
+        "docCommandRefCount": 324,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -4754,8 +4754,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 17,
+          "inputCount": 19,
           "inputs": [
+            "agent-work-context-json",
+            "agent-work-mode",
             "buildchain-ref",
             "buildchain-repository",
             "downstream-base-ref",

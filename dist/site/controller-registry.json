@@ -2121,6 +2121,14 @@
         "path": ".github/workflows/release-propagation.yml"
       },
       "inputs": {
+        "agent-work-context-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "agent-work-mode": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "buildchain-ref": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -2205,6 +2213,10 @@
             "required": true
           },
           {
+            "id": "emit-work",
+            "required": false
+          },
+          {
             "id": "write-lock",
             "required": true
           },
@@ -2232,7 +2244,8 @@
         "capabilities": [
           "release-propagation-plan",
           "downstream-lock",
-          "pull-request-handoff"
+          "agent-native-work-envelope",
+          "resumable-production-handoff"
         ],
         "evidence": [
           "propagation-plan",
@@ -2240,7 +2253,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:aff7a9f6bcf96d7a9d406e490868288f3acef104e53eddddc5782b8a2b5b4fa5"
+      "digest": "sha256:660579b5561e8e33375a3f3b1fefbb8a5bd8241a55ba43374d786fb772c24a12"
     },
     {
       "schemaVersion": 1,
@@ -2289,5 +2302,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:3564f3c38f8c070280ea9cf5dee810d466b40e72ce80104b15776365dfdf9b60"
+  "digest": "sha256:365541ae05fb807ed5ca3e80662ea5fa3b1d0cd13db5b56e444a4596b7b899f2"
 }

@@ -166,14 +166,23 @@ function evaluatePublicSurface({ root, revision, policy }) {
         );
       }
       const previous = baselineByKey.get(entry[definition.key]);
+      const currentContract = publicSurfaceContract(entry, definition.kind);
       if (
         previous &&
-        JSON.stringify(publicSurfaceContract(entry, definition.kind)) !==
+        JSON.stringify(currentContract) !==
           JSON.stringify(publicSurfaceContract(previous, definition.kind))
       ) {
-        issues.push(
-          `${label}: existing public contract drifted from ${revision}`,
-        );
+        const approval = policy.approvedPublicSurfaceTransitions?.[label];
+        const approved =
+          approval?.fromRevision === revision &&
+          String(approval?.rationale || "").trim() &&
+          JSON.stringify(approval?.contract) ===
+            JSON.stringify(currentContract);
+        if (!approved) {
+          issues.push(
+            `${label}: existing public contract drifted from ${revision}`,
+          );
+        }
       }
       if (!previous && !entry.nonDuplicationRationale) {
         issues.push(

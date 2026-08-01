@@ -2,6 +2,7 @@
   "repository": "kungfu-systems/paper-observer-declared-timelines",
   "channel": "alpha",
   "tag": "v0.1.0-alpha.1",
+  "tagTargetSha": "4444444444444444444444444444444444444444",
   "sourceSha": "4444444444444444444444444444444444444444",
   "releasePassport": {
     "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/buildchain.release.json",
