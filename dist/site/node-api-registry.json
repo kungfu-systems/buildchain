@@ -10377,7 +10377,7 @@
       ],
       "source": {
         "path": "packages/core/paper-repository.js",
-        "line": 132
+        "line": 133
       },
       "example": "import { resolvePaperRepository } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10570,7 +10570,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2341
+        "line": 2412
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10599,7 +10599,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1399
+        "line": 1470
       },
       "example": "import { collectPaperStatus } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10628,7 +10628,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2583
+        "line": 2654
       },
       "example": "import { createPaperAlphaPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10657,7 +10657,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2520
+        "line": 2591
       },
       "example": "import { createPaperBuildPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10686,7 +10686,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 456
+        "line": 518
       },
       "example": "import { createPaperProvisioningAuthority } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -10715,7 +10715,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2641
+        "line": 2712
       },
       "example": "import { createPaperResumePlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10744,7 +10744,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2768
+        "line": 2839
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11037,7 +11037,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 941
+        "line": 1012
       },
       "example": "import { planPaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11066,7 +11066,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 638
+        "line": 701
       },
       "example": "import { planPaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11099,7 +11099,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 182
+        "line": 244
       },
       "example": "import { resolvePaperRuntimeGitSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11128,7 +11128,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1057
+        "line": 1128
       },
       "example": "import { writePaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11157,7 +11157,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 783
+        "line": 846
       },
       "example": "import { writePaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18116,7 +18116,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:3eb8acadc978dc636a4283025f12c89e620ebf0f1dc2a164670e27f9a6825ac2",
+      "digest": "sha256:d4e80751dab1fd8e2ff3ff58db5d0daabd7956f16ad72fe34abd442226d4da19",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -18633,12 +18633,12 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:0c8721e9c2f449e96aa8adefe99b016b193ab2876c02f3c61186794ac1873e90"
+      "digest": "sha256:1707dd8989e1630b5ba9381c6f8aabbbc64288590628cbae9058ea6f56f9037c"
     },
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:2df82d2f754898d2f463ec0795e20f903f534dd537ac971e62b140beb21d49ee"
+      "digest": "sha256:a5faf35fcb808184ef29057bf6e97d895938dd5d57abf005ea79bf85c38b6f49"
     },
     {
       "id": "build-facts",
