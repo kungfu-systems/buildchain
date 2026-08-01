@@ -276,3 +276,20 @@ test("public surface lifecycle metadata preserves baseline contracts", () => {
     [],
   );
 });
+
+test("public surface transitions require an exact reviewed successor contract", () => {
+  const fixturePolicy = structuredClone(policy);
+  fixturePolicy.approvedPublicSurfaceTransitions[
+    "workflow:release-propagation"
+  ].contract.outputs.push("unreviewed-output");
+  const issues = evaluatePublicSurface({
+    root,
+    revision: policy.enforcementRevision || baseline.revision,
+    policy: fixturePolicy,
+  });
+  assert.ok(
+    issues.includes(
+      `workflow:release-propagation: existing public contract drifted from ${policy.enforcementRevision}`,
+    ),
+  );
+});

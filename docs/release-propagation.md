@@ -70,7 +70,8 @@ The upstream release envelope is the post-finalization fact set:
   "package": {
     "name": "@kungfu-tech/kfd",
     "version": "1.4.0-alpha.3",
-    "integrity": "sha512-..."
+    "integrity": "sha512-...",
+    "gitHead": "1111111111111111111111111111111111111111"
   },
   "releasePassport": {
     "url": "https://github.com/kungfu-systems/kfd/releases/download/v1.4.0-alpha.3/buildchain.release.json",
@@ -82,8 +83,10 @@ The upstream release envelope is the post-finalization fact set:
 }
 ```
 
-The package version and integrity must be exact. Downstream build logic should
-install that version directly, not resolve `alpha` or `latest` again.
+The package version, integrity, and npm `gitHead` must be exact. The exact tag
+must be `v<version>`, and `gitHead`, tag target, and `sourceSha` must describe
+the same source commit before propagation is admitted. Downstream build logic
+installs that version directly and never resolves `alpha` or `latest` again.
 
 Publication repositories can propagate immutable publication archive evidence
 without npm package facts. The upstream envelope then includes
@@ -200,6 +203,107 @@ The receipt keeps four machine states separate:
 
 Package publication or alpha completion never implies either visibility state.
 
+## Agent-native work envelope
+
+Passing an exact `agent-work-context-json` upgrades the PR controller into a
+resumable delivery handoff. Buildchain emits one
+`kungfu-buildchain-release-propagation-work` v1 envelope per exact release and
+downstream target. This is a Buildchain domain execution contract, not another
+Work Control database or authority.
+
+The envelope binds:
+
+- the exact normalized upstream release and release-lock roots;
+- the downstream repository, channel, base ref, expected base SHA, managed
+  branch, lock path, and propagation key;
+- exact parent and child `kungfu.assignment-graph.work-ref/v1` values;
+- one exact `kungfu.work-control.initiative-family-state/v2` coordinate;
+- capture-only or end-to-end execution authority, including an active typed
+  execution-Warrant reference for execution;
+- explicit publish-to-production intent, deterministic commands, canonical
+  ordered stages, a recovery cursor, stage receipts, supersession policy, and
+  a content root.
+
+The ordered stages are:
+
+```text
+materialize -> verify-release -> push-branch -> pull-request -> preview
+-> independent-review -> protected-merge -> staging -> production-release
+-> production-deploy -> online-readback -> complete
+```
+
+`pull-request` and `protected-merge` are intermediate states. Only exact online
+readback followed by an accepted Work Control Decision can record `complete`.
+Every state transition uses expected-old fencing against the current work
+content root. An identical initial envelope has the same work id and root;
+newer releases receive distinct propagation keys and must name an explicit
+superseded work root when they replace unfinished work.
+
+The context has this shape (roots abbreviated here only for readability):
+
+```json
+{
+  "parentWorkRef": {
+    "schema": "kungfu.assignment-graph.work-ref/v1",
+    "workspace_identity_root": "sha256:<64 hex>",
+    "object_kind": "initiative",
+    "subject": "paper-publication",
+    "version_root": "sha256:<64 hex>",
+    "cut_root": "sha256:<64 hex>"
+  },
+  "childWorkRef": {
+    "schema": "kungfu.assignment-graph.work-ref/v1",
+    "workspace_identity_root": "sha256:<64 hex>",
+    "object_kind": "assignment",
+    "subject": "site-propagation",
+    "version_root": "sha256:<64 hex>",
+    "cut_root": "sha256:<64 hex>"
+  },
+  "familyState": {
+    "schema": "kungfu.work-control.initiative-family-state/v2",
+    "stateRoot": "sha256:<64 hex>",
+    "v1ProjectionRoot": "sha256:<64 hex>",
+    "typedBindingRoot": "sha256:<64 hex>",
+    "factWorld": "<owning fact world>",
+    "cutRoot": "sha256:<64 hex>"
+  },
+  "authority": {
+    "mode": "capture-only",
+    "publishToProduction": false,
+    "allowedActions": [],
+    "executionWarrant": null
+  },
+  "supersedesWorkRoot": ""
+}
+```
+
+Capture-only input emits a paused, unclaimed unit and performs no downstream
+write. An executing input must carry an active Warrant at the same Family State
+fact world and cut, explicit production intent, and the complete supported
+action set. Buildchain never infers a missing WorkRef, Family binding, Warrant,
+or authority.
+
+Agent entrypoints are machine-readable and restart-safe:
+
+```bash
+buildchain release-propagation work create ... --output work.json --json
+buildchain release-propagation work status --work work.json --json
+buildchain release-propagation work resume --work work.json --json
+buildchain release-propagation work claim ... --output successor.json --json
+buildchain release-propagation work receipt ... --output receipt.json --json
+buildchain release-propagation work record ... --output successor.json --json
+buildchain release-propagation work repair ... --output successor.json --json
+buildchain release-propagation work complete ... --output successor.json --json
+```
+
+Known operational races (`stale-branch`, `expected-old-mismatch`,
+`lockfile-drift`, `failed-check`, `interrupted-execution`, and `ci-delay`) return
+a retryable repair action. Semantic ambiguity, missing credentials, policy
+expansion, and unknown failures stop at `needs-decision`. Release-contract
+mismatch, immutable-artifact conflict, and destructive recovery stop at a hard
+safety gate. Evidence locators containing signed or credential parameters are
+rejected.
+
 ## Reusable Workflow
 
 Upstream repositories can call
@@ -257,11 +361,13 @@ can disable that step with `refresh-managed-readme-badges: false`.
 push, so consumers can use the same check as their PR workflow. Update,
 preparation, badge refresh, and verification failures all fail closed. The
 workflow stages the complete deterministic result, signs the propagation
-commit with DCO, and then opens or updates the PR. It does not publish the
-downstream release directly. The downstream repository keeps its normal
-Buildchain governance: the PR updates source-of-truth facts, then downstream
-alpha or release publication runs through its own protected channel. A
-byte-identical rerun is an explicit successful no-op.
+commit with DCO, and then opens or updates the PR. With no agent work context,
+the reusable workflow retains this backward-compatible PR boundary. With an
+executing work context, it records materialization, verification, branch, and
+PR receipts and returns `preview` as the next action; the authorized Agent then
+continues through the downstream repository's normal protected review,
+publication, deployment, and readback entrypoints. A byte-identical rerun is an
+explicit successful no-op, never a synthetic completion.
 
 For unreleased runtime validation, keep the caller's reusable workflow reference
 on `@v3` and pass a temporary train ref through `buildchain-ref`.

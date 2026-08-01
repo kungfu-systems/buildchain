@@ -1768,9 +1768,10 @@
         "package-name",
         "package-version",
         "public-release-tag",
-        "release-passport-path"
+        "release-passport-path",
+        "upstream-release-json"
       ],
-      "outputCount": 5,
+      "outputCount": 6,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active",
@@ -2289,6 +2290,7 @@
       "path": ".github/workflows/release-propagation.yml",
       "reusable": true,
       "inputs": [
+        "agent-work-context-json",
         "buildchain-ref",
         "buildchain-repository",
         "downstream-base-ref",
@@ -2307,7 +2309,7 @@
         "source-node",
         "upstream-release-json"
       ],
-      "inputCount": 17,
+      "inputCount": 18,
       "secrets": [
         "propagation-token"
       ],
@@ -2321,9 +2323,13 @@
         "controller-receipt-json",
         "controller-receipt-status",
         "propagation-receipt-digest",
-        "propagation-receipt-json"
+        "propagation-receipt-json",
+        "propagation-work-artifact",
+        "propagation-work-json",
+        "propagation-work-next-action",
+        "propagation-work-root"
       ],
-      "outputCount": 9,
+      "outputCount": 13,
       "surface": "release-propagation",
       "capabilityGroup": "site-and-propagation",
       "status": "preview",

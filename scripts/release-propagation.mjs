@@ -3,9 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+  claimReleasePropagationWork,
+  completeReleasePropagationWork,
   createReleasePropagationReceipt,
+  createReleasePropagationStageReceipt,
+  createReleasePropagationWork,
   planReleasePropagation,
   readReleasePropagationJson,
+  recordReleasePropagationStage,
+  repairReleasePropagationWork,
+  resumeReleasePropagationWork,
+  verifyReleasePropagationWork,
   writeReleasePropagationLock,
 } from "../packages/core/release-propagation.js";
 
@@ -25,6 +33,33 @@ function usage() {
                                          [--production-state <state>]
                                          [--observed-at <iso-8601>]
                                          [--output <file>] [--json]
+  buildchain release-propagation work create --plan <json-or-path>
+                                            --work-context <json-or-path>
+                                            --expected-downstream-base-sha <git-sha>
+                                            [--target <id-or-repo>]
+                                            [--output <file>] [--json]
+  buildchain release-propagation work status --work <json-or-path> [--json]
+  buildchain release-propagation work resume --work <json-or-path> [--json]
+  buildchain release-propagation work claim --work <json-or-path>
+                                           --authority <json-or-path>
+                                           --expected-work-root <sha256:...>
+                                           [--output <file>] [--json]
+  buildchain release-propagation work receipt --work <json-or-path>
+                                             --receipt-input <json-or-path>
+                                             [--output <file>] [--json]
+  buildchain release-propagation work record --work <json-or-path>
+                                            --receipt <json-or-path>
+                                            --expected-work-root <sha256:...>
+                                            [--output <file>] [--json]
+  buildchain release-propagation work repair --work <json-or-path>
+                                            --receipt <json-or-path>
+                                            --expected-work-root <sha256:...>
+                                            [--output <file>] [--json]
+  buildchain release-propagation work complete --work <json-or-path>
+                                              --receipt <json-or-path>
+                                              --completion-decision <json-or-path>
+                                              --expected-work-root <sha256:...>
+                                              [--output <file>] [--json]
 `;
 }
 
@@ -47,6 +82,87 @@ function writeOutput(filePath, value) {
   }
   fs.mkdirSync(path.dirname(path.resolve(filePath)), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function readJsonFlag(args, name) {
+  return readReleasePropagationJson(readFlag(args, name), {
+    label: `--${name}`,
+    cwd: process.cwd(),
+  });
+}
+
+function emitWorkResult(args, value, summary) {
+  writeOutput(readFlag(args, "output", ""), value);
+  if (hasFlag(args, "json")) {
+    printJson(value);
+  } else {
+    process.stdout.write(`${summary}\n`);
+  }
+}
+
+function runWorkCli(args) {
+  const [mode = "", ...workArgs] = args;
+  if (!mode || mode === "--help" || mode === "-h") {
+    process.stdout.write(usage());
+    return;
+  }
+  if (mode === "create") {
+    const result = createReleasePropagationWork({
+      plan: readJsonFlag(workArgs, "plan"),
+      target: readFlag(workArgs, "target", ""),
+      workContext: readJsonFlag(workArgs, "work-context"),
+      expectedDownstreamBaseSha: readFlag(workArgs, "expected-downstream-base-sha"),
+    });
+    emitWorkResult(workArgs, result, `release propagation work: ${result.contentRoot}`);
+    return;
+  }
+  if (mode === "status" || mode === "resume") {
+    const work = readJsonFlag(workArgs, "work");
+    const result = mode === "resume"
+      ? resumeReleasePropagationWork(work)
+      : verifyReleasePropagationWork(work);
+    emitWorkResult(workArgs, result, `release propagation next action: ${result.nextAction.action} ${result.currentStage}`);
+    return;
+  }
+  if (mode === "claim") {
+    const result = claimReleasePropagationWork({
+      work: readJsonFlag(workArgs, "work"),
+      authority: readJsonFlag(workArgs, "authority"),
+      expectedWorkRoot: readFlag(workArgs, "expected-work-root"),
+    });
+    emitWorkResult(workArgs, result, `release propagation work claimed: ${result.contentRoot}`);
+    return;
+  }
+  if (mode === "receipt") {
+    const work = readJsonFlag(workArgs, "work");
+    const input = readJsonFlag(workArgs, "receipt-input");
+    const result = createReleasePropagationStageReceipt({ work, ...input });
+    emitWorkResult(workArgs, result, `release propagation stage receipt: ${result.receiptRoot}`);
+    return;
+  }
+  if (mode === "record" || mode === "repair") {
+    const transition = {
+      work: readJsonFlag(workArgs, "work"),
+      receipt: readJsonFlag(workArgs, "receipt"),
+      expectedWorkRoot: readFlag(workArgs, "expected-work-root"),
+    };
+    const result = mode === "record"
+      ? recordReleasePropagationStage(transition)
+      : repairReleasePropagationWork(transition);
+    emitWorkResult(workArgs, result, `release propagation work advanced: ${result.contentRoot}`);
+    return;
+  }
+  if (mode === "complete") {
+    const result = completeReleasePropagationWork({
+      work: readJsonFlag(workArgs, "work"),
+      receipt: readJsonFlag(workArgs, "receipt"),
+      completionDecision: readJsonFlag(workArgs, "completion-decision"),
+      expectedWorkRoot: readFlag(workArgs, "expected-work-root"),
+    });
+    emitWorkResult(workArgs, result, `release propagation work complete: ${result.contentRoot}`);
+    return;
+  }
+  throw new Error(`unsupported release-propagation work command: ${mode}`);
 }
 
 export function runReleasePropagationCli(argv = process.argv.slice(2)) {
@@ -78,6 +194,10 @@ export function runReleasePropagationCli(argv = process.argv.slice(2)) {
         process.stdout.write(`- ${target.repository} ${target.channel} lock=${target.lockPath}\n`);
       }
     }
+    return;
+  }
+  if (mode === "work") {
+    runWorkCli(args);
     return;
   }
   if (mode === "write-lock") {

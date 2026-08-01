@@ -90,6 +90,12 @@ test("sealed paper release separates read-only build, authority, and admitted pu
     /github-release-artifact-paths: \$\{\{ steps\.candidate\.outputs\.github-release-artifact-paths \}\}/,
   );
   assert.match(workflow, /publish-transaction-override: "true"/);
+  assert.match(workflow, /upstream-release-json:/);
+  assert.match(workflow, /npm view "\$\{PACKAGE_NAME\}@\$\{PACKAGE_VERSION\}" version dist\.integrity gitHead --json/);
+  assert.match(workflow, /packageFact\.gitHead !== process\.env\.SOURCE_SHA/);
+  assert.match(workflow, /remote_tag_sha.*SOURCE_SHA/s);
+  assert.match(workflow, /releaseBase.*publication-registry\.json/s);
+  assert.match(workflow, /paper-upstream-release-\$\{\{ steps\.candidate\.outputs\.package-version \}\}/);
   const publish = workflow.slice(workflow.indexOf("  publish:"));
   assert.doesNotMatch(
     publish,

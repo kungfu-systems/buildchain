@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:430eed733bfcbebd853da9c60a687822dab73689d7fb9ad2e9a760af279415e5"
+      "digest": "sha256:f6e378d0d583568b0ee90c8805b83b6f0a4faf0d1efa6e4a995482b5ecb8f538"
     },
     {
       "id": "auditable-demo",
@@ -125,7 +125,7 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:aea013d923a8d419fc76e99a81765f281640dd95141d32ae415b8572604e9d32"
+      "digest": "sha256:070f8763607a7511c273ade5299ead36cef4d3a55c3e130f3ef92ae86a45eae8"
     },
     {
       "id": "readme-badges",

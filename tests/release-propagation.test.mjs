@@ -1,13 +1,22 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  RELEASE_PROPAGATION_WORK_STAGES,
+  claimReleasePropagationWork,
+  completeReleasePropagationWork,
   createReleasePropagationReceipt,
+  createReleasePropagationStageReceipt,
+  createReleasePropagationWork,
   normalizeReleasePropagationGraph,
   planReleasePropagation,
+  recordReleasePropagationStage,
+  repairReleasePropagationWork,
+  verifyReleasePropagationWork,
   writeReleasePropagationLock,
 } from "@kungfu-tech/buildchain/release-propagation";
 
@@ -22,6 +31,81 @@ function readJson(rel) {
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
+}
+
+function shaRoot(value) {
+  return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
+}
+
+function workRef(kind, subject) {
+  return {
+    schema: "kungfu.assignment-graph.work-ref/v1",
+    workspace_identity_root: shaRoot(`${subject}:workspace`),
+    object_kind: kind,
+    subject,
+    version_root: shaRoot(`${subject}:version`),
+    cut_root: shaRoot(`${subject}:cut`),
+  };
+}
+
+function typedReference(kind, identity, status, familyState) {
+  return {
+    kind,
+    identity,
+    root: shaRoot(`${kind}:${identity}`),
+    factWorld: familyState.factWorld,
+    cutRoot: familyState.cutRoot,
+    schema: `kungfu.test.${kind}/v1`,
+    status,
+  };
+}
+
+function propagationWorkContext(mode = "execute") {
+  const familyState = {
+    schema: "kungfu.work-control.initiative-family-state/v2",
+    stateRoot: shaRoot("family-state"),
+    v1ProjectionRoot: shaRoot("family-v1"),
+    typedBindingRoot: shaRoot("family-bindings"),
+    factWorld: "kungfu-test-world",
+    cutRoot: shaRoot("family-cut"),
+  };
+  return {
+    parentWorkRef: workRef("initiative", "paper-publication"),
+    childWorkRef: workRef("assignment", "site-propagation"),
+    familyState,
+    authority: mode === "execute"
+      ? {
+          mode: "execute",
+          publishToProduction: true,
+          allowedActions: [...RELEASE_PROPAGATION_WORK_STAGES].sort(),
+          executionWarrant: typedReference("execution-warrant", "warrant-1", "active", familyState),
+        }
+      : {
+          mode: "capture-only",
+          publishToProduction: false,
+          allowedActions: [],
+          executionWarrant: null,
+        },
+    supersedesWorkRoot: "",
+  };
+}
+
+function stageReceipt(work, outcome = "success", failure = null) {
+  return createReleasePropagationStageReceipt({
+    work,
+    outcome,
+    observedAt: "2026-08-01T06:00:00.000Z",
+    actor: { kind: "agent", identity: "codex/pro-1802" },
+    summary: `${work.state.currentStage} ${outcome}`,
+    evidence: [{
+      kind: `${work.state.currentStage}-evidence`,
+      root: shaRoot(`${work.state.currentStage}:${work.revision}:${outcome}`),
+      locator: `github://kungfu-systems/site-libkungfu-dev/${work.state.currentStage}`,
+      repository: "kungfu-systems/site-libkungfu-dev",
+      revision: "a".repeat(40),
+    }],
+    failure,
+  });
 }
 
 test("release propagation graph preserves alpha channel and exact upstream facts", () => {
@@ -64,6 +148,27 @@ test("release propagation graph preserves stable release channel", () => {
 
   assert.equal(plan.targets[0].channel, "release");
   assert.equal(plan.targets[0].lock.upstream.package.version, "1.4.0");
+});
+
+test("release propagation rejects npm gitHead, exact tag, source SHA, and package version disagreement", () => {
+  const release = readJson("upstream-alpha.json");
+  assert.throws(
+    () => planReleasePropagation({
+      graph: readJson("graph.json"),
+      upstreamRelease: {
+        ...release,
+        package: { ...release.package, gitHead: "f".repeat(40) },
+      },
+    }),
+    /gitHead must match sourceSha/,
+  );
+  assert.throws(
+    () => planReleasePropagation({
+      graph: readJson("graph.json"),
+      upstreamRelease: { ...release, tag: "v1.4.0-alpha" },
+    }),
+    /tag must exactly match/,
+  );
 });
 
 test("release propagation graph carries publication archive payload without package facts", () => {
@@ -171,6 +276,187 @@ test("release propagation receipt keeps alpha truth independent from site visibi
   assert.match(receipt.receiptSha256, /^[0-9a-f]{64}$/);
 });
 
+test("agent-native propagation work binds Family State v2, exact WorkRefs, release lock, and execution authority", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  const context = propagationWorkContext();
+  const work = createReleasePropagationWork({
+    plan,
+    target: "site-libkungfu-dev",
+    workContext: context,
+    expectedDownstreamBaseSha: "a".repeat(40),
+  });
+  const repeated = createReleasePropagationWork({
+    plan,
+    target: "site-libkungfu-dev",
+    workContext: context,
+    expectedDownstreamBaseSha: "a".repeat(40),
+  });
+  const status = verifyReleasePropagationWork(work);
+
+  assert.equal(work.contract, "kungfu-buildchain-release-propagation-work");
+  assert.equal(work.workControl.familyState.schema, "kungfu.work-control.initiative-family-state/v2");
+  assert.equal(work.workControl.childWorkRef.schema, "kungfu.assignment-graph.work-ref/v1");
+  assert.equal(work.authority.executionWarrant.kind, "execution-warrant");
+  assert.equal(work.intent.publishToProduction, true);
+  assert.equal(work.downstream.expectedBaseSha, "a".repeat(40));
+  assert.equal(work.downstream.lockSha256, plan.targets[0].lock.lockSha256);
+  assert.equal(work.contentRoot, repeated.contentRoot);
+  assert.equal(status.currentStage, "materialize");
+  assert.equal(status.nextAction.action, "record");
+  assert.equal(status.productionVisible, false);
+});
+
+test("capture-only propagation stays paused until an exact active Warrant claims it", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  const context = propagationWorkContext("capture-only");
+  const captured = createReleasePropagationWork({
+    plan,
+    workContext: context,
+    expectedDownstreamBaseSha: "b".repeat(40),
+  });
+
+  assert.equal(captured.state.lifecycle, "paused");
+  assert.equal(captured.state.nextAction.action, "claim");
+  assert.throws(
+    () => recordReleasePropagationStage({
+      work: captured,
+      expectedWorkRoot: captured.contentRoot,
+      receipt: stageReceipt(captured),
+    }),
+    /must be claimed/,
+  );
+
+  const executing = propagationWorkContext("execute").authority;
+  const claimed = claimReleasePropagationWork({
+    work: captured,
+    expectedWorkRoot: captured.contentRoot,
+    authority: executing,
+  });
+  assert.equal(claimed.state.lifecycle, "ready");
+  assert.equal(claimed.state.currentStage, "materialize");
+  assert.equal(claimed.previousWorkRoot, captured.contentRoot);
+});
+
+test("propagation work resumes retryable failure and completes only after online readback plus Work Control decision", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  const context = propagationWorkContext();
+  let work = createReleasePropagationWork({
+    plan,
+    workContext: context,
+    expectedDownstreamBaseSha: "c".repeat(40),
+  });
+  const failedReceipt = stageReceipt(work, "failure", {
+    class: "expected-old-mismatch",
+    code: "remote-advanced",
+    summary: "downstream base advanced before the leased push",
+  });
+  work = recordReleasePropagationStage({
+    work,
+    expectedWorkRoot: work.contentRoot,
+    receipt: failedReceipt,
+  });
+  assert.equal(work.state.lifecycle, "retryable-failure");
+  assert.equal(work.state.nextAction.action, "repair");
+
+  const repair = stageReceipt(work, "repair");
+  work = repairReleasePropagationWork({
+    work,
+    expectedWorkRoot: work.contentRoot,
+    receipt: repair,
+  });
+  assert.equal(work.state.lifecycle, "ready");
+  assert.equal(work.state.recoveryCursor.attempt, 2);
+
+  while (work.state.currentStage !== "complete") {
+    const receipt = stageReceipt(work);
+    work = recordReleasePropagationStage({
+      work,
+      expectedWorkRoot: work.contentRoot,
+      receipt,
+    });
+  }
+  assert.equal(verifyReleasePropagationWork(work).productionVisible, false);
+  assert.throws(
+    () => recordReleasePropagationStage({
+      work,
+      expectedWorkRoot: work.contentRoot,
+      receipt: stageReceipt(work),
+    }),
+    /requires a Work Control completion decision/,
+  );
+
+  const completionReceipt = stageReceipt(work);
+  work = completeReleasePropagationWork({
+    work,
+    expectedWorkRoot: work.contentRoot,
+    receipt: completionReceipt,
+    completionDecision: typedReference(
+      "decision",
+      "site-production-completion",
+      "accepted",
+      context.familyState,
+    ),
+  });
+  const completed = verifyReleasePropagationWork(work);
+  assert.equal(completed.lifecycle, "complete");
+  assert.equal(completed.productionVisible, true);
+  assert.equal(completed.completionQualified, true);
+  assert.equal(work.stageReceipts.at(-2).stage, "online-readback");
+  assert.equal(work.stageReceipts.at(-1).stage, "complete");
+});
+
+test("propagation work fails closed on malformed WorkRef, floating base, and hard safety failures", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  const malformed = propagationWorkContext();
+  malformed.childWorkRef.version_root = "v1";
+  assert.throws(
+    () => createReleasePropagationWork({
+      plan,
+      workContext: malformed,
+      expectedDownstreamBaseSha: "main",
+    }),
+    /sha256 content root|40-character Git SHA/,
+  );
+
+  const context = propagationWorkContext();
+  let work = createReleasePropagationWork({
+    plan,
+    workContext: context,
+    expectedDownstreamBaseSha: "d".repeat(40),
+  });
+  work = recordReleasePropagationStage({
+    work,
+    expectedWorkRoot: work.contentRoot,
+    receipt: stageReceipt(work, "failure", {
+      class: "release-contract-mismatch",
+      code: "npm-githead-tag-mismatch",
+      summary: "npm gitHead and the immutable release tag disagree",
+    }),
+  });
+  assert.equal(work.state.lifecycle, "hard-safety-gate");
+  assert.equal(work.state.nextAction.action, "hard-safety-gate");
+  assert.throws(
+    () => repairReleasePropagationWork({
+      work,
+      expectedWorkRoot: work.contentRoot,
+      receipt: stageReceipt(work, "repair"),
+    }),
+    /only retryable/,
+  );
+});
+
 test("release propagation CLI plans and writes downstream locks", () => {
   const cwd = tempDir("release-propagation-cli");
   const planPath = path.join(cwd, "plan.json");
@@ -276,9 +562,8 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
   assert.match(workflow, /Install Buildchain runtime dependencies/);
   assert.match(workflow, /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/);
   assert.equal(workflow.includes("node bin/buildchain.mjs release-propagation"), false);
-  assert.equal(
-    (workflow.match(/node \.buildchain\/runtime\/bin\/buildchain\.mjs release-propagation/g) || []).length,
-    3,
+  assert.ok(
+    (workflow.match(/node \.buildchain\/runtime\/bin\/buildchain\.mjs release-propagation/g) || []).length >= 9,
   );
   assert.match(workflow, /LOCK_PATH: \$\{\{ steps\.plan\.outputs\.lock_path \}\}/);
   assert.match(workflow, /downstream-prepare-command:/);
@@ -318,6 +603,13 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
   assert.match(workflow, /BUILDCHAIN_PROPAGATION_LOCK_PATH:/);
   assert.match(workflow, /bash --noprofile --norc -e -u -o pipefail -c "\$DOWNSTREAM_UPDATE_COMMAND"/);
   assert.match(workflow, /release-propagation receipt/);
+  assert.match(workflow, /agent-work-context-json:/);
+  assert.match(workflow, /release-propagation work create/);
+  assert.match(workflow, /release-propagation work receipt/);
+  assert.match(workflow, /release-propagation work record/);
+  assert.match(workflow, /release-propagation work status/);
+  assert.match(workflow, /propagation-work-next-action:/);
+  assert.match(workflow, /steps\.propagation-work\.outputs\.execute == 'true'/);
   assert.match(workflow, /release propagation found duplicate matching PRs/);
   assert.equal(workflow.includes("gh pr create \\\n"), true);
 });

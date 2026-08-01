@@ -11,7 +11,20 @@
       "id": "site-libkungfu-dev",
       "repository": "kungfu-systems/site-libkungfu-dev",
       "lockPath": "buildchain.upstreams/kfd.release.json",
-      "baseRef": "dev/v2/v2.7"
+      "baseRef": "dev/v2/v2.7",
+      "executionProfile": {
+        "contract": "kungfu-buildchain-github-web-surface-execution",
+        "workflow": "buildchain-web-surface.yml",
+        "productionReleaseLabel": "buildchain-release",
+        "productionReleaseHeadPrefix": "release/",
+        "productionStatusUrl": "https://libkungfu.dev/.well-known/kungfu-release-status.json",
+        "readbackUrls": [
+          "https://kfd.libkungfu.dev/manifest.json"
+        ],
+        "updateCommand": "node scripts/paper-propagation.cjs consume --lock \"$BUILDCHAIN_PROPAGATION_LOCK_PATH\"",
+        "prepareCommand": "pnpm install --lockfile-only --ignore-scripts",
+        "verifyCommand": "pnpm run check"
+      }
     }
   ],
   "edges": [
