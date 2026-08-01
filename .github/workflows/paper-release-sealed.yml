@@ -486,13 +486,13 @@ jobs:
           RELEASE_PASSPORT_PATH: ${{ steps.promote.outputs.release-passport-path }}
         shell: bash
         run: |
-          set -euo pipefail
+          set -euo pipefail; [ -n "$RELEASE_PASSPORT_PATH" ] || { echo "::error::paper publication is awaiting its generated version-state merge; merge the generated PR and rerun the failed jobs"; exit 1; }
           published=false
           for _ in 1 2 3 4 5 6; do
             if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version dist.integrity gitHead --json \
               --registry=https://registry.npmjs.org/ > .buildchain/published-package.json \
               && jq -e --arg version "$PACKAGE_VERSION" --arg sha "$SOURCE_SHA" \
-                '.version == $version and .gitHead == $sha and (.dist.integrity | startswith("sha512-"))' \
+                '.version == $version and .gitHead == $sha and ((.dist.integrity // .["dist.integrity"] // "") | startswith("sha512-"))' \
                 .buildchain/published-package.json >/dev/null; then
               published=true
               break
@@ -522,7 +522,7 @@ jobs:
           };
           const packageFact = JSON.parse(fs.readFileSync(".buildchain/published-package.json", "utf8"));
           if (packageFact.version !== process.env.PACKAGE_VERSION) throw new Error("npm version readback mismatch");
-          if (!packageFact.dist?.integrity?.startsWith("sha512-")) throw new Error("npm integrity readback is missing");
+          const packageIntegrity = packageFact.dist?.integrity || packageFact["dist.integrity"]; if (!packageIntegrity?.startsWith("sha512-")) throw new Error("npm integrity readback is missing");
           if (packageFact.gitHead !== process.env.SOURCE_SHA) throw new Error("npm gitHead readback does not match source SHA");
           if (process.env.RELEASE_TAG !== `v${process.env.PACKAGE_VERSION}`) throw new Error("public release tag does not match package version");
 
@@ -545,7 +545,7 @@ jobs:
             package: {
               name: process.env.PACKAGE_NAME,
               version: process.env.PACKAGE_VERSION,
-              integrity: packageFact.dist.integrity,
+              integrity: packageIntegrity,
               gitHead: packageFact.gitHead,
             },
             releasePassport: {
