@@ -626,6 +626,7 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
 test("strict alpha promotion uses provider transaction evidence when protection details are unreadable", async () => {
   let reviewState = "APPROVED";
   let protectionReadStatus = 403;
+  let observedHeadSha = SHA;
   const pullRequestHeadSha = "b".repeat(40);
   const checkedRefs = [];
   const octokit = {
@@ -660,7 +661,7 @@ test("strict alpha promotion uses provider transaction evidence when protection 
           return {
             data: {
               protected: true,
-              commit: { sha: SHA },
+              commit: { sha: observedHeadSha },
               protection: {
                 required_status_checks: {
                   enforcement_level: "everyone",
@@ -707,6 +708,11 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     assert.equal(resolvedStatusCheck, "check");
   }
   assert.deepEqual(checkedRefs, [pullRequestHeadSha, pullRequestHeadSha]);
+
+  observedHeadSha = OTHER_SHA;
+  const recoveredStatusCheck = await assertProtectedChannel({ octokit, owner: "kungfu-systems", repo: "buildchain", sourceSha: SHA, expectedChannelSha: OTHER_SHA, targetRef: "alpha/v1/v1.0", requiredStatusCheck: "check" });
+  assert.equal(recoveredStatusCheck, "check");
+  await assert.rejects(assertProtectedChannel({ octokit, owner: "kungfu-systems", repo: "buildchain", sourceSha: SHA, targetRef: "alpha/v1/v1.0", requiredStatusCheck: "check" }), /must still point at the exact admitted channel head/);
 
   reviewState = "CHANGES_REQUESTED";
   await assert.rejects(
