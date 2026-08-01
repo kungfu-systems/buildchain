@@ -2818,7 +2818,9 @@ jobs:
           BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+          BUILDCHAIN_EXPECTED_PLATFORMS_JSON: ${{ needs.resolve-contract.outputs.platforms-json }}
           BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: ${{ inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && '1' || '0' }}
+          BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON: ${{ inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && format('["{0}-credential"]', inputs.credential-island-macos-platform-id) || '[]' }}
           BUILDCHAIN_TRUSTED_EVENT: ${{ needs.trust-gate.outputs.trusted-event }}
           BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
           BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}
