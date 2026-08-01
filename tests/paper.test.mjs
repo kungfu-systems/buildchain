@@ -470,6 +470,28 @@ test("paper agent entry is managed, preserves repository instructions, and fails
     },
   });
   assert.equal(acceptedCi.ok, true);
+  const acceptedAlphaPromotion = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "ci",
+    env: {
+      GITHUB_EVENT_NAME: "pull_request",
+      GITHUB_HEAD_REF: "dev/v0/v0.1",
+      GITHUB_BASE_REF: "alpha/v0/v0.1",
+    },
+  });
+  assert.equal(acceptedAlphaPromotion.ok, true);
+  const acceptedReleasePromotion = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "ci",
+    env: {
+      GITHUB_EVENT_NAME: "pull_request",
+      GITHUB_HEAD_REF: "alpha/v0/v0.1",
+      GITHUB_BASE_REF: "release/v0/v0.1",
+    },
+  });
+  assert.equal(acceptedReleasePromotion.ok, true);
   const wrongBase = collectPaperAgentEntry({
     cwd,
     buildchainSha: runtimeSha,
@@ -486,6 +508,17 @@ test("paper agent entry is managed, preserves repository instructions, and fails
       .status,
     "fail",
   );
+  const skippedChannel = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "ci",
+    env: {
+      GITHUB_EVENT_NAME: "pull_request",
+      GITHUB_HEAD_REF: "dev/v0/v0.1",
+      GITHUB_BASE_REF: "release/v0/v0.1",
+    },
+  });
+  assert.equal(skippedChannel.ok, false);
 
   const packagePath = path.join(cwd, "package.json");
   const packageText = fs.readFileSync(packagePath, "utf8");
