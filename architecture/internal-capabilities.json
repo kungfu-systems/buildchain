@@ -92,6 +92,7 @@
       ],
       "tests": [
         "tests/promote-buildchain-ref.test.mjs",
+        "tests/promote-buildchain-ref-governance.test.mjs",
         "tests/promotion-responsibilities.test.mjs"
       ],
       "contracts": [
@@ -108,6 +109,7 @@
       ],
       "tests": [
         "tests/promote-buildchain-ref.test.mjs",
+        "tests/promote-buildchain-ref-recovery.test.mjs",
         "tests/release-impact-contract.test.mjs"
       ],
       "contracts": [
@@ -125,6 +127,7 @@
       ],
       "tests": [
         "tests/promote-buildchain-ref.test.mjs",
+        "tests/promote-buildchain-ref-recovery.test.mjs",
         "tests/promotion-responsibilities.test.mjs"
       ],
       "contracts": ["actions/promote-buildchain-ref/lib.js"]
@@ -139,6 +142,8 @@
       ],
       "tests": [
         "tests/promote-buildchain-ref.test.mjs",
+        "tests/promote-buildchain-ref-recovery.test.mjs",
+        "tests/promote-buildchain-ref-governance.test.mjs",
         "tests/promotion-responsibilities.test.mjs"
       ],
       "contracts": [
@@ -169,7 +174,8 @@
       ],
       "tests": [
         "tests/promotion-routing-evidence.test.mjs",
-        "tests/build-surface.test.mjs"
+        "tests/build-surface.test.mjs",
+        "tests/build-surface-promotion.test.mjs"
       ],
       "contracts": [
         ".github/workflows/.release-candidate-promote.yml",
@@ -210,6 +216,7 @@
       "tests": [
         "tests/artifact-transfer-mode.test.mjs",
         "tests/build-surface.test.mjs",
+        "tests/build-surface-promotion.test.mjs",
         "tests/controller-evidence.test.mjs"
       ],
       "contracts": [
@@ -240,7 +247,8 @@
       ],
       "tests": [
         "tests/buildchain-contract.test.mjs",
-        "tests/build-surface.test.mjs"
+        "tests/build-surface.test.mjs",
+        "tests/build-surface-promotion.test.mjs"
       ],
       "contracts": [
         "dist/site/buildchain-contract.json",
