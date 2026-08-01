@@ -7,6 +7,10 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import {
+  validateRenditionSet,
+  validateTerminalCapture,
+} from "./auditable-demo-renditions.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
@@ -22,19 +26,16 @@ const REQUIRED_ADAPTER_FILES = [
   "public-projection.json",
   "scene.json",
 ];
-const OPTIONAL_ADAPTER_FILES = ["terminal-capture.json"];
+const OPTIONAL_ADAPTER_FILES = [
+  "terminal-capture.json",
+  "complete-transcript-720p.txt",
+  "public-projection-720p.json",
+  "scene-720p.json",
+  "terminal-capture-720p.json",
+  "rendition-set.json",
+];
 const MAX_TERMINAL_CAPTURE_BYTES = 4 * 1024 * 1024;
 const MAX_TERMINAL_CAPTURE_EVENTS = 10_000;
-const TERMINAL_CAPTURE_NON_AUTHORITIES = [
-  "first-party-identity",
-  "system-identity",
-  "kfd-compliance",
-  "product-system-metadata",
-  "package-metadata",
-  "registry-history",
-  "scan-output",
-  "standalone-generation",
-];
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -249,80 +250,11 @@ function validateProjection(value, scene, transcriptLineCount) {
   };
 }
 
-function validateTerminalCapture(value, scene) {
-  exactKeys(
-    value,
-    [
-      "schema",
-      "command",
-      "dimensions",
-      "durationMs",
-      "encoding",
-      "events",
-      "completion",
-      "exitCode",
-      "authority",
-    ],
-    [],
-    "terminalCapture",
-  );
-  invariant(value.schema === "kungfu.terminal-capture/v1", "unsupported terminal capture schema");
-  text(value.command, 1, 160, "terminalCapture.command");
-  exactKeys(value.dimensions, ["columns", "rows"], [], "terminalCapture.dimensions");
-  integer(value.dimensions.columns, 80, 200, "terminalCapture.dimensions.columns");
-  integer(value.dimensions.rows, 24, 80, "terminalCapture.dimensions.rows");
-  const durationMs = integer(value.durationMs, 500, 60000, "terminalCapture.durationMs");
-  invariant(
-    durationMs <= scene.durationMs && scene.durationMs - durationMs <= 2000,
-    "terminal capture duration must end within two seconds of the scene",
-  );
-  invariant(value.encoding === "base64", "terminalCapture.encoding must be base64");
-  invariant(
-    Array.isArray(value.events)
-      && value.events.length > 0
-      && value.events.length <= MAX_TERMINAL_CAPTURE_EVENTS,
-    `terminalCapture.events must contain 1 through ${MAX_TERMINAL_CAPTURE_EVENTS} events`,
-  );
-  let previousAtMs = -1;
-  let totalBytes = 0;
-  for (const [index, event] of value.events.entries()) {
-    exactKeys(event, ["atMs", "data"], [], `terminalCapture.events[${index}]`);
-    const atMs = integer(event.atMs, 0, durationMs - 1, `terminalCapture.events[${index}].atMs`);
-    invariant(atMs >= previousAtMs, "terminal capture event timestamps must be monotonic");
-    invariant(index > 0 || atMs === 0, "the first terminal capture event must start at zero");
-    previousAtMs = atMs;
-    totalBytes += decodeBase64(event.data, `terminalCapture.events[${index}].data`).length;
-    invariant(totalBytes <= MAX_TERMINAL_CAPTURE_BYTES, "terminal capture exceeds the 4 MiB byte bound");
-  }
-  exactKeys(
-    value.completion,
-    ["schema", "status", "reportRoot", "eventCount"],
-    [],
-    "terminalCapture.completion",
-  );
-  invariant(
-    value.completion.schema === "kungfu.agent-work-lab.tui-autoplay/v1"
-      && value.completion.status === "qualified"
-      && DIGEST_PATTERN.test(value.completion.reportRoot),
-    "terminal capture completion sentinel is not a qualified Agent Work Lab autoplay",
-  );
-  integer(value.completion.eventCount, 1, 100_000, "terminalCapture.completion.eventCount");
-  invariant(value.exitCode === 0, "terminal capture exitCode must be zero");
-  exactKeys(value.authority, ["classification", "grants", "nonAuthorities"], [], "terminalCapture.authority");
-  invariant(
-    value.authority.classification === "volatile-terminal-observation",
-    "terminal capture authority classification must remain observation-only",
-  );
-  invariant(
-    Array.isArray(value.authority.grants) && value.authority.grants.length === 0,
-    "terminal capture must not grant authority",
-  );
-  invariant(
-    JSON.stringify(value.authority.nonAuthorities) === JSON.stringify(TERMINAL_CAPTURE_NON_AUTHORITIES),
-    "terminal capture must declare every identity and metadata non-authority",
-  );
-  return value;
-}
+const RENDITION_VALIDATION_HELPERS = {
+  decodeBase64, decodeUtf8, digestPattern: DIGEST_PATTERN, exactKeys, integer, invariant,
+  maxBytes: MAX_TERMINAL_CAPTURE_BYTES, maxEvents: MAX_TERMINAL_CAPTURE_EVENTS,
+  readJson, readRegular, sha256, text, validateProjection, validateScene,
+};
 
 function validateSourceCoordinate(value) {
   exactKeys(
@@ -379,8 +311,17 @@ function validateAdapterOutput(output, strict = true) {
   );
   const terminalCapturePath = path.join(output, "terminal-capture.json");
   const terminalCapture = fs.existsSync(terminalCapturePath)
-    ? validateTerminalCapture(readJson(terminalCapturePath, "terminal capture"), scene)
+    ? validateTerminalCapture(
+      readJson(terminalCapturePath, "terminal capture"),
+      scene,
+      RENDITION_VALIDATION_HELPERS,
+    )
     : null;
+  const renditionSet = validateRenditionSet(output, RENDITION_VALIDATION_HELPERS);
+  invariant(
+    !renditionSet || terminalCapture,
+    "rendition set requires the primary terminal capture",
+  );
   if (strict) {
     const allowed = new Set([...REQUIRED_ADAPTER_FILES, ...OPTIONAL_ADAPTER_FILES]);
     for (const member of listFiles(output)) invariant(allowed.has(member), `undeclared adapter output: ${member}`);
@@ -391,6 +332,7 @@ function validateAdapterOutput(output, strict = true) {
     scene,
     projection,
     terminalCapture,
+    renditionSet,
   };
 }
 
@@ -1047,6 +989,21 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     const observed = manifest.inputs?.[key]?.root;
     invariant(observed === sha256(readRegular(filePath, `${key} input`)), `renderer ${key} input root mismatch`);
   }
+  if (expectedInputs.renditionSet) {
+    invariant(
+      manifest.derivation?.policy === "independent-native-frame-sets/v1",
+      "renderer did not use independent native frame sets",
+    );
+    invariant(
+      Array.isArray(manifest.inputs?.renditions)
+        && manifest.inputs.renditions.length === 2
+        && manifest.inputs.renditions[0]?.role === "primary"
+        && manifest.inputs.renditions[1]?.role === "responsive"
+        && manifest.inputs.renditions[0]?.terminalCapture?.root
+          !== manifest.inputs.renditions[1]?.terminalCapture?.root,
+      "renderer native rendition inputs are not independently bound",
+    );
+  }
   const probe = readJson(path.join(renderOutput, "media-probe.json"), "media probe");
   invariant(probe.schema === "build-images.demo-media-probe/v1" && probe.passed === true, "renderer media probe failed");
   const qualification = qualifyRendererOutput(
@@ -1099,11 +1056,10 @@ function finalizeGate(values) {
   fs.writeFileSync(path.join(output, "complete-transcript.txt"), normalized.transcript);
   writeJson(path.join(output, "scene.json"), normalized.scene);
   writeJson(path.join(output, "public-projection.json"), normalized.projection);
-  if (normalized.terminalCapture) {
-    copyFile(
-      path.join(adapterOutput, "terminal-capture.json"),
-      path.join(output, "terminal-capture.json"),
-    );
+  for (const name of OPTIONAL_ADAPTER_FILES) {
+    if (fs.existsSync(path.join(adapterOutput, name))) {
+      copyFile(path.join(adapterOutput, name), path.join(output, name));
+    }
   }
   copyFile(sourceCoordinatePath, path.join(output, "source-artifact.json"));
   copyFile(path.join(diagnostics, "adapter.json"), path.join(output, "adapter.json"));
@@ -1145,6 +1101,22 @@ function finalizeGate(values) {
           terminalCapture: {
             schema: normalized.terminalCapture.schema,
             root: sha256(readRegular(path.join(output, "terminal-capture.json"), "terminal capture")),
+          },
+        }
+        : {}),
+      ...(normalized.renditionSet
+        ? {
+          renditionSet: {
+            schema: normalized.renditionSet.schema,
+            root: sha256(readRegular(path.join(output, "rendition-set.json"), "rendition set")),
+            renditions: normalized.renditionSet.renditions.map((rendition) => ({
+              id: rendition.id,
+              role: rendition.role,
+              captureRoot: rendition.captureRoot,
+              sceneRoot: sha256(readRegular(path.join(output, rendition.scene), `${rendition.id} scene`)),
+              transcriptRoot: sha256(readRegular(path.join(output, rendition.transcript), `${rendition.id} transcript`)),
+              projectionRoot: sha256(readRegular(path.join(output, rendition.projection), `${rendition.id} projection`)),
+            })),
           },
         }
         : {}),
@@ -1198,6 +1170,27 @@ function verifyGate(values) {
       "gate terminal capture root mismatch",
     );
   }
+  const qualifiedRenditionSet = receipt.qualifiedInputs?.renditionSet;
+  invariant(
+    Boolean(qualifiedRenditionSet) === Boolean(normalized.renditionSet),
+    "gate rendition set presence drifted",
+  );
+  if (normalized.renditionSet) {
+    invariant(
+      qualifiedRenditionSet.schema === normalized.renditionSet.schema
+        && qualifiedRenditionSet.root === sha256(readRegular(path.join(bundle, "rendition-set.json"), "rendition set"))
+        && JSON.stringify(qualifiedRenditionSet.renditions)
+          === JSON.stringify(normalized.renditionSet.renditions.map((rendition) => ({
+            id: rendition.id,
+            role: rendition.role,
+            captureRoot: rendition.captureRoot,
+            sceneRoot: sha256(readRegular(path.join(bundle, rendition.scene), `${rendition.id} scene`)),
+            transcriptRoot: sha256(readRegular(path.join(bundle, rendition.transcript), `${rendition.id} transcript`)),
+            projectionRoot: sha256(readRegular(path.join(bundle, rendition.projection), `${rendition.id} projection`)),
+          }))),
+      "gate native rendition roots mismatch",
+    );
+  }
   invariant(receipt.qualifiedInputs.evidenceClass === normalized.projection.evidenceClass, "gate evidence class drifted");
 }
 
@@ -1228,12 +1221,16 @@ function finalizeMedia(values) {
     "--media-profile": mediaProfile,
   });
   const terminalCapturePath = path.join(gateBundle, "terminal-capture.json");
+  const renditionSetPath = path.join(gateBundle, "rendition-set.json");
   const verifiedRenderer = verifyRendererOutput(renderOutput, rendererImage, {
     scene: path.join(gateBundle, "scene.json"),
     transcript: path.join(gateBundle, "complete-transcript.txt"),
     projection: path.join(gateBundle, "public-projection.json"),
     ...(fs.existsSync(terminalCapturePath)
       ? { terminalCapture: terminalCapturePath }
+      : {}),
+    ...(fs.existsSync(renditionSetPath)
+      ? { renditionSet: renditionSetPath }
       : {}),
   }, {
     mediaProfile,

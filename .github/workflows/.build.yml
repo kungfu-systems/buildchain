@@ -2516,7 +2516,7 @@ jobs:
         if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ inputs.artifact-name }}-manifest-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
+          name: ${{ inputs.artifact-name }}-credential-manifest-macos-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: ${{ steps.import-signing-results.outputs.credential-manifest-path }}
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
@@ -2531,7 +2531,6 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest-pre-signing.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
-            .buildchain/artifacts/signing
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true
@@ -2549,7 +2548,6 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
-            .buildchain/artifacts/signing
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true
@@ -2584,7 +2582,7 @@ jobs:
         run: |
           {
             echo "artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-macos-credential-${BUILDCHAIN_SOURCE_SHA}"
-            echo "manifest-artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-manifest-macos-credential-${BUILDCHAIN_SOURCE_SHA}"
+            echo "manifest-artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-credential-manifest-macos-${BUILDCHAIN_SOURCE_SHA}"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Download immutable credential-island runtime
@@ -2818,7 +2816,9 @@ jobs:
           BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+          BUILDCHAIN_EXPECTED_PLATFORMS_JSON: ${{ needs.resolve-contract.outputs.platforms-json }}
           BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: ${{ inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && '1' || '0' }}
+          BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON: ${{ inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && format('["{0}-credential"]', inputs.credential-island-macos-platform-id) || '[]' }}
           BUILDCHAIN_TRUSTED_EVENT: ${{ needs.trust-gate.outputs.trusted-event }}
           BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
           BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}

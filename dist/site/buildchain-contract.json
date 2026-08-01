@@ -52,7 +52,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:8d0ef9c8048a107dc6fb418d93d9a799e27bf8f94dc008cbe4001255c54004f8"
+      "auditDigest": "sha256:5ae0793e1da87242a56d7fdf29a2d1d7d24ca50f68429797a7d78bcba605b797"
     },
     {
       "contractVersion": 1,
@@ -321,7 +321,7 @@
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment"
       ],
       "breakingDigest": "sha256:425f8d3d1ba205dd6fe35a20f1dc6dad7d7c563872283e3af79fea4d5c475692",
-      "auditDigest": "sha256:38353cc5dc5520e6de84e387abafc6086a4b236e18be6521b00d43ad651582e4"
+      "auditDigest": "sha256:4f0051783d637ff25a1154379dc0eb77a246ad7aee18e12a5e8ff0107aa61a90"
     },
     {
       "contractVersion": 1,
@@ -731,7 +731,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:1a86c034cbe51c0da8ee978602f0f71e9e4faa5302a250b152c0d84d7d3a9f67"
+      "auditDigest": "sha256:db0fe262bcfc34ea78f8b9b36333b93ab9388548a46b4616b2105156b3f1173a"
     },
     {
       "contractVersion": 1,
@@ -1340,7 +1340,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:8d0ef9c8048a107dc6fb418d93d9a799e27bf8f94dc008cbe4001255c54004f8"
+      "auditDigest": "sha256:5ae0793e1da87242a56d7fdf29a2d1d7d24ca50f68429797a7d78bcba605b797"
     },
     {
       "contractVersion": 1,
@@ -3522,5 +3522,5 @@
     }
   ],
   "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
-  "contractDigest": "sha256:72c454ef28010b660fc0caf1f4adc84e440a1edd1e8ebf6b8ece2e89563b1953"
+  "contractDigest": "sha256:c343445c9eb2e7e046cfee2d0716c56b560a1b62c7105a857f6ede498c64a11a"
 }
