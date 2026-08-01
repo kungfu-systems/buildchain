@@ -199,10 +199,14 @@ function ciContext({ env, developmentRef }) {
   const pullRequest = ["pull_request", "pull_request_target"].includes(event);
   const channelBranches = expectedCiBranches(developmentRef);
   const channelIndex = channelBranches.indexOf(targetBranch);
+  const versionStatePrefix = `buildchain/version-state/${targetBranch.replaceAll("/", "-")}/`;
+  const generatedVersionState =
+    channelBranches.includes(targetBranch) &&
+    sourceBranch.startsWith(versionStatePrefix) &&
+    /^[0-9a-f]{12}$/i.test(sourceBranch.slice(versionStatePrefix.length));
   const branchOk = pullRequest
-    ? (PAPER_WORK_BRANCH_PATTERN.test(sourceBranch) &&
-        targetBranch === developmentRef) ||
-      (channelIndex > 0 && sourceBranch === channelBranches[channelIndex - 1])
+    ? (PAPER_WORK_BRANCH_PATTERN.test(sourceBranch) && targetBranch === developmentRef) ||
+      (channelIndex > 0 && sourceBranch === channelBranches[channelIndex - 1]) || generatedVersionState
     : channelBranches.includes(refName);
   return {
     mode: "ci",
@@ -213,7 +217,7 @@ function ciContext({ env, developmentRef }) {
     pullRequest,
     ok: branchOk,
     message: pullRequest
-      ? `Pull requests must target ${developmentRef} from an allowed work branch or promote adjacent protected channels.`
+      ? `Pull requests must target ${developmentRef} from an allowed work branch, promote adjacent protected channels, or carry an exact target-bound generated version state.`
       : `Channel checks must run on ${channelBranches.join(", ")}.`,
   };
 }
