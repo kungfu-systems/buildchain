@@ -6,10 +6,10 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 237,
-    "maxHandMaintainedSourceLines": 91994,
+    "maxHandMaintainedSourceLines": 92076,
     "maxWorkflowFiles": 57,
-    "maxWorkflowLines": 19634,
-    "rationale": "The structural hardening, bounded AWS Windows JIT controller, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, and documentation hardening may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds typed Work Control, deterministic recovery, npm and Git source coherence, production readback, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, and regression guards instead of duplicated delivery behavior; any wider ceiling requires another reviewed policy change."
+    "maxWorkflowLines": 19648,
+    "rationale": "The structural hardening, bounded AWS Windows JIT controller, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, documentation hardening, and audited sccache compiler binding may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds typed Work Control, deterministic recovery, npm and Git source coherence, production readback, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, effective Cargo/CMake compiler launchers, a nonzero cache-activity gate, and regression guards instead of duplicated delivery behavior; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,

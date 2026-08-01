@@ -7,6 +7,12 @@ import { fileURLToPath } from "node:url";
 export const BUILDCHAIN_COMPILER_CACHE_PREPARATION_CONTRACT =
   "kungfu-buildchain-compiler-cache-preparation";
 
+const SCCACHE_COMPILER_BINDINGS = Object.freeze({
+  RUSTC_WRAPPER: "sccache",
+  CMAKE_C_COMPILER_LAUNCHER: "sccache",
+  CMAKE_CXX_COMPILER_LAUNCHER: "sccache",
+});
+
 const DIGEST_RE = /^sha256:[0-9a-f]{64}$/;
 
 function stableValue(value) {
@@ -74,6 +80,33 @@ function appendGithubEnv(filePath, values) {
       .map(([name, value]) => `${name}=${value}`)
       .join("\n")}\n`,
   );
+}
+
+function sumCounters(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (!value || typeof value !== "object") return 0;
+  return Object.values(value).reduce((total, entry) => total + sumCounters(entry), 0);
+}
+
+function readSccacheStats({ cwd, env, runCommand }) {
+  const result = runCommand(
+    "sccache",
+    ["--show-stats", "--stats-format", "json"],
+    { cwd, env },
+  );
+  assertCommandSucceeded(result, "sccache current-run stats probe");
+  let payload;
+  try {
+    payload = JSON.parse(cleanText(result.stdout));
+  } catch {
+    throw new Error("sccache current-run stats probe returned invalid JSON");
+  }
+  const stats = payload?.stats || payload;
+  return {
+    compileRequests: sumCounters(stats?.compile_requests),
+    cacheHits: sumCounters(stats?.cache_hits),
+    cacheMisses: sumCounters(stats?.cache_misses),
+  };
 }
 
 function readToolEvidence({ cwd, env, expectedRoot }) {
@@ -178,6 +211,7 @@ export function prepareCompilerCacheEvidence({
     action: {
       statsReset: true,
       command: ["sccache", "--zero-stats"],
+      compilerBindings: SCCACHE_COMPILER_BINDINGS,
     },
     bindings,
   };
@@ -191,21 +225,69 @@ export function prepareCompilerCacheEvidence({
     BUILDCHAIN_COMPILER_CACHE_ACTIVE_PROVIDER: provider,
     BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH: outputPath,
     BUILDCHAIN_COMPILER_CACHE_PREPARATION_ROOT: receipt.root,
+    ...SCCACHE_COMPILER_BINDINGS,
   });
   return receipt;
 }
 
+export function verifyCompilerCacheActivity({
+  cwd = process.cwd(),
+  env = process.env,
+  runCommand = defaultRunCommand,
+} = {}) {
+  const provider = cleanText(
+    env.BUILDCHAIN_COMPILER_CACHE_ACTIVE_PROVIDER ||
+      env.BUILDCHAIN_COMPILER_CACHE_PROVIDER ||
+      "none",
+  ).toLowerCase();
+  const required = cleanText(env.BUILDCHAIN_COMPILER_CACHE_REQUIRED).toLowerCase() === "true";
+  if (provider !== "sccache") {
+    if (required) {
+      throw new Error(`required compiler cache provider must be sccache, received ${provider || "empty"}`);
+    }
+    return undefined;
+  }
+
+  const stats = readSccacheStats({ cwd, env, runCommand });
+  const cacheableRequests = stats.cacheHits + stats.cacheMisses;
+  if (required && stats.compileRequests < 1) {
+    throw new Error(
+      "required sccache observed zero compile requests; compiler launcher bindings were not effective",
+    );
+  }
+  if (required && cacheableRequests < 1) {
+    throw new Error(
+      "required sccache observed no cacheable compiler requests",
+    );
+  }
+  return {
+    ...stats,
+    cacheableRequests,
+  };
+}
+
 function main() {
   const command = process.argv[2] || "";
-  if (command !== "prepare") {
-    throw new Error("usage: node scripts/compiler-cache-evidence.mjs prepare");
+  if (!new Set(["prepare", "verify"]).has(command)) {
+    throw new Error("usage: node scripts/compiler-cache-evidence.mjs <prepare|verify>");
   }
-  const receipt = prepareCompilerCacheEvidence();
-  if (receipt) {
-    console.log(`compiler_cache_provider=${receipt.provider}`);
-    console.log(`compiler_cache_preparation_root=${receipt.root}`);
+  if (command === "prepare") {
+    const receipt = prepareCompilerCacheEvidence();
+    if (receipt) {
+      console.log(`compiler_cache_provider=${receipt.provider}`);
+      console.log(`compiler_cache_preparation_root=${receipt.root}`);
+    } else {
+      console.log("compiler_cache_provider=none");
+    }
   } else {
-    console.log("compiler_cache_provider=none");
+    const activity = verifyCompilerCacheActivity();
+    if (activity) {
+      console.log(`compiler_cache_compile_requests=${activity.compileRequests}`);
+      console.log(`compiler_cache_hits=${activity.cacheHits}`);
+      console.log(`compiler_cache_misses=${activity.cacheMisses}`);
+    } else {
+      console.log("compiler_cache_activity=not-applicable");
+    }
   }
 }
 

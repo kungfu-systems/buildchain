@@ -571,6 +571,14 @@ test("reusable build workflow exposes the required surface contract", () => {
     2,
   );
   assert.equal(
+    (workflow.match(/Verify auditable compiler cache activity/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime\/scripts\/compiler-cache-evidence\.mjs verify/g) || []).length,
+    2,
+  );
+  assert.equal(
     (workflow.match(/\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/compiler-cache-preparation\.json/g) || []).length,
     5,
   );

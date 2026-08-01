@@ -511,7 +511,14 @@ the preparation step. Buildchain probes its version, runs `sccache
 `compiler-cache-preparation.json`. The receipt binds the source commit/tree,
 Buildchain runtime, platform, cache profile, and any declared dependency,
 toolchain, or policy roots. It resets counters only; it does not delete cached
-compiler outputs.
+compiler outputs. The same preparation exports `RUSTC_WRAPPER`,
+`CMAKE_C_COMPILER_LAUNCHER`, and `CMAKE_CXX_COMPILER_LAUNCHER` so Cargo and
+CMake/Ninja compilation actually passes through the audited tool.
+
+After the build lifecycle, Buildchain probes the reset counter set again. When
+`compiler-cache-required` is true, the build fails closed if sccache observed
+zero compiler requests or zero cacheable requests. This prevents an installed
+but unbound sccache binary from being reported as an active compiler cache.
 
 Final diagnostics admit sccache hit/miss outcomes as current-run evidence only
 when that preparation receipt is present and valid. A bare `sccache
