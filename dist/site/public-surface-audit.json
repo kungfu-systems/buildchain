@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 111,
+    "cliCommandCount": 112,
     "workflowCount": 57,
     "actionCount": 6,
     "sitePageCount": 60,
-    "docCommandRefCount": 315,
+    "docCommandRefCount": 316,
     "failureCount": 0
   },
   "enumerated": {
@@ -371,6 +371,11 @@
         "id": "paper",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper"
+      },
+      {
+        "id": "paper-agent",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper agent verify [--cwd <dir>] [--offline] [--json]"
       },
       {
         "id": "paper-alpha",
@@ -4008,6 +4013,11 @@
         "command": "buildchain npm dry-run"
       },
       {
+        "id": "paper-agent",
+        "path": "docs/cli.md",
+        "command": "buildchain paper agent verify"
+      },
+      {
         "id": "paper-alpha",
         "path": "docs/cli.md",
         "command": "buildchain paper alpha --json"
@@ -4508,9 +4518,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "48cb548303c6773a09257bca5699f0d5e84639a083c85e566446efb740d34578",
+    "cliRegistryDigest": "5a9eac28d00c78601d49226f8ba63896a0a22c51f6e5eff97f4cea5a572c355d",
     "workflowRegistryDigest": "9500a8099e10c5328b6e051445dba3c18cf0eb31eec3655b6554b111417f9abd",
-    "pageRegistryDigest": "76d2cc04d6bff33c9e8842eedee7e0a78506ba8a99f4c89a429c1c4e5042e90c"
+    "pageRegistryDigest": "017ecd04f8dfecb9afc6e0df434eb606ae105db9694e8b6c943699217367ebf1"
   },
   "comparison": {
     "missingCliRegistry": [],
