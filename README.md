@@ -25,6 +25,20 @@ its existing CI.
 
 The same mechanism releases Buildchain itself.
 
+## Choose Your Path
+
+| You are... | Start here | You will get... |
+| --- | --- | --- |
+| adopting Buildchain for the first time | [Golden Path](docs/getting-started.md) | an exact install, project declaration, validated config, reusable workflow, release dry-run, and Passport inspection |
+| looking up a CLI command | [Generated CLI Reference](docs/cli-reference.md) | governed syntax, options, aliases, and side-effect-free help paths |
+| writing JavaScript automation | [Generated Node API Reference](docs/node-api-reference.md) | every public subpath and symbol with source-derived signatures and behavior boundaries |
+| operating an advanced build or release | [Documentation Map](docs/MAP.md) | capability-, intent-, and maturity-based navigation to normative contracts |
+
+The Golden Path is the beginner lane. Advanced workflow, signing, publishing,
+and governance manuals remain separate so a first-time consumer does not need
+to understand the entire release control plane before reaching a valid local
+configuration.
+
 ## Where Buildchain sits in the Agent Supply Chain
 
 Buildchain binds a product's declarations to the exact source cut, build,
@@ -47,6 +61,10 @@ To evaluate the layer, inspect a release's `buildchain.release.json` and
 or protocol evidence through the repository issue tracker.
 
 ## Install and Verify
+
+New repository adopters should follow the [15–30 minute Golden Path](docs/getting-started.md).
+The commands below are the shorter verification-only route for an existing
+consumer.
 
 For v3, use the published npm package and verify the release passport before
 trusting release evidence:

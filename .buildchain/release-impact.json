@@ -402,11 +402,32 @@
       "class": "release-governance",
       "rationale": "Buildchain self-fixture pull requests can validate the exact same-repository head SHA when the caller, runtime repository, head repository, and event SHA all agree, while arbitrary pull-request runtime overrides remain rejected.",
       "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "generated-cli-reference-registry",
+      "impact": "minor",
+      "class": "agent-readable-artifact",
+      "rationale": "The public site bundle adds a generated, drift-checked registry for every governed CLI path, including syntax, options, aliases, and side-effect-free contextual help while preserving existing command execution semantics.",
+      "source": "dist/site/cli-registry.json"
+    },
+    {
+      "id": "generated-node-api-symbol-registry",
+      "impact": "minor",
+      "class": "agent-readable-artifact",
+      "rationale": "The public site bundle adds a generated, drift-checked symbol catalog and export reachability index for every published Node API subpath, with exact source links, signatures, parameters, return and error guidance, side-effect classification, maturity, and import examples.",
+      "source": "dist/site/node-api-registry.json"
+    },
+    {
+      "id": "verified-golden-path-manual",
+      "impact": "patch",
+      "class": "documentation",
+      "rationale": "A tested 15-to-30-minute Golden Path now carries a first-time user from installation through init, validation, reusable workflow inspection, release dry-run, and local Release Passport inspection without changing an existing public contract.",
+      "source": "docs/getting-started.md"
     }
   ],
   "classification": "minor",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence and release governance with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
+  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, aligned propagation receipts, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
 }
