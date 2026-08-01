@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8d719b02e3482635f29fc89022437fc107cf618a4ea5a73ce0f54c17fe7d1072",
+    "sha256": "ee92fe9c24b7c3d26108fb56bd06d4ce3c2d44bb872df3cb6c8496449bb29fca",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 57,
       "actionCount": 6,
-      "sitePageCount": 60,
-      "docCommandRefCount": 324,
+      "sitePageCount": 63,
+      "docCommandRefCount": 813,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8d719b02e3482635f29fc89022437fc107cf618a4ea5a73ce0f54c17fe7d1072",
+      "sha256": "ee92fe9c24b7c3d26108fb56bd06d4ce3c2d44bb872df3cb6c8496449bb29fca",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 57,
         "actionCount": 6,
-        "sitePageCount": 60,
-        "docCommandRefCount": 324,
+        "sitePageCount": 63,
+        "docCommandRefCount": 813,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -417,6 +417,18 @@
           "plane": "use"
         },
         {
+          "id": "doc:docs/cli-reference.md",
+          "name": "Generated CLI reference",
+          "kind": "documentation",
+          "sourcePath": "docs/cli-reference.md",
+          "evidencePath": "docs/cli-reference.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
           "id": "doc:docs/cli.md",
           "name": "CLI and npm package",
           "kind": "documentation",
@@ -451,6 +463,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "verify"
+        },
+        {
+          "id": "doc:docs/getting-started.md",
+          "name": "Golden Path",
+          "kind": "documentation",
+          "sourcePath": "docs/getting-started.md",
+          "evidencePath": "docs/getting-started.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
         },
         {
           "id": "doc:docs/github-artifact-attestation.md",
@@ -559,6 +583,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "verify"
+        },
+        {
+          "id": "doc:docs/node-api-reference.md",
+          "name": "Generated Node API reference",
+          "kind": "documentation",
+          "sourcePath": "docs/node-api-reference.md",
+          "evidencePath": "docs/node-api-reference.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
         },
         {
           "id": "doc:docs/ownership.md",
@@ -5432,6 +5468,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:cli-reference",
+          "name": "site-page:manual:cli-reference",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:consumer-issue-reporting",
           "name": "site-page:manual:consumer-issue-reporting",
           "kind": "site-page",
@@ -5458,6 +5506,18 @@
         {
           "id": "site-page:manual:dev-alpha-candidate-patrol",
           "name": "site-page:manual:dev-alpha-candidate-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:getting-started",
+          "name": "site-page:manual:getting-started",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -5578,6 +5638,18 @@
         {
           "id": "site-page:manual:migration-inventory",
           "name": "site-page:manual:migration-inventory",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:node-api-reference",
+          "name": "site-page:manual:node-api-reference",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -6022,6 +6094,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 384
+    "publicSurfaceCount": 390
   }
 }
