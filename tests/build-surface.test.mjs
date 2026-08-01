@@ -2492,7 +2492,11 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
   );
   assert.match(
     selfPromotion,
-    /reject-invalid-durable-recovery:[\s\S]*?Durable transaction recovery requires the exact current protected channel SHA/,
+    /recover-durable-transaction:[\s\S]*?Recover an existing durable transaction from its exact original source SHA/,
+  );
+  assert.match(
+    selfPromotion,
+    /reject-invalid-durable-recovery:[\s\S]*?Durable transaction recovery requires the exact original transaction source SHA/,
   );
 });
 
