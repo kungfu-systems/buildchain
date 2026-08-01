@@ -29,6 +29,7 @@ import {
   planPaperMigration,
   planPaperFleetUpdate,
   planPaperScaffold,
+  resolvePaperRuntimeGitSha,
   writePaperMigration,
   writePaperFleetUpdate,
   writePaperScaffold,
@@ -98,6 +99,45 @@ function attachCanonicalTestOrigin(cwd, repository) {
   });
   return bare;
 }
+
+test("installed Paper runtime does not inherit the consumer Git head", () => {
+  const consumer = tempDir("installed-runtime-consumer");
+  initGit(consumer);
+  configureGit(consumer);
+  fs.writeFileSync(path.join(consumer, "README.md"), "# Consumer\n");
+  commitAll(consumer, "initial consumer");
+  const consumerHead = execFileSync("git", ["rev-parse", "HEAD"], {
+    cwd: consumer,
+    encoding: "utf8",
+  }).trim();
+  const packageRoot = path.join(
+    consumer,
+    "node_modules",
+    "@kungfu-tech",
+    "buildchain",
+  );
+  fs.mkdirSync(packageRoot, { recursive: true });
+  fs.writeFileSync(
+    path.join(packageRoot, "package.json"),
+    `${JSON.stringify({ name: "@kungfu-tech/buildchain", version: "3.0.4-alpha.1" })}\n`,
+  );
+  const binDir = tempDir("installed-runtime-bin");
+  const sourceSha = "a".repeat(40);
+  const npm = path.join(binDir, "npm");
+  fs.writeFileSync(npm, `#!/bin/sh\nprintf '%s\\n' '"${sourceSha}"'\n`);
+  fs.chmodSync(npm, 0o755);
+  const originalPath = process.env.PATH;
+  process.env.PATH = `${binDir}${path.delimiter}${originalPath || ""}`;
+  try {
+    assert.notEqual(consumerHead, sourceSha);
+    assert.equal(
+      resolvePaperRuntimeGitSha(packageRoot, "3.0.4-alpha.1"),
+      sourceSha,
+    );
+  } finally {
+    process.env.PATH = originalPath;
+  }
+});
 
 function writeJson(cwd, relativePath, value) {
   const target = path.join(cwd, relativePath);
