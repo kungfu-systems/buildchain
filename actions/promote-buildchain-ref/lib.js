@@ -4592,12 +4592,8 @@ async function promoteBuildchainRefs({
               version: expectedPublicationVersion,
             })
           : undefined;
-      const targetAdvancedByExactPublication =
-        advancedPublicationTransaction?.source_sha === sha &&
-        advancedPublicationTransaction?.target_ref === targetRef &&
-        advancedPublicationTransaction?.release_sha === branchSha &&
-        advancedPublicationTransaction?.version === expectedPublicationVersion &&
-        !["abandoned", "failed_permanently"].includes(advancedPublicationTransaction?.state || "");
+      let targetAdvancedByExactPublication = advancedPublicationTransaction?.source_sha === sha && advancedPublicationTransaction?.target_ref === targetRef && advancedPublicationTransaction?.release_sha === branchSha && advancedPublicationTransaction?.version === expectedPublicationVersion && !["abandoned", "failed_permanently"].includes(advancedPublicationTransaction?.state || "");
+      if (!targetAdvancedByExactPublication && publishTransactionOverride && publicationEnabled) { const statePrefix = rule.releasePrefix.replace(/^v/, "").replaceAll(".", "-"); const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({ owner, repo, ref: `heads/buildchain/release-state/${statePrefix}-` }); const resumeResolver = rule.channel === "alpha" ? resumableAlphaTransactionState : rule.channel === "release" ? resumableReleaseTransactionState : undefined; const resumable = resumeResolver && await resumeResolver({ octokit, owner, repo, cwd, refs: stateRefs, releasePrefix: rule.releasePrefix, targetRef, sourceSha: sha, expectedVersion: expectedPublicationVersion }); if (!resumable) throw new Error(`Ref ${targetRef} advanced to ${branchSha}, but no exact resumable transaction accepts requested SHA ${sha}`); advancedPublicationTransaction = resumable.transaction; targetAdvancedByExactPublication = true; }
       if (!targetAdvancedByExactPublication) {
         return {
           owner,

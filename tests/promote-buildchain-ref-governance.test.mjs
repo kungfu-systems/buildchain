@@ -180,7 +180,7 @@ test("governed promotion treats a superseded target as an auditable no-op", asyn
 });
 
 test("governed promotion resumes its exact durable transaction after the target ref advanced", async () => {
-  const releaseSha = "c".repeat(40);
+  const releaseSha = "c".repeat(40); const advancedSha = "d".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -189,13 +189,14 @@ test("governed promotion resumes its exact durable transaction after the target 
     },
   });
   const { octokit, refs, commits } = createGitMock({
-    refs: new Map([["heads/alpha/v1/v1.0", releaseSha]]),
+    refs: new Map([["heads/alpha/v1/v1.0", advancedSha]]),
   });
   commits.set(releaseSha, {
     sha: releaseSha,
     tree: { sha: `tree-${releaseSha}` },
     parents: [{ sha: SHA }],
   });
+  commits.set(advancedSha, { sha: advancedSha, tree: { sha: `tree-${advancedSha}` }, parents: [{ sha: releaseSha }] });
   octokit.rest.repos = {
     compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
     getBranchProtection: async () => ({ data: protectedChannel() }),
@@ -271,6 +272,7 @@ test("governed promotion resumes its exact durable transaction after the target 
     versionState: false,
     requireGovernance: true,
     publishTransaction: true,
+    publishTransactionOverride: true,
     expectedPublicationVersion: "1.0.0-alpha.0",
     releasePassport: false,
   });
@@ -278,7 +280,7 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(result.superseded, undefined);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
-  assert.equal(refs.get("heads/alpha/v1/v1.0"), releaseSha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), advancedSha);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), releaseSha);
   assert.equal(refs.get("tags/v1.0-alpha"), releaseSha);
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
