@@ -559,7 +559,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-package",
       "export": "./publication-package",
       "target": "./packages/core/publication-package.js",
-      "digest": "sha256:fa37e806991e37bc8bde854c59cba760d735eb809fbdc4705f5c808e24ec2a69",
+      "digest": "sha256:a2d2b770087923188d6bf5e89c739747f746e4f31c385b7f0f5ff667b1bbf5ae",
       "summary": "Publication npm package synthesis APIs for Buildchain-managed paper release presets.",
       "capabilityGroup": "reusable-build",
       "audience": [
