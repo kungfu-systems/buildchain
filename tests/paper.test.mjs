@@ -28,12 +28,25 @@ import {
   executePaperNpmBootstrap,
   planPaperMigration,
   planPaperFleetUpdate,
+  paperFleetTransitionWorkspace,
   planPaperScaffold,
   resolvePaperRuntimeGitSha,
   writePaperMigration,
   writePaperFleetUpdate,
   writePaperScaffold,
 } from "../packages/core/paper.js";
+
+test("paper fleet lock refresh temporarily admits the pinned source runtime", () => {
+  const workspace =
+    "minimumReleaseAgeExclude:\n  - '@example/keep@1.0.0'\n  - '@kungfu-tech/buildchain@3.0.4-alpha.7'\n";
+  const lock =
+    "packages:\n  '@kungfu-tech/buildchain@3.0.4-alpha.5':\n    resolution: {}\n";
+  assert.equal(
+    paperFleetTransitionWorkspace(workspace, lock),
+    "minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain'\n  - '@example/keep@1.0.0'\n",
+  );
+  assert.equal(paperFleetTransitionWorkspace(workspace, ""), workspace);
+});
 import {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   publicationArtifactCandidateDigest,
@@ -513,8 +526,7 @@ test("paper agent entry is managed, preserves repository instructions, and fails
     mode: "ci",
     env: {
       GITHUB_EVENT_NAME: "pull_request",
-      GITHUB_HEAD_REF:
-        "buildchain/version-state/dev-v0-v0.1/ece28683b2bd",
+      GITHUB_HEAD_REF: "buildchain/version-state/dev-v0-v0.1/ece28683b2bd",
       GITHUB_BASE_REF: "dev/v0/v0.1",
     },
   });
@@ -525,8 +537,7 @@ test("paper agent entry is managed, preserves repository instructions, and fails
     mode: "ci",
     env: {
       GITHUB_EVENT_NAME: "pull_request",
-      GITHUB_HEAD_REF:
-        "buildchain/version-state/alpha-v0-v0.1/ece28683b2bd",
+      GITHUB_HEAD_REF: "buildchain/version-state/alpha-v0-v0.1/ece28683b2bd",
       GITHUB_BASE_REF: "dev/v0/v0.1",
     },
   });
