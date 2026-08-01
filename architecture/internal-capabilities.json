@@ -7,8 +7,12 @@
     "packages/core/release-passport.js",
     "packages/core/buildchain-contract.js",
     "packages/core/paper-fleet.js",
+    "packages/core/paper-agent-entry.js",
+    "packages/core/paper-npm-bootstrap.js",
     "packages/core/paper-repository.js",
+    "packages/core/paper-scaffold-content.js",
     "packages/core/paper-work.js",
+    "packages/core/paper.js",
     "packages/core/public-surface-cli.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
@@ -17,10 +21,40 @@
     "scripts/promotion-routing-evidence.mjs",
     "scripts/paper-work-fleet-cli.mjs",
     "scripts/run-lifecycle-core.mjs",
+    "scripts/resolve-artifact-transfer-mode.mjs",
     "scripts/web-surface-core.mjs",
+    "scripts/web-surface-routing.mjs",
     "scripts/web-surface.mjs",
     "scripts/verify-promotion-router-binding.sh"
   ],
+  "ownershipRules": [
+    {
+      "id": "action-runtime-sources",
+      "owner": "Buildchain action maintainers",
+      "paths": ["actions"]
+    },
+    {
+      "id": "cli-sources",
+      "owner": "Buildchain CLI maintainers",
+      "paths": ["bin"]
+    },
+    {
+      "id": "fixture-sources",
+      "owner": "Buildchain fixture maintainers",
+      "paths": ["fixtures"]
+    },
+    {
+      "id": "core-library-sources",
+      "owner": "Buildchain core maintainers",
+      "paths": ["packages/core"]
+    },
+    {
+      "id": "workflow-runtime-sources",
+      "owner": "Buildchain workflow maintainers",
+      "paths": ["scripts"]
+    }
+  ],
+  "ownershipExclusions": [],
   "dependencyRules": [
     {
       "id": "core-does-not-depend-on-delivery-surfaces",
@@ -69,7 +103,8 @@
       "id": "promotion-version-state",
       "owner": "Buildchain maintainers",
       "implementation": [
-        "actions/promote-buildchain-ref/internal/version-state.js"
+        "actions/promote-buildchain-ref/internal/version-state.js",
+        "actions/promote-buildchain-ref/internal/version-state-operations.js"
       ],
       "tests": [
         "tests/promote-buildchain-ref.test.mjs",
@@ -85,6 +120,7 @@
       "owner": "Buildchain maintainers",
       "implementation": [
         "actions/promote-buildchain-ref/internal/durable-transaction-store.js",
+        "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
         "actions/promote-buildchain-ref/internal/github-adapter.js"
       ],
       "tests": [
@@ -94,11 +130,32 @@
       "contracts": ["actions/promote-buildchain-ref/lib.js"]
     },
     {
+      "id": "promotion-channel-orchestration",
+      "owner": "Buildchain action maintainers",
+      "implementation": [
+        "actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
+        "actions/promote-buildchain-ref/internal/promote-major-channel.js",
+        "actions/promote-buildchain-ref/internal/promote-release-channel.js"
+      ],
+      "tests": [
+        "tests/promote-buildchain-ref.test.mjs",
+        "tests/promotion-responsibilities.test.mjs"
+      ],
+      "contracts": [
+        "actions/promote-buildchain-ref/action.yml",
+        "actions/promote-buildchain-ref/lib.js"
+      ]
+    },
+    {
       "id": "cli-trust-release-dispatch",
       "owner": "Buildchain maintainers",
       "implementation": [
         "bin/internal/cli-options.mjs",
-        "bin/internal/trust-release-cli.mjs"
+        "bin/internal/trust-release-command-handlers.mjs",
+        "bin/internal/trust-release-cli.mjs",
+        "bin/internal/trust-release-inspection-handlers.mjs",
+        "bin/internal/trust-release-release-handlers.mjs",
+        "bin/internal/trust-release-verification-handlers.mjs"
       ],
       "tests": ["tests/cli.test.mjs", "tests/public-surface-audit.test.mjs"],
       "contracts": ["bin/buildchain.mjs", "docs/cli.md"]
@@ -147,9 +204,11 @@
       "owner": "Buildchain workflow maintainers",
       "implementation": [
         "scripts/generate-channel-build-workflow.mjs",
+        "scripts/resolve-artifact-transfer-mode.mjs",
         "scripts/run-lifecycle-core.mjs"
       ],
       "tests": [
+        "tests/artifact-transfer-mode.test.mjs",
         "tests/build-surface.test.mjs",
         "tests/controller-evidence.test.mjs"
       ],
@@ -163,6 +222,7 @@
       "owner": "Buildchain web-surface maintainers",
       "implementation": [
         "scripts/web-surface-core.mjs",
+        "scripts/web-surface-routing.mjs",
         "scripts/web-surface.mjs"
       ],
       "tests": [
@@ -198,9 +258,13 @@
       "id": "paper-fleet-golden-path",
       "owner": "Buildchain Paper maintainers",
       "implementation": [
+        "packages/core/paper-agent-entry.js",
         "packages/core/paper-fleet.js",
+        "packages/core/paper-npm-bootstrap.js",
         "packages/core/paper-repository.js",
+        "packages/core/paper-scaffold-content.js",
         "packages/core/paper-work.js",
+        "packages/core/paper.js",
         "packages/core/public-surface-cli.js",
         "scripts/buildchain-cli-help.mjs",
         "scripts/paper-work-fleet-cli.mjs"

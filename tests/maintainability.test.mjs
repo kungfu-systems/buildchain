@@ -13,6 +13,7 @@ import {
   ensureRevisionAvailable,
   evaluatePublicSurface,
   evaluateMaintainability,
+  evaluateRepositoryBudgets,
   sourceMetricsAtRevision,
 } from "../scripts/check-maintainability.mjs";
 
@@ -36,6 +37,65 @@ ensureMaintainabilityRevisionsAvailable(root, {
   enforcementRevision: policy.enforcementRevision || baseline.revision,
 });
 
+test("new-only budgets detect added anonymous and duplicate-name functions", () => {
+  const baselineFiles = {
+    "legacy.js": analyzeJavaScript(
+      "legacy.js",
+      "items.map(() => 1);\nfunction duplicate() { return 1; }\n",
+    ),
+  };
+  const current = {
+    files: {
+      "legacy.js": analyzeJavaScript(
+        "legacy.js",
+        [
+          "items.map(() => 1);",
+          "items.map(() => { if (true) return 2; return 0; });",
+          "function duplicate() { return 1; }",
+          "function duplicate() { if (true) return 2; return 0; }",
+        ].join("\n"),
+      ),
+    },
+  };
+  const fixturePolicy = structuredClone(policy);
+  fixturePolicy.sourceBudgets.newFunctionComplexity = 1;
+  fixturePolicy.selectedFunctionBudgets = {};
+  const issues = evaluateMaintainability({
+    current,
+    baselineFiles,
+    policy: fixturePolicy,
+  });
+  assert.ok(
+    issues.some((entry) => entry.includes("<anonymous@2> has complexity 2")),
+  );
+  assert.ok(
+    issues.some((entry) => entry.includes("duplicate has complexity 2")),
+  );
+});
+
+test("repository-wide source and workflow growth require an explicit ceiling", () => {
+  const fixturePolicy = structuredClone(policy);
+  fixturePolicy.repositoryBudgets = {
+    maxHandMaintainedSourceFiles: 1,
+    maxHandMaintainedSourceLines: 10,
+    maxWorkflowFiles: 1,
+    maxWorkflowLines: 10,
+    rationale: "bounded fixture",
+  };
+  const issues = evaluateRepositoryBudgets({
+    current: {
+      repository: {
+        handMaintainedSourceFiles: 2,
+        handMaintainedSourceLines: 11,
+        workflowFiles: 2,
+        workflowLines: 11,
+      },
+    },
+    policy: fixturePolicy,
+  });
+  assert.equal(issues.length, 4);
+});
+
 test("exact-head maintainability baseline is reproducible", () => {
   const report = collectMaintainabilityMetrics({
     root,
@@ -44,10 +104,10 @@ test("exact-head maintainability baseline is reproducible", () => {
   assert.equal(report.revision, baseline.revision);
   assert.deepEqual(report.repository, baseline.repository);
   assert.deepEqual(report.publicSurface, baseline.publicSurface);
-  assert.equal(report.hotspots.promoteBuildchainRefs.lines, 3066);
-  assert.equal(report.hotspots.promoteBuildchainRefs.complexity, 262);
-  assert.equal(report.hotspots.createReleaseCheckReport.lines, 470);
-  assert.equal(report.hotspots.createReleaseCheckReport.complexity, 155);
+  assert.equal(report.hotspots.promoteBuildchainRefs.lines, 341);
+  assert.equal(report.hotspots.promoteBuildchainRefs.complexity, 26);
+  assert.equal(report.hotspots.createReleaseCheckReport.lines, 65);
+  assert.equal(report.hotspots.createReleaseCheckReport.complexity, 5);
 });
 
 test("AST complexity proxy counts bounded decisions without charging nested functions twice", () => {
@@ -114,12 +174,28 @@ test("new-only budgets reject widened debt and oversized extracted units", () =>
       entry.includes("new.js:1 extracted has complexity 31"),
     ),
   );
+
+  fixturePolicy.approvedExtractedDebt["new.js#extracted"] = {
+    maxLines: 40,
+    maxComplexity: 31,
+    rationale:
+      "Fixture proving that explicitly bounded extracted debt remains auditable in a new module.",
+  };
+  const approvedIssues = evaluateMaintainability({
+    current,
+    baselineFiles,
+    policy: fixturePolicy,
+  });
+  assert.equal(
+    approvedIssues.some((entry) => entry.includes("new.js:1 extracted")),
+    false,
+  );
 });
 
 test("baseline revision source metrics remain available from Git", () => {
   const files = sourceMetricsAtRevision(root, baseline.revision);
-  assert.equal(files["actions/promote-buildchain-ref/lib.js"].lines, 5854);
-  assert.equal(files["packages/core/release-passport.js"].lines, 2577);
+  assert.equal(files["actions/promote-buildchain-ref/lib.js"].lines, 6952);
+  assert.equal(files["packages/core/release-passport.js"].lines, 2859);
 });
 
 test("Linux standalone binary dependency remains reproducible from the lockfile", () => {

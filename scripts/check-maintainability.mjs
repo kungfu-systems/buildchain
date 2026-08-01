@@ -193,16 +193,19 @@ function evaluateAddedFunctionBudgets({
   budgets,
 }) {
   const issues = [];
-  const baselineFunctionNames = new Set(
-    (baseline.functions || [])
-      .map((entry) => entry.name)
-      .filter((name) => !name.startsWith("<anonymous@")),
-  );
+  const identity = (entry) =>
+    entry.name.startsWith("<anonymous@") ? "<anonymous>" : entry.name;
+  const baselineFunctionCounts = new Map();
+  for (const entry of baseline.functions || []) {
+    const key = identity(entry);
+    baselineFunctionCounts.set(key, (baselineFunctionCounts.get(key) || 0) + 1);
+  }
+  const currentFunctionCounts = new Map();
   for (const entry of metrics.functions) {
-    if (
-      entry.name.startsWith("<anonymous@") ||
-      baselineFunctionNames.has(entry.name)
-    ) {
+    const identityKey = identity(entry);
+    const occurrence = (currentFunctionCounts.get(identityKey) || 0) + 1;
+    currentFunctionCounts.set(identityKey, occurrence);
+    if (occurrence <= (baselineFunctionCounts.get(identityKey) || 0)) {
       continue;
     }
     const key = `${file}#${entry.name}`;
@@ -227,6 +230,43 @@ function evaluateAddedFunctionBudgets({
   return issues;
 }
 
+function evaluateRepositoryBudgets({ current, policy }) {
+  const issues = [];
+  const budgets = policy.repositoryBudgets;
+  if (!budgets) return issues;
+  if (!String(budgets.rationale || "").trim()) {
+    issues.push("repository growth budget requires a rationale");
+  }
+  const checks = [
+    [
+      "handMaintainedSourceFiles",
+      "maxHandMaintainedSourceFiles",
+      "source files",
+    ],
+    [
+      "handMaintainedSourceLines",
+      "maxHandMaintainedSourceLines",
+      "source lines",
+    ],
+    ["workflowFiles", "maxWorkflowFiles", "workflow files"],
+    ["workflowLines", "maxWorkflowLines", "workflow lines"],
+  ];
+  for (const [metric, ceiling, label] of checks) {
+    if (!Number.isInteger(budgets[ceiling]) || budgets[ceiling] < 0) {
+      issues.push(
+        `repository growth budget ${ceiling} must be a non-negative integer`,
+      );
+      continue;
+    }
+    if (current.repository[metric] > budgets[ceiling]) {
+      issues.push(
+        `repository ${label} are ${current.repository[metric]}; approved ceiling is ${budgets[ceiling]}`,
+      );
+    }
+  }
+  return issues;
+}
+
 function evaluateMaintainability({ current, baselineFiles, policy }) {
   const issues = [];
   const budgets = policy.sourceBudgets;
@@ -239,14 +279,22 @@ function evaluateMaintainability({ current, baselineFiles, policy }) {
         );
       }
       for (const entry of metrics.functions) {
-        if (entry.lines > budgets.newFunctionLines) {
+        const key = `${file}#${entry.name}`;
+        const approval = policy.approvedExtractedDebt?.[key];
+        if (approval && !String(approval.rationale || "").trim()) {
+          issues.push(`${key}: approved extracted debt requires a rationale`);
+        }
+        const allowedLines = approval?.maxLines ?? budgets.newFunctionLines;
+        const allowedComplexity =
+          approval?.maxComplexity ?? budgets.newFunctionComplexity;
+        if (entry.lines > allowedLines) {
           issues.push(
-            `${file}:${entry.start} ${entry.name} has ${entry.lines} lines; new-function budget is ${budgets.newFunctionLines}`,
+            `${file}:${entry.start} ${entry.name} has ${entry.lines} lines; new-function budget is ${allowedLines}`,
           );
         }
-        if (entry.complexity > budgets.newFunctionComplexity) {
+        if (entry.complexity > allowedComplexity) {
           issues.push(
-            `${file}:${entry.start} ${entry.name} has complexity ${entry.complexity}; new-function budget is ${budgets.newFunctionComplexity}`,
+            `${file}:${entry.start} ${entry.name} has complexity ${entry.complexity}; new-function budget is ${allowedComplexity}`,
           );
         }
       }
@@ -326,6 +374,7 @@ function checkMaintainability({ root = process.cwd() } = {}) {
   const current = collectMaintainabilityMetrics({ root });
   const baselineFiles = sourceMetricsAtRevision(root, enforcementRevision);
   const issues = evaluateMaintainability({ current, baselineFiles, policy });
+  issues.push(...evaluateRepositoryBudgets({ current, policy }));
   issues.push(
     ...evaluatePublicSurface({ root, revision: enforcementRevision, policy }),
   );
@@ -366,6 +415,7 @@ export {
   ensureMaintainabilityRevisionsAvailable,
   ensureRevisionAvailable,
   evaluateMaintainability,
+  evaluateRepositoryBudgets,
   evaluatePublicSurface,
   sourceMetricsAtRevision,
 };
