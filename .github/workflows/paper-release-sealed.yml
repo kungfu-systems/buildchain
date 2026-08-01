@@ -242,6 +242,10 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Install exact admitted Buildchain runtime dependencies
+        shell: bash
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
       - name: Resolve generated-write authority config
         id: generated-write-config
         env:
