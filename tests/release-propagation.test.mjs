@@ -134,7 +134,7 @@ function stageReceipt(
   const deployedRevision = "a".repeat(40);
   const boundRelease = {
     releaseRoot: work.upstream.releaseRoot,
-    releaseLockRoot: work.downstream.releaseLockRoot,
+    releaseLockRoot: `sha256:${work.downstream.lockSha256}`,
     sourceSha: work.upstream.release.sourceSha,
     tagTargetSha: work.upstream.release.tagTargetSha,
   };
