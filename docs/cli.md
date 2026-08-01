@@ -51,7 +51,8 @@ published, pnpm may block the install through a minimum release-age policy. In
 that case, add a temporary package/version-specific `minimumReleaseAgeExclude`
 entry, such as `@kungfu-tech/buildchain@3.0.0`, and remove it once the package
 has aged past the normal policy window. Do not replace that with a broad
-registry or scope-wide exclude.
+registry or scope-wide exclude. Paper scaffold and migration maintain the
+exact current entry in `pnpm-workspace.yaml` before refreshing the lockfile.
 
 Use the package API directly inside JavaScript build scripts:
 

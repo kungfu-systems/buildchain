@@ -172,11 +172,15 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   const cwd = tempDir("scaffold");
   const firstPlan = planPaperScaffold(scaffoldOptions(cwd));
   assert.equal(firstPlan.ok, true);
-  assert.equal(firstPlan.summary.create, 17);
+  assert.equal(firstPlan.summary.create, 18);
   assert.equal(JSON.stringify(firstPlan).includes("_plannedFiles"), false);
   const firstWrite = writePaperScaffold(firstPlan);
   assert.equal(firstWrite.ok, true);
-  assert.equal(firstWrite.written.length, 17);
+  assert.equal(firstWrite.written.length, 18);
+  assert.equal(
+    fs.readFileSync(path.join(cwd, "pnpm-workspace.yaml"), "utf8"),
+    `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${packageVersion}'\n`,
+  );
   const provisioning = JSON.parse(
     fs.readFileSync(
       path.join(cwd, ".buildchain", "paper", "provisioning-authority.json"),
@@ -337,6 +341,10 @@ test("paper migration converges existing repositories without rewriting content 
       fs.readFileSync(workflow, "utf8").replaceAll(runtimeSha, "v2"),
     );
   }
+  fs.writeFileSync(
+    path.join(cwd, "pnpm-workspace.yaml"),
+    "packages:\n  - '.'\nminimumReleaseAgeExclude:\n  - '@example/keep@1.0.0'\n  - '@kungfu-tech/buildchain@3.0.4-alpha.4'\ncatalog:\n  example: 1.0.0\n",
+  );
   execFileSync("git", ["add", "."], { cwd });
   execFileSync("git", ["commit", "-q", "-m", "fixture: legacy authority"], {
     cwd,
@@ -363,6 +371,10 @@ test("paper migration converges existing repositories without rewriting content 
     contentBefore,
   );
   assert.equal(fs.readFileSync(configPath, "utf8"), configBefore);
+  assert.equal(
+    fs.readFileSync(path.join(cwd, "pnpm-workspace.yaml"), "utf8"),
+    `packages:\n  - '.'\nminimumReleaseAgeExclude:\n  - '@example/keep@1.0.0'\n  - '@kungfu-tech/buildchain@${packageVersion}'\ncatalog:\n  example: 1.0.0\n`,
+  );
   assert.match(
     fs.readFileSync(
       path.join(cwd, ".github", "workflows", "verify.yml"),

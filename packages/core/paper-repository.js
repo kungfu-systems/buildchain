@@ -13,6 +13,7 @@ export const PAPER_PATHS = Object.freeze({
   buildWorkflow: ".github/workflows/build.yml",
   verifyWorkflow: ".github/workflows/verify.yml",
   releaseWorkflow: ".github/workflows/paper-release.yml",
+  pnpmWorkspace: "pnpm-workspace.yaml",
   reproducibilityReceipt:
     ".buildchain/publication/reproducibility-receipt.json",
   sealedBundle: ".buildchain/admitted/sealed-bundle.json",
