@@ -339,8 +339,8 @@ jobs:
           const packageJsonPath = exactPath(".buildchain/publication/npm-package/package.json");
           const packageDir = path.dirname(packageJsonPath);
           const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-          if (packageJson.name !== process.env.BUILDCHAIN_PACKAGE_NAME || packageJson.version !== process.env.BUILDCHAIN_PACKAGE_VERSION) {
-            throw new Error("prepared npm package identity differs from the admitted publication plan");
+          if (packageJson.name !== process.env.BUILDCHAIN_PACKAGE_NAME || packageJson.version !== process.env.BUILDCHAIN_PACKAGE_VERSION || packageJson.gitHead !== sourceSha) {
+            throw new Error("prepared npm package identity or gitHead differs from the admitted publication plan");
           }
           const manifestPath = exactPath(".buildchain/publication/publication-artifact.json");
           const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));

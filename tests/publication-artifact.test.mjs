@@ -192,6 +192,7 @@ auth = "trusted-publishing"
     type: "git",
     url: "git+https://github.com/kungfu-systems/paper-observer-declared-timelines.git",
   });
+  assert.equal(packageJson.gitHead, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
   assert.equal(packageJson.exports["./publication-artifact.json"], "./.buildchain/publication/publication-artifact.json");
   assert.equal(fs.existsSync(path.join(packageDir, "_build/main.pdf")), true);
   assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-artifact.json")), true);
