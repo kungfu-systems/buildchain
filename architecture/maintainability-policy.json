@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 237,
-    "maxHandMaintainedSourceLines": 92076,
+    "maxHandMaintainedSourceLines": 92108,
     "maxWorkflowFiles": 57,
     "maxWorkflowLines": 19648,
     "rationale": "The structural hardening, bounded AWS Windows JIT controller, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, documentation hardening, and audited sccache compiler binding may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds typed Work Control, deterministic recovery, npm and Git source coherence, production readback, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, effective Cargo/CMake compiler launchers, a nonzero cache-activity gate, and regression guards instead of duplicated delivery behavior; any wider ceiling requires another reviewed policy change."
@@ -41,6 +41,12 @@
     "scripts/generate-site-bundle.mjs": {
       "maxLines": 1502,
       "rationale": "Lifecycle metadata and CLI registry parity are generated centrally across the latest upstream public surface while the largest generator function remains at or below its prior size and complexity ceilings."
+    },
+    "scripts/run-lifecycle-core.mjs": {
+      "maxLines": 886,
+      "maxFunctionLines": 472,
+      "maxFunctionComplexity": 74,
+      "rationale": "The runtime action now enforces the audited compiler-cache activity gate immediately after a successful build, so consumers receive fail-closed verification before their reusable workflow shell advances; exact existing function complexity does not increase."
     }
   },
   "approvedPublicSurfaceTransitions": {

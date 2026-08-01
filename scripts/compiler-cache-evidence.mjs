@@ -292,6 +292,7 @@ function main() {
 }
 
 const isMain = process.argv[1] &&
+  path.basename(process.argv[1]) === "compiler-cache-evidence.mjs" &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   try {
