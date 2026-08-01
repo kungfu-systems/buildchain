@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import {
   PAPER_FLEET_AUDIT_CONTRACT,
@@ -17,6 +18,7 @@ import {
   planPaperMigration,
   planPaperScaffold,
   planPaperFleetUpdate,
+  paperFleetTransitionWorkspace,
   writePaperFleetUpdate,
   writePaperMigration,
   writePaperScaffold,
@@ -467,9 +469,26 @@ function runFleetAudit(options) {
 function refreshFleetLocks(result) {
   for (const entry of result.results || []) {
     if (!entry.ok) continue;
-    const lock = commandResult("pnpm", ["install", "--lockfile-only"], {
-      cwd: entry.cwd,
-    });
+    const workspacePath = path.resolve(entry.cwd, "pnpm-workspace.yaml");
+    const lockPath = path.resolve(entry.cwd, "pnpm-lock.yaml");
+    const finalWorkspace = fs.readFileSync(workspacePath, "utf8");
+    const transitionWorkspace = paperFleetTransitionWorkspace(
+      finalWorkspace,
+      fs.existsSync(lockPath) ? fs.readFileSync(lockPath, "utf8") : "",
+    );
+    let lock;
+    try {
+      if (transitionWorkspace !== finalWorkspace) {
+        fs.writeFileSync(workspacePath, transitionWorkspace);
+      }
+      lock = commandResult("pnpm", ["install", "--lockfile-only"], {
+        cwd: entry.cwd,
+      });
+    } finally {
+      if (fs.readFileSync(workspacePath, "utf8") !== finalWorkspace) {
+        fs.writeFileSync(workspacePath, finalWorkspace);
+      }
+    }
     if (lock.ok) continue;
     return {
       ...result,

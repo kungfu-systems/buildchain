@@ -54,10 +54,7 @@ function legacyBuildchainWorkflowRefs(cwd) {
   if (!fs.existsSync(workflowRoot)) return [];
   return fs
     .readdirSync(workflowRoot, { withFileTypes: true })
-    .filter(
-      (entry) =>
-        entry.isFile() && /\.ya?ml$/i.test(entry.name),
-    )
+    .filter((entry) => entry.isFile() && /\.ya?ml$/i.test(entry.name))
     .filter((entry) =>
       /uses:\s*kungfu-systems\/buildchain\/[^\s]+@v2(?:[-.][^\s]+)?/i.test(
         fs.readFileSync(path.join(workflowRoot, entry.name), "utf8"),
@@ -288,4 +285,29 @@ export function writePaperFleetUpdate(plan) {
     dryRun: false,
     results,
   };
+}
+
+export function paperFleetTransitionWorkspace(workspaceText, lockText) {
+  const source = String(workspaceText || "");
+  if (!/@kungfu-tech\/buildchain@[0-9A-Za-z]/.test(String(lockText || ""))) {
+    return source;
+  }
+  const lines = source.replace(/\r\n/g, "\n").split("\n");
+  const keyIndex = lines.findIndex((line) =>
+    /^minimumReleaseAgeExclude:\s*(?:#.*)?$/.test(line),
+  );
+  if (keyIndex < 0) {
+    throw new Error(
+      "paper fleet lock refresh requires a generated minimumReleaseAgeExclude block",
+    );
+  }
+  const retained = lines.filter(
+    (line, index) =>
+      index <= keyIndex ||
+      !/^\s*-\s+['"]?@kungfu-tech\/buildchain(?:@[^'"\s]+)?['"]?\s*(?:#.*)?$/.test(
+        line,
+      ),
+  );
+  retained.splice(keyIndex + 1, 0, "  - '@kungfu-tech/buildchain'");
+  return retained.join("\n");
 }
