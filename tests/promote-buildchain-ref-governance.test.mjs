@@ -189,7 +189,12 @@ test("governed promotion resumes its exact durable transaction after the target 
     },
   });
   const { octokit, refs, commits } = createGitMock({
-    refs: new Map([["heads/alpha/v1/v1.0", advancedSha]]),
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", advancedSha],
+      ["heads/dev/v1/v1.0", advancedSha],
+      ["tags/v1.0-alpha", advancedSha],
+      ["tags/v1-alpha", advancedSha],
+    ]),
   });
   commits.set(releaseSha, {
     sha: releaseSha,
@@ -269,7 +274,7 @@ test("governed promotion resumes its exact durable transaction after the target 
     sha: SHA,
     targetRef: "alpha/v1/v1.0",
     cwd,
-    versionState: false,
+    versionState: true,
     requireGovernance: true,
     publishTransaction: true,
     publishTransactionOverride: true,
@@ -280,11 +285,15 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(result.superseded, undefined);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
+  assert.equal(result.sha, advancedSha);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), advancedSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), advancedSha);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), releaseSha);
-  assert.equal(refs.get("tags/v1.0-alpha"), releaseSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), advancedSha);
+  assert.equal(refs.get("tags/v1-alpha"), advancedSha);
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
   assert.equal(result.updates[0].action, "resumed-advanced-publication");
+  assert.equal(result.updates.at(-1).action, "finalized-advanced-publication");
 });
 
 test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {
