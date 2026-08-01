@@ -35,6 +35,7 @@ import {
   PAPER_AGENT_ENTRY_CONTRACT,
   collectPaperAgentEntry,
   paperAgentEntryFiles,
+  resolvePaperBuildchainSha,
 } from "./paper-agent-entry.js";
 import {
   managedPaperPackageJson,
@@ -177,8 +178,11 @@ function buildchainPackageIdentity(buildchainRoot, explicitVersion = "") {
   };
 }
 
-function runtimeGitSha(buildchainRoot, buildchainVersion = "") {
-  const value = gitValue(buildchainRoot, ["rev-parse", "HEAD"]);
+export function resolvePaperRuntimeGitSha(
+  buildchainRoot,
+  buildchainVersion = "",
+) {
+  const value = resolvePaperBuildchainSha(buildchainRoot);
   if (GIT_SHA_PATTERN.test(value)) return value;
   const identity = buildchainPackageIdentity(buildchainRoot, buildchainVersion);
   if (!identity.version) return "";
@@ -661,7 +665,8 @@ export function planPaperScaffold({
     buildchainVersion,
   );
   const runtimeSha =
-    buildchainSha || runtimeGitSha(buildchainRoot, runtimeIdentity.version);
+    buildchainSha ||
+    resolvePaperRuntimeGitSha(buildchainRoot, runtimeIdentity.version);
   if (!GIT_SHA_PATTERN.test(runtimeSha)) {
     throw new Error(
       "paper scaffold cannot resolve the exact Buildchain runtime SHA; pass buildchainSha or use a published Buildchain package with npm gitHead provenance",
@@ -854,7 +859,8 @@ function migrationFiles({
     "paper publish package",
   );
   const runtimeSha =
-    buildchainSha || runtimeGitSha(buildchainRoot, buildchainVersion);
+    buildchainSha ||
+    resolvePaperRuntimeGitSha(buildchainRoot, buildchainVersion);
   if (!GIT_SHA_PATTERN.test(runtimeSha)) {
     throw new Error("paper migration requires an exact Buildchain source SHA");
   }
@@ -1734,7 +1740,8 @@ function runtimeFacts({
     version: identity.version,
     ref: buildchainRef,
     resolvedSha:
-      buildchainSha || runtimeGitSha(buildchainRoot, identity.version),
+      buildchainSha ||
+      resolvePaperRuntimeGitSha(buildchainRoot, identity.version),
     contract: contractWorld.contract,
     contractDigest: contractWorld.contractDigest,
     compatibilityDigest: contractWorld.compatibilityDigest,
