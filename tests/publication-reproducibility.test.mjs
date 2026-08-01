@@ -165,6 +165,13 @@ test("publication reproducibility compares two clean builds and exact npm tarbal
       ),
       true,
     );
+    assert.equal(
+      JSON.parse(fs.readFileSync(
+        path.join(cwd, ".buildchain/publication/npm-package/package.json"),
+        "utf8",
+      )).gitHead,
+      result.source.sha,
+    );
     const promotedTarball = path.join(
       cwd,
       ".buildchain/publication/npm-tarball",

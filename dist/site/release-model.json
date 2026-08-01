@@ -23,6 +23,13 @@
     "graphContract": "kungfu-buildchain-release-propagation-graph",
     "planContract": "kungfu-buildchain-release-propagation-plan",
     "lockContract": "kungfu-buildchain-release-propagation-lock",
+    "workContract": "kungfu-buildchain-release-propagation-work",
+    "stageReceiptContract": "kungfu-buildchain-release-propagation-stage-receipt",
+    "workControlBindings": [
+      "kungfu.assignment-graph.work-ref/v1",
+      "kungfu.work-control.initiative-family-state/v2"
+    ],
+    "completionBoundary": "production-online-readback-plus-accepted-work-control-decision",
     "defaultChannelPolicy": "preserve",
     "defaultChannelMap": {
       "alpha": "alpha",

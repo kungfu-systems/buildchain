@@ -1215,61 +1215,17 @@ jobs:
       s3-prefix: ${{ steps.transfer.outputs.s3-prefix }}
       oidc-audience: ${{ steps.transfer.outputs.oidc-audience }}
     steps:
+      - name: Checkout artifact transfer workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/artifact-transfer-runtime
+          persist-credentials: false
+
       - name: Resolve artifact transfer mode
         id: transfer
-        shell: bash
-        run: |
-          mode="${INPUT_TRANSFER_MODE:-github-artifacts}"
-          case "${mode}" in
-            github-artifacts|s3-to-github-artifacts) ;;
-            *)
-              echo "::error::artifact-transfer-mode must be github-artifacts or s3-to-github-artifacts, got: ${mode}"
-              exit 1
-              ;;
-          esac
-          bucket="${INPUT_S3_BUCKET:-${VAR_S3_BUCKET:-}}"
-          region="${INPUT_S3_REGION:-${VAR_S3_REGION:-}}"
-          prefix="${INPUT_S3_PREFIX:-${VAR_S3_PREFIX:-buildchain-artifacts}}"
-          audience="${INPUT_OIDC_AUDIENCE:-${VAR_OIDC_AUDIENCE:-}}"
-          upload_role="${INPUT_S3_UPLOAD_ROLE_ARN:-${VAR_S3_UPLOAD_ROLE_ARN:-${SECRET_S3_UPLOAD_ROLE_ARN:-}}}"
-          download_role="${INPUT_S3_DOWNLOAD_ROLE_ARN:-${VAR_S3_DOWNLOAD_ROLE_ARN:-${SECRET_S3_DOWNLOAD_ROLE_ARN:-}}}"
-          shared_role="${INPUT_S3_ROLE_ARN:-${VAR_S3_ROLE_ARN:-${SECRET_S3_ROLE_ARN:-}}}"
-          if [ "${mode}" = "s3-to-github-artifacts" ]; then
-            if [ -z "${bucket}" ]; then
-              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-bucket or BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET"
-              exit 1
-            fi
-            if [ -z "${region}" ]; then
-              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-region or BUILDCHAIN_ARTIFACT_RELAY_S3_REGION"
-              exit 1
-            fi
-            if [ -z "${upload_role}${shared_role}" ]; then
-              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires an upload role ARN input, variable, or secret"
-              exit 1
-            fi
-            if [ -z "${download_role}${shared_role}" ]; then
-              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires a download role ARN input, variable, or secret"
-              exit 1
-            fi
-            if [ -z "${audience}" ]; then
-              case "${region}" in
-                cn-*) audience="sts.amazonaws.com.cn" ;;
-                *) audience="sts.amazonaws.com" ;;
-              esac
-            fi
-          else
-            bucket=""
-            region=""
-            prefix=""
-            audience=""
-          fi
-          {
-            echo "mode=${mode}"
-            echo "s3-bucket=${bucket}"
-            echo "s3-region=${region}"
-            echo "s3-prefix=${prefix}"
-            echo "oidc-audience=${audience}"
-          } >> "${GITHUB_OUTPUT}"
+        run: node .buildchain/artifact-transfer-runtime/scripts/resolve-artifact-transfer-mode.mjs
         env:
           INPUT_TRANSFER_MODE: ${{ inputs.artifact-transfer-mode }}
           INPUT_S3_BUCKET: ${{ inputs.artifact-relay-s3-bucket }}
@@ -2516,7 +2472,7 @@ jobs:
         if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ inputs.artifact-name }}-manifest-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
+          name: ${{ inputs.artifact-name }}-credential-manifest-macos-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: ${{ steps.import-signing-results.outputs.credential-manifest-path }}
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
@@ -2531,7 +2487,6 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest-pre-signing.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
-            .buildchain/artifacts/signing
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true
@@ -2549,7 +2504,6 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
-            .buildchain/artifacts/signing
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true
@@ -2584,7 +2538,7 @@ jobs:
         run: |
           {
             echo "artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-macos-credential-${BUILDCHAIN_SOURCE_SHA}"
-            echo "manifest-artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-manifest-macos-credential-${BUILDCHAIN_SOURCE_SHA}"
+            echo "manifest-artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-credential-manifest-macos-${BUILDCHAIN_SOURCE_SHA}"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Download immutable credential-island runtime
@@ -2818,7 +2772,9 @@ jobs:
           BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+          BUILDCHAIN_EXPECTED_PLATFORMS_JSON: ${{ needs.resolve-contract.outputs.platforms-json }}
           BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: ${{ inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && '1' || '0' }}
+          BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON: ${{ inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && format('["{0}-credential"]', inputs.credential-island-macos-platform-id) || '[]' }}
           BUILDCHAIN_TRUSTED_EVENT: ${{ needs.trust-gate.outputs.trusted-event }}
           BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
           BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}

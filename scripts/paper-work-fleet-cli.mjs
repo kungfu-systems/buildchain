@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import {
   PAPER_FLEET_AUDIT_CONTRACT,
@@ -17,6 +18,7 @@ import {
   planPaperMigration,
   planPaperScaffold,
   planPaperFleetUpdate,
+  paperFleetTransitionWorkspace,
   writePaperFleetUpdate,
   writePaperMigration,
   writePaperScaffold,
@@ -368,12 +370,13 @@ function githubGovernance(cwd, repository) {
   }
 }
 
-function runWorkStart({ args, cwd }) {
+function runWorkStart({ args, cwd, buildchainSha }) {
   const topic = args[0]?.startsWith("--") ? "" : args[0] || "";
   const plan = createPaperWorkStartPlan({
     cwd,
     topic,
     branch: readFlag(args, "branch"),
+    buildchainSha,
   });
   return args.includes("--execute") ? executePaperWorkStart(plan) : plan;
 }
@@ -382,7 +385,11 @@ function runScaffold(options) {
   const plan = planPaperScaffold({
     cwd: options.cwd,
     buildchainRoot: options.buildchainRoot,
-    buildchainVersion: options.buildchainVersion,
+    buildchainVersion: readFlag(
+      options.args,
+      "buildchain-version",
+      options.buildchainVersion,
+    ),
     buildchainRef: readFlag(
       options.args,
       "buildchain-ref",
@@ -405,7 +412,11 @@ function runMigration(options) {
   const plan = planPaperMigration({
     cwd: options.cwd,
     buildchainRoot: options.buildchainRoot,
-    buildchainVersion: options.buildchainVersion,
+    buildchainVersion: readFlag(
+      options.args,
+      "buildchain-version",
+      options.buildchainVersion,
+    ),
     buildchainSha: options.buildchainSha,
   });
   return options.args.some((entry) => ["--write", "--execute"].includes(entry))
@@ -413,7 +424,7 @@ function runMigration(options) {
     : plan;
 }
 
-function runWorkSubmit({ args, cwd }) {
+function runWorkSubmit({ args, cwd, buildchainSha }) {
   const repository = collectPaperStatus({ cwd }).identity.repository;
   const branch = commandResult("git", ["branch", "--show-current"], {
     cwd,
@@ -426,6 +437,7 @@ function runWorkSubmit({ args, cwd }) {
     cwd,
     pullRequests: observation.rows,
     pullRequestObservation: observation,
+    buildchainSha,
   });
   return args.includes("--execute") ? executeWorkSubmit(plan, args) : plan;
 }
@@ -457,9 +469,26 @@ function runFleetAudit(options) {
 function refreshFleetLocks(result) {
   for (const entry of result.results || []) {
     if (!entry.ok) continue;
-    const lock = commandResult("pnpm", ["install", "--lockfile-only"], {
-      cwd: entry.cwd,
-    });
+    const workspacePath = path.resolve(entry.cwd, "pnpm-workspace.yaml");
+    const lockPath = path.resolve(entry.cwd, "pnpm-lock.yaml");
+    const finalWorkspace = fs.readFileSync(workspacePath, "utf8");
+    const transitionWorkspace = paperFleetTransitionWorkspace(
+      finalWorkspace,
+      fs.existsSync(lockPath) ? fs.readFileSync(lockPath, "utf8") : "",
+    );
+    let lock;
+    try {
+      if (transitionWorkspace !== finalWorkspace) {
+        fs.writeFileSync(workspacePath, transitionWorkspace);
+      }
+      lock = commandResult("pnpm", ["install", "--lockfile-only"], {
+        cwd: entry.cwd,
+      });
+    } finally {
+      if (fs.readFileSync(workspacePath, "utf8") !== finalWorkspace) {
+        fs.writeFileSync(workspacePath, finalWorkspace);
+      }
+    }
     if (lock.ok) continue;
     return {
       ...result,

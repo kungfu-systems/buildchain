@@ -51,7 +51,8 @@ published, pnpm may block the install through a minimum release-age policy. In
 that case, add a temporary package/version-specific `minimumReleaseAgeExclude`
 entry, such as `@kungfu-tech/buildchain@3.0.0`, and remove it once the package
 has aged past the normal policy window. Do not replace that with a broad
-registry or scope-wide exclude.
+registry or scope-wide exclude. Paper scaffold and migration maintain the
+exact current entry in `pnpm-workspace.yaml` before refreshing the lockfile.
 
 Use the package API directly inside JavaScript build scripts:
 
@@ -111,6 +112,19 @@ Use `dist/site/manual-registry.json` to find the packaged operating manuals and
 their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
 floating-ref contract world for a runtime such as `@v3`.
 
+For exhaustive lookup, use the generated references rather than scanning this
+conceptual guide:
+
+- [`cli-reference.md`](cli-reference.md) is projected from the governed usage
+  model and runtime command registry. `buildchain <path> --help` is intercepted
+  before dispatch at every listed path, exits zero, and has no command side
+  effects.
+- [`node-api-reference.md`](node-api-reference.md) is projected from
+  `package.json#exports` and exact ESM export declarations. The packaged
+  `dist/site/node-api-registry.json` carries the same per-symbol signatures,
+  parameters, conservative return/error boundaries, side-effect classification,
+  maturity, example import, and source location.
+
 ## Commands
 
 `buildchain create github-artifact-attestation-policy` seals the expected
@@ -131,6 +145,7 @@ a discovered fleet. Every subcommand returns a versioned JSON contract with
 buildchain paper scaffold --package @kungfu-tech/paper-example \
   --repository kungfu-systems/paper-example
 buildchain paper migrate --json
+buildchain paper agent verify --json
 buildchain paper work start golden-path --json
 buildchain paper work submit --json
 buildchain paper fleet audit --root ../papers --json
@@ -145,14 +160,22 @@ buildchain paper resume --json
 
 The safety and authority boundary is explicit:
 
-- `scaffold` plans a 14-file, no-overwrite repository shape by default; add
+- `scaffold` plans a 17-file, no-overwrite repository shape by default; add
   `--write` to create only missing files.
 - `migrate` plans the Buildchain-owned authority, workflow, contract lock,
-  version pin, and package control changes needed by an existing paper
-  repository. It pins an exact v3 dependency and adds pnpm-backed paper scripts.
+  version pin, package, agent-entry policy, managed `AGENTS.md` section, and
+  required-check changes needed by an existing paper repository. It pins an
+  exact v3 dependency and adds pnpm-backed paper scripts.
   Add `--write` only after reviewing exact old and new digests; paper content
   and publication configuration are never rewritten. Refresh
   `pnpm-lock.yaml` with `pnpm install --lockfile-only` after a write.
+- `agent verify` is the mandatory resume check on an existing work branch. It
+  verifies the digest-bound `.buildchain/paper/agent-entry.json`, the single
+  managed `AGENTS.md` section, exact package scripts and v3 dependency, runtime
+  source SHA, development target, and current branch lineage. `--ci` derives
+  the pull-request source and target from GitHub context and fails closed on a
+  non-work source branch or a target other than the configured development
+  line.
 - `work start` derives the protected development branch from the configured
   publication semver line and creates a safe local work branch only when the
   worktree is clean, the sole `origin` is the canonical `kungfu-systems`
@@ -169,10 +192,16 @@ The safety and authority boundary is explicit:
   contract for every discovered repository, remains dry-run by default, and
   refuses protected or non-work branches.
 - The scaffolded `.buildchain/paper/provisioning-authority.json` binds both
-  caller workflow byte digests, their exact reusable-workflow SHA, the runtime
-  SHA, contract-lock bytes, npm registry and trusted-publisher coordinates, and
-  the repository Actions/generated-write policy under one digest. A floating
-  Buildchain ref cannot change release policy after that authority is accepted.
+  build/release caller workflow byte digests, the required verify caller, the
+  agent-entry policy and instructions, their exact reusable-workflow SHA, the
+  runtime SHA, contract-lock bytes, npm registry and trusted-publisher
+  coordinates, and the repository Actions/generated-write policy under one
+  digest. A floating Buildchain ref cannot change release policy after that
+  authority is accepted.
+- The reusable `check.yml` detects publication-artifact repositories and runs
+  `paper preflight --offline --ci` inside the existing required check context.
+  Skipping the local CLI therefore cannot admit a missing entry contract,
+  drifted Buildchain-owned surface, unsafe source branch, or wrong PR target.
 - `preflight` separates local readiness from readiness for external mutation.
   `--offline` skips live GitHub and npm observations without treating them as
   local failures. Live readiness requires default workflow permissions `read`,

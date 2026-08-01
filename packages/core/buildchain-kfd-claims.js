@@ -7,44 +7,12 @@ import {
   collectPublicSurfaceReverseAudit,
 } from "./public-surface-audit.js";
 import { normalizeKfd3DistributionDeclaration } from "./kfd3-surface-register.js";
+import { BUILDCHAIN_AGENT_MANUALS } from "./buildchain-agent-manuals.js";
+
+export { BUILDCHAIN_AGENT_MANUALS } from "./buildchain-agent-manuals.js";
 
 export const BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT = "kungfu-buildchain-kfd-claim-registry";
 export const BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT = "kungfu-buildchain-kfd-collaboration-interface";
-
-export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
-  { id: "map", title: "Buildchain documentation map", path: "docs/MAP.md", plane: "use" },
-  { id: "auditable-demo", title: "Auditable demo artifact pipeline", path: "docs/auditable-demo.md", plane: "verify" },
-  { id: "install", title: "Install and verify Buildchain", path: "docs/install.md", plane: "use" },
-  { id: "release-passport", title: "Release Passport protocol", path: "docs/release-passport.md", plane: "verify" },
-  { id: "github-artifact-attestation", title: "GitHub-native Linux artifact attestation", path: "docs/github-artifact-attestation.md", plane: "verify" },
-  { id: "controller-evidence", title: "Controller evidence contract", path: "docs/controller-evidence.md", plane: "verify" },
-  { id: "publication-authority", title: "Sealed publication authority", path: "docs/publication-authority.md", plane: "verify" },
-  { id: "github-governance-authority", title: "GitHub governance authority", path: "docs/github-governance-authority.md", plane: "verify" },
-  { id: "release-candidate", title: "Release Candidate Passport", path: "docs/release-candidate.md", plane: "verify" },
-  { id: "release-propagation", title: "Release propagation", path: "docs/release-propagation.md", plane: "use" },
-  { id: "readme-badges", title: "README badge blocks", path: "docs/readme-badges.md", plane: "use" },
-  { id: "homebrew", title: "Homebrew distribution indexes", path: "docs/homebrew.md", plane: "use" },
-  { id: "binary-distribution", title: "Binary distribution contract", path: "docs/binary-distribution.md", plane: "verify" },
-  { id: "consumer-issue-reporting", title: "Consumer issue reporting", path: "docs/consumer-issue-reporting.md", plane: "use" },
-  { id: "infra-contract", title: "Infra Contract", path: "docs/infra-contract.md", plane: "use" },
-  { id: "toolkit-observability", title: "Toolkit observability", path: "docs/toolkit-observability.md", plane: "use" },
-  { id: "site-bundle-contract", title: "Site bundle contract", path: "docs/site-bundle-contract.md", plane: "use" },
-  { id: "migration-inventory", title: "Migration inventory", path: "docs/migration-inventory.md", plane: "verify" },
-  { id: "ownership", title: "Ownership", path: "docs/ownership.md", plane: "why" },
-  { id: "product-mechanism", title: "Product mechanism", path: "docs/product-mechanism.md", plane: "why" },
-  { id: "cli", title: "CLI and npm package", path: "docs/cli.md", plane: "use" },
-  { id: "build-facts", title: "Build Facts", path: "docs/build-facts.md", plane: "use" },
-  { id: "kfd-support", title: "KFD support and KFD-3 surface registration", path: "docs/kfd-support.md", plane: "verify" },
-  { id: "kfd-agent-hub", title: "KFD Agent Hub Builder flow", path: "docs/kfd-agent-hub.md", plane: "use" },
-  { id: "lifecycle-protocol", title: "Lifecycle protocol", path: "docs/lifecycle-protocol.md", plane: "use" },
-  { id: "reusable-build-surface", title: "Reusable build surface", path: "docs/reusable-build-surface.md", plane: "use" },
-  { id: "publish-transaction", title: "Publish transaction", path: "docs/publish-transaction.md", plane: "verify" },
-  { id: "release-governance", title: "Release governance", path: "docs/release-governance.md", plane: "why" },
-  { id: "release-flow", title: "Release flow", path: "docs/release-flow.md", plane: "verify" },
-  { id: "runtime-train-validation", title: "Runtime train validation", path: "docs/runtime-train-validation.md", plane: "verify" },
-  { id: "versioning", title: "Versioning", path: "docs/versioning.md", plane: "why" },
-  { id: "web-surface-deployments", title: "Web surface deployments", path: "docs/web-surface-deployments.md", plane: "use" },
-]);
 
 const SITE_CONTRACT_FILES = Object.freeze([
   "dist/site/buildchain-site.json",
@@ -203,7 +171,6 @@ function uniqueById(entries) {
     return true;
   });
 }
-
 function uniquePaths(paths) {
   return [...new Set(paths.filter(Boolean))].sort();
 }
@@ -411,7 +378,7 @@ export function createBuildchainPublicClaimDefinitions() {
     },
     {
       id: "claim:buildchain-release-propagation",
-      claim: "Buildchain can propagate upstream alpha or stable releases to downstream repositories while preserving release channels through exact release locks.",
+      claim: "Buildchain can propagate exact upstream releases as Family State v2 and WorkRef-bound, resumable downstream work that preserves protected review and completes only after production readback.",
       sourcePaths: [
         "packages/core/release-propagation.js",
         "scripts/release-propagation.mjs",

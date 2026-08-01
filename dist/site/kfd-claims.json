@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436",
+    "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "af5cb9990177c134c9de2a03cd21bba16258e4ead0e8c7d01c94446d8cff8760",
+    "sha256": "29118ea036605532c088c4707809c4e0dac0430d1ade7b6b8a220bea5bd2ed09",
     "summary": {
-      "cliCommandCount": 111,
+      "cliCommandCount": 112,
       "workflowCount": 57,
       "actionCount": 6,
-      "sitePageCount": 60,
-      "docCommandRefCount": 315,
+      "sitePageCount": 63,
+      "docCommandRefCount": 813,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -211,7 +211,7 @@
     },
     {
       "id": "claim:buildchain-release-propagation",
-      "claim": "Buildchain can propagate upstream alpha or stable releases to downstream repositories while preserving release channels through exact release locks.",
+      "claim": "Buildchain can propagate exact upstream releases as Family State v2 and WorkRef-bound, resumable downstream work that preserves protected review and completes only after production readback.",
       "sourcePaths": [
         "packages/core/release-propagation.js",
         "scripts/release-propagation.mjs",
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "af5cb9990177c134c9de2a03cd21bba16258e4ead0e8c7d01c94446d8cff8760",
+      "sha256": "29118ea036605532c088c4707809c4e0dac0430d1ade7b6b8a220bea5bd2ed09",
       "summary": {
-        "cliCommandCount": 111,
+        "cliCommandCount": 112,
         "workflowCount": 57,
         "actionCount": 6,
-        "sitePageCount": 60,
-        "docCommandRefCount": 315,
+        "sitePageCount": 63,
+        "docCommandRefCount": 813,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -417,6 +417,18 @@
           "plane": "use"
         },
         {
+          "id": "doc:docs/cli-reference.md",
+          "name": "Generated CLI reference",
+          "kind": "documentation",
+          "sourcePath": "docs/cli-reference.md",
+          "evidencePath": "docs/cli-reference.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
           "id": "doc:docs/cli.md",
           "name": "CLI and npm package",
           "kind": "documentation",
@@ -451,6 +463,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "verify"
+        },
+        {
+          "id": "doc:docs/getting-started.md",
+          "name": "Golden Path",
+          "kind": "documentation",
+          "sourcePath": "docs/getting-started.md",
+          "evidencePath": "docs/getting-started.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
         },
         {
           "id": "doc:docs/github-artifact-attestation.md",
@@ -559,6 +583,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "verify"
+        },
+        {
+          "id": "doc:docs/node-api-reference.md",
+          "name": "Generated Node API reference",
+          "kind": "documentation",
+          "sourcePath": "docs/node-api-reference.md",
+          "evidencePath": "docs/node-api-reference.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
         },
         {
           "id": "doc:docs/ownership.md",
@@ -2753,6 +2789,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:paper-agent",
+          "name": "buildchain paper agent verify [--cwd <dir>] [--offline] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:paper-alpha",
           "name": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]",
           "kind": "cli-command",
@@ -4742,8 +4790,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 17,
+          "inputCount": 19,
           "inputs": [
+            "agent-work-context-json",
+            "agent-work-mode",
             "buildchain-ref",
             "buildchain-repository",
             "downstream-base-ref",
@@ -5418,6 +5468,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:cli-reference",
+          "name": "site-page:manual:cli-reference",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:consumer-issue-reporting",
           "name": "site-page:manual:consumer-issue-reporting",
           "kind": "site-page",
@@ -5444,6 +5506,18 @@
         {
           "id": "site-page:manual:dev-alpha-candidate-patrol",
           "name": "site-page:manual:dev-alpha-candidate-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:getting-started",
+          "name": "site-page:manual:getting-started",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -5564,6 +5638,18 @@
         {
           "id": "site-page:manual:migration-inventory",
           "name": "site-page:manual:migration-inventory",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:node-api-reference",
+          "name": "site-page:manual:node-api-reference",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -6008,6 +6094,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 383
+    "publicSurfaceCount": 390
   }
 }

@@ -47,6 +47,15 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.match(workflow, /Setup trusted-publishing Node\.js/);
   assert.match(workflow, /uses: actions\/setup-node@v6\.4\.0/);
   assert.match(workflow, /node-version: "24"/);
+  assert.match(workflow, /Install exact admitted Buildchain runtime dependencies/);
+  assert.match(
+    workflow,
+    /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/,
+  );
+  assert.ok(
+    workflow.indexOf("Install exact admitted Buildchain runtime dependencies") <
+      workflow.indexOf("Capture configured downstream propagation work"),
+  );
   assert.match(workflow, /BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID:/);
   assert.match(workflow, /BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY:/);
   assert.match(workflow, /BUILDCHAIN_GENERATED_WRITE_TOKEN:/);
@@ -90,6 +99,28 @@ test("sealed paper release separates read-only build, authority, and admitted pu
     /github-release-artifact-paths: \$\{\{ steps\.candidate\.outputs\.github-release-artifact-paths \}\}/,
   );
   assert.match(workflow, /publish-transaction-override: "true"/);
+  assert.match(workflow, /upstream-release-json:/);
+  assert.match(workflow, /npm view "\$\{PACKAGE_NAME\}@\$\{PACKAGE_VERSION\}" version dist\.integrity gitHead --json/);
+  assert.match(workflow, /\.dist\.integrity \/\/ \.\["dist\.integrity"\]/);
+  assert.match(workflow, /const packageIntegrity = packageFact\.dist\?\.integrity \|\| packageFact\["dist\.integrity"\]/);
+  assert.match(workflow, /paper publication is awaiting its generated version-state merge/);
+  assert.match(
+    workflow,
+    /\.buildchain\/admitted\/artifact\/\.buildchain\/publication/,
+  );
+  assert.doesNotMatch(workflow, /execFileSync\("find"/);
+  assert.match(workflow, /packageJson\.gitHead !== sourceSha/);
+  assert.match(workflow, /packageFact\.gitHead !== process\.env\.SOURCE_SHA/);
+  assert.match(workflow, /remote_tag_sha.*SOURCE_SHA/s);
+  assert.match(workflow, /tagTargetSha: process\.env\.SOURCE_SHA/);
+  assert.match(workflow, /registry: \{ url: `\$\{releaseBase\}\/\$\{path\.basename\(registryPath\)\}`/);
+  assert.match(workflow, /paper-upstream-release-\$\{\{ steps\.candidate\.outputs\.package-version \}\}/);
+  assert.match(workflow, /kungfu-buildchain-paper-release-propagation/);
+  assert.match(workflow, /contents\/\.buildchain\/release-propagation\.json\?ref=\$\{SOURCE_SHA\}/);
+  assert.match(workflow, /release-propagation work create/);
+  assert.match(workflow, /release-propagation work status/);
+  assert.match(workflow, /paper-propagation-work-\$\{PACKAGE_VERSION\}-\$\{SOURCE_SHA\}/);
+  assert.match(workflow, /propagation-work-artifact:/);
   const publish = workflow.slice(workflow.indexOf("  publish:"));
   assert.doesNotMatch(
     publish,

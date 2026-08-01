@@ -420,6 +420,83 @@ test("optional terminal capture is bounded and grants no implicit authority", (t
   assert.throws(() => validateAdapterOutput(root), /must start at zero/);
 });
 
+test("native rendition set binds distinct 1080p and 720p captures", (t) => {
+  const root = temporaryDirectory(t);
+  writeAdapterOutput(root, 2500, true);
+  const primaryScenePath = path.join(root, "scene.json");
+  const primaryScene = JSON.parse(fs.readFileSync(primaryScenePath, "utf8"));
+  primaryScene.width = 1920;
+  primaryScene.height = 1080;
+  fs.writeFileSync(primaryScenePath, stableJson(primaryScene));
+
+  fs.writeFileSync(path.join(root, "complete-transcript-720p.txt"), "compact layout\nartifact qualified\n");
+  fs.writeFileSync(path.join(root, "scene-720p.json"), stableJson({
+    ...primaryScene,
+    id: "qualification-720p",
+    width: 1280,
+    height: 720,
+  }));
+  fs.writeFileSync(path.join(root, "public-projection-720p.json"), stableJson({
+    schema: "build-images.demo-projection/v1",
+    evidenceClass: "qualified-build-output",
+    claimBoundary: "Presentation is traceable to the retained transcript and is not a screen capture.",
+    cues: [{ startMs: 0, endMs: 2500, transcriptLines: [1, 2], annotation: "compact output" }],
+  }));
+  const responsiveCapture = terminalCapture(2500);
+  responsiveCapture.dimensions = { columns: 100, rows: 28 };
+  responsiveCapture.events[0].data = Buffer.from("compact 100x28\r\n").toString("base64");
+  responsiveCapture.completion.reportRoot = `sha256:${"f".repeat(64)}`;
+  fs.writeFileSync(path.join(root, "terminal-capture-720p.json"), stableJson(responsiveCapture));
+
+  const primaryCaptureRoot = sha256(fs.readFileSync(path.join(root, "terminal-capture.json")));
+  const responsiveCaptureRoot = sha256(fs.readFileSync(path.join(root, "terminal-capture-720p.json")));
+  const renditionSetPath = path.join(root, "rendition-set.json");
+  fs.writeFileSync(renditionSetPath, stableJson({
+    schema: "kungfu.auditable-demo.rendition-set/v1",
+    renditions: [
+      {
+        id: "1080p", role: "primary", transcript: "complete-transcript.txt",
+        projection: "public-projection.json", scene: "scene.json",
+        terminalCapture: "terminal-capture.json", captureRoot: primaryCaptureRoot,
+      },
+      {
+        id: "720p", role: "responsive", transcript: "complete-transcript-720p.txt",
+        projection: "public-projection-720p.json", scene: "scene-720p.json",
+        terminalCapture: "terminal-capture-720p.json", captureRoot: responsiveCaptureRoot,
+      },
+    ],
+    authority: {
+      classification: "capture-routing-metadata",
+      grants: [],
+      nonAuthorities: [
+        "publication-authority",
+        "runtime-authority",
+        "first-party-identity",
+        "system-identity",
+        "kfd-compliance",
+        "product-system-metadata",
+        "package-metadata",
+        "registry-history",
+        "scan-output",
+        "standalone-generation",
+      ],
+    },
+  }));
+
+  const normalized = validateAdapterOutput(root);
+  assert.equal(normalized.renditionSet.renditions[0].scene.width, 1920);
+  assert.equal(normalized.renditionSet.renditions[1].scene.width, 1280);
+  assert.notEqual(
+    normalized.renditionSet.renditions[0].captureRoot,
+    normalized.renditionSet.renditions[1].captureRoot,
+  );
+
+  const renditionSet = JSON.parse(fs.readFileSync(renditionSetPath, "utf8"));
+  renditionSet.renditions[1].captureRoot = primaryCaptureRoot;
+  fs.writeFileSync(renditionSetPath, stableJson(renditionSet));
+  assert.throws(() => validateAdapterOutput(root), /captureRoot mismatch|capture roots must be distinct/u);
+});
+
 test("checksums cover every member and reject tampering", (t) => {
   const root = temporaryDirectory(t);
   fs.writeFileSync(path.join(root, "one.txt"), "one");

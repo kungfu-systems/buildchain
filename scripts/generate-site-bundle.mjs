@@ -35,6 +35,12 @@ import {
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 import { cliCommandMeta, nodeApiMeta } from "./site-capability-metadata.mjs";
 import { projectHomepageIntro } from "./site-bundle-homepage.mjs";
+import { BUILDCHAIN_USAGE } from "./buildchain-cli-help.mjs";
+import {
+  cliReferenceById,
+  createCliReference,
+} from "./public-reference.mjs";
+import { createSiteNodeApiRegistry } from "./site-reference-registry.mjs";
 import {
   BUILDCHAIN_COMMAND_REGISTRY,
   resolveBuildchainCommand,
@@ -341,9 +347,12 @@ function publicSurfaceLifecycle({ owner, maturity, nonDuplicationRationale }) {
 
 const manualMetaById = new Map(Object.entries({
   map: { capabilityGroup: "getting-started", audience: ["agent", "consumer"], maturity: "stable", order: 10 },
+  "getting-started": { capabilityGroup: "getting-started", audience: ["consumer", "agent"], maturity: "stable", order: 15 },
   install: { capabilityGroup: "getting-started", audience: ["consumer"], maturity: "stable", order: 20 },
   "product-mechanism": { capabilityGroup: "getting-started", audience: ["agent", "maintainer"], maturity: "stable", order: 30 },
   cli: { capabilityGroup: "api-cli-reference", audience: ["agent", "developer"], maturity: "stable", order: 40 },
+  "cli-reference": { capabilityGroup: "api-cli-reference", audience: ["agent", "developer", "operator"], maturity: "stable", order: 42 },
+  "node-api-reference": { capabilityGroup: "api-cli-reference", audience: ["agent", "developer"], maturity: "stable", order: 44 },
   "release-passport": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 100 },
   "github-artifact-attestation": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 108 },
   "publication-authority": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 105 },
@@ -409,6 +418,8 @@ function pageCapabilityMeta(relPath, category) {
 
 function createCliRegistry(packageJson) {
   const commands = enumerateCliCommandsFromBin({ root });
+  const reference = createCliReference(BUILDCHAIN_USAGE);
+  const referenceById = cliReferenceById(reference);
   const documentedTopLevelCommands = new Set();
   for (const entry of commands) {
     const command = entry.usage.split(/\s+/)[1] || "";
@@ -433,6 +444,13 @@ function createCliRegistry(packageJson) {
       const meta = cliCommandMeta(entry.id);
       return {
         ...entry,
+        ...(referenceById.get(entry.id) || {
+          paths: [],
+          syntaxes: [],
+          options: [],
+          aliases: [],
+          helpCommands: [],
+        }),
         purpose: meta.purpose,
         capabilityGroup: meta.capabilityGroup,
         audience: meta.audience,
@@ -621,6 +639,21 @@ function createPublicationReleaseRegistry({ packageJson, timestampPolicy }) {
   };
 }
 
+const RELEASE_PROPAGATION_MODEL = {
+  graphContract: "kungfu-buildchain-release-propagation-graph",
+  planContract: "kungfu-buildchain-release-propagation-plan",
+  lockContract: "kungfu-buildchain-release-propagation-lock",
+  workContract: "kungfu-buildchain-release-propagation-work",
+  stageReceiptContract: "kungfu-buildchain-release-propagation-stage-receipt",
+  workControlBindings: [
+    "kungfu.assignment-graph.work-ref/v1",
+    "kungfu.work-control.initiative-family-state/v2",
+  ],
+  completionBoundary: "production-online-readback-plus-accepted-work-control-decision",
+  defaultChannelPolicy: "preserve",
+  defaultChannelMap: { alpha: "alpha", release: "release" },
+};
+
 function buildSiteBundle() {
   const packageJson = readJson("package.json");
   const inventory = readJson("tests/buildchain-inventory.json");
@@ -723,40 +756,7 @@ function buildSiteBundle() {
     pages,
   };
 
-  const nodeApiRegistry = {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-node-api-registry",
-    package: packageJson.name,
-    moduleSystem: packageJson.type || "module",
-    exports: Object.entries(packageJson.exports || {})
-      .filter(([specifier]) => !specifier.startsWith("./site/") && specifier !== "./package.json")
-      .map(([specifier, target]) => {
-        const meta = nodeApiMeta(specifier);
-        return {
-          specifier: specifier === "." ? packageJson.name : `${packageJson.name}/${specifier.replace(/^\.\//, "")}`,
-          export: specifier,
-          target,
-          digest: typeof target === "string" ? sha256File(target.replace(/^\.\//, "")) : "",
-          summary: meta.summary,
-          capabilityGroup: meta.capabilityGroup,
-          audience: meta.audience,
-          ...publicSurfaceLifecycle({
-            owner: "buildchain-core",
-            maturity: meta.maturity,
-            nonDuplicationRationale: "Existing package subpath retained as the canonical API boundary for this capability.",
-          }),
-        };
-      }),
-    docs: [
-      { id: "cli-and-node-package", path: "docs/cli.md", digest: sha256File("docs/cli.md") },
-      { id: "build-facts", path: "docs/build-facts.md", digest: sha256File("docs/build-facts.md") },
-      { id: "kfd-support", path: "docs/kfd-support.md", digest: sha256File("docs/kfd-support.md") },
-      { id: "readme-badges", path: "docs/readme-badges.md", digest: sha256File("docs/readme-badges.md") },
-      { id: "homebrew", path: "docs/homebrew.md", digest: sha256File("docs/homebrew.md") },
-      { id: "site-bundle-contract", path: "docs/site-bundle-contract.md", digest: sha256File("docs/site-bundle-contract.md") },
-    ],
-    guidance: "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths.",
-  };
+  const nodeApiRegistry = createSiteNodeApiRegistry({ root, packageJson, nodeApiMeta, sha256File, publicSurfaceLifecycle });
 
   const workflowRegistry = {
     schemaVersion: 1,
@@ -857,13 +857,7 @@ function buildSiteBundle() {
       schema: "schemas/release-passport-v1.schema.json",
       checkManifest: "release-passport-check-manifest.json",
     },
-    releasePropagation: {
-      graphContract: "kungfu-buildchain-release-propagation-graph",
-      planContract: "kungfu-buildchain-release-propagation-plan",
-      lockContract: "kungfu-buildchain-release-propagation-lock",
-      defaultChannelPolicy: "preserve",
-      defaultChannelMap: { alpha: "alpha", release: "release" },
-    },
+    releasePropagation: RELEASE_PROPAGATION_MODEL,
     npm: {
       package: packageJson.name,
       command: packageJson.bin?.buildchain || "",

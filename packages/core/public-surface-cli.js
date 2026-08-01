@@ -96,6 +96,10 @@ export function enumerateCliCommandsFromBin({
 } = {}) {
   const binSource = readText(root, binPath);
   const helpSource = readText(root, "scripts/buildchain-cli-help.mjs");
+  const registrySource = readText(
+    root,
+    "bin/internal/command-registry.mjs",
+  );
   const dispatchSource = [
     binSource,
     ...listFiles(root, "bin/internal", (name) => name.endsWith(".mjs")).map(
@@ -106,7 +110,14 @@ export function enumerateCliCommandsFromBin({
   const dispatch = [
     ...dispatchSource.matchAll(/if\s*\(\s*command\s*===\s*"([^"]+)"/g),
   ].map((match) => commandId(match[1]));
-  return uniqueSorted([...usage.map((entry) => entry.id), ...dispatch]).map(
+  const registered = [
+    ...registrySource.matchAll(/\{\s*id:\s*"([^"]+)"/g),
+  ].map((match) => commandId(match[1]));
+  return uniqueSorted([
+    ...usage.map((entry) => entry.id),
+    ...dispatch,
+    ...registered,
+  ]).map(
     (id) => ({
       id,
       source: "bin/buildchain.mjs",

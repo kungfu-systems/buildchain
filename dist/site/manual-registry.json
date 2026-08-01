@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:430eed733bfcbebd853da9c60a687822dab73689d7fb9ad2e9a760af279415e5",
+      "digest": "sha256:0731b18f6a7aa6a164197080fac3b57ff161640a28433c4cd26adcf145403fb5",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -17,6 +17,20 @@
       ],
       "maturity": "stable",
       "order": 10
+    },
+    {
+      "id": "getting-started",
+      "title": "Golden Path",
+      "path": "docs/getting-started.md",
+      "plane": "use",
+      "digest": "sha256:806224481f542786ed2e60226417bd1ba673099a3110f564357792bdbf637403",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "consumer",
+        "agent"
+      ],
+      "maturity": "stable",
+      "order": 15
     },
     {
       "id": "auditable-demo",
@@ -37,7 +51,7 @@
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
       "plane": "use",
-      "digest": "sha256:570bf79189925ae0dfc040a83804a71149cda122c033d5aa763672b2a137072a",
+      "digest": "sha256:b9d87becf94efff804495ee3beea5da795241ae4402186102baa846c87c7bf14",
       "capabilityGroup": "getting-started",
       "audience": [
         "consumer"
@@ -136,7 +150,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:aea013d923a8d419fc76e99a81765f281640dd95141d32ae415b8572604e9d32",
+      "digest": "sha256:d9c9b4ba9dff6ed336b1ff31e5a02fcdf68dd013278caa86510e5fd0b50c4267",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -234,7 +248,7 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:40831ce35dca6ac2a3a81d54a83fb0e5ab064137829a4f7844e5d80ba61aa65c",
+      "digest": "sha256:36a4e60e91f500ea1dcdbef97cd0250a2c26562b98d8d3622e8e0f9df2aad23b",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
@@ -289,7 +303,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:9afe80ef29fb5cce140ffc7980c41172495878726e5504e47914b8dc7af8fc1f",
+      "digest": "sha256:1707dd8989e1630b5ba9381c6f8aabbbc64288590628cbae9058ea6f56f9037c",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -297,6 +311,35 @@
       ],
       "maturity": "stable",
       "order": 40
+    },
+    {
+      "id": "cli-reference",
+      "title": "Generated CLI reference",
+      "path": "docs/cli-reference.md",
+      "plane": "use",
+      "digest": "sha256:c728fe693ab591ab5b52f4276a817ec5a013c79833f0d20ca2cc137e85ae51ca",
+      "capabilityGroup": "api-cli-reference",
+      "audience": [
+        "agent",
+        "developer",
+        "operator"
+      ],
+      "maturity": "stable",
+      "order": 42
+    },
+    {
+      "id": "node-api-reference",
+      "title": "Generated Node API reference",
+      "path": "docs/node-api-reference.md",
+      "plane": "use",
+      "digest": "sha256:ce9b018e6b1cfd98d8faa0ccadd6570585f2812b4828d610810f984f9810df5d",
+      "capabilityGroup": "api-cli-reference",
+      "audience": [
+        "agent",
+        "developer"
+      ],
+      "maturity": "stable",
+      "order": 44
     },
     {
       "id": "build-facts",
@@ -429,7 +472,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:5dd27f3c4a412a23093e5d33746a5d5d40353625c8ffe89a961978fc5de9c03e",
+      "digest": "sha256:bdb155e873f9c2ea5cd40bdde057d2c2f90322f0d4575de77fe1670bd040e643",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"

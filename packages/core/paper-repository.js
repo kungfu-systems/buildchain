@@ -6,11 +6,14 @@ import { loadBuildchainConfig } from "./buildchain-config.js";
 
 export const PAPER_PATHS = Object.freeze({
   config: ".buildchain/buildchain.toml",
+  agentEntry: ".buildchain/paper/agent-entry.json",
+  agentInstructions: "AGENTS.md",
   versionPin: ".buildchain-version",
   contractLock: ".buildchain/contract-lock.json",
   buildWorkflow: ".github/workflows/build.yml",
   verifyWorkflow: ".github/workflows/verify.yml",
   releaseWorkflow: ".github/workflows/paper-release.yml",
+  pnpmWorkspace: "pnpm-workspace.yaml",
   reproducibilityReceipt:
     ".buildchain/publication/reproducibility-receipt.json",
   sealedBundle: ".buildchain/admitted/sealed-bundle.json",

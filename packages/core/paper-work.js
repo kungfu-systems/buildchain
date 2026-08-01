@@ -1,11 +1,14 @@
 import path from "node:path";
+import { collectPaperAgentEntry } from "./paper-agent-entry.js";
 import {
+  PAPER_PATHS,
   PAPER_WORK_BRANCH_PATTERN,
   gitResult,
   gitValue,
   normalizedWorkBranch,
   paperDevelopmentRef,
   paperWorkSource,
+  readJson,
   remoteBranchObservation,
   rootedPlan,
   workCheck,
@@ -26,10 +29,20 @@ function failedActions(checks) {
     }));
 }
 
+function agentEntryForWork(cwd, buildchainSha) {
+  const policy = readJson(path.resolve(cwd, PAPER_PATHS.agentEntry)).value;
+  return collectPaperAgentEntry({
+    cwd,
+    buildchainSha: buildchainSha || policy?.runtime?.sourceSha || "",
+    mode: "contract",
+  });
+}
+
 export function createPaperWorkStartPlan({
   cwd = process.cwd(),
   topic = "",
   branch = "",
+  buildchainSha = "",
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const source = paperWorkSource(resolvedCwd);
@@ -56,7 +69,14 @@ export function createPaperWorkStartPlan({
         `${remoteDevelopment.sha}^{commit}`,
       ]).ok
     : false;
+  const agentEntry = agentEntryForWork(resolvedCwd, buildchainSha);
   const checks = [
+    workCheck(
+      "agent-entry.current",
+      agentEntry.ok,
+      "The mandatory Buildchain Paper agent-entry contract is current.",
+      "buildchain paper migrate --write --json",
+    ),
     workCheck(
       "repository.canonical-origin",
       source.canonical,
@@ -121,6 +141,9 @@ export function createPaperWorkStartPlan({
       developmentRef,
       remoteDevelopmentSha: remoteDevelopment.sha,
     },
+    runtime: {
+      sourceSha: buildchainSha || agentEntry.entry?.runtime?.sourceSha || "",
+    },
     target: { branch: targetBranch, startSha: remoteDevelopment.sha },
     checks,
     mutation: {
@@ -155,6 +178,7 @@ export function executePaperWorkStart(plan) {
   const fresh = createPaperWorkStartPlan({
     cwd: plan.cwd,
     branch: plan.target.branch,
+    buildchainSha: plan.runtime?.sourceSha || "",
   });
   if (!fresh.ok || fresh.planRoot !== plan.planRoot) {
     return {
@@ -184,6 +208,7 @@ export function createPaperWorkSubmitPlan({
   cwd = process.cwd(),
   pullRequests = [],
   pullRequestObservation = { ok: true },
+  buildchainSha = "",
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const source = paperWorkSource(resolvedCwd);
@@ -222,7 +247,14 @@ export function createPaperWorkSubmitPlan({
       entry.headRefName === source.branch &&
       entry.baseRefName === developmentRef,
   );
+  const agentEntry = agentEntryForWork(resolvedCwd, buildchainSha);
   const checks = [
+    workCheck(
+      "agent-entry.current",
+      agentEntry.ok,
+      "The mandatory Buildchain Paper agent-entry contract is current.",
+      "buildchain paper migrate --write --json",
+    ),
     workCheck(
       "repository.canonical-origin",
       source.canonical,
@@ -292,6 +324,9 @@ export function createPaperWorkSubmitPlan({
       remoteSha: remoteWork.sha,
     },
     target: { branch: developmentRef, sha: remoteDevelopment.sha },
+    runtime: {
+      sourceSha: buildchainSha || agentEntry.entry?.runtime?.sourceSha || "",
+    },
     pullRequest: matchingPullRequest || null,
     checks,
     mutation: {

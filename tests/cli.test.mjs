@@ -1897,7 +1897,11 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     ),
   );
   assert.equal(scaffold.ok, true);
-  assert.equal(scaffold.written.length, 14);
+  assert.equal(scaffold.written.length, 18);
+  assert.equal(
+    fs.readFileSync(path.join(paperCwd, "pnpm-workspace.yaml"), "utf8"),
+    `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${version}'\n`,
+  );
   execFileSync("git", ["init", "-q"], { cwd: paperCwd });
   const preflight = JSON.parse(
     execFileSync(
