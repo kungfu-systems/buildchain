@@ -111,6 +111,19 @@ Use `dist/site/manual-registry.json` to find the packaged operating manuals and
 their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
 floating-ref contract world for a runtime such as `@v3`.
 
+For exhaustive lookup, use the generated references rather than scanning this
+conceptual guide:
+
+- [`cli-reference.md`](cli-reference.md) is projected from the governed usage
+  model and runtime command registry. `buildchain <path> --help` is intercepted
+  before dispatch at every listed path, exits zero, and has no command side
+  effects.
+- [`node-api-reference.md`](node-api-reference.md) is projected from
+  `package.json#exports` and exact ESM export declarations. The packaged
+  `dist/site/node-api-registry.json` carries the same per-symbol signatures,
+  parameters, conservative return/error boundaries, side-effect classification,
+  maturity, example import, and source location.
+
 ## Commands
 
 `buildchain create github-artifact-attestation-policy` seals the expected

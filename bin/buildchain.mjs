@@ -14,6 +14,7 @@ import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
 import { runPublicationReproducibilityCli } from "../scripts/publication-reproducibility.mjs";
 import { runPaperCli } from "../scripts/paper.mjs";
 import { BUILDCHAIN_USAGE } from "../scripts/buildchain-cli-help.mjs";
+import { formatCliHelp } from "../scripts/public-reference.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { detectPackageManager } from "../packages/core/package-manager.js";
 import {
@@ -1224,7 +1225,7 @@ async function runProcessTreeSample(sampleArgs = []) {
 }
 
 async function handleHelpCommand(args) {
-    process.stdout.write(BUILDCHAIN_USAGE);
+    process.stdout.write(formatCliHelp({ usageText: BUILDCHAIN_USAGE, pathParts: args }));
     return;
 
 }
@@ -1732,6 +1733,14 @@ const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
 });
 
 async function main(argv = process.argv.slice(2)) {
+  const helpIndex = argv.findIndex((entry) => entry === "--help" || entry === "-h");
+  if (helpIndex >= 0) {
+    process.stdout.write(formatCliHelp({
+      usageText: BUILDCHAIN_USAGE,
+      pathParts: argv.slice(0, helpIndex),
+    }));
+    return;
+  }
   const [command = "help", ...args] = argv;
   return dispatchRegisteredCommand({
     command,

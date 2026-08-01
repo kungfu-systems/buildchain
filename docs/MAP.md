@@ -30,6 +30,20 @@ running artifact), *use* (consume / extend) - and a **status**:
 - `to write` - planned; the material exists but is not yet a single doc.
 - `retired` - intentionally not part of the active Buildchain v3 surface.
 
+## Start by Role or Intent
+
+| Role or intent | First entry | Then |
+| --- | --- | --- |
+| First-time repository adopter | [Golden Path](getting-started.md) | [Lifecycle Protocol](lifecycle-protocol.md) only when the generated defaults need changes |
+| CLI operator or agent | [Generated CLI Reference](cli-reference.md) | [CLI guide](cli.md) for concepts and worked examples |
+| Node toolkit developer | [Generated Node API Reference](node-api-reference.md) | [Core package guide](../packages/core/README.md) for recipes |
+| Build/release operator | [Reusable Build Surface](reusable-build-surface.md) | [Release Flow](release-flow.md) and [Release Passport](release-passport.md) |
+| Product/trust reviewer | [Product Mechanism](product-mechanism.md) | [Release Passport](release-passport.md) and [KFD Support](kfd-support.md) |
+
+These entrypoints keep common destinations within three meaningful hops:
+README or this map, the role entry, and the normative contract or generated
+reference.
+
 ## Capability Coverage
 
 This package should be usable by an agent from the npm artifact alone. The
@@ -44,7 +58,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 
 | Capability group | Primary facts | Primary manuals |
 | --- | --- | --- |
-| Getting Started | `capability-registry.json`, `product-mechanism.json` | [`install.md`](install.md), [`product-mechanism.md`](product-mechanism.md), [`cli.md`](cli.md) |
+| Getting Started | `capability-registry.json`, `product-mechanism.json` | [`getting-started.md`](getting-started.md), [`install.md`](install.md), [`product-mechanism.md`](product-mechanism.md), [`cli.md`](cli.md) |
 | Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `publication-authority-registry.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`github-artifact-attestation.md`](github-artifact-attestation.md), [`publication-authority.md`](publication-authority.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
 | Reusable Build and Lifecycle | `workflow-registry.json`, `controller-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`controller-evidence.md`](controller-evidence.md), [`shifu-gate-profiles.md`](shifu-gate-profiles.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
 | KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
@@ -53,7 +67,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Distribution Indexes and Badges | `badge-endpoint-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`readme-badges.md`](readme-badges.md), [`homebrew.md`](homebrew.md) |
 | Build Facts, Observability, and Diagnostics | `cli-registry.json`, `node-api-registry.json`, lifecycle artifacts | [`build-facts.md`](build-facts.md), [`toolkit-observability.md`](toolkit-observability.md), [`consumer-issue-reporting.md`](consumer-issue-reporting.md) |
 | Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`github-governance-authority.md`](github-governance-authority.md), [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md), [`cli.md`](cli.md) |
-| CLI and Node API Reference | `cli-registry.json`, `node-api-registry.json`, `workflow-registry.json`, `manual-registry.json` | [`cli.md`](cli.md), [`../packages/core/README.md`](../packages/core/README.md) |
+| CLI and Node API Reference | `cli-registry.json`, `node-api-registry.json`, `workflow-registry.json`, `manual-registry.json` | [`cli-reference.md`](cli-reference.md), [`node-api-reference.md`](node-api-reference.md), [`cli.md`](cli.md), [`../packages/core/README.md`](../packages/core/README.md) |
 
 | Capability | Machine-readable entry | Manual entry |
 | --- | --- | --- |
@@ -87,12 +101,13 @@ replace them.
 | Your question | Document | Plane | Status |
 | --- | --- | --- | --- |
 | What is Buildchain, in one idea? | [`../README.md`](../README.md) | - | stable |
+| How do I complete a first clean adoption in 15–30 minutes? | [`getting-started.md`](getting-started.md) | use | stable |
 | Why is Buildchain a Release Passport mechanism rather than a generic workflow collection? | [`product-mechanism.md`](product-mechanism.md) | why | stable |
 | How do agents and contributors enter this repo? | [`../AGENTS.md`](../AGENTS.md) + [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | use | stable |
 | How do I install a standalone binary or npm package? | [`install.md`](install.md) | use | stable |
-| How do I run the `buildchain` CLI? | [`cli.md`](cli.md) | use | stable |
-| How do I import Buildchain toolkit APIs from JavaScript build code? | [`toolkit-observability.md`](toolkit-observability.md) + [`../packages/core/README.md`](../packages/core/README.md) | use | stable |
-| How do I initialize a new repository? | [`cli.md`](cli.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
+| How do I run or look up the `buildchain` CLI? | [`cli-reference.md`](cli-reference.md) + [`cli.md`](cli.md) | use | stable |
+| How do I import Buildchain toolkit APIs from JavaScript build code? | [`node-api-reference.md`](node-api-reference.md) + [`../packages/core/README.md`](../packages/core/README.md) | use | stable |
+| How do I initialize a new repository? | [`getting-started.md`](getting-started.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
 | How do protected dev branches and scheduled ready-PR merging work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |
 | How do slow required checks land reliably on a busy dev channel? | [`release-governance.md`](release-governance.md#protected-dev-branches) + [`cli.md`](cli.md#commands) | use | preview |

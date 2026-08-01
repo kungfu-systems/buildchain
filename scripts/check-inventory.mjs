@@ -15,11 +15,10 @@ import {
   generateChannelPromotionWorkflow,
   parsePromotionShellRouting,
 } from "./generate-channel-promotion-workflow.mjs";
-
+import { assertPublicReferenceRegistry } from "./site-reference-registry.mjs";
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
 const commonJsSourcePattern = /\b(require\s*\(|module\.exports|exports\.|require\.main|createRequire)\b/;
-
 function assertSelfReleaseImpactContract(impact, { expectedVersion = "" } = {}) {
   if (!impact || typeof impact !== "object" || Array.isArray(impact)) {
     throw new Error("Buildchain self release impact must be a JSON object");
@@ -700,6 +699,7 @@ for (const exported of nodeApiRegistry.exports || []) {
   }
   assertPublicLifecycle(exported, `node-api-registry.json export ${exported.export || exported.specifier}`);
 }
+assertPublicReferenceRegistry({ cliRegistry, nodeApiRegistry });
 const workflowRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/workflow-registry.json"), "utf8"));
 for (const workflow of workflowRegistry.workflows || []) {
   assertPublicLifecycle(workflow, `workflow-registry.json workflow ${workflow.id || workflow.path}`);
