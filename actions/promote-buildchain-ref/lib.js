@@ -4571,8 +4571,7 @@ async function promoteBuildchainRefs({
     repo,
     ref: `heads/${targetRef}`,
   });
-  const branchSha = branchRef.object.sha;
-  let advancedPublicationTransaction;
+  const branchSha = branchRef.object.sha; let advancedPublicationTransaction;
   if (branchSha !== sha) {
     if (requireGovernance && !dryRun) {
       const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
@@ -4620,14 +4619,15 @@ async function promoteBuildchainRefs({
           ],
         };
       }
+    } else if (dryRun && publishTransactionOverride && Boolean(publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
+      const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${sha}...${branchSha}` }); const statePrefix = rule.releasePrefix.replace(/^v/, "").replaceAll(".", "-"); const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({ owner, repo, ref: `heads/buildchain/release-state/${statePrefix}-` }); const resumeResolver = rule.channel === "alpha" ? resumableAlphaTransactionState : rule.channel === "release" ? resumableReleaseTransactionState : undefined; const resumable = resumeResolver && await resumeResolver({ octokit, owner, repo, cwd, refs: stateRefs, releasePrefix: rule.releasePrefix, targetRef, sourceSha: sha, expectedVersion: expectedPublicationVersion }); if (comparison.status !== "ahead") throw new Error(`Ref ${targetRef} moved incompatibly from requested SHA ${sha} to ${branchSha} (${comparison.status})`); if (!resumable) throw new Error(`Ref ${targetRef} advanced to ${branchSha}, but no exact resumable transaction accepts requested SHA ${sha}`); advancedPublicationTransaction = resumable.transaction;
     }
     if (!advancedPublicationTransaction) {
       throw new Error(`Ref ${targetRef} points at ${branchSha}, not requested SHA ${sha}`);
     }
   }
 
-  const updates = [];
-  if (advancedPublicationTransaction) {
+  const updates = []; if (advancedPublicationTransaction) {
     updates.push({
       action: "resumed-advanced-publication",
       ref: targetRef,

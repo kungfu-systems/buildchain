@@ -260,6 +260,7 @@ test("governed promotion resumes its exact durable transaction after the target 
   });
   fs.unlinkSync(evidencePath);
 
+  const plan = await promoteBuildchainRefs({ octokit, owner: "kungfu-systems", repo: "buildchain", sha: SHA, targetRef: "alpha/v1/v1.0", cwd, dryRun: true, publishTransaction: true, publishTransactionOverride: true, requireVersionState: false, releasePassport: false }); assert.equal(plan.updates.find((update) => update.action === "dry-run-publish-transaction")?.version, "1.0.0-alpha.0"); assert.equal(plan.updates[0].action, "resumed-advanced-publication");
   const result = await promoteBuildchainRefs({
     octokit,
     owner: "kungfu-systems",
