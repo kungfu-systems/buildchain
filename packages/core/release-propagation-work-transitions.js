@@ -1,4 +1,5 @@
 import {
+  normalizeFamilyStateReference,
   normalizeWorkAuthority,
   normalizeTypedReference,
 } from "./release-propagation-work-control.js";
@@ -13,17 +14,27 @@ import {
   withWorkRoot,
 } from "./release-propagation-work.js";
 
-export function claimReleasePropagationWork({ work, expectedWorkRoot, authority } = {}) {
+export function claimReleasePropagationWork({
+  work,
+  expectedWorkRoot,
+  authority,
+  familyState,
+} = {}) {
   const current = verifyReleasePropagationWork(work).work;
   assertExpectedWorkRoot(current, expectedWorkRoot);
   if (current.state.lifecycle !== "paused" || current.state.nextAction.action !== "claim") {
     throw new Error("only paused capture-only propagation work can be claimed");
   }
-  const normalizedAuthority = normalizeWorkAuthority(authority, current.workControl.familyState);
+  const normalizedFamilyState = current.workControl.bindingState === "bound"
+    ? current.workControl.familyState
+    : normalizeFamilyStateReference(familyState);
+  const normalizedAuthority = normalizeWorkAuthority(authority, normalizedFamilyState);
   if (normalizedAuthority.mode !== "execute") {
     throw new Error("claim requires execute authority");
   }
   const successor = successorWork(current);
+  successor.workControl.bindingState = "bound";
+  successor.workControl.familyState = normalizedFamilyState;
   successor.authority = normalizedAuthority;
   successor.intent.publishToProduction = normalizedAuthority.publishToProduction;
   successor.state.lifecycle = "ready";
@@ -126,4 +137,3 @@ export function completeReleasePropagationWork({
   successor.state.nextAction = nextWorkAction(successor, "none", "", "production-visible-and-work-control-accepted");
   return verifyReleasePropagationWork(withWorkRoot(successor)).work;
 }
-

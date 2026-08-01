@@ -6,9 +6,9 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 230,
-    "maxHandMaintainedSourceLines": 90457,
+    "maxHandMaintainedSourceLines": 90553,
     "maxWorkflowFiles": 57,
-    "maxWorkflowLines": 19483,
+    "maxWorkflowLines": 19498,
     "rationale": "The structural hardening, bounded AWS Windows JIT controller, and agent-native Paper-to-Site propagation closure may add responsibility-owned modules and exact workflow evidence stages but must remain below these exact repository-wide ceilings. The new allowance binds typed Work Control, deterministic recovery, npm and Git source coherence, and production readback instead of duplicated delivery behavior; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
@@ -104,6 +104,7 @@
         "reusable": true,
         "inputs": [
           "agent-work-context-json",
+          "agent-work-mode",
           "buildchain-ref",
           "buildchain-repository",
           "downstream-base-ref",

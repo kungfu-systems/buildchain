@@ -34,8 +34,8 @@ function usage() {
                                          [--observed-at <iso-8601>]
                                          [--output <file>] [--json]
   buildchain release-propagation work create --plan <json-or-path>
-                                            --work-context <json-or-path>
                                             --expected-downstream-base-sha <git-sha>
+                                            [--work-context <json-or-path>]
                                             [--target <id-or-repo>]
                                             [--output <file>] [--json]
   buildchain release-propagation work status --work <json-or-path> [--json]
@@ -43,6 +43,7 @@ function usage() {
   buildchain release-propagation work claim --work <json-or-path>
                                            --authority <json-or-path>
                                            --expected-work-root <sha256:...>
+                                           [--family-state <json-or-path>]
                                            [--output <file>] [--json]
   buildchain release-propagation work receipt --work <json-or-path>
                                              --receipt-input <json-or-path>
@@ -91,6 +92,10 @@ function readJsonFlag(args, name) {
   });
 }
 
+function readOptionalJsonFlag(args, name) {
+  return args.includes(`--${name}`) ? readJsonFlag(args, name) : undefined;
+}
+
 function emitWorkResult(args, value, summary) {
   writeOutput(readFlag(args, "output", ""), value);
   if (hasFlag(args, "json")) {
@@ -110,7 +115,7 @@ function runWorkCli(args) {
     const result = createReleasePropagationWork({
       plan: readJsonFlag(workArgs, "plan"),
       target: readFlag(workArgs, "target", ""),
-      workContext: readJsonFlag(workArgs, "work-context"),
+      workContext: readOptionalJsonFlag(workArgs, "work-context"),
       expectedDownstreamBaseSha: readFlag(workArgs, "expected-downstream-base-sha"),
     });
     emitWorkResult(workArgs, result, `release propagation work: ${result.contentRoot}`);
@@ -128,6 +133,7 @@ function runWorkCli(args) {
     const result = claimReleasePropagationWork({
       work: readJsonFlag(workArgs, "work"),
       authority: readJsonFlag(workArgs, "authority"),
+      familyState: readOptionalJsonFlag(workArgs, "family-state"),
       expectedWorkRoot: readFlag(workArgs, "expected-work-root"),
     });
     emitWorkResult(workArgs, result, `release propagation work claimed: ${result.contentRoot}`);

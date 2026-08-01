@@ -2291,6 +2291,7 @@
       "reusable": true,
       "inputs": [
         "agent-work-context-json",
+        "agent-work-mode",
         "buildchain-ref",
         "buildchain-repository",
         "downstream-base-ref",
@@ -2309,7 +2310,7 @@
         "source-node",
         "upstream-release-json"
       ],
-      "inputCount": 18,
+      "inputCount": 19,
       "secrets": [
         "propagation-token"
       ],

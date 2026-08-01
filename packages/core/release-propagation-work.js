@@ -8,6 +8,7 @@ import {
 } from "./release-propagation-common.js";
 import { normalizeExecutionProfile } from "./release-propagation-execution-profile.js";
 import { normalizeUpstreamRelease } from "./release-propagation-release.js";
+import { resolveWorkContext } from "./release-propagation-work-capture.js";
 import {
   assertCommitSha,
   assertContentRoot,
@@ -90,7 +91,7 @@ function workCommands(executionProfile = null, repository = "", branch = "", bas
 
 export function nextWorkAction(work, action, stage, reason = "") {
   const command = action === "claim"
-    ? "buildchain release-propagation work claim --work <work.json> --authority <authority.json> --expected-work-root <sha256:...> --output <successor.json> --json"
+    ? "buildchain release-propagation work claim --work <work.json> --family-state <family-state.json> --authority <authority.json> --expected-work-root <sha256:...> --output <successor.json> --json"
     : action === "none"
       ? ""
       : action === "repair"
@@ -112,13 +113,7 @@ export function createReleasePropagationWork({
   expectedDownstreamBaseSha,
 } = {}) {
   const { selectedPlan, selected, propagationKey } = selectPropagationTarget(plan, target);
-  const context = assertExactFields(workContext, [
-    "parentWorkRef",
-    "childWorkRef",
-    "familyState",
-    "authority",
-    "supersedesWorkRoot",
-  ], "workContext");
+  const context = resolveWorkContext(workContext, selectedPlan, selected, propagationKey);
   const parentWorkRef = normalizeWorkRef(context.parentWorkRef, "workContext.parentWorkRef");
   const childWorkRef = normalizeWorkRef(context.childWorkRef, "workContext.childWorkRef");
   if (childWorkRef.object_kind !== "assignment") {
@@ -128,7 +123,9 @@ export function createReleasePropagationWork({
       && parentWorkRef.workspace_identity_root === childWorkRef.workspace_identity_root) {
     throw new Error("parent and child WorkRefs must identify different work");
   }
-  const familyState = normalizeFamilyStateReference(context.familyState);
+  const familyState = context.bindingState === "bound"
+    ? normalizeFamilyStateReference(context.familyState)
+    : null;
   const authority = normalizeWorkAuthority(context.authority, familyState);
   const supersedesWorkRoot = assertContentRoot(
     context.supersedesWorkRoot,
@@ -139,7 +136,6 @@ export function createReleasePropagationWork({
     propagationKey,
     parentWorkRef,
     childWorkRef,
-    familyStateRoot: familyState.stateRoot,
   };
   const identityRoot = contentRoot(identity);
   const workId = `propagation-${propagationKey.slice(0, 16)}-${identityRoot.slice(-12)}`;
@@ -175,7 +171,12 @@ export function createReleasePropagationWork({
       releaseLock: structuredClone(selected.lock),
       executionProfile: structuredClone(selected.executionProfile),
     },
-    workControl: { parentWorkRef, childWorkRef, familyState },
+    workControl: {
+      bindingState: context.bindingState,
+      parentWorkRef,
+      childWorkRef,
+      familyState,
+    },
     intent: { publishToProduction: authority.publishToProduction },
     authority,
     deduplication: {
@@ -406,7 +407,7 @@ function verifyWorkRelease(work) {
 function verifyWorkControl(work) {
   const workControl = assertExactFields(
     work.workControl,
-    ["parentWorkRef", "childWorkRef", "familyState"],
+    ["bindingState", "parentWorkRef", "childWorkRef", "familyState"],
     "release propagation work Work Control",
   );
   const parentWorkRef = normalizeWorkRef(
@@ -417,8 +418,19 @@ function verifyWorkControl(work) {
     workControl.childWorkRef,
     "release propagation work childWorkRef",
   );
-  const familyState = normalizeFamilyStateReference(workControl.familyState);
+  if (!new Set(["pending", "bound"]).has(workControl.bindingState)) {
+    throw new Error("release propagation work binding state is unsupported");
+  }
+  const familyState = workControl.bindingState === "bound"
+    ? normalizeFamilyStateReference(workControl.familyState)
+    : null;
+  if (workControl.bindingState === "pending" && workControl.familyState !== null) {
+    throw new Error("pending propagation work cannot claim a Family State");
+  }
   const authority = normalizeWorkAuthority(work.authority, familyState);
+  if (workControl.bindingState === "pending" && authority.mode !== "capture-only") {
+    throw new Error("pending propagation work must remain capture-only");
+  }
   const intent = assertExactFields(
     work.intent,
     ["publishToProduction"],
@@ -431,7 +443,6 @@ function verifyWorkControl(work) {
     propagationKey: work.propagationKey,
     parentWorkRef,
     childWorkRef,
-    familyStateRoot: familyState.stateRoot,
   });
   const deduplication = assertExactFields(work.deduplication, [
     "identityRoot", "propagationKey", "supersedesWorkRoot", "policy",
@@ -521,6 +532,9 @@ function verifyWorkReceipts(work, state, cursor, familyState) {
     throw new Error("release propagation work successful receipts do not match canonical stage order");
   }
   if (state.lifecycle === "complete") {
+    if (!familyState) {
+      throw new Error("complete propagation work requires a bound Family State");
+    }
     normalizeTypedReference(work.completionDecision, {
       kind: "decision",
       status: "accepted",

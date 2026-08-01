@@ -343,6 +343,42 @@ test("capture-only propagation stays paused until an exact active Warrant claims
   assert.equal(claimed.previousWorkRoot, captured.contentRoot);
 });
 
+test("automatic capture emits deterministic typed WorkRefs and binds Family State only when claimed", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  const captured = createReleasePropagationWork({
+    plan,
+    target: "site-libkungfu-dev",
+    expectedDownstreamBaseSha: "b".repeat(40),
+  });
+  const repeated = createReleasePropagationWork({
+    plan,
+    target: "site-libkungfu-dev",
+    expectedDownstreamBaseSha: "b".repeat(40),
+  });
+  assert.equal(captured.contentRoot, repeated.contentRoot);
+  assert.equal(captured.workControl.bindingState, "pending");
+  assert.equal(captured.workControl.familyState, null);
+  assert.equal(captured.authority.mode, "capture-only");
+  assert.equal(captured.state.nextAction.action, "claim");
+  assert.match(captured.workControl.parentWorkRef.subject, /^buildchain:release:/);
+  assert.match(captured.workControl.childWorkRef.subject, /^buildchain:propagation:/);
+
+  const context = propagationWorkContext("execute");
+  const claimed = claimReleasePropagationWork({
+    work: captured,
+    expectedWorkRoot: captured.contentRoot,
+    familyState: context.familyState,
+    authority: context.authority,
+  });
+  assert.equal(claimed.workId, captured.workId);
+  assert.equal(claimed.workControl.bindingState, "bound");
+  assert.deepEqual(claimed.workControl.familyState, context.familyState);
+  assert.equal(claimed.authority.mode, "execute");
+});
+
 test("propagation work resumes retryable failure and completes only after online readback plus Work Control decision", () => {
   const plan = planReleasePropagation({
     graph: readJson("graph.json"),
@@ -563,8 +599,9 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
   assert.match(workflow, /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/);
   assert.equal(workflow.includes("node bin/buildchain.mjs release-propagation"), false);
   assert.ok(
-    (workflow.match(/node \.buildchain\/runtime\/bin\/buildchain\.mjs release-propagation/g) || []).length >= 9,
+    (workflow.match(/node \.buildchain\/runtime\/bin\/buildchain\.mjs release-propagation/g) || []).length >= 8,
   );
+  assert.match(workflow, /node \.buildchain\/runtime\/bin\/buildchain\.mjs "\$\{args\[@\]\}"/);
   assert.match(workflow, /LOCK_PATH: \$\{\{ steps\.plan\.outputs\.lock_path \}\}/);
   assert.match(workflow, /downstream-prepare-command:/);
   assert.match(workflow, /BUILDCHAIN_UPSTREAM_PACKAGE_VERSION:/);
@@ -604,6 +641,8 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
   assert.match(workflow, /bash --noprofile --norc -e -u -o pipefail -c "\$DOWNSTREAM_UPDATE_COMMAND"/);
   assert.match(workflow, /release-propagation receipt/);
   assert.match(workflow, /agent-work-context-json:/);
+  assert.match(workflow, /agent-work-mode:/);
+  assert.match(workflow, /agent-work-mode == 'capture-only'/);
   assert.match(workflow, /release-propagation work create/);
   assert.match(workflow, /release-propagation work receipt/);
   assert.match(workflow, /release-propagation work record/);

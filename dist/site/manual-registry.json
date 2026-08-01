@@ -136,7 +136,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:070f8763607a7511c273ade5299ead36cef4d3a55c3e130f3ef92ae86a45eae8",
+      "digest": "sha256:fcec7575ff1d4da4c1ac3db6e074e30db9d4133e55e9797de1d6d8aa584efd6c",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",

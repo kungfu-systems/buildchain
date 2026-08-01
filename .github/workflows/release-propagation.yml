@@ -83,6 +83,11 @@ on:
         default: ""
         required: false
         type: string
+      agent-work-mode:
+        description: "legacy preserves existing execution; capture-only emits a paused typed work unit without downstream mutation"
+        default: "legacy"
+        required: false
+        type: string
       dry-run:
         description: "Plan and write lock without pushing a PR"
         default: true
@@ -230,10 +235,14 @@ jobs:
           GRAPH_JSON: ${{ inputs.graph-json }}
           UPSTREAM_RELEASE_JSON: ${{ inputs.upstream-release-json }}
           AGENT_WORK_CONTEXT_JSON: ${{ inputs.agent-work-context-json }}
+          AGENT_WORK_MODE: ${{ inputs.agent-work-mode }}
         run: |
           mkdir -p .buildchain/release-propagation
           node <<'NODE'
           const fs = require("fs");
+          if (!["legacy", "capture-only"].includes(process.env.AGENT_WORK_MODE)) {
+            throw new Error("agent-work-mode must be legacy or capture-only");
+          }
           fs.writeFileSync(".buildchain/release-propagation/graph.json", `${process.env.GRAPH_JSON}\n`);
           fs.writeFileSync(".buildchain/release-propagation/upstream-release.json", `${process.env.UPSTREAM_RELEASE_JSON}\n`);
           if (process.env.AGENT_WORK_CONTEXT_JSON) {
@@ -296,16 +305,22 @@ jobs:
 
       - name: Create agent-native propagation work
         id: propagation-work
-        if: ${{ inputs.agent-work-context-json != '' }}
+        if: ${{ inputs.agent-work-mode == 'capture-only' || inputs.agent-work-context-json != '' }}
         shell: bash
         run: |
-          node .buildchain/runtime/bin/buildchain.mjs release-propagation work create \
-            --plan .buildchain/release-propagation/plan.json \
-            --target "${{ inputs.downstream-target }}" \
-            --work-context .buildchain/release-propagation/work-context.json \
-            --expected-downstream-base-sha "${{ steps.branch.outputs.base_sha }}" \
-            --output .buildchain/release-propagation/work.json \
-            --json > .buildchain/release-propagation/work.stdout.json
+          args=(
+            release-propagation work create
+            --plan .buildchain/release-propagation/plan.json
+            --target "${{ inputs.downstream-target }}"
+            --expected-downstream-base-sha "${{ steps.branch.outputs.base_sha }}"
+            --output .buildchain/release-propagation/work.json
+            --json
+          )
+          if [ -f .buildchain/release-propagation/work-context.json ]; then
+            args+=(--work-context .buildchain/release-propagation/work-context.json)
+          fi
+          node .buildchain/runtime/bin/buildchain.mjs "${args[@]}" \
+            > .buildchain/release-propagation/work.stdout.json
           node <<'NODE'
           const fs = require("fs");
           const work = JSON.parse(fs.readFileSync(".buildchain/release-propagation/work.json", "utf8"));
@@ -314,7 +329,7 @@ jobs:
 
       - name: Write downstream release lock
         id: lock
-        if: ${{ inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true' }}
+        if: ${{ (inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true' }}
         shell: bash
         run: |
           node .buildchain/runtime/bin/buildchain.mjs release-propagation write-lock \
@@ -331,7 +346,7 @@ jobs:
 
       - name: Apply consumer-owned downstream update
         id: downstream-update
-        if: ${{ (inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-update-command != '' || steps.plan.outputs.update_command != '') }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-update-command != '' || steps.plan.outputs.update_command != '') }}
         shell: bash
         working-directory: downstream
         env:
@@ -345,7 +360,7 @@ jobs:
 
       - name: Prepare downstream release update
         id: prepare
-        if: ${{ (inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-prepare-command != '' || steps.plan.outputs.prepare_command != '') }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-prepare-command != '' || steps.plan.outputs.prepare_command != '') }}
         shell: bash
         working-directory: downstream
         env:
@@ -357,7 +372,7 @@ jobs:
 
       - name: Refresh managed README badges
         id: badges
-        if: ${{ (inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true') && inputs.refresh-managed-readme-badges }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && inputs.refresh-managed-readme-badges }}
         shell: bash
         working-directory: downstream
         run: |
@@ -369,7 +384,7 @@ jobs:
 
       - name: Verify downstream release update
         id: verify
-        if: ${{ (inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-verify-command != '' || steps.plan.outputs.verify_command != '') }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && (inputs.downstream-verify-command != '' || steps.plan.outputs.verify_command != '') }}
         shell: bash
         working-directory: downstream
         env:
@@ -380,7 +395,7 @@ jobs:
         run: bash -euo pipefail -c "$BUILDCHAIN_DOWNSTREAM_VERIFY_COMMAND"
 
       - name: Record materialization and release verification
-        if: ${{ inputs.agent-work-context-json != '' && steps.propagation-work.outputs.execute == 'true' && steps.lock.outcome == 'success' && steps.downstream-update.outcome != 'failure' && steps.prepare.outcome != 'failure' && steps.badges.outcome != 'failure' && steps.verify.outcome != 'failure' }}
+        if: ${{ steps.propagation-work.outputs.execute == 'true' && steps.lock.outcome == 'success' && steps.downstream-update.outcome != 'failure' && steps.prepare.outcome != 'failure' && steps.badges.outcome != 'failure' && steps.verify.outcome != 'failure' }}
         shell: bash
         env:
           LOCK_SHA: ${{ steps.lock.outputs.lock_sha }}
@@ -421,7 +436,7 @@ jobs:
 
       - name: Summarize release propagation
         id: summarize
-        if: ${{ inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true' }}
+        if: ${{ (inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true' }}
         shell: bash
         run: |
           {
@@ -438,7 +453,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Prepare propagation PR outcome
-        if: ${{ inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true' }}
+        if: ${{ (inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true' }}
         shell: bash
         env:
           BRANCH: ${{ steps.plan.outputs.branch }}
@@ -455,7 +470,7 @@ jobs:
 
       - name: Create or update downstream PR
         id: open-pr
-        if: ${{ (inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true') && !inputs.dry-run }}
+        if: ${{ ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && !inputs.dry-run }}
         shell: bash
         working-directory: downstream
         env:
@@ -574,7 +589,7 @@ jobs:
 
       - name: Create exact propagation receipt
         id: propagation-receipt
-        if: ${{ always() && (inputs.agent-work-context-json == '' || steps.propagation-work.outputs.execute == 'true') && steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && (inputs.dry-run || steps.open-pr.outcome == 'success') }}
+        if: ${{ always() && ((inputs.agent-work-mode == 'legacy' && inputs.agent-work-context-json == '') || steps.propagation-work.outputs.execute == 'true') && steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && (inputs.dry-run || steps.open-pr.outcome == 'success') }}
         shell: bash
         run: |
           node .buildchain/runtime/bin/buildchain.mjs release-propagation receipt \
@@ -594,7 +609,7 @@ jobs:
           NODE
 
       - name: Record pushed branch and pull request
-        if: ${{ inputs.agent-work-context-json != '' && steps.propagation-work.outputs.execute == 'true' && !inputs.dry-run && steps.open-pr.outcome == 'success' }}
+        if: ${{ steps.propagation-work.outputs.execute == 'true' && !inputs.dry-run && steps.open-pr.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -638,7 +653,7 @@ jobs:
 
       - name: Expose agent-native propagation work
         id: propagation-work-output
-        if: ${{ always() && inputs.agent-work-context-json != '' && steps.propagation-work.outcome == 'success' }}
+        if: ${{ always() && steps.propagation-work.outcome == 'success' }}
         shell: bash
         run: |
           node .buildchain/runtime/bin/buildchain.mjs release-propagation work status \
@@ -652,7 +667,7 @@ jobs:
           NODE
 
       - name: Upload agent-native propagation work
-        if: ${{ always() && inputs.agent-work-context-json != '' && steps.propagation-work.outcome == 'success' }}
+        if: ${{ always() && steps.propagation-work.outcome == 'success' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-release-propagation-work-${{ steps.plan.outputs.propagation_key }}
@@ -692,7 +707,7 @@ jobs:
           if-no-files-found: error
 
       - name: Enforce qualifying release-propagation controller receipt
-        if: ${{ always() && !(inputs.agent-work-context-json != '' && steps.propagation-work.outputs.execute != 'true') && steps.controller-plan.outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        if: ${{ always() && !(steps.propagation-work.outcome == 'success' && steps.propagation-work.outputs.execute != 'true') && steps.controller-plan.outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
         run: |
           echo "::error::release-propagation controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
           exit 1

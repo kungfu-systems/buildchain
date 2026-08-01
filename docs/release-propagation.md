@@ -205,8 +205,10 @@ Package publication or alpha completion never implies either visibility state.
 
 ## Agent-native work envelope
 
-Passing an exact `agent-work-context-json` upgrades the PR controller into a
-resumable delivery handoff. Buildchain emits one
+Setting `agent-work-mode: capture-only` makes a finalized release emit a
+resumable delivery handoff without mutating the downstream repository. Passing
+an exact `agent-work-context-json` instead emits an already-authorized unit.
+Buildchain emits one
 `kungfu-buildchain-release-propagation-work` v1 envelope per exact release and
 downstream target. This is a Buildchain domain execution contract, not another
 Work Control database or authority.
@@ -216,8 +218,10 @@ The envelope binds:
 - the exact normalized upstream release and release-lock roots;
 - the downstream repository, channel, base ref, expected base SHA, managed
   branch, lock path, and propagation key;
-- exact parent and child `kungfu.assignment-graph.work-ref/v1` values;
-- one exact `kungfu.work-control.initiative-family-state/v2` coordinate;
+- exact parent and child `kungfu.assignment-graph.work-ref/v1` values derived
+  from the immutable release and downstream plan;
+- either a pending Family binding or one exact
+  `kungfu.work-control.initiative-family-state/v2` coordinate;
 - capture-only or end-to-end execution authority, including an active typed
   execution-Warrant reference for execution;
 - explicit publish-to-production intent, deterministic commands, canonical
@@ -277,11 +281,17 @@ The context has this shape (roots abbreviated here only for readability):
 }
 ```
 
-Capture-only input emits a paused, unclaimed unit and performs no downstream
-write. An executing input must carry an active Warrant at the same Family State
-fact world and cut, explicit production intent, and the complete supported
-action set. Buildchain never infers a missing WorkRef, Family binding, Warrant,
-or authority.
+Automatic capture emits deterministic Buildchain-owned release and propagation
+WorkRefs, leaves `workControl.bindingState` as `pending`, emits no Family State
+or Warrant, and performs no downstream write. Claiming that unit supplies the
+exact Family State v2 coordinate and active Warrant while preserving the work
+identity. An executing input must carry an active Warrant at the same Family
+State fact world and cut, explicit production intent, and the complete supported
+action set. Buildchain never invents external Work Control authority.
+
+The reusable workflow keeps its prior behavior when `agent-work-mode` is
+`legacy` (the default). Managed Paper callers set `capture-only`; an Agent later
+claims the emitted artifact and resumes from its machine-readable `next_action`.
 
 Agent entrypoints are machine-readable and restart-safe:
 

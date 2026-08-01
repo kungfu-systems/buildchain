@@ -2125,6 +2125,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "agent-work-mode": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "buildchain-ref": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -2249,7 +2253,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:9041f58461ffd70320dce2411e4c9afe61026465dd9efc745ffe786862fc4e21"
+      "digest": "sha256:660579b5561e8e33375a3f3b1fefbb8a5bd8241a55ba43374d786fb772c24a12"
     },
     {
       "schemaVersion": 1,
@@ -2298,5 +2302,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:bd7d43729d578e72402a46c99d22c527208e4df81ece52f94549703ec4ee68b8"
+  "digest": "sha256:365541ae05fb807ed5ca3e80662ea5fa3b1d0cd13db5b56e444a4596b7b899f2"
 }

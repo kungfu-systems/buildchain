@@ -2352,6 +2352,7 @@
         "reusable": true,
         "inputs": [
           "agent-work-context-json",
+          "agent-work-mode",
           "buildchain-ref",
           "buildchain-repository",
           "downstream-base-ref",
@@ -2370,7 +2371,7 @@
           "source-node",
           "upstream-release-json"
         ],
-        "inputCount": 18,
+        "inputCount": 19,
         "secrets": [
           "propagation-token"
         ],
@@ -4565,8 +4566,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5a9eac28d00c78601d49226f8ba63896a0a22c51f6e5eff97f4cea5a572c355d",
-    "workflowRegistryDigest": "6cbf3234bcfc3add4e6f51111ad5788f7f4259d25db7e3e3bfd1215bd4bcdd25",
-    "pageRegistryDigest": "1ad815709f987aaa9e080503cc0fdca30208211079987af470479d5339ba1630"
+    "workflowRegistryDigest": "f7ee4b85a179039ac13a2fe164fb9cf5e92d3e7efc18bb3b115dc869cc4b052b",
+    "pageRegistryDigest": "21e65434e5ce943d00d4886b190b3947e62defbf8fb06a593b978b02a010299a"
   },
   "comparison": {
     "missingCliRegistry": [],

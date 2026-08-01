@@ -170,6 +170,9 @@ export function normalizeWorkAuthority(value, familyState) {
   if (!authority.publishToProduction) {
     throw new Error("execute authority must explicitly carry publish-to-production intent");
   }
+  if (!familyState) {
+    throw new Error("execute authority requires a bound Family State v2 reference");
+  }
   if (JSON.stringify(allowedActions) !== JSON.stringify([...EXECUTION_ACTIONS].sort())) {
     throw new Error("execute authority must cover the complete propagation stage set");
   }
