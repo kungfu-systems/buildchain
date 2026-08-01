@@ -222,7 +222,10 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
     releaseWorkflow,
     /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: \$\{\{ secrets\.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY \}\}/,
   );
-  assert.doesNotMatch(releaseWorkflow, /BUILDCHAIN_PROMOTION_TOKEN/);
+  assert.match(
+    releaseWorkflow,
+    /BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
 
   initGit(cwd);
   const validation = JSON.parse(
@@ -492,6 +495,30 @@ test("paper agent entry is managed, preserves repository instructions, and fails
     },
   });
   assert.equal(acceptedReleasePromotion.ok, true);
+  const acceptedGeneratedVersionState = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "ci",
+    env: {
+      GITHUB_EVENT_NAME: "pull_request",
+      GITHUB_HEAD_REF:
+        "buildchain/version-state/dev-v0-v0.1/ece28683b2bd",
+      GITHUB_BASE_REF: "dev/v0/v0.1",
+    },
+  });
+  assert.equal(acceptedGeneratedVersionState.ok, true);
+  const wrongGeneratedVersionStateTarget = collectPaperAgentEntry({
+    cwd,
+    buildchainSha: runtimeSha,
+    mode: "ci",
+    env: {
+      GITHUB_EVENT_NAME: "pull_request",
+      GITHUB_HEAD_REF:
+        "buildchain/version-state/alpha-v0-v0.1/ece28683b2bd",
+      GITHUB_BASE_REF: "dev/v0/v0.1",
+    },
+  });
+  assert.equal(wrongGeneratedVersionStateTarget.ok, false);
   const wrongBase = collectPaperAgentEntry({
     cwd,
     buildchainSha: runtimeSha,
