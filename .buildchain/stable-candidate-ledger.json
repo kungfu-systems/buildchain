@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-07-31T20:15:58.757Z"
+    "updatedAt": "2026-08-01T20:06:56.470Z"
   },
   "candidates": [
     {
@@ -764,9 +764,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-31T20:15:58.757Z",
+        "observedAt": "2026-08-01T20:06:56.470Z",
         "soakStartedAt": "2026-07-30T10:19:42.000Z",
-        "soakElapsedSeconds": 122176,
+        "soakElapsedSeconds": 208034,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -791,7 +791,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-31T20:15:58.757Z",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -812,9 +812,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-31T20:15:58.757Z",
+        "observedAt": "2026-08-01T20:06:56.470Z",
         "soakStartedAt": "2026-07-31T13:57:29.000Z",
-        "soakElapsedSeconds": 22709,
+        "soakElapsedSeconds": 108567,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -839,7 +839,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-31T20:15:58.757Z",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -852,9 +852,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-31T20:15:58.757Z",
+        "observedAt": "2026-08-01T20:06:56.470Z",
         "soakStartedAt": "2026-07-31T15:40:10.000Z",
-        "soakElapsedSeconds": 16548,
+        "soakElapsedSeconds": 102406,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -879,7 +879,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-31T20:15:58.757Z",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -892,9 +892,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-31T20:15:58.757Z",
+        "observedAt": "2026-08-01T20:06:56.470Z",
         "soakStartedAt": "2026-07-31T16:16:47.000Z",
-        "soakElapsedSeconds": 14351,
+        "soakElapsedSeconds": 100209,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -919,7 +919,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-31T20:15:58.757Z",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -930,9 +930,537 @@
         "requestedAt": "2026-07-31T20:15:58.757Z",
         "authority": "policy"
       }
+    },
+    {
+      "version": "3.0.4-alpha.0",
+      "stableVersion": "3.0.4",
+      "sha": "a9e45de75089115bea3541abe1b59e32252fe800",
+      "tag": "v3.0.4-alpha.0",
+      "publishedAt": "2026-08-01T00:23:25.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T00:28:54.000Z",
+        "soakElapsedSeconds": 70682,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T00:23:25.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.0"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T00:17:40.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30675016648"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T00:28:54.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30675578439"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.1",
+      "stableVersion": "3.0.4",
+      "sha": "7c8ee52fa67aa8599e86fed9a49873a867c74dbe",
+      "tag": "v3.0.4-alpha.1",
+      "publishedAt": "2026-08-01T01:02:02.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T01:08:19.000Z",
+        "soakElapsedSeconds": 68317,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T01:02:02.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.1"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T00:58:53.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30676718562"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T01:08:19.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30677161902"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.2",
+      "stableVersion": "3.0.4",
+      "sha": "567ead5b6ee8f1ced75bab62609387ea8820e0f9",
+      "tag": "v3.0.4-alpha.2",
+      "publishedAt": "2026-08-01T01:30:07.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T01:35:50.000Z",
+        "soakElapsedSeconds": 66666,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T01:30:07.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.2"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T01:27:00.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30677810121"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T01:35:50.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30678211656"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.3",
+      "stableVersion": "3.0.4",
+      "sha": "9a2ae728cfa8e34f87b31791d83db56977b3e9ce",
+      "tag": "v3.0.4-alpha.3",
+      "publishedAt": "2026-08-01T07:33:55.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T07:41:28.000Z",
+        "soakElapsedSeconds": 44728,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T07:33:55.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.3"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T07:29:20.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30689724367"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T07:41:28.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30690198719"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.4",
+      "stableVersion": "3.0.4",
+      "sha": "4a24064fa0f341ebb0091840479212a19a131b8e",
+      "tag": "v3.0.4-alpha.4",
+      "publishedAt": "2026-08-01T08:08:40.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T08:15:14.000Z",
+        "soakElapsedSeconds": 42702,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T08:08:40.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.4"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T08:00:34.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30690737292"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T08:15:14.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30691344358"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.5",
+      "stableVersion": "3.0.4",
+      "sha": "e4d4789b97b1423869ca383f378057265f96a783",
+      "tag": "v3.0.4-alpha.5",
+      "publishedAt": "2026-08-01T09:24:44.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T09:29:35.000Z",
+        "soakElapsedSeconds": 38241,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T09:24:44.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.5"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T09:20:24.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30693437838"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T09:29:35.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30693808564"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.6",
+      "stableVersion": "3.0.4",
+      "sha": "d9836f820f574c5af03654808dbde99c6a9e654c",
+      "tag": "v3.0.4-alpha.6",
+      "publishedAt": "2026-08-01T11:14:44.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T11:20:59.000Z",
+        "soakElapsedSeconds": 31557,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T11:14:44.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.6"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T11:09:48.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30697043535"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T11:20:59.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30697467099"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.7",
+      "stableVersion": "3.0.4",
+      "sha": "8fe62572a6bdfe226c2410ca84adc7ebc5028f67",
+      "tag": "v3.0.4-alpha.7",
+      "publishedAt": "2026-08-01T12:03:07.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T12:08:34.000Z",
+        "soakElapsedSeconds": 28702,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T12:03:07.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.7"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T11:59:10.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30698649688"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T12:08:34.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30699047055"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.8",
+      "stableVersion": "3.0.4",
+      "sha": "10c5f118c2f15a0044b2547e3ae3843c684a109a",
+      "tag": "v3.0.4-alpha.8",
+      "publishedAt": "2026-08-01T12:54:33.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T13:00:25.000Z",
+        "soakElapsedSeconds": 25591,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T12:54:33.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.8"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T12:50:43.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30700376186"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T13:00:25.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30700788000"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.9",
+      "stableVersion": "3.0.4",
+      "sha": "8ae6b884bc26eded58ad410f2738822a898de1ef",
+      "tag": "v3.0.4-alpha.9",
+      "publishedAt": "2026-08-01T13:13:07.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T13:18:26.000Z",
+        "soakElapsedSeconds": 24510,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T13:13:07.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.9"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T13:07:42.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30700972525"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T13:18:26.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30701420448"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.10",
+      "stableVersion": "3.0.4",
+      "sha": "29db83180dd80d847ebdf619b0f10333b2e3e52a",
+      "tag": "v3.0.4-alpha.10",
+      "publishedAt": "2026-08-01T14:08:57.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "2026-08-01T14:15:22.000Z",
+        "soakElapsedSeconds": 21094,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T14:08:57.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.10"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T14:03:27.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30702839401"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-01T14:15:22.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30703351267"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      },
+      "promotionRequest": {
+        "stableTag": "v3.0.4",
+        "sourceRef": "publish-gate/release/v3/v3.0/3.0.4-alpha.10",
+        "targetRef": "release/v3/v3.0",
+        "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/2192",
+        "requestedAt": "2026-08-01T20:06:56.470Z",
+        "authority": "policy"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.12",
+      "stableVersion": "3.0.4",
+      "sha": "463422e35ac8e0dd13e14402ca2acbeefb5c06c6",
+      "tag": "v3.0.4-alpha.12",
+      "publishedAt": "2026-08-01T17:56:31.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T17:56:31.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.12"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T15:38:11.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30706225356"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.4-alpha.13",
+      "stableVersion": "3.0.4",
+      "sha": "3e4615ee1abbbb38ad5558c8ba073f35a74f54a0",
+      "tag": "v3.0.4-alpha.13",
+      "publishedAt": "2026-08-01T18:02:38.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-01T20:06:56.470Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-01T18:02:38.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.4-alpha.13"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-01T15:59:01.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30707002912"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "actor": "buildchain-patrol"
+      }
     }
   ],
-  "updatedAt": "2026-07-31T20:15:58.757Z",
+  "updatedAt": "2026-08-01T20:06:56.470Z",
   "stableReleases": [
     {
       "version": "3.0.2",
@@ -1035,12 +1563,6 @@
       "tag": "v2.14.4",
       "publishedAt": "2026-07-20T20:24:13Z",
       "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.4"
-    },
-    {
-      "version": "2.14.3",
-      "tag": "v2.14.3",
-      "publishedAt": "2026-07-19T14:37:49Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.3"
     }
   ]
 }
