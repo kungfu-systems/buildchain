@@ -74,6 +74,7 @@ export {
   collectPaperFleetAudit,
   discoverPaperFleet,
   planPaperFleetUpdate,
+  paperFleetTransitionWorkspace,
   writePaperFleetUpdate,
 } from "./paper-fleet.js";
 
