@@ -152,6 +152,8 @@ export function normalizeWorkAuthority(value, familyState) {
     "mode",
     "publishToProduction",
     "allowedActions",
+    "executionPrincipal",
+    "sourceControlPrincipal",
     "executionWarrant",
   ], "workContext.authority");
   if (!new Set(["capture-only", "execute"]).has(authority.mode)) {
@@ -162,7 +164,10 @@ export function normalizeWorkAuthority(value, familyState) {
   }
   const allowedActions = normalizeAllowedActions(authority.allowedActions, "workContext.authority.allowedActions");
   if (authority.mode === "capture-only") {
-    if (authority.executionWarrant !== null || allowedActions.length !== 0) {
+    if (authority.executionWarrant !== null
+        || authority.executionPrincipal !== null
+        || authority.sourceControlPrincipal !== null
+        || allowedActions.length !== 0) {
       throw new Error("capture-only work cannot carry execution authority");
     }
     return { ...authority, allowedActions };
@@ -179,6 +184,14 @@ export function normalizeWorkAuthority(value, familyState) {
   return {
     ...authority,
     allowedActions,
+    executionPrincipal: assertString(
+      authority.executionPrincipal,
+      "workContext.authority.executionPrincipal",
+    ),
+    sourceControlPrincipal: assertString(
+      authority.sourceControlPrincipal,
+      "workContext.authority.sourceControlPrincipal",
+    ),
     executionWarrant: normalizeTypedReference(authority.executionWarrant, {
       kind: "execution-warrant",
       status: "active",

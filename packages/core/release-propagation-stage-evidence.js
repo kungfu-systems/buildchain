@@ -1,4 +1,5 @@
 import {
+  assertPlainObject,
   assertString,
   optionalString,
 } from "./release-propagation-common.js";
@@ -46,6 +47,112 @@ function assertHttpsLocator(locator, stage) {
   }
 }
 
+function exactClaims(entry, fields, label) {
+  const claims = assertExactFields(entry.claims, fields, label);
+  if (entry.root !== contentRoot(claims)) {
+    throw new Error(`${label} root does not bind its exact claims`);
+  }
+  return claims;
+}
+
+function releaseClaims(work) {
+  return {
+    releaseRoot: work.upstream.releaseRoot,
+    releaseLockRoot: work.downstream.releaseLockRoot,
+    sourceSha: work.upstream.release.sourceSha,
+    tagTargetSha: work.upstream.release.tagTargetSha,
+  };
+}
+
+function assertReleaseClaims(work, claims, label) {
+  const expected = releaseClaims(work);
+  for (const [field, value] of Object.entries(expected)) {
+    if (claims[field] !== value) {
+      throw new Error(`${label}.${field} does not bind the propagation release`);
+    }
+  }
+}
+
+function verifyIndependentReview(work, receipt) {
+  if (receipt.actor.kind !== "github-reviewer") {
+    throw new Error("independent-review actor must be a verified GitHub reviewer");
+  }
+  const approval = receipt.evidence.find((entry) => entry.kind === "github-pr-approval");
+  const claims = exactClaims(approval, [
+    "provider",
+    "reviewState",
+    "reviewerIdentity",
+    "pullRequestAuthorIdentity",
+    "headRevision",
+  ], "independent-review evidence claims");
+  if (claims.provider !== "github" || claims.reviewState !== "APPROVED") {
+    throw new Error("independent-review must bind an approved GitHub review");
+  }
+  if (claims.reviewerIdentity !== receipt.actor.identity
+      || claims.pullRequestAuthorIdentity !== work.authority.sourceControlPrincipal) {
+    throw new Error("independent-review identities disagree with the receipt and source-control authority");
+  }
+  if (new Set([
+    work.authority.executionPrincipal,
+    work.authority.sourceControlPrincipal,
+  ]).has(claims.reviewerIdentity)) {
+    throw new Error("independent-review identity must differ from the executor and pull request author");
+  }
+  const pullRequest = [...work.stageReceipts]
+    .reverse()
+    .find((entry) => entry.stage === "pull-request" && entry.outcome === "success");
+  const expectedHead = pullRequest?.evidence.find((entry) => entry.kind === "github-pull-request")?.revision;
+  if (!expectedHead || claims.headRevision !== expectedHead || approval.revision !== expectedHead) {
+    throw new Error("independent-review must bind the exact propagated pull request head");
+  }
+}
+
+function verifyProductionDeployment(work, receipt) {
+  const deployment = receipt.evidence.find((entry) => entry.kind === "production-deployment");
+  const claims = exactClaims(deployment, [
+    "deploymentRunUrl",
+    "deployedRevision",
+    "releaseRoot",
+    "releaseLockRoot",
+    "sourceSha",
+    "tagTargetSha",
+    "artifactRoot",
+    "readbackArtifacts",
+  ], "production-deployment evidence claims");
+  assertReleaseClaims(work, claims, "production-deployment evidence claims");
+  if (claims.deploymentRunUrl !== deployment.locator
+      || claims.deployedRevision !== deployment.revision) {
+    throw new Error("production-deployment evidence must bind its run and deployed revision");
+  }
+  assertContentRoot(claims.artifactRoot, "production-deployment evidence claims.artifactRoot");
+  if (!Array.isArray(claims.readbackArtifacts)) {
+    throw new Error("production-deployment readbackArtifacts must be an array");
+  }
+  const artifacts = claims.readbackArtifacts.map((entry, index) => {
+    const artifact = assertExactFields(entry, ["url", "contentSha256"], `readbackArtifacts[${index}]`);
+    return {
+      url: assertString(artifact.url, `readbackArtifacts[${index}].url`),
+      contentSha256: assertContentRoot(
+        artifact.contentSha256,
+        `readbackArtifacts[${index}].contentSha256`,
+      ),
+    };
+  });
+  const expectedUrls = work.downstream.executionProfile.readbackUrls;
+  if (JSON.stringify(artifacts.map((entry) => entry.url)) !== JSON.stringify(expectedUrls)) {
+    throw new Error("production-deployment readback artifacts must cover the exact profile URLs");
+  }
+  const rollback = receipt.evidence.find((entry) => entry.kind === "rollback-coordinate");
+  const rollbackClaims = exactClaims(rollback, [
+    "deployedRevision",
+    "rollbackRevision",
+  ], "rollback-coordinate evidence claims");
+  if (rollbackClaims.deployedRevision !== deployment.revision
+      || rollbackClaims.rollbackRevision !== rollback.revision) {
+    throw new Error("rollback-coordinate must bind the deployed and rollback revisions");
+  }
+}
+
 function verifyOnlineReadback(work, evidence) {
   const profile = work.downstream.executionProfile;
   const expectedLocators = [profile.productionStatusUrl, ...profile.readbackUrls].sort();
@@ -63,6 +170,50 @@ function verifyOnlineReadback(work, evidence) {
   }
   if (evidence.some((entry) => entry !== status && entry.kind !== "online-artifact")) {
     throw new Error("online-readback artifact URLs require online-artifact evidence");
+  }
+  const deploymentReceipt = [...work.stageReceipts]
+    .reverse()
+    .find((entry) => entry.stage === "production-deploy" && entry.outcome === "success");
+  const deployment = deploymentReceipt?.evidence.find(
+    (entry) => entry.kind === "production-deployment",
+  );
+  if (!deployment) {
+    throw new Error("online-readback requires a qualifying production deployment receipt");
+  }
+  const deploymentClaims = exactClaims(deployment, [
+    "deploymentRunUrl",
+    "deployedRevision",
+    "releaseRoot",
+    "releaseLockRoot",
+    "sourceSha",
+    "tagTargetSha",
+    "artifactRoot",
+    "readbackArtifacts",
+  ], "production-deployment evidence claims");
+  const expectedArtifacts = new Map(
+    deploymentClaims.readbackArtifacts.map((entry) => [entry.url, entry.contentSha256]),
+  );
+  for (const entry of evidence) {
+    const claims = exactClaims(entry, [
+      "deployedRevision",
+      "releaseRoot",
+      "releaseLockRoot",
+      "sourceSha",
+      "tagTargetSha",
+      "artifactRoot",
+      "contentSha256",
+    ], "online-readback evidence claims");
+    assertReleaseClaims(work, claims, "online-readback evidence claims");
+    assertContentRoot(claims.contentSha256, "online-readback evidence claims.contentSha256");
+    if (claims.deployedRevision !== deployment.revision
+        || claims.artifactRoot !== deploymentClaims.artifactRoot
+        || entry.revision !== deployment.revision) {
+      throw new Error("online-readback evidence does not bind the production deployment");
+    }
+    if (entry.kind === "online-artifact"
+        && claims.contentSha256 !== expectedArtifacts.get(entry.locator)) {
+      throw new Error("online artifact digest does not match the deployed readback artifact");
+    }
   }
 }
 
@@ -86,10 +237,8 @@ export function validateStageEvidence({ work, receipt }) {
   ]).has(receipt.stage)) {
     for (const entry of receipt.evidence) assertHttpsLocator(entry.locator, receipt.stage);
   }
-  if (receipt.stage === "independent-review"
-      && receipt.actor.identity === work.authority.executionWarrant?.identity) {
-    throw new Error("independent-review actor must differ from the executing Warrant identity");
-  }
+  if (receipt.stage === "independent-review") verifyIndependentReview(work, receipt);
+  if (receipt.stage === "production-deploy") verifyProductionDeployment(work, receipt);
   if (receipt.stage === "online-readback") verifyOnlineReadback(work, receipt.evidence);
 }
 
@@ -106,6 +255,7 @@ function normalizeEvidence(value, label) {
       "revision",
       "httpStatus",
       "bytes",
+      "claims",
     ], `${label}[${index}]`);
     const locator = assertString(evidence.locator, `${label}[${index}].locator`);
     if (/[?&](?:token|signature|x-amz-|x-goog-)/i.test(locator)) {
@@ -120,6 +270,9 @@ function normalizeEvidence(value, label) {
     if (!Number.isInteger(bytes) || bytes < 0) {
       throw new Error(`${label}[${index}].bytes must be a non-negative integer`);
     }
+    const claims = evidence.claims === null
+      ? null
+      : structuredClone(assertPlainObject(evidence.claims, `${label}[${index}].claims`));
     return {
       kind: assertString(evidence.kind, `${label}[${index}].kind`),
       root: assertContentRoot(evidence.root, `${label}[${index}].root`),
@@ -128,6 +281,7 @@ function normalizeEvidence(value, label) {
       revision: optionalString(evidence.revision),
       httpStatus,
       bytes,
+      claims,
     };
   });
 }

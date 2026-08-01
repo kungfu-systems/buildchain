@@ -81,12 +81,16 @@ function propagationWorkContext(mode = "execute") {
           mode: "execute",
           publishToProduction: true,
           allowedActions: [...RELEASE_PROPAGATION_WORK_STAGES].sort(),
+          executionPrincipal: "codex/pro-1802",
+          sourceControlPrincipal: "dongkeren",
           executionWarrant: typedReference("execution-warrant", "warrant-1", "active", familyState),
         }
       : {
           mode: "capture-only",
           publishToProduction: false,
           allowedActions: [],
+          executionPrincipal: null,
+          sourceControlPrincipal: null,
           executionWarrant: null,
         },
     supersedesWorkRoot: "",
@@ -127,37 +131,106 @@ function stageReceipt(
     "production-deploy": `https://github.com/${work.downstream.repository}/actions/runs/3`,
     complete: "kungfu://decision/site-production-completion",
   };
-  const evidence = stage === "online-readback"
-    ? [
-        ["production-status", work.downstream.executionProfile.productionStatusUrl],
-        ...work.downstream.executionProfile.readbackUrls.map((url) => ["online-artifact", url]),
-      ].map(([kind, locator]) => ({
+  const deployedRevision = "a".repeat(40);
+  const boundRelease = {
+    releaseRoot: work.upstream.releaseRoot,
+    releaseLockRoot: work.downstream.releaseLockRoot,
+    sourceSha: work.upstream.release.sourceSha,
+    tagTargetSha: work.upstream.release.tagTargetSha,
+  };
+  let evidence;
+  if (stage === "online-readback") {
+    const deployment = work.stageReceipts
+      .find((entry) => entry.stage === "production-deploy")
+      .evidence.find((entry) => entry.kind === "production-deployment");
+    evidence = [
+      ["production-status", work.downstream.executionProfile.productionStatusUrl],
+      ...work.downstream.executionProfile.readbackUrls.map((url) => ["online-artifact", url]),
+    ].map(([kind, locator]) => {
+      const expectedArtifact = deployment.claims.readbackArtifacts
+        .find((entry) => entry.url === locator);
+      const claims = {
+        deployedRevision,
+        ...boundRelease,
+        artifactRoot: deployment.claims.artifactRoot,
+        contentSha256: expectedArtifact?.contentSha256 || shaRoot(`status:${locator}`),
+      };
+      return {
         kind,
-        root: shaRoot(`${kind}:${work.revision}:${outcome}`),
+        root: contentRoot(claims),
         locator,
         repository: work.downstream.repository,
-        revision: "a".repeat(40),
+        revision: deployedRevision,
         httpStatus: 200,
         bytes: 128,
-      }))
-    : [{
-        kind: kinds[stage] || `${stage}-diagnostic`,
-        root: decision?.root || shaRoot(`${stage}:${work.revision}:${outcome}`),
-        locator: locators[stage] || `buildchain://release-propagation/${stage}`,
-        repository: work.downstream.repository,
-        revision: "a".repeat(40),
-        httpStatus: null,
-        bytes: 0,
-      }];
+        claims,
+      };
+    });
+  } else if (stage === "independent-review") {
+    const claims = {
+      provider: "github",
+      reviewState: "APPROVED",
+      reviewerIdentity: actorIdentity || "kungfu-origin",
+      pullRequestAuthorIdentity: work.authority.sourceControlPrincipal,
+      headRevision: deployedRevision,
+    };
+    evidence = [{
+      kind: "github-pr-approval",
+      root: contentRoot(claims),
+      locator: locators[stage],
+      repository: work.downstream.repository,
+      revision: deployedRevision,
+      httpStatus: null,
+      bytes: 0,
+      claims,
+    }];
+  } else if (stage === "production-deploy") {
+    const claims = {
+      deploymentRunUrl: locators[stage],
+      deployedRevision,
+      ...boundRelease,
+      artifactRoot: shaRoot(`site-artifact:${work.revision}`),
+      readbackArtifacts: work.downstream.executionProfile.readbackUrls.map((url) => ({
+        url,
+        contentSha256: shaRoot(`readback:${url}`),
+      })),
+    };
+    evidence = [{
+      kind: "production-deployment",
+      root: contentRoot(claims),
+      locator: locators[stage],
+      repository: work.downstream.repository,
+      revision: deployedRevision,
+      httpStatus: null,
+      bytes: 0,
+      claims,
+    }];
+  } else {
+    evidence = [{
+      kind: kinds[stage] || `${stage}-diagnostic`,
+      root: decision?.root || shaRoot(`${stage}:${work.revision}:${outcome}`),
+      locator: locators[stage] || `buildchain://release-propagation/${stage}`,
+      repository: work.downstream.repository,
+      revision: deployedRevision,
+      httpStatus: null,
+      bytes: 0,
+      claims: null,
+    }];
+  }
   if (stage === "production-deploy") {
+    const claims = {
+      deployedRevision,
+      rollbackRevision: "b".repeat(40),
+    };
     evidence.push({
       kind: "rollback-coordinate",
-      root: shaRoot(`rollback:${work.revision}`),
+      root: contentRoot(claims),
       locator: `https://github.com/${work.downstream.repository}/commit/${"b".repeat(40)}`,
       repository: work.downstream.repository,
       revision: "b".repeat(40),
       httpStatus: null,
       bytes: 0,
+      claims,
     });
   }
   return createReleasePropagationStageReceipt({
@@ -165,9 +238,9 @@ function stageReceipt(
     outcome,
     observedAt: "2026-08-01T06:00:00.000Z",
     actor: {
-      kind: "agent",
+      kind: stage === "independent-review" ? "github-reviewer" : "agent",
       identity: actorIdentity
-        || (stage === "independent-review" ? "kungfu-origin/reviewer" : "codex/pro-1802"),
+        || (stage === "independent-review" ? "kungfu-origin" : "codex/pro-1802"),
     },
     summary: `${stage} ${outcome}`,
     evidence,
@@ -489,8 +562,12 @@ test("propagation work resumes retryable failure and completes only after online
   while (work.state.currentStage !== "complete") {
     if (work.state.currentStage === "independent-review") {
       assert.throws(
-        () => stageReceipt(work, "success", null, null, "warrant-1"),
-        /must differ from the executing Warrant identity/,
+        () => stageReceipt(work, "success", null, null, "codex/pro-1802"),
+        /must differ from the executor and pull request author/,
+      );
+      assert.throws(
+        () => stageReceipt(work, "success", null, null, "dongkeren"),
+        /must differ from the executor and pull request author/,
       );
     }
     if (work.state.currentStage === "online-readback") {
@@ -508,9 +585,40 @@ test("propagation work resumes retryable failure and completes only after online
             revision: "a".repeat(40),
             httpStatus: null,
             bytes: 0,
+            claims: null,
           }],
         }),
         /stage-specific evidence/,
+      );
+      const staleArtifactEvidence = structuredClone(stageReceipt(work).evidence);
+      const staleArtifact = staleArtifactEvidence.find((entry) => entry.kind === "online-artifact");
+      staleArtifact.claims.contentSha256 = shaRoot("stale-online-artifact");
+      staleArtifact.root = contentRoot(staleArtifact.claims);
+      assert.throws(
+        () => createReleasePropagationStageReceipt({
+          work,
+          observedAt: "2026-08-01T06:00:00.000Z",
+          actor: { kind: "agent", identity: "codex/pro-1802" },
+          summary: "stale online artifact cannot qualify",
+          evidence: staleArtifactEvidence,
+        }),
+        /online artifact digest does not match/,
+      );
+      const staleRevisionEvidence = structuredClone(stageReceipt(work).evidence);
+      for (const entry of staleRevisionEvidence) {
+        entry.revision = "c".repeat(40);
+        entry.claims.deployedRevision = "c".repeat(40);
+        entry.root = contentRoot(entry.claims);
+      }
+      assert.throws(
+        () => createReleasePropagationStageReceipt({
+          work,
+          observedAt: "2026-08-01T06:00:00.000Z",
+          actor: { kind: "agent", identity: "codex/pro-1802" },
+          summary: "stale deployment revision cannot qualify",
+          evidence: staleRevisionEvidence,
+        }),
+        /does not bind the production deployment/,
       );
     }
     const receipt = stageReceipt(work);

@@ -432,7 +432,7 @@ jobs:
               --arg locator "$locator" \
               --arg repository "${{ inputs.downstream-repository }}" \
               --arg revision "$revision" \
-              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision,httpStatus:null,bytes:0}],failure:null}' \
+              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision,httpStatus:null,bytes:0,claims:null}],failure:null}' \
               > .buildchain/release-propagation/receipt-input.json
             node .buildchain/runtime/bin/buildchain.mjs release-propagation work receipt \
               --work .buildchain/release-propagation/work.json \
@@ -646,7 +646,7 @@ jobs:
               --arg locator "$locator" \
               --arg repository "${{ inputs.downstream-repository }}" \
               --arg revision "$revision" \
-              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision,httpStatus:null,bytes:0}],failure:null}' \
+              '{stage:$stage,outcome:"success",observedAt:(now|todateiso8601),actor:{kind:"automation",identity:"github-actions"},summary:("recorded " + $stage),evidence:[{kind:$kind,root:$root,locator:$locator,repository:$repository,revision:$revision,httpStatus:null,bytes:0,claims:null}],failure:null}' \
               > .buildchain/release-propagation/receipt-input.json
             node .buildchain/runtime/bin/buildchain.mjs release-propagation work receipt \
               --work .buildchain/release-propagation/work.json \

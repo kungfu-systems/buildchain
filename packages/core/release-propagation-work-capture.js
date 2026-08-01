@@ -39,6 +39,8 @@ function automaticCaptureContext(selectedPlan, selected, propagationKey) {
       mode: "capture-only",
       publishToProduction: false,
       allowedActions: [],
+      executionPrincipal: null,
+      sourceControlPrincipal: null,
       executionWarrant: null,
     },
     supersedesWorkRoot: "",
@@ -59,5 +61,4 @@ export function resolveWorkContext(workContext, selectedPlan, selected, propagat
   ], "workContext");
   return { ...context, bindingState: "bound" };
 }
-
 

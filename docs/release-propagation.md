@@ -277,6 +277,8 @@ The context has this shape (roots abbreviated here only for readability):
     "mode": "capture-only",
     "publishToProduction": false,
     "allowedActions": [],
+    "executionPrincipal": null,
+    "sourceControlPrincipal": null,
     "executionWarrant": null
   },
   "supersedesWorkRoot": ""
@@ -289,7 +291,9 @@ or Warrant, and performs no downstream write. Claiming that unit supplies the
 exact Family State v2 coordinate and active Warrant while preserving the work
 identity. An executing input must carry an active Warrant at the same Family
 State fact world and cut, explicit production intent, and the complete supported
-action set. Buildchain never invents external Work Control authority.
+action set. It also binds the acting Agent principal and the source-control
+principal that authors the PR. Buildchain never invents external Work Control
+authority.
 
 A managed Paper opts into automatic capture with a thin, source-controlled
 `.buildchain/release-propagation.json`. The sealed release workflow reads that
@@ -344,11 +348,13 @@ rejected.
 
 Successful stage receipts are typed, not generic progress notes. In particular,
 the pushed-branch receipt hashes the full expected-old branch reconciliation;
-review must come from an identity distinct from the execution Warrant; production
-deployment carries both deployment and rollback coordinates; and online readback
-must cover the exact execution-profile URLs with HTTP 200, observed non-zero
-bytes, and the exact deployed Git revision. The final receipt binds the accepted
-Work Control Decision root.
+review binds an approved GitHub review and must come from an identity distinct
+from both the acting Agent and PR author; production deployment carries release,
+lock, deployed artifact, expected readback digest, and rollback coordinates; and
+online readback must cover the exact execution-profile URLs with HTTP 200,
+observed non-zero bytes, exact deployed Git revision, and matching release and
+artifact digests. The final receipt binds the accepted Work Control Decision
+root.
 
 ## Reusable Workflow
 

@@ -125,7 +125,7 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:6c9ee8a26f45245f567f72a210df3ae8ddd153c56065672558872f8651225ca7"
+      "digest": "sha256:d9c9b4ba9dff6ed336b1ff31e5a02fcdf68dd013278caa86510e5fd0b50c4267"
     },
     {
       "id": "readme-badges",
