@@ -24,7 +24,7 @@ on:
         required: true
         default: "true"
       recover-durable-transaction:
-        description: "Recover an existing durable transaction from the exact current protected channel SHA using fresh GitHub-hosted admission"
+        description: "Recover an existing durable transaction from its exact original source SHA using fresh GitHub-hosted admission"
         required: true
         default: false
         type: boolean
@@ -77,7 +77,7 @@ jobs:
     steps:
       - name: Require exact recovery SHA
         run: |
-          echo "::error::Durable transaction recovery requires the exact current protected channel SHA."
+          echo "::error::Durable transaction recovery requires the exact original transaction source SHA."
           exit 1
 
   promote:

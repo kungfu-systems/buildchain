@@ -464,6 +464,39 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
 
 async function finalizeAlphaPublication(context, state, publication) {
   const { selectedAlpha, alpha } = publication;
+  if (context.advancedPublicationTransaction) {
+    await context.markFinalizing();
+    const transaction =
+      context.getLatestPublishTransaction()?.transaction ||
+      context.advancedPublicationTransaction;
+    await context.ensureTag(selectedAlpha.tag, alpha.sha, {
+      acceptedExistingShas: context.transactionAcceptedExactTagShas(
+        transaction,
+        alpha.sha,
+      ),
+      acceptedExistingMaterialShas: context.transactionAcceptedExactTagShas(
+        transaction,
+        "",
+      ),
+    });
+    await context.markComplete();
+    context.updates.push({
+      action: "finalized-advanced-publication",
+      tag: selectedAlpha.tag,
+      sourceSha: context.sha,
+      releaseSha: alpha.sha,
+      currentChannelSha: context.advancedChannelSha,
+      sha: alpha.sha,
+    });
+    return context.withPublishTransaction({
+      owner: context.owner,
+      repo: context.repo,
+      sourceSha: context.sha,
+      sha: context.advancedChannelSha || context.sha,
+      targetRef: context.targetRef,
+      updates: context.updates,
+    });
+  }
   if (context.versionState) {
     await context.markFinalizing();
     const targetUpdate = await context.updateBranch(

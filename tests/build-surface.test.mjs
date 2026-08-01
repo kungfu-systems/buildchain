@@ -1120,6 +1120,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     "exact publication planning must install source dependencies before version-state verification",
   );
   assert.match(publicationPlan, /name: Validate consumer package manager contract/);
+  assert.match(publicationPlan, /publish-transaction-override: \$\{\{ inputs\.publish-transaction-override \}\}/);
   assert.match(publicationPlan, /corepack pnpm install --frozen-lockfile/);
   assert.doesNotMatch(publicationPlan, /corepack pnpm@11\.7\.0/);
   assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);
@@ -1132,10 +1133,13 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /BUILDCHAIN_RC_DOWNLOAD: "false"/);
   assert.match(workflow, /failure\(\) && !inputs\.dry-run && steps\.rc\.outcome != ''/);
   assert.match(workflow, /compareCommitsWithBasehead/);
-  assert.match(workflow, /const superseded = !dryRun && comparisonStatus === "ahead"/);
+  assert.match(workflow, /INPUT_PUBLISH_TRANSACTION_OVERRIDE: \$\{\{ inputs\.publish-transaction-override \}\}/);
+  assert.match(workflow, /const recoverableAdvance = durableRecovery && comparisonStatus === "ahead"/);
+  assert.match(workflow, /const superseded = !dryRun && !recoverableAdvance && comparisonStatus === "ahead"/);
+  assert.match(workflow, /!superseded && !recoverableAdvance/);
   assert.match(workflow, /moved incompatibly/);
   assert.match(workflow, /const action = superseded \? "noop" : "promote"/);
-  assert.match(workflow, /const reason = superseded \? "target-ref-advanced" : "target-ref-current"/);
+  assert.match(workflow, /"durable-transaction-recovery"/);
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
   assert.match(workflow, /publication-gate-aggregate-json:/);
@@ -2500,7 +2504,11 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
   );
   assert.match(
     selfPromotion,
-    /reject-invalid-durable-recovery:[\s\S]*?Durable transaction recovery requires the exact current protected channel SHA/,
+    /recover-durable-transaction:[\s\S]*?Recover an existing durable transaction from its exact original source SHA/,
+  );
+  assert.match(
+    selfPromotion,
+    /reject-invalid-durable-recovery:[\s\S]*?Durable transaction recovery requires the exact original transaction source SHA/,
   );
 });
 
