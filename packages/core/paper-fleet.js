@@ -1,10 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import { planPaperMigration, writePaperMigration } from "./paper.js";
+import {
+  planPaperMigration,
+  resolvePaperRuntimeGitSha,
+  writePaperMigration,
+} from "./paper.js";
 import {
   PAPER_PATHS,
   PAPER_WORK_BRANCH_PATTERN,
-  gitValue,
   paperWorkSource,
   readJson,
   rootedPlan,
@@ -188,7 +191,9 @@ export function collectPaperFleetAudit({
     root: resolvedRoot,
     runtime: {
       version: buildchainVersion,
-      sha: buildchainSha || gitValue(buildchainRoot, ["rev-parse", "HEAD"]),
+      sha:
+        buildchainSha ||
+        resolvePaperRuntimeGitSha(buildchainRoot, buildchainVersion),
     },
     summary: {
       repositories: entries.length,

@@ -134,6 +134,13 @@ test("installed Paper runtime does not inherit the consumer Git head", () => {
       resolvePaperRuntimeGitSha(packageRoot, "3.0.4-alpha.1"),
       sourceSha,
     );
+    const fleet = collectPaperFleetAudit({
+      root: consumer,
+      repositories: [consumer],
+      buildchainRoot: packageRoot,
+      buildchainVersion: "3.0.4-alpha.1",
+    });
+    assert.equal(fleet.runtime.sha, sourceSha);
   } finally {
     process.env.PATH = originalPath;
   }
