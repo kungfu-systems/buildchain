@@ -327,6 +327,57 @@
       "contractVersion": 1,
       "stability": "stable",
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "declarative-auditable-demo",
+      "kind": "workflow",
+      "path": ".github/workflows/.declarative-auditable-demo.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.declarative-auditable-demo.yml@v3",
+      "requiredInputs": [
+        "binary-artifact-name",
+        "binary-artifact-digest",
+        "renderer-image"
+      ],
+      "requiredOutputs": [
+        "source-sha",
+        "capture-artifact-name",
+        "capture-artifact-digest",
+        "evidence-artifact-name",
+        "evidence-artifact-digest",
+        "publication-pr-url"
+      ],
+      "breakingDefaults": {
+        "scenarioPathDefault": ".buildchain/auditable-demo.json",
+        "renderMediaDefault": false,
+        "materializeDefault": false,
+        "mediaProfileDefault": "responsive-web-delivery-v1",
+        "artifactRetentionDaysDefault": 14,
+        "executionBoundary": "exact-binary-network-none-secret-free-60-seconds"
+      },
+      "optionalInputs": [
+        "buildchain-repository",
+        "source-ref",
+        "scenario-path",
+        "render-media",
+        "media-profile",
+        "materialize",
+        "materialize-base-ref",
+        "artifact-retention-days"
+      ],
+      "guarantees": [
+        "one versioned declaration can contain multiple demos with multiple ordered literal argv steps",
+        "every demo uses the exact same-run standalone binary admitted by producer-owned artifact name and digest",
+        "capture runs without network or inherited secrets and retains independent native 1080p and 720p terminal dimensions",
+        "the generic adapter feeds the required auditable demo Gate and immutable renderer without product-specific glue",
+        "full rendering emits a content-addressed Release Passport and idempotent protected README update pull request",
+        "manual, alpha, and release callers use the same capture, Gate, renderer, passport, and materializer implementation",
+        "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority"
+      ],
+      "breakingDigest": "sha256:0bcba689ab5060e12230db4118895242ecb48677ff581ea0360b1833bdac558c",
+      "auditDigest": "sha256:49051fc60effa1d4077f461c841927b5a1ab411956e94b305cbf06d2895ab5d0"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "promote-buildchain-ref-action",
       "kind": "action",
       "path": "actions/promote-buildchain-ref/action.yml",
@@ -619,7 +670,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:f3be0e8ce65d5860d1ad808990f78a1fd48c18207a9aacf1ba63fd0d0e51be40"
+      "auditDigest": "sha256:9f5a8549d5d7cb42af5720a05ad3d64b6b06f6415013d62e93fcf7d404978495"
     },
     {
       "contractVersion": 1,
@@ -709,7 +760,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:da035e1a7b51adedfb9c06f59959dd08de3f066b563dff865cc87c8498f68c18"
+      "auditDigest": "sha256:b4d64e6a19089520d4d5cdf49c270871f96f668e1d6edab35bb28d8f093fbfa3"
     },
     {
       "contractVersion": 1,
@@ -731,7 +782,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:77635b2759c316e9a2c42f0b5aca8e032037609661003455683cae969241048a"
+      "auditDigest": "sha256:59cbb97c499c5c9573d9b32bb87da7ca13851760ccecec6dfb73fd0166ab11b1"
     },
     {
       "contractVersion": 1,
@@ -3547,6 +3598,6 @@
       "auditDigest": "sha256:d07482cd66413a2fb3781a3b76f960b8151b6231841799647fe237820de2fde6"
     }
   ],
-  "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691",
-  "contractDigest": "sha256:23e268fdeea59397e457cb27783d1b69ede401566e63ddc7ea975d54c22f0786"
+  "compatibilityDigest": "sha256:76c3dd58a02887ecd6af33d63e749fef0a988a820fea99bdf4cb078cc48caa83",
+  "contractDigest": "sha256:62244d560266e0fe82c5896768d476444c15ab20797a2cc060da588677fb209f"
 }

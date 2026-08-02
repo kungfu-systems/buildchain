@@ -352,7 +352,11 @@ export function buildStandaloneBinary({
     name,
     version,
     platform: triple,
+    platformId: process.platform === "linux" && process.arch === "x64" ? "linux-x64" : triple,
     binary: relativePath(cwd, binaryPath),
+    sha256: crypto.createHash("sha256").update(fs.readFileSync(binaryPath)).digest("hex"),
+    sourceSha: sourceSha(cwd),
+    runtimeDependencies: [],
     archive: relativePath(cwd, archivePath),
     node: process.version,
     observability: {

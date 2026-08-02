@@ -1,0 +1,440 @@
+name: Buildchain Declarative Binary Auditable Demo
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        default: kungfu-systems/buildchain
+        type: string
+        required: false
+      source-ref:
+        default: ""
+        type: string
+        required: false
+      binary-artifact-name:
+        type: string
+        required: true
+      binary-artifact-digest:
+        type: string
+        required: true
+      scenario-path:
+        default: .buildchain/auditable-demo.json
+        type: string
+        required: false
+      renderer-image:
+        type: string
+        required: true
+      render-media:
+        default: false
+        type: boolean
+        required: false
+      media-profile:
+        default: responsive-web-delivery-v1
+        type: string
+        required: false
+      materialize:
+        default: false
+        type: boolean
+        required: false
+      materialize-base-ref:
+        default: ""
+        type: string
+        required: false
+      artifact-retention-days:
+        default: 14
+        type: number
+        required: false
+    secrets:
+      DEMO_UPDATE_TOKEN:
+        required: false
+    outputs:
+      source-sha:
+        value: ${{ jobs.capture.outputs.source-sha }}
+      capture-artifact-name:
+        value: ${{ jobs.capture.outputs.capture-artifact-name }}
+      capture-artifact-digest:
+        value: ${{ jobs.capture.outputs.capture-artifact-digest }}
+      evidence-artifact-name:
+        value: ${{ jobs.qualify.outputs.evidence-artifact-name }}
+      evidence-artifact-digest:
+        value: ${{ jobs.qualify.outputs.evidence-artifact-digest }}
+      publication-pr-url:
+        value: ${{ jobs.publish.outputs.pr-url }}
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: declarative-auditable-demo-${{ github.repository }}-${{ github.ref }}-${{ inputs.binary-artifact-digest }}
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    name: Capture every declared demo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      source-sha: ${{ steps.source.outputs.sha }}
+      capture-artifact-name: ${{ steps.identity.outputs.name }}
+      capture-artifact-digest: ${{ steps.digest.outputs.digest }}
+    steps:
+      - name: Check out exact consumer source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ inputs.source-ref || github.sha }}
+          path: source
+          clean: true
+          persist-credentials: false
+
+      - name: Record exact source
+        id: source
+        shell: bash
+        run: echo "sha=$(git -C source rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+
+      - name: Check out exact Buildchain runtime
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          clean: true
+          persist-credentials: false
+
+      - name: Resolve exact same-run binary artifact
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          EXPECTED_NAME: ${{ inputs.binary-artifact-name }}
+          EXPECTED_DIGEST: ${{ inputs.binary-artifact-digest }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        with:
+          script: |
+            const fs = require("fs");
+            const expected = process.env.EXPECTED_DIGEST.startsWith("sha256:")
+              ? process.env.EXPECTED_DIGEST : `sha256:${process.env.EXPECTED_DIGEST}`;
+            if (!/^sha256:[0-9a-f]{64}$/.test(expected)) throw new Error("binary artifact digest is invalid");
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId, per_page: 100,
+            });
+            const matches = artifacts.filter((artifact) => artifact.name === process.env.EXPECTED_NAME && !artifact.expired);
+            if (matches.length !== 1 || matches[0].digest !== expected) throw new Error("exact same-run binary artifact is absent or drifted");
+            const artifact = matches[0];
+            fs.writeFileSync("binary-coordinate.json", JSON.stringify({
+              schema: "buildchain.github-artifact-coordinate/v1",
+              repository: `${context.repo.owner}/${context.repo.repo}`,
+              runId: String(context.runId), runAttempt: String(process.env.GITHUB_RUN_ATTEMPT),
+              sourceSha: process.env.SOURCE_SHA, id: String(artifact.id), nodeId: artifact.node_id,
+              name: artifact.name, digest: artifact.digest, sizeInBytes: artifact.size_in_bytes,
+              createdAt: artifact.created_at, expiresAt: artifact.expires_at,
+            }, null, 2) + "\n");
+
+      - name: Download exact binary artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ inputs.binary-artifact-name }}
+          path: source-artifact
+
+      - name: Validate declaration and capture every demo in network isolation
+        shell: bash
+        env:
+          SCENARIO_PATH: ${{ inputs.scenario-path }}
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+        run: |
+          set -euo pipefail
+          if ! [[ "${RENDERER_IMAGE}" =~ ^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$ ]]; then
+            echo "renderer-image must be immutable" >&2
+            exit 2
+          fi
+          node .buildchain/runtime/scripts/auditable-demo-platform.mjs validate --scenario "source/${SCENARIO_PATH}"
+          binary_path=$(node -e 'const fs=require("fs"); const v=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(v.artifact.binaryPath)' "source/${SCENARIO_PATH}")
+          chmod 755 "source-artifact/${binary_path}"
+          docker pull "${RENDERER_IMAGE}"
+          mkdir -p capture-collection
+          while IFS= read -r demo_id; do
+            mkdir -p "capture-collection/${demo_id}"
+            chmod 0777 "capture-collection/${demo_id}"
+            docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges \
+              --tmpfs /tmp:rw,noexec,nosuid,size=512m \
+              --volume "${GITHUB_WORKSPACE}/.buildchain/runtime:/runtime:ro" \
+              --volume "${GITHUB_WORKSPACE}/source-artifact:/artifact:ro" \
+              --volume "${GITHUB_WORKSPACE}/source/${SCENARIO_PATH}:/scenario.json:ro" \
+              --volume "${GITHUB_WORKSPACE}/binary-coordinate.json:/source-coordinate.json:ro" \
+              --volume "${GITHUB_WORKSPACE}/capture-collection/${demo_id}:/output" \
+              --entrypoint python3 "${RENDERER_IMAGE}" \
+              /runtime/scripts/auditable-demo-capture.py \
+              --artifact-root /artifact --scenario /scenario.json --source-coordinate /source-coordinate.json \
+              --demo-id "${demo_id}" --network-isolation docker-none --output /output/capture
+          done < <(node .buildchain/runtime/scripts/auditable-demo-platform.mjs list --scenario "source/${SCENARIO_PATH}")
+
+      - name: Bind capture collection identity
+        id: identity
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: echo "name=declarative-demo-captures-${SOURCE_SHA:0:12}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload exact capture collection
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.identity.outputs.name }}
+          path: capture-collection
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+          overwrite: false
+
+      - name: Normalize capture digest
+        id: digest
+        shell: bash
+        env:
+          RAW: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          digest="${RAW}"
+          [[ "${digest}" =~ ^[0-9a-f]{64}$ ]] && digest="sha256:${digest}"
+          [[ "${digest}" =~ ^sha256:[0-9a-f]{64}$ ]] || exit 2
+          echo "digest=${digest}" >> "${GITHUB_OUTPUT}"
+
+  qualify:
+    name: Gate and render every declared demo
+    needs: capture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    outputs:
+      evidence-artifact-name: ${{ steps.identity.outputs.name }}
+      evidence-artifact-digest: ${{ steps.upload.outputs.artifact-digest }}
+    steps:
+      - name: Check out exact consumer source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ needs.capture.outputs.source-sha }}
+          path: source
+          persist-credentials: false
+
+      - name: Check out exact Buildchain runtime
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Download exact capture collection
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ needs.capture.outputs.capture-artifact-name }}
+          path: capture-collection
+
+      - name: Resolve exact capture artifact coordinate
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          EXPECTED_NAME: ${{ needs.capture.outputs.capture-artifact-name }}
+          EXPECTED_DIGEST: ${{ needs.capture.outputs.capture-artifact-digest }}
+          SOURCE_SHA: ${{ needs.capture.outputs.source-sha }}
+        with:
+          script: |
+            const fs = require("fs");
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId, per_page: 100,
+            });
+            const matches = artifacts.filter((artifact) => artifact.name === process.env.EXPECTED_NAME && !artifact.expired);
+            if (matches.length !== 1 || matches[0].digest !== process.env.EXPECTED_DIGEST) throw new Error("capture collection artifact drifted");
+            const artifact = matches[0];
+            fs.writeFileSync("capture-coordinate.json", JSON.stringify({
+              schema: "buildchain.github-artifact-coordinate/v1", repository: `${context.repo.owner}/${context.repo.repo}`,
+              runId: String(context.runId), runAttempt: String(process.env.GITHUB_RUN_ATTEMPT), sourceSha: process.env.SOURCE_SHA,
+              id: String(artifact.id), nodeId: artifact.node_id, name: artifact.name, digest: artifact.digest,
+              sizeInBytes: artifact.size_in_bytes, createdAt: artifact.created_at, expiresAt: artifact.expires_at,
+            }, null, 2) + "\n");
+
+      - name: Run required Gate and selective render for every demo
+        shell: bash
+        env:
+          SCENARIO_PATH: ${{ inputs.scenario-path }}
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+          SOURCE_SHA: ${{ needs.capture.outputs.source-sha }}
+          MEDIA_PROFILE: ${{ inputs.media-profile }}
+          RENDER_MEDIA: ${{ inputs.render-media }}
+        run: |
+          set -euo pipefail
+          docker pull "${RENDERER_IMAGE}"
+          mkdir -p qualified-collection
+          while IFS= read -r demo_id; do
+            root="qualified-collection/${demo_id}"
+            mkdir -p "${root}/diagnostics" "${root}/smoke-output" "${root}/render-output"
+            chmod 0777 "${root}/smoke-output" "${root}/render-output"
+            node .buildchain/runtime/scripts/auditable-demo.mjs run-adapter \
+              --source-root "${GITHUB_WORKSPACE}/.buildchain/runtime" \
+              --artifact-root "${GITHUB_WORKSPACE}/capture-collection/${demo_id}/capture" \
+              --source-coordinate "${GITHUB_WORKSPACE}/capture-coordinate.json" \
+              --adapter scripts/auditable-demo-platform.mjs --adapter-arguments-json '[]' \
+              --output "${GITHUB_WORKSPACE}/${root}/adapter" --diagnostics "${GITHUB_WORKSPACE}/${root}/diagnostics"
+            node .buildchain/runtime/scripts/auditable-demo.mjs prepare-smoke \
+              --adapter-output "${root}/adapter" --output "${root}/smoke-input"
+            docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=512m \
+              --volume "${GITHUB_WORKSPACE}/${root}/smoke-input:/input:ro" \
+              --volume "${GITHUB_WORKSPACE}/${root}/smoke-output:/output" "${RENDERER_IMAGE}" \
+              demo-renderer --scene /input/scene.json --transcript /input/complete-transcript.txt \
+              --projection /input/public-projection.json --output /output --renderer-image "${RENDERER_IMAGE}"
+            mkdir -p "${root}/smoke-inspection" && chmod 0777 "${root}/smoke-inspection"
+            docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+              --volume "${GITHUB_WORKSPACE}/.buildchain/runtime:/buildchain:ro" \
+              --volume "${GITHUB_WORKSPACE}/${root}/smoke-output:/media:ro" \
+              --volume "${GITHUB_WORKSPACE}/${root}/smoke-inspection:/inspection" --entrypoint node "${RENDERER_IMAGE}" \
+              /buildchain/scripts/auditable-demo.mjs inspect-media --render-output /media \
+              --renderer-image "${RENDERER_IMAGE}" --output /inspection/media-inspection.json
+            node .buildchain/runtime/scripts/auditable-demo.mjs finalize-gate \
+              --adapter-output "${root}/adapter" --smoke-input "${root}/smoke-input" --smoke-output "${root}/smoke-output" \
+              --source-coordinate capture-coordinate.json --diagnostics "${root}/diagnostics" \
+              --adapter scripts/auditable-demo-platform.mjs --renderer-image "${RENDERER_IMAGE}" --source-sha "${SOURCE_SHA}" \
+              --media-profile "${MEDIA_PROFILE}" --media-inspection "${root}/smoke-inspection/media-inspection.json" --output "${root}/gate"
+            if [ "${RENDER_MEDIA}" = "true" ]; then
+              gate_root=$(sha256sum "${root}/gate/checksums.sha256" | awk '{print "sha256:"$1}')
+              docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+                --volume "${GITHUB_WORKSPACE}/${root}/gate:/input:ro" "${RENDERER_IMAGE}" demo-renderer --validate-only \
+                --scene /input/scene.json --transcript /input/complete-transcript.txt \
+                --projection /input/public-projection.json --terminal-capture /input/terminal-capture.json \
+                --rendition-set /input/rendition-set.json
+              docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=1g \
+                --volume "${GITHUB_WORKSPACE}/${root}/gate:/input:ro" --volume "${GITHUB_WORKSPACE}/${root}/render-output:/output" \
+                "${RENDERER_IMAGE}" demo-renderer --scene /input/scene.json --transcript /input/complete-transcript.txt \
+                --projection /input/public-projection.json --terminal-capture /input/terminal-capture.json \
+                --rendition-set /input/rendition-set.json --output /output --renderer-image "${RENDERER_IMAGE}"
+              mkdir -p "${root}/render-inspection" && chmod 0777 "${root}/render-inspection"
+              docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+                --volume "${GITHUB_WORKSPACE}/.buildchain/runtime:/buildchain:ro" \
+                --volume "${GITHUB_WORKSPACE}/${root}/render-output:/media:ro" \
+                --volume "${GITHUB_WORKSPACE}/${root}/render-inspection:/inspection" --entrypoint node "${RENDERER_IMAGE}" \
+                /buildchain/scripts/auditable-demo.mjs inspect-media --render-output /media \
+                --renderer-image "${RENDERER_IMAGE}" --output /inspection/media-inspection.json
+              node .buildchain/runtime/scripts/auditable-demo.mjs finalize-media \
+                --gate-bundle "${root}/gate" --gate-root "${gate_root}" --render-output "${root}/render-output" \
+                --renderer-image "${RENDERER_IMAGE}" --source-sha "${SOURCE_SHA}" --media-profile "${MEDIA_PROFILE}" \
+                --media-inspection "${root}/render-inspection/media-inspection.json" --output "${root}/media"
+            fi
+          done < <(node .buildchain/runtime/scripts/auditable-demo-platform.mjs list --scenario "source/${SCENARIO_PATH}")
+
+      - name: Bind evidence collection identity
+        id: identity
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ needs.capture.outputs.source-sha }}
+        run: echo "name=declarative-demo-evidence-${SOURCE_SHA:0:12}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload qualified evidence collection
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.identity.outputs.name }}
+          path: qualified-collection
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+          overwrite: false
+
+  publish:
+    name: Open protected materialization pull request
+    if: ${{ inputs.materialize && inputs.render-media }}
+    needs: [capture, qualify]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    outputs:
+      pr-url: ${{ steps.pr.outputs.url }}
+    steps:
+      - name: Require explicit publication capability
+        shell: bash
+        env:
+          UPDATE_TOKEN: ${{ secrets.DEMO_UPDATE_TOKEN }}
+          BASE_REF: ${{ inputs.materialize-base-ref }}
+        run: |
+          test -n "${UPDATE_TOKEN}" || { echo "DEMO_UPDATE_TOKEN is required for publication" >&2; exit 2; }
+          test -n "${BASE_REF}" || { echo "materialize-base-ref is required for publication" >&2; exit 2; }
+
+      - name: Check out exact source with bounded update capability
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ needs.capture.outputs.source-sha }}
+          fetch-depth: 0
+          token: ${{ secrets.DEMO_UPDATE_TOKEN }}
+          persist-credentials: true
+
+      - name: Establish the protected update branch
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ needs.capture.outputs.source-sha }}
+        run: |
+          set -euo pipefail
+          branch="automation/auditable-demo-${SOURCE_SHA:0:12}"
+          if git ls-remote --exit-code --heads origin "${branch}" >/dev/null 2>&1; then
+            git fetch origin "${branch}"
+            git switch -c "${branch}" --track "origin/${branch}"
+          else
+            git switch -c "${branch}"
+          fi
+
+      - name: Check out exact Buildchain runtime
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Download exact capture collection
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ needs.capture.outputs.capture-artifact-name }}
+          path: .demo-input/captures
+
+      - name: Download exact qualified evidence
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ needs.qualify.outputs.evidence-artifact-name }}
+          path: .demo-input/qualified
+
+      - name: Materialize every demo idempotently
+        shell: bash
+        env:
+          SCENARIO_PATH: ${{ inputs.scenario-path }}
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r demo_id; do
+            node .buildchain/runtime/scripts/auditable-demo-platform.mjs materialize \
+              --repository "${GITHUB_WORKSPACE}" --scenario "${SCENARIO_PATH}" --demo-id "${demo_id}" \
+              --capture ".demo-input/captures/${demo_id}/capture" \
+              --gate ".demo-input/qualified/${demo_id}/gate" --media ".demo-input/qualified/${demo_id}/media" \
+              --buildchain-sha "${{ job.workflow_sha }}" --renderer-image "${RENDERER_IMAGE}"
+          done < <(node .buildchain/runtime/scripts/auditable-demo-platform.mjs list --scenario "${SCENARIO_PATH}")
+
+      - name: Commit and open or update the protected pull request
+        id: pr
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.DEMO_UPDATE_TOKEN }}
+          SOURCE_SHA: ${{ needs.capture.outputs.source-sha }}
+          BASE_REF: ${{ inputs.materialize-base-ref }}
+        run: |
+          set -euo pipefail
+          branch="automation/auditable-demo-${SOURCE_SHA:0:12}"
+          git config user.name "Keren Dong"
+          git config user.email "keren.dong@kungfu.link"
+          publication=$(node .buildchain/runtime/scripts/auditable-demo-platform.mjs publication --scenario "${{ inputs.scenario-path }}")
+          readme_path=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(v.readmePath)' "${publication}")
+          evidence_path=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(v.evidencePath)' "${publication}")
+          git add -- "${readme_path}" "${evidence_path}"
+          if ! git diff --cached --quiet; then
+            git commit -s -m "docs: refresh auditable demo media"
+            git push origin "${branch}"
+          fi
+          url=$(gh pr list --state open --head "${branch}" --base "${BASE_REF}" --json url --jq '.[0].url // ""')
+          if [ -z "${url}" ]; then
+            url=$(gh pr create --base "${BASE_REF}" --head "${branch}" \
+              --title "docs: refresh auditable demo media" \
+              --body "Refreshes content-addressed auditable demo media from the exact declared standalone binary, qualified Gate, immutable renderer, and Release Passport. Identity and Product System metadata grant no authority.")
+          fi
+          echo "url=${url}" >> "${GITHUB_OUTPUT}"

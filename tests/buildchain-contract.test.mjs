@@ -249,6 +249,19 @@ test("contract world exposes auditable-demo media qualification coordinates", ()
   assert.doesNotMatch(surface.optionalInputs.join("\n"), /ffmpeg|codec|shell|transcod/i);
 });
 
+test("contract world exposes declarative standalone binary demo consumption", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "3.0.5-alpha.3" },
+  });
+  const surface = contract.surfaces.find((entry) => entry.id === "declarative-auditable-demo");
+  assert.ok(surface);
+  assert.equal(surface.path, ".github/workflows/.declarative-auditable-demo.yml");
+  assert.ok(surface.requiredInputs.includes("binary-artifact-digest"));
+  assert.ok(surface.requiredOutputs.includes("publication-pr-url"));
+  assert.equal(surface.breakingDefaults.executionBoundary, "exact-binary-network-none-secret-free-60-seconds");
+});
+
 test("contract world exposes additive post-publish artifact provenance schema", () => {
   const contract = createBuildchainContractWorld({
     root: path.resolve(import.meta.dirname, ".."),
