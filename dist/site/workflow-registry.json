@@ -126,6 +126,7 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "checkout-history-mode",
         "compiler-cache-platforms-json",
         "compiler-cache-provider",
         "compiler-cache-required",
@@ -175,7 +176,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 82,
+      "inputCount": 83,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1155,6 +1156,7 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "checkout-history-mode",
         "compiler-cache-platforms-json",
         "compiler-cache-provider",
         "compiler-cache-required",
@@ -1204,7 +1206,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 85,
+      "inputCount": 86,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

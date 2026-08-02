@@ -437,6 +437,13 @@
       "class": "release-propagation",
       "rationale": "Finalized package promotion can opt into a strict source-controlled propagation graph that verifies the exact npm integrity and gitHead, Git tag target, public Release Passport, and downstream base SHA before emitting paused claim-only Work artifacts without downstream mutation authority.",
       "source": "packages/core/release-propagation-capture.js"
+    },
+    {
+      "id": "alpha-propagation-stable-shell-compatibility",
+      "impact": "patch",
+      "class": "workflow-contract",
+      "rationale": "The v3-alpha public promotion router forwards the additive package propagation input only to the matching alpha shell until the stable v3 shell publishes that input, preventing GitHub reusable-workflow graph validation from rejecting alpha callers while preserving the existing stable contract.",
+      "source": ".github/workflows/release-candidate-promote.yml"
     }
   ],
   "classification": "minor",
