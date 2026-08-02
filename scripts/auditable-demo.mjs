@@ -1017,6 +1017,15 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
   return { manifest, probe, qualification };
 }
 
+function renditionInputRoots(root, renditions) {
+  return renditions.map((rendition) => ({
+    id: rendition.id, role: rendition.role, captureRoot: rendition.captureRoot,
+    sceneRoot: sha256(readRegular(path.join(root, rendition.files.scene), `${rendition.id} scene`)),
+    transcriptRoot: sha256(readRegular(path.join(root, rendition.files.transcript), `${rendition.id} transcript`)),
+    projectionRoot: sha256(readRegular(path.join(root, rendition.files.projection), `${rendition.id} projection`)),
+  }));
+}
+
 function finalizeGate(values) {
   const adapterOutput = path.resolve(required(values, "--adapter-output"));
   const smokeInput = path.resolve(required(values, "--smoke-input"));
@@ -1109,14 +1118,7 @@ function finalizeGate(values) {
           renditionSet: {
             schema: normalized.renditionSet.schema,
             root: sha256(readRegular(path.join(output, "rendition-set.json"), "rendition set")),
-            renditions: normalized.renditionSet.renditions.map((rendition) => ({
-              id: rendition.id,
-              role: rendition.role,
-              captureRoot: rendition.captureRoot,
-              sceneRoot: sha256(readRegular(path.join(output, rendition.scene), `${rendition.id} scene`)),
-              transcriptRoot: sha256(readRegular(path.join(output, rendition.transcript), `${rendition.id} transcript`)),
-              projectionRoot: sha256(readRegular(path.join(output, rendition.projection), `${rendition.id} projection`)),
-            })),
+            renditions: renditionInputRoots(output, normalized.renditionSet.renditions),
           },
         }
         : {}),
@@ -1179,15 +1181,8 @@ function verifyGate(values) {
     invariant(
       qualifiedRenditionSet.schema === normalized.renditionSet.schema
         && qualifiedRenditionSet.root === sha256(readRegular(path.join(bundle, "rendition-set.json"), "rendition set"))
-        && JSON.stringify(qualifiedRenditionSet.renditions)
-          === JSON.stringify(normalized.renditionSet.renditions.map((rendition) => ({
-            id: rendition.id,
-            role: rendition.role,
-            captureRoot: rendition.captureRoot,
-            sceneRoot: sha256(readRegular(path.join(bundle, rendition.scene), `${rendition.id} scene`)),
-            transcriptRoot: sha256(readRegular(path.join(bundle, rendition.transcript), `${rendition.id} transcript`)),
-            projectionRoot: sha256(readRegular(path.join(bundle, rendition.projection), `${rendition.id} projection`)),
-          }))),
+        && stableJson(qualifiedRenditionSet.renditions)
+          === stableJson(renditionInputRoots(bundle, normalized.renditionSet.renditions)),
       "gate native rendition roots mismatch",
     );
   }
@@ -1311,6 +1306,7 @@ export {
   inspectRendererMedia,
   parseAdapterArguments,
   qualifyMediaFixture,
+  renditionInputRoots,
   prepareSmoke,
   runAdapter,
   sha256,

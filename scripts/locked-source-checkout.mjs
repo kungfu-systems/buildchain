@@ -46,6 +46,14 @@ function normalizeFallback(value = "github") {
   return fallback;
 }
 
+function normalizeHistoryMode(value = "shallow") {
+  const mode = String(value || "shallow").trim().toLowerCase() || "shallow";
+  if (!["shallow", "full"].includes(mode)) {
+    throw new Error(`checkout-history-mode must be shallow or full; got ${value}`);
+  }
+  return mode;
+}
+
 function splitRepository(repository) {
   const match = String(repository || "").trim().match(/^([^/\s]+)\/([^/\s]+)$/);
   if (!match) {
@@ -237,19 +245,25 @@ export function fetchSourceCommit({
   sourceTreeSha = "",
   timeoutMs,
   env = {},
+  historyMode = readEnv("BUILDCHAIN_CHECKOUT_HISTORY_MODE", "shallow"),
   allowFullFetchRetry = false,
   runGit = git,
   containsCommit = hasCommit,
 }) {
+  const normalizedHistoryMode = normalizeHistoryMode(historyMode);
   const fetchEnv = isolatedGitFetchEnv(env, targetPath);
   const fetch = (refspec) => {
     const options = { cwd: targetPath, timeoutMs, env: fetchEnv };
+    const fetchArgs = ["fetch", "--no-tags"];
+    if (normalizedHistoryMode === "shallow") fetchArgs.push("--depth=1");
+    fetchArgs.push(remoteName, refspec);
     try {
-      runGit(["fetch", "--no-tags", "--depth=1", remoteName, refspec], options);
-      return "shallow";
+      runGit(fetchArgs, options);
+      return normalizedHistoryMode;
     } catch (error) {
       if (
-        !allowFullFetchRetry
+        normalizedHistoryMode !== "shallow"
+        || !allowFullFetchRetry
         || !/dumb http transport does not support shallow capabilities/i.test(
           String(error?.message || error || ""),
         )

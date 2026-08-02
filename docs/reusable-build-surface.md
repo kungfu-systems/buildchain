@@ -439,6 +439,7 @@ jobs:
       checkout-cache-timeout-seconds: 60
       checkout-cache-github-timeout-seconds: 600
       checkout-cache-fetch-attempts: 3
+      checkout-history-mode: shallow
 ```
 
 `checkout-cache-mode` accepts:
@@ -448,6 +449,14 @@ jobs:
 | `off`     | Default. Buildchain fetches the locked commit from GitHub.                                                  |
 | `auto`    | Try the trusted cache first; on miss, record the miss and fall back according to `checkout-cache-fallback`. |
 | `require` | Require the cache to provide the locked commit and fail before lifecycle work if unavailable.               |
+
+`checkout-history-mode` defaults to `shallow`, preserving the bounded single-
+commit transport used by ordinary builds. Set it to `full` only when a
+consumer gate must inspect source ancestry, for example when an Alpha pull
+request qualifies GitHub's synthetic merge ref while retained evidence is
+bound to an ancestor of the source-lock head. Full mode still verifies the
+resolved immutable `HEAD` and tree; it changes only whether the advertised
+source ref is fetched with depth one or with its reachable history.
 
 The cache can be a local/LAN mirror URL template or a runner-local bare
 reference repository template. Templates support `{owner}`, `{repo}`,

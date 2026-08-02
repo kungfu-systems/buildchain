@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "3.0.4-alpha.9",
+    "version": "3.0.5-alpha.3",
     "line": "v3.0"
   },
   "versionImpact": {
@@ -423,11 +423,39 @@
       "class": "documentation",
       "rationale": "A tested 15-to-30-minute Golden Path now carries a first-time user from installation through init, validation, reusable workflow inspection, release dry-run, and local Release Passport inspection without changing an existing public contract.",
       "source": "docs/getting-started.md"
+    },
+    {
+      "id": "package-release-source-bound-exact-tag",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "New package publish transactions bind the immutable public version tag to source_sha so npm gitHead, the Git tag, and downstream release envelopes identify one source commit, while floating channel refs remain on generated release state and legacy release-material tag targets stay accepted for recovery.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "package-release-propagation-work-capture",
+      "impact": "minor",
+      "class": "release-propagation",
+      "rationale": "Finalized package promotion can opt into a strict source-controlled propagation graph that verifies the exact npm integrity and gitHead, Git tag target, public Release Passport, and downstream base SHA before emitting paused claim-only Work artifacts without downstream mutation authority.",
+      "source": "packages/core/release-propagation-capture.js"
+    },
+    {
+      "id": "alpha-propagation-stable-shell-compatibility",
+      "impact": "patch",
+      "class": "workflow-contract",
+      "rationale": "The v3-alpha public promotion router forwards the additive package propagation input only to the matching alpha shell until the stable v3 shell publishes that input, preventing GitHub reusable-workflow graph validation from rejecting alpha callers while preserving the existing stable contract.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "promotion-controller-finalization-handoff",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "A successful registry publication that intentionally pauses for protected version-state finalization records a partial controller receipt without failing the promotion workflow; incomplete non-finalization paths remain fail-closed.",
+      "source": ".github/workflows/.release-candidate-promote.yml"
     }
   ],
   "classification": "minor",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, aligned propagation receipts, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
+  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, source-bound immutable package tags, aligned propagation receipts, claim-only package propagation Work capture, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
 }

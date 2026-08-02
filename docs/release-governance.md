@@ -863,6 +863,13 @@ must be absent or already point at accepted release material. This preserves an
 immutable tag that represents a completed transaction while allowing a tag
 collision discovered after registry publication to recover without republishing.
 
+For package publish transactions, the immutable public version tag points to
+the transaction `source_sha`, so registry source metadata such as npm `gitHead`
+and the Git tag identify the same source commit. Protected branches and mutable
+channel tags continue to point to the generated `release_sha`. Recovery accepts
+older completed transactions whose exact tags already point to recorded release
+or release-material SHAs, but new tags are source-bound.
+
 Every Buildchain publish model that can run registry side effects must bind the
 publish entrypoint to an immutable `publish-gate/*` source lock. The reusable
 `release-candidate-promote.yml@v3` wrapper creates or updates that gate ref and

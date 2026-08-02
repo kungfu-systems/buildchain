@@ -8,6 +8,7 @@ import {
   renderWindowsJitBootstrap,
   verifyWindowsEc2JitQualification,
   windowsEc2JitPlan,
+  windowsJitCampaignId,
   windowsJitRunnerLabel,
   windowsJitRunnerLabels,
 } from "../scripts/aws-windows-jit-core.mjs";
@@ -48,12 +49,17 @@ test("Windows JIT runner labels are card-scoped and bounded", () => {
     "X64",
     "aws-us-ec2-windows-jit-full-01",
   ]);
+  assert.throws(
+    () => windowsJitCampaignId("win-this-campaign-id-is-too-long"),
+    /bounded Windows campaign id/,
+  );
 });
 
 test("Windows bootstrap keeps JIT material out of user data", () => {
   const template =
-    "param=__JIT_PARAMETER_NAME__;label=__RUNNER_LABEL__;bucket=__EVIDENCE_BUCKET__;sha=__SOURCE_SHA__;run=__GITHUB_RUN_ID__;attempt=__GITHUB_RUN_ATTEMPT__;ami=__AMI_ID__;name=__AMI_NAME__;region=__REGION__;type=__INSTANCE_TYPE__;launched=__LAUNCHED_AT__";
+    "campaign=__CAMPAIGN_ID__;param=__JIT_PARAMETER_NAME__;label=__RUNNER_LABEL__;bucket=__EVIDENCE_BUCKET__;sha=__SOURCE_SHA__;run=__GITHUB_RUN_ID__;attempt=__GITHUB_RUN_ATTEMPT__;ami=__AMI_ID__;name=__AMI_NAME__;region=__REGION__;type=__INSTANCE_TYPE__;launched=__LAUNCHED_AT__";
   const rendered = renderWindowsJitBootstrap(template, {
+    campaignId: "win-20260802-ledger",
     jitParameterName: "/kungfu/burst/windows/full-01",
     evidenceBucket: "kungfu-windows-jit-evidence",
     runnerLabel: "aws-us-ec2-windows-jit-full-01",
@@ -67,11 +73,13 @@ test("Windows bootstrap keeps JIT material out of user data", () => {
   assert.doesNotMatch(rendered, /__[A-Z0-9_]+__/);
   assert.doesNotMatch(rendered, /encoded_jit_config|github_pat_|ghp_|gho_/);
   assert.match(rendered, /\/kungfu\/burst\/windows\/full-01/);
+  assert.match(rendered, /campaign=win-20260802-ledger/);
 });
 
 test("Windows JIT evidence binds exact source, AMI, runner, and lifecycle", () => {
   const evidence = createWindowsJitEvidence({
     repository: "kungfu-systems/kungfu",
+    campaignId: "win-20260802-ledger",
     sourceSha: "a".repeat(40),
     sourceRef: "refs/heads/dev/v4/v4.0",
     githubRunId: "123",
@@ -96,6 +104,7 @@ test("Windows JIT evidence binds exact source, AMI, runner, and lifecycle", () =
     cleanupResult: "terminated",
   });
   assert.equal(evidence.source.sha, "a".repeat(40));
+  assert.equal(evidence.campaign.id, "win-20260802-ledger");
   assert.equal(evidence.aws.instanceId, "i-0123456789abcdef0");
   assert.match(evidence.digest, /^sha256:[0-9a-f]{64}$/);
 });
@@ -108,6 +117,7 @@ test("Windows phase requires smoke, three full jobs, both cleanups, and zero res
     { kind: "full" },
   ].map((job) => ({
     ...job,
+    campaignId: "win-20260802-ledger",
     trusted: true,
     exactSource: true,
     status: "succeeded",
@@ -120,6 +130,7 @@ test("Windows phase requires smoke, three full jobs, both cleanups, and zero res
     runnerRemoved: true,
   };
   const result = verifyWindowsEc2JitQualification({
+    campaignId: "win-20260802-ledger",
     jobs,
     cancellationCleanup: cleanup,
     timeoutCleanup: cleanup,
@@ -133,10 +144,21 @@ test("Windows phase requires smoke, three full jobs, both cleanups, and zero res
   });
   assert.equal(result.qualifying, true);
   assert.equal(result.metrics.fullJobs, 3);
+  const mismatched = verifyWindowsEc2JitQualification({
+    campaignId: "win-20260802-ledger",
+    jobs: jobs.map((job, index) =>
+      index === 0 ? { ...job, campaignId: "win-other-campaign" } : job,
+    ),
+    cancellationCleanup: cleanup,
+    timeoutCleanup: cleanup,
+    actualIncrementalSpendUsd: 8.2,
+  });
+  assert.ok(mismatched.issues.includes("accepted-jobs-not-bound-to-campaign"));
 });
 
 test("Windows phase fails closed on residue or missing timeout cleanup", () => {
   const result = verifyWindowsEc2JitQualification({
+    campaignId: "win-20260802-ledger",
     jobs: [],
     cancellationCleanup: {
       status: "passed",
@@ -182,6 +204,14 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /ec2:TerminateInstances/);
   assert.match(stack, /ssm:GetParameter/);
   assert.match(stack, /s3:PutObject/);
+  assert.match(stack, /Type: AWS::DynamoDB::Table/);
+  assert.match(stack, /PointInTimeRecoveryEnabled: true/);
+  assert.match(stack, /dynamodb:TransactWriteItems/);
+  assert.match(stack, /STATE_TABLE: !Ref CampaignState/);
+  assert.match(stack, /kill_campaign\(/);
+  assert.match(stack, /runner-lifetime-violation/);
+  assert.match(stack, /TagFilteredBudgetConfirmed/);
+  assert.match(stack, /disabled-until-cost-allocation-tag-is-active/);
   assert.match(bootstrap, /latest\/api\/token/);
   assert.match(bootstrap, /AWS\.Tools\.SimpleSystemsManagement/);
   assert.match(bootstrap, /AWS\.Tools\.S3/);

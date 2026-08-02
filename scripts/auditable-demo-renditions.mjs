@@ -16,7 +16,6 @@ const RENDITION_SET_NON_AUTHORITIES = [
   "runtime-authority",
   ...TERMINAL_CAPTURE_NON_AUTHORITIES,
 ];
-
 export function validateTerminalCapture(value, scene, helpers) {
   const { decodeBase64, digestPattern, exactKeys, integer, invariant, maxBytes, maxEvents, text } = helpers;
   exactKeys(
@@ -53,10 +52,10 @@ export function validateTerminalCapture(value, scene, helpers) {
   }
   exactKeys(value.completion, ["schema", "status", "reportRoot", "eventCount"], [], "terminalCapture.completion");
   invariant(
-    value.completion.schema === "kungfu.agent-work-lab.tui-autoplay/v1"
+    /^[a-z0-9][a-z0-9._/-]*\/v[1-9][0-9]*$/u.test(value.completion.schema)
       && value.completion.status === "qualified"
       && digestPattern.test(value.completion.reportRoot),
-    "terminal capture completion sentinel is not a qualified Agent Work Lab autoplay",
+    "terminal capture completion sentinel is not a qualified versioned result",
   );
   integer(value.completion.eventCount, 1, 100_000, "terminalCapture.completion.eventCount");
   invariant(value.exitCode === 0, "terminal capture exitCode must be zero");
@@ -115,7 +114,7 @@ export function validateRenditionSet(output, helpers) {
     const captureBytes = readRegular(path.join(output, entry.terminalCapture), `${label} terminal capture`, maxBytes);
     const capture = validateTerminalCapture(JSON.parse(decodeUtf8(captureBytes, `${label} terminal capture`)), scene, helpers);
     invariant(entry.captureRoot === sha256(captureBytes), `${label}.captureRoot mismatch`);
-    return { ...entry, transcript, lines, scene, projection, capture };
+    return { ...entry, files: Object.fromEntries(["transcript", "projection", "scene", "terminalCapture"].map((key) => [key, entry[key]])), transcript, lines, scene, projection, capture };
   });
   invariant(normalized[0].captureRoot !== normalized[1].captureRoot, "native rendition capture roots must be distinct");
   invariant(
