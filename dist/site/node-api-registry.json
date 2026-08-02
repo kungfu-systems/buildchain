@@ -15198,7 +15198,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation-work.js",
-        "line": 514
+        "line": 518
       },
       "example": "import { resumeReleasePropagationWork } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -15227,7 +15227,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation-work.js",
-        "line": 482
+        "line": 486
       },
       "example": "import { verifyReleasePropagationWork } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18765,7 +18765,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:62f5633ce6df3db2b92358a078dcc82d935d6fe480b9b4bf99294c0c1ccc39fb"
+      "digest": "sha256:470b65c96353a9f3fac0db7b67bba34058e03bfa7e1a8fc6bec0d6d9f13aa6c4"
     },
     {
       "id": "build-facts",

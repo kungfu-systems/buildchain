@@ -46,10 +46,14 @@ function armPlan() {
     armedAt: arg("armed-at", new Date().toISOString()),
     expiresAt: arg("expires-at"),
     phaseSpendBaselineUsd: arg("phase-spend-baseline-usd"),
+    maxAcceptedInstances: arg("max-accepted-instances"),
   });
 }
 
-function confirm(plan, { phaseSpendBaseline = true } = {}) {
+function confirm(
+  plan,
+  { phaseSpendBaseline = true, maxAcceptedInstances = true } = {},
+) {
   if (arg("confirm-campaign-id") !== plan.campaign.id) {
     throw new Error("--confirm-campaign-id must equal the campaign id");
   }
@@ -69,6 +73,16 @@ function confirm(plan, { phaseSpendBaseline = true } = {}) {
   ) {
     throw new Error(
       "--confirm-phase-spend-baseline-usd must equal the phase spend baseline",
+    );
+  }
+  if (
+    maxAcceptedInstances &&
+    (!arg("confirm-max-accepted-instances").trim() ||
+      Number(arg("confirm-max-accepted-instances")) !==
+        plan.limits.maxAcceptedInstances)
+  ) {
+    throw new Error(
+      "--confirm-max-accepted-instances must equal the campaign slot ceiling",
     );
   }
 }
@@ -132,7 +146,10 @@ export function main() {
       expiresAt: new Date(now.getTime() + 1000).toISOString(),
       phaseSpendBaselineUsd: 0,
     });
-    confirm(plan, { phaseSpendBaseline: false });
+    confirm(plan, {
+      phaseSpendBaseline: false,
+      maxAcceptedInstances: false,
+    });
     const topic = killSwitchTopic();
     aws(
       plan,

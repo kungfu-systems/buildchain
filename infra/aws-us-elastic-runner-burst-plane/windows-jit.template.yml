@@ -282,7 +282,7 @@ Resources:
   ReaperLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /kungfu/buildchain/aws-us-windows-jit/reaper
+      LogGroupName: !Sub "/kungfu/buildchain/aws-us-windows-jit/reaper/${AWS::StackName}"
       RetentionInDays: 30
 
   Reaper:
