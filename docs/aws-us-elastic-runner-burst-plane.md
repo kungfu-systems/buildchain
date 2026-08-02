@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-01
+last_reviewed: 2026-08-02
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -173,21 +173,104 @@ Each runner uses:
   security-group rule, no key pair, and no warm Auto Scaling capacity.
 
 Runner diagnostics and a redacted lifecycle record are uploaded to the
-provider's encrypted, private evidence bucket. The runner process exits after
-one job, Windows shuts down, and EC2's instance-initiated shutdown behavior is
-set to `terminate`. A five-minute reaper terminates card-owned stopped or
+provider's encrypted, private evidence bucket under the exact campaign, run,
+attempt, and instance identity. The runner process exits after one job, Windows
+shuts down, and EC2's instance-initiated shutdown behavior is set to
+`terminate`. A five-minute reaper terminates card-owned stopped or
 three-hour-old instances and deletes only their dedicated JIT parameter.
 
 At the 2026-07-29 AWS Price List rate of USD 1.45 per Windows
-`c7i.4xlarge` hour, six accepted three-hour instances reserve USD 26.10. The
-two-instance race envelope reserves another USD 8.70, producing a USD 34.80
-worst case below the dedicated USD 40 budget. Budget notifications at 80% and
-95% invoke the same card-scoped global kill switch.
+`c7i.4xlarge` hour, each accepted instance reserves its complete three-hour
+USD 4.35 fail-closed lifetime before `RunInstances`. A DynamoDB transaction
+binds the exact campaign and source, creates an idempotent run ledger entry,
+and atomically refuses a seventh accepted instance. Six accepted instances
+therefore reserve at most USD 26.10 under the dedicated USD 40 decision.
 
-Qualification requires one runner-profile smoke, three trusted exact-source
-full Windows jobs, independent cancellation and timeout cleanup exercises, and
-zero repository runner, EC2 instance, disposable volume, min capacity, and
-desired capacity within 15 minutes of the final job.
+The campaign starts unarmed and expires within 24 hours. Its `CONTROL` record
+can be created only once: a killed or expired campaign cannot be re-armed by
+the campaign tool. A budget notification or any instance lifetime violation
+persists `KILLED` before cleanup, so later workflow dispatches fail before a
+paid launch. Reservations are never refunded: a controller crash, ambiguous
+launch, or successful launch all remain charged to the campaign, favoring a
+false stop over an accidental budget overrun.
+
+The tag-filtered AWS Budget is defense in depth, not the authoritative launch
+gate. It is disabled by default because a linked account cannot activate a
+cost-allocation tag. Set `EnableTagFilteredBudget=true` only after the AWS
+Organizations management account has activated `kungfu:provider` and a Cost
+Explorer readback proves that `windows-ec2-jit` spend is visible. The DynamoDB
+reservation cap remains mandatory in either mode.
+
+Qualification requires one runner-profile smoke and three trusted exact-source
+full Windows jobs all bound to the same campaign, independent cancellation and
+timeout cleanup exercises, and zero repository runner, EC2 instance,
+disposable volume, min capacity, and desired capacity within 15 minutes of the
+final job.
+
+### Phase 2 campaign controller
+
+`scripts/aws-windows-jit-campaign.mjs` is the one-shot operator boundary.
+Without a mutation mode it emits the arm plan. `arm-campaign` requires the
+campaign id, exact source SHA, and state table to be repeated as confirmations,
+then creates `CONTROL` and `CAMPAIGN#<id>` with `attribute_not_exists`
+conditions. DynamoDB therefore refuses a second campaign in the same retained
+state table. The operator can always use `kill-campaign`; there is deliberately
+no clear or re-arm operation.
+
+Every `scripts/aws-windows-jit-controller.mjs --execute` call must provide the
+same `--campaign-id`, `--confirm-campaign-id`, `--state-table`, and
+`--confirm-state-table`. After the GitHub, AMI, active-instance, SSM, and EC2
+DryRun checks pass, the controller
+atomically reserves one run. Duplicate run-attempt-qualification identities,
+source mismatch, expiry, `KILLED`, the seventh accepted instance, or a
+reservation over the USD 40 ceiling all fail closed before `RunInstances`.
+
+Example dry-run and arm boundary (do not execute without a new campaign budget
+decision):
+
+```bash
+windows_campaign=win-REPLACE_WITH_CAMPAIGN_ID
+windows_source=REPLACE_WITH_EXACT_40_CHARACTER_SHA
+windows_state_table=REPLACE_WITH_CAMPAIGN_STATE_TABLE
+windows_expires_at=REPLACE_WITH_ISO_TIMESTAMP_WITHIN_24_HOURS
+
+node scripts/aws-windows-jit-campaign.mjs plan-arm \
+  --campaign-id "$windows_campaign" \
+  --source-sha "$windows_source" \
+  --state-table "$windows_state_table" \
+  --expires-at "$windows_expires_at"
+
+node scripts/aws-windows-jit-campaign.mjs arm-campaign \
+  --campaign-id "$windows_campaign" \
+  --confirm-campaign-id "$windows_campaign" \
+  --source-sha "$windows_source" \
+  --confirm-source-sha "$windows_source" \
+  --state-table "$windows_state_table" \
+  --confirm-state-table "$windows_state_table" \
+  --expires-at "$windows_expires_at"
+```
+
+Arming creates a permanent one-shot control record and admits up to six paid
+instances. Its rollback is fail-closed, not deletion: `kill-campaign` first
+persists `KILLED`, then publishes to the dedicated SNS topic so the reaper
+terminates active card-owned instances and removes their JIT parameters. The
+command is idempotent, but the operator must read back DynamoDB, EC2, SSM, and
+GitHub runners before treating cleanup as complete:
+
+```bash
+windows_kill_topic=REPLACE_WITH_DEDICATED_KILL_SWITCH_TOPIC_ARN
+
+node scripts/aws-windows-jit-campaign.mjs kill-campaign \
+  --campaign-id "$windows_campaign" \
+  --confirm-campaign-id "$windows_campaign" \
+  --source-sha "$windows_source" \
+  --confirm-source-sha "$windows_source" \
+  --state-table "$windows_state_table" \
+  --confirm-state-table "$windows_state_table" \
+  --kill-switch-topic "$windows_kill_topic" \
+  --confirm-kill-switch-topic "$windows_kill_topic" \
+  --reason operator-kill
+```
 
 ## Phase 3 contract
 

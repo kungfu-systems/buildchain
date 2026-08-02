@@ -3,12 +3,13 @@
 import { digest } from "./aws-runner-burst-core.mjs";
 import {
   WINDOWS_EC2_JIT,
+  windowsJitCampaignId,
   windowsJitRunnerLabel,
   windowsJitRunnerLabels,
 } from "./aws-windows-jit-core.mjs";
 
 export const AWS_WINDOWS_JIT_CONTROLLER_CONTRACT =
-  "kungfu-buildchain-aws-windows-jit-controller/v1";
+  "kungfu-buildchain-aws-windows-jit-controller/v2";
 
 function exact(value, pattern, label) {
   const normalized = String(value || "").trim();
@@ -59,6 +60,7 @@ export function createWindowsJitLaunchPlan(values = {}) {
   );
   const jobId = exact(values.jobId, /^\d+$/, "jobId");
   const qualification = qualificationId(values.qualificationId);
+  const campaign = windowsJitCampaignId(values.campaignId);
   const runnerLabel = windowsJitRunnerLabel(values.runnerLabel);
   const expectedLabel = `${WINDOWS_EC2_JIT.labelPrefix}${qualification}`;
   if (runnerLabel !== expectedLabel) {
@@ -109,6 +111,11 @@ export function createWindowsJitLaunchPlan(values = {}) {
     /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/,
     "evidenceBucket",
   );
+  const stateTable = exact(
+    values.stateTable,
+    /^kungfu-buildchain-windows-jit(?:-[A-Za-z0-9_.-]+)?$/,
+    "stateTable",
+  );
   const launchedAt = iso(values.launchedAt, "launchedAt");
   const clientToken = `kungfu-${runId}-${runAttempt}-${qualification}`;
   const jitParameterName =
@@ -125,6 +132,7 @@ export function createWindowsJitLaunchPlan(values = {}) {
     tag("kungfu:owner", "buildchain"),
     tag("kungfu:plane", "aws-us-elastic-runner-burst"),
     tag("kungfu:provider", "windows-ec2-jit"),
+    tag("kungfu:campaign-id", campaign),
     tag("kungfu:github-run-id", runId),
     tag("kungfu:github-run-attempt", runAttempt),
     tag("kungfu:qualification-id", qualification),
@@ -141,6 +149,7 @@ export function createWindowsJitLaunchPlan(values = {}) {
     contract: AWS_WINDOWS_JIT_CONTROLLER_CONTRACT,
     kind: "launch-plan",
     repository,
+    campaign: { id: campaign },
     source: { sha: sourceSha, ref: sourceRef },
     github: {
       runId,
@@ -164,6 +173,7 @@ export function createWindowsJitLaunchPlan(values = {}) {
       securityGroupId,
       instanceProfileName,
       evidenceBucket,
+      stateTable,
       jitParameterName,
       launchedAt,
       clientToken,
@@ -188,6 +198,13 @@ export function createWindowsJitLaunchPlan(values = {}) {
       exactSourceRequired: true,
       queuedJobRequired: true,
       activeInstanceCeiling: WINDOWS_EC2_JIT.maxConcurrentInstances,
+      campaignAcceptedInstanceCeiling: WINDOWS_EC2_JIT.maxAcceptedInstances,
+      campaignReservationUsd:
+        (WINDOWS_EC2_JIT.pricePerHourUsd *
+          WINDOWS_EC2_JIT.maximumInstanceLifetimeMinutes) /
+        60,
+      campaignBudgetLimitUsd: WINDOWS_EC2_JIT.budgetLimitUsd,
+      persistentCampaignLedgerRequired: true,
       awsDryRunRequiredBeforeLaunch: true,
       userDataTransport: "fileb://rendered-bootstrap",
       jitConfigTransport: "0600-temporary-file-to-ssm-secure-string",

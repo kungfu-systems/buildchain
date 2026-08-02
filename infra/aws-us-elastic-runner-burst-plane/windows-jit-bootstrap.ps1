@@ -7,6 +7,7 @@ $ProgressPreference = "SilentlyContinue"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $Region = "__REGION__"
+$CampaignId = "__CAMPAIGN_ID__"
 $JitParameterName = "__JIT_PARAMETER_NAME__"
 $EvidenceBucket = "__EVIDENCE_BUCKET__"
 $RunnerLabel = "__RUNNER_LABEL__"
@@ -135,6 +136,7 @@ function Put-Evidence([string]$InstanceId, [string]$AvailabilityZone) {
     schemaVersion = 1
     contract = "kungfu-buildchain-aws-windows-jit-lifecycle/v1"
     provider = "aws-ec2"
+    campaignId = $CampaignId
     instanceId = $InstanceId
     instanceType = $env:AWS_EC2_INSTANCE_TYPE
     availabilityZone = $AvailabilityZone
@@ -160,7 +162,7 @@ function Put-Evidence([string]$InstanceId, [string]$AvailabilityZone) {
   }
   $LifecyclePath = Join-Path $EvidenceRoot "lifecycle.json"
   $Lifecycle | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $LifecyclePath -Encoding UTF8
-  $Prefix = "windows/$GitHubRunId/$GitHubRunAttempt/$InstanceId"
+  $Prefix = "windows/$CampaignId/$GitHubRunId/$GitHubRunAttempt/$InstanceId"
   Write-S3Object -BucketName $EvidenceBucket -Key "$Prefix/lifecycle.json" -File $LifecyclePath -Region $Region | Out-Null
   $Diag = "C:\actions-runner\_diag"
   if (Test-Path -LiteralPath $Diag) {
@@ -177,6 +179,7 @@ try {
   $InstanceId = [string]$Document.instanceId
   $AvailabilityZone = [string]$Document.availabilityZone
   $env:AWS_EC2_INSTANCE_ID = $InstanceId
+  $env:AWS_EC2_CAMPAIGN_ID = $CampaignId
   $env:AWS_EC2_INSTANCE_TYPE = "__INSTANCE_TYPE__"
   $env:AWS_EC2_AMI_ID = $AmiId
   $env:AWS_EC2_AMI_NAME = $AmiName
