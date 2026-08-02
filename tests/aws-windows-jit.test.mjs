@@ -8,6 +8,7 @@ import {
   renderWindowsJitBootstrap,
   verifyWindowsEc2JitQualification,
   windowsEc2JitPlan,
+  windowsJitCampaignId,
   windowsJitRunnerLabel,
   windowsJitRunnerLabels,
 } from "../scripts/aws-windows-jit-core.mjs";
@@ -48,6 +49,10 @@ test("Windows JIT runner labels are card-scoped and bounded", () => {
     "X64",
     "aws-us-ec2-windows-jit-full-01",
   ]);
+  assert.throws(
+    () => windowsJitCampaignId("win-this-campaign-id-is-too-long"),
+    /bounded Windows campaign id/,
+  );
 });
 
 test("Windows bootstrap keeps JIT material out of user data", () => {

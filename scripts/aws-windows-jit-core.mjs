@@ -77,7 +77,7 @@ export function windowsJitRunnerLabels(value) {
 
 export function windowsJitCampaignId(value) {
   const campaign = String(value || "").trim();
-  if (!/^win-[a-z0-9][a-z0-9-]{2,43}$/.test(campaign)) {
+  if (!/^win-[a-z0-9][a-z0-9-]{2,15}$/.test(campaign)) {
     throw new Error("campaignId must be a bounded Windows campaign id");
   }
   return campaign;

@@ -143,14 +143,16 @@ The source-bound evidence and deterministic phase receipt are:
 
 The Windows phase uses the explicit `aws-us-ec2-windows-jit` runner preset.
 Its caller supplies one bounded label under
-`aws-us-ec2-windows-jit-<qualification-id>`, and Buildchain resolves exactly
-one Windows x64 native lane. The reusable trust gate still runs on a
-GitHub-hosted runner before the JIT label can select EC2.
+`aws-us-ec2-windows-jit-<campaign-id>-<qualification-id>`, and Buildchain
+resolves exactly one Windows x64 native lane. The reusable trust gate still
+runs on a GitHub-hosted runner before the JIT label can select EC2.
 
 The provider creates repository-level GitHub JIT configuration for
 `kungfu-systems/kungfu`. Its `labels` request must contain all four scheduling
 labels: `self-hosted`, `Windows`, `X64`, and the card-scoped
-`aws-us-ec2-windows-jit-<qualification-id>` label. GitHub's JIT endpoint does
+`aws-us-ec2-windows-jit-<campaign-id>-<qualification-id>` label. The workflow
+display title also carries both identities, allowing the launch controller to
+verify the queued run against its campaign plan. GitHub's JIT endpoint does
 not infer the default OS and architecture labels when they are omitted. The
 encoded configuration is never placed in EC2 user data, a tag, a command log,
 or an artifact. The operator writes it to a card-scoped SSM SecureString under

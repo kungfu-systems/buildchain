@@ -62,7 +62,7 @@ export function createWindowsJitLaunchPlan(values = {}) {
   const qualification = qualificationId(values.qualificationId);
   const campaign = windowsJitCampaignId(values.campaignId);
   const runnerLabel = windowsJitRunnerLabel(values.runnerLabel);
-  const expectedLabel = `${WINDOWS_EC2_JIT.labelPrefix}${qualification}`;
+  const expectedLabel = `${WINDOWS_EC2_JIT.labelPrefix}${campaign}-${qualification}`;
   if (runnerLabel !== expectedLabel) {
     throw new Error(`runnerLabel must be ${expectedLabel}`);
   }
@@ -157,6 +157,7 @@ export function createWindowsJitLaunchPlan(values = {}) {
       jobId,
       qualificationId: qualification,
       event: "workflow_dispatch",
+      displayTitle: `AWS Windows JIT ${campaign} ${qualification}`,
     },
     runner: {
       name: runnerName,

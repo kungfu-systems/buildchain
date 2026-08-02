@@ -26,7 +26,8 @@ function launchPlan(overrides = {}) {
     jobId: "91315129066",
     qualificationId: "win-full-01",
     campaignId: "win-20260802-ledger",
-    runnerLabel: "aws-us-ec2-windows-jit-win-full-01",
+    runnerLabel:
+      "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01",
     runnerName: "kungfu-win-full-01-30679299189-1",
     sourceSha: "a".repeat(40),
     sourceRef:
@@ -56,6 +57,10 @@ test("Windows controller binds exact run, source, JIT label, and IaC ownership",
   assert.equal(plan.safety.campaignAcceptedInstanceCeiling, 6);
   assert.equal(plan.safety.campaignReservationUsd, 4.35);
   assert.equal(
+    plan.github.displayTitle,
+    "AWS Windows JIT win-20260802-ledger win-full-01",
+  );
+  assert.equal(
     plan.aws.jitParameterName,
     "/kungfu/burst/windows/30679299189/1/win-full-01",
   );
@@ -63,7 +68,7 @@ test("Windows controller binds exact run, source, JIT label, and IaC ownership",
     "self-hosted",
     "Windows",
     "X64",
-    "aws-us-ec2-windows-jit-win-full-01",
+    "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01",
   ]);
   assert.ok(
     plan.aws.instanceTags.some(
@@ -228,9 +233,10 @@ test("Windows controller rejects a mismatched qualification label", () => {
   assert.throws(
     () =>
       launchPlan({
-        runnerLabel: "aws-us-ec2-windows-jit-win-full-02",
+        runnerLabel:
+          "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-02",
       }),
-    /runnerLabel must be aws-us-ec2-windows-jit-win-full-01/,
+    /runnerLabel must be aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01/,
   );
 });
 
@@ -284,9 +290,9 @@ const args = process.argv.slice(2);
 fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "gh", args }) + "\n");
 const joined = args.join(" ");
 if (joined.includes("actions/runs/30679299189")) {
-  process.stdout.write(JSON.stringify({ event: "workflow_dispatch", head_sha: "a".repeat(40), head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
+  process.stdout.write(JSON.stringify({ event: "workflow_dispatch", display_title: "AWS Windows JIT win-20260802-ledger win-full-01", head_sha: "a".repeat(40), head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
 } else if (joined.includes("actions/jobs/91315129066")) {
-  process.stdout.write(JSON.stringify({ status: "queued", labels: ["self-hosted", "Windows", "X64", "aws-us-ec2-windows-jit-win-full-01"] }));
+  process.stdout.write(JSON.stringify({ status: "queued", labels: ["self-hosted", "Windows", "X64", "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01"] }));
 } else if (joined.includes("generate-jitconfig")) {
   process.stdin.resume();
   process.stdin.on("end", () => process.stdout.write(JSON.stringify({ encoded_jit_config: "secret-jit-config" })));
@@ -354,7 +360,7 @@ if (joined.includes("ec2 describe-instances")) {
       "--campaign-id",
       "win-20260802-ledger",
       "--runner-label",
-      "aws-us-ec2-windows-jit-win-full-01",
+      "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01",
       "--runner-name",
       "kungfu-win-full-01-30679299189-1",
       "--source-sha",
@@ -435,9 +441,9 @@ const args = process.argv.slice(2);
 fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "gh", args }) + "\n");
 const joined = args.join(" ");
 if (joined.includes("actions/runs/30679299189")) {
-  process.stdout.write(JSON.stringify({ event: "workflow_dispatch", head_sha: "a".repeat(40), head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
+  process.stdout.write(JSON.stringify({ event: "workflow_dispatch", display_title: "AWS Windows JIT win-20260802-ledger win-full-01", head_sha: "a".repeat(40), head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
 } else if (joined.includes("actions/jobs/91315129066")) {
-  process.stdout.write(JSON.stringify({ status: "queued", labels: ["self-hosted", "Windows", "X64", "aws-us-ec2-windows-jit-win-full-01"] }));
+  process.stdout.write(JSON.stringify({ status: "queued", labels: ["self-hosted", "Windows", "X64", "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01"] }));
 } else if (joined.includes("generate-jitconfig")) {
   process.stdin.resume();
   process.stdin.on("end", () => process.stdout.write(JSON.stringify({ encoded_jit_config: "secret-jit-config" })));
@@ -503,7 +509,7 @@ if (joined.includes("ec2 describe-instances")) {
         "--campaign-id",
         "win-20260802-ledger",
         "--runner-label",
-        "aws-us-ec2-windows-jit-win-full-01",
+        "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01",
         "--runner-name",
         "kungfu-win-full-01-30679299189-1",
         "--source-sha",

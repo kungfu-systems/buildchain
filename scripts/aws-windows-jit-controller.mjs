@@ -79,6 +79,7 @@ function assertLivePreflight(plan, profile) {
   );
   if (
     run.event !== plan.github.event ||
+    run.display_title !== plan.github.displayTitle ||
     run.head_sha !== plan.source.sha ||
     run.head_repository?.full_name !== plan.repository ||
     !["queued", "in_progress"].includes(run.status)
