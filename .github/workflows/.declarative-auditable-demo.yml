@@ -199,7 +199,7 @@ jobs:
     name: Gate and render every declared demo
     needs: capture
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 120
     outputs:
       evidence-artifact-name: ${{ steps.identity.outputs.name }}
       evidence-artifact-digest: ${{ steps.upload.outputs.artifact-digest }}
@@ -290,6 +290,11 @@ jobs:
               --media-profile "${MEDIA_PROFILE}" --media-inspection "${root}/smoke-inspection/media-inspection.json" --output "${root}/gate"
             if [ "${RENDER_MEDIA}" = "true" ]; then
               gate_root=$(sha256sum "${root}/gate/checksums.sha256" | awk '{print "sha256:"$1}')
+              docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+                --volume "${GITHUB_WORKSPACE}/${root}/gate:/input:ro" "${RENDERER_IMAGE}" demo-renderer --validate-only \
+                --scene /input/scene.json --transcript /input/complete-transcript.txt \
+                --projection /input/public-projection.json --terminal-capture /input/terminal-capture.json \
+                --rendition-set /input/rendition-set.json
               docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=1g \
                 --volume "${GITHUB_WORKSPACE}/${root}/gate:/input:ro" --volume "${GITHUB_WORKSPACE}/${root}/render-output:/output" \
                 "${RENDERER_IMAGE}" demo-renderer --scene /input/scene.json --transcript /input/complete-transcript.txt \

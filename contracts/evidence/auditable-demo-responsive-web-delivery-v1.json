@@ -1,5 +1,5 @@
 {
-  "evidenceRoot": "sha256:5bebb7ca41b7b509d63293c3c363fbff917d188fe1d6ae19a73d33424ea623ed",
+  "evidenceRoot": "sha256:b62fb4c8292971303e7b109bc4da3f53e5ea6065c7d51bef01823b6619145343",
   "inputs": {
     "complete-transcript.txt": "sha256:3cc1fc8a46d47fad052143b54ab261f08d007403c4ec00eba37b0a733f7cc615",
     "public-projection.json": "sha256:c5d5ec702189d2e6eed17419f2fd9a659c1b4cbcf7ee1a58ac8507ec2a748180",
@@ -14,7 +14,7 @@
       "production-site-deployment"
     ],
     "profile": {
-      "catalogRoot": "sha256:cf885ac31104a36aa051fb62f47dd79b68bd671f7dfeeb1a458ea7d0cbf0c479",
+      "catalogRoot": "sha256:87578237079330ac2843113af2baff63031dc1363dba43cf3a59127ed2d255a2",
       "id": "responsive-web-delivery-v1",
       "mode": "web-delivery",
       "profileRoot": "sha256:fdbda001970304af935f58af11ccfdb7c32ec466c9dd487cbb81ee1b19dc4556"
