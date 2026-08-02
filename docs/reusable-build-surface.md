@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-03
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-30
+  generated_at: 2026-08-03
   invisible_context: not asserted
 ---
 
@@ -624,7 +624,8 @@ Every native and container build lane reads this declaration after the build
 lifecycle and before verification. Buildchain binds the exact artifact bytes or directory tree to
 the caller repository, source commit, source tree, immutable runtime, platform,
 and requested signature semantics, then publishes a deterministic
-`<artifact>-signing-request-<platform>-<source-sha>` request. No consumer
+`<artifact>-signing-request-<platform>-<source-sha>-<run-id>-<run-attempt>`
+request. No consumer
 workflow step is required. The lifecycle runner automatically adds declarations
 selected for the current platform to the `build` manifest scan, including
 subjects outside the caller's ordinary `artifact-paths`; this extends the
@@ -677,14 +678,22 @@ Buildchain-owned signing authority is responsible for credential selection,
 native signing, notarization where applicable, immutable result delivery, and a
 receipt bound to the request digest, runtime SHA, output digest, and signature
 evidence. Consumer repositories neither receive nor duplicate credential-island
-material. The reusable workflow dispatches the sealed request to the
-Buildchain repository, waits for its protected authority workflow, verifies the
-immutable result, replaces only the declared artifact with the returned final
-bytes. The ordinary platform lane completes the consumer's functional
-verification before delegation. A GitHub-hosted finalization lane then verifies
-the authority result against the sealed request, imports the exact signed bytes,
-and recomputes the final manifest before replacing the deterministic artifact.
-The signing result is never downloaded back to a self-hosted native runner.
+material. Each platform lane seals and uploads the unsigned request plus a
+run-attempt-bound control request, completes functional verification, and exits.
+It does not dispatch or poll the authority. A separate `ubuntu-24.04` controller
+starts only after the build matrices complete, validates the exact source,
+tree, runtime, request-set root, platform, run attempt, and correlation, then
+dispatches and awaits the protected authority workflow. Its retained receipt
+records the exact authority run and result artifact; failure, timeout, or
+cancellation produces a non-qualifying receipt and no finalization delegation.
+
+A second GitHub-hosted finalization lane downloads the original control request,
+controller receipt, and delegation, verifies their roots and coordinates agree,
+then verifies the authority result against the sealed request, imports the exact
+signed bytes, and recomputes the final manifest before replacing the
+deterministic artifact. The signing result is never downloaded back to a
+self-hosted native runner, so a macOS caller is released before credential-island
+signing and notarization complete.
 Platform manifests, KFD evidence, checksums, and Release Passport inputs
 therefore observe the final signed artifact rather than the pre-signing build
 output.
