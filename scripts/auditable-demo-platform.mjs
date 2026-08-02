@@ -167,7 +167,8 @@ function validateExecutableClosure({ artifactRoot, scenario, requireExecutable }
   });
   requireValue(declared.has(artifact.binaryPath), "binary metadata executableFiles must include scenario.artifact.binaryPath");
   const binary = files.find((entry) => entry.path === artifact.binaryPath);
-  requireValue(metadata.sha256 === binary.sha256, "binary digest differs from exact artifact metadata");
+  const metadataBinarySha256 = String(metadata.sha256 || "").replace(/^sha256:/u, "");
+  requireValue(/^[0-9a-f]{64}$/u.test(metadataBinarySha256) && metadataBinarySha256 === binary.sha256, "binary digest differs from exact artifact metadata");
   return { metadata, files };
 }
 
