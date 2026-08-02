@@ -31,6 +31,7 @@ const bin = path.join(root, "bin", "buildchain.mjs");
 const fixture = path.join(root, "fixtures", "release-propagation-shaped");
 const workflowPath = path.join(root, ".github", "workflows", "release-propagation.yml");
 const promotionWorkflowPath = path.join(root, ".github", "workflows", ".release-candidate-promote.yml");
+const publicPromotionWorkflowPath = path.join(root, ".github", "workflows", "release-candidate-promote.yml");
 
 function packageCaptureConfig() {
   return {
@@ -1096,4 +1097,15 @@ test("promotion finalization exposes generic package Work capture without downst
     workflow.indexOf("Bundle release-candidate-promotion controller evidence"),
   );
   assert.doesNotMatch(captureBlock, /git push|gh pr create|gh pr merge/);
+});
+
+test("alpha package propagation does not pass a new input into the older stable shell", () => {
+  const workflow = fs.readFileSync(publicPromotionWorkflowPath, "utf8");
+  const alphaBlock = workflow.slice(
+    workflow.indexOf("  alpha:"),
+    workflow.indexOf("  stable:"),
+  );
+  const stableBlock = workflow.slice(workflow.indexOf("  stable:"));
+  assert.match(alphaBlock, /release-propagation-config-path:/);
+  assert.doesNotMatch(stableBlock, /release-propagation-config-path:/);
 });
