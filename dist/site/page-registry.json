@@ -140,7 +140,7 @@
       ],
       "maturity": "stable",
       "sourcePath": "actions/macos-credential-island/README.md",
-      "digest": "sha256:c280346807a33cdec6848a6444800c7272488a2af0e288356da450f72104a2c8",
+      "digest": "sha256:174ffb3e3424effc02164ad3577268fc060bfeefb223d0a2bc8d4cc43e66b110",
       "headings": [
         {
           "level": 1,
@@ -148,7 +148,7 @@
           "anchor": "macos-credential-island"
         }
       ],
-      "markdown": "# macOS Credential Island\n\nThis action signs one sealed macOS application on an isolated macOS runner. It\ndoes not check out consumer source and does not execute files from the input\nartifact. Buildchain validates the source-bound input manifest, imports one\nexact Developer ID Application identity into a temporary keychain, signs the\napplication, submits Apple notarization, staples the application and DMG,\nverifies Gatekeeper, and writes bounded JSON evidence.\n\nThe reusable Buildchain workflow invokes this action from a job bound to the\ncaller's protected GitHub Environment. The job downloads the exact sealed\nBuildchain input and immutable action runtime, then uploads the signed payload\nand its Buildchain platform manifest. It has no consumer checkout. Do not add a\npackage manager, lifecycle, hook, or consumer-script execution to that job.\n\nThe supported `electron-desktop-v1` entitlements profile is owned by\nBuildchain. Consumer-provided entitlement files are intentionally unsupported;\notherwise pull-request bytes could expand the signing authority."
+      "markdown": "# macOS Credential Island\n\nThis action signs one sealed macOS application on an isolated macOS runner. It\ndoes not check out consumer source and does not execute files from the input\nartifact. Buildchain validates the source-bound input manifest, imports one\nexact Developer ID Application identity into a temporary keychain, signs the\napplication, submits Apple notarization, staples the application and DMG,\nverifies Gatekeeper, and writes bounded JSON evidence.\n\nDMG assembly uses a unique execution- and attempt-bound image path and volume\nname. Only the exact `hdiutil: create failed - Resource busy` failure is retried,\nwith three attempts and a total retry delay of seven seconds. Certificate,\nentitlement, signature, notarization, provenance, and policy failures remain\nterminal. Attempt artifacts stay below the owned temporary root, and successful\nevidence binds the request, unsigned archive, runtime, runner attempt, toolchain,\nretry history, cleanup result, and signed output digests.\n\nThe reusable Buildchain workflow invokes this action from a job bound to the\ncaller's protected GitHub Environment. The job downloads the exact sealed\nBuildchain input and immutable action runtime, then uploads the signed payload\nand its Buildchain platform manifest. It has no consumer checkout. Do not add a\npackage manager, lifecycle, hook, or consumer-script execution to that job.\n\nThe supported `electron-desktop-v1` entitlements profile is owned by\nBuildchain. Consumer-provided entitlement files are intentionally unsupported;\notherwise pull-request bytes could expand the signing authority."
     },
     {
       "id": "action:promote-buildchain-ref",
