@@ -58,7 +58,7 @@ function exactClaims(entry, fields, label) {
 function releaseClaims(work) {
   return {
     releaseRoot: work.upstream.releaseRoot,
-    releaseLockRoot: work.downstream.releaseLockRoot,
+    releaseLockRoot: `sha256:${work.downstream.lockSha256}`,
     sourceSha: work.upstream.release.sourceSha,
     tagTargetSha: work.upstream.release.tagTargetSha,
   };
