@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-08-01T20:06:56.470Z"
+    "updatedAt": "2026-08-02T20:07:41.170Z"
   },
   "candidates": [
     {
@@ -764,9 +764,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-07-30T10:19:42.000Z",
-        "soakElapsedSeconds": 208034,
+        "soakElapsedSeconds": 294479,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -791,7 +791,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -812,9 +812,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-07-31T13:57:29.000Z",
-        "soakElapsedSeconds": 108567,
+        "soakElapsedSeconds": 195012,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -839,7 +839,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -852,9 +852,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-07-31T15:40:10.000Z",
-        "soakElapsedSeconds": 102406,
+        "soakElapsedSeconds": 188851,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -879,7 +879,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -892,9 +892,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-07-31T16:16:47.000Z",
-        "soakElapsedSeconds": 100209,
+        "soakElapsedSeconds": 186654,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -919,7 +919,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -940,9 +940,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T00:28:54.000Z",
-        "soakElapsedSeconds": 70682,
+        "soakElapsedSeconds": 157127,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -967,7 +967,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -980,9 +980,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T01:08:19.000Z",
-        "soakElapsedSeconds": 68317,
+        "soakElapsedSeconds": 154762,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1007,7 +1007,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1020,9 +1020,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T01:35:50.000Z",
-        "soakElapsedSeconds": 66666,
+        "soakElapsedSeconds": 153111,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1047,7 +1047,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1060,9 +1060,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T07:41:28.000Z",
-        "soakElapsedSeconds": 44728,
+        "soakElapsedSeconds": 131173,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1087,7 +1087,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1100,9 +1100,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T08:15:14.000Z",
-        "soakElapsedSeconds": 42702,
+        "soakElapsedSeconds": 129147,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1127,7 +1127,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1140,9 +1140,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T09:29:35.000Z",
-        "soakElapsedSeconds": 38241,
+        "soakElapsedSeconds": 124686,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1167,7 +1167,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1180,9 +1180,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T11:20:59.000Z",
-        "soakElapsedSeconds": 31557,
+        "soakElapsedSeconds": 118002,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1207,7 +1207,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1220,9 +1220,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T12:08:34.000Z",
-        "soakElapsedSeconds": 28702,
+        "soakElapsedSeconds": 115147,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1247,7 +1247,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1260,9 +1260,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T13:00:25.000Z",
-        "soakElapsedSeconds": 25591,
+        "soakElapsedSeconds": 112036,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1287,7 +1287,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1300,9 +1300,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T13:18:26.000Z",
-        "soakElapsedSeconds": 24510,
+        "soakElapsedSeconds": 110955,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1327,7 +1327,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1340,9 +1340,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "2026-08-01T14:15:22.000Z",
-        "soakElapsedSeconds": 21094,
+        "soakElapsedSeconds": 107539,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1367,7 +1367,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -1388,7 +1388,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1415,7 +1415,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1428,7 +1428,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-01T20:06:56.470Z",
+        "observedAt": "2026-08-02T20:07:41.170Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1455,12 +1455,340 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-01T20:06:56.470Z",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.5-alpha.0",
+      "stableVersion": "3.0.5",
+      "sha": "6a8b386f9fd8f5a6f11a8cb8544e41b10fb292e5",
+      "tag": "v3.0.5-alpha.0",
+      "publishedAt": "2026-08-02T01:27:18.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-02T20:07:41.170Z",
+        "soakStartedAt": "2026-08-02T01:32:26.000Z",
+        "soakElapsedSeconds": 66915,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-02T01:27:18.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.5-alpha.0"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-02T01:22:02.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/30726790292"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-02T01:32:26.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/30727194161"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "qualification-satisfied",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
+        "actor": "buildchain-patrol"
+      },
+      "promotionRequest": {
+        "stableTag": "v3.0.5",
+        "sourceRef": "publish-gate/release/v3/v3.0/3.0.5-alpha.0",
+        "targetRef": "release/v3/v3.0",
+        "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/2260",
+        "requestedAt": "2026-08-02T20:07:41.170Z",
+        "authority": "policy"
+      }
+    },
+    {
+      "version": "3.0.5-alpha.1",
+      "stableVersion": "3.0.5",
+      "sha": "8b96fb02e587124bad0f9055f9de6eb7c6b8081c",
+      "tag": "v3.0.5-alpha.1",
+      "publishedAt": "2026-08-02T02:35:28.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-02T20:07:41.170Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-02T02:35:28.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.5-alpha.1"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.5-alpha.2",
+      "stableVersion": "3.0.5",
+      "sha": "1d2c6f6f9571f0417063c9814e5ad0e6fd61bb81",
+      "tag": "v3.0.5-alpha.2",
+      "publishedAt": "2026-08-02T03:44:37.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-02T20:07:41.170Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-02T03:44:37.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.5-alpha.2"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.5-alpha.3",
+      "stableVersion": "3.0.5",
+      "sha": "0b2bbbec336a3e5bd2f032eb9cb10b0758b7c579",
+      "tag": "v3.0.5-alpha.3",
+      "publishedAt": "2026-08-02T04:26:20.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-02T20:07:41.170Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-02T04:26:20.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.5-alpha.3"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.5-alpha.4",
+      "stableVersion": "3.0.5",
+      "sha": "0e42df038cdb688330156635bbcad37e362a8345",
+      "tag": "v3.0.5-alpha.4",
+      "publishedAt": "2026-08-02T05:42:50.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-02T20:07:41.170Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-02T05:42:50.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.5-alpha.4"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.5-alpha.5",
+      "stableVersion": "3.0.5",
+      "sha": "7f32e917c5561a53cf9ffc6e0f8a18df841a1cd9",
+      "tag": "v3.0.5-alpha.5",
+      "publishedAt": "2026-08-02T07:18:06.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-02T20:07:41.170Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-02T07:18:06.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.5-alpha.5"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.5-alpha.6",
+      "stableVersion": "3.0.5",
+      "sha": "2b5880a79f169f4a64b193a06a47b990d6585e16",
+      "tag": "v3.0.5-alpha.6",
+      "publishedAt": "2026-08-02T08:51:38.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-02T20:07:41.170Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-02T08:51:38.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.5-alpha.6"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.5-alpha.7",
+      "stableVersion": "3.0.5",
+      "sha": "b5a8cb26691966378ee01f12e83d362fded9e47c",
+      "tag": "v3.0.5-alpha.7",
+      "publishedAt": "2026-08-02T13:54:32.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-02T20:07:41.170Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-02T13:54:32.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.5-alpha.7"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-02T20:07:41.170Z",
         "actor": "buildchain-patrol"
       }
     }
   ],
-  "updatedAt": "2026-08-01T20:06:56.470Z",
+  "updatedAt": "2026-08-02T20:07:41.170Z",
   "stableReleases": [
     {
       "version": "3.0.2",
@@ -1545,24 +1873,6 @@
       "tag": "v2.14.7",
       "publishedAt": "2026-07-21T08:33:33Z",
       "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.7"
-    },
-    {
-      "version": "2.14.6",
-      "tag": "v2.14.6",
-      "publishedAt": "2026-07-21T01:19:18Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.6"
-    },
-    {
-      "version": "2.14.5",
-      "tag": "v2.14.5",
-      "publishedAt": "2026-07-20T21:56:26Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.5"
-    },
-    {
-      "version": "2.14.4",
-      "tag": "v2.14.4",
-      "publishedAt": "2026-07-20T20:24:13Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.4"
     }
   ]
 }
