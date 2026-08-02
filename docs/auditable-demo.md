@@ -47,6 +47,13 @@ fixed 80-200 by 24-80 terminal cells, 10,000 events, and 4 MiB of canonical
 base64 bytes. It must contain a passed completion sentinel and an explicitly
 empty authority-grant list. Existing three-file adapters remain valid.
 
+The completion sentinel names a consumer-owned versioned schema, the exact
+`qualified` status, a content root, and an event count. Buildchain validates
+that envelope generically; it does not reinterpret a command-specific result
+as Agent Work Lab evidence or grant authority from the schema name. The
+consumer projection and its retained source artifact remain responsible for
+the exact claim boundary.
+
 Terminal bytes are volatile observations, not Work, Warrant, capability, or
 publication authority. First-party or System identity, KFD compliance, Product
 System metadata, package metadata, scan output, registry history, and

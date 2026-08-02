@@ -32,7 +32,10 @@ function temporaryDirectory(t) {
   return directory;
 }
 
-function terminalCapture(durationMs = 2500) {
+function terminalCapture(
+  durationMs = 2500,
+  completionSchema = "kungfu.agent-work-lab.tui-autoplay/v1",
+) {
   const captureDurationMs = Math.max(500, durationMs - 500);
   return {
     schema: "kungfu.terminal-capture/v1",
@@ -45,7 +48,7 @@ function terminalCapture(durationMs = 2500) {
       { atMs: Math.max(1, captureDurationMs - 1), data: Buffer.from("completed\r\n").toString("base64") },
     ],
     completion: {
-      schema: "kungfu.agent-work-lab.tui-autoplay/v1",
+      schema: completionSchema,
       status: "qualified",
       reportRoot: `sha256:${"e".repeat(64)}`,
       eventCount: 4,
@@ -400,11 +403,23 @@ test("optional terminal capture is bounded and grants no implicit authority", (t
 
   const capturePath = path.join(root, "terminal-capture.json");
   const capture = JSON.parse(fs.readFileSync(capturePath, "utf8"));
+  capture.completion.schema = "kungfu.kfd-agent-hub-qualification/v1";
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.equal(
+    validateAdapterOutput(root).terminalCapture.completion.schema,
+    "kungfu.kfd-agent-hub-qualification/v1",
+  );
+
   capture.completion.status = "passed";
   fs.writeFileSync(capturePath, stableJson(capture));
-  assert.throws(() => validateAdapterOutput(root), /not a qualified Agent Work Lab autoplay/);
+  assert.throws(() => validateAdapterOutput(root), /not a qualified versioned result/);
 
   capture.completion.status = "qualified";
+  capture.completion.schema = "unversioned-completion";
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.throws(() => validateAdapterOutput(root), /not a qualified versioned result/);
+
+  capture.completion.schema = "kungfu.kfd-agent-hub-qualification/v1";
   capture.authority.grants = ["system-identity"];
   fs.writeFileSync(capturePath, stableJson(capture));
   assert.throws(() => validateAdapterOutput(root), /must not grant authority/);

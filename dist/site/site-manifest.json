@@ -69,7 +69,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:4b3e529060ba54a439a86159a4dc0fc7fb43c8456a90e4b32579c86b20bc6bab"
+      "digest": "sha256:4d32c82b652decfbb26b441c203fe34e70daa86022bb4baed9da02a5d6cf5831"
     },
     {
       "id": "install",
