@@ -106,7 +106,7 @@ else:
   writeJson(path.join(artifact, "fixture.json"), {
     contract: "fixture.binary/v1",
     platformId: "linux-x64",
-    sha256: digest,
+    sha256: `sha256:${digest}`,
     executableFiles: [
       { path: "fixture", sha256: digest },
       { path: "runtime/fixture-runtime", sha256: runtimeDigest },
