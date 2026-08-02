@@ -8,7 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-08-01
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-08-01
+  invisible_information: No hidden model checkpoint, parameters, or private training data were available.
 ---
 
 # AWS US elastic runner burst plane
@@ -225,6 +230,32 @@ host, including at least one full run, plus proof that:
 - the repository has no registered campaign runner;
 - AWS has no active campaign instance or allocated campaign host;
 - actual incremental spend remained below USD 25.
+
+### Phase 3 lifecycle controller
+
+`scripts/aws-macos-jit-controller.mjs` is the operator boundary for the paid
+campaign. It has three explicit mutation modes:
+
+- `launch-campaign` binds the exact repository source, AMI, availability zone,
+  tagged Dedicated Host, and reusable instance. It rejects pre-existing Mac
+  capacity and requires successful `AllocateHosts` and `RunInstances` DryRuns
+  before either real call.
+- `run-job` binds one queued exact-source GitHub job to the existing campaign
+  host and instance. It writes the repository JIT configuration through a
+  mode-0600 temporary file into a distinct SSM SecureString, sends only the
+  credential-free bootstrap through SSM, and removes the parameter plus runner
+  registration if command delivery fails.
+- `close-campaign` refuses execution before the provider's 24-hour minimum,
+  verifies the encrypted delete-on-termination root volume, removes scoped JIT
+  residue, terminates the exact instance, and requires a `ReleaseHosts` DryRun
+  before release. If Apple host scrubbing is still in progress, it reports
+  `release-pending`; the ten-minute card-scoped reaper remains the bounded
+  retry path.
+
+Every execute mode requires the exact source SHA and campaign id to be repeated
+through `--confirm-source-sha` and `--confirm-campaign-id`. `run-job` also
+requires `--confirm-run-id`. Omitting `--execute` emits a deterministic plan
+without changing AWS or GitHub state.
 
 ## Provider lifecycle
 
