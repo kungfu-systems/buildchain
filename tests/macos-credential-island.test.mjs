@@ -6,6 +6,12 @@ import path from "node:path";
 import test from "node:test";
 
 import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
+import {
+  DMG_RESOURCE_BUSY_FAILURE,
+  assembleDmgWithRetry,
+  classifyHdiutilCreateFailure,
+  createDmgAssemblyIdentity,
+} from "../actions/macos-credential-island/dmg-assembly.js";
 
 import {
   EVIDENCE_CONTRACT,
@@ -318,6 +324,152 @@ test("entitlements and output names are Buildchain owned", () => {
   assert.throws(() => safeArtifactName("macos/credential"), /safe Buildchain/);
 });
 
+function dmgIdentity(executionNonce = "fixture-nonce") {
+  return createDmgAssemblyIdentity({
+    sourceSha: SOURCE_SHA,
+    runtimeSha: "3".repeat(40),
+    requestDigest: `sha256:${"4".repeat(64)}`,
+    unsignedArchiveDigest: `sha256:${"5".repeat(64)}`,
+    runId: "1000",
+    runAttempt: "2",
+    executionNonce,
+  });
+}
+
+test("DMG assembly retries only the retained Resource busy failure", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-dmg-resource-busy-"),
+  );
+  const sourceRoot = path.join(root, "source");
+  fs.mkdirSync(sourceRoot);
+  const delays = [];
+  let calls = 0;
+  try {
+    const assembled = assembleDmgWithRetry({
+      temporaryRoot: root,
+      sourceRoot,
+      productName: "Kungfu Episodes",
+      identity: dmgIdentity(),
+      runHdiutil(_command, args) {
+        calls += 1;
+        if (calls === 1) throw new Error(DMG_RESOURCE_BUSY_FAILURE);
+        fs.writeFileSync(args.at(-1), "signed-later");
+      },
+      sleep(delay) {
+        delays.push(delay);
+      },
+    });
+    assert.equal(calls, 2);
+    assert.deepEqual(delays, [2000]);
+    assert.deepEqual(
+      assembled.evidence.attempts.map((attempt) => [
+        attempt.outcome,
+        attempt.classification,
+      ]),
+      [
+        ["failed", "resource-busy"],
+        ["created", "none"],
+      ],
+    );
+    assert.equal(assembled.evidence.attempts[0].ownedArtifactRemoved, true);
+    assert.notEqual(
+      assembled.evidence.attempts[0].volumeName,
+      assembled.evidence.attempts[1].volumeName,
+    );
+  } finally {
+    cleanupState({ temporaryRoot: root });
+  }
+});
+
+test("DMG assembly does not retry non-transient provider failures", () => {
+  const parent = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-dmg-terminal-"),
+  );
+  const unrelated = path.join(parent, "unrelated.dmg");
+  const root = path.join(parent, "owned");
+  const sourceRoot = path.join(root, "source");
+  fs.writeFileSync(unrelated, "do-not-touch");
+  fs.mkdirSync(sourceRoot, { recursive: true });
+  let calls = 0;
+  let sleeps = 0;
+  try {
+    assert.throws(
+      () =>
+        assembleDmgWithRetry({
+          temporaryRoot: root,
+          sourceRoot,
+          productName: "Kungfu Episodes",
+          identity: dmgIdentity("terminal-fixture"),
+          runHdiutil(_command, args) {
+            calls += 1;
+            fs.writeFileSync(args.at(-1), "partial");
+            throw new Error(
+              "hdiutil failed with status 1: certificate identity invalid",
+            );
+          },
+          sleep() {
+            sleeps += 1;
+          },
+        }),
+      /certificate identity invalid/u,
+    );
+    assert.equal(calls, 1);
+    assert.equal(sleeps, 0);
+    assert.equal(fs.readFileSync(unrelated, "utf8"), "do-not-touch");
+    assert.deepEqual(classifyHdiutilCreateFailure(DMG_RESOURCE_BUSY_FAILURE), {
+      code: "resource-busy",
+      retryable: true,
+    });
+    assert.deepEqual(
+      classifyHdiutilCreateFailure(`${DMG_RESOURCE_BUSY_FAILURE}.`),
+      { code: "terminal", retryable: false },
+    );
+  } finally {
+    cleanupState({ temporaryRoot: root });
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+test("concurrent DMG executions receive disjoint owned resources", () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-dmg-concurrent-"),
+  );
+  const sourceRoot = path.join(root, "source");
+  fs.mkdirSync(sourceRoot);
+  try {
+    const first = assembleDmgWithRetry({
+      temporaryRoot: root,
+      sourceRoot,
+      productName: "Kungfu Episodes",
+      identity: dmgIdentity("concurrent-one"),
+      runHdiutil(_command, args) {
+        fs.writeFileSync(args.at(-1), "one");
+      },
+    });
+    const second = assembleDmgWithRetry({
+      temporaryRoot: root,
+      sourceRoot,
+      productName: "Kungfu Episodes",
+      identity: dmgIdentity("concurrent-two"),
+      runHdiutil(_command, args) {
+        fs.writeFileSync(args.at(-1), "two");
+      },
+    });
+    assert.notEqual(first.assemblyRoot, second.assemblyRoot);
+    assert.notEqual(first.imagePath, second.imagePath);
+    assert.notEqual(
+      first.evidence.attempts[0].volumeName,
+      second.evidence.attempts[0].volumeName,
+    );
+  } finally {
+    const unrelated = path.join(path.dirname(root), "unrelated-dmg-resource");
+    fs.writeFileSync(unrelated, "preserve");
+    cleanupState({ temporaryRoot: root });
+    assert.equal(fs.readFileSync(unrelated, "utf8"), "preserve");
+    fs.rmSync(unrelated, { force: true });
+  }
+});
+
 test("every nested code object uses the Buildchain-owned entitlements file", () => {
   const optionsForFile = signingOptionsForFile(
     "/tmp/buildchain/entitlements.plist",
@@ -608,6 +760,10 @@ test("public action and workflow keep credentials outside the build matrix", () 
     path.join(root, "actions/macos-credential-island/index.js"),
     "utf8",
   );
+  const dmgImplementation = fs.readFileSync(
+    path.join(root, "actions/macos-credential-island/dmg-assembly.js"),
+    "utf8",
+  );
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
     "utf8",
@@ -648,7 +804,11 @@ test("public action and workflow keep credentials outside the build matrix", () 
   }
   assert.match(
     implementation,
-    /signAndVerifyContainer\(dmgPath,[\s\S]*?certificateSha1,[\s\S]*?keychainPath,[\s\S]*?expectedTeamId[\s\S]*?const dmgNotary = submitNotary\([\s\S]*?staple\(dmgPath\)[\s\S]*?context:primary-signature/,
+    /createRunBoundDmg\([\s\S]*?certificateSha1,[\s\S]*?keychainPath,[\s\S]*?expectedTeamId[\s\S]*?runFile,[\s\S]*?submitNotary,[\s\S]*?staple/,
+  );
+  assert.match(
+    dmgImplementation,
+    /assembleDmgWithRetry\([\s\S]*?signAndVerifyDmg\(assembly\.imagePath,[\s\S]*?const notarization = submitNotary\([\s\S]*?staple\(assembly\.imagePath\)[\s\S]*?COPYFILE_EXCL/,
   );
   assert.match(implementation, /dmgCodesign: true/);
   for (const caller of [workflow, publicWorkflow, fixtureWorkflow]) {
