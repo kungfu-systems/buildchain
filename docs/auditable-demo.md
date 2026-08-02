@@ -45,15 +45,19 @@ The schema is `contracts/auditable-demo-scenario-v1.schema.json`. One scenario
 can declare up to eight demos, and each demo can contain up to twelve ordered
 literal argv steps. Steps in one demo share a disposable workspace; separate
 demos and the two rendition captures do not. Commands are never accepted as a
-shell string. The complete scenario is bounded to 60 seconds, 4 MiB per step,
-a clean Home/XDG environment, no inherited credentials, and a network-disabled
-read-only container with bounded tmpfs.
+shell string. An omitted or explicit `standard` duration class remains bounded
+to 60 seconds. A reviewed `execution.durationClass: long-form` declaration may
+raise the scenario and literal step ceilings to 180 seconds; it does not change
+the default. Both classes retain 4 MiB per step, a clean Home/XDG environment,
+no inherited credentials, and a network-disabled read-only container with
+bounded tmpfs.
 
 The uploaded metadata must bind the executable SHA-256 and declare an empty
 runtime dependency set. Capture rejects an artifact name or upload digest that
 does not resolve to exactly one live artifact from the current workflow run.
-It retains ANSI terminal bytes, verifies declared stdout and JSON file facts,
-and removes the disposable workspace before emitting evidence.
+It retains ANSI terminal bytes with the real PTY read timestamps, verifies
+declared stdout and JSON file facts, enforces the total deadline while a step is
+running, and removes the disposable workspace before emitting evidence.
 
 Both manual validation and alpha or release refreshes call the same reusable
 workflow. Manual callers select Gate-only or full rendering and can explicitly
@@ -100,9 +104,10 @@ scene.json
 ```
 
 It may additionally emit one declared `terminal-capture.json` using
-`kungfu.terminal-capture/v1`. The optional capture is bounded to 60 seconds,
+`kungfu.terminal-capture/v1`. The optional capture is bounded to 60 seconds by
+default or 180 seconds only when its scene explicitly declares `long-form`,
 fixed 80-200 by 24-80 terminal cells, 10,000 events, and 4 MiB of canonical
-base64 bytes. It must contain a passed completion sentinel and an explicitly
+base64 bytes. It must contain a qualified completion sentinel and an explicitly
 empty authority-grant list. Existing three-file adapters remain valid.
 
 The completion sentinel names a consumer-owned versioned schema, the exact
@@ -209,6 +214,7 @@ shell fragments, arbitrary profile paths, or transcoding instructions.
 | `archive-v1` | Default compatibility contract. Retains the exact renderer outputs and classifies GIF as README compatibility evidence without making a browser-delivery claim. |
 | `web-delivery-v1` | Independently qualifies H.264 MP4 and VP9 WebM playback sources, forbids audio, requires exact scene dimensions and bounded duration/frame-rate drift, checks per-rendition byte ceilings, and proves MP4 `moov` precedes `mdat`. PNG remains the lossless evidence poster. |
 | `responsive-web-delivery-v1` | Extends `web-delivery-v1` with exact 1280x720 H.264 MP4 and VP9 WebM responsive sources plus a 1280x720 README GIF while keeping the primary MP4/WebM and evidence poster at the source scene dimensions. Every declared downscale must preserve the scene aspect ratio and may never upscale. |
+| `responsive-long-form-web-delivery-v1` | Extends the responsive profile for explicitly admitted long-form scenes. Its measured-baseline multipliers raise only the GIF ceiling to 8 MiB and the four video ceilings to 4 MiB; all codec, native-resolution, no-audio, duration, and authority checks remain unchanged. |
 | `site-hero-v1` | Extends `web-delivery-v1` and additionally requires a qualified WebP browser poster. The current Build Images v1 renderer does not emit that member, so selecting this profile fails closed until the producer adds it. |
 
 For web-delivery profiles, Buildchain runs its own fixed `ffprobe` invocation
@@ -243,8 +249,10 @@ Initial byte ceilings are derived from the checked-in
 `auditable-demo-web-delivery-v1` fixture rendered by Build Images
 `v1.3.0-alpha.16` at its exact source SHA and image digest. GIF, MP4, WebM, and
 PNG ceilings are the next power of two above sixteen times the measured member
-bytes. The not-yet-produced WebP poster uses eight times the measured lossless
-PNG as its conservative proxy. The path-scoped qualification workflow
+bytes. The explicit responsive long-form profile derives its 4 MiB video and
+8 MiB GIF ceilings from the same observed bytes at a bounded 128-times
+multiplier; it does not change another profile. The not-yet-produced WebP poster
+uses eight times the measured lossless PNG as its conservative proxy. The path-scoped qualification workflow
 regenerates the content-addressed evidence and fails on any byte or fact drift.
 Its matrix retains the original 1280x720 web-delivery baseline on the renderer
 that produced it and separately measures the responsive profile against a
@@ -300,7 +308,8 @@ build should always call the reusable workflow. Selection policy changes only
 
 Use `web-delivery-v1` only when the rendered bundle is intended to become a
 qualified web-delivery source. Use `site-hero-v1` when an optimized browser
-poster is also required. Profile qualification does not prove browser playback,
+poster is also required. Select `responsive-long-form-web-delivery-v1` only
+with an explicit long-form scenario. Profile qualification does not prove browser playback,
 responsive layout, reduced-motion behavior, accessibility, or production
 deployment; those remain site responsibilities.
 

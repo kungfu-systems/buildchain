@@ -77,7 +77,7 @@ function fixture(t) {
   fs.mkdirSync(artifact);
   const binary = path.join(artifact, "fixture");
   fs.writeFileSync(binary, `#!/usr/bin/env python3
-import json, os, sys
+import json, os, sys, time
 if sys.argv[1:] == ["write"]:
   open("state.json", "w", encoding="utf-8").write(json.dumps({"status":"ready"}))
   print("\\x1b[38;5;42mSTATE WRITTEN\\x1b[0m")
@@ -86,7 +86,12 @@ elif sys.argv[1:] == ["read"]:
   print("\\x1b[38;5;81mSTATE READ\\x1b[0m")
 elif sys.argv[1:] == ["independent"]:
   assert not os.path.exists("state.json")
-  print("\\x1b[38;5;214mINDEPENDENT\\x1b[0m")
+  print("\\x1b[38;5;214mINDEPENDENT START\\x1b[0m", flush=True)
+  time.sleep(0.18)
+  print("\\x1b[38;5;81mINDEPENDENT END\\x1b[0m", flush=True)
+elif sys.argv[1:] == ["slow"]:
+  time.sleep(2)
+  print("SLOW COMPLETE")
 else:
   raise SystemExit(2)
 `);
@@ -113,8 +118,13 @@ else:
   return { root, artifact, scenarioPath, coordinate };
 }
 
-function capture(t, demoId) {
+function capture(t, demoId, transformScenario = null) {
   const value = fixture(t);
+  if (transformScenario) {
+    const declared = JSON.parse(fs.readFileSync(value.scenarioPath, "utf8"));
+    transformScenario(declared);
+    writeJson(value.scenarioPath, declared);
+  }
   const output = path.join(value.root, `capture-${demoId}`);
   const result = spawnSync("python3", [
     path.join(ROOT, "scripts/auditable-demo-capture.py"),
@@ -137,6 +147,28 @@ test("scenario contract accepts multiple demos and rejects shell command authori
   const privileged = structuredClone(scenario());
   privileged.authority.grants.push("system-identity");
   assert.throws(() => validateScenario(privileged), /authority boundary/u);
+});
+
+test("duration class keeps standard at 60 seconds and admits only bounded long-form", () => {
+  const standardTotal = structuredClone(scenario());
+  standardTotal.execution.totalTimeoutSeconds = 61;
+  assert.throws(() => validateScenario(standardTotal), /total timeout/u);
+
+  const standardStep = structuredClone(scenario());
+  standardStep.demos[0].steps[0].timeoutSeconds = 61;
+  assert.throws(() => validateScenario(standardStep), /timeoutSeconds/u);
+
+  const longForm = structuredClone(scenario());
+  longForm.execution.durationClass = "long-form";
+  longForm.execution.totalTimeoutSeconds = 180;
+  longForm.demos[0].steps[0].timeoutSeconds = 180;
+  assert.equal(validateScenario(longForm).execution.durationClass, "long-form");
+
+  longForm.execution.totalTimeoutSeconds = 181;
+  assert.throws(() => validateScenario(longForm), /total timeout/u);
+  longForm.execution.totalTimeoutSeconds = 180;
+  longForm.demos[0].steps[0].timeoutSeconds = 181;
+  assert.throws(() => validateScenario(longForm), /timeoutSeconds/u);
 });
 
 test("capture shares ordered state within a demo and creates independent native renditions", { skip: process.platform === "win32" }, (t) => {
@@ -167,9 +199,33 @@ test("generic adapter projects exact captures into the existing Gate contract", 
   assert.equal(gateCheck.status, 0, gateCheck.stderr);
 });
 
+test("generic adapter projects an explicit long-form renderer contract", { skip: process.platform === "win32" }, (t) => {
+  const { root, output } = capture(t, "independent", (declared) => {
+    declared.execution.durationClass = "long-form";
+    declared.execution.totalTimeoutSeconds = 180;
+    declared.demos[1].steps[0].timeoutSeconds = 180;
+  });
+  const adapted = path.join(root, "adapted-long-form");
+  adaptCapture({ artifactRoot: output, output: adapted });
+  for (const name of ["scene.json", "scene-720p.json"]) {
+    const projected = JSON.parse(fs.readFileSync(path.join(adapted, name), "utf8"));
+    assert.equal(projected.durationClass, "long-form");
+    assert.equal(projected.fps, 10);
+    assert.ok(projected.durationMs <= 180_000);
+  }
+  const primary = JSON.parse(fs.readFileSync(path.join(adapted, "terminal-capture.json"), "utf8"));
+  const responsive = JSON.parse(fs.readFileSync(path.join(adapted, "terminal-capture-720p.json"), "utf8"));
+  assert.equal(primary.durationMs, responsive.durationMs, "native replay windows share one exact duration");
+});
+
 test("capture keeps demos isolated and fails closed on binary metadata drift", { skip: process.platform === "win32" }, (t) => {
   const independent = capture(t, "independent");
   assert.equal(JSON.parse(fs.readFileSync(path.join(independent.output, "manifest.json"), "utf8")).demo.id, "independent");
+  const timedCapture = JSON.parse(fs.readFileSync(path.join(independent.output, "renditions/1080p/terminal-capture.json"), "utf8"));
+  const start = timedCapture.events.find((event) => Buffer.from(event.data, "base64").includes(Buffer.from("INDEPENDENT START")));
+  const end = timedCapture.events.find((event) => Buffer.from(event.data, "base64").includes(Buffer.from("INDEPENDENT END")));
+  assert.ok(start && end, "timed PTY chunks are retained");
+  assert.ok(end.atMs - start.atMs >= 120, `PTY timing collapsed to ${end.atMs - start.atMs}ms`);
   const drifted = fixture(t);
   const metadata = JSON.parse(fs.readFileSync(path.join(drifted.artifact, "fixture.json"), "utf8"));
   metadata.sha256 = "0".repeat(64);
@@ -181,6 +237,39 @@ test("capture keeps demos isolated and fails closed on binary metadata drift", {
   ], { encoding: "utf8", env: { ...process.env, BUILDCHAIN_AUDITABLE_DEMO_TEST: "1" } });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /binary digest differs/u);
+});
+
+test("capture enforces the total deadline inside a running step", { skip: process.platform === "win32" }, (t) => {
+  const value = fixture(t);
+  const declared = JSON.parse(fs.readFileSync(value.scenarioPath, "utf8"));
+  declared.execution.totalTimeoutSeconds = 1;
+  declared.demos = [{
+    id: "slow",
+    title: "Slow fixture",
+    claimBoundary: "The negative fixture must be stopped by the exact total deadline.",
+    steps: [{
+      id: "slow",
+      argv: ["slow"],
+      timeoutSeconds: 10,
+      expectedExitCodes: [0],
+      stdoutIncludes: ["SLOW COMPLETE"],
+      fileAssertions: [],
+    }],
+  }];
+  writeJson(value.scenarioPath, declared);
+  const started = Date.now();
+  const result = spawnSync("python3", [
+    path.join(ROOT, "scripts/auditable-demo-capture.py"),
+    "--artifact-root", value.artifact,
+    "--scenario", value.scenarioPath,
+    "--source-coordinate", value.coordinate,
+    "--demo-id", "slow",
+    "--network-isolation", "test-only",
+    "--output", path.join(value.root, "slow-capture"),
+  ], { encoding: "utf8", env: { ...process.env, BUILDCHAIN_AUDITABLE_DEMO_TEST: "1" } });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /step exceeded its .*second bound|total timeout/u);
+  assert.ok(Date.now() - started < 4_000, "total timeout was not enforced while the step was running");
 });
 
 test("materializer verifies exact bundles and updates README idempotently", { skip: process.platform === "win32" }, (t) => {
@@ -223,6 +312,18 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   assert.equal(fs.readFileSync(path.join(repository, "README.md"), "utf8"), firstReadme);
   assert.match(firstReadme, /\$ fixture write[\s\S]*\$ fixture read/u);
   assert.match(firstReadme, /1080p MP4[\s\S]*720p MP4/u);
+  const independent = capture(t, "independent");
+  materializeDemo({
+    ...args,
+    demoId: "independent",
+    scenarioPath: independent.scenarioPath,
+    captureRoot: independent.output,
+  });
+  const multiReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
+  assert.match(multiReadme, /<!-- fixture-demo:shared-state:start -->/u);
+  assert.match(multiReadme, /<!-- fixture-demo:independent:start -->/u);
+  assert.match(multiReadme, /\$ fixture write/u);
+  assert.match(multiReadme, /\$ fixture independent/u);
   const passport = JSON.parse(fs.readFileSync(path.join(repository, first.evidenceDirectory, "release-passport.json"), "utf8"));
   assert.deepEqual(passport.authority.grants, []);
   assert.equal(passport.authority.productSystemRole, "assembly-and-distribution-metadata-only");
@@ -243,6 +344,7 @@ test("Gate smoke stays bounded while full render consumes both native captures",
   assert.doesNotMatch(smoke, /--terminal-capture|--rendition-set/u);
   assert.match(full, /--terminal-capture \/input\/terminal-capture\.json/u);
   assert.match(full, /--rendition-set \/input\/rendition-set\.json/u);
+  assert.match(workflow, /demo-renderer --validate-only[\s\S]*--rendition-set/u);
 });
 
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {

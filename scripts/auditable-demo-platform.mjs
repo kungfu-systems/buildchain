@@ -23,6 +23,16 @@ const RENDITIONS = [
   { id: "1080p", role: "primary", columns: 150, rows: 36, width: 1920, height: 1080 },
   { id: "720p", role: "responsive", columns: 100, rows: 28, width: 1280, height: 720 },
 ];
+const STANDARD_MAX_SECONDS = 60;
+const LONG_FORM_MAX_SECONDS = 180;
+
+function durationPolicy(value = "standard") {
+  requireValue(value === "standard" || value === "long-form", "scenario duration class is invalid");
+  return {
+    durationClass: value,
+    maximumSeconds: value === "long-form" ? LONG_FORM_MAX_SECONDS : STANDARD_MAX_SECONDS,
+  };
+}
 
 function fail(message) {
   throw new Error(`auditable demo platform: ${message}`);
@@ -134,22 +144,24 @@ function validateArtifact(artifact) {
 }
 
 function validateExecution(execution) {
-  exactKeys(execution, ["deterministic", "network", "secrets", "totalTimeoutSeconds", "environment"], [], "scenario.execution");
+  exactKeys(execution, ["deterministic", "network", "secrets", "totalTimeoutSeconds", "environment"], ["durationClass"], "scenario.execution");
   requireValue(execution.deterministic === true && execution.network === "none" && execution.secrets === "none", "scenario execution must be deterministic, network-disabled, and secret-free");
-  requireValue(Number.isInteger(execution.totalTimeoutSeconds) && execution.totalTimeoutSeconds >= 1 && execution.totalTimeoutSeconds <= 60, "scenario total timeout is invalid");
+  const policy = durationPolicy(execution.durationClass);
+  requireValue(Number.isInteger(execution.totalTimeoutSeconds) && execution.totalTimeoutSeconds >= 1 && execution.totalTimeoutSeconds <= policy.maximumSeconds, "scenario total timeout is invalid");
   requireValue(execution.environment && typeof execution.environment === "object" && !Array.isArray(execution.environment), "scenario environment must be an object");
   for (const [key, item] of Object.entries(execution.environment)) {
     requireValue(/^[A-Z][A-Z0-9_]{0,63}$/u.test(key) && typeof item === "string" && item.length <= 256, `scenario environment entry is invalid: ${key}`);
   }
+  return policy;
 }
 
-function validateStep(step, stepLabel, stepIds) {
+function validateStep(step, stepLabel, stepIds, maximumSeconds) {
   exactKeys(step, ["id", "argv", "timeoutSeconds", "expectedExitCodes", "stdoutIncludes", "fileAssertions"], [], stepLabel);
   requireValue(SAFE_ID.test(step.id) && !stepIds.has(step.id), `${stepLabel}.id is invalid or repeated`);
   stepIds.add(step.id);
   requireValue(Array.isArray(step.argv) && step.argv.length >= 1 && step.argv.length <= 64 && step.argv.every((item) => typeof item === "string" && !item.includes("\0") && item.length <= 512), `${stepLabel}.argv is invalid`);
   requireValue(!Object.hasOwn(step, "command"), `${stepLabel} must not use a shell command string`);
-  requireValue(Number.isInteger(step.timeoutSeconds) && step.timeoutSeconds >= 1 && step.timeoutSeconds <= 60, `${stepLabel}.timeoutSeconds is invalid`);
+  requireValue(Number.isInteger(step.timeoutSeconds) && step.timeoutSeconds >= 1 && step.timeoutSeconds <= maximumSeconds, `${stepLabel}.timeoutSeconds is invalid`);
   requireValue(Array.isArray(step.expectedExitCodes) && step.expectedExitCodes.length >= 1 && step.expectedExitCodes.length <= 4 && step.expectedExitCodes.every((item) => Number.isInteger(item) && item >= 0 && item <= 255), `${stepLabel}.expectedExitCodes is invalid`);
   requireValue(Array.isArray(step.stdoutIncludes) && step.stdoutIncludes.every((item) => typeof item === "string" && item.length >= 1 && item.length <= 256), `${stepLabel}.stdoutIncludes is invalid`);
   requireValue(Array.isArray(step.fileAssertions) && step.fileAssertions.length <= 32, `${stepLabel}.fileAssertions is invalid`);
@@ -160,7 +172,7 @@ function validateStep(step, stepLabel, stepIds) {
   }
 }
 
-function validateDemo(demo, index, demoIds) {
+function validateDemo(demo, index, demoIds, maximumSeconds) {
   const label = `scenario.demos[${index}]`;
   exactKeys(demo, ["id", "title", "claimBoundary", "steps"], [], label);
   requireValue(SAFE_ID.test(demo.id) && !demoIds.has(demo.id), `${label}.id is invalid or repeated`);
@@ -169,7 +181,7 @@ function validateDemo(demo, index, demoIds) {
   requireValue(typeof demo.claimBoundary === "string" && demo.claimBoundary.length > 0 && demo.claimBoundary.length <= 500, `${label}.claimBoundary is invalid`);
   requireValue(Array.isArray(demo.steps) && demo.steps.length >= 1 && demo.steps.length <= 12, `${label}.steps is invalid`);
   const stepIds = new Set();
-  demo.steps.forEach((step, stepIndex) => validateStep(step, `${label}.steps[${stepIndex}]`, stepIds));
+  demo.steps.forEach((step, stepIndex) => validateStep(step, `${label}.steps[${stepIndex}]`, stepIds, maximumSeconds));
 }
 
 export function validateScenario(value) {
@@ -177,11 +189,11 @@ export function validateScenario(value) {
   requireValue(value.schema === "buildchain.declarative-binary-demo/v1", "unsupported scenario schema");
   validateProduct(value.product);
   validateArtifact(value.artifact);
-  validateExecution(value.execution);
+  const executionPolicy = validateExecution(value.execution);
   requireValue(JSON.stringify(value.renditions) === JSON.stringify(RENDITIONS), "scenario must declare both native rendition profiles exactly");
   requireValue(Array.isArray(value.demos) && value.demos.length >= 1 && value.demos.length <= 8, "scenario requires 1 through 8 demos");
   const demoIds = new Set();
-  value.demos.forEach((demo, index) => validateDemo(demo, index, demoIds));
+  value.demos.forEach((demo, index) => validateDemo(demo, index, demoIds, executionPolicy.maximumSeconds));
   exactKeys(value.publication, ["evidencePath", "readmePath", "marker"], [], "scenario.publication");
   inside("/repository", value.publication.evidencePath, "scenario.publication.evidencePath");
   inside("/repository", value.publication.readmePath, "scenario.publication.readmePath");
@@ -191,24 +203,33 @@ export function validateScenario(value) {
   return value;
 }
 
-function validateCapture(capture, rendition, summaryRoot) {
+function validateCapture(capture, rendition, summaryRoot, durationClass) {
+  const policy = durationPolicy(durationClass);
   requireValue(capture.schema === "buildchain.declarative-terminal-capture/v1", "capture schema mismatch");
   requireValue(JSON.stringify(capture.dimensions) === JSON.stringify({ columns: rendition.columns, rows: rendition.rows }), "capture dimensions mismatch");
   requireValue(capture.completion?.status === "qualified" && capture.completion?.reportRoot === summaryRoot, "capture completion mismatch");
   requireValue(capture.exitCode === 0 && capture.authority?.classification === "volatile-terminal-observation", "capture authority or exit mismatch");
   requireValue(JSON.stringify(capture.authority) === JSON.stringify({ classification: "volatile-terminal-observation", grants: [], nonAuthorities: NON_AUTHORITIES }), "capture grants authority");
   requireValue(Array.isArray(capture.events) && capture.events.length === capture.completion.eventCount && capture.events.length > 0, "capture events mismatch");
+  requireValue(Number.isInteger(capture.durationMs) && capture.durationMs >= 500 && capture.durationMs <= policy.maximumSeconds * 1000, "capture duration exceeds its declared class");
+  let previousAtMs = -1;
+  for (const [index, event] of capture.events.entries()) {
+    requireValue(Number.isInteger(event.atMs) && event.atMs >= 0 && event.atMs < capture.durationMs && event.atMs >= previousAtMs, "capture event timeline is invalid");
+    requireValue(index > 0 || event.atMs === 0, "capture event timeline must start at zero");
+    previousAtMs = event.atMs;
+  }
   return capture;
 }
 
-function projection(capture, transcript, demo, rendition) {
+function projection(capture, transcript, demo, rendition, durationClass, sharedCaptureDurationMs) {
   const lines = transcript.endsWith("\n") ? transcript.slice(0, -1).split("\n") : transcript.split("\n");
-  const durationMs = Math.min(60000, capture.durationMs + 1000);
+  const policy = durationPolicy(durationClass);
+  const durationMs = Math.min(policy.maximumSeconds * 1000, sharedCaptureDurationMs + 1000);
   const projected = {
     schema: "kungfu.terminal-capture/v1",
     command: capture.command,
     dimensions: capture.dimensions,
-    durationMs: capture.durationMs,
+    durationMs: sharedCaptureDurationMs,
     encoding: capture.encoding,
     events: capture.events,
     completion: capture.completion,
@@ -220,7 +241,8 @@ function projection(capture, transcript, demo, rendition) {
     id: `${demo.id}-${rendition.id}`.slice(0, 64),
     width: rendition.width,
     height: rendition.height,
-    fps: 15,
+    fps: policy.durationClass === "long-form" ? 10 : 15,
+    ...(policy.durationClass === "long-form" ? { durationClass: "long-form" } : {}),
     durationMs,
     title: demo.title,
     commandLabel: capture.command,
@@ -251,9 +273,10 @@ export function adaptCapture({ artifactRoot, output }) {
   requireValue(DIGEST.test(declaredRoot) && rootJson(manifestBody) === declaredRoot, "capture manifest root mismatch");
   requireValue(manifest.authority?.grants?.length === 0 && JSON.stringify(manifest.authority?.nonAuthorities) === JSON.stringify(NON_AUTHORITIES), "capture manifest grants authority");
   requireValue(Array.isArray(manifest.renditions) && manifest.renditions.length === 2, "capture rendition set is invalid");
+  const executionPolicy = durationPolicy(manifest.execution?.durationClass);
   prepareOutput(output);
   const set = [];
-  for (const [index, expected] of RENDITIONS.entries()) {
+  const loaded = RENDITIONS.map((expected, index) => {
     const descriptor = manifest.renditions[index];
     requireValue(descriptor.id === expected.id && descriptor.role === expected.role && descriptor.width === expected.width && descriptor.height === expected.height, `capture rendition ${index} mismatch`);
     const transcriptBytes = regular(inside(root, descriptor.transcript, "capture transcript"), "capture transcript", 4 * 1024 * 1024);
@@ -262,9 +285,21 @@ export function adaptCapture({ artifactRoot, output }) {
     const summary = readJson(inside(root, descriptor.runSummary, "run summary"), "run summary");
     requireValue(rootJson(summary) === descriptor.runSummaryRoot, "run summary root mismatch");
     const captureBytes = regular(inside(root, descriptor.terminalCapture, "terminal capture"), "terminal capture", 4 * 1024 * 1024);
-    const capture = validateCapture(JSON.parse(captureBytes.toString("utf8")), expected, descriptor.runSummaryRoot);
+    const capture = validateCapture(JSON.parse(captureBytes.toString("utf8")), expected, descriptor.runSummaryRoot, executionPolicy.durationClass);
     requireValue(rootJson(capture) === descriptor.terminalCaptureRoot, "terminal capture root mismatch");
-    const { projected, scene, publicProjection } = projection(capture, transcript, manifest.demo, expected);
+    return { index, expected, descriptor, transcript, capture };
+  });
+  const sharedCaptureDurationMs = Math.max(...loaded.map((entry) => entry.capture.durationMs));
+  requireValue(sharedCaptureDurationMs <= executionPolicy.maximumSeconds * 1000, "native capture duration exceeds its declared class");
+  for (const { index, expected, transcript, capture } of loaded) {
+    const { projected, scene, publicProjection } = projection(
+      capture,
+      transcript,
+      manifest.demo,
+      expected,
+      executionPolicy.durationClass,
+      sharedCaptureDurationMs,
+    );
     const suffix = index === 0 ? "" : "-720p";
     fs.writeFileSync(path.join(output, `complete-transcript${suffix}.txt`), transcript);
     fs.writeFileSync(path.join(output, `terminal-capture${suffix}.json`), stableJson(projected));
@@ -373,7 +408,9 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
   const publicEvidence = { ...evidencePreimage, evidenceRoot, passportRoot: passport.passportRoot, source: sourceCoordinate, files: publicFiles.sort((left, right) => left.path.localeCompare(right.path)) };
   fs.writeFileSync(path.join(evidenceDirectory, "public-evidence.json"), stableJson(publicEvidence));
   const relative = path.relative(repository, evidenceDirectory).split(path.sep).join("/");
-  const marker = scenario.publication.marker;
+  const marker = scenario.demos.length === 1
+    ? scenario.publication.marker
+    : `${scenario.publication.marker}:${demo.id}`;
   const commandLines = demo.steps.map((step) => `$ ${scenario.product.binaryName} ${step.argv.join(" ")}`.trim()).join("\n");
   const block = [
     `<!-- ${marker}:start -->`,

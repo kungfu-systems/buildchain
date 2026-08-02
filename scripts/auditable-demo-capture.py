@@ -36,6 +36,9 @@ RENDITIONS = [
     {"id": "1080p", "role": "primary", "columns": 150, "rows": 36, "width": 1920, "height": 1080},
     {"id": "720p", "role": "responsive", "columns": 100, "rows": 28, "width": 1280, "height": 720},
 ]
+STANDARD_MAX_SECONDS = 60
+LONG_FORM_MAX_SECONDS = 180
+MAX_CAPTURE_EVENTS = 10_000
 
 
 class CaptureError(RuntimeError):
@@ -100,7 +103,7 @@ def clean_environment(home: Path, declared: dict[str, str]) -> dict[str, str]:
 
 
 def run_pty(argv: list[str], cwd: Path, env: dict[str, str], columns: int, rows: int,
-            timeout_seconds: int) -> tuple[bytes, int, int]:
+            timeout_seconds: float) -> tuple[bytes, int, int, list[tuple[int, bytes]]]:
     master, slave = pty.openpty()
     fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", rows, columns, 0, 0))
     started = time.monotonic()
@@ -108,6 +111,7 @@ def run_pty(argv: list[str], cwd: Path, env: dict[str, str], columns: int, rows:
                                start_new_session=True, close_fds=True)
     os.close(slave)
     chunks: list[bytes] = []
+    timed_chunks: list[tuple[int, bytes]] = []
     total = 0
     deadline = started + timeout_seconds
     try:
@@ -131,6 +135,7 @@ def run_pty(argv: list[str], cwd: Path, env: dict[str, str], columns: int, rows:
                     total += len(chunk)
                     require(total <= 4 * 1024 * 1024, "step output exceeds 4 MiB")
                     chunks.append(chunk)
+                    timed_chunks.append((max(0, int((time.monotonic() - started) * 1000)), chunk))
                 else:
                     eof = True
             if process.poll() is not None and (not readable or eof):
@@ -141,10 +146,10 @@ def run_pty(argv: list[str], cwd: Path, env: dict[str, str], columns: int, rows:
             os.killpg(process.pid, signal.SIGKILL)
             process.wait(timeout=5)
     elapsed = max(1, int((time.monotonic() - started) * 1000))
-    return b"".join(chunks), int(process.returncode or 0), elapsed
+    return b"".join(chunks), int(process.returncode or 0), elapsed, timed_chunks
 
 
-def safe_text(raw: bytes, replacements: dict[str, str]) -> str:
+def safe_terminal_text(raw: bytes, replacements: dict[str, str]) -> str:
     require(b"\0" not in raw, "terminal output contains NUL")
     text = raw.decode("utf-8", errors="strict")
     for source, target in sorted(replacements.items(), key=lambda entry: -len(entry[0])):
@@ -155,7 +160,29 @@ def safe_text(raw: bytes, replacements: dict[str, str]) -> str:
     ]
     for pattern in forbidden:
         require(re.search(pattern, text) is None, "terminal output contains a private path or credential-shaped value")
-    return text.replace("\r\n", "\n").replace("\r", "\n")
+    return text
+
+
+def safe_text(raw: bytes, replacements: dict[str, str]) -> str:
+    return safe_terminal_text(raw, replacements).replace("\r\n", "\n").replace("\r", "\n")
+
+
+def timed_public_chunks(raw: bytes, timed_chunks: list[tuple[int, bytes]],
+                        replacements: dict[str, str]) -> tuple[bytes, list[tuple[int, bytes]]]:
+    public = safe_terminal_text(raw, replacements).encode("utf-8")
+    if not raw:
+        return public, []
+    mapped: list[tuple[int, bytes]] = []
+    raw_end = 0
+    public_start = 0
+    for index, (at_ms, chunk) in enumerate(timed_chunks):
+        raw_end += len(chunk)
+        public_end = len(public) if index == len(timed_chunks) - 1 else round(len(public) * raw_end / len(raw))
+        if public_end > public_start:
+            mapped.append((at_ms, public[public_start:public_end]))
+            public_start = public_end
+    require(public_start == len(public), "sanitized terminal timing projection is incomplete")
+    return public, mapped
 
 
 def dotted(value: Any, expression: str) -> Any:
@@ -187,7 +214,10 @@ def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
     execution = value.get("execution") or {}
     require(execution.get("deterministic") is True and execution.get("network") == "none" and execution.get("secrets") == "none",
             "scenario execution boundary must be deterministic, secret-free, and network-disabled")
-    require(isinstance(execution.get("totalTimeoutSeconds"), int) and 1 <= execution["totalTimeoutSeconds"] <= 60,
+    duration_class = execution.get("durationClass", "standard")
+    require(duration_class in ("standard", "long-form"), "scenario duration class is invalid")
+    maximum_seconds = LONG_FORM_MAX_SECONDS if duration_class == "long-form" else STANDARD_MAX_SECONDS
+    require(isinstance(execution.get("totalTimeoutSeconds"), int) and 1 <= execution["totalTimeoutSeconds"] <= maximum_seconds,
             "scenario total timeout is invalid")
     require(isinstance(execution.get("environment"), dict), "scenario environment must be an object")
     demos = value.get("demos")
@@ -205,7 +235,7 @@ def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
                     f"demo {demo['id']} step {step['id']} must use literal argv")
             require(all(isinstance(item, str) and "\0" not in item and len(item) <= 512 for item in step["argv"]),
                     f"demo {demo['id']} step {step['id']} argv is invalid")
-            require(isinstance(step.get("timeoutSeconds"), int) and 1 <= step["timeoutSeconds"] <= 60,
+            require(isinstance(step.get("timeoutSeconds"), int) and 1 <= step["timeoutSeconds"] <= maximum_seconds,
                     f"demo {demo['id']} step {step['id']} timeout is invalid")
             require(isinstance(step.get("expectedExitCodes"), list) and step["expectedExitCodes"],
                     f"demo {demo['id']} step {step['id']} expected exits are invalid")
@@ -258,35 +288,52 @@ def capture_rendition(binary: Path, demo: dict[str, Any], rendition: dict[str, A
     events: list[dict[str, Any]] = []
     transcript: list[str] = []
     summaries = []
-    at_ms = 0
+    duration_class = scenario["execution"].get("durationClass", "standard")
+    duration_limit_ms = (LONG_FORM_MAX_SECONDS if duration_class == "long-form" else STANDARD_MAX_SECONDS) * 1000
     with tempfile.TemporaryDirectory(prefix=f"buildchain-demo-{demo['id']}-{rendition['id']}-") as home_value:
         home = Path(home_value)
         env = clean_environment(home, scenario["execution"]["environment"])
         started = time.monotonic()
+        deadline = started + scenario["execution"]["totalTimeoutSeconds"]
         for step in demo["steps"]:
-            require(time.monotonic() - started < scenario["execution"]["totalTimeoutSeconds"], "demo exceeded its total timeout")
+            remaining = deadline - time.monotonic()
+            require(remaining > 0, "demo exceeded its total timeout")
             display = f"{scenario['product']['binaryName']} {' '.join(step['argv'])}".rstrip()
             prompt = f"\x1b[1;38;5;81m$\x1b[0m \x1b[1m{display}\x1b[0m\r\n"
-            events.append({"atMs": at_ms, "data": base64.b64encode(prompt.encode()).decode()})
+            prompt_at_ms = 0 if not events else max(events[-1]["atMs"], int((time.monotonic() - started) * 1000))
+            events.append({"atMs": prompt_at_ms, "data": base64.b64encode(prompt.encode()).decode()})
             transcript.append(f"$ {display}")
-            at_ms += 120
-            raw, exit_code, elapsed = run_pty([str(binary), *step["argv"]], workspace, env,
-                                              rendition["columns"], rendition["rows"], step["timeoutSeconds"])
-            text = safe_text(raw, {str(workspace): ".", str(binary): scenario["product"]["binaryName"], str(home): "<isolated-home>"})
+            step_started_ms = int((time.monotonic() - started) * 1000)
+            effective_timeout = min(float(step["timeoutSeconds"]), remaining)
+            raw, exit_code, elapsed, raw_chunks = run_pty(
+                [str(binary), *step["argv"]], workspace, env,
+                rendition["columns"], rendition["rows"], effective_timeout,
+            )
+            replacements = {
+                str(workspace): ".", str(binary): scenario["product"]["binaryName"],
+                str(home): "<isolated-home>",
+            }
+            public_bytes, public_chunks = timed_public_chunks(raw, raw_chunks, replacements)
+            text = safe_text(raw, replacements)
             require(exit_code in step["expectedExitCodes"], f"step {step['id']} exited with {exit_code}")
             for expected in step["stdoutIncludes"]:
                 require(expected in text, f"step {step['id']} output is missing: {expected}")
             file_evidence = assert_files(workspace, step["fileAssertions"])
+            for relative_at_ms, chunk in public_chunks:
+                at_ms = step_started_ms + relative_at_ms
+                require(at_ms < duration_limit_ms, "terminal event exceeds the declared duration class")
+                events.append({"atMs": at_ms, "data": base64.b64encode(chunk).decode()})
+            require(len(events) <= MAX_CAPTURE_EVENTS, "terminal capture exceeds 10000 events")
             for line in text.splitlines():
                 if line:
-                    encoded = f"{line}\r\n".encode()
-                    events.append({"atMs": at_ms, "data": base64.b64encode(encoded).decode()})
                     transcript.append(line)
-                    at_ms += max(40, min(120, elapsed // max(1, len(text.splitlines()))))
             summary = {"id": step["id"], "argv": step["argv"], "exitCode": exit_code,
-                       "outputRoot": root_bytes(raw), "fileAssertions": file_evidence}
+                       "elapsedMs": elapsed, "outputRoot": root_bytes(public_bytes),
+                       "outputEncoding": "utf-8-sanitized-terminal/v1", "fileAssertions": file_evidence}
             summaries.append({**summary, "root": root_json(summary)})
-    duration = max(900, min(59000, at_ms + 600))
+    last_event_ms = events[-1]["atMs"]
+    duration = max(900, min(duration_limit_ms, last_event_ms + 600))
+    require(last_event_ms < duration, "terminal event timeline does not fit the declared duration class")
     completion = {"schema": "buildchain.declarative-demo-completion/v1", "status": "qualified",
                   "demoId": demo["id"], "steps": summaries}
     completion_root = root_json(completion)
@@ -337,6 +384,7 @@ def main() -> int:
     manifest = {
         "schema": "buildchain.declarative-demo-capture/v1", "status": "qualified",
         "demo": {"id": demo["id"], "title": demo["title"], "claimBoundary": demo["claimBoundary"]},
+        "execution": {"durationClass": scenario["execution"].get("durationClass", "standard")},
         "product": {**scenario["product"], "distribution": "standalone-binary"},
         "artifact": {"platformId": scenario["artifact"]["platformId"], "binaryRoot": binary_root,
                      "metadataContract": metadata["contract"], "metadataRoot": root_json(metadata), "runtimeDependencies": []},
