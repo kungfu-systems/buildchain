@@ -211,6 +211,7 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-passport-evidence-path",
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
+      "release-propagation-config-path",
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v3/);
