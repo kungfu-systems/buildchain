@@ -185,8 +185,11 @@ At the 2026-07-29 AWS Price List rate of USD 1.45 per Windows
 `c7i.4xlarge` hour, each accepted instance reserves its complete three-hour
 USD 4.35 fail-closed lifetime before `RunInstances`. A DynamoDB transaction
 binds the exact campaign and source, creates an idempotent run ledger entry,
-and atomically refuses a seventh accepted instance. Six accepted instances
-therefore reserve at most USD 26.10 under the dedicated USD 40 decision.
+and atomically refuses a sixth accepted instance. Five accepted instances
+therefore reserve at most USD 21.75. The campaign also persists the
+operator-observed spend from earlier Windows work, and refuses to arm unless
+that baseline, all five reservations, and one USD 4.35 fail-closed race
+allowance remain below the USD 80 phase cap.
 
 The campaign starts unarmed and expires within 24 hours. Its `CONTROL` record
 can be created only once: a killed or expired campaign cannot be re-armed by
@@ -213,8 +216,9 @@ final job.
 
 `scripts/aws-windows-jit-campaign.mjs` is the one-shot operator boundary.
 Without a mutation mode it emits the arm plan. `arm-campaign` requires the
-campaign id, exact source SHA, and state table to be repeated as confirmations,
-then creates `CONTROL` and `CAMPAIGN#<id>` with `attribute_not_exists`
+campaign id, exact source SHA, state table, and observed prior phase spend to
+be repeated as confirmations, then creates `CONTROL` and `CAMPAIGN#<id>` with
+`attribute_not_exists`
 conditions. DynamoDB therefore refuses a second campaign in the same retained
 state table. The operator can always use `kill-campaign`; there is deliberately
 no clear or re-arm operation.
@@ -224,8 +228,9 @@ same `--campaign-id`, `--confirm-campaign-id`, `--state-table`, and
 `--confirm-state-table`. After the GitHub, AMI, active-instance, SSM, and EC2
 DryRun checks pass, the controller
 atomically reserves one run. Duplicate run-attempt-qualification identities,
-source mismatch, expiry, `KILLED`, the seventh accepted instance, or a
-reservation over the USD 40 ceiling all fail closed before `RunInstances`.
+source mismatch, expiry, `KILLED`, the sixth accepted instance, or a
+reservation that would exceed the baseline-adjusted USD 80 phase ceiling all
+fail closed before `RunInstances`.
 
 Example dry-run and arm boundary (do not execute without a new campaign budget
 decision):
@@ -235,12 +240,14 @@ windows_campaign=win-REPLACE_WITH_CAMPAIGN_ID
 windows_source=REPLACE_WITH_EXACT_40_CHARACTER_SHA
 windows_state_table=REPLACE_WITH_CAMPAIGN_STATE_TABLE
 windows_expires_at=REPLACE_WITH_ISO_TIMESTAMP_WITHIN_24_HOURS
+windows_phase_spend_baseline_usd=REPLACE_WITH_OBSERVED_PRIOR_WINDOWS_SPEND
 
 node scripts/aws-windows-jit-campaign.mjs plan-arm \
   --campaign-id "$windows_campaign" \
   --source-sha "$windows_source" \
   --state-table "$windows_state_table" \
-  --expires-at "$windows_expires_at"
+  --expires-at "$windows_expires_at" \
+  --phase-spend-baseline-usd "$windows_phase_spend_baseline_usd"
 
 node scripts/aws-windows-jit-campaign.mjs arm-campaign \
   --campaign-id "$windows_campaign" \
@@ -249,10 +256,12 @@ node scripts/aws-windows-jit-campaign.mjs arm-campaign \
   --confirm-source-sha "$windows_source" \
   --state-table "$windows_state_table" \
   --confirm-state-table "$windows_state_table" \
-  --expires-at "$windows_expires_at"
+  --expires-at "$windows_expires_at" \
+  --phase-spend-baseline-usd "$windows_phase_spend_baseline_usd" \
+  --confirm-phase-spend-baseline-usd "$windows_phase_spend_baseline_usd"
 ```
 
-Arming creates a permanent one-shot control record and admits up to six paid
+Arming creates a permanent one-shot control record and admits up to five paid
 instances. Its rollback is fail-closed, not deletion: `kill-campaign` first
 persists `KILLED`, then publishes to the dedicated SNS topic so the reaper
 terminates active card-owned instances and removes their JIT parameters. The
