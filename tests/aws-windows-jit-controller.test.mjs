@@ -151,6 +151,36 @@ test("Windows campaign cannot remain armed for more than 24 hours", () => {
   );
 });
 
+test("Windows campaign narrows its paid slot ceiling without widening the phase cap", () => {
+  const campaign = createWindowsJitCampaignArmPlan({
+    campaignId: "win-20260802-bounded",
+    sourceSha: "a".repeat(40),
+    stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+    armedAt: "2026-08-02T03:00:00Z",
+    expiresAt: "2026-08-03T03:00:00Z",
+    phaseSpendBaselineUsd: 60,
+    maxAcceptedInstances: 1,
+  });
+  const arm = windowsCampaignArmItems(campaign);
+  assert.equal(campaign.limits.maxAcceptedInstances, 1);
+  assert.equal(campaign.limits.campaignReservationCeilingUsd, 4.35);
+  assert.equal(campaign.limits.campaignSafetyCeilingUsd, 8.7);
+  assert.equal(arm[1].Put.Item.max_accepted_instances.N, "1");
+  assert.throws(
+    () =>
+      createWindowsJitCampaignArmPlan({
+        campaignId: "win-20260802-bounded",
+        sourceSha: "a".repeat(40),
+        stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+        armedAt: "2026-08-02T03:00:00Z",
+        expiresAt: "2026-08-03T03:00:00Z",
+        phaseSpendBaselineUsd: 60,
+        maxAcceptedInstances: 6,
+      }),
+    /maxAcceptedInstances must be an integer from 1 through 5/,
+  );
+});
+
 test("Windows campaign requires a prior-spend baseline and rejects an exhausted cap", () => {
   const values = {
     campaignId: "win-20260802-ledger",
@@ -191,16 +221,18 @@ test("Windows campaign CLI plans without mutating AWS", () => {
       "2026-08-03T03:00:00Z",
       "--phase-spend-baseline-usd",
       "51.98572625",
+      "--max-accepted-instances",
+      "1",
     ],
     { cwd: path.resolve(import.meta.dirname, ".."), encoding: "utf8" },
   );
   assert.equal(result.status, 0, result.stderr);
   const plan = JSON.parse(result.stdout);
   assert.equal(plan.kind, "campaign-arm-plan");
-  assert.equal(plan.limits.maxAcceptedInstances, 5);
+  assert.equal(plan.limits.maxAcceptedInstances, 1);
   assert.equal(plan.limits.phaseSpendBaselineUsd, 51.98572625);
   assert.equal(plan.limits.remainingPhaseBudgetUsd, 28.01427375);
-  assert.equal(plan.limits.campaignSafetyCeilingUsd, 26.1);
+  assert.equal(plan.limits.campaignSafetyCeilingUsd, 8.7);
 });
 
 test("Windows campaign kill persists state before publishing cleanup", () => {
