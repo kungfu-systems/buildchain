@@ -248,6 +248,11 @@ on:
         default: true
         type: boolean
         required: false
+      release-propagation-config-path:
+        description: "Optional source-controlled package propagation capture config read from the exact finalized release SHA"
+        default: ""
+        type: string
+        required: false
       release-passport-output-dir:
         description: "Release passport output directory"
         default: ".buildchain/release-passport"
@@ -507,6 +512,9 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.alpha.outputs.release-candidate-artifact || jobs.stable.outputs.release-candidate-artifact }}
+      release-propagation-work-artifact:
+        description: "Captured package release propagation Work artifact"
+        value: ${{ jobs.alpha.outputs.release-propagation-work-artifact || jobs.stable.outputs.release-propagation-work-artifact }}
       publication-commit-evidence-path:
         description: "Validated consumer publication commit evidence path"
         value: ${{ jobs.alpha.outputs.publication-commit-evidence-path || jobs.stable.outputs.publication-commit-evidence-path }}
@@ -817,6 +825,7 @@ jobs:
       publish-package-set-order: ${{ inputs.publish-package-set-order }}
       publish-package-main: ${{ inputs.publish-package-main }}
       release-passport: ${{ inputs.release-passport }}
+      release-propagation-config-path: ${{ inputs.release-propagation-config-path }}
       release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
       release-passport-product-name: ${{ inputs.release-passport-product-name }}
       release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
@@ -924,6 +933,7 @@ jobs:
       publish-package-set-order: ${{ inputs.publish-package-set-order }}
       publish-package-main: ${{ inputs.publish-package-main }}
       release-passport: ${{ inputs.release-passport }}
+      release-propagation-config-path: ${{ inputs.release-propagation-config-path }}
       release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
       release-passport-product-name: ${{ inputs.release-passport-product-name }}
       release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
