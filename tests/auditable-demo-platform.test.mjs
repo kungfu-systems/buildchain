@@ -244,3 +244,11 @@ test("Gate smoke stays bounded while full render consumes both native captures",
   assert.match(full, /--terminal-capture \/input\/terminal-capture\.json/u);
   assert.match(full, /--rendition-set \/input\/rendition-set\.json/u);
 });
+
+test("recursive dogfood resolves the reviewed setup-node action commit", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/auditable-demo.yml"), "utf8");
+  assert.match(
+    workflow,
+    /actions\/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6\.4\.0/u,
+  );
+});
