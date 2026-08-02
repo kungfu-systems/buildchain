@@ -30,7 +30,9 @@ function aws(plan, serviceArgs) {
     const detail = String(result.stderr || result.stdout || "")
       .trim()
       .slice(0, 2000);
-    throw new Error(`AWS campaign mutation failed${detail ? `: ${detail}` : ""}`);
+    throw new Error(
+      `AWS campaign mutation failed${detail ? `: ${detail}` : ""}`,
+    );
   }
   return result.stdout ? JSON.parse(result.stdout) : {};
 }
@@ -43,10 +45,15 @@ function armPlan() {
     region: arg("region", "us-east-1"),
     armedAt: arg("armed-at", new Date().toISOString()),
     expiresAt: arg("expires-at"),
+    phaseSpendBaselineUsd: arg("phase-spend-baseline-usd"),
+    maxAcceptedInstances: arg("max-accepted-instances"),
   });
 }
 
-function confirm(plan) {
+function confirm(
+  plan,
+  { phaseSpendBaseline = true, maxAcceptedInstances = true } = {},
+) {
   if (arg("confirm-campaign-id") !== plan.campaign.id) {
     throw new Error("--confirm-campaign-id must equal the campaign id");
   }
@@ -54,7 +61,29 @@ function confirm(plan) {
     throw new Error("--confirm-source-sha must equal the exact source SHA");
   }
   if (arg("confirm-state-table") !== plan.aws.stateTable) {
-    throw new Error("--confirm-state-table must equal the campaign state table");
+    throw new Error(
+      "--confirm-state-table must equal the campaign state table",
+    );
+  }
+  if (
+    phaseSpendBaseline &&
+    (!arg("confirm-phase-spend-baseline-usd").trim() ||
+      Number(arg("confirm-phase-spend-baseline-usd")) !==
+        plan.limits.phaseSpendBaselineUsd)
+  ) {
+    throw new Error(
+      "--confirm-phase-spend-baseline-usd must equal the phase spend baseline",
+    );
+  }
+  if (
+    maxAcceptedInstances &&
+    (!arg("confirm-max-accepted-instances").trim() ||
+      Number(arg("confirm-max-accepted-instances")) !==
+        plan.limits.maxAcceptedInstances)
+  ) {
+    throw new Error(
+      "--confirm-max-accepted-instances must equal the campaign slot ceiling",
+    );
   }
 }
 
@@ -65,7 +94,9 @@ function killSwitchTopic() {
       topic,
     )
   ) {
-    throw new Error("--kill-switch-topic must be the dedicated Windows JIT SNS ARN");
+    throw new Error(
+      "--kill-switch-topic must be the dedicated Windows JIT SNS ARN",
+    );
   }
   if (arg("confirm-kill-switch-topic") !== topic) {
     throw new Error(
@@ -113,8 +144,12 @@ export function main() {
       region: arg("region", "us-east-1"),
       armedAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 1000).toISOString(),
+      phaseSpendBaselineUsd: 0,
     });
-    confirm(plan);
+    confirm(plan, {
+      phaseSpendBaseline: false,
+      maxAcceptedInstances: false,
+    });
     const topic = killSwitchTopic();
     aws(
       plan,

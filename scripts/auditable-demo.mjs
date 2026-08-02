@@ -36,6 +36,10 @@ const OPTIONAL_ADAPTER_FILES = [
 ];
 const MAX_TERMINAL_CAPTURE_BYTES = 4 * 1024 * 1024;
 const MAX_TERMINAL_CAPTURE_EVENTS = 10_000;
+const STANDARD_MAX_DURATION_MS = 60_000;
+const LONG_FORM_MAX_DURATION_MS = 180_000;
+const LONG_FORM_MAX_FPS = 10;
+const MAX_RENDER_FRAMES = 1_800;
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -186,15 +190,20 @@ function validateScene(value) {
   exactKeys(
     value,
     ["schema", "id", "width", "height", "fps", "durationMs", "title"],
-    ["commandLabel", "background", "accent"],
+    ["durationClass", "commandLabel", "background", "accent"],
     "scene",
   );
   invariant(value.schema === "build-images.demo-scene/v1", "unsupported scene schema");
   invariant(/^[a-z0-9][a-z0-9._-]{0,63}$/.test(value.id), "scene.id is invalid");
   integer(value.width, 640, 1920, "scene.width");
   integer(value.height, 360, 1080, "scene.height");
-  integer(value.fps, 1, 30, "scene.fps");
-  integer(value.durationMs, 500, 60000, "scene.durationMs");
+  const durationClass = value.durationClass ?? "standard";
+  invariant(durationClass === "standard" || durationClass === "long-form", "scene.durationClass is invalid");
+  const maximumDurationMs = durationClass === "long-form" ? LONG_FORM_MAX_DURATION_MS : STANDARD_MAX_DURATION_MS;
+  const maximumFps = durationClass === "long-form" ? LONG_FORM_MAX_FPS : 30;
+  integer(value.fps, 1, maximumFps, "scene.fps");
+  integer(value.durationMs, 500, maximumDurationMs, "scene.durationMs");
+  invariant(Math.ceil((value.durationMs / 1000) * value.fps) <= MAX_RENDER_FRAMES, "scene exceeds the deterministic source-frame bound");
   text(value.title, 1, 120, "scene.title");
   if (value.commandLabel !== undefined) text(value.commandLabel, 0, 160, "scene.commandLabel");
   for (const key of ["background", "accent"]) {
@@ -206,6 +215,7 @@ function validateScene(value) {
     width: value.width,
     height: value.height,
     fps: value.fps,
+    ...(value.durationClass === undefined ? {} : { durationClass }),
     durationMs: value.durationMs,
     title: value.title,
     commandLabel: value.commandLabel ?? "",
@@ -524,7 +534,7 @@ function validateBudgetBasis(entry, label) {
     MAX_BUNDLE_MEMBER_BYTES,
     `${label}.budgetBasis.observedBytes`,
   );
-  const multiplier = integer(entry.budgetBasis.multiplier, 1, 64, `${label}.budgetBasis.multiplier`);
+  const multiplier = integer(entry.budgetBasis.multiplier, 1, 128, `${label}.budgetBasis.multiplier`);
   invariant(entry.budgetBasis.rounding === "next-power-of-two", `${label}.budgetBasis.rounding is unsupported`);
   const expected = 2 ** Math.ceil(Math.log2(observedBytes * multiplier));
   invariant(entry.maximumBytes === expected, `${label}.maximumBytes does not match its measured budget basis`);
@@ -1017,6 +1027,15 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
   return { manifest, probe, qualification };
 }
 
+function renditionInputRoots(root, renditions) {
+  return renditions.map((rendition) => ({
+    id: rendition.id, role: rendition.role, captureRoot: rendition.captureRoot,
+    sceneRoot: sha256(readRegular(path.join(root, rendition.files.scene), `${rendition.id} scene`)),
+    transcriptRoot: sha256(readRegular(path.join(root, rendition.files.transcript), `${rendition.id} transcript`)),
+    projectionRoot: sha256(readRegular(path.join(root, rendition.files.projection), `${rendition.id} projection`)),
+  }));
+}
+
 function finalizeGate(values) {
   const adapterOutput = path.resolve(required(values, "--adapter-output"));
   const smokeInput = path.resolve(required(values, "--smoke-input"));
@@ -1109,14 +1128,7 @@ function finalizeGate(values) {
           renditionSet: {
             schema: normalized.renditionSet.schema,
             root: sha256(readRegular(path.join(output, "rendition-set.json"), "rendition set")),
-            renditions: normalized.renditionSet.renditions.map((rendition) => ({
-              id: rendition.id,
-              role: rendition.role,
-              captureRoot: rendition.captureRoot,
-              sceneRoot: sha256(readRegular(path.join(output, rendition.scene), `${rendition.id} scene`)),
-              transcriptRoot: sha256(readRegular(path.join(output, rendition.transcript), `${rendition.id} transcript`)),
-              projectionRoot: sha256(readRegular(path.join(output, rendition.projection), `${rendition.id} projection`)),
-            })),
+            renditions: renditionInputRoots(output, normalized.renditionSet.renditions),
           },
         }
         : {}),
@@ -1179,15 +1191,8 @@ function verifyGate(values) {
     invariant(
       qualifiedRenditionSet.schema === normalized.renditionSet.schema
         && qualifiedRenditionSet.root === sha256(readRegular(path.join(bundle, "rendition-set.json"), "rendition set"))
-        && JSON.stringify(qualifiedRenditionSet.renditions)
-          === JSON.stringify(normalized.renditionSet.renditions.map((rendition) => ({
-            id: rendition.id,
-            role: rendition.role,
-            captureRoot: rendition.captureRoot,
-            sceneRoot: sha256(readRegular(path.join(bundle, rendition.scene), `${rendition.id} scene`)),
-            transcriptRoot: sha256(readRegular(path.join(bundle, rendition.transcript), `${rendition.id} transcript`)),
-            projectionRoot: sha256(readRegular(path.join(bundle, rendition.projection), `${rendition.id} projection`)),
-          }))),
+        && stableJson(qualifiedRenditionSet.renditions)
+          === stableJson(renditionInputRoots(bundle, normalized.renditionSet.renditions)),
       "gate native rendition roots mismatch",
     );
   }
@@ -1311,6 +1316,7 @@ export {
   inspectRendererMedia,
   parseAdapterArguments,
   qualifyMediaFixture,
+  renditionInputRoots,
   prepareSmoke,
   runAdapter,
   sha256,

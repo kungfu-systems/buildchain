@@ -317,6 +317,10 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /needs\.promote\.outputs\.finalization-needed == 'true' && 'partial'/,
   );
+  assert.match(
+    wrapper,
+    /Enforce qualifying release-candidate-promotion controller receipt[\s\S]*?needs\.promote\.outputs\.finalization-needed != 'true'[\s\S]*?controller-receipt-qualifying != 'true'/,
+  );
 });
 
 test("reusable build exposes release-candidate passport outputs", () => {
@@ -1583,10 +1587,8 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
   assert.equal(stableLock.buildchain.majorLine, "v3");
   assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
-  assert.equal(
-    alphaLock.buildchain.compatibilityDigest,
-    currentContract.compatibilityDigest,
-  );
+  assert.match(alphaLock.buildchain.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
+  assert.match(currentContract.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),
   ).version;

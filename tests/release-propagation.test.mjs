@@ -24,7 +24,10 @@ import {
 import { sha256Json } from "../packages/core/release-propagation-common.js";
 import { contentRoot } from "../packages/core/release-propagation-work-control.js";
 import { withWorkRoot } from "../packages/core/release-propagation-work.js";
-import { capturePackageReleasePropagation } from "../scripts/capture-package-release-propagation.mjs";
+import {
+  capturePackageReleasePropagation,
+  readConfigAtSource,
+} from "../scripts/capture-package-release-propagation.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -1058,7 +1061,45 @@ test("package release capture materializes a restart-safe artifact set", () => {
   const status = JSON.parse(fs.readFileSync(path.join(outputDir, "work", propagationKey, "status.json"), "utf8"));
   assert.equal(work.contentRoot, captured.works[0].work.contentRoot);
   assert.equal(status.nextAction.action, "claim");
+  assert.equal(verifyReleasePropagationWork(work).contentRoot, work.contentRoot);
   assert.equal(JSON.parse(fs.readFileSync(path.join(outputDir, "upstream-release.json"), "utf8")).tag, "v1.4.0-alpha.3");
+});
+
+test("package release capture recovers an exact source commit missing from a shallow checkout", () => {
+  const sandbox = tempDir("package-release-shallow-source");
+  const seed = path.join(sandbox, "seed");
+  const remote = path.join(sandbox, "remote.git");
+  const shallow = path.join(sandbox, "shallow");
+  execFileSync("git", ["init", "--initial-branch=main", seed], { stdio: "ignore" });
+  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd: seed });
+  execFileSync("git", ["config", "user.email", "buildchain@example.test"], { cwd: seed });
+  fs.writeFileSync(
+    path.join(seed, "buildchain.release-propagation.json"),
+    `${JSON.stringify(packageCaptureConfig())}\n`,
+  );
+  execFileSync("git", ["add", "buildchain.release-propagation.json"], { cwd: seed });
+  execFileSync("git", ["commit", "-m", "test: release source"], { cwd: seed, stdio: "ignore" });
+  const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: seed, encoding: "utf8" }).trim();
+  fs.writeFileSync(path.join(seed, "later.txt"), "later\n");
+  execFileSync("git", ["add", "later.txt"], { cwd: seed });
+  execFileSync("git", ["commit", "-m", "test: later checkout"], { cwd: seed, stdio: "ignore" });
+  execFileSync("git", ["clone", "--bare", seed, remote], { stdio: "ignore" });
+  execFileSync("git", ["clone", "--depth=1", `file://${remote}`, shallow], { stdio: "ignore" });
+
+  assert.notEqual(
+    spawnSync("git", ["cat-file", "-e", `${sourceSha}^{commit}`], { cwd: shallow }).status,
+    0,
+  );
+  const recovered = readConfigAtSource(
+    sourceSha,
+    "buildchain.release-propagation.json",
+    shallow,
+  );
+  assert.equal(recovered.normalized.sourceNode, "kfd");
+  assert.equal(
+    spawnSync("git", ["cat-file", "-e", `${sourceSha}^{commit}`], { cwd: shallow }).status,
+    0,
+  );
 });
 
 test("package release capture rejects the alpha.48 tag and npm source mismatch class", () => {

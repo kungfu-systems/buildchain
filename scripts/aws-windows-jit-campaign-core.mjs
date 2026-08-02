@@ -38,6 +38,34 @@ function number(value) {
   return { N: String(value) };
 }
 
+function money(value, label) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) {
+    throw new Error(`${label} is required`);
+  }
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${label} must be a non-negative finite number`);
+  }
+  return Math.round(parsed * 100_000_000) / 100_000_000;
+}
+
+function acceptedInstances(value) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return WINDOWS_EC2_JIT.maxAcceptedInstances;
+  const parsed = Number(normalized);
+  if (
+    !Number.isInteger(parsed) ||
+    parsed < 1 ||
+    parsed > WINDOWS_EC2_JIT.maxAcceptedInstances
+  ) {
+    throw new Error(
+      `maxAcceptedInstances must be an integer from 1 through ${WINDOWS_EC2_JIT.maxAcceptedInstances}`,
+    );
+  }
+  return parsed;
+}
+
 function string(value) {
   return { S: String(value) };
 }
@@ -56,6 +84,22 @@ export function createWindowsJitCampaignArmPlan(values = {}) {
     (WINDOWS_EC2_JIT.pricePerHourUsd *
       WINDOWS_EC2_JIT.maximumInstanceLifetimeMinutes) /
     60;
+  const phaseSpendBaselineUsd = money(
+    values.phaseSpendBaselineUsd,
+    "phaseSpendBaselineUsd",
+  );
+  const maxAcceptedInstances = acceptedInstances(values.maxAcceptedInstances);
+  const campaignReservationCeilingUsd = reservationUsd * maxAcceptedInstances;
+  const campaignSafetyCeilingUsd =
+    campaignReservationCeilingUsd +
+    reservationUsd * WINDOWS_EC2_JIT.maxConcurrentInstances;
+  const remainingPhaseBudgetUsd =
+    WINDOWS_EC2_JIT.budgetLimitUsd - phaseSpendBaselineUsd;
+  if (campaignSafetyCeilingUsd >= remainingPhaseBudgetUsd) {
+    throw new Error(
+      "campaign safety envelope must remain below the remaining Windows phase budget",
+    );
+  }
   return {
     schemaVersion: 1,
     contract: AWS_WINDOWS_JIT_CAMPAIGN_CONTRACT,
@@ -75,9 +119,14 @@ export function createWindowsJitCampaignArmPlan(values = {}) {
       stateTable: tableName(values.stateTable),
     },
     limits: {
-      maxAcceptedInstances: WINDOWS_EC2_JIT.maxAcceptedInstances,
+      maxAcceptedInstances,
       reservationUsd,
       budgetLimitUsd: WINDOWS_EC2_JIT.budgetLimitUsd,
+      phaseSpendBaselineUsd,
+      remainingPhaseBudgetUsd,
+      campaignReservationCeilingUsd,
+      campaignSafetyCeilingUsd,
+      reservationLimitUsd: remainingPhaseBudgetUsd - reservationUsd,
     },
   };
 }
@@ -97,6 +146,8 @@ export function windowsCampaignArmItems(plan) {
           state: string("ARMED"),
           campaign_id: string(plan.campaign.id),
           source_sha: string(plan.source.sha),
+          phase_spend_baseline_usd: number(plan.limits.phaseSpendBaselineUsd),
+          budget_limit_usd: number(plan.limits.budgetLimitUsd),
           armed_at: number(plan.campaign.armedAt),
           expires_epoch: number(plan.campaign.expiresAt),
         },
@@ -115,6 +166,17 @@ export function windowsCampaignArmItems(plan) {
           max_accepted_instances: number(plan.limits.maxAcceptedInstances),
           reservation_usd: number(plan.limits.reservationUsd),
           budget_limit_usd: number(plan.limits.budgetLimitUsd),
+          phase_spend_baseline_usd: number(plan.limits.phaseSpendBaselineUsd),
+          remaining_phase_budget_usd: number(
+            plan.limits.remainingPhaseBudgetUsd,
+          ),
+          campaign_reservation_ceiling_usd: number(
+            plan.limits.campaignReservationCeilingUsd,
+          ),
+          campaign_safety_ceiling_usd: number(
+            plan.limits.campaignSafetyCeilingUsd,
+          ),
+          reservation_limit_usd: number(plan.limits.reservationLimitUsd),
           armed_at: number(plan.campaign.armedAt),
           expires_epoch: number(plan.campaign.expiresAt),
         },
@@ -128,7 +190,6 @@ export function windowsCampaignReservationItems(plan, observedAt) {
   const now = epoch(observedAt, "observedAt");
   const runPk = runKey(plan);
   const campaignPk = `CAMPAIGN#${plan.campaign.id}`;
-  const maxAccepted = plan.safety.campaignAcceptedInstanceCeiling;
   const reservation = plan.safety.campaignReservationUsd;
   return [
     {
@@ -171,17 +232,13 @@ export function windowsCampaignReservationItems(plan, observedAt) {
         UpdateExpression:
           "ADD accepted_instances :one, reserved_usd :reservation SET updated_at = :now",
         ConditionExpression:
-          "#state = :armed AND source_sha = :source AND accepted_instances < :max AND reserved_usd <= :remaining",
+          "#state = :armed AND source_sha = :source AND accepted_instances < max_accepted_instances AND reserved_usd <= reservation_limit_usd",
         ExpressionAttributeNames: { "#state": "state" },
         ExpressionAttributeValues: {
           ":armed": string("ARMED"),
           ":source": string(plan.source.sha),
           ":one": number(1),
           ":reservation": number(reservation),
-          ":max": number(maxAccepted),
-          ":remaining": number(
-            plan.safety.campaignBudgetLimitUsd - reservation,
-          ),
           ":now": number(now),
         },
       },
@@ -230,9 +287,7 @@ export function windowsCampaignKillArgs(stateTable, reason, observedAt) {
     "--expression-attribute-values",
     JSON.stringify({
       ":killed": string("KILLED"),
-      ":reason": string(
-        exact(reason, /^[a-z0-9][a-z0-9-]{2,63}$/, "reason"),
-      ),
+      ":reason": string(exact(reason, /^[a-z0-9][a-z0-9-]{2,63}$/, "reason")),
       ":now": number(epoch(observedAt, "observedAt")),
     }),
     "--output",

@@ -767,6 +767,7 @@ function buildSiteBundle() {
         ["build", "channel-build-router"],
         [".build", "reusable-build"],
         [".auditable-demo", "auditable-demo"],
+        [".declarative-auditable-demo", "declarative-auditable-demo"],
         ["web-surface", "site-app-deployment"],
         ["buildchain-ref-promotion", "release-governance"],
         ["release-line-bootstrap", "release-governance"],
@@ -793,6 +794,7 @@ function buildSiteBundle() {
       ]);
       const statusById = new Map([
         [".auditable-demo", "preview"],
+        [".declarative-auditable-demo", "preview"],
         ["release-propagation", "preview"],
         ["candidate-lab", "repository-internal"],
         ["build-surface-fixture", "repository-internal"],

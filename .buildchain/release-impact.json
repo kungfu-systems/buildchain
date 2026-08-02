@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "3.0.4-alpha.13",
+    "version": "3.0.5-alpha.6",
     "line": "v3.0"
   },
   "versionImpact": {
@@ -444,6 +444,13 @@
       "class": "workflow-contract",
       "rationale": "The v3-alpha public promotion router forwards the additive package propagation input only to the matching alpha shell until the stable v3 shell publishes that input, preventing GitHub reusable-workflow graph validation from rejecting alpha callers while preserving the existing stable contract.",
       "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "promotion-controller-finalization-handoff",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "A successful registry publication that intentionally pauses for protected version-state finalization records a partial controller receipt without failing the promotion workflow; incomplete non-finalization paths remain fail-closed.",
+      "source": ".github/workflows/.release-candidate-promote.yml"
     }
   ],
   "classification": "minor",

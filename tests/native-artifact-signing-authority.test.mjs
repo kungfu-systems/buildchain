@@ -221,49 +221,111 @@ test("native authority binds and projects a notarized app release payload", () =
     );
     fs.writeFileSync(
       path.join(input, "index.json"),
-      `${JSON.stringify({
-        schemaVersion: 1,
-        contract: "kungfu-buildchain-artifact-signing-request-index/v1",
-        requests: [{
-          id: request.artifact.id,
-          digest: request.digest,
-          path: "app/request.json",
-          required: true,
-        }],
-      }, null, 2)}\n`,
+      `${JSON.stringify(
+        {
+          schemaVersion: 1,
+          contract: "kungfu-buildchain-artifact-signing-request-index/v1",
+          requests: [
+            {
+              id: request.artifact.id,
+              digest: request.digest,
+              path: "app/request.json",
+              required: true,
+            },
+          ],
+        },
+        null,
+        2,
+      )}\n`,
     );
 
     const credential = path.join(root, "credential");
     const release = path.join(credential, "product", "release");
     fs.mkdirSync(release, { recursive: true });
-    const zip = path.join(release, "Kungfu-Episodes-4.0.0-alpha.1-macos-arm64.zip");
-    const dmg = path.join(release, "Kungfu-Episodes-4.0.0-alpha.1-macos-arm64.dmg");
+    const zip = path.join(
+      release,
+      "Kungfu-Episodes-4.0.0-alpha.1-macos-arm64.zip",
+    );
+    const dmg = path.join(
+      release,
+      "Kungfu-Episodes-4.0.0-alpha.1-macos-arm64.dmg",
+    );
     const evidencePath = path.join(release, "credential-island-evidence.json");
     fs.writeFileSync(zip, "signed-stapled-app-zip");
     fs.writeFileSync(dmg, "signed-stapled-dmg");
-    fs.writeFileSync(evidencePath, `${JSON.stringify({
-      schema: "buildchain.macos-credential-island-evidence/v1",
-      status: "accepted",
-      source: {
-        repository: request.source.repository,
-        sha: request.source.sha,
-        treeSha: request.source.treeSha,
-      },
-      buildchain: { runtimeSha: request.runtime.sha },
-      app: { architecture: "arm64" },
-      notarization: {
-        application: { id: "a", status: "Accepted" },
-        diskImage: { id: "b", status: "Accepted" },
-      },
-      verification: {
-        codesignStrict: true,
-        hardenedRuntime: true,
-        appStaple: true,
-        appGatekeeper: true,
-        dmgStaple: true,
-        dmgGatekeeper: true,
-      },
-    }, null, 2)}\n`);
+    fs.writeFileSync(
+      evidencePath,
+      `${JSON.stringify(
+        {
+          schema: "buildchain.macos-credential-island-evidence/v1",
+          status: "accepted",
+          source: {
+            repository: request.source.repository,
+            sha: request.source.sha,
+            treeSha: request.source.treeSha,
+          },
+          buildchain: { runtimeSha: request.runtime.sha },
+          input: { requestDigest: request.digest },
+          app: { architecture: "arm64" },
+          execution: {
+            id: "e".repeat(64),
+            runId: "1000",
+            runAttempt: "2",
+          },
+          dmgAssembly: {
+            schema: "buildchain.macos-dmg-assembly-evidence/v1",
+            status: "accepted",
+            executionId: "e".repeat(64),
+            binding: {
+              sourceSha: request.source.sha,
+              runtimeSha: request.runtime.sha,
+              requestDigest: request.digest,
+              unsignedArchiveDigest: request.artifact.transport.digest,
+              runId: "1000",
+              runAttempt: "2",
+            },
+            policy: {
+              maxAttempts: 3,
+              retryableClassifications: ["resource-busy"],
+              retryDelaysMs: [2000, 5000],
+            },
+            attempts: [
+              {
+                number: 1,
+                outcome: "created",
+                classification: "none",
+              },
+            ],
+            cleanup: {
+              ownership: "temporary-root-only",
+              failedAttemptArtifactsRemoved: true,
+              finalOwnedRoot: "removed",
+            },
+          },
+          cleanup: { status: "complete" },
+          toolchain: {
+            node: process.version,
+            macosProductVersion: "15.0",
+            macosBuildVersion: "24A000",
+            xcode: "Xcode 16.0; Build version 16A000",
+          },
+          notarization: {
+            application: { id: "a", status: "Accepted" },
+            diskImage: { id: "b", status: "Accepted" },
+          },
+          verification: {
+            codesignStrict: true,
+            hardenedRuntime: true,
+            appStaple: true,
+            appGatekeeper: true,
+            dmgStaple: true,
+            dmgGatekeeper: true,
+          },
+        },
+        null,
+        2,
+      )}\n`,
+    );
     const files = [zip, dmg, evidencePath].map((file) => ({
       path: path.relative(credential, file).split(path.sep).join("/"),
       size: fs.statSync(file).size,
@@ -282,10 +344,26 @@ test("native authority binds and projects a notarized app release payload", () =
       evidencePath,
       credentialArtifactRoot: credential,
       outputRoot: output,
+      expectedRunId: "1000",
+      expectedRunAttempt: "2",
     });
     assert.equal(
       verifyArtifactSigningResults({ requestRoot: input, resultRoot: output }).ok,
       true,
+    );
+    assert.throws(
+      () =>
+        finalizeNativeArtifactSigningResult({
+          requestRoot: input,
+          requestPath: "app/request.json",
+          signedPayload: zip,
+          evidencePath,
+          credentialArtifactRoot: credential,
+          outputRoot: path.join(root, "cross-run-output"),
+          expectedRunId: "1001",
+          expectedRunAttempt: "2",
+        }),
+      /does not prove the requested native signature/u,
     );
 
     const consumer = path.join(root, "consumer");

@@ -26,8 +26,7 @@ function launchPlan(overrides = {}) {
     jobId: "91315129066",
     qualificationId: "win-full-01",
     campaignId: "win-20260802-ledger",
-    runnerLabel:
-      "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01",
+    runnerLabel: "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01",
     runnerName: "kungfu-win-full-01-30679299189-1",
     sourceSha: "a".repeat(40),
     sourceRef:
@@ -54,7 +53,7 @@ test("Windows controller binds exact run, source, JIT label, and IaC ownership",
   assert.equal(plan.safety.jitConfigInArgv, false);
   assert.equal(plan.safety.jitConfigInUserData, false);
   assert.equal(plan.safety.persistentCampaignLedgerRequired, true);
-  assert.equal(plan.safety.campaignAcceptedInstanceCeiling, 6);
+  assert.equal(plan.safety.campaignAcceptedInstanceCeiling, 5);
   assert.equal(plan.safety.campaignReservationUsd, 4.35);
   assert.equal(
     plan.github.displayTitle,
@@ -99,12 +98,17 @@ test("Windows campaign is one-shot, source-bound, and atomically capped", () => 
     stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
     armedAt: "2026-08-02T03:00:00Z",
     expiresAt: "2026-08-03T03:00:00Z",
+    phaseSpendBaselineUsd: 51.98572625,
   });
   const arm = windowsCampaignArmItems(campaign);
   assert.equal(arm.length, 2);
   assert.equal(arm[0].Put.ConditionExpression, "attribute_not_exists(pk)");
   assert.equal(arm[1].Put.Item.accepted_instances.N, "0");
   assert.equal(arm[1].Put.Item.reserved_usd.N, "0");
+  assert.equal(arm[1].Put.Item.phase_spend_baseline_usd.N, "51.98572625");
+  assert.equal(arm[1].Put.Item.budget_limit_usd.N, "80");
+  assert.equal(arm[1].Put.Item.campaign_reservation_ceiling_usd.N, "21.75");
+  assert.equal(arm[1].Put.Item.campaign_safety_ceiling_usd.N, "26.1");
 
   const plan = launchPlan();
   const reservation = windowsCampaignReservationItems(
@@ -118,15 +122,7 @@ test("Windows campaign is one-shot, source-bound, and atomically capped", () => 
   );
   assert.match(
     reservation[2].Update.ConditionExpression,
-    /accepted_instances < :max.*reserved_usd <= :remaining/,
-  );
-  assert.equal(
-    reservation[2].Update.ExpressionAttributeValues[":max"].N,
-    "6",
-  );
-  assert.equal(
-    reservation[2].Update.ExpressionAttributeValues[":remaining"].N,
-    "35.65",
+    /accepted_instances < max_accepted_instances.*reserved_usd <= reservation_limit_usd/,
   );
   const kill = windowsCampaignKillArgs(
     plan.aws.stateTable,
@@ -149,8 +145,61 @@ test("Windows campaign cannot remain armed for more than 24 hours", () => {
         stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
         armedAt: "2026-08-02T03:00:00Z",
         expiresAt: "2026-08-03T03:00:01Z",
+        phaseSpendBaselineUsd: 51.98572625,
       }),
     /within 24 hours/,
+  );
+});
+
+test("Windows campaign narrows its paid slot ceiling without widening the phase cap", () => {
+  const campaign = createWindowsJitCampaignArmPlan({
+    campaignId: "win-20260802-bounded",
+    sourceSha: "a".repeat(40),
+    stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+    armedAt: "2026-08-02T03:00:00Z",
+    expiresAt: "2026-08-03T03:00:00Z",
+    phaseSpendBaselineUsd: 60,
+    maxAcceptedInstances: 1,
+  });
+  const arm = windowsCampaignArmItems(campaign);
+  assert.equal(campaign.limits.maxAcceptedInstances, 1);
+  assert.equal(campaign.limits.campaignReservationCeilingUsd, 4.35);
+  assert.equal(campaign.limits.campaignSafetyCeilingUsd, 8.7);
+  assert.equal(arm[1].Put.Item.max_accepted_instances.N, "1");
+  assert.throws(
+    () =>
+      createWindowsJitCampaignArmPlan({
+        campaignId: "win-20260802-bounded",
+        sourceSha: "a".repeat(40),
+        stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+        armedAt: "2026-08-02T03:00:00Z",
+        expiresAt: "2026-08-03T03:00:00Z",
+        phaseSpendBaselineUsd: 60,
+        maxAcceptedInstances: 6,
+      }),
+    /maxAcceptedInstances must be an integer from 1 through 5/,
+  );
+});
+
+test("Windows campaign requires a prior-spend baseline and rejects an exhausted cap", () => {
+  const values = {
+    campaignId: "win-20260802-ledger",
+    sourceSha: "a".repeat(40),
+    stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+    armedAt: "2026-08-02T03:00:00Z",
+    expiresAt: "2026-08-03T03:00:00Z",
+  };
+  assert.throws(
+    () => createWindowsJitCampaignArmPlan(values),
+    /phaseSpendBaselineUsd is required/,
+  );
+  assert.throws(
+    () =>
+      createWindowsJitCampaignArmPlan({
+        ...values,
+        phaseSpendBaselineUsd: 53.9,
+      }),
+    /safety envelope must remain below the remaining Windows phase budget/,
   );
 });
 
@@ -170,13 +219,20 @@ test("Windows campaign CLI plans without mutating AWS", () => {
       "2026-08-02T03:00:00Z",
       "--expires-at",
       "2026-08-03T03:00:00Z",
+      "--phase-spend-baseline-usd",
+      "51.98572625",
+      "--max-accepted-instances",
+      "1",
     ],
     { cwd: path.resolve(import.meta.dirname, ".."), encoding: "utf8" },
   );
   assert.equal(result.status, 0, result.stderr);
   const plan = JSON.parse(result.stdout);
   assert.equal(plan.kind, "campaign-arm-plan");
-  assert.equal(plan.limits.maxAcceptedInstances, 6);
+  assert.equal(plan.limits.maxAcceptedInstances, 1);
+  assert.equal(plan.limits.phaseSpendBaselineUsd, 51.98572625);
+  assert.equal(plan.limits.remainingPhaseBudgetUsd, 28.01427375);
+  assert.equal(plan.limits.campaignSafetyCeilingUsd, 8.7);
 });
 
 test("Windows campaign kill persists state before publishing cleanup", () => {
@@ -196,14 +252,22 @@ process.stdout.write(JSON.stringify(args.includes("publish") ? { MessageId: "mes
   );
   try {
     const common = [
-      "--campaign-id", "win-20260802-ledger",
-      "--confirm-campaign-id", "win-20260802-ledger",
-      "--source-sha", "a".repeat(40),
-      "--confirm-source-sha", "a".repeat(40),
-      "--state-table", "kungfu-buildchain-windows-jit-CampaignState-example",
-      "--confirm-state-table", "kungfu-buildchain-windows-jit-CampaignState-example",
-      "--kill-switch-topic", "arn:aws:sns:us-east-1:123456789012:kungfu-buildchain-windows-jit-KillSwitchTopic-example",
-      "--confirm-kill-switch-topic", "arn:aws:sns:us-east-1:123456789012:kungfu-buildchain-windows-jit-KillSwitchTopic-example",
+      "--campaign-id",
+      "win-20260802-ledger",
+      "--confirm-campaign-id",
+      "win-20260802-ledger",
+      "--source-sha",
+      "a".repeat(40),
+      "--confirm-source-sha",
+      "a".repeat(40),
+      "--state-table",
+      "kungfu-buildchain-windows-jit-CampaignState-example",
+      "--confirm-state-table",
+      "kungfu-buildchain-windows-jit-CampaignState-example",
+      "--kill-switch-topic",
+      "arn:aws:sns:us-east-1:123456789012:kungfu-buildchain-windows-jit-KillSwitchTopic-example",
+      "--confirm-kill-switch-topic",
+      "arn:aws:sns:us-east-1:123456789012:kungfu-buildchain-windows-jit-KillSwitchTopic-example",
     ];
     const result = spawnSync(
       process.execPath,
@@ -220,11 +284,16 @@ process.stdout.write(JSON.stringify(args.includes("publish") ? { MessageId: "mes
     );
     assert.equal(result.status, 0, result.stderr);
     assert.equal(JSON.parse(result.stdout).notificationMessageId, "message-1");
-    const calls = fs.readFileSync(log, "utf8").trim().split("\n").map(JSON.parse);
+    const calls = fs
+      .readFileSync(log, "utf8")
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
     assert.equal(calls[0].includes("update-item"), true);
     assert.equal(calls[1].includes("publish"), true);
   } finally {
-    for (const file of fs.readdirSync(tempRoot)) fs.unlinkSync(path.join(tempRoot, file));
+    for (const file of fs.readdirSync(tempRoot))
+      fs.unlinkSync(path.join(tempRoot, file));
     fs.rmdirSync(tempRoot);
   }
 });
@@ -233,8 +302,7 @@ test("Windows controller rejects a mismatched qualification label", () => {
   assert.throws(
     () =>
       launchPlan({
-        runnerLabel:
-          "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-02",
+        runnerLabel: "aws-us-ec2-windows-jit-win-20260802-ledger-win-full-02",
       }),
     /runnerLabel must be aws-us-ec2-windows-jit-win-20260802-ledger-win-full-01/,
   );
@@ -564,12 +632,10 @@ if (joined.includes("ec2 describe-instances")) {
     );
     const reservationIndex = commands.findIndex(
       (entry) =>
-        entry.command === "aws" &&
-        entry.args.includes("transact-write-items"),
+        entry.command === "aws" && entry.args.includes("transact-write-items"),
     );
     const markIndex = commands.findIndex(
-      (entry) =>
-        entry.command === "aws" && entry.args.includes("update-item"),
+      (entry) => entry.command === "aws" && entry.args.includes("update-item"),
     );
     assert.ok(
       dryRunIndex >= 0 &&

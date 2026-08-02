@@ -37,7 +37,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:4d32c82b652decfbb26b441c203fe34e70daa86022bb4baed9da02a5d6cf5831",
+      "digest": "sha256:a99175216b3774748b253814c1933683cace8107a34083dd711f639f3e680c61",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -317,7 +317,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:c728fe693ab591ab5b52f4276a817ec5a013c79833f0d20ca2cc137e85ae51ca",
+      "digest": "sha256:94207fa353e87b087ecf53b6cebe6dfffdc1311b2b6bc90b511d83d5757e7827",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:38f051f579fb93dc7d8b4f2c70acd622c020e867394344b5e932568cd8d2ad83",
+      "digest": "sha256:deab508284ed365a830894205a4d293c524281d6da7126094cf8e9eea8efe223",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -430,7 +430,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:96d78f800cd7d43d3a47a11863d4813711e360418ba33a4284688389c7e4b70c",
+      "digest": "sha256:a38eca4d8ada75aed5cb60f2ef23ffe4ba36b1c804ea1ee7f74b3271765b7a1c",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

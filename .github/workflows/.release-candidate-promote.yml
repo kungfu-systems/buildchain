@@ -2131,7 +2131,7 @@ jobs:
           if-no-files-found: error
 
       - name: Enforce qualifying release-candidate-promotion controller receipt
-        if: ${{ always() && !inputs.dry-run && needs.preflight.outputs.action == 'promote' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        if: ${{ always() && !inputs.dry-run && needs.preflight.outputs.action == 'promote' && needs.promote.outputs.finalization-needed != 'true' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
         run: |
           echo "::error::release-candidate-promotion controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
           exit 1

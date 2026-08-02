@@ -15,21 +15,21 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("Windows EC2 JIT plan is bounded below USD 40", () => {
+test("Windows EC2 JIT plan is bounded below the USD 80 phase cap", () => {
   const plan = windowsEc2JitPlan();
-  assert.equal(plan.config.maxAcceptedInstances, 6);
-  assert.equal(plan.config.maxConcurrentInstances, 2);
-  assert.equal(plan.costEnvelope.maximumCommittedComputeUsd, 26.1);
-  assert.equal(plan.costEnvelope.maximumRaceStopUsd, 8.7);
-  assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 34.8);
-  assert.ok(plan.costEnvelope.maximumBoundedSpendUsd < 40);
+  assert.equal(plan.config.maxAcceptedInstances, 5);
+  assert.equal(plan.config.maxConcurrentInstances, 1);
+  assert.equal(plan.costEnvelope.maximumCommittedComputeUsd, 21.75);
+  assert.equal(plan.costEnvelope.maximumRaceStopUsd, 4.35);
+  assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 26.1);
+  assert.ok(plan.costEnvelope.maximumBoundedSpendUsd < 80);
   assert.equal(plan.invariants.oneJobPerRunner, true);
   assert.equal(plan.invariants.zeroWarmCapacity, true);
 });
 
 test("Windows EC2 JIT plan rejects an unsafe cost envelope", () => {
   assert.throws(
-    () => windowsEc2JitPlan({ maxAcceptedInstances: 8 }),
+    () => windowsEc2JitPlan({ maxAcceptedInstances: 18 }),
     /must remain below budget/,
   );
 });
@@ -201,14 +201,27 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /SecurityGroupIngress: \[\]/);
   assert.match(stack, /MaximumInstanceLifetimeMinutes/);
   assert.match(stack, /rate\(5 minutes\)/);
+  assert.match(stack, /reaper\/\$\{AWS::StackName\}/);
   assert.match(stack, /ec2:TerminateInstances/);
   assert.match(stack, /ssm:GetParameter/);
   assert.match(stack, /s3:PutObject/);
   assert.match(stack, /Type: AWS::DynamoDB::Table/);
   assert.match(stack, /PointInTimeRecoveryEnabled: true/);
   assert.match(stack, /dynamodb:TransactWriteItems/);
+  assert.match(stack, /dynamodb:GetItem/);
   assert.match(stack, /STATE_TABLE: !Ref CampaignState/);
   assert.match(stack, /kill_campaign\(/);
+  assert.match(stack, /ConsistentRead=True/);
+  assert.match(stack, /control = campaign_control\(\)/);
+  assert.match(stack, /ProjectionExpression="#state, campaign_id"/);
+  assert.match(stack, /campaign_id = control\["campaign_id"\]/);
+  assert.match(stack, /if not campaign_id:/);
+  assert.match(
+    stack,
+    /{"Name": "tag:kungfu:campaign-id", "Values": \[campaign_id\]}/,
+  );
+  assert.match(stack, /kill_all = sns_kill or control_killed/);
+  assert.match(stack, /if sns_kill and not control_killed:/);
   assert.match(stack, /runner-lifetime-violation/);
   assert.match(stack, /TagFilteredBudgetConfirmed/);
   assert.match(stack, /disabled-until-cost-allocation-tag-is-active/);
@@ -223,6 +236,12 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(bootstrap, /\$Root\\bin;\$Root\\cmd;\$env:PATH/);
   assert.doesNotMatch(bootstrap, /\\usr\\bin/);
   assert.match(bootstrap, /Remove-SSMParameter/);
+  assert.match(bootstrap, /Join-Path \$RunnerRoot "\.env"/);
+  assert.match(
+    bootstrap,
+    /BUILDCHAIN_RUNNER_LABELS_JSON=\$\(\$env:BUILDCHAIN_RUNNER_LABELS_JSON\)/,
+  );
+  assert.doesNotMatch(bootstrap, /encoded_jit_config=.*\.env|Jit=.*\.env/);
   assert.match(bootstrap, /run\.cmd" --jitconfig \$Jit/);
   assert.match(bootstrap, /Stop-Computer -Force/);
   assert.doesNotMatch(bootstrap, /encoded_jit_config|github_pat_|ghp_|gho_/);

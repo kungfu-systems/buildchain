@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691",
+    "compatibilityDigest": "sha256:76c3dd58a02887ecd6af33d63e749fef0a988a820fea99bdf4cb078cc48caa83",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "513a122ef005c820496087715622697ff8d11688fbfc4adb670303e8a06dd6a7",
+    "sha256": "48813f505f0c4f0155fff3676e9f4cf2d72ac7fb3d5d59dcf80bd1751313f0ab",
     "summary": {
       "cliCommandCount": 112,
-      "workflowCount": 57,
+      "workflowCount": 59,
       "actionCount": 6,
       "sitePageCount": 63,
-      "docCommandRefCount": 813,
+      "docCommandRefCount": 822,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "513a122ef005c820496087715622697ff8d11688fbfc4adb670303e8a06dd6a7",
+      "sha256": "48813f505f0c4f0155fff3676e9f4cf2d72ac7fb3d5d59dcf80bd1751313f0ab",
       "summary": {
         "cliCommandCount": 112,
-        "workflowCount": 57,
+        "workflowCount": 59,
         "actionCount": 6,
         "sitePageCount": 63,
-        "docCommandRefCount": 813,
+        "docCommandRefCount": 822,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -3066,7 +3066,7 @@
         },
         {
           "id": "cli:release-propagation",
-          "name": "buildchain release-propagation <plan|write-lock> ...",
+          "name": "buildchain release-propagation <plan|write-lock|work|pickup> ...",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3434,6 +3434,32 @@
           "public": true,
           "inputCount": 0,
           "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:.declarative-auditable-demo",
+          "name": "workflow:.declarative-auditable-demo",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.declarative-auditable-demo.yml",
+          "evidencePath": ".github/workflows/.declarative-auditable-demo.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 11,
+          "inputs": [
+            "artifact-retention-days",
+            "binary-artifact-digest",
+            "binary-artifact-name",
+            "buildchain-repository",
+            "materialize",
+            "materialize-base-ref",
+            "media-profile",
+            "render-media",
+            "renderer-image",
+            "scenario-path",
+            "source-ref"
+          ],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -3970,6 +3996,20 @@
           "kind": "workflow",
           "sourcePath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
           "evidencePath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:auditable-demo",
+          "name": "workflow:auditable-demo",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/auditable-demo.yml",
+          "evidencePath": ".github/workflows/auditable-demo.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -6098,6 +6138,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 390
+    "publicSurfaceCount": 392
   }
 }
