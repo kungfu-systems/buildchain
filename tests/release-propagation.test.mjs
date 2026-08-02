@@ -12,6 +12,8 @@ import {
   createReleasePropagationReceipt,
   createReleasePropagationStageReceipt,
   createReleasePropagationWork,
+  createPackageReleasePropagationCapture,
+  normalizePackageReleasePropagationConfig,
   normalizeReleasePropagationGraph,
   planReleasePropagation,
   recordReleasePropagationStage,
@@ -22,11 +24,23 @@ import {
 import { sha256Json } from "../packages/core/release-propagation-common.js";
 import { contentRoot } from "../packages/core/release-propagation-work-control.js";
 import { withWorkRoot } from "../packages/core/release-propagation-work.js";
+import { capturePackageReleasePropagation } from "../scripts/capture-package-release-propagation.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
 const fixture = path.join(root, "fixtures", "release-propagation-shaped");
 const workflowPath = path.join(root, ".github", "workflows", "release-propagation.yml");
+const promotionWorkflowPath = path.join(root, ".github", "workflows", ".release-candidate-promote.yml");
+
+function packageCaptureConfig() {
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-package-release-propagation",
+    sourceNode: "kfd",
+    graph: readJson("graph.json"),
+    targets: ["site-libkungfu-dev"],
+  };
+}
 
 function readJson(rel) {
   return JSON.parse(fs.readFileSync(path.join(fixture, rel), "utf8"));
@@ -982,4 +996,104 @@ test("release propagation replaces a surviving managed branch with an exact leas
   ], { cwd: stale, encoding: "utf8" });
   assert.notEqual(rejected.status, 0);
   assert.match(`${rejected.stdout}\n${rejected.stderr}`, /stale info|rejected/);
+});
+
+test("package release propagation config is strict and source-package bound", () => {
+  const config = packageCaptureConfig();
+  const normalized = normalizePackageReleasePropagationConfig(config);
+  assert.equal(normalized.sourceNode, "kfd");
+  assert.deepEqual(normalized.targets, ["site-libkungfu-dev"]);
+  assert.equal(normalized.graph.nodes[1].executionProfile.workflow, "buildchain-web-surface.yml");
+
+  assert.throws(
+    () => normalizePackageReleasePropagationConfig({ ...config, unexpected: true }),
+    /invalid field set/,
+  );
+  const nestedDrift = structuredClone(config);
+  nestedDrift.graph.nodes[1].unknownCommand = "echo unsafe";
+  assert.throws(
+    () => normalizePackageReleasePropagationConfig(nestedDrift),
+    /unknown fields: unknownCommand/,
+  );
+});
+
+test("package release capture emits one deterministic paused Work with zero execution authority", () => {
+  const release = readJson("upstream-alpha.json");
+  const capture = createPackageReleasePropagationCapture({
+    config: packageCaptureConfig(),
+    upstreamRelease: release,
+    expectedBaseShas: { "site-libkungfu-dev": "9".repeat(40) },
+  });
+  assert.equal(capture.works.length, 1);
+  const [{ work, status }] = capture.works;
+  assert.equal(work.upstream.release.sourceSha, release.sourceSha);
+  assert.equal(work.upstream.release.tagTargetSha, release.sourceSha);
+  assert.equal(work.upstream.release.package.gitHead, release.sourceSha);
+  assert.equal(work.downstream.expectedBaseSha, "9".repeat(40));
+  assert.equal(work.authority.mode, "capture-only");
+  assert.equal(work.intent.publishToProduction, false);
+  assert.equal(work.state.lifecycle, "paused");
+  assert.equal(status.nextAction.action, "claim");
+  assert.equal(status.contentRoot, work.contentRoot);
+
+  const repeated = createPackageReleasePropagationCapture({
+    config: packageCaptureConfig(),
+    upstreamRelease: release,
+    expectedBaseShas: { "site-libkungfu-dev": "9".repeat(40) },
+  });
+  assert.equal(repeated.works[0].work.contentRoot, work.contentRoot);
+});
+
+test("package release capture materializes a restart-safe artifact set", () => {
+  const outputDir = tempDir("package-release-capture");
+  const captured = capturePackageReleasePropagation({
+    config: packageCaptureConfig(),
+    upstreamRelease: readJson("upstream-alpha.json"),
+    expectedBaseShas: { "site-libkungfu-dev": "9".repeat(40) },
+    outputDir,
+  });
+  const propagationKey = captured.works[0].propagationKey;
+  const work = JSON.parse(fs.readFileSync(path.join(outputDir, "work", propagationKey, "work.json"), "utf8"));
+  const status = JSON.parse(fs.readFileSync(path.join(outputDir, "work", propagationKey, "status.json"), "utf8"));
+  assert.equal(work.contentRoot, captured.works[0].work.contentRoot);
+  assert.equal(status.nextAction.action, "claim");
+  assert.equal(JSON.parse(fs.readFileSync(path.join(outputDir, "upstream-release.json"), "utf8")).tag, "v1.4.0-alpha.3");
+});
+
+test("package release capture rejects the alpha.48 tag and npm source mismatch class", () => {
+  const release = readJson("upstream-alpha.json");
+  assert.throws(
+    () => createPackageReleasePropagationCapture({
+      config: packageCaptureConfig(),
+      upstreamRelease: { ...release, tagTargetSha: "8".repeat(40) },
+      expectedBaseShas: { "site-libkungfu-dev": "9".repeat(40) },
+    }),
+    /tag target must match sourceSha/,
+  );
+  assert.throws(
+    () => createPackageReleasePropagationCapture({
+      config: packageCaptureConfig(),
+      upstreamRelease: {
+        ...release,
+        package: { ...release.package, gitHead: "7".repeat(40) },
+      },
+      expectedBaseShas: { "site-libkungfu-dev": "9".repeat(40) },
+    }),
+    /package gitHead must match sourceSha/,
+  );
+});
+
+test("promotion finalization exposes generic package Work capture without downstream writes", () => {
+  const workflow = fs.readFileSync(promotionWorkflowPath, "utf8");
+  assert.match(workflow, /release-propagation-config-path:/);
+  assert.match(workflow, /steps\.promote\.outputs\.finalization-needed != 'true'/);
+  assert.match(workflow, /capture-package-release-propagation\.mjs/);
+  assert.match(workflow, /steps\.promote\.outputs\.transaction-release-sha/);
+  assert.match(workflow, /steps\.promote\.outputs\.public-release-tag/);
+  assert.match(workflow, /release-propagation-work-artifact:/);
+  const captureBlock = workflow.slice(
+    workflow.indexOf("Capture exact package release propagation work"),
+    workflow.indexOf("Bundle release-candidate-promotion controller evidence"),
+  );
+  assert.doesNotMatch(captureBlock, /git push|gh pr create|gh pr merge/);
 });

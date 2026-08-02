@@ -471,3 +471,8 @@ export {
   recordReleasePropagationStage,
   repairReleasePropagationWork,
 } from "./release-propagation-work-transitions.js";
+export {
+  PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT,
+  createPackageReleasePropagationCapture,
+  normalizePackageReleasePropagationConfig,
+} from "./release-propagation-capture.js";

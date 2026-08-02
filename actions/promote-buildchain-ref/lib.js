@@ -2187,6 +2187,7 @@ async function assertProviderEnforcedChannelTransaction({
   repo,
   targetRef,
   sourceSha,
+  expectedChannelSha = sourceSha,
   requiredStatusCheck,
 }) {
   const { data: branch } = await octokit.rest.repos.getBranch({
@@ -2240,7 +2241,7 @@ async function assertProviderEnforcedChannelTransaction({
   );
   const missing = [];
   if (branch.protected !== true) missing.push("must be provider-protected");
-  if (branch.commit?.sha !== sourceSha) missing.push("must still point at the admitted source SHA");
+  if (branch.commit?.sha !== expectedChannelSha) missing.push("must still point at the exact admitted channel head");
   if (protection.required_status_checks?.enforcement_level !== "everyone") {
     missing.push("must enforce required status checks for everyone");
   }
@@ -2269,6 +2270,7 @@ async function assertProtectedChannel({
   repo,
   targetRef,
   sourceSha,
+  expectedChannelSha = sourceSha,
   requiredStatusCheck = "check",
 }) {
   let protection;
@@ -2286,6 +2288,7 @@ async function assertProtectedChannel({
         repo,
         targetRef,
         sourceSha,
+        expectedChannelSha,
         requiredStatusCheck,
       });
     }
@@ -4571,8 +4574,7 @@ async function promoteBuildchainRefs({
     repo,
     ref: `heads/${targetRef}`,
   });
-  const branchSha = branchRef.object.sha;
-  let advancedPublicationTransaction;
+  const branchSha = branchRef.object.sha; let advancedPublicationTransaction;
   if (branchSha !== sha) {
     if (requireGovernance && !dryRun) {
       const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
@@ -4593,12 +4595,8 @@ async function promoteBuildchainRefs({
               version: expectedPublicationVersion,
             })
           : undefined;
-      const targetAdvancedByExactPublication =
-        advancedPublicationTransaction?.source_sha === sha &&
-        advancedPublicationTransaction?.target_ref === targetRef &&
-        advancedPublicationTransaction?.release_sha === branchSha &&
-        advancedPublicationTransaction?.version === expectedPublicationVersion &&
-        !["abandoned", "failed_permanently"].includes(advancedPublicationTransaction?.state || "");
+      let targetAdvancedByExactPublication = advancedPublicationTransaction?.source_sha === sha && advancedPublicationTransaction?.target_ref === targetRef && advancedPublicationTransaction?.release_sha === branchSha && advancedPublicationTransaction?.version === expectedPublicationVersion && !["abandoned", "failed_permanently"].includes(advancedPublicationTransaction?.state || "");
+      if (!targetAdvancedByExactPublication && publishTransactionOverride && publicationEnabled) { const statePrefix = rule.releasePrefix.replace(/^v/, "").replaceAll(".", "-"); const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({ owner, repo, ref: `heads/buildchain/release-state/${statePrefix}-` }); const resumeResolver = rule.channel === "alpha" ? resumableAlphaTransactionState : rule.channel === "release" ? resumableReleaseTransactionState : undefined; const resumable = resumeResolver && await resumeResolver({ octokit, owner, repo, cwd, refs: stateRefs, releasePrefix: rule.releasePrefix, targetRef, sourceSha: sha, expectedVersion: expectedPublicationVersion }); if (!resumable) throw new Error(`Ref ${targetRef} advanced to ${branchSha}, but no exact resumable transaction accepts requested SHA ${sha}`); advancedPublicationTransaction = resumable.transaction; targetAdvancedByExactPublication = true; }
       if (!targetAdvancedByExactPublication) {
         return {
           owner,
@@ -4620,14 +4618,15 @@ async function promoteBuildchainRefs({
           ],
         };
       }
+    } else if (dryRun && publishTransactionOverride && Boolean(publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
+      const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${sha}...${branchSha}` }); const statePrefix = rule.releasePrefix.replace(/^v/, "").replaceAll(".", "-"); const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({ owner, repo, ref: `heads/buildchain/release-state/${statePrefix}-` }); const resumeResolver = rule.channel === "alpha" ? resumableAlphaTransactionState : rule.channel === "release" ? resumableReleaseTransactionState : undefined; const resumable = resumeResolver && await resumeResolver({ octokit, owner, repo, cwd, refs: stateRefs, releasePrefix: rule.releasePrefix, targetRef, sourceSha: sha, expectedVersion: expectedPublicationVersion }); if (comparison.status !== "ahead") throw new Error(`Ref ${targetRef} moved incompatibly from requested SHA ${sha} to ${branchSha} (${comparison.status})`); if (!resumable) throw new Error(`Ref ${targetRef} advanced to ${branchSha}, but no exact resumable transaction accepts requested SHA ${sha}`); advancedPublicationTransaction = resumable.transaction;
     }
     if (!advancedPublicationTransaction) {
       throw new Error(`Ref ${targetRef} points at ${branchSha}, not requested SHA ${sha}`);
     }
   }
 
-  const updates = [];
-  if (advancedPublicationTransaction) {
+  const updates = []; if (advancedPublicationTransaction) {
     updates.push({
       action: "resumed-advanced-publication",
       ref: targetRef,
@@ -4749,6 +4748,7 @@ async function promoteBuildchainRefs({
     promotionGeneratedAt,
     releaseCandidateValidation,
     advancedPublicationTransaction,
+    advancedChannelSha: advancedPublicationTransaction ? branchSha : "",
     COMMIT_IDENTITY,
     fs,
     path,
@@ -4831,6 +4831,7 @@ async function promoteBuildchainRefs({
       repo,
       targetRef,
       sourceSha: sha,
+      expectedChannelSha: advancedPublicationTransaction ? branchSha : sha,
       requiredStatusCheck,
     });
   }
