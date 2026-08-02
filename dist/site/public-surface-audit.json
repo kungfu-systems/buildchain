@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 112,
-    "workflowCount": 59,
+    "workflowCount": 60,
     "actionCount": 6,
-    "sitePageCount": 63,
+    "sitePageCount": 64,
     "docCommandRefCount": 822,
     "failureCount": 0
   },
@@ -1888,6 +1888,38 @@
         "outputCount": 6
       },
       {
+        "id": "dev-qualification-patrol",
+        "path": ".github/workflows/dev-qualification-patrol.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "dev-workflow-path",
+          "dispatch-inputs-json",
+          "dry-run",
+          "max-attempts",
+          "mutation-authorized",
+          "preflight-workflow-path",
+          "priority-workflows-json",
+          "source-branch"
+        ],
+        "inputCount": 10,
+        "secrets": [
+          "qualification-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "action",
+          "active-run-id",
+          "decision-root",
+          "pending-sha",
+          "reason",
+          "source-sha",
+          "state"
+        ],
+        "outputCount": 7
+      },
+      {
         "id": "github-artifact-attestation",
         "path": ".github/workflows/github-artifact-attestation.yml",
         "reusable": true,
@@ -2861,6 +2893,10 @@
       },
       {
         "id": "manual:dev-alpha-candidate-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:dev-qualification-patrol",
         "category": "manual"
       },
       {
@@ -7118,8 +7154,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "c070e7bff9d1cb65a08daacd936f3567871af7844e88fa6ffcb05ea59579c15f",
-    "workflowRegistryDigest": "dff218a0f6f03602912c4f2e238cc79a1304ee2d0f6d1e3f3bae8514302f4706",
-    "pageRegistryDigest": "e210f43bd7ac5e13d81ea7540632f5935ef085c05ed2ca1678c2222b132bec79"
+    "workflowRegistryDigest": "d38df079bca543307acde9a579577f82ce0e39339e66831c67c4c511d8dc593b",
+    "pageRegistryDigest": "0c22ed84d6e7acac52d748259c1f829f7f820fc1113e4007839a340e0c5e0056"
   },
   "comparison": {
     "missingCliRegistry": [],
