@@ -423,11 +423,18 @@
       "class": "documentation",
       "rationale": "A tested 15-to-30-minute Golden Path now carries a first-time user from installation through init, validation, reusable workflow inspection, release dry-run, and local Release Passport inspection without changing an existing public contract.",
       "source": "docs/getting-started.md"
+    },
+    {
+      "id": "package-release-propagation-work-capture",
+      "impact": "minor",
+      "class": "release-propagation",
+      "rationale": "Finalized package promotion can opt into a strict source-controlled propagation graph that verifies the exact npm integrity and gitHead, Git tag target, public Release Passport, and downstream base SHA before emitting paused claim-only Work artifacts without downstream mutation authority.",
+      "source": "packages/core/release-propagation-capture.js"
     }
   ],
   "classification": "minor",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, aligned propagation receipts, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
+  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, aligned propagation receipts, claim-only package propagation Work capture, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
 }
