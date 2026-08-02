@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "45f40164d3ceb9c8dc1339e1223c6dc54296aee173400408ad5eccc38f7636fd",
+    "sha256": "b668f282a60ba1e9737cbe17319dbc633e1fd2e3156436d5bafcb78bc35dda67",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 57,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "45f40164d3ceb9c8dc1339e1223c6dc54296aee173400408ad5eccc38f7636fd",
+      "sha256": "b668f282a60ba1e9737cbe17319dbc633e1fd2e3156436d5bafcb78bc35dda67",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 57,
@@ -3538,7 +3538,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 94,
+          "inputCount": 95,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3627,6 +3627,7 @@
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
+            "release-propagation-config-path",
             "required-artifact-count",
             "required-status-check",
             "runner-preset",
@@ -4642,7 +4643,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 86,
+          "inputCount": 87,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4723,6 +4724,7 @@
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
+            "release-propagation-config-path",
             "required-artifact-count",
             "required-status-check",
             "runner-preset",

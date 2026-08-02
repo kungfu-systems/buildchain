@@ -490,6 +490,7 @@
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
+        "release-propagation-config-path",
         "required-artifact-count",
         "required-status-check",
         "runner-preset",
@@ -498,7 +499,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 94,
+      "inputCount": 95,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -531,9 +532,10 @@
         "publication-commit-evidence-path",
         "publication-commit-payload-root",
         "publication-commit-url",
-        "release-candidate-artifact"
+        "release-candidate-artifact",
+        "release-propagation-work-artifact"
       ],
-      "outputCount": 19,
+      "outputCount": 20,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active",
@@ -2148,6 +2150,7 @@
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
+        "release-propagation-config-path",
         "required-artifact-count",
         "required-status-check",
         "runner-preset",
@@ -2156,7 +2159,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 86,
+      "inputCount": 87,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2201,9 +2204,10 @@
         "publication-commit-evidence-path",
         "publication-commit-payload-root",
         "publication-commit-url",
-        "release-candidate-artifact"
+        "release-candidate-artifact",
+        "release-propagation-work-artifact"
       ],
-      "outputCount": 31,
+      "outputCount": 32,
       "surface": "release-governance",
       "capabilityGroup": "reusable-build",
       "status": "active",

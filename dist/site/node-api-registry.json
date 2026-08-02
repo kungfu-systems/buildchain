@@ -14851,6 +14851,88 @@
       ]
     },
     {
+      "id": "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
+      "name": "createPackageReleasePropagationCapture",
+      "kind": "function",
+      "signature": "function createPackageReleasePropagationCapture({ config: configInput, upstreamRelease: upstreamReleaseInput, expectedBaseShas = {}, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ config: configInput, upstreamRelease: upstreamReleaseInput, expectedBaseShas = {}, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-capture.js",
+        "line": 101
+      },
+      "example": "import { createPackageReleasePropagationCapture } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
+      "name": "normalizePackageReleasePropagationConfig",
+      "kind": "function",
+      "signature": "function normalizePackageReleasePropagationConfig(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-capture.js",
+        "line": 63
+      },
+      "example": "import { normalizePackageReleasePropagationConfig } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-capture.js#PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
+      "name": "PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
+      "kind": "constant",
+      "signature": "const PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-capture.js",
+        "line": 17
+      },
+      "example": "import { PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
       "name": "RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
       "kind": "constant",
@@ -16056,7 +16138,7 @@
         "developer",
         "agent"
       ],
-      "symbolCount": 538,
+      "symbolCount": 541,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -16229,6 +16311,7 @@
         "packages/core/readme-badges.js#createKfdBadgeSpecsFromStandards",
         "packages/core/kfd-product-gates.js#createKfdSupportProjection",
         "packages/core/build-facts.js#createKungfuBuildInfoProjection",
+        "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
         "packages/core/paper.js#createPaperAlphaPlan",
         "packages/core/paper.js#createPaperBuildPlan",
         "packages/core/paper.js#createPaperResumePlan",
@@ -16392,8 +16475,10 @@
         "packages/core/kfd3-surface-register.js#normalizeKfd3DistributionDeclaration",
         "packages/core/kfd.js#normalizeKfdStandardId",
         "packages/core/buildchain-config.js#normalizeLifecycleStage",
+        "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
         "packages/core/stable-candidate-ledger.js#normalizeStableCandidateLedger",
+        "packages/core/release-propagation-capture.js#PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
         "packages/core/paper.js#PAPER_ALPHA_PLAN_CONTRACT",
         "packages/core/paper.js#PAPER_BUILD_PLAN_CONTRACT",
         "packages/core/paper-fleet.js#PAPER_FLEET_AUDIT_CONTRACT",
@@ -16692,7 +16777,7 @@
         "developer",
         "agent"
       ],
-      "symbolCount": 538,
+      "symbolCount": 541,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -16865,6 +16950,7 @@
         "packages/core/readme-badges.js#createKfdBadgeSpecsFromStandards",
         "packages/core/kfd-product-gates.js#createKfdSupportProjection",
         "packages/core/build-facts.js#createKungfuBuildInfoProjection",
+        "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
         "packages/core/paper.js#createPaperAlphaPlan",
         "packages/core/paper.js#createPaperBuildPlan",
         "packages/core/paper.js#createPaperResumePlan",
@@ -17028,8 +17114,10 @@
         "packages/core/kfd3-surface-register.js#normalizeKfd3DistributionDeclaration",
         "packages/core/kfd.js#normalizeKfdStandardId",
         "packages/core/buildchain-config.js#normalizeLifecycleStage",
+        "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
         "packages/core/stable-candidate-ledger.js#normalizeStableCandidateLedger",
+        "packages/core/release-propagation-capture.js#PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
         "packages/core/paper.js#PAPER_ALPHA_PLAN_CONTRACT",
         "packages/core/paper.js#PAPER_BUILD_PLAN_CONTRACT",
         "packages/core/paper-fleet.js#PAPER_FLEET_AUDIT_CONTRACT",
@@ -18534,22 +18622,25 @@
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
-      "digest": "sha256:647b8bc5e28a3f40a4f61a2e1e0c81948956e8359bd87903024de949ea92c015",
+      "digest": "sha256:193a8489c200d96b50bc71d54162d7ec37a7c1335bc97bc1459971fe18c31b16",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 22,
+      "symbolCount": 25,
       "symbolIds": [
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/release-propagation-work-transitions.js#completeReleasePropagationWork",
+        "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
         "packages/core/release-propagation.js#createReleasePropagationLock",
         "packages/core/release-propagation.js#createReleasePropagationReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationStageReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationWork",
+        "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
+        "packages/core/release-propagation-capture.js#PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
         "packages/core/release-propagation.js#planReleasePropagation",
         "packages/core/release-propagation.js#readReleasePropagationJson",
         "packages/core/release-propagation-work-transitions.js#recordReleasePropagationStage",
@@ -18674,7 +18765,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:ce9b018e6b1cfd98d8faa0ccadd6570585f2812b4828d610810f984f9810df5d"
+      "digest": "sha256:38f051f579fb93dc7d8b4f2c70acd622c020e867394344b5e932568cd8d2ad83"
     },
     {
       "id": "build-facts",

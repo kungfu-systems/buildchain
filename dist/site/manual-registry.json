@@ -150,7 +150,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:d9c9b4ba9dff6ed336b1ff31e5a02fcdf68dd013278caa86510e5fd0b50c4267",
+      "digest": "sha256:3b7a2a0437f8a3a4e5cff7e05a2a8c427be597d85e93d49d5e35ba2a2b089afc",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:ce9b018e6b1cfd98d8faa0ccadd6570585f2812b4828d610810f984f9810df5d",
+      "digest": "sha256:38f051f579fb93dc7d8b4f2c70acd622c020e867394344b5e932568cd8d2ad83",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
