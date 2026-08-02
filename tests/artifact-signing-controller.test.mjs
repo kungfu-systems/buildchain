@@ -22,6 +22,7 @@ import {
 const sourceSha = "1".repeat(40);
 const treeSha = "2".repeat(40);
 const runtimeSha = "3".repeat(40);
+const authorityRuntimeSha = "5".repeat(40);
 const requestDigest = `sha256:${"4".repeat(64)}`;
 
 function fixture({
@@ -171,6 +172,7 @@ test("successful Linux controller settlement binds request, receipt, and delegat
       request,
       authorityStatus: "succeeded",
       authorityRunId: "900",
+      authorityRuntimeSha,
       authorityRunUrl:
         "https://github.com/kungfu-systems/buildchain/actions/runs/900",
       authorityResultArtifact: request.authority.resultArtifact,
@@ -214,6 +216,17 @@ test("successful Linux controller settlement binds request, receipt, and delegat
           delegation: foreign,
         }),
       /authority run ID mismatch/u,
+    );
+    const foreignRuntime = structuredClone(settled.delegation);
+    foreignRuntime.authority.runtimeSha = "6".repeat(40);
+    assert.throws(
+      () =>
+        assertArtifactSigningControllerReceipt({
+          request,
+          receipt: settled.receipt,
+          delegation: foreignRuntime,
+        }),
+      /authority runtime SHA mismatch/u,
     );
   } finally {
     fs.rmSync(value.root, { recursive: true, force: true });
@@ -282,7 +295,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
     id: 900,
     display_title: expectedTitle,
     event: "workflow_dispatch",
-    head_sha: runtimeSha,
+    head_sha: authorityRuntimeSha,
     status: "completed",
     conclusion: "success",
     html_url: "https://github.com/kungfu-systems/buildchain/actions/runs/900",
@@ -306,7 +319,10 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
     timeoutSeconds: "60",
     nowImpl: () => Date.parse("2026-08-03T00:00:10.000Z"),
     delayImpl: async () => {},
-    requestImpl: async (_url, options) => {
+    requestImpl: async (url, options) => {
+      if (url.includes("/git/ref/heads/")) {
+        return { object: { type: "commit", sha: authorityRuntimeSha } };
+      }
       if (options.method === "POST") {
         dispatches += 1;
         assert.equal(options.body.inputs["source-run-attempt"], "2");
@@ -314,6 +330,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
           options.body.inputs["expected-request-root"],
           `sha256:${"a".repeat(64)}`,
         );
+        assert.equal(options.body.inputs["expected-runtime-sha"], runtimeSha);
         return {};
       }
       return { workflow_runs: [run] };
@@ -321,14 +338,15 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
   });
   assert.equal(dispatches, 1);
   assert.equal(result.runId, 900);
+  assert.equal(result.authorityRuntimeSha, authorityRuntimeSha);
   assert.equal(result.status, "succeeded");
   assert.throws(
     () =>
       validateArtifactSigningAuthorityRun(
-        { ...run, head_sha: "5".repeat(40) },
+        { ...run, head_sha: "6".repeat(40) },
         {
           authorityRepository: "kungfu-systems/buildchain",
-          runtimeSha,
+          authorityRuntimeSha,
           expectedTitle,
         },
       ),
@@ -340,7 +358,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
         { ...run, display_title: `${expectedTitle} foreign` },
         {
           authorityRepository: "kungfu-systems/buildchain",
-          runtimeSha,
+          authorityRuntimeSha,
           expectedTitle,
         },
       ),
@@ -355,7 +373,7 @@ test("dispatch rejects duplicate exact correlations instead of choosing a run", 
     id: 900,
     display_title: title,
     event: "workflow_dispatch",
-    head_sha: runtimeSha,
+    head_sha: authorityRuntimeSha,
     status: "queued",
     conclusion: null,
     html_url: "https://github.com/kungfu-systems/buildchain/actions/runs/900",
@@ -378,10 +396,14 @@ test("dispatch rejects duplicate exact correlations instead of choosing a run", 
         timeoutSeconds: "60",
         nowImpl: () => Date.parse("2026-08-03T00:00:10.000Z"),
         delayImpl: async () => {},
-        requestImpl: async (_url, options) =>
-          options.method === "POST"
+        requestImpl: async (url, options) => {
+          if (url.includes("/git/ref/heads/")) {
+            return { object: { type: "commit", sha: authorityRuntimeSha } };
+          }
+          return options.method === "POST"
             ? {}
-            : { workflow_runs: [run, { ...run, id: 901 }] },
+            : { workflow_runs: [run, { ...run, id: 901 }] };
+        },
       }),
     /multiple Buildchain signing authority runs/u,
   );

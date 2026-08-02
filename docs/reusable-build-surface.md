@@ -702,7 +702,12 @@ It does not dispatch or poll the authority. A separate `ubuntu-24.04` controller
 starts only after the build matrices complete, validates the exact source,
 tree, runtime, request-set root, platform, run attempt, and correlation, then
 dispatches and awaits the protected authority workflow. Its retained receipt
-records the exact authority run and result artifact; failure, timeout, or
+records two independent immutable identities: the consumer Buildchain runtime
+SHA carried by the control request and the exact authority-ref commit resolved
+immediately before dispatch. The former validates the request-producing
+runtime; the latter must equal the authority workflow run's `head_sha` and is
+retained with the exact authority run and result artifact. If the protected ref
+moves between resolution and dispatch, settlement fails closed. Failure, timeout, or
 cancellation produces a non-qualifying receipt and no finalization delegation.
 
 A second GitHub-hosted finalization lane downloads the original control request,
