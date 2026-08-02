@@ -6,10 +6,10 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 250,
-    "maxHandMaintainedSourceLines": 96877,
+    "maxHandMaintainedSourceLines": 96978,
     "maxWorkflowFiles": 59,
-    "maxWorkflowLines": 20256,
-    "rationale": "The structural hardening, bounded AWS Windows and macOS JIT controllers, persistent one-shot Windows campaign admission ledger, cumulative Windows phase-spend baseline gate, operator-confirmed narrowed Windows campaign slot ceilings, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, generic finalized-package propagation capture, downstream-manual code-repository pickup with npm SLSA provenance, exact release-source recovery from shallow consumers, source-bound package release tags, locked consumer history selection, reusable-workflow call preflight, collision-safe macOS DMG assembly, canonical release-propagation digest comparison, declarative exact-binary demo platform, bounded long-form PTY replay, digest-prefix-compatible executable-closure restoration, recursive Buildchain dogfood, documentation hardening, and audited sccache compiler binding may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds typed Work Control, advanced-channel-preserving durable recovery, npm and Git source coherence, public Passport or registry-provenance readback, capture-only downstream handoff, production readback, exact-source cloud preflight, credential-safe JIT delivery, atomic cost reservation against the retained prior-spend baseline, explicit one-to-five paid-slot confirmation, permanent kill state, fail-closed cleanup, exact head and tree verification across ancestry-aware source gates, bounded allowlisted resource-busy retry with execution-bound cleanup evidence, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, one shared controlled workflow parser plus exact call-contract receipts, isolated native demo capture with actual elapsed timing, protected README materialization, effective Cargo and CMake compiler launchers, a nonzero cache-activity gate, and regression guards instead of duplicated delivery behavior or product-specific recording glue; any wider ceiling requires another reviewed policy change."
+    "maxWorkflowLines": 20274,
+    "rationale": "The structural hardening, bounded AWS Windows and macOS JIT controllers, persistent one-shot Windows campaign admission ledger, cumulative Windows phase-spend baseline gate, operator-confirmed narrowed Windows campaign slot ceilings, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, generic finalized-package propagation capture, downstream-manual code-repository pickup with npm SLSA provenance, exact release-source recovery from shallow consumers, source-bound package release tags, locked consumer history selection, reusable-workflow call preflight, collision-safe macOS DMG assembly, canonical release-propagation digest comparison, declarative exact-binary demo platform, bounded long-form PTY replay, digest-prefix-compatible executable-closure restoration, recursive Buildchain dogfood, protected exact-source candidate auto-merge registration, documentation hardening, and audited sccache compiler binding may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds typed Work Control, advanced-channel-preserving durable recovery, npm and Git source coherence, public Passport or registry-provenance readback, capture-only downstream handoff, production readback, exact-source cloud preflight, credential-safe JIT delivery, atomic cost reservation against the retained prior-spend baseline, explicit one-to-five paid-slot confirmation, permanent kill state, fail-closed cleanup, exact head and tree verification across ancestry-aware source gates, bounded allowlisted resource-busy retry with execution-bound cleanup evidence, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, one shared controlled workflow parser plus exact call-contract receipts, isolated native demo capture with actual elapsed timing, protected README materialization, effective Cargo and CMake compiler launchers, a nonzero cache-activity gate, explicit merge-method validation, and regression guards instead of duplicated delivery behavior or product-specific recording glue; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -46,6 +46,10 @@
       "maxLines": 1330,
       "rationale": "The existing Gate validator admits an explicit bounded long-form duration class while preserving the standard 60-second default and exact capture-to-scene binding; this exact post-integration ceiling cannot grow implicitly."
     },
+    "scripts/dev-alpha-candidate-patrol.mjs": {
+      "maxLines": 1184,
+      "rationale": "The existing single-flight exact-source Alpha controller now idempotently registers repository-selected GitHub auto-merge intent only after settlement revalidation, with explicit merge-method validation and no direct merge or approval path; this exact ceiling cannot grow implicitly."
+    },
     "scripts/generate-site-bundle.mjs": {
       "maxLines": 1502,
       "rationale": "Lifecycle metadata and CLI registry parity are generated centrally across the latest upstream public surface while the largest generator function remains at or below its prior size and complexity ceilings."
@@ -58,6 +62,81 @@
     }
   },
   "approvedPublicSurfaceTransitions": {
+    "workflow:dev-alpha-candidate-patrol": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "dev-alpha-candidate-patrol",
+        "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
+        "reusable": true,
+        "inputs": [
+          "alpha-workflow-path",
+          "auto-merge",
+          "buildchain-ref",
+          "buildchain-repository",
+          "create-pull-request",
+          "dev-workflow-path",
+          "dry-run",
+          "max-age-seconds",
+          "merge-method",
+          "pull-request-body-prefix",
+          "pull-request-body-prefix-renderer",
+          "reactivation-authorized",
+          "settlement-authorized",
+          "source-branch",
+          "target-branch"
+        ],
+        "secrets": ["promotion-token"],
+        "outputs": [
+          "active-candidate-pr",
+          "controller-state",
+          "eligible",
+          "next-candidate-sha",
+          "prior-state-root",
+          "promotion-pr",
+          "result-path",
+          "selected-sha",
+          "settlement-action",
+          "source-lock-ref"
+        ]
+      },
+      "rationale": "Expose opt-in auto-merge registration and an explicit merge method for the already-managed exact-source Alpha candidate without adding approval or direct-merge authority."
+    },
+    "workflow:stable-candidate-patrol": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "stable-candidate-patrol",
+        "path": ".github/workflows/stable-candidate-patrol.yml",
+        "reusable": true,
+        "inputs": [
+          "auto-approve",
+          "auto-merge",
+          "auto-promote",
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "hold",
+          "hold-reason",
+          "ledger-ref",
+          "merge-method",
+          "minimum-soak-seconds",
+          "release-now",
+          "required-checks",
+          "revoke-reason",
+          "revoked-versions",
+          "target-branch"
+        ],
+        "secrets": ["approval-token", "promotion-token"],
+        "outputs": [
+          "promotion-pr",
+          "result-path",
+          "selected",
+          "selected-sha",
+          "selected-version",
+          "stable-version"
+        ]
+      },
+      "rationale": "Let protected stable callers select the repository-supported GitHub auto-merge method while preserving the existing opt-in and exact-source gates."
+    },
     "cli:release-propagation": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
