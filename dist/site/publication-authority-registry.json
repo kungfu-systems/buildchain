@@ -45,6 +45,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.declarative-auditable-demo.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.declarative-auditable-demo.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.publication-authority.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -175,6 +188,19 @@
       "credentialMode": "none",
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/artifact-signing-authority.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/auditable-demo.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/auditable-demo.yml",
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
@@ -603,6 +629,14 @@
       "classified": false
     },
     {
+      "path": ".github/workflows/.declarative-auditable-demo.yml",
+      "signals": [
+        "write-permission",
+        "git-push"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.gate-profile.yml",
       "signals": [],
       "classified": false
@@ -701,6 +735,13 @@
       "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
       "signals": [],
       "classified": false
+    },
+    {
+      "path": ".github/workflows/auditable-demo.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
     },
     {
       "path": ".github/workflows/binary-distribution.yml",
@@ -958,5 +999,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "0f4705fb7b2afcb72e9136dac44eac7fc47d9440330aa3c72a8ae8bd8f3339c3"
+  "registryDigest": "c4574eaddd6cecd08c24e9125a2767f3126e8fbae894ed71d24cd5cc16e2443b"
 }

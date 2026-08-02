@@ -277,6 +277,10 @@ The active reusable workflow surfaces are:
   qualification, transcript-bound renderer smoke, optional media rendering
   from the exact passing Gate bundle, and opt-in content-addressed web-delivery
   profiles with independently verified rendition roles;
+- `.github/workflows/.declarative-auditable-demo.yml` for standalone binary
+  consumers that provide only a versioned multi-demo argv scenario and exact
+  same-run binary artifact coordinates; Buildchain owns isolated native
+  capture, Gate, Release Passport, materialization, and protected README PRs;
 - `.github/workflows/.build.yml` for deterministic multi-platform build and
   artifact contracts;
 - `.github/workflows/build.yml` for the single-config channel router that uses

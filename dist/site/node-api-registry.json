@@ -1881,7 +1881,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 910
+        "line": 945
       },
       "example": "import { contractSummary } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1910,7 +1910,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 752
+        "line": 787
       },
       "example": "import { createBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1939,7 +1939,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 75
+        "line": 110
       },
       "example": "import { createBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1968,7 +1968,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 818
+        "line": 853
       },
       "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1997,7 +1997,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 727
+        "line": 762
       },
       "example": "import { finalizeBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2026,7 +2026,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 803
+        "line": 838
       },
       "example": "import { readBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2055,7 +2055,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 783
+        "line": 818
       },
       "example": "import { readBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2084,7 +2084,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 922
+        "line": 957
       },
       "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3493,7 +3493,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 51
+        "line": 53
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3522,7 +3522,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 76
+        "line": 78
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17542,7 +17542,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:b36bbd70ebd7dffdba2ab3161cbea8adfed0cd72b418ba587a4d0e5aecbd94dc",
+      "digest": "sha256:876f747eccd92d31e821c85b2f38a54ba6056704adfb30cbf7e545ff61148625",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -18381,7 +18381,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:0e5db6d66ed48d5eb57be1e4f1c3de92a2fc4c72a70b5764df6b21f78026a731",
+      "digest": "sha256:4ac32145cacbf15e1fa4f8c5daf24c2374a76e9f079afc5bcc8d444c64c2d246",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -18765,7 +18765,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:62f5633ce6df3db2b92358a078dcc82d935d6fe480b9b4bf99294c0c1ccc39fb"
+      "digest": "sha256:e87c004f9fe65a248af6e0ebba1da6efddd7dc196d627e939bd23f46045a806e"
     },
     {
       "id": "build-facts",
