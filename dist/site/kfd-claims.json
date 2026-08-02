@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "c0ad3ff2166ec8c3b315c4a56af0fee5debead1dff3b3e7a6145943952df609b",
+    "sha256": "e4f6acd3f27929e08ee3a272b48c325609347dfe6ca91e89c82fe451e1b795a9",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 59,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "c0ad3ff2166ec8c3b315c4a56af0fee5debead1dff3b3e7a6145943952df609b",
+      "sha256": "e4f6acd3f27929e08ee3a272b48c325609347dfe6ca91e89c82fe451e1b795a9",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 59,
@@ -3334,7 +3334,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 83,
+          "inputCount": 85,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3392,6 +3392,8 @@
             "linux-container-preset",
             "node-version",
             "platforms-json",
+            "pre-upload-transport-smoke-artifact-root",
+            "pre-upload-transport-smoke-scenario-path",
             "process-sample-interval-ms",
             "process-summary-path",
             "publish-anchor-request-json",
@@ -4070,7 +4072,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 86,
+          "inputCount": 88,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -4131,6 +4133,8 @@
             "linux-container-preset",
             "node-version",
             "platforms-json",
+            "pre-upload-transport-smoke-artifact-root",
+            "pre-upload-transport-smoke-scenario-path",
             "process-sample-interval-ms",
             "process-summary-path",
             "publish-anchor-request-json",

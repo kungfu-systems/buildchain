@@ -69,7 +69,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:984999dba496df640350ba27262f7112ac4574e0814fc51773a93ad22847b5bd"
+      "digest": "sha256:7e1426d8200bd4e7a7e6684c872f47075cd37d0bddbb262ea3263eaad846b540"
     },
     {
       "id": "install",
@@ -277,7 +277,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:40fb5ee9bb57e668cf0a206904035936adbb8536f604e7ee4112e3aacb689230"
+      "digest": "sha256:d063882dabfc22e8ebbc07b485f34cbc9e7699d7d7227950b40c3d32a555c846"
     },
     {
       "id": "publish-transaction",

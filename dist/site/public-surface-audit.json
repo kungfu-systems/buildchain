@@ -699,6 +699,8 @@
           "linux-container-preset",
           "node-version",
           "platforms-json",
+          "pre-upload-transport-smoke-artifact-root",
+          "pre-upload-transport-smoke-scenario-path",
           "process-sample-interval-ms",
           "process-summary-path",
           "publish-anchor-request-json",
@@ -727,7 +729,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 83,
+        "inputCount": 85,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1562,6 +1564,8 @@
           "linux-container-preset",
           "node-version",
           "platforms-json",
+          "pre-upload-transport-smoke-artifact-root",
+          "pre-upload-transport-smoke-scenario-path",
           "process-sample-interval-ms",
           "process-summary-path",
           "publish-anchor-request-json",
@@ -1590,7 +1594,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 86,
+        "inputCount": 88,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -7118,8 +7122,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "c070e7bff9d1cb65a08daacd936f3567871af7844e88fa6ffcb05ea59579c15f",
-    "workflowRegistryDigest": "dff218a0f6f03602912c4f2e238cc79a1304ee2d0f6d1e3f3bae8514302f4706",
-    "pageRegistryDigest": "e210f43bd7ac5e13d81ea7540632f5935ef085c05ed2ca1678c2222b132bec79"
+    "workflowRegistryDigest": "b0299e77c4e78f7d3e846c3688c9726d2a777ece266d487673c0637a2b18635c",
+    "pageRegistryDigest": "39ca1a1a4141030ffa280d91d91c575d5641053940d789298ac7d83a86f3c02c"
   },
   "comparison": {
     "missingCliRegistry": [],

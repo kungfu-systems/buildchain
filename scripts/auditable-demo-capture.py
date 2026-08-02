@@ -221,6 +221,25 @@ def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
     require(isinstance(execution.get("totalTimeoutSeconds"), int) and 1 <= execution["totalTimeoutSeconds"] <= maximum_seconds,
             "scenario total timeout is invalid")
     require(isinstance(execution.get("environment"), dict), "scenario environment must be an object")
+    transport_smoke = value.get("transportSmoke")
+    if transport_smoke is not None:
+        require(isinstance(transport_smoke, dict) and set(transport_smoke) == {
+            "argv", "timeoutSeconds", "expectedExitCodes", "stdoutIncludes"
+        }, "scenario transport smoke shape is invalid")
+        require(isinstance(transport_smoke.get("argv"), list) and 1 <= len(transport_smoke["argv"]) <= 64,
+                "scenario transport smoke argv is invalid")
+        require(all(isinstance(item, str) and "\0" not in item and len(item) <= 512 for item in transport_smoke["argv"]),
+                "scenario transport smoke argv is invalid")
+        require(isinstance(transport_smoke.get("timeoutSeconds"), int) and 1 <= transport_smoke["timeoutSeconds"] <= 60,
+                "scenario transport smoke timeout is invalid")
+        require(isinstance(transport_smoke.get("expectedExitCodes"), list) and 1 <= len(transport_smoke["expectedExitCodes"]) <= 4,
+                "scenario transport smoke expected exits are invalid")
+        require(all(isinstance(item, int) and 0 <= item <= 255 for item in transport_smoke["expectedExitCodes"]),
+                "scenario transport smoke expected exits are invalid")
+        require(isinstance(transport_smoke.get("stdoutIncludes"), list) and len(transport_smoke["stdoutIncludes"]) <= 32,
+                "scenario transport smoke stdout assertions are invalid")
+        require(all(isinstance(item, str) and 1 <= len(item) <= 256 for item in transport_smoke["stdoutIncludes"]),
+                "scenario transport smoke stdout assertions are invalid")
     demos = value.get("demos")
     require(isinstance(demos, list) and 1 <= len(demos) <= 8, "scenario requires 1 through 8 demos")
     ids = [entry.get("id") for entry in demos]
