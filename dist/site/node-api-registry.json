@@ -14933,6 +14933,170 @@
       ]
     },
     {
+      "id": "packages/core/release-propagation-pickup.js#createManualUpstreamPickupCapture",
+      "name": "createManualUpstreamPickupCapture",
+      "kind": "function",
+      "signature": "function createManualUpstreamPickupCapture({ plan, expectedDownstreamBaseSha, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ plan, expectedDownstreamBaseSha, }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-pickup.js",
+        "line": 362
+      },
+      "example": "import { createManualUpstreamPickupCapture } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-pickup.js#createManualUpstreamPickupPlan",
+      "name": "createManualUpstreamPickupPlan",
+      "kind": "function",
+      "signature": "function createManualUpstreamPickupPlan({ config: configInput, sourceId, channel, currentVersion, upstreamRelease, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ config: configInput, sourceId, channel, currentVersion, upstreamRelease, }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-pickup.js",
+        "line": 304
+      },
+      "example": "import { createManualUpstreamPickupPlan } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT",
+      "name": "MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT",
+      "kind": "constant",
+      "signature": "const MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-pickup.js",
+        "line": 16
+      },
+      "example": "import { MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT",
+      "name": "MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT",
+      "kind": "constant",
+      "signature": "const MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-pickup.js",
+        "line": 18
+      },
+      "example": "import { MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-pickup.js#normalizeManualUpstreamPickupConfig",
+      "name": "normalizeManualUpstreamPickupConfig",
+      "kind": "function",
+      "signature": "function normalizeManualUpstreamPickupConfig(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-pickup.js",
+        "line": 120
+      },
+      "example": "import { normalizeManualUpstreamPickupConfig } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-pickup.js#resolveNpmRegistryRelease",
+      "name": "resolveNpmRegistryRelease",
+      "kind": "function",
+      "signature": "function resolveNpmRegistryRelease({ source: sourceInput, channel, packageMetadata, attestations, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ source: sourceInput, channel, packageMetadata, attestations, }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-pickup.js",
+        "line": 169
+      },
+      "example": "import { resolveNpmRegistryRelease } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
       "name": "RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
       "kind": "constant",
@@ -15285,7 +15449,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation.js",
-        "line": 370
+        "line": 371
       },
       "example": "import { createReleasePropagationReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -15343,7 +15507,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation.js",
-        "line": 248
+        "line": 249
       },
       "example": "import { planReleasePropagation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -15376,7 +15540,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation.js",
-        "line": 304
+        "line": 305
       },
       "example": "import { readReleasePropagationJson } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -15534,7 +15698,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation.js",
-        "line": 316
+        "line": 317
       },
       "example": "import { writeReleasePropagationLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16138,7 +16302,7 @@
         "developer",
         "agent"
       ],
-      "symbolCount": 541,
+      "symbolCount": 547,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -16311,6 +16475,8 @@
         "packages/core/readme-badges.js#createKfdBadgeSpecsFromStandards",
         "packages/core/kfd-product-gates.js#createKfdSupportProjection",
         "packages/core/build-facts.js#createKungfuBuildInfoProjection",
+        "packages/core/release-propagation-pickup.js#createManualUpstreamPickupCapture",
+        "packages/core/release-propagation-pickup.js#createManualUpstreamPickupPlan",
         "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
         "packages/core/paper.js#createPaperAlphaPlan",
         "packages/core/paper.js#createPaperBuildPlan",
@@ -16459,6 +16625,8 @@
         "packages/core/buildchain-config.js#loadBuildchainConfig",
         "packages/core/buildchain-config.js#loadConfiguredAnchorManifest",
         "packages/core/release-passport.js#makeReleasePassportFixtureAssets",
+        "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT",
+        "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT",
         "packages/core/stable-candidate-ledger.js#markStableCandidatePromoted",
         "packages/core/buildchain-layout.js#migrateBuildchainLayout",
         "packages/core/buildchain-config.js#normalizeBuildchainConfig",
@@ -16475,6 +16643,7 @@
         "packages/core/kfd3-surface-register.js#normalizeKfd3DistributionDeclaration",
         "packages/core/kfd.js#normalizeKfdStandardId",
         "packages/core/buildchain-config.js#normalizeLifecycleStage",
+        "packages/core/release-propagation-pickup.js#normalizeManualUpstreamPickupConfig",
         "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
         "packages/core/stable-candidate-ledger.js#normalizeStableCandidateLedger",
@@ -16588,6 +16757,7 @@
         "packages/core/buildchain-layout.js#resolveKfd2ProductClaimsRegistryPath",
         "packages/core/kfd-gate.js#resolveKfd3Metadata",
         "packages/core/buildchain-layout.js#resolveKfd3SurfaceRegistryPath",
+        "packages/core/release-propagation-pickup.js#resolveNpmRegistryRelease",
         "packages/core/paper-repository.js#resolvePaperRepository",
         "packages/core/release-propagation.js#resolvePropagationChannel",
         "packages/core/publication-artifact-candidate.js#resolvePublicationCandidateFile",
@@ -16777,7 +16947,7 @@
         "developer",
         "agent"
       ],
-      "symbolCount": 541,
+      "symbolCount": 547,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -16950,6 +17120,8 @@
         "packages/core/readme-badges.js#createKfdBadgeSpecsFromStandards",
         "packages/core/kfd-product-gates.js#createKfdSupportProjection",
         "packages/core/build-facts.js#createKungfuBuildInfoProjection",
+        "packages/core/release-propagation-pickup.js#createManualUpstreamPickupCapture",
+        "packages/core/release-propagation-pickup.js#createManualUpstreamPickupPlan",
         "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
         "packages/core/paper.js#createPaperAlphaPlan",
         "packages/core/paper.js#createPaperBuildPlan",
@@ -17098,6 +17270,8 @@
         "packages/core/buildchain-config.js#loadBuildchainConfig",
         "packages/core/buildchain-config.js#loadConfiguredAnchorManifest",
         "packages/core/release-passport.js#makeReleasePassportFixtureAssets",
+        "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT",
+        "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT",
         "packages/core/stable-candidate-ledger.js#markStableCandidatePromoted",
         "packages/core/buildchain-layout.js#migrateBuildchainLayout",
         "packages/core/buildchain-config.js#normalizeBuildchainConfig",
@@ -17114,6 +17288,7 @@
         "packages/core/kfd3-surface-register.js#normalizeKfd3DistributionDeclaration",
         "packages/core/kfd.js#normalizeKfdStandardId",
         "packages/core/buildchain-config.js#normalizeLifecycleStage",
+        "packages/core/release-propagation-pickup.js#normalizeManualUpstreamPickupConfig",
         "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
         "packages/core/stable-candidate-ledger.js#normalizeStableCandidateLedger",
@@ -17227,6 +17402,7 @@
         "packages/core/buildchain-layout.js#resolveKfd2ProductClaimsRegistryPath",
         "packages/core/kfd-gate.js#resolveKfd3Metadata",
         "packages/core/buildchain-layout.js#resolveKfd3SurfaceRegistryPath",
+        "packages/core/release-propagation-pickup.js#resolveNpmRegistryRelease",
         "packages/core/paper-repository.js#resolvePaperRepository",
         "packages/core/release-propagation.js#resolvePropagationChannel",
         "packages/core/publication-artifact-candidate.js#resolvePublicationCandidateFile",
@@ -18622,22 +18798,27 @@
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
-      "digest": "sha256:193a8489c200d96b50bc71d54162d7ec37a7c1335bc97bc1459971fe18c31b16",
+      "digest": "sha256:959a9474d48da2090debac31eb95927652ad05ded0364ef6b736b6c12af96847",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 25,
+      "symbolCount": 31,
       "symbolIds": [
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/release-propagation-work-transitions.js#completeReleasePropagationWork",
+        "packages/core/release-propagation-pickup.js#createManualUpstreamPickupCapture",
+        "packages/core/release-propagation-pickup.js#createManualUpstreamPickupPlan",
         "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
         "packages/core/release-propagation.js#createReleasePropagationLock",
         "packages/core/release-propagation.js#createReleasePropagationReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationStageReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationWork",
+        "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT",
+        "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT",
+        "packages/core/release-propagation-pickup.js#normalizeManualUpstreamPickupConfig",
         "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
         "packages/core/release-propagation-capture.js#PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
@@ -18652,6 +18833,7 @@
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_STAGES",
         "packages/core/release-propagation-work-transitions.js#repairReleasePropagationWork",
+        "packages/core/release-propagation-pickup.js#resolveNpmRegistryRelease",
         "packages/core/release-propagation.js#resolvePropagationChannel",
         "packages/core/release-propagation-work.js#resumeReleasePropagationWork",
         "packages/core/release-propagation-work.js#verifyReleasePropagationWork",
@@ -18765,7 +18947,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:27fe25457581061efc809e134efa4a979806a149f6562b0a484b96b38d8b5f65"
+      "digest": "sha256:425cb0d357e0a83548e57234766caad03854bd06d40361f08c6b3f5107029a22"
     },
     {
       "id": "build-facts",

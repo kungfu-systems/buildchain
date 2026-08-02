@@ -1623,7 +1623,7 @@ async function handlePaperCommand(args) {
 }
 
 async function handleReleasePropagationCommand(args) {
-    runReleasePropagationCli(args);
+    await runReleasePropagationCli(args);
     return;
 
 }
