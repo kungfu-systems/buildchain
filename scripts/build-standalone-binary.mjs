@@ -346,6 +346,7 @@ export function buildStandaloneBinary({
       phase: "archive",
     });
   }
+  const binarySha256 = crypto.createHash("sha256").update(fs.readFileSync(binaryPath)).digest("hex");
   const manifest = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-standalone-binary",
@@ -354,7 +355,8 @@ export function buildStandaloneBinary({
     platform: triple,
     platformId: process.platform === "linux" && process.arch === "x64" ? "linux-x64" : triple,
     binary: relativePath(cwd, binaryPath),
-    sha256: crypto.createHash("sha256").update(fs.readFileSync(binaryPath)).digest("hex"),
+    sha256: binarySha256,
+    executableFiles: [{ path: path.basename(binaryPath), sha256: binarySha256 }],
     sourceSha: sourceSha(cwd),
     runtimeDependencies: [],
     archive: relativePath(cwd, archivePath),
