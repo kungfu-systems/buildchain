@@ -223,6 +223,12 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(bootstrap, /\$Root\\bin;\$Root\\cmd;\$env:PATH/);
   assert.doesNotMatch(bootstrap, /\\usr\\bin/);
   assert.match(bootstrap, /Remove-SSMParameter/);
+  assert.match(bootstrap, /Join-Path \$RunnerRoot "\.env"/);
+  assert.match(
+    bootstrap,
+    /BUILDCHAIN_RUNNER_LABELS_JSON=\$\(\$env:BUILDCHAIN_RUNNER_LABELS_JSON\)/,
+  );
+  assert.doesNotMatch(bootstrap, /encoded_jit_config=.*\.env|Jit=.*\.env/);
   assert.match(bootstrap, /run\.cmd" --jitconfig \$Jit/);
   assert.match(bootstrap, /Stop-Computer -Force/);
   assert.doesNotMatch(bootstrap, /encoded_jit_config|github_pat_|ghp_|gho_/);
