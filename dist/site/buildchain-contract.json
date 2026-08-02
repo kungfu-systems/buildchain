@@ -372,7 +372,7 @@
         "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority"
       ],
       "breakingDigest": "sha256:0bcba689ab5060e12230db4118895242ecb48677ff581ea0360b1833bdac558c",
-      "auditDigest": "sha256:4552ab1980d1b9f07f56bb259bea034c192f811f2bca199ce4bb6e6cdb049b1d"
+      "auditDigest": "sha256:e06660b62b46bc698cb761020db195605dbeb09bb1ded98ba49c75c83e32f54b"
     },
     {
       "contractVersion": 1,
@@ -3599,5 +3599,5 @@
     }
   ],
   "compatibilityDigest": "sha256:76c3dd58a02887ecd6af33d63e749fef0a988a820fea99bdf4cb078cc48caa83",
-  "contractDigest": "sha256:ee3f6e446e3b8f22f20004fd2c0071beab0e3f86e9fd00e62d361d19dfc6815f"
+  "contractDigest": "sha256:a7c142e4414a13d7f70fd9c7e7e60bab95734946ad99242a0d30e7d9e6ca046b"
 }
