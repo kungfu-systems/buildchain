@@ -933,7 +933,6 @@ jobs:
       publish-package-set-order: ${{ inputs.publish-package-set-order }}
       publish-package-main: ${{ inputs.publish-package-main }}
       release-passport: ${{ inputs.release-passport }}
-      release-propagation-config-path: ${{ inputs.release-propagation-config-path }}
       release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
       release-passport-product-name: ${{ inputs.release-passport-product-name }}
       release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
