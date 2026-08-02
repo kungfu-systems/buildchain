@@ -316,6 +316,40 @@ target; publication itself does not open a Site PR.
 }
 ```
 
+A managed npm package uses the parallel generic contract and passes its path to
+the release-candidate promotion workflow:
+
+```json
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-package-release-propagation",
+  "sourceNode": "kfd",
+  "graph": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-release-propagation-graph",
+    "nodes": [],
+    "edges": []
+  },
+  "targets": ["site-libkungfu-dev"]
+}
+```
+
+```yaml
+with:
+  release-propagation-config-path: .buildchain/release-propagation.json
+```
+
+The config is read with `git show` from the exact finalized release SHA. Its
+root fields, graph fields, nodes, edges, targets, and execution profiles reject
+unknown fields. After npm publication and the public GitHub Release are
+complete, Buildchain independently reads npm `version`, `dist.integrity`, and
+`gitHead`, resolves annotated Git tags to their commit, downloads the public
+`buildchain.release.json` asset, and compares its bytes with the finalized
+Passport. Only an exact source SHA, tag target, npm `gitHead`, package version,
+integrity, and Passport digest can produce the capture artifact. The promotion
+output `release-propagation-work-artifact` names the restart-safe artifact set.
+No downstream checkout, branch, or pull request is created by this step.
+
 Each graph target owns an exact GitHub web-surface execution profile: workflow,
 base and managed branch, lock path, consumer commands, production status URL,
 and production artifact readback URLs. The sealed workflow rejects extra config

@@ -180,7 +180,7 @@ test("governed promotion treats a superseded target as an auditable no-op", asyn
 });
 
 test("governed promotion resumes its exact durable transaction after the target ref advanced", async () => {
-  const releaseSha = "c".repeat(40);
+  const releaseSha = "c".repeat(40); const advancedSha = "d".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -189,13 +189,19 @@ test("governed promotion resumes its exact durable transaction after the target 
     },
   });
   const { octokit, refs, commits } = createGitMock({
-    refs: new Map([["heads/alpha/v1/v1.0", releaseSha]]),
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", advancedSha],
+      ["heads/dev/v1/v1.0", advancedSha],
+      ["tags/v1.0-alpha", advancedSha],
+      ["tags/v1-alpha", advancedSha],
+    ]),
   });
   commits.set(releaseSha, {
     sha: releaseSha,
     tree: { sha: `tree-${releaseSha}` },
     parents: [{ sha: SHA }],
   });
+  commits.set(advancedSha, { sha: advancedSha, tree: { sha: `tree-${advancedSha}` }, parents: [{ sha: releaseSha }] });
   octokit.rest.repos = {
     compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
     getBranchProtection: async () => ({ data: protectedChannel() }),
@@ -260,6 +266,7 @@ test("governed promotion resumes its exact durable transaction after the target 
   });
   fs.unlinkSync(evidencePath);
 
+  const plan = await promoteBuildchainRefs({ octokit, owner: "kungfu-systems", repo: "buildchain", sha: SHA, targetRef: "alpha/v1/v1.0", cwd, dryRun: true, publishTransaction: true, publishTransactionOverride: true, requireVersionState: false, releasePassport: false }); assert.equal(plan.updates.find((update) => update.action === "dry-run-publish-transaction")?.version, "1.0.0-alpha.0"); assert.equal(plan.updates[0].action, "resumed-advanced-publication");
   const result = await promoteBuildchainRefs({
     octokit,
     owner: "kungfu-systems",
@@ -267,9 +274,10 @@ test("governed promotion resumes its exact durable transaction after the target 
     sha: SHA,
     targetRef: "alpha/v1/v1.0",
     cwd,
-    versionState: false,
+    versionState: true,
     requireGovernance: true,
     publishTransaction: true,
+    publishTransactionOverride: true,
     expectedPublicationVersion: "1.0.0-alpha.0",
     releasePassport: false,
   });
@@ -277,11 +285,15 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(result.superseded, undefined);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
-  assert.equal(refs.get("heads/alpha/v1/v1.0"), releaseSha);
+  assert.equal(result.sha, advancedSha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), advancedSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), advancedSha);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), releaseSha);
-  assert.equal(refs.get("tags/v1.0-alpha"), releaseSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), advancedSha);
+  assert.equal(refs.get("tags/v1-alpha"), advancedSha);
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
   assert.equal(result.updates[0].action, "resumed-advanced-publication");
+  assert.equal(result.updates.at(-1).action, "finalized-advanced-publication");
 });
 
 test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {
@@ -623,6 +635,7 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
 test("strict alpha promotion uses provider transaction evidence when protection details are unreadable", async () => {
   let reviewState = "APPROVED";
   let protectionReadStatus = 403;
+  let observedHeadSha = SHA;
   const pullRequestHeadSha = "b".repeat(40);
   const checkedRefs = [];
   const octokit = {
@@ -657,7 +670,7 @@ test("strict alpha promotion uses provider transaction evidence when protection 
           return {
             data: {
               protected: true,
-              commit: { sha: SHA },
+              commit: { sha: observedHeadSha },
               protection: {
                 required_status_checks: {
                   enforcement_level: "everyone",
@@ -704,6 +717,11 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     assert.equal(resolvedStatusCheck, "check");
   }
   assert.deepEqual(checkedRefs, [pullRequestHeadSha, pullRequestHeadSha]);
+
+  observedHeadSha = OTHER_SHA;
+  const recoveredStatusCheck = await assertProtectedChannel({ octokit, owner: "kungfu-systems", repo: "buildchain", sourceSha: SHA, expectedChannelSha: OTHER_SHA, targetRef: "alpha/v1/v1.0", requiredStatusCheck: "check" });
+  assert.equal(recoveredStatusCheck, "check");
+  await assert.rejects(assertProtectedChannel({ octokit, owner: "kungfu-systems", repo: "buildchain", sourceSha: SHA, targetRef: "alpha/v1/v1.0", requiredStatusCheck: "check" }), /must still point at the exact admitted channel head/);
 
   reviewState = "CHANGES_REQUESTED";
   await assert.rejects(
