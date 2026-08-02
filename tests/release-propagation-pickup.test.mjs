@@ -78,7 +78,7 @@ function attestations() {
     _type: "https://in-toto.io/Statement/v1",
     subject: [
       {
-        name: "pkg:npm/%40kungfu-tech%2Fbuildchain@3.0.4",
+        name: "pkg:npm/%40kungfu-tech/buildchain@3.0.4",
         digest: { sha512: subjectSha512 },
       },
     ],
