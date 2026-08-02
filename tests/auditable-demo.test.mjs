@@ -12,6 +12,7 @@ import {
   parseAdapterArguments,
   prepareSmoke,
   qualifyMediaFixture,
+  renditionInputRoots,
   runAdapter,
   sha256,
   stableJson,
@@ -505,6 +506,8 @@ test("native rendition set binds distinct 1080p and 720p captures", (t) => {
   for (const rendition of normalized.renditionSet.renditions) {
     ["scene", "transcript", "projection"].forEach((member) => assert.doesNotThrow(() => fs.readFileSync(path.join(root, rendition.files[member]))));
   }
+  const inputRoots = renditionInputRoots(root, normalized.renditionSet.renditions);
+  assert.equal(stableJson(inputRoots), stableJson(JSON.parse(stableJson(inputRoots))));
   assert.notEqual(
     normalized.renditionSet.renditions[0].captureRoot,
     normalized.renditionSet.renditions[1].captureRoot,
