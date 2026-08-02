@@ -276,6 +276,7 @@ Resources:
                 Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kungfu/burst/windows/*"
               - Effect: Allow
                 Action:
+                  - dynamodb:GetItem
                   - dynamodb:UpdateItem
                 Resource: !GetAtt CampaignState.Arn
 
@@ -325,12 +326,24 @@ Resources:
                   },
               )
 
+          def campaign_killed():
+              control = dynamodb.get_item(
+                  TableName=STATE_TABLE,
+                  Key={"pk": {"S": "CONTROL"}},
+                  ConsistentRead=True,
+                  ProjectionExpression="#state",
+                  ExpressionAttributeNames={"#state": "state"},
+              ).get("Item", {})
+              return control.get("state", {}).get("S") == "KILLED"
+
           def tags(instance):
               return {row["Key"]: row["Value"] for row in instance.get("Tags", [])}
 
           def handler(event, context):
               now = datetime.datetime.now(datetime.timezone.utc)
-              kill_all = bool(event.get("Records"))
+              sns_kill = bool(event.get("Records"))
+              control_killed = campaign_killed()
+              kill_all = sns_kill or control_killed
               response = ec2.describe_instances(Filters=[
                   {"Name": "tag:kungfu:plane", "Values": ["aws-us-elastic-runner-burst"]},
                   {"Name": "tag:kungfu:provider", "Values": ["windows-ec2-jit"]},
@@ -351,11 +364,13 @@ Resources:
                       parameter = instance_tags.get("kungfu:jit-parameter", "")
                       if parameter.startswith(PREFIX):
                           parameters.append(parameter)
-              if kill_all or victims:
+              if sns_kill and not control_killed:
                   kill_campaign(
-                      "aws-budget-notification" if kill_all else "runner-lifetime-violation",
+                      "aws-budget-notification",
                       now,
                   )
+              elif victims and not control_killed:
+                  kill_campaign("runner-lifetime-violation", now)
               if victims:
                   ec2.terminate_instances(InstanceIds=victims)
               for parameter in sorted(set(parameters)):
