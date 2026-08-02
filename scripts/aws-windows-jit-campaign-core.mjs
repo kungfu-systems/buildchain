@@ -50,6 +50,22 @@ function money(value, label) {
   return Math.round(parsed * 100_000_000) / 100_000_000;
 }
 
+function acceptedInstances(value) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return WINDOWS_EC2_JIT.maxAcceptedInstances;
+  const parsed = Number(normalized);
+  if (
+    !Number.isInteger(parsed) ||
+    parsed < 1 ||
+    parsed > WINDOWS_EC2_JIT.maxAcceptedInstances
+  ) {
+    throw new Error(
+      `maxAcceptedInstances must be an integer from 1 through ${WINDOWS_EC2_JIT.maxAcceptedInstances}`,
+    );
+  }
+  return parsed;
+}
+
 function string(value) {
   return { S: String(value) };
 }
@@ -72,8 +88,8 @@ export function createWindowsJitCampaignArmPlan(values = {}) {
     values.phaseSpendBaselineUsd,
     "phaseSpendBaselineUsd",
   );
-  const campaignReservationCeilingUsd =
-    reservationUsd * WINDOWS_EC2_JIT.maxAcceptedInstances;
+  const maxAcceptedInstances = acceptedInstances(values.maxAcceptedInstances);
+  const campaignReservationCeilingUsd = reservationUsd * maxAcceptedInstances;
   const campaignSafetyCeilingUsd =
     campaignReservationCeilingUsd +
     reservationUsd * WINDOWS_EC2_JIT.maxConcurrentInstances;
@@ -103,7 +119,7 @@ export function createWindowsJitCampaignArmPlan(values = {}) {
       stateTable: tableName(values.stateTable),
     },
     limits: {
-      maxAcceptedInstances: WINDOWS_EC2_JIT.maxAcceptedInstances,
+      maxAcceptedInstances,
       reservationUsd,
       budgetLimitUsd: WINDOWS_EC2_JIT.budgetLimitUsd,
       phaseSpendBaselineUsd,
