@@ -237,7 +237,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ce9b018e6b1cfd98d8faa0ccadd6570585f2812b4828d610810f984f9810df5d"
+      "digest": "sha256:776d27889e36f1273b2fbf46cd7fe183521d945bc3e9695e628ec41eb43b16ec"
     },
     {
       "id": "build-facts",
@@ -293,7 +293,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:60ec90d3294818d3c53e403312801a8ab47be7c0f34810002676fbfcdbceaa60"
+      "digest": "sha256:5aedb17031324bb2168e93f295856f1c458e344b53183bf94f8d2bcc3273f286"
     },
     {
       "id": "release-flow",
