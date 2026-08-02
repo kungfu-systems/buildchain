@@ -212,7 +212,14 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /STATE_TABLE: !Ref CampaignState/);
   assert.match(stack, /kill_campaign\(/);
   assert.match(stack, /ConsistentRead=True/);
-  assert.match(stack, /control_killed = campaign_killed\(\)/);
+  assert.match(stack, /control = campaign_control\(\)/);
+  assert.match(stack, /ProjectionExpression="#state, campaign_id"/);
+  assert.match(stack, /campaign_id = control\["campaign_id"\]/);
+  assert.match(stack, /if not campaign_id:/);
+  assert.match(
+    stack,
+    /{"Name": "tag:kungfu:campaign-id", "Values": \[campaign_id\]}/,
+  );
   assert.match(stack, /kill_all = sns_kill or control_killed/);
   assert.match(stack, /if sns_kill and not control_killed:/);
   assert.match(stack, /runner-lifetime-violation/);

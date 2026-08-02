@@ -326,15 +326,18 @@ Resources:
                   },
               )
 
-          def campaign_killed():
+          def campaign_control():
               control = dynamodb.get_item(
                   TableName=STATE_TABLE,
                   Key={"pk": {"S": "CONTROL"}},
                   ConsistentRead=True,
-                  ProjectionExpression="#state",
+                  ProjectionExpression="#state, campaign_id",
                   ExpressionAttributeNames={"#state": "state"},
               ).get("Item", {})
-              return control.get("state", {}).get("S") == "KILLED"
+              return {
+                  "killed": control.get("state", {}).get("S") == "KILLED",
+                  "campaign_id": control.get("campaign_id", {}).get("S", ""),
+              }
 
           def tags(instance):
               return {row["Key"]: row["Value"] for row in instance.get("Tags", [])}
@@ -342,11 +345,23 @@ Resources:
           def handler(event, context):
               now = datetime.datetime.now(datetime.timezone.utc)
               sns_kill = bool(event.get("Records"))
-              control_killed = campaign_killed()
+              control = campaign_control()
+              control_killed = control["killed"]
+              campaign_id = control["campaign_id"]
               kill_all = sns_kill or control_killed
+              if not campaign_id:
+                  print({
+                      "killAll": kill_all,
+                      "observedInstances": 0,
+                      "terminatedInstances": [],
+                      "deletedJitParameters": 0,
+                      "reason": "campaign-control-missing-id",
+                  })
+                  return {"terminatedInstances": []}
               response = ec2.describe_instances(Filters=[
                   {"Name": "tag:kungfu:plane", "Values": ["aws-us-elastic-runner-burst"]},
                   {"Name": "tag:kungfu:provider", "Values": ["windows-ec2-jit"]},
+                  {"Name": "tag:kungfu:campaign-id", "Values": [campaign_id]},
                   {"Name": "instance-state-name", "Values": ["pending", "running", "stopping", "stopped"]},
               ])
               instances = [
