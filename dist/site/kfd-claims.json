@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "2e9764ba6dd200a54303e8d38606b39c5de13581c2595194cd4eb35780091a94",
+    "sha256": "34e7996447934d67fd6048ede3462f99fc0d5ce4b748f8a1e62d65a793714364",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 59,
       "actionCount": 6,
       "sitePageCount": 63,
-      "docCommandRefCount": 816,
+      "docCommandRefCount": 822,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "2e9764ba6dd200a54303e8d38606b39c5de13581c2595194cd4eb35780091a94",
+      "sha256": "34e7996447934d67fd6048ede3462f99fc0d5ce4b748f8a1e62d65a793714364",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 59,
         "actionCount": 6,
         "sitePageCount": 63,
-        "docCommandRefCount": 816,
+        "docCommandRefCount": 822,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -3066,7 +3066,7 @@
         },
         {
           "id": "cli:release-propagation",
-          "name": "buildchain release-propagation <plan|write-lock> ...",
+          "name": "buildchain release-propagation <plan|write-lock|work|pickup> ...",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",

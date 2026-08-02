@@ -208,7 +208,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                           [--execute] [--json]
   buildchain paper status [--cwd <dir>] [--json]
   buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]
-  buildchain release-propagation <plan|write-lock> ...
+  buildchain release-propagation <plan|write-lock|work|pickup> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
   buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]
@@ -246,6 +246,7 @@ Examples:
   buildchain paper preflight --json
   buildchain paper status --json
   buildchain release-propagation plan --graph graph.json --upstream-release release.json --json
+  buildchain release-propagation pickup plan --config manual-upstreams.json --source-id buildchain --channel release --current-version 3.0.3 --json
   buildchain kfd status --json
   buildchain kfd schema list --json
   buildchain kfd 1 witness --json

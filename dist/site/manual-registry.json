@@ -317,7 +317,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:c728fe693ab591ab5b52f4276a817ec5a013c79833f0d20ca2cc137e85ae51ca",
+      "digest": "sha256:94207fa353e87b087ecf53b6cebe6dfffdc1311b2b6bc90b511d83d5757e7827",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:27fe25457581061efc809e134efa4a979806a149f6562b0a484b96b38d8b5f65",
+      "digest": "sha256:425cb0d357e0a83548e57234766caad03854bd06d40361f08c6b3f5107029a22",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
