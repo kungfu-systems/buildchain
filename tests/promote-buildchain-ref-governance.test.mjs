@@ -288,7 +288,7 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(result.sha, advancedSha);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), advancedSha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), advancedSha);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), releaseSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
   assert.equal(refs.get("tags/v1.0-alpha"), advancedSha);
   assert.equal(refs.get("tags/v1-alpha"), advancedSha);
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
