@@ -29,7 +29,8 @@ export function validateTerminalCapture(value, scene, helpers) {
   exactKeys(value.dimensions, ["columns", "rows"], [], "terminalCapture.dimensions");
   integer(value.dimensions.columns, 80, 200, "terminalCapture.dimensions.columns");
   integer(value.dimensions.rows, 24, 80, "terminalCapture.dimensions.rows");
-  const durationMs = integer(value.durationMs, 500, 60000, "terminalCapture.durationMs");
+  const maximumDurationMs = scene.durationClass === "long-form" ? 180000 : 60000;
+  const durationMs = integer(value.durationMs, 500, maximumDurationMs, "terminalCapture.durationMs");
   invariant(
     durationMs <= scene.durationMs && scene.durationMs - durationMs <= 2000,
     "terminal capture duration must end within two seconds of the scene",
@@ -117,6 +118,10 @@ export function validateRenditionSet(output, helpers) {
     return { ...entry, files: Object.fromEntries(["transcript", "projection", "scene", "terminalCapture"].map((key) => [key, entry[key]])), transcript, lines, scene, projection, capture };
   });
   invariant(normalized[0].captureRoot !== normalized[1].captureRoot, "native rendition capture roots must be distinct");
+  invariant(
+    (normalized[0].scene.durationClass ?? "standard") === (normalized[1].scene.durationClass ?? "standard"),
+    "native rendition duration classes must match",
+  );
   invariant(
     JSON.stringify(normalized[0].capture.dimensions) !== JSON.stringify(normalized[1].capture.dimensions),
     "native rendition PTY dimensions must be distinct",

@@ -1504,6 +1504,13 @@ jobs:
           requested-parallelism: ${{ inputs.requested-parallelism }}
           process-summary-required: ${{ inputs.require-build }}
 
+      - name: Verify auditable compiler cache activity
+        if: ${{ inputs.compiler-cache-provider != 'none' && contains(fromJSON(inputs.compiler-cache-platforms-json), matrix.platform.id) }}
+        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs verify
+        env:
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
+          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ inputs.compiler-cache-required }}
+
       - name: Seal declared artifact signing requests
         id: signing-requests
         shell: bash
@@ -1970,6 +1977,13 @@ jobs:
           process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
           requested-parallelism: ${{ inputs.requested-parallelism }}
           process-summary-required: ${{ inputs.require-build }}
+
+      - name: Verify auditable compiler cache activity
+        if: ${{ inputs.compiler-cache-provider != 'none' && contains(fromJSON(inputs.compiler-cache-platforms-json), matrix.platform.id) }}
+        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs verify
+        env:
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
+          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ inputs.compiler-cache-required }}
 
       - name: Seal declared artifact signing requests
         id: signing-requests

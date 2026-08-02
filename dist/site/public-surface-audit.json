@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 112,
-    "workflowCount": 57,
+    "workflowCount": 59,
     "actionCount": 6,
     "sitePageCount": 63,
-    "docCommandRefCount": 813,
+    "docCommandRefCount": 822,
     "failureCount": 0
   },
   "enumerated": {
@@ -490,7 +490,7 @@
       {
         "id": "release-propagation",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain release-propagation <plan|write-lock> ..."
+        "usage": "buildchain release-propagation <plan|write-lock|work|pickup> ..."
       },
       {
         "id": "release-transaction",
@@ -799,6 +799,38 @@
         "secretCount": 1,
         "outputs": [],
         "outputCount": 0
+      },
+      {
+        "id": ".declarative-auditable-demo",
+        "path": ".github/workflows/.declarative-auditable-demo.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-retention-days",
+          "binary-artifact-digest",
+          "binary-artifact-name",
+          "buildchain-repository",
+          "materialize",
+          "materialize-base-ref",
+          "media-profile",
+          "render-media",
+          "renderer-image",
+          "scenario-path",
+          "source-ref"
+        ],
+        "inputCount": 11,
+        "secrets": [
+          "DEMO_UPDATE_TOKEN"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "capture-artifact-digest",
+          "capture-artifact-name",
+          "evidence-artifact-digest",
+          "evidence-artifact-name",
+          "publication-pr-url",
+          "source-sha"
+        ],
+        "outputCount": 6
       },
       {
         "id": ".gate-profile",
@@ -1414,6 +1446,17 @@
       {
         "id": "auditable-demo-media-profile-qualification",
         "path": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "auditable-demo",
+        "path": ".github/workflows/auditable-demo.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -4039,6 +4082,11 @@
       {
         "id": "init",
         "path": "README.md",
+        "command": "buildchain init --cwd"
+      },
+      {
+        "id": "init",
+        "path": "README.md",
         "command": "buildchain init --type package"
       },
       {
@@ -5297,6 +5345,11 @@
         "command": "buildchain layout --cwd"
       },
       {
+        "id": "layout",
+        "path": "README.md",
+        "command": "buildchain layout --cwd"
+      },
+      {
         "id": "lifecycle",
         "path": "docs/cli-reference.md",
         "command": "buildchain lifecycle"
@@ -6319,7 +6372,27 @@
       {
         "id": "release-propagation",
         "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
         "command": "buildchain release-propagation --help"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation pickup"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation pickup --help"
       },
       {
         "id": "release-propagation",
@@ -6330,6 +6403,16 @@
         "id": "release-propagation",
         "path": "docs/cli-reference.md",
         "command": "buildchain release-propagation plan --help"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation work"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation work --help"
       },
       {
         "id": "release-propagation",
@@ -7004,6 +7087,11 @@
       {
         "id": "version",
         "path": "README.md",
+        "command": "buildchain version"
+      },
+      {
+        "id": "version",
+        "path": "README.md",
         "command": "buildchain version npx buildchain"
       },
       {
@@ -7032,9 +7120,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "0db010925d1c60209c3dac8bc2797537f307ab21bc68084263e79004c5c16ff7",
-    "workflowRegistryDigest": "127d82a3a26c3b46bb5a45d707d69e689f4ecdc661d638c2934879813e5bc53b",
-    "pageRegistryDigest": "49ef956b98eb996c844a7dba826fca6720e5a15a99f7fa6cafaa95229b0ddd31"
+    "cliRegistryDigest": "c070e7bff9d1cb65a08daacd936f3567871af7844e88fa6ffcb05ea59579c15f",
+    "workflowRegistryDigest": "00bca055a9b1bf248b6ebadd0e1b497d0e701811bdd2d28c305064b6e1e3f2f9",
+    "pageRegistryDigest": "bc31d90d76c5ea74f9789f481d4e2c2bdf3f4f962a5cedf99d6cf9532d421d27"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -3315,21 +3315,25 @@
     {
       "id": "release-propagation",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain release-propagation <plan|write-lock> ...",
+      "usage": "buildchain release-propagation <plan|write-lock|work|pickup> ...",
       "paths": [
         "release-propagation",
+        "release-propagation pickup",
         "release-propagation plan",
+        "release-propagation work",
         "release-propagation write-lock"
       ],
       "syntaxes": [
         "buildchain release-propagation",
-        "buildchain release-propagation <plan|write-lock> ..."
+        "buildchain release-propagation <plan|write-lock|work|pickup> ..."
       ],
       "options": [],
       "aliases": [],
       "helpCommands": [
         "buildchain release-propagation --help",
+        "buildchain release-propagation pickup --help",
         "buildchain release-propagation plan --help",
+        "buildchain release-propagation work --help",
         "buildchain release-propagation write-lock --help"
       ],
       "purpose": "Plan channel-preserving downstream release PRs and write exact upstream release locks.",

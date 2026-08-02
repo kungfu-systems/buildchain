@@ -5,11 +5,11 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 248,
-    "maxHandMaintainedSourceLines": 95730,
-    "maxWorkflowFiles": 57,
-    "maxWorkflowLines": 19713,
-    "rationale": "The structural hardening, bounded AWS Windows and macOS JIT controllers, persistent one-shot Windows campaign admission ledger, cumulative Windows phase-spend baseline gate, operator-confirmed narrowed Windows campaign slot ceilings, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, generic finalized-package propagation capture, exact release-source recovery from shallow consumers, source-bound package release tags, locked consumer history selection, reusable-workflow call preflight, collision-safe macOS DMG assembly, protected exact-source candidate auto-merge registration, and documentation hardening may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds typed Work Control, advanced-channel-preserving durable recovery, npm and Git source coherence, public Passport readback, capture-only downstream handoff, production readback, exact-source cloud preflight, credential-safe JIT delivery, atomic cost reservation against the retained prior-spend baseline, explicit one-to-five paid-slot confirmation, permanent kill state, fail-closed cleanup, exact head and tree verification across ancestry-aware source gates, bounded allowlisted resource-busy retry with execution-bound cleanup evidence, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, one shared controlled workflow parser plus exact call-contract receipts, explicit merge-method validation, and regression guards instead of duplicated delivery behavior; any wider ceiling requires another reviewed policy change."
+    "maxHandMaintainedSourceFiles": 250,
+    "maxHandMaintainedSourceLines": 96978,
+    "maxWorkflowFiles": 59,
+    "maxWorkflowLines": 20274,
+    "rationale": "The structural hardening, bounded AWS Windows and macOS JIT controllers, persistent one-shot Windows campaign admission ledger, cumulative Windows phase-spend baseline gate, operator-confirmed narrowed Windows campaign slot ceilings, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, generic finalized-package propagation capture, downstream-manual code-repository pickup with npm SLSA provenance, exact release-source recovery from shallow consumers, source-bound package release tags, locked consumer history selection, reusable-workflow call preflight, collision-safe macOS DMG assembly, canonical release-propagation digest comparison, declarative exact-binary demo platform, bounded long-form PTY replay, digest-prefix-compatible executable-closure restoration, recursive Buildchain dogfood, protected exact-source candidate auto-merge registration, documentation hardening, and audited sccache compiler binding may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds typed Work Control, advanced-channel-preserving durable recovery, npm and Git source coherence, public Passport or registry-provenance readback, capture-only downstream handoff, production readback, exact-source cloud preflight, credential-safe JIT delivery, atomic cost reservation against the retained prior-spend baseline, explicit one-to-five paid-slot confirmation, permanent kill state, fail-closed cleanup, exact head and tree verification across ancestry-aware source gates, bounded allowlisted resource-busy retry with execution-bound cleanup evidence, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, one shared controlled workflow parser plus exact call-contract receipts, isolated native demo capture with actual elapsed timing, protected README materialization, effective Cargo and CMake compiler launchers, a nonzero cache-activity gate, explicit merge-method validation, and regression guards instead of duplicated delivery behavior or product-specific recording glue; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -30,13 +30,21 @@
       "maxLines": 2859,
       "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification while the terminal report constructor drops from 470 lines to at most 180. This exact post-integration ceiling cannot grow implicitly."
     },
+    "packages/core/buildchain-contract.js": {
+      "maxLines": 1009,
+      "rationale": "The contract world adds one extracted declarative exact-binary demo surface descriptor while keeping the primary constructor at its prior function-length ceiling; this exact public-contract wiring ceiling cannot grow implicitly."
+    },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1440,
-      "rationale": "Public lifecycle fields are checked for every generated CLI, Node API, action, and workflow entry after integrating the latest upstream inventory; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1445,
+      "rationale": "Public lifecycle fields and the declarative demo scenario, runtime, capture, reusable workflow, and recursive dogfood caller are checked after integrating the latest upstream inventory; this exact post-integration ceiling cannot grow implicitly."
+    },
+    "scripts/auditable-demo.mjs": {
+      "maxLines": 1330,
+      "rationale": "The existing Gate validator admits an explicit bounded long-form duration class while preserving the standard 60-second default and exact capture-to-scene binding; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/dev-alpha-candidate-patrol.mjs": {
       "maxLines": 1184,
@@ -45,6 +53,12 @@
     "scripts/generate-site-bundle.mjs": {
       "maxLines": 1502,
       "rationale": "Lifecycle metadata and CLI registry parity are generated centrally across the latest upstream public surface while the largest generator function remains at or below its prior size and complexity ceilings."
+    },
+    "scripts/run-lifecycle-core.mjs": {
+      "maxLines": 886,
+      "maxFunctionLines": 472,
+      "maxFunctionComplexity": 74,
+      "rationale": "The runtime action now enforces the audited compiler-cache activity gate immediately after a successful build, so consumers receive fail-closed verification before their reusable workflow shell advances; exact existing function complexity does not increase."
     }
   },
   "approvedPublicSurfaceTransitions": {
@@ -122,6 +136,14 @@
         ]
       },
       "rationale": "Let protected stable callers select the repository-supported GitHub auto-merge method while preserving the existing opt-in and exact-source gates."
+    },
+    "cli:release-propagation": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "release-propagation",
+        "usage": "buildchain release-propagation <plan|write-lock|work|pickup> ..."
+      },
+      "rationale": "The existing release-propagation command adds a downstream-manual pickup namespace while preserving the prior plan, lock, and Work Control commands."
     },
     "workflow:.build": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-08-02T05:24:51.211Z",
-  "publishedAt": "2026-08-02T05:24:51.211Z",
+  "generatedAt": "2026-08-02T08:34:45.723Z",
+  "publishedAt": "2026-08-02T08:34:45.723Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "0e42df038cdb688330156635bbcad37e362a8345",
+  "sourceRevision": "2b5880a79f169f4a64b193a06a47b990d6585e16",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.5-alpha.4",
+    "version": "3.0.5-alpha.6",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -69,7 +69,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:4d32c82b652decfbb26b441c203fe34e70daa86022bb4baed9da02a5d6cf5831"
+      "digest": "sha256:984999dba496df640350ba27262f7112ac4574e0814fc51773a93ad22847b5bd"
     },
     {
       "id": "install",
@@ -229,7 +229,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:c728fe693ab591ab5b52f4276a817ec5a013c79833f0d20ca2cc137e85ae51ca"
+      "digest": "sha256:94207fa353e87b087ecf53b6cebe6dfffdc1311b2b6bc90b511d83d5757e7827"
     },
     {
       "id": "node-api-reference",
@@ -237,7 +237,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:62f5633ce6df3db2b92358a078dcc82d935d6fe480b9b4bf99294c0c1ccc39fb"
+      "digest": "sha256:deab508284ed365a830894205a4d293c524281d6da7126094cf8e9eea8efe223"
     },
     {
       "id": "build-facts",
@@ -277,7 +277,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:baadd0c0ef61d877b409d2bdf0e696e218971eb541c5f51a1a8e88e75af4904d"
+      "digest": "sha256:40fb5ee9bb57e668cf0a206904035936adbb8536f604e7ee4112e3aacb689230"
     },
     {
       "id": "publish-transaction",

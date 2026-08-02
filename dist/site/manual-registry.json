@@ -37,7 +37,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:4d32c82b652decfbb26b441c203fe34e70daa86022bb4baed9da02a5d6cf5831",
+      "digest": "sha256:984999dba496df640350ba27262f7112ac4574e0814fc51773a93ad22847b5bd",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -317,7 +317,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:c728fe693ab591ab5b52f4276a817ec5a013c79833f0d20ca2cc137e85ae51ca",
+      "digest": "sha256:94207fa353e87b087ecf53b6cebe6dfffdc1311b2b6bc90b511d83d5757e7827",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:62f5633ce6df3db2b92358a078dcc82d935d6fe480b9b4bf99294c0c1ccc39fb",
+      "digest": "sha256:deab508284ed365a830894205a4d293c524281d6da7126094cf8e9eea8efe223",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -403,7 +403,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:baadd0c0ef61d877b409d2bdf0e696e218971eb541c5f51a1a8e88e75af4904d",
+      "digest": "sha256:40fb5ee9bb57e668cf0a206904035936adbb8536f604e7ee4112e3aacb689230",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",

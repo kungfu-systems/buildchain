@@ -72,6 +72,41 @@ function majorLineFromPackageVersion(version = "") {
   return match ? `v${match[1]}` : "v3";
 }
 
+function declarativeAuditableDemoSurface(root, pkg, majorLine) {
+  return surface(root, {
+    id: "declarative-auditable-demo",
+    kind: "workflow",
+    path: ".github/workflows/.declarative-auditable-demo.yml",
+    publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.declarative-auditable-demo.yml@${majorLine}`,
+    requiredInputs: ["binary-artifact-name", "binary-artifact-digest", "renderer-image"],
+    requiredOutputs: [
+      "source-sha", "capture-artifact-name", "capture-artifact-digest",
+      "evidence-artifact-name", "evidence-artifact-digest", "publication-pr-url",
+    ],
+    breakingDefaults: {
+      scenarioPathDefault: ".buildchain/auditable-demo.json",
+      renderMediaDefault: false,
+      materializeDefault: false,
+      mediaProfileDefault: "responsive-web-delivery-v1",
+      artifactRetentionDaysDefault: 14,
+      executionBoundary: "exact-binary-network-none-secret-free-60-seconds",
+    },
+    optionalInputs: [
+      "buildchain-repository", "source-ref", "scenario-path", "render-media",
+      "media-profile", "materialize", "materialize-base-ref", "artifact-retention-days",
+    ],
+    guarantees: [
+      "one versioned declaration can contain multiple demos with multiple ordered literal argv steps",
+      "every demo uses the exact same-run standalone binary admitted by producer-owned artifact name and digest",
+      "capture runs without network or inherited secrets and retains independent native 1080p and 720p terminal dimensions",
+      "the generic adapter feeds the required auditable demo Gate and immutable renderer without product-specific glue",
+      "full rendering emits a content-addressed Release Passport and idempotent protected README update pull request",
+      "manual, alpha, and release callers use the same capture, Gate, renderer, passport, and materializer implementation",
+      "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority",
+    ],
+  });
+}
+
 export function createBuildchainContractWorld({
   root = process.cwd(),
   packageJson = undefined,
@@ -360,7 +395,7 @@ export function createBuildchainContractWorld({
         "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment",
       ],
-    }),
+    }), declarativeAuditableDemoSurface(root, pkg, majorLine),
     surface(root, {
       id: "promote-buildchain-ref-action",
       kind: "action",
