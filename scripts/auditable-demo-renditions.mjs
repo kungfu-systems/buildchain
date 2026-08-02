@@ -114,7 +114,7 @@ export function validateRenditionSet(output, helpers) {
     const captureBytes = readRegular(path.join(output, entry.terminalCapture), `${label} terminal capture`, maxBytes);
     const capture = validateTerminalCapture(JSON.parse(decodeUtf8(captureBytes, `${label} terminal capture`)), scene, helpers);
     invariant(entry.captureRoot === sha256(captureBytes), `${label}.captureRoot mismatch`);
-    return { ...entry, transcript, lines, scene, projection, capture };
+    return { ...entry, files: Object.fromEntries(["transcript", "projection", "scene", "terminalCapture"].map((key) => [key, entry[key]])), transcript, lines, scene, projection, capture };
   });
   invariant(normalized[0].captureRoot !== normalized[1].captureRoot, "native rendition capture roots must be distinct");
   invariant(
