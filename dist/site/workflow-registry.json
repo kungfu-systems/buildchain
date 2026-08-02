@@ -1603,12 +1603,14 @@
       "reusable": true,
       "inputs": [
         "alpha-workflow-path",
+        "auto-merge",
         "buildchain-ref",
         "buildchain-repository",
         "create-pull-request",
         "dev-workflow-path",
         "dry-run",
         "max-age-seconds",
+        "merge-method",
         "pull-request-body-prefix",
         "pull-request-body-prefix-renderer",
         "reactivation-authorized",
@@ -1616,7 +1618,7 @@
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 13,
+      "inputCount": 15,
       "secrets": [
         "promotion-token"
       ],
@@ -2493,6 +2495,7 @@
         "hold",
         "hold-reason",
         "ledger-ref",
+        "merge-method",
         "minimum-soak-seconds",
         "release-now",
         "required-checks",
@@ -2500,7 +2503,7 @@
         "revoked-versions",
         "target-branch"
       ],
-      "inputCount": 15,
+      "inputCount": 16,
       "secrets": [
         "approval-token",
         "promotion-token"

@@ -12,6 +12,7 @@ import {
 import {
   createGitHubChannelCandidateClient,
   managedCandidateFromPullRequest,
+  normalizeDevAlphaPatrolOptions,
   parseCandidateStateMarker,
   runDevAlphaCandidatePatrol,
   selectLatestQualifiedSource,
@@ -208,8 +209,14 @@ function client({
     ensureImmutableBranch: async (ref, sha) => calls.push(["branch", ref, sha]),
     ensurePullRequest: async (request) => {
       calls.push(["pr", request]);
-      return { number: 9, html_url: "https://example.invalid/pull/9" };
+      return {
+        number: 9,
+        node_id: "PR_candidate_9",
+        html_url: "https://example.invalid/pull/9",
+      };
     },
+    enableAutoMerge: async (pullRequest, mergeMethod) =>
+      calls.push(["auto-merge", pullRequest.number, mergeMethod]),
     updatePullRequestBody: async (number, body) =>
       calls.push(["update-pr", number, body]),
   };
@@ -229,9 +236,12 @@ function candidatePullRequest({
   sourceSha = ACTIVE_SHA,
   number = 17,
   body,
+  autoMerge = null,
 } = {}) {
   return {
     number,
+    node_id: `PR_candidate_${number}`,
+    auto_merge: autoMerge,
     html_url: `https://example.invalid/pull/${number}`,
     body:
       body ||
@@ -338,7 +348,7 @@ test("candidate mode creates only an immutable branch and protected PR request",
   assert.equal(fake.calls[1][1].base, "alpha/v4/v4.0");
   assert.doesNotMatch(
     fake.calls[1][1].body,
-    /auto-merge|publish npm|create release/iu,
+    /publish npm|create release/iu,
   );
   assert.equal(result.controller.state, "active");
   assert.equal(result.controller.settlementAction, "create-active-candidate");
@@ -346,6 +356,67 @@ test("candidate mode creates only an immutable branch and protected PR request",
     parseCandidateStateMarker(fake.calls[1][1].body).activeCandidate.sourceSha,
     SOURCE_SHA,
   );
+});
+
+test("candidate settlement arms auto-merge only for the managed exact-source PR", async () => {
+  const fake = client();
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: true,
+      autoMerge: true,
+      mergeMethod: "rebase",
+      dryRun: false,
+    },
+    fake,
+  );
+
+  assert.deepEqual(fake.calls[2], ["auto-merge", 9, "rebase"]);
+  assert.deepEqual(result.autoMerge, {
+    requested: true,
+    enabled: true,
+    mergeMethod: "rebase",
+  });
+});
+
+test("candidate auto-merge method is explicit and fail-closed", () => {
+  assert.equal(
+    normalizeDevAlphaPatrolOptions({ ...patrolOptions, mergeMethod: "REBASE" })
+      .mergeMethod,
+    "rebase",
+  );
+  assert.throws(
+    () =>
+      normalizeDevAlphaPatrolOptions({
+        ...patrolOptions,
+        mergeMethod: "fast-forward",
+      }),
+    /mergeMethod must be merge, squash, or rebase/u,
+  );
+});
+
+test("candidate settlement preserves already-enabled auto-merge idempotently", async () => {
+  const fake = client({
+    openPullRequests: [
+      candidatePullRequest({
+        sourceSha: SOURCE_SHA,
+        autoMerge: { merge_method: "rebase" },
+      }),
+    ],
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      settlementAuthorized: true,
+      autoMerge: true,
+      mergeMethod: "rebase",
+      dryRun: false,
+    },
+    fake,
+  );
+
+  assert.equal(fake.calls.some(([operation]) => operation === "auto-merge"), false);
+  assert.equal(result.autoMerge.enabled, true);
 });
 
 test("candidate creation prepends a repository-owned governance declaration", async () => {
@@ -834,13 +905,18 @@ test("reusable workflow retains the no-publication boundary", () => {
     /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_PRIOR_STATE_ROOT: \$\{\{ needs\.observe\.outputs\.prior-state-root \}\}/u,
   );
   assert.match(workflowText, /reactivation-authorized:/u);
+  assert.match(workflowText, /auto-merge:/u);
+  assert.match(workflowText, /merge-method:/u);
   const observeJob = workflowText.split("\n  settle:")[0];
   assert.doesNotMatch(observeJob, /secrets\.promotion-token/u);
+  assert.doesNotMatch(observeJob, /BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE/u);
   const settleJob = workflowText.split("\n  settle:")[1] || "";
   assert.doesNotMatch(settleJob, /PR_BODY_PREFIX_RENDERER/u);
+  assert.match(settleJob, /BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE/u);
+  assert.match(settleJob, /BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD/u);
   assert.match(workflowText, /scripts\/dev-alpha-candidate-patrol\.mjs/u);
   assert.doesNotMatch(
     workflowText,
-    /npm publish|gh release create|git tag|auto-merge/iu,
+    /npm publish|gh release create|git tag/iu,
   );
 });

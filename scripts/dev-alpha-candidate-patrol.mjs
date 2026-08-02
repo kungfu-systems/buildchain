@@ -24,6 +24,16 @@ function bool(value, fallback = false) {
   return ["1", "true", "yes", "on"].includes(text(value).toLowerCase());
 }
 
+function autoMergeMethod(value, fallback = "merge") {
+  const normalized = text(value || fallback).toLowerCase();
+  if (!["merge", "squash", "rebase"].includes(normalized)) {
+    throw new Error(
+      `mergeMethod must be merge, squash, or rebase, got ${value || "<empty>"}`,
+    );
+  }
+  return normalized;
+}
+
 function repository(value) {
   const normalized = text(value);
   if (!/^[^/\s]+\/[^/\s]+$/.test(normalized))
@@ -169,6 +179,8 @@ export function managedCandidateFromPullRequest(pullRequest, targetBranch) {
     }
     return {
       number: Number(pullRequest.number),
+      nodeId: text(pullRequest.node_id),
+      autoMerge: pullRequest.auto_merge || null,
       url: text(pullRequest.html_url),
       body,
       sourceSha,
@@ -191,6 +203,8 @@ export function managedCandidateFromPullRequest(pullRequest, targetBranch) {
     );
   return {
     number: Number(pullRequest.number),
+    nodeId: text(pullRequest.node_id),
+    autoMerge: pullRequest.auto_merge || null,
     url: text(pullRequest.html_url),
     body,
     sourceSha,
@@ -281,6 +295,14 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
       options.settlementAuthorized ??
         process.env.BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED,
       createPullRequest,
+    ),
+    autoMerge: bool(
+      options.autoMerge ?? process.env.BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE,
+      false,
+    ),
+    mergeMethod: autoMergeMethod(
+      options.mergeMethod ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD,
     ),
     dryRun: bool(
       options.dryRun ?? process.env.BUILDCHAIN_CHANNEL_PATROL_DRY_RUN,
@@ -541,10 +563,48 @@ function pullRequestBody({
         `- ${row.workflowName}: [run ${row.runId} attempt ${row.runAttempt}](${row.url})`,
     ),
     "",
-    "The source-lock branch must continue to point at the exact source SHA. This patrol never merges the PR, publishes a package, creates a tag, or creates a release.",
+    "The source-lock branch must continue to point at the exact source SHA. This patrol never directly merges the PR, publishes a package, creates a tag, or creates a release. Repository policy may arm GitHub auto-merge while every protected branch gate remains authoritative.",
     "",
     candidateStateMarker(state),
   ].join("\n");
+}
+
+async function armCandidateAutoMerge(
+  options,
+  controllerState,
+  pullRequest,
+  client,
+) {
+  if (
+    !options.autoMerge ||
+    !options.settlementAuthorized ||
+    options.dryRun ||
+    controllerState !== "active" ||
+    !pullRequest
+  ) {
+    return {
+      requested: options.autoMerge,
+      enabled: false,
+      mergeMethod: options.mergeMethod,
+    };
+  }
+  if (!pullRequest.auto_merge) {
+    await client.enableAutoMerge(pullRequest, options.mergeMethod);
+  }
+  return {
+    requested: true,
+    enabled: true,
+    mergeMethod: options.mergeMethod,
+  };
+}
+
+function activePullRequest(candidate) {
+  return {
+    number: candidate.number,
+    node_id: candidate.nodeId,
+    auto_merge: candidate.autoMerge,
+    html_url: candidate.url,
+  };
 }
 
 export async function runDevAlphaCandidatePatrol(
@@ -793,10 +853,7 @@ export async function runDevAlphaCandidatePatrol(
             : "retain-next-candidate"
           : "reconcile-active-candidate";
       }
-      pullRequest = {
-        number: activeCandidate.number,
-        html_url: activeCandidate.url,
-      };
+      pullRequest = activePullRequest(activeCandidate);
     } else if (decision.eligible) {
       await client.ensureImmutableBranch(decision.sourceLockRef, sourceSha);
       state = candidateStateBody({
@@ -870,11 +927,13 @@ export async function runDevAlphaCandidatePatrol(
       }
     }
   }
+  const autoMerge = await armCandidateAutoMerge(options, controllerState, pullRequest, client);
   return {
     schema: "kungfu-buildchain-dev-alpha-candidate-patrol/v1",
     dryRun: options.dryRun,
     createPullRequest: options.createPullRequest,
     settlementAuthorized: options.settlementAuthorized,
+    autoMerge,
     decision,
     controller: {
       schema: DEV_ALPHA_CANDIDATE_STATE_SCHEMA,
@@ -1029,6 +1088,22 @@ export function createGitHubChannelCandidateClient({
       return api(`/repos/${owner}/${repo}/pulls`, {
         method: "POST",
         body: { head, base, title, body },
+      });
+    },
+    async enableAutoMerge(pullRequest, mergeMethod) {
+      if (!text(pullRequest.node_id)) {
+        throw new Error("candidate pull request has no GraphQL node id");
+      }
+      const query = `mutation($id:ID!,$mergeMethod:PullRequestMergeMethod!){enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:$mergeMethod}){pullRequest{url}}}`;
+      return api("/graphql", {
+        method: "POST",
+        body: {
+          query,
+          variables: {
+            id: pullRequest.node_id,
+            mergeMethod: autoMergeMethod(mergeMethod).toUpperCase(),
+          },
+        },
       });
     },
     async updatePullRequestBody(
