@@ -199,6 +199,10 @@ paid launch. Reservations are never refunded: a controller crash, ambiguous
 launch, or successful launch all remain charged to the campaign, favoring a
 false stop over an accidental budget overrun.
 
+Each stack owns a stack-scoped reaper log group, so an independent retained
+one-shot campaign stack can be created without colliding with another
+campaign's audit log resource.
+
 The tag-filtered AWS Budget is defense in depth, not the authoritative launch
 gate. It is disabled by default because a linked account cannot activate a
 cost-allocation tag. Set `EnableTagFilteredBudget=true` only after the AWS
@@ -216,8 +220,9 @@ final job.
 
 `scripts/aws-windows-jit-campaign.mjs` is the one-shot operator boundary.
 Without a mutation mode it emits the arm plan. `arm-campaign` requires the
-campaign id, exact source SHA, state table, and observed prior phase spend to
-be repeated as confirmations, then creates `CONTROL` and `CAMPAIGN#<id>` with
+campaign id, exact source SHA, state table, observed prior phase spend, and a
+bounded one-to-five accepted-instance ceiling to be repeated as confirmations,
+then creates `CONTROL` and `CAMPAIGN#<id>` with
 `attribute_not_exists`
 conditions. DynamoDB therefore refuses a second campaign in the same retained
 state table. The operator can always use `kill-campaign`; there is deliberately
@@ -241,13 +246,15 @@ windows_source=REPLACE_WITH_EXACT_40_CHARACTER_SHA
 windows_state_table=REPLACE_WITH_CAMPAIGN_STATE_TABLE
 windows_expires_at=REPLACE_WITH_ISO_TIMESTAMP_WITHIN_24_HOURS
 windows_phase_spend_baseline_usd=REPLACE_WITH_OBSERVED_PRIOR_WINDOWS_SPEND
+windows_max_accepted_instances=REPLACE_WITH_INTEGER_FROM_1_THROUGH_5
 
 node scripts/aws-windows-jit-campaign.mjs plan-arm \
   --campaign-id "$windows_campaign" \
   --source-sha "$windows_source" \
   --state-table "$windows_state_table" \
   --expires-at "$windows_expires_at" \
-  --phase-spend-baseline-usd "$windows_phase_spend_baseline_usd"
+  --phase-spend-baseline-usd "$windows_phase_spend_baseline_usd" \
+  --max-accepted-instances "$windows_max_accepted_instances"
 
 node scripts/aws-windows-jit-campaign.mjs arm-campaign \
   --campaign-id "$windows_campaign" \
@@ -258,11 +265,14 @@ node scripts/aws-windows-jit-campaign.mjs arm-campaign \
   --confirm-state-table "$windows_state_table" \
   --expires-at "$windows_expires_at" \
   --phase-spend-baseline-usd "$windows_phase_spend_baseline_usd" \
-  --confirm-phase-spend-baseline-usd "$windows_phase_spend_baseline_usd"
+  --confirm-phase-spend-baseline-usd "$windows_phase_spend_baseline_usd" \
+  --max-accepted-instances "$windows_max_accepted_instances" \
+  --confirm-max-accepted-instances "$windows_max_accepted_instances"
 ```
 
-Arming creates a permanent one-shot control record and admits up to five paid
-instances. Its rollback is fail-closed, not deletion: `kill-campaign` first
+Arming creates a permanent one-shot control record and admits only the
+explicitly confirmed number of paid instances, never more than five. Its
+rollback is fail-closed, not deletion: `kill-campaign` first
 persists `KILLED`, then publishes to the dedicated SNS topic so the reaper
 terminates active card-owned instances and removes their JIT parameters. The
 command is idempotent, but the operator must read back DynamoDB, EC2, SSM, and

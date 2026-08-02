@@ -201,6 +201,7 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /SecurityGroupIngress: \[\]/);
   assert.match(stack, /MaximumInstanceLifetimeMinutes/);
   assert.match(stack, /rate\(5 minutes\)/);
+  assert.match(stack, /reaper\/\$\{AWS::StackName\}/);
   assert.match(stack, /ec2:TerminateInstances/);
   assert.match(stack, /ssm:GetParameter/);
   assert.match(stack, /s3:PutObject/);
