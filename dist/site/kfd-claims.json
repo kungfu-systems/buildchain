@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "64527faf6cc114ad6f37e1ddab0dce87c0b3719cdf6957dcc34a552cd52f07e3",
+    "sha256": "1d5484a84ded0743d94e80c3a3afec0f704558fc66039d10e516ffe02073828b",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 57,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "64527faf6cc114ad6f37e1ddab0dce87c0b3719cdf6957dcc34a552cd52f07e3",
+      "sha256": "1d5484a84ded0743d94e80c3a3afec0f704558fc66039d10e516ffe02073828b",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 57,
@@ -3334,7 +3334,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 82,
+          "inputCount": 83,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3370,6 +3370,7 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "checkout-history-mode",
             "compiler-cache-platforms-json",
             "compiler-cache-provider",
             "compiler-cache-required",
@@ -4029,7 +4030,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 85,
+          "inputCount": 86,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -4068,6 +4069,7 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "checkout-history-mode",
             "compiler-cache-platforms-json",
             "compiler-cache-provider",
             "compiler-cache-required",
