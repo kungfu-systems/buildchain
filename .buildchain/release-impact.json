@@ -425,6 +425,13 @@
       "source": "docs/getting-started.md"
     },
     {
+      "id": "package-release-source-bound-exact-tag",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "New package publish transactions bind the immutable public version tag to source_sha so npm gitHead, the Git tag, and downstream release envelopes identify one source commit, while floating channel refs remain on generated release state and legacy release-material tag targets stay accepted for recovery.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
       "id": "package-release-propagation-work-capture",
       "impact": "minor",
       "class": "release-propagation",
@@ -436,5 +443,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, aligned propagation receipts, claim-only package propagation Work capture, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
+  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, source-bound immutable package tags, aligned propagation receipts, claim-only package propagation Work capture, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
 }
