@@ -206,7 +206,8 @@ export function resolveNpmRegistryRelease({
       "npm SLSA statement predicate type disagrees with its envelope",
     );
   }
-  const expectedSubject = `pkg:npm/${encodeURIComponent(source.package)}@${version}`;
+  const purlName = encodeURIComponent(source.package).replace("%2F", "/");
+  const expectedSubject = `pkg:npm/${purlName}@${version}`;
   const subject = (statement.subject || []).find(
     (entry) => entry.name === expectedSubject,
   );
