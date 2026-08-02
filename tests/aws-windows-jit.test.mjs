@@ -208,8 +208,13 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /Type: AWS::DynamoDB::Table/);
   assert.match(stack, /PointInTimeRecoveryEnabled: true/);
   assert.match(stack, /dynamodb:TransactWriteItems/);
+  assert.match(stack, /dynamodb:GetItem/);
   assert.match(stack, /STATE_TABLE: !Ref CampaignState/);
   assert.match(stack, /kill_campaign\(/);
+  assert.match(stack, /ConsistentRead=True/);
+  assert.match(stack, /control_killed = campaign_killed\(\)/);
+  assert.match(stack, /kill_all = sns_kill or control_killed/);
+  assert.match(stack, /if sns_kill and not control_killed:/);
   assert.match(stack, /runner-lifetime-violation/);
   assert.match(stack, /TagFilteredBudgetConfirmed/);
   assert.match(stack, /disabled-until-cost-allocation-tag-is-active/);
