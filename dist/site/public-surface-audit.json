@@ -677,6 +677,7 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "checkout-history-mode",
           "compiler-cache-platforms-json",
           "compiler-cache-provider",
           "compiler-cache-required",
@@ -726,7 +727,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 82,
+        "inputCount": 83,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1496,6 +1497,7 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "checkout-history-mode",
           "compiler-cache-platforms-json",
           "compiler-cache-provider",
           "compiler-cache-required",
@@ -1545,7 +1547,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 85,
+        "inputCount": 86,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -7028,8 +7030,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0db010925d1c60209c3dac8bc2797537f307ab21bc68084263e79004c5c16ff7",
-    "workflowRegistryDigest": "b5b860965abf645e1618d7840db544d638fd8ea3d0ee04ed00ccd4c8f8ccaabb",
-    "pageRegistryDigest": "13e408bcfe519ed58f0723980506c522bf124921883c880ac89258db28b06ce5"
+    "workflowRegistryDigest": "4f1b9a933e117abc5fc4212241c83a35609f23477dac98d6cd37c4b40b57ba29",
+    "pageRegistryDigest": "f5379db22d99231ba44509021eba8923230f3707b1b3c79e9d3f55077ecadbf7"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -337,6 +337,31 @@ test("mirror source fetch retries without depth when dumb HTTP rejects shallow f
   assert.equal(result.fetchMode, "full");
 });
 
+test("full-history source fetch retains the advertised ref ancestry", () => {
+  const calls = [];
+  const result = fetchSourceCommit({
+    targetPath: "/tmp/buildchain-source-fetch-full-history-fixture",
+    remoteName: "origin",
+    remoteUrl: "https://github.com/kungfu-systems/example.git",
+    sha: "c".repeat(40),
+    fetchRef: "refs/pull/2172/merge",
+    timeoutMs: 60000,
+    historyMode: "full",
+    runGit: (args, options) => {
+      calls.push({ args, options });
+      return "";
+    },
+    containsCommit: () => true,
+  });
+
+  const fetches = calls.filter(({ args }) => args[0] === "fetch");
+  assert.equal(fetches.length, 1);
+  assert.ok(!fetches[0].args.some((arg) => arg.startsWith("--depth")));
+  assert.equal(fetches[0].args.at(-1), "+refs/pull/2172/merge:refs/buildchain/source-ref");
+  assert.equal(result.selector, "ref");
+  assert.equal(result.fetchMode, "full");
+});
+
 test("locked checkout accepts a regenerated pull merge commit with the exact locked tree", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pull-merge-origin-"));
   git(["init"], root);
