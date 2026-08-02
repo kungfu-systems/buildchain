@@ -291,7 +291,7 @@ function createDurableTransactionOperations(context) {
       ) {
         await ensureTag(
           publicReleaseTag,
-          latestPublishTransaction.transaction.release_sha,
+          latestPublishTransaction.transaction.source_sha,
         );
       }
     }
