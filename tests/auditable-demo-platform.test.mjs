@@ -6,7 +6,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-import { adaptCapture, materializeDemo, validateScenario } from "../scripts/auditable-demo-platform.mjs";
+import { adaptCapture, materializeDemo, prepareArtifact, validateScenario } from "../scripts/auditable-demo-platform.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const NON_AUTHORITIES = [
@@ -74,9 +74,13 @@ function scenario() {
 function fixture(t) {
   const root = temporary(t);
   const artifact = path.join(root, "artifact");
-  fs.mkdirSync(artifact);
+  fs.mkdirSync(path.join(artifact, "runtime"), { recursive: true });
   const binary = path.join(artifact, "fixture");
-  fs.writeFileSync(binary, `#!/usr/bin/env python3
+  const runtime = path.join(artifact, "runtime", "fixture-runtime");
+  fs.writeFileSync(binary, `#!/bin/sh
+exec "$(dirname "$0")/runtime/fixture-runtime" "$@"
+`);
+  fs.writeFileSync(runtime, `#!/usr/bin/env python3
 import json, os, sys, time
 if sys.argv[1:] == ["write"]:
   open("state.json", "w", encoding="utf-8").write(json.dumps({"status":"ready"}))
@@ -96,8 +100,19 @@ else:
   raise SystemExit(2)
 `);
   fs.chmodSync(binary, 0o755);
+  fs.chmodSync(runtime, 0o755);
   const digest = crypto.createHash("sha256").update(fs.readFileSync(binary)).digest("hex");
-  writeJson(path.join(artifact, "fixture.json"), { contract: "fixture.binary/v1", platformId: "linux-x64", sha256: digest, runtimeDependencies: [] });
+  const runtimeDigest = crypto.createHash("sha256").update(fs.readFileSync(runtime)).digest("hex");
+  writeJson(path.join(artifact, "fixture.json"), {
+    contract: "fixture.binary/v1",
+    platformId: "linux-x64",
+    sha256: digest,
+    executableFiles: [
+      { path: "fixture", sha256: digest },
+      { path: "runtime/fixture-runtime", sha256: runtimeDigest },
+    ],
+    runtimeDependencies: [],
+  });
   const scenarioPath = path.join(root, "scenario.json");
   writeJson(scenarioPath, scenario());
   const coordinate = path.join(root, "coordinate.json");
@@ -115,7 +130,7 @@ else:
     createdAt: "2026-08-02T00:00:00Z",
     expiresAt: "2026-08-16T00:00:00Z",
   });
-  return { root, artifact, scenarioPath, coordinate };
+  return { root, artifact, binary, runtime, scenarioPath, coordinate };
 }
 
 function capture(t, demoId, transformScenario = null) {
@@ -169,6 +184,44 @@ test("duration class keeps standard at 60 seconds and admits only bounded long-f
   longForm.execution.totalTimeoutSeconds = 180;
   longForm.demos[0].steps[0].timeoutSeconds = 181;
   assert.throws(() => validateScenario(longForm), /timeoutSeconds/u);
+});
+
+test("artifact preparation restores only the exact digest-bound executable closure", { skip: process.platform === "win32" }, (t) => {
+  const value = fixture(t);
+  const inert = path.join(value.artifact, "inert-data");
+  fs.writeFileSync(inert, "not executable\n");
+  fs.chmodSync(value.binary, 0o644);
+  fs.chmodSync(value.runtime, 0o644);
+  fs.chmodSync(inert, 0o644);
+
+  const result = prepareArtifact({ artifactRoot: value.artifact, scenarioPath: value.scenarioPath });
+  assert.deepEqual(result.executableFiles.map((entry) => entry.path), ["fixture", "runtime/fixture-runtime"]);
+  assert.notEqual(fs.statSync(value.binary).mode & 0o111, 0);
+  assert.notEqual(fs.statSync(value.runtime).mode & 0o111, 0);
+  assert.equal(fs.statSync(inert).mode & 0o111, 0, "undeclared files remain untouched");
+  assert.deepEqual(result.authority.grants, []);
+});
+
+test("artifact preparation rejects unsafe or digest-drifted executable declarations", (t) => {
+  const unsafe = fixture(t);
+  const unsafeMetadataPath = path.join(unsafe.artifact, "fixture.json");
+  const unsafeMetadata = JSON.parse(fs.readFileSync(unsafeMetadataPath, "utf8"));
+  unsafeMetadata.executableFiles[1].path = "../fixture-runtime";
+  writeJson(unsafeMetadataPath, unsafeMetadata);
+  assert.throws(
+    () => prepareArtifact({ artifactRoot: unsafe.artifact, scenarioPath: unsafe.scenarioPath }),
+    /escapes its root/u,
+  );
+
+  const drifted = fixture(t);
+  const driftedMetadataPath = path.join(drifted.artifact, "fixture.json");
+  const driftedMetadata = JSON.parse(fs.readFileSync(driftedMetadataPath, "utf8"));
+  driftedMetadata.executableFiles[1].sha256 = "0".repeat(64);
+  writeJson(driftedMetadataPath, driftedMetadata);
+  assert.throws(
+    () => prepareArtifact({ artifactRoot: drifted.artifact, scenarioPath: drifted.scenarioPath }),
+    /digest differs/u,
+  );
 });
 
 test("capture shares ordered state within a demo and creates independent native renditions", { skip: process.platform === "win32" }, (t) => {
@@ -345,6 +398,7 @@ test("Gate smoke stays bounded while full render consumes both native captures",
   assert.match(full, /--terminal-capture \/input\/terminal-capture\.json/u);
   assert.match(full, /--rendition-set \/input\/rendition-set\.json/u);
   assert.match(workflow, /demo-renderer --validate-only[\s\S]*--rendition-set/u);
+  assert.match(workflow, /prepare-artifact[\s\S]*--artifact-root "source-artifact"/u);
 });
 
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {

@@ -38,6 +38,7 @@ RENDITIONS = [
 ]
 STANDARD_MAX_SECONDS = 60
 LONG_FORM_MAX_SECONDS = 180
+MAX_EXECUTABLE_FILES = 32
 MAX_CAPTURE_EVENTS = 10_000
 
 
@@ -251,15 +252,35 @@ def validate_binary(root: Path, scenario: dict[str, Any]) -> tuple[Path, dict[st
     artifact = scenario.get("artifact") or {}
     binary = inside(root, artifact.get("binaryPath"), "binaryPath")
     metadata_path = inside(root, artifact.get("metadataPath"), "metadataPath")
-    require(binary.is_file() and not binary.is_symlink() and os.access(binary, os.X_OK), "binary must be a regular executable")
     metadata = read_object(metadata_path, "binary metadata")
     require(metadata.get("contract") == artifact.get("metadataContract"), "binary metadata contract mismatch")
     require((metadata.get("platformId") or metadata.get("platform")) == artifact.get("platformId"),
             "binary metadata platform mismatch")
     require(metadata.get("runtimeDependencies") == artifact.get("runtimeDependencies") == [], "binary must be standalone")
+    executable_files = metadata.get("executableFiles")
+    require(isinstance(executable_files, list) and 1 <= len(executable_files) <= MAX_EXECUTABLE_FILES,
+            "binary metadata executableFiles must be a bounded non-empty array")
+    declared: set[str] = set()
+    declared_digests: dict[str, str] = {}
+    for index, entry in enumerate(executable_files):
+        label = f"binary metadata executableFiles[{index}]"
+        require(isinstance(entry, dict) and set(entry) == {"path", "sha256"}, f"{label} must contain only path and sha256")
+        relative = entry.get("path")
+        require(isinstance(relative, str) and relative not in declared, f"{label}.path is invalid or repeated")
+        declared.add(relative)
+        executable = inside(root, relative, f"{label}.path")
+        require(executable.is_file() and not executable.is_symlink() and os.access(executable, os.X_OK),
+                f"{label} must be a regular executable")
+        expected = entry.get("sha256")
+        require(DIGEST.fullmatch(str(expected or "")) is not None, f"{label}.sha256 is invalid")
+        observed_executable = hashlib.sha256(executable.read_bytes()).hexdigest()
+        require(expected == observed_executable, f"{label} digest differs from exact artifact metadata")
+        declared_digests[relative] = expected
+    require(artifact.get("binaryPath") in declared, "binary metadata executableFiles must include binaryPath")
     observed = hashlib.sha256(binary.read_bytes()).hexdigest()
     match = DIGEST.fullmatch(str(metadata.get("sha256") or ""))
-    require(match is not None and match.group(1) == observed, "binary digest differs from exact artifact metadata")
+    require(match is not None and match.group(1) == observed == declared_digests[artifact["binaryPath"]],
+            "binary digest differs from exact artifact metadata")
     return binary, metadata, f"sha256:{observed}"
 
 
