@@ -197,6 +197,16 @@ on:
           build/stage
         type: string
         required: false
+      pre-upload-transport-smoke-scenario-path:
+        description: "Optional declarative demo scenario, relative to working-directory, whose transport smoke must pass before Linux artifact upload"
+        default: ""
+        type: string
+        required: false
+      pre-upload-transport-smoke-artifact-root:
+        description: "Artifact root, relative to working-directory, used by the pre-upload transport simulation"
+        default: "."
+        type: string
+        required: false
       credential-island-macos-app-path:
         description: "Optional exact .app path to seal for a protected macOS credential-island job"
         default: ""
@@ -1624,6 +1634,17 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Simulate artifact transport before upload
+        if: ${{ matrix.platform.id == 'linux-x64' && inputs.pre-upload-transport-smoke-scenario-path != '' }}
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT: ${{ inputs.pre-upload-transport-smoke-artifact-root }}
+          BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO: ${{ inputs.pre-upload-transport-smoke-scenario-path }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/auditable-demo-transport-smoke.mjs"
+          --artifact-root "${BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT}"
+          --scenario "${BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO}"
+
       - name: Seal macOS credential-island input
         if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
         run: node .buildchain/runtime/scripts/seal-macos-credential-input.mjs
@@ -2085,6 +2106,17 @@ jobs:
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+
+      - name: Simulate artifact transport before upload
+        if: ${{ matrix.platform.id == 'linux-x64' && inputs.pre-upload-transport-smoke-scenario-path != '' }}
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT: ${{ inputs.pre-upload-transport-smoke-artifact-root }}
+          BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO: ${{ inputs.pre-upload-transport-smoke-scenario-path }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/auditable-demo-transport-smoke.mjs"
+          --artifact-root "${BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT}"
+          --scenario "${BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO}"
 
       - name: Create GitHub artifact attestation policy
         if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}

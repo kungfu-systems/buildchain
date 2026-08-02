@@ -7,6 +7,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 
 import { adaptCapture, materializeDemo, prepareArtifact, validateScenario } from "../scripts/auditable-demo-platform.mjs";
+import { runTransportSmoke } from "../scripts/auditable-demo-transport-smoke.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const NON_AUTHORITIES = [
@@ -45,13 +46,14 @@ function writeChecksums(root) {
 
 function scenario() {
   const step = (id, argv, stdoutIncludes, fileAssertions = []) => ({
-    id, argv, timeoutSeconds: 10, expectedExitCodes: [0], stdoutIncludes, fileAssertions,
+    id, argv, timeoutSeconds: 20, expectedExitCodes: [0], stdoutIncludes, fileAssertions,
   });
   return {
     schema: "buildchain.declarative-binary-demo/v1",
     product: { id: "fixture", displayName: "Fixture CLI", binaryName: "fixture" },
     artifact: { platformId: "linux-x64", binaryPath: "fixture", metadataPath: "fixture.json", metadataContract: "fixture.binary/v1", runtimeDependencies: [] },
     execution: { deterministic: true, network: "none", secrets: "none", totalTimeoutSeconds: 30, environment: {} },
+    transportSmoke: { argv: ["independent"], timeoutSeconds: 20, expectedExitCodes: [0], stdoutIncludes: ["INDEPENDENT END"] },
     renditions: RENDITIONS,
     demos: [
       {
@@ -184,6 +186,10 @@ test("duration class keeps standard at 60 seconds and admits only bounded long-f
   longForm.execution.totalTimeoutSeconds = 180;
   longForm.demos[0].steps[0].timeoutSeconds = 181;
   assert.throws(() => validateScenario(longForm), /timeoutSeconds/u);
+
+  const unboundedSmoke = structuredClone(scenario());
+  unboundedSmoke.transportSmoke.timeoutSeconds = 61;
+  assert.throws(() => validateScenario(unboundedSmoke), /transport smoke timeout/u);
 });
 
 test("artifact preparation restores only the exact digest-bound executable closure", { skip: process.platform === "win32" }, (t) => {
@@ -221,6 +227,24 @@ test("artifact preparation rejects unsafe or digest-drifted executable declarati
   assert.throws(
     () => prepareArtifact({ artifactRoot: drifted.artifact, scenarioPath: drifted.scenarioPath }),
     /digest differs/u,
+  );
+});
+
+test("pre-upload transport smoke catches an omitted executable before artifact upload", { skip: process.platform === "win32" }, (t) => {
+  const qualified = fixture(t);
+  const receipt = runTransportSmoke({ artifactRoot: qualified.artifact, scenarioPath: qualified.scenarioPath });
+  assert.equal(receipt.status, "passed");
+  assert.equal(receipt.exitCode, 0);
+  assert.deepEqual(receipt.authority.grants, []);
+
+  const incomplete = fixture(t);
+  const metadataPath = path.join(incomplete.artifact, "fixture.json");
+  const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+  metadata.executableFiles = metadata.executableFiles.slice(0, 1);
+  writeJson(metadataPath, metadata);
+  assert.throws(
+    () => runTransportSmoke({ artifactRoot: incomplete.artifact, scenarioPath: incomplete.scenarioPath }),
+    /transport smoke exited with|Permission denied/u,
   );
 });
 
@@ -399,6 +423,19 @@ test("Gate smoke stays bounded while full render consumes both native captures",
   assert.match(full, /--rendition-set \/input\/rendition-set\.json/u);
   assert.match(workflow, /demo-renderer --validate-only[\s\S]*--rendition-set/u);
   assert.match(workflow, /prepare-artifact[\s\S]*--artifact-root "source-artifact"/u);
+});
+
+test("reusable builds run the transport simulation before either artifact upload path", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.build.yml"), "utf8");
+  assert.equal(workflow.match(/name: Simulate artifact transport before upload/gu)?.length, 2);
+  for (const start of [
+    workflow.indexOf("name: Simulate artifact transport before upload"),
+    workflow.lastIndexOf("name: Simulate artifact transport before upload"),
+  ]) {
+    const block = workflow.slice(start, workflow.indexOf("name: Upload deterministic artifact", start));
+    assert.match(block, /auditable-demo-transport-smoke\.mjs/u);
+    assert.match(block, /name: Upload payload to S3 artifact relay/u);
+  }
 });
 
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {

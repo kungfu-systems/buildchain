@@ -1,10 +1,9 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-08-02T08:34:45.723Z",
-  "publishedAt": "2026-08-02T08:34:45.723Z",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
   "reproducible": true,
-  "timestampPolicy": "ci-injected",
+  "timestampPolicy": "source-date-epoch",
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
@@ -13,13 +12,11 @@
     "packages/core/README.md",
     "package.json#exports",
     "tests/buildchain-inventory.json",
-    "sourceRevision",
     "sourceDateEpoch",
     "package content",
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "2b5880a79f169f4a64b193a06a47b990d6585e16",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -69,7 +66,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:984999dba496df640350ba27262f7112ac4574e0814fc51773a93ad22847b5bd"
+      "digest": "sha256:7e1426d8200bd4e7a7e6684c872f47075cd37d0bddbb262ea3263eaad846b540"
     },
     {
       "id": "install",
@@ -277,7 +274,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:a3b8237651da5c1600c2eaf8fdbccc7bb3606f119136062bdea98715166c9d61"
+      "digest": "sha256:0524ac7458504287a6ba90f5481d8f957defd8424f932b28887e4f7fe4d70c05"
     },
     {
       "id": "publish-transaction",

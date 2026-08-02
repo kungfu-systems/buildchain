@@ -105,6 +105,8 @@ jobs:
       artifact-paths: |
         dist
         build/stage
+      pre-upload-transport-smoke-scenario-path: .buildchain/auditable-demo.json
+      pre-upload-transport-smoke-artifact-root: .
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["dist/libnode.tar.gz","dist/checksums.txt"]}
       process-summary-path: .buildchain/diagnostics/process-summary.json
@@ -112,6 +114,15 @@ jobs:
       publish-channel: release
       publish-source-ref: publish-gate/release/v22/v22.22/22.22.3-kf.0
 ```
+
+For a standalone Linux binary demo, the optional pre-upload transport smoke
+uses the same declarative scenario as the later capture workflow. Buildchain
+copies the distribution containing the scenario metadata, strips file execute
+bits to model GitHub Artifact transport, restores only the declared
+digest-bound executable closure, and runs `transportSmoke` before either the
+GitHub Artifact or S3 relay upload step. The smoke must be non-interactive and
+is hard-capped at 60 seconds. Omitting the input preserves the ordinary build
+surface; enabling it requires a scenario with `transportSmoke`.
 
 `runner-preset` is the stable first-class surface for known runner fleets:
 

@@ -61,6 +61,16 @@ the network-disabled capture boundary. It never recursively changes artifact
 modes. This metadata controls assembly only and grants no execution,
 publication, or identity authority. Capture rejects an artifact name or upload
 digest that does not resolve to exactly one live artifact from the current workflow run.
+
+Consumers may also declare one bounded, non-interactive `transportSmoke` argv
+in the same scenario and opt the reusable build into
+`pre-upload-transport-smoke-scenario-path`. Before any GitHub Artifact or S3
+relay upload, Buildchain copies the exact distribution directory, removes Unix
+execute bits to simulate transport, restores only the digest-bound executable
+closure, and runs that real binary with a clean Home/XDG environment. A missing
+launcher, runtime, or embedded interpreter therefore fails before the expensive
+upload begins. This is a transport diagnostic with no authority grants; the
+later network-disabled capture and Gate remain the qualification authority.
 It retains ANSI terminal bytes with the real PTY read timestamps, verifies
 declared stdout and JSON file facts, enforces the total deadline while a step is
 running, and removes the disposable workspace before emitting evidence.

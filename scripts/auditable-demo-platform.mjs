@@ -144,6 +144,14 @@ function validateArtifact(artifact) {
   requireValue(Array.isArray(artifact.runtimeDependencies) && artifact.runtimeDependencies.length === 0, "scenario artifact must be standalone");
 }
 
+function validateTransportSmoke(smoke) {
+  exactKeys(smoke, ["argv", "timeoutSeconds", "expectedExitCodes", "stdoutIncludes"], [], "scenario.transportSmoke");
+  requireValue(Array.isArray(smoke.argv) && smoke.argv.length >= 1 && smoke.argv.length <= 64 && smoke.argv.every((item) => typeof item === "string" && !item.includes("\0") && item.length <= 512), "scenario transport smoke argv is invalid");
+  requireValue(Number.isInteger(smoke.timeoutSeconds) && smoke.timeoutSeconds >= 1 && smoke.timeoutSeconds <= STANDARD_MAX_SECONDS, "scenario transport smoke timeout is invalid");
+  requireValue(Array.isArray(smoke.expectedExitCodes) && smoke.expectedExitCodes.length >= 1 && smoke.expectedExitCodes.length <= 4 && smoke.expectedExitCodes.every((item) => Number.isInteger(item) && item >= 0 && item <= 255), "scenario transport smoke expected exits are invalid");
+  requireValue(Array.isArray(smoke.stdoutIncludes) && smoke.stdoutIncludes.length <= 32 && smoke.stdoutIncludes.every((item) => typeof item === "string" && item.length >= 1 && item.length <= 256), "scenario transport smoke stdout assertions are invalid");
+}
+
 function validateExecutableClosure({ artifactRoot, scenario, requireExecutable }) {
   const root = path.resolve(artifactRoot);
   const artifact = scenario.artifact;
@@ -226,7 +234,7 @@ function validateDemo(demo, index, demoIds, maximumSeconds) {
 }
 
 export function validateScenario(value) {
-  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], [], "scenario");
+  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["transportSmoke"], "scenario");
   requireValue(value.schema === "buildchain.declarative-binary-demo/v1", "unsupported scenario schema");
   validateProduct(value.product);
   validateArtifact(value.artifact);
@@ -235,6 +243,7 @@ export function validateScenario(value) {
   requireValue(Array.isArray(value.demos) && value.demos.length >= 1 && value.demos.length <= 8, "scenario requires 1 through 8 demos");
   const demoIds = new Set();
   value.demos.forEach((demo, index) => validateDemo(demo, index, demoIds, executionPolicy.maximumSeconds));
+  if (value.transportSmoke) validateTransportSmoke(value.transportSmoke);
   exactKeys(value.publication, ["evidencePath", "readmePath", "marker"], [], "scenario.publication");
   inside("/repository", value.publication.evidencePath, "scenario.publication.evidencePath");
   inside("/repository", value.publication.readmePath, "scenario.publication.readmePath");
