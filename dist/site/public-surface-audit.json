@@ -1767,12 +1767,14 @@
         "reusable": true,
         "inputs": [
           "alpha-workflow-path",
+          "auto-merge",
           "buildchain-ref",
           "buildchain-repository",
           "create-pull-request",
           "dev-workflow-path",
           "dry-run",
           "max-age-seconds",
+          "merge-method",
           "pull-request-body-prefix",
           "pull-request-body-prefix-renderer",
           "reactivation-authorized",
@@ -1780,7 +1782,7 @@
           "source-branch",
           "target-branch"
         ],
-        "inputCount": 13,
+        "inputCount": 15,
         "secrets": [
           "promotion-token"
         ],
@@ -2447,6 +2449,7 @@
           "hold",
           "hold-reason",
           "ledger-ref",
+          "merge-method",
           "minimum-soak-seconds",
           "release-now",
           "required-checks",
@@ -2454,7 +2457,7 @@
           "revoked-versions",
           "target-branch"
         ],
-        "inputCount": 15,
+        "inputCount": 16,
         "secrets": [
           "approval-token",
           "promotion-token"
@@ -7030,8 +7033,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0db010925d1c60209c3dac8bc2797537f307ab21bc68084263e79004c5c16ff7",
-    "workflowRegistryDigest": "4f1b9a933e117abc5fc4212241c83a35609f23477dac98d6cd37c4b40b57ba29",
-    "pageRegistryDigest": "2dd8f8ceda42da22c79d1e6762897c34b62aff57c37cf0cd418792ac20f33a47"
+    "workflowRegistryDigest": "127d82a3a26c3b46bb5a45d707d69e689f4ecdc661d638c2934879813e5bc53b",
+    "pageRegistryDigest": "49ef956b98eb996c844a7dba826fca6720e5a15a99f7fa6cafaa95229b0ddd31"
   },
   "comparison": {
     "missingCliRegistry": [],

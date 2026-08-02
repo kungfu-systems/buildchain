@@ -56,6 +56,16 @@ on:
         default: false
         required: false
         type: boolean
+      auto-merge:
+        description: Enable GitHub auto-merge on the managed exact-source Alpha PR
+        default: false
+        required: false
+        type: boolean
+      merge-method:
+        description: "GitHub auto-merge method: merge, squash, or rebase"
+        default: merge
+        required: false
+        type: string
       dry-run:
         description: Evaluate without creating a branch or pull request
         default: true
@@ -246,6 +256,8 @@ jobs:
           BUILDCHAIN_CHANNEL_PATROL_REACTIVATION_AUTHORIZED: ${{ inputs.reactivation-authorized }}
           BUILDCHAIN_CHANNEL_PATROL_CREATE_PR: "true"
           BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED: "true"
+          BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE: ${{ inputs.auto-merge }}
+          BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD: ${{ inputs.merge-method }}
           BUILDCHAIN_CHANNEL_PATROL_DRY_RUN: "false"
           BUILDCHAIN_CHANNEL_PATROL_OUTPUT_PATH: .buildchain/patrol/dev-alpha-candidate-settlement.json
 
