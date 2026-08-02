@@ -904,10 +904,6 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       release-candidate-workflow-file: ${{ inputs.release-candidate-workflow-file }}
       release-candidate-workflow-name: ${{ inputs.release-candidate-workflow-name }}
-      release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
-      release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
-      release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
-      release-candidate-family-assignment-id: ${{ inputs.release-candidate-family-assignment-id }}
       artifact-patterns: ${{ inputs.artifact-patterns }}
       required-status-check: ${{ inputs.required-status-check }}
       branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
@@ -943,8 +939,6 @@ jobs:
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
       release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
       release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
-      release-passport-evidence-jsons: ${{ inputs.release-passport-evidence-jsons }}
-      release-passport-attachment-command: ${{ inputs.release-passport-attachment-command }}
       release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
       release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths }}
       required-artifact-count: ${{ inputs.required-artifact-count }}
