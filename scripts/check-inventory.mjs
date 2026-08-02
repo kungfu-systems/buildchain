@@ -105,6 +105,7 @@ const requiredPaths = [
   "scripts/shifu-gate-profile.mjs",
   "scripts/auditable-demo.mjs",
   "scripts/auditable-demo-platform.mjs",
+  "scripts/auditable-demo-transport-smoke.mjs",
   "scripts/auditable-demo-capture.py",
   "scripts/resolve-artifact-coordinates.mjs",
   "scripts/artifact-relay-s3.mjs",

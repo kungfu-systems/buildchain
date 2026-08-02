@@ -12,8 +12,16 @@ on:
         description: Consumer workflow run containing sealed request artifacts
         required: true
         type: string
+      source-run-attempt:
+        description: Exact consumer workflow attempt that sealed the request artifact
+        required: true
+        type: string
       request-artifact-pattern:
         description: Exact/pattern name of Buildchain-sealed request artifacts
+        required: true
+        type: string
+      expected-request-root:
+        description: Canonical sha256 root of the exact sealed request index
         required: true
         type: string
       result-artifact-name:
@@ -33,7 +41,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: artifact-signing-${{ inputs.source-repository }}-${{ inputs.source-run-id }}-${{ inputs.correlation-id }}
+  group: artifact-signing-${{ inputs.source-repository }}-${{ inputs.source-run-id }}-${{ inputs.source-run-attempt }}-${{ inputs.correlation-id }}
   cancel-in-progress: false
 
 jobs:
@@ -65,6 +73,7 @@ jobs:
           BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
           BUILDCHAIN_SIGNING_SOURCE_REPOSITORY: ${{ inputs.source-repository }}
           BUILDCHAIN_RUNTIME_SHA: ${{ inputs.expected-runtime-sha }}
+          BUILDCHAIN_SIGNING_EXPECTED_REQUEST_ROOT: ${{ inputs.expected-request-root }}
       - name: Retain admitted request set for isolated provider jobs
         uses: actions/upload-artifact@v7.0.1
         with:

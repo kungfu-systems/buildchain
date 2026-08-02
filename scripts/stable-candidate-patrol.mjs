@@ -23,6 +23,20 @@ function bool(value, fallback = false) {
   return ["1", "true", "yes", "on"].includes(String(value).trim().toLowerCase());
 }
 
+function autoMergeMethod(value, fallback = "merge") {
+  const normalized = text(value || fallback).toLowerCase();
+  if (!["merge", "squash", "rebase"].includes(normalized)) {
+    throw new Error(
+      `mergeMethod must be merge, squash, or rebase, got ${value || "<empty>"}`,
+    );
+  }
+  return normalized;
+}
+
+function shouldEnableAutoMerge(options, pullRequest) {
+  return options.autoMerge && !pullRequest.auto_merge;
+}
+
 function list(value) {
   return [...new Set(String(value || "").split(/[\n,]+/).map((entry) => entry.trim()).filter(Boolean))];
 }
@@ -67,6 +81,7 @@ export function normalizeStableCandidatePatrolOptions(options = {}) {
     releaseNow: text(options.releaseNow ?? process.env.BUILDCHAIN_STABLE_PATROL_RELEASE_NOW).replace(/^v/, ""),
     autoPromote: bool(options.autoPromote ?? process.env.BUILDCHAIN_STABLE_PATROL_AUTO_PROMOTE, false),
     autoMerge: bool(options.autoMerge ?? process.env.BUILDCHAIN_STABLE_PATROL_AUTO_MERGE, false),
+    mergeMethod: autoMergeMethod(options.mergeMethod ?? process.env.BUILDCHAIN_STABLE_PATROL_MERGE_METHOD),
     dryRun: bool(options.dryRun ?? process.env.BUILDCHAIN_STABLE_PATROL_DRY_RUN, true),
     now: text(options.now ?? process.env.BUILDCHAIN_STABLE_PATROL_NOW) || new Date().toISOString(),
     outputPath: text(options.outputPath ?? process.env.BUILDCHAIN_STABLE_PATROL_OUTPUT_PATH) || ".buildchain/patrol/stable-candidate.json",
@@ -239,7 +254,9 @@ export async function runStableCandidatePatrol(optionsInput = {}, clientInput) {
           "The source-lock branch freezes the exact candidate; newer alpha publications do not alter this PR.",
         ].join("\n"),
       });
-      if (options.autoMerge) await client.enableAutoMerge(pullRequest);
+      if (shouldEnableAutoMerge(options, pullRequest)) {
+        await client.enableAutoMerge(pullRequest, options.mergeMethod);
+      }
       promotion.pullRequest = pullRequest;
       const storedCandidate = ledger.candidates.find((entry) => entry.version === selection.candidate.version);
       storedCandidate.promotionRequest = {
@@ -434,9 +451,18 @@ export function createGitHubStableCandidateClient({ repository: repositoryInput,
       const open = await api(`/repos/${owner}/${repo}/pulls?state=open&head=${encodeURIComponent(`${owner}:${head}`)}&base=${encodeURIComponent(base)}&per_page=20`);
       return open[0] || api(`/repos/${owner}/${repo}/pulls`, { method: "POST", body: { head, base, title, body } });
     },
-    async enableAutoMerge(pullRequest) {
-      const query = `mutation($id:ID!){enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:MERGE}){pullRequest{url}}}`;
-      return api("/graphql", { method: "POST", body: { query, variables: { id: pullRequest.node_id } } });
+    async enableAutoMerge(pullRequest, mergeMethod) {
+      const query = `mutation($id:ID!,$mergeMethod:PullRequestMergeMethod!){enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:$mergeMethod}){pullRequest{url}}}`;
+      return api("/graphql", {
+        method: "POST",
+        body: {
+          query,
+          variables: {
+            id: pullRequest.node_id,
+            mergeMethod: autoMergeMethod(mergeMethod).toUpperCase(),
+          },
+        },
+      });
     },
     async setVariable(name, value) {
       const current = await api(`/repos/${owner}/${repo}/actions/variables/${encodeURIComponent(name)}`, { allow404: true });

@@ -7,7 +7,10 @@ import test from "node:test";
 import { spawnSync } from "node:child_process";
 
 import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
-import { githubRequest, resolveAuthorityDispatchRef } from "../scripts/dispatch-artifact-signing-authority.mjs";
+import {
+  githubRequest,
+  resolveAuthorityDispatchRef,
+} from "../scripts/dispatch-artifact-signing-authority.mjs";
 import { finalizeNativeArtifactSigningResult } from "../scripts/finalize-native-artifact-signing-result.mjs";
 import { inspectArtifactSigningRequests } from "../scripts/inspect-artifact-signing-requests.mjs";
 import { importArtifactSigningResults } from "../scripts/import-artifact-signing-results.mjs";
@@ -17,8 +20,14 @@ import { verifyArtifactSigningResults } from "../scripts/verify-artifact-signing
 const FORMAL_AUTHORITY_REF = "authority/v3/v3.0/artifact-signing";
 
 test("exact runtime pins dispatch through the formal protected authority ref", () => {
-  assert.equal(resolveAuthorityDispatchRef("4".repeat(40)), FORMAL_AUTHORITY_REF);
-  assert.equal(resolveAuthorityDispatchRef(FORMAL_AUTHORITY_REF), FORMAL_AUTHORITY_REF);
+  assert.equal(
+    resolveAuthorityDispatchRef("4".repeat(40)),
+    FORMAL_AUTHORITY_REF,
+  );
+  assert.equal(
+    resolveAuthorityDispatchRef(FORMAL_AUTHORITY_REF),
+    FORMAL_AUTHORITY_REF,
+  );
 });
 
 function digest(value) {
@@ -121,10 +130,17 @@ test("native authority materializes only the sealed PE and binds final signed by
       }).ok,
       true,
     );
-    const nestedIntake = path.join(value.root, "nested-intake", "request-artifact");
+    const nestedIntake = path.join(
+      value.root,
+      "nested-intake",
+      "request-artifact",
+    );
     fs.cpSync(value.input, nestedIntake, { recursive: true });
     assert.equal(
-      verifyArtifactSigningResults({ requestRoot: path.dirname(nestedIntake), resultRoot: output }).ok,
+      verifyArtifactSigningResults({
+        requestRoot: path.dirname(nestedIntake),
+        resultRoot: output,
+      }).ok,
       true,
     );
     const consumer = path.join(value.root, "consumer");
@@ -348,7 +364,8 @@ test("native authority binds and projects a notarized app release payload", () =
       expectedRunAttempt: "2",
     });
     assert.equal(
-      verifyArtifactSigningResults({ requestRoot: input, resultRoot: output }).ok,
+      verifyArtifactSigningResults({ requestRoot: input, resultRoot: output })
+        .ok,
       true,
     );
     assert.throws(
@@ -382,15 +399,28 @@ test("native authority binds and projects a notarized app release payload", () =
     });
     assert.equal(imported.credentialArtifacts.length, 1);
     assert.equal(
-      fs.readFileSync(path.join(consumer, "product", "release", path.basename(dmg)), "utf8"),
+      fs.readFileSync(
+        path.join(consumer, "product", "release", path.basename(dmg)),
+        "utf8",
+      ),
       "signed-stapled-dmg",
     );
     fs.appendFileSync(
-      path.join(output, "credential-artifact", "product", "release", path.basename(dmg)),
+      path.join(
+        output,
+        "credential-artifact",
+        "product",
+        "release",
+        path.basename(dmg),
+      ),
       "tamper",
     );
     assert.throws(
-      () => verifyArtifactSigningResults({ requestRoot: input, resultRoot: output }),
+      () =>
+        verifyArtifactSigningResults({
+          requestRoot: input,
+          resultRoot: output,
+        }),
       /result evidence digest mismatch/,
     );
   } finally {
@@ -421,7 +451,20 @@ test("Buildchain authority owns native credentials and performs provider verific
     "utf8",
   );
   assert.match(workflow, /environment: buildchain-artifact-signing/);
-  assert.match(workflow, /Verify complete signed result set on GitHub-hosted infrastructure/);
+  assert.match(workflow, /source-run-attempt:[\s\S]*?required: true/);
+  assert.match(workflow, /expected-request-root:[\s\S]*?required: true/);
+  assert.match(
+    workflow,
+    /group: artifact-signing-\$\{\{ inputs\.source-repository \}\}-\$\{\{ inputs\.source-run-id \}\}-\$\{\{ inputs\.source-run-attempt \}\}-\$\{\{ inputs\.correlation-id \}\}/,
+  );
+  assert.match(
+    workflow,
+    /macos:[\s\S]*?strategy:\n\s+fail-fast: false[\s\S]*?matrix:\n\s+request: \$\{\{ fromJSON\(needs\.intake\.outputs\.macos-matrix\) \}\}/,
+  );
+  assert.match(
+    workflow,
+    /Verify complete signed result set on GitHub-hosted infrastructure/,
+  );
   assert.match(releaseVerify, /authority\/\*\/\*\/artifact-signing/);
   assert.match(
     reusableDocs,

@@ -65,6 +65,12 @@ jobs:
       - name: Build standalone binary
         run: pnpm binary:build -- --output-dir dist/auditable-demo-binary
 
+      - name: Simulate artifact transport before upload
+        run: >-
+          node scripts/auditable-demo-transport-smoke.mjs
+          --artifact-root dist/auditable-demo-binary
+          --scenario .buildchain/auditable-demo.json
+
       - name: Bind artifact name
         id: identity
         shell: bash

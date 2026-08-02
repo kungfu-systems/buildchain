@@ -197,6 +197,16 @@ on:
           build/stage
         type: string
         required: false
+      pre-upload-transport-smoke-scenario-path:
+        description: "Optional declarative demo scenario, relative to working-directory, whose transport smoke must pass before Linux artifact upload"
+        default: ""
+        type: string
+        required: false
+      pre-upload-transport-smoke-artifact-root:
+        description: "Artifact root, relative to working-directory, used by the pre-upload transport simulation"
+        default: "."
+        type: string
+        required: false
       credential-island-macos-app-path:
         description: "Optional exact .app path to seal for a protected macOS credential-island job"
         default: ""
@@ -756,6 +766,8 @@ jobs:
           path: |
             .buildchain/workflow-shell/scripts/locked-source-checkout.mjs
             .buildchain/workflow-shell/scripts/artifact-signing-delegation.mjs
+            .buildchain/workflow-shell/scripts/artifact-signing-controller-core.mjs
+            .buildchain/workflow-shell/scripts/artifact-signing-controller.mjs
             .buildchain/workflow-shell/scripts/build-contract-core.mjs
             .buildchain/workflow-shell/scripts/aws-runner-burst-core.mjs
             .buildchain/workflow-shell/scripts/aws-windows-jit-core.mjs
@@ -1518,10 +1530,14 @@ jobs:
           set -euo pipefail
           signing_sealer=".buildchain/runtime/scripts/seal-artifact-signing-requests.mjs"
           if [ ! -f "${signing_sealer}" ]; then
+            request_root=".buildchain/signing/requests/${{ matrix.platform.id }}"
+            request_index="${request_root}/index.json"
+            mkdir -p "${request_root}"
+            printf '%s\n' '{"schemaVersion":1,"contract":"kungfu-buildchain-artifact-signing-request-index/v1","requests":[]}' > "${request_index}"
             {
               echo "request-count=0"
-              echo "request-index="
-              echo "request-root="
+              echo "request-index=${request_index}"
+              echo "request-root=${request_root}"
             } >> "${GITHUB_OUTPUT}"
             echo "Artifact signing request sealing is unavailable in the resolved legacy runtime; continuing with its validated contract."
             exit 0
@@ -1550,49 +1566,38 @@ jobs:
         env:
           NO_PROXY: ${{ steps.signing-request-upload-route.outputs.no-proxy }}
         with:
-          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ steps.signing-requests.outputs.request-root }}
           include-hidden-files: true
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
-      - name: Dispatch and await Buildchain signing authority
-        id: signing-authority
-        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
-        run: node .buildchain/runtime/scripts/dispatch-artifact-signing-authority.mjs
-        env:
-          BUILDCHAIN_AUTHORITY_DISPATCH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ inputs.buildchain-repository }}
-          BUILDCHAIN_AUTHORITY_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ inputs.artifact-name }}-signing-result-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          BUILDCHAIN_SIGNING_TIMEOUT_SECONDS: 7200
-
-      - name: Seal GitHub-hosted signing finalization delegation
-        run: node .buildchain/runtime-bootstrap/artifact-signing-delegation.mjs seal
+      - name: Seal detached signing control request
+        run: node .buildchain/runtime-bootstrap/artifact-signing-controller.mjs seal
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
-          BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
+          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_RUNTIME_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
           BUILDCHAIN_SIGNING_REQUEST_COUNT: ${{ steps.signing-requests.outputs.request-count }}
-          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_AUTHORITY_RUN_ID: ${{ steps.signing-authority.outputs.authority-run-id }}
-          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ steps.signing-authority.outputs.result-artifact }}
+          BUILDCHAIN_SIGNING_REQUEST_INDEX: ${{ steps.signing-requests.outputs.request-index }}
+          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ inputs.artifact-name }}-signing-result-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           BUILDCHAIN_ARTIFACT_NAME: ${{ steps.artifact-contract.outputs.artifact-name }}
           BUILDCHAIN_MANIFEST_ARTIFACT_NAME: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_DIAGNOSTICS_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
 
-      - name: Publish GitHub-hosted signing finalization delegation
+      - name: Publish detached signing control request
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ inputs.artifact-name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
+          name: ${{ inputs.artifact-name }}-signing-control-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -1628,6 +1633,17 @@ jobs:
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+
+      - name: Simulate artifact transport before upload
+        if: ${{ matrix.platform.id == 'linux-x64' && inputs.pre-upload-transport-smoke-scenario-path != '' }}
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT: ${{ inputs.pre-upload-transport-smoke-artifact-root }}
+          BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO: ${{ inputs.pre-upload-transport-smoke-scenario-path }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/auditable-demo-transport-smoke.mjs"
+          --artifact-root "${BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT}"
+          --scenario "${BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO}"
 
       - name: Seal macOS credential-island input
         if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
@@ -1992,10 +2008,14 @@ jobs:
           set -euo pipefail
           signing_sealer=".buildchain/runtime/scripts/seal-artifact-signing-requests.mjs"
           if [ ! -f "${signing_sealer}" ]; then
+            request_root=".buildchain/signing/requests/${{ matrix.platform.id }}"
+            request_index="${request_root}/index.json"
+            mkdir -p "${request_root}"
+            printf '%s\n' '{"schemaVersion":1,"contract":"kungfu-buildchain-artifact-signing-request-index/v1","requests":[]}' > "${request_index}"
             {
               echo "request-count=0"
-              echo "request-index="
-              echo "request-root="
+              echo "request-index=${request_index}"
+              echo "request-root=${request_root}"
             } >> "${GITHUB_OUTPUT}"
             echo "Artifact signing request sealing is unavailable in the resolved legacy runtime; continuing with its validated contract."
             exit 0
@@ -2024,49 +2044,38 @@ jobs:
         env:
           NO_PROXY: ${{ steps.signing-request-upload-route.outputs.no-proxy }}
         with:
-          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          name: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ steps.signing-requests.outputs.request-root }}
           include-hidden-files: true
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
-      - name: Dispatch and await Buildchain signing authority
-        id: signing-authority
-        if: ${{ steps.signing-requests.outputs.request-count != '0' }}
-        run: node .buildchain/runtime/scripts/dispatch-artifact-signing-authority.mjs
-        env:
-          BUILDCHAIN_AUTHORITY_DISPATCH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ inputs.buildchain-repository }}
-          BUILDCHAIN_AUTHORITY_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ inputs.artifact-name }}-signing-result-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          BUILDCHAIN_SIGNING_TIMEOUT_SECONDS: 7200
-
-      - name: Seal GitHub-hosted signing finalization delegation
-        run: node .buildchain/runtime-bootstrap/artifact-signing-delegation.mjs seal
+      - name: Seal detached signing control request
+        run: node .buildchain/runtime-bootstrap/artifact-signing-controller.mjs seal
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ inputs.working-directory }}
-          BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
+          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_RUNTIME_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
           BUILDCHAIN_SIGNING_REQUEST_COUNT: ${{ steps.signing-requests.outputs.request-count }}
-          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_AUTHORITY_RUN_ID: ${{ steps.signing-authority.outputs.authority-run-id }}
-          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ steps.signing-authority.outputs.result-artifact }}
+          BUILDCHAIN_SIGNING_REQUEST_INDEX: ${{ steps.signing-requests.outputs.request-index }}
+          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ inputs.artifact-name }}-signing-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ inputs.artifact-name }}-signing-result-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           BUILDCHAIN_ARTIFACT_NAME: ${{ steps.artifact-contract.outputs.artifact-name }}
           BUILDCHAIN_MANIFEST_ARTIFACT_NAME: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_DIAGNOSTICS_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
 
-      - name: Publish GitHub-hosted signing finalization delegation
+      - name: Publish detached signing control request
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ inputs.artifact-name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
+          name: ${{ inputs.artifact-name }}-signing-control-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -2097,6 +2106,17 @@ jobs:
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+
+      - name: Simulate artifact transport before upload
+        if: ${{ matrix.platform.id == 'linux-x64' && inputs.pre-upload-transport-smoke-scenario-path != '' }}
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT: ${{ inputs.pre-upload-transport-smoke-artifact-root }}
+          BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO: ${{ inputs.pre-upload-transport-smoke-scenario-path }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/auditable-demo-transport-smoke.mjs"
+          --artifact-root "${BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT}"
+          --scenario "${BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO}"
 
       - name: Create GitHub artifact attestation policy
         if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
@@ -2330,6 +2350,115 @@ jobs:
           BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
           BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
 
+  artifact-signing-control:
+    name: Control detached signing ${{ matrix.platform.name }}
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+      - resolve-contract
+      - resolve-source
+      - build-native
+      - build-linux-container
+    if: ${{ always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
+    steps:
+      - name: Checkout trusted Buildchain signing controller
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/controller-runtime
+          persist-credentials: false
+
+      - name: Download immutable signing control request
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ inputs.artifact-name }}-signing-control-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/signing/control-requests/${{ matrix.platform.id }}
+
+      - name: Validate immutable signing control request
+        id: control-request
+        run: node .buildchain/controller-runtime/scripts/artifact-signing-controller.mjs outputs
+        env:
+          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
+          BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_EXPECTED_SOURCE_RUN_ID: ${{ github.run_id }}
+          BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_EXPECTED_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_EXPECTED_RUNTIME_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_EXPECTED_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Dispatch and await exact Buildchain signing authority
+        id: signing-authority
+        if: ${{ steps.control-request.outputs.request-count != '0' }}
+        continue-on-error: true
+        run: node .buildchain/controller-runtime/scripts/dispatch-artifact-signing-authority.mjs
+        env:
+          BUILDCHAIN_AUTHORITY_DISPATCH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ steps.control-request.outputs.authority-repository }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ steps.control-request.outputs.authority-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.control-request.outputs.runtime-sha }}
+          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ steps.control-request.outputs.request-artifact }}
+          BUILDCHAIN_SIGNING_REQUEST_ROOT_DIGEST: ${{ steps.control-request.outputs.request-root }}
+          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ steps.control-request.outputs.result-artifact }}
+          BUILDCHAIN_AUTHORITY_CORRELATION_ID: ${{ steps.control-request.outputs.correlation-id }}
+          BUILDCHAIN_SIGNING_TIMEOUT_SECONDS: 7200
+
+      - name: Seal detached signing controller receipt and delegation
+        id: settlement
+        if: ${{ always() && steps.control-request.outcome == 'success' }}
+        run: node .buildchain/controller-runtime/scripts/artifact-signing-controller.mjs settle
+        env:
+          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
+          BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}/receipt.json
+          BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
+          BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_EXPECTED_SOURCE_RUN_ID: ${{ github.run_id }}
+          BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_EXPECTED_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_EXPECTED_RUNTIME_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_EXPECTED_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_AUTHORITY_STATUS: ${{ steps.control-request.outputs.request-count == '0' && 'skipped' || steps.signing-authority.outputs.authority-status || 'failed' }}
+          BUILDCHAIN_AUTHORITY_RUN_ID: ${{ steps.signing-authority.outputs.authority-run-id }}
+          BUILDCHAIN_AUTHORITY_RUN_URL: ${{ steps.signing-authority.outputs.authority-run-url }}
+          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ steps.signing-authority.outputs.result-artifact }}
+          BUILDCHAIN_AUTHORITY_CORRELATION_ID: ${{ steps.signing-authority.outputs.correlation-id }}
+          BUILDCHAIN_AUTHORITY_CONCLUSION: ${{ steps.control-request.outputs.request-count == '0' && 'not-required' || steps.signing-authority.outputs.authority-conclusion || 'controller-error' }}
+          BUILDCHAIN_CONTROLLER_STARTED_AT: ${{ steps.signing-authority.outputs.controller-started-at }}
+          BUILDCHAIN_CONTROLLER_COMPLETED_AT: ${{ steps.signing-authority.outputs.controller-completed-at }}
+
+      - name: Publish detached signing controller receipt
+        if: ${{ always() && steps.settlement.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-signing-controller-receipt-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}/receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Publish signing finalization delegation
+        if: ${{ steps.settlement.outputs.controller-qualifying == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Enforce qualifying detached signing settlement
+        if: ${{ steps.settlement.outputs.controller-qualifying != 'true' }}
+        run: |
+          echo "::error::detached signing controller did not qualify: ${{ steps.settlement.outputs.controller-status || 'missing-receipt' }}"
+          exit 1
+
   finalize-artifact-signing:
     name: Finalize signed artifact ${{ matrix.platform.name }}
     runs-on: ubuntu-24.04
@@ -2341,7 +2470,8 @@ jobs:
       - build-native
       - build-linux-container
       - relay-artifacts
-    if: ${{ always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
+      - artifact-signing-control
+    if: ${{ always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && needs.artifact-signing-control.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -2376,18 +2506,35 @@ jobs:
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
-          name: ${{ inputs.artifact-name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          name: ${{ inputs.artifact-name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: .buildchain/signing/delegations/${{ matrix.platform.id }}
 
-      - name: Validate signing finalization delegation
+      - name: Download immutable signing control request
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ inputs.artifact-name }}-signing-control-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/signing/control-requests/${{ matrix.platform.id }}
+
+      - name: Download signing controller receipt
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ inputs.artifact-name }}-signing-controller-receipt-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}
+
+      - name: Validate signing control request, receipt, and finalization delegation
         id: delegation
-        run: node .buildchain/workflow-shell/scripts/artifact-signing-delegation.mjs outputs
+        run: node .buildchain/workflow-shell/scripts/artifact-signing-controller.mjs verify
         env:
+          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
+          BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}/receipt.json
           BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
           BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_EXPECTED_SOURCE_RUN_ID: ${{ github.run_id }}
           BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
           BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_EXPECTED_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_EXPECTED_RUNTIME_REPOSITORY: ${{ inputs.buildchain-repository }}
           BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_EXPECTED_PLATFORM_ID: ${{ matrix.platform.id }}
@@ -2680,9 +2827,10 @@ jobs:
       - build-native
       - build-linux-container
       - relay-artifacts
+      - artifact-signing-control
       - finalize-artifact-signing
       - credential-island-macos
-    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && needs.finalize-artifact-signing.result == 'success' && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || (inputs.credential-island-caller-owned && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success') }}
+    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && needs.artifact-signing-control.result == 'success' && needs.finalize-artifact-signing.result == 'success' && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || (inputs.credential-island-caller-owned && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success') }}
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
@@ -2953,6 +3101,7 @@ jobs:
       - build-native
       - build-linux-container
       - relay-artifacts
+      - artifact-signing-control
       - finalize-artifact-signing
       - credential-island-macos
       - summarize

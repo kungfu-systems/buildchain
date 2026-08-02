@@ -488,12 +488,16 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /expected-artifacts-json:/);
   assert.equal((workflow.match(/Seal declared artifact signing requests/g) || []).length, 2);
   assert.equal((workflow.match(/Publish Buildchain-owned artifact signing request/g) || []).length, 2);
-  assert.equal((workflow.match(/Dispatch and await Buildchain signing authority/g) || []).length, 2);
+  assert.equal((workflow.match(/Seal detached signing control request/g) || []).length, 2);
+  assert.equal((workflow.match(/Publish detached signing control request/g) || []).length, 2);
+  assert.equal((workflow.match(/Dispatch and await exact Buildchain signing authority/g) || []).length, 1);
   assert.equal((workflow.match(/Verify and import final signed bytes on GitHub-hosted infrastructure/g) || []).length, 1);
   assert.doesNotMatch(workflow, /Download immutable signed result\n/);
-  assert.equal((workflow.match(/Seal GitHub-hosted signing finalization delegation/g) || []).length, 2);
-  assert.equal((workflow.match(/Publish GitHub-hosted signing finalization delegation/g) || []).length, 2);
+  assert.equal((workflow.match(/Publish signing finalization delegation/g) || []).length, 1);
+  assert.match(workflow, /artifact-signing-control:[\s\S]*?runs-on: ubuntu-24\.04/);
+  assert.match(workflow, /artifact-signing-control:[\s\S]*?needs:[\s\S]*?- build-native[\s\S]*?- build-linux-container/);
   assert.match(workflow, /finalize-artifact-signing:[\s\S]*?runs-on: ubuntu-24\.04/);
+  assert.match(workflow, /needs\.artifact-signing-control\.result == 'success'/);
   assert.match(workflow, /needs\.finalize-artifact-signing\.result == 'success'/);
   assert.equal(
     (
@@ -509,7 +513,7 @@ test("reusable build workflow exposes the required surface contract", () => {
         /if: \$\{\{ steps\.signing-requests\.outputs\.request-count != '0' \}\}/g,
       ) || []
     ).length,
-    6,
+    4,
   );
   assert.equal(
     (
@@ -522,7 +526,13 @@ test("reusable build workflow exposes the required surface contract", () => {
   const firstBuild = workflow.indexOf("      - name: Run build lifecycle");
   const firstSeal = workflow.indexOf("      - name: Seal declared artifact signing requests");
   const firstVerify = workflow.indexOf("      - name: Run verify lifecycle");
-  assert.ok(firstBuild < firstSeal && firstSeal < firstVerify, "signed bytes must be imported between build and verify");
+  const signingControl = workflow.indexOf("  artifact-signing-control:");
+  assert.ok(firstBuild < firstSeal && firstSeal < firstVerify, "unsigned requests must be sealed between build and verify");
+  assert.ok(firstVerify < signingControl, "the detached controller must be scheduled after the caller build jobs");
+  assert.doesNotMatch(
+    workflow.slice(workflow.indexOf("  build-native:"), signingControl),
+    /Dispatch and await exact Buildchain signing authority/u,
+  );
   assert.match(workflow, /signing-request-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
   assert.match(workflow, /process-summary-path:/);
   assert.match(workflow, /sample-process-tree:/);
@@ -604,11 +614,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/);
   assert.match(workflow, /path: \|\n\s+\.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-delegation\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-controller\.mjs/);
+  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-controller-core\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-runner-burst-core\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-windows-jit-core\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-macos-jit-core\.mjs/);
+  assert.equal((workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length, 0);
   assert.equal(
-    (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length,
+    (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-controller\.mjs seal/g) || []).length,
     2,
   );
   assert.match(workflow, /Upload Buildchain runtime checkout bootstrap/);
