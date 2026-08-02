@@ -6,6 +6,8 @@
     "bin/internal",
     "packages/core/release-passport.js",
     "packages/core/buildchain-contract.js",
+    "packages/core/workflow-call-contract.js",
+    "packages/core/workflow-yaml-contract.js",
     "packages/core/paper-fleet.js",
     "packages/core/paper-agent-entry.js",
     "packages/core/paper-npm-bootstrap.js",
@@ -25,6 +27,7 @@
     "scripts/web-surface-core.mjs",
     "scripts/web-surface-routing.mjs",
     "scripts/web-surface.mjs",
+    "scripts/workflow-call-contract.mjs",
     "scripts/verify-promotion-router-binding.sh"
   ],
   "ownershipRules": [
@@ -254,6 +257,20 @@
         "dist/site/buildchain-contract.json",
         "docs/runtime-train-validation.md"
       ]
+    },
+    {
+      "id": "reusable-workflow-call-contract",
+      "owner": "Buildchain release governance maintainers",
+      "implementation": [
+        "packages/core/workflow-call-contract.js",
+        "packages/core/workflow-yaml-contract.js",
+        "scripts/workflow-call-contract.mjs"
+      ],
+      "tests": [
+        "tests/workflow-call-contract.test.mjs",
+        "tests/public-surface-audit.test.mjs"
+      ],
+      "contracts": ["docs/release-governance.md"]
     },
     {
       "id": "promotion-runtime-override-authorization",

@@ -15,21 +15,21 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("Windows EC2 JIT plan is bounded below USD 40", () => {
+test("Windows EC2 JIT plan is bounded below the USD 80 phase cap", () => {
   const plan = windowsEc2JitPlan();
-  assert.equal(plan.config.maxAcceptedInstances, 6);
-  assert.equal(plan.config.maxConcurrentInstances, 2);
-  assert.equal(plan.costEnvelope.maximumCommittedComputeUsd, 26.1);
-  assert.equal(plan.costEnvelope.maximumRaceStopUsd, 8.7);
-  assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 34.8);
-  assert.ok(plan.costEnvelope.maximumBoundedSpendUsd < 40);
+  assert.equal(plan.config.maxAcceptedInstances, 5);
+  assert.equal(plan.config.maxConcurrentInstances, 1);
+  assert.equal(plan.costEnvelope.maximumCommittedComputeUsd, 21.75);
+  assert.equal(plan.costEnvelope.maximumRaceStopUsd, 4.35);
+  assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 26.1);
+  assert.ok(plan.costEnvelope.maximumBoundedSpendUsd < 80);
   assert.equal(plan.invariants.oneJobPerRunner, true);
   assert.equal(plan.invariants.zeroWarmCapacity, true);
 });
 
 test("Windows EC2 JIT plan rejects an unsafe cost envelope", () => {
   assert.throws(
-    () => windowsEc2JitPlan({ maxAcceptedInstances: 8 }),
+    () => windowsEc2JitPlan({ maxAcceptedInstances: 18 }),
     /must remain below budget/,
   );
 });

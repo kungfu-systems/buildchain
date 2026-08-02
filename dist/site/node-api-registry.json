@@ -11306,7 +11306,7 @@
       ],
       "source": {
         "path": "packages/core/public-surface-audit.js",
-        "line": 292
+        "line": 261
       },
       "example": "import { assertPublicSurfaceReverseAudit } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11330,7 +11330,7 @@
       ],
       "source": {
         "path": "packages/core/public-surface-audit.js",
-        "line": 11
+        "line": 12
       },
       "example": "import { BUILDCHAIN_PUBLIC_SURFACE_AUDIT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11359,7 +11359,7 @@
       ],
       "source": {
         "path": "packages/core/public-surface-audit.js",
-        "line": 192
+        "line": 161
       },
       "example": "import { collectPublicSurfaceReverseAudit } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11388,7 +11388,7 @@
       ],
       "source": {
         "path": "packages/core/public-surface-audit.js",
-        "line": 122
+        "line": 91
       },
       "example": "import { enumerateActionInputs } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11417,7 +11417,7 @@
       ],
       "source": {
         "path": "packages/core/public-surface-audit.js",
-        "line": 146
+        "line": 115
       },
       "example": "import { enumerateDocCommandRefs } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11446,7 +11446,7 @@
       ],
       "source": {
         "path": "packages/core/public-surface-audit.js",
-        "line": 137
+        "line": 106
       },
       "example": "import { enumerateSitePages } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11475,7 +11475,7 @@
       ],
       "source": {
         "path": "packages/core/public-surface-audit.js",
-        "line": 105
+        "line": 74
       },
       "example": "import { enumerateWorkflowInputs } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18046,7 +18046,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:d8c73e29d45f93e45efd77ce80a1a0ef0153123c8e350958f710500f418f8315",
+      "digest": "sha256:486e2ecc57aa5fa8f7664ce75ea2852c4d226f823b51d1b04d8f680b60bf1b39",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -18765,7 +18765,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:38f051f579fb93dc7d8b4f2c70acd622c020e867394344b5e932568cd8d2ad83"
+      "digest": "sha256:62f5633ce6df3db2b92358a078dcc82d935d6fe480b9b4bf99294c0c1ccc39fb"
     },
     {
       "id": "build-facts",
