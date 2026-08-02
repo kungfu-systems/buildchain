@@ -501,6 +501,10 @@ test("native rendition set binds distinct 1080p and 720p captures", (t) => {
   const normalized = validateAdapterOutput(root);
   assert.equal(normalized.renditionSet.renditions[0].scene.width, 1920);
   assert.equal(normalized.renditionSet.renditions[1].scene.width, 1280);
+  assert.deepEqual(normalized.renditionSet.renditions.map(({ files }) => files.scene), ["scene.json", "scene-720p.json"]);
+  for (const rendition of normalized.renditionSet.renditions) {
+    ["scene", "transcript", "projection"].forEach((member) => assert.doesNotThrow(() => fs.readFileSync(path.join(root, rendition.files[member]))));
+  }
   assert.notEqual(
     normalized.renditionSet.renditions[0].captureRoot,
     normalized.renditionSet.renditions[1].captureRoot,
