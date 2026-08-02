@@ -50,7 +50,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0731b18f6a7aa6a164197080fac3b57ff161640a28433c4cd26adcf145403fb5"
+      "digest": "sha256:409527fc5d2466c26a4d299380bc62f5a1653c34b850669bbb873cbe268de3d0"
     },
     {
       "id": "getting-started",
@@ -234,7 +234,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:deab508284ed365a830894205a4d293c524281d6da7126094cf8e9eea8efe223"
+      "digest": "sha256:3634029d64cd50aa0a0ce0b6bfed0aca96a56f0ef908cb86d8ad95a74625c984"
     },
     {
       "id": "build-facts",
