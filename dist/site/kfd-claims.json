@@ -14,17 +14,17 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691",
+    "compatibilityDigest": "sha256:76c3dd58a02887ecd6af33d63e749fef0a988a820fea99bdf4cb078cc48caa83",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "2f818fff88795ad4301d14e0a81edc990a8c7feb17a6163bd812b68e689db2a9",
+    "sha256": "a7c0528254363d68b5c6ae0214a337423b5978adbc5d29a6f075a7dd6804f4c1",
     "summary": {
       "cliCommandCount": 112,
-      "workflowCount": 57,
+      "workflowCount": 59,
       "actionCount": 6,
       "sitePageCount": 63,
       "docCommandRefCount": 813,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "2f818fff88795ad4301d14e0a81edc990a8c7feb17a6163bd812b68e689db2a9",
+      "sha256": "a7c0528254363d68b5c6ae0214a337423b5978adbc5d29a6f075a7dd6804f4c1",
       "summary": {
         "cliCommandCount": 112,
-        "workflowCount": 57,
+        "workflowCount": 59,
         "actionCount": 6,
         "sitePageCount": 63,
         "docCommandRefCount": 813,
@@ -3437,6 +3437,32 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:.declarative-auditable-demo",
+          "name": "workflow:.declarative-auditable-demo",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.declarative-auditable-demo.yml",
+          "evidencePath": ".github/workflows/.declarative-auditable-demo.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 11,
+          "inputs": [
+            "artifact-retention-days",
+            "binary-artifact-digest",
+            "binary-artifact-name",
+            "buildchain-repository",
+            "materialize",
+            "materialize-base-ref",
+            "media-profile",
+            "render-media",
+            "renderer-image",
+            "scenario-path",
+            "source-ref"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:.gate-profile",
           "name": "workflow:.gate-profile",
           "kind": "workflow",
@@ -3970,6 +3996,20 @@
           "kind": "workflow",
           "sourcePath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
           "evidencePath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:auditable-demo",
+          "name": "workflow:auditable-demo",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/auditable-demo.yml",
+          "evidencePath": ".github/workflows/auditable-demo.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -6098,6 +6138,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 390
+    "publicSurfaceCount": 392
   }
 }

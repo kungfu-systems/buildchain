@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-02
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-08-02
   invisible_context_boundary: No hidden model build, parameter count, or private corpus is asserted.
 ---
 
@@ -29,6 +29,64 @@ The public reusable workflow is
 `.github/workflows/.auditable-demo.yml`. It is consumer-neutral: Buildchain
 does not know how a Kungfu, library, service, or application artifact should be
 interpreted. The consumer owns a small checked-in executable adapter.
+
+For standalone binary CLIs, the higher-level first-class surface is
+`.github/workflows/.declarative-auditable-demo.yml`. A consumer checks in only
+`.buildchain/auditable-demo.json`, builds and uploads its exact same-run binary
+plus metadata, and passes the producer-owned artifact name and digest to that
+workflow. Buildchain then owns capture, Gate adaptation, independent native
+1080p and 720p rendering, Release Passport construction, content-addressed
+materialization, and the protected README update pull request. No
+product-specific capture, adapter, passport, or materializer is required.
+
+## Declarative Standalone Binary Scenarios
+
+The schema is `contracts/auditable-demo-scenario-v1.schema.json`. One scenario
+can declare up to eight demos, and each demo can contain up to twelve ordered
+literal argv steps. Steps in one demo share a disposable workspace; separate
+demos and the two rendition captures do not. Commands are never accepted as a
+shell string. The complete scenario is bounded to 60 seconds, 4 MiB per step,
+a clean Home/XDG environment, no inherited credentials, and a network-disabled
+read-only container with bounded tmpfs.
+
+The uploaded metadata must bind the executable SHA-256 and declare an empty
+runtime dependency set. Capture rejects an artifact name or upload digest that
+does not resolve to exactly one live artifact from the current workflow run.
+It retains ANSI terminal bytes, verifies declared stdout and JSON file facts,
+and removes the disposable workspace before emitting evidence.
+
+Both manual validation and alpha or release refreshes call the same reusable
+workflow. Manual callers select Gate-only or full rendering and can explicitly
+request a materialization PR. Release callers select full rendering and the
+same materializer automatically; there is no separate release-only recording
+implementation. Publication requires a dedicated update token and target
+branch. The token is an explicit bounded capability, while actor identity,
+first-party/System classification, KFD compliance, Product System metadata,
+package metadata, registry history, scans, and generated evidence grant no
+authority.
+
+```yaml
+jobs:
+  demo:
+    needs: exact-binary
+    uses: kungfu-systems/buildchain/.github/workflows/.declarative-auditable-demo.yml@BUILDCHAIN_EXACT_SHA
+    with:
+      source-ref: ${{ github.sha }}
+      binary-artifact-name: ${{ needs.exact-binary.outputs.artifact-name }}
+      binary-artifact-digest: ${{ needs.exact-binary.outputs.artifact-digest }}
+      scenario-path: .buildchain/auditable-demo.json
+      renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:RENDERER_DIGEST
+      render-media: true
+      media-profile: responsive-web-delivery-v1
+      materialize: true
+      materialize-base-ref: dev/v1/v1.0
+    secrets:
+      DEMO_UPDATE_TOKEN: ${{ secrets.DEMO_UPDATE_TOKEN }}
+```
+
+Buildchain recursively consumes this surface in
+`.github/workflows/auditable-demo.yml` using its own exact standalone binary
+and the beginner bootstrap scenario in `.buildchain/auditable-demo.json`.
 
 ## Authority Boundary
 
