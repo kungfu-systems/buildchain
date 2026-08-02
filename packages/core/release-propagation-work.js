@@ -317,8 +317,12 @@ function verifyWorkRelease(work) {
     downstream.executionProfile,
     "release propagation work downstream.executionProfile",
   );
-  if (!profile
-      || JSON.stringify(profile) !== JSON.stringify(downstream.releaseLock.downstream.executionProfile)) {
+  const lockedProfile = normalizeExecutionProfile(
+    downstream.releaseLock.downstream.executionProfile,
+    "release propagation work releaseLock.downstream.executionProfile",
+  );
+  if (!profile || !lockedProfile
+      || sha256Json(profile) !== sha256Json(lockedProfile)) {
     throw new Error("release propagation work execution profile disagrees with the exact release lock");
   }
   return { downstream, profile };
@@ -400,7 +404,7 @@ function verifyWorkPlanAndState(work, downstream, profile) {
     downstream.branch,
     downstream.baseRef,
   );
-  if (JSON.stringify(plan.commands) !== JSON.stringify(expectedCommands)) {
+  if (sha256Json(plan.commands) !== sha256Json(expectedCommands)) {
     throw new Error("release propagation work commands are not canonical");
   }
   const state = assertExactFields(
