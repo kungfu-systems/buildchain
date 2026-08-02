@@ -575,6 +575,38 @@ context shape into the other. Consumer repositories can keep their context
 stable while changing the actual verification command declaratively in
 `buildchain.toml`:
 
+Before a release caller is merged, consumers should also verify its exact
+reusable-workflow call contract. The checker reads the caller and an already
+checked-out exact Buildchain commit; it never resolves a floating ref or starts
+a release. It rejects unknown or missing inputs and secrets, literal type
+drift, insufficient permissions, untrusted event classes, and a caller pin that
+does not equal the checked callee commit. Defaults, workflow bytes, and the
+complete interface are bound into `contractRoot`; the receipt additionally
+binds the caller commit/tree and both workflow digests.
+
+```sh
+node .buildchain/workflow-contract-runtime/scripts/workflow-call-contract.mjs check \
+  --caller-root . \
+  --caller-workflow .github/workflows/release-new-version.yml \
+  --caller-repository kungfu-systems/example \
+  --job promote \
+  --callee-root .buildchain/workflow-contract-runtime \
+  --callee-workflow .github/workflows/release-candidate-promote.yml \
+  --callee-repository kungfu-systems/buildchain \
+  --trusted-event workflow_dispatch \
+  --trusted-event pull_request:closed \
+  --expected-contract-root "$(cat .buildchain/release-call-contract-root)" \
+  --output .buildchain/workflow-call-receipts/release-new-version.json
+```
+
+The checkout at `.buildchain/workflow-contract-runtime` must use the same
+40-character SHA written in the caller's `uses:` edge. To accept an intentional
+contract change, first run without `--expected-contract-root`, review the full
+diagnostic and exact coordinates, then replace only the committed root. The
+ordinary PR check runs this command before any candidate or promotion dispatch.
+Local pre-commit rehearsal may add `--allow-dirty`; that result is marked
+`receiptReusable: false` and cannot replace the clean exact-source receipt.
+
 ```toml
 [lifecycle.install]
 command = "cargo fetch --locked"
