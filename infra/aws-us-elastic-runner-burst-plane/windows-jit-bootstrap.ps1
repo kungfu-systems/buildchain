@@ -206,6 +206,23 @@ try {
   Set-Location $RunnerRoot
   $RunnerStartedAt = (Get-Date).ToUniversalTime()
   $env:AWS_EC2_RUNNER_STARTED_AT = $RunnerStartedAt.ToString("o")
+  $RunnerEnvironment = @(
+    "AWS_EC2_INSTANCE_ID=$($env:AWS_EC2_INSTANCE_ID)"
+    "AWS_EC2_CAMPAIGN_ID=$($env:AWS_EC2_CAMPAIGN_ID)"
+    "AWS_EC2_INSTANCE_TYPE=$($env:AWS_EC2_INSTANCE_TYPE)"
+    "AWS_EC2_AMI_ID=$($env:AWS_EC2_AMI_ID)"
+    "AWS_EC2_AMI_NAME=$($env:AWS_EC2_AMI_NAME)"
+    "AWS_EC2_AVAILABILITY_ZONE=$($env:AWS_EC2_AVAILABILITY_ZONE)"
+    "AWS_EC2_LAUNCHED_AT=$($env:AWS_EC2_LAUNCHED_AT)"
+    "AWS_EC2_RUNNER_STARTED_AT=$($env:AWS_EC2_RUNNER_STARTED_AT)"
+    "AWS_EC2_JIT_PARAMETER_DELETED=$($env:AWS_EC2_JIT_PARAMETER_DELETED)"
+    "BUILDCHAIN_RUNNER_LABELS_JSON=$($env:BUILDCHAIN_RUNNER_LABELS_JSON)"
+  )
+  [System.IO.File]::WriteAllLines(
+    (Join-Path $RunnerRoot ".env"),
+    $RunnerEnvironment,
+    [System.Text.UTF8Encoding]::new($false)
+  )
   & ".\run.cmd" --jitconfig $Jit
   $ExitCode = $LASTEXITCODE
   $Jit = $null
