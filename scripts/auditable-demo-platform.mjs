@@ -408,7 +408,9 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
   const publicEvidence = { ...evidencePreimage, evidenceRoot, passportRoot: passport.passportRoot, source: sourceCoordinate, files: publicFiles.sort((left, right) => left.path.localeCompare(right.path)) };
   fs.writeFileSync(path.join(evidenceDirectory, "public-evidence.json"), stableJson(publicEvidence));
   const relative = path.relative(repository, evidenceDirectory).split(path.sep).join("/");
-  const marker = scenario.publication.marker;
+  const marker = scenario.demos.length === 1
+    ? scenario.publication.marker
+    : `${scenario.publication.marker}:${demo.id}`;
   const commandLines = demo.steps.map((step) => `$ ${scenario.product.binaryName} ${step.argv.join(" ")}`.trim()).join("\n");
   const block = [
     `<!-- ${marker}:start -->`,

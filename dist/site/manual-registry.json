@@ -37,7 +37,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:692f835dacdf01dca91c8da67713454a5403b823bc61972593577246f3b9018f",
+      "digest": "sha256:a99175216b3774748b253814c1933683cace8107a34083dd711f639f3e680c61",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",

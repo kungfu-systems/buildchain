@@ -312,6 +312,18 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   assert.equal(fs.readFileSync(path.join(repository, "README.md"), "utf8"), firstReadme);
   assert.match(firstReadme, /\$ fixture write[\s\S]*\$ fixture read/u);
   assert.match(firstReadme, /1080p MP4[\s\S]*720p MP4/u);
+  const independent = capture(t, "independent");
+  materializeDemo({
+    ...args,
+    demoId: "independent",
+    scenarioPath: independent.scenarioPath,
+    captureRoot: independent.output,
+  });
+  const multiReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
+  assert.match(multiReadme, /<!-- fixture-demo:shared-state:start -->/u);
+  assert.match(multiReadme, /<!-- fixture-demo:independent:start -->/u);
+  assert.match(multiReadme, /\$ fixture write/u);
+  assert.match(multiReadme, /\$ fixture independent/u);
   const passport = JSON.parse(fs.readFileSync(path.join(repository, first.evidenceDirectory, "release-passport.json"), "utf8"));
   assert.deepEqual(passport.authority.grants, []);
   assert.equal(passport.authority.productSystemRole, "assembly-and-distribution-metadata-only");
