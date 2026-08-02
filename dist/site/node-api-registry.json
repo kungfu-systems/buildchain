@@ -14952,7 +14952,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation-pickup.js",
-        "line": 362
+        "line": 360
       },
       "example": "import { createManualUpstreamPickupCapture } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14981,7 +14981,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation-pickup.js",
-        "line": 304
+        "line": 302
       },
       "example": "import { createManualUpstreamPickupPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -15058,7 +15058,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation-pickup.js",
-        "line": 120
+        "line": 118
       },
       "example": "import { normalizeManualUpstreamPickupConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -15087,7 +15087,7 @@
       ],
       "source": {
         "path": "packages/core/release-propagation-pickup.js",
-        "line": 169
+        "line": 167
       },
       "example": "import { resolveNpmRegistryRelease } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18947,7 +18947,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:425cb0d357e0a83548e57234766caad03854bd06d40361f08c6b3f5107029a22"
+      "digest": "sha256:c67e43ac62b7771c997c089da1541e573b7bb3202bdef01816a782b876e403c3"
     },
     {
       "id": "build-facts",

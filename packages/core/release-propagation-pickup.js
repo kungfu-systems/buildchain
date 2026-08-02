@@ -55,7 +55,7 @@ function normalizeRuntime(value) {
 function normalizeDownstream(value) {
   const downstream = assertExactFields(
     value,
-    ["id", "repository", "baseRef", "lockPath", "executionProfile"],
+    ["id", "repository", "baseRef", "executionProfile"],
     "manual pickup downstream",
   );
   return {
@@ -67,10 +67,6 @@ function normalizeDownstream(value) {
     baseRef: assertString(
       downstream.baseRef,
       "manual pickup downstream.baseRef",
-    ),
-    lockPath: assertString(
-      downstream.lockPath,
-      "manual pickup downstream.lockPath",
     ),
     executionProfile: normalizeExecutionProfile(
       downstream.executionProfile,
@@ -87,6 +83,7 @@ function normalizeSource(value, index) {
       "id",
       "repository",
       "package",
+      "lockPath",
       "distTags",
       "workflowPaths",
       "workflowRefs",
@@ -102,6 +99,7 @@ function normalizeSource(value, index) {
     id: assertString(source.id, `${label}.id`),
     repository: assertRepository(source.repository, `${label}.repository`),
     package: assertString(source.package, `${label}.package`),
+    lockPath: assertString(source.lockPath, `${label}.lockPath`),
     distTags: {
       alpha: assertString(distTags.alpha, `${label}.distTags.alpha`),
       release: assertString(distTags.release, `${label}.distTags.release`),
@@ -283,7 +281,7 @@ function pickupGraph(config, source) {
         id: config.downstream.id,
         repository: config.downstream.repository,
         baseRef: config.downstream.baseRef,
-        lockPath: config.downstream.lockPath,
+        lockPath: source.lockPath,
         executionProfile: config.downstream.executionProfile,
       },
     ],
@@ -294,7 +292,7 @@ function pickupGraph(config, source) {
         to: config.downstream.id,
         channels: ["alpha", "release"],
         channelPolicy: "preserve",
-        lockPath: config.downstream.lockPath,
+        lockPath: source.lockPath,
         prBaseRef: config.downstream.baseRef,
       },
     ],
