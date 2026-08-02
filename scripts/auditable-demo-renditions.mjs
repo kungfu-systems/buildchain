@@ -16,7 +16,6 @@ const RENDITION_SET_NON_AUTHORITIES = [
   "runtime-authority",
   ...TERMINAL_CAPTURE_NON_AUTHORITIES,
 ];
-
 export function validateTerminalCapture(value, scene, helpers) {
   const { decodeBase64, digestPattern, exactKeys, integer, invariant, maxBytes, maxEvents, text } = helpers;
   exactKeys(
@@ -53,10 +52,10 @@ export function validateTerminalCapture(value, scene, helpers) {
   }
   exactKeys(value.completion, ["schema", "status", "reportRoot", "eventCount"], [], "terminalCapture.completion");
   invariant(
-    value.completion.schema === "kungfu.agent-work-lab.tui-autoplay/v1"
+    /^[a-z0-9][a-z0-9._/-]*\/v[1-9][0-9]*$/u.test(value.completion.schema)
       && value.completion.status === "qualified"
       && digestPattern.test(value.completion.reportRoot),
-    "terminal capture completion sentinel is not a qualified Agent Work Lab autoplay",
+    "terminal capture completion sentinel is not a qualified versioned result",
   );
   integer(value.completion.eventCount, 1, 100_000, "terminalCapture.completion.eventCount");
   invariant(value.exitCode === 0, "terminal capture exitCode must be zero");

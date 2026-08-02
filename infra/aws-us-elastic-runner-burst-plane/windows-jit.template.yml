@@ -29,8 +29,42 @@ Parameters:
     Default: 180
     MinValue: 30
     MaxValue: 180
+  EnableTagFilteredBudget:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+
+Conditions:
+  TagFilteredBudgetConfirmed: !Equals [!Ref EnableTagFilteredBudget, "true"]
 
 Resources:
+  CampaignState:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:provider
+          Value: windows-ec2-jit
+
   RunnerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -189,6 +223,12 @@ Resources:
                   - ssm:DeleteParameter
                 Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kungfu/burst/windows/*"
               - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:TransactWriteItems
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt CampaignState.Arn
+              - Effect: Allow
                 Action: iam:PassRole
                 Resource: !GetAtt RunnerInstanceRole.Arn
                 Condition:
@@ -234,6 +274,10 @@ Resources:
               - Effect: Allow
                 Action: ssm:DeleteParameter
                 Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kungfu/burst/windows/*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt CampaignState.Arn
 
   ReaperLogGroup:
     Type: AWS::Logs::LogGroup
@@ -254,6 +298,7 @@ Resources:
         Variables:
           MAXIMUM_LIFETIME_MINUTES: !Ref MaximumInstanceLifetimeMinutes
           PARAMETER_PREFIX: /kungfu/burst/windows/
+          STATE_TABLE: !Ref CampaignState
       Code:
         ZipFile: |
           import datetime
@@ -262,8 +307,23 @@ Resources:
 
           ec2 = boto3.client("ec2")
           ssm = boto3.client("ssm")
+          dynamodb = boto3.client("dynamodb")
           MAX_AGE = int(os.environ["MAXIMUM_LIFETIME_MINUTES"]) * 60
           PREFIX = os.environ["PARAMETER_PREFIX"]
+          STATE_TABLE = os.environ["STATE_TABLE"]
+
+          def kill_campaign(reason, now):
+              dynamodb.update_item(
+                  TableName=STATE_TABLE,
+                  Key={"pk": {"S": "CONTROL"}},
+                  UpdateExpression="SET #state = :killed, reason = :reason, killed_at = :now",
+                  ExpressionAttributeNames={"#state": "state"},
+                  ExpressionAttributeValues={
+                      ":killed": {"S": "KILLED"},
+                      ":reason": {"S": reason},
+                      ":now": {"N": str(int(now.timestamp()))},
+                  },
+              )
 
           def tags(instance):
               return {row["Key"]: row["Value"] for row in instance.get("Tags", [])}
@@ -291,6 +351,11 @@ Resources:
                       parameter = instance_tags.get("kungfu:jit-parameter", "")
                       if parameter.startswith(PREFIX):
                           parameters.append(parameter)
+              if kill_all or victims:
+                  kill_campaign(
+                      "aws-budget-notification" if kill_all else "runner-lifetime-violation",
+                      now,
+                  )
               if victims:
                   ec2.terminate_instances(InstanceIds=victims)
               for parameter in sorted(set(parameters)):
@@ -376,6 +441,7 @@ Resources:
 
   BurstBudget:
     Type: AWS::Budgets::Budget
+    Condition: TagFilteredBudgetConfirmed
     Properties:
       Budget:
         BudgetName: kungfu-buildchain-windows-jit-actual-spend
@@ -420,7 +486,14 @@ Outputs:
     Value: !GetAtt GitHubProvisionerRole.Arn
   EvidenceBucket:
     Value: !Ref EvidenceBucket
+  CampaignStateTable:
+    Value: !Ref CampaignState
   ReaperFunction:
     Value: !Ref Reaper
   KillSwitchTopic:
     Value: !Ref KillSwitchTopic
+  TagFilteredBudgetStatus:
+    Value: !If
+      - TagFilteredBudgetConfirmed
+      - enabled-after-management-account-confirmation
+      - disabled-until-cost-allocation-tag-is-active

@@ -2402,7 +2402,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     }],
   );
   assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-0"), true);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), alphaSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
   assert.equal(refs.get("tags/v1.0-alpha"), alphaSha);
   assert.equal(refs.get("tags/v1-alpha"), alphaSha);
   const order = fs.readFileSync(path.join(cwd, "order.log"), "utf8").trim().split("\n");
@@ -3825,7 +3825,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.1-alpha.2");
   assert.equal(refs.get("heads/alpha/v1/v1.0"), result.sha);
-  assert.equal(refs.get("tags/v1.0.1-alpha.2"), result.sha);
+  assert.equal(refs.get("tags/v1.0.1-alpha.2"), SHA);
   assert.equal(refs.get("tags/v1.0-alpha"), result.sha);
   assert.equal(refs.has("tags/v1.0.1-alpha.1"), false);
   assert.equal(refs.has("heads/buildchain/release-state/1-0-1-alpha-2"), true);

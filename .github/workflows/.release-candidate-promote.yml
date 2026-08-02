@@ -287,6 +287,11 @@ on:
         default: true
         type: boolean
         required: false
+      release-propagation-config-path:
+        description: "Optional source-controlled package propagation capture config read from the exact finalized release SHA"
+        default: ""
+        type: string
+        required: false
       release-passport-output-dir:
         description: "Release passport output directory"
         default: ".buildchain/release-passport"
@@ -510,6 +515,9 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.promote.outputs.release-candidate-artifact }}
+      release-propagation-work-artifact:
+        description: "Captured package release propagation Work artifact"
+        value: ${{ jobs.promote.outputs.release-propagation-work-artifact }}
       publication-commit-evidence-path:
         description: "Validated consumer publication commit evidence path"
         value: ${{ jobs.promote.outputs.publication-commit-evidence-path }}
@@ -1100,6 +1108,7 @@ jobs:
       promoted-sha: ${{ needs.preflight.outputs.requested-sha }}
       built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
       release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
+      release-propagation-work-artifact: ${{ steps.capture-release-propagation.outputs.artifact-name }}
       release-candidate-outcome: ${{ steps.rc.outcome }}
       promotion-outcome: ${{ steps.promote.outcome }}
       finalization-needed: ${{ steps.promote.outputs.finalization-needed }}
@@ -1774,6 +1783,34 @@ jobs:
           test -f "${BUILDCHAIN_RELEASE_EVIDENCE_PATH}"
           echo "evidence-path=${BUILDCHAIN_RELEASE_EVIDENCE_PATH}" >> "${GITHUB_OUTPUT}"
 
+      - name: Capture exact package release propagation work
+        id: capture-release-propagation
+        if: ${{ inputs.release-propagation-config-path != '' && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          output_dir=.buildchain/release-propagation-capture
+          mkdir -p "$output_dir"
+          node .buildchain/runtime/scripts/capture-package-release-propagation.mjs \
+            --repository "${{ github.repository }}" \
+            --channel "${{ needs.preflight.outputs.channel }}" \
+            --source-sha "${{ steps.promote.outputs.transaction-release-sha }}" \
+            --tag "${{ steps.promote.outputs.public-release-tag }}" \
+            --config-path "${{ inputs.release-propagation-config-path }}" \
+            --release-passport-path "${{ steps.promote.outputs.release-passport-path }}" \
+            --output-dir "$output_dir" \
+            > "$output_dir/capture-result.json"
+
+      - name: Upload exact package release propagation work
+        if: ${{ steps.capture-release-propagation.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.capture-release-propagation.outputs.artifact-name }}
+          path: .buildchain/release-propagation-capture/
+          if-no-files-found: error
+
       - name: Bundle release-candidate-promotion controller evidence
         id: controller-evidence
         if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' }}
@@ -1787,6 +1824,7 @@ jobs:
           PUBLICATION_COMMIT_EVIDENCE: ${{ steps.publication-commit.outputs.evidence-path }}
           RELEASE_ACTIVATION_RECEIPTS: ${{ steps.release-activation.outputs.receipt-set-path }}
           RELEASED_PRODUCT_EVIDENCE: ${{ steps.release-evidence.outputs.evidence-path }}
+          RELEASE_PROPAGATION_CAPTURE: ${{ steps.capture-release-propagation.outcome == 'success' && '.buildchain/release-propagation-capture/capture-result.json' || '' }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
@@ -1807,6 +1845,9 @@ jobs:
           }
           if (process.env.RELEASED_PRODUCT_EVIDENCE && !finalizationNeeded) {
             files.push([process.env.RELEASED_PRODUCT_EVIDENCE, "released-product-evidence.json"]);
+          }
+          if (process.env.RELEASE_PROPAGATION_CAPTURE && !finalizationNeeded) {
+            files.push([process.env.RELEASE_PROPAGATION_CAPTURE, "release-propagation-capture.json"]);
           }
           fs.mkdirSync(".buildchain/controller/promotion-evidence", { recursive: true });
           for (const [source, name] of files) {

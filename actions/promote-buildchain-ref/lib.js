@@ -956,6 +956,7 @@ function uniqueShas(values) {
 function transactionAcceptedExactTagShas(transaction, publicSha) {
   return uniqueShas([
     publicSha,
+    transaction?.source_sha,
     transaction?.release_sha,
     transaction?.release_material_sha,
   ]);

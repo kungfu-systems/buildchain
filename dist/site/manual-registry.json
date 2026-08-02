@@ -37,7 +37,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:4b3e529060ba54a439a86159a4dc0fc7fb43c8456a90e4b32579c86b20bc6bab",
+      "digest": "sha256:4d32c82b652decfbb26b441c203fe34e70daa86022bb4baed9da02a5d6cf5831",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -150,7 +150,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:d9c9b4ba9dff6ed336b1ff31e5a02fcdf68dd013278caa86510e5fd0b50c4267",
+      "digest": "sha256:3b7a2a0437f8a3a4e5cff7e05a2a8c427be597d85e93d49d5e35ba2a2b089afc",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:ce9b018e6b1cfd98d8faa0ccadd6570585f2812b4828d610810f984f9810df5d",
+      "digest": "sha256:38f051f579fb93dc7d8b4f2c70acd622c020e867394344b5e932568cd8d2ad83",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -403,7 +403,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:ad76e65f26f545ce306f1ba419e23349afbd24f1056f2c5963b27aceaa991948",
+      "digest": "sha256:40fb5ee9bb57e668cf0a206904035936adbb8536f604e7ee4112e3aacb689230",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -417,7 +417,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:9b830727e5b0d2192c937f19106c11ea5064dde77e30d290825f343df47f291b",
+      "digest": "sha256:3a9ef099d5d93d9b558c7b6a0aa4403dfcce1479ce5d6fc36ecb3e34cdd5bb6d",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -430,7 +430,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:60ec90d3294818d3c53e403312801a8ab47be7c0f34810002676fbfcdbceaa60",
+      "digest": "sha256:96d78f800cd7d43d3a47a11863d4813711e360418ba33a4284688389c7e4b70c",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -444,7 +444,7 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:bac959565c36cf39c3cd30dfce00dbbb59b73ed21b852a8f24a6cae281cb5f05",
+      "digest": "sha256:dc54b8a264489341984ca6157b07d1956e934366f937b7412a21df7f025d2d8d",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
