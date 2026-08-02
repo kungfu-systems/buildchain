@@ -42,7 +42,6 @@ function config() {
       id: "site-libkungfu-dev",
       repository: "kungfu-systems/site-libkungfu-dev",
       baseRef: "main",
-      lockPath: "buildchain.upstreams/code-content.release.json",
       executionProfile: executionProfile(),
     },
     sources: [
@@ -50,6 +49,7 @@ function config() {
         id: "buildchain",
         repository: "kungfu-systems/buildchain",
         package: "@kungfu-tech/buildchain",
+        lockPath: "buildchain.upstreams/buildchain.release.json",
         distTags: { alpha: "alpha", release: "latest" },
         workflowPaths: [".github/workflows/buildchain-ref-promotion.yml"],
         workflowRefs: ["refs/heads/dev/v3/v3.0"],
@@ -195,6 +195,10 @@ test("manual pickup only creates paused Work after explicit create and returns a
   assert.equal(updatePlan.runtime.version, "3.0.5-alpha.7");
   assert.equal(updatePlan.resolvedVersion, "3.0.4");
   assert.equal(updatePlan.status, "update-available");
+  assert.equal(
+    updatePlan.propagationPlan.targets[0].lockPath,
+    "buildchain.upstreams/buildchain.release.json",
+  );
   const capture = createManualUpstreamPickupCapture({
     plan: updatePlan,
     expectedDownstreamBaseSha: "3".repeat(40),
