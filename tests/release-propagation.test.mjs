@@ -1061,6 +1061,7 @@ test("package release capture materializes a restart-safe artifact set", () => {
   const status = JSON.parse(fs.readFileSync(path.join(outputDir, "work", propagationKey, "status.json"), "utf8"));
   assert.equal(work.contentRoot, captured.works[0].work.contentRoot);
   assert.equal(status.nextAction.action, "claim");
+  assert.equal(verifyReleasePropagationWork(work).contentRoot, work.contentRoot);
   assert.equal(JSON.parse(fs.readFileSync(path.join(outputDir, "upstream-release.json"), "utf8")).tag, "v1.4.0-alpha.3");
 });
 

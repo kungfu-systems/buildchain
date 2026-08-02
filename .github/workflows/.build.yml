@@ -1506,6 +1506,13 @@ jobs:
           requested-parallelism: ${{ inputs.requested-parallelism }}
           process-summary-required: ${{ inputs.require-build }}
 
+      - name: Verify auditable compiler cache activity
+        if: ${{ inputs.compiler-cache-provider != 'none' && contains(fromJSON(inputs.compiler-cache-platforms-json), matrix.platform.id) }}
+        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs verify
+        env:
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
+          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ inputs.compiler-cache-required }}
+
       - name: Seal declared artifact signing requests
         id: signing-requests
         shell: bash
@@ -1965,6 +1972,13 @@ jobs:
           process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
           requested-parallelism: ${{ inputs.requested-parallelism }}
           process-summary-required: ${{ inputs.require-build }}
+
+      - name: Verify auditable compiler cache activity
+        if: ${{ inputs.compiler-cache-provider != 'none' && contains(fromJSON(inputs.compiler-cache-platforms-json), matrix.platform.id) }}
+        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs verify
+        env:
+          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ inputs.compiler-cache-provider }}
+          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ inputs.compiler-cache-required }}
 
       - name: Seal declared artifact signing requests
         id: signing-requests
@@ -2981,7 +2995,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"signing-control","status":"${{ needs.artifact-signing-control.result }}"},{"id":"signing-finalization","status":"${{ needs.finalize-artifact-signing.result }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"signing-finalization","status":"${{ needs.finalize-artifact-signing.result }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"anchored-version-material","path":".buildchain/anchored-version-material/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]'
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/release-candidate-receipt.json
@@ -3103,7 +3117,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"signing-control","status":"${{ needs.artifact-signing-control.result }}"},{"id":"signing-finalization","status":"${{ needs.finalize-artifact-signing.result }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"signing-finalization","status":"${{ needs.finalize-artifact-signing.result }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ needs.summarize.result == 'success' && '[{"kind":"anchored-version-material","path":".buildchain/controller/evidence/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/controller/evidence/build-summary.json"},{"kind":"build-summary","path":".buildchain/controller/evidence/build-summary.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.summarize.result == 'success' && '' || 'controller-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Build or verification did not complete successfully

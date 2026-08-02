@@ -397,6 +397,24 @@ test("adapter output is strict and smoke input is bounded", (t) => {
   assert.throws(() => validateAdapterOutput(adapter), /undeclared adapter output/);
 });
 
+test("adapter output requires an explicit bounded long-form scene", (t) => {
+  const root = temporaryDirectory(t);
+  writeAdapterOutput(root, 61_000, true);
+  assert.throws(() => validateAdapterOutput(root), /scene\.durationMs is out of range/u);
+
+  const scenePath = path.join(root, "scene.json");
+  const scene = JSON.parse(fs.readFileSync(scenePath, "utf8"));
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", fps: 10 }));
+  const validated = validateAdapterOutput(root);
+  assert.equal(validated.scene.durationClass, "long-form");
+  assert.equal(validated.terminalCapture.durationMs, 60_500);
+
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", durationMs: 180_001, fps: 1 }));
+  assert.throws(() => validateAdapterOutput(root), /scene\.durationMs is out of range/u);
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", fps: 11 }));
+  assert.throws(() => validateAdapterOutput(root), /scene\.fps is out of range/u);
+});
+
 test("optional terminal capture is bounded and grants no implicit authority", (t) => {
   const root = temporaryDirectory(t);
   writeAdapterOutput(root, 2500, true);
@@ -865,7 +883,12 @@ test("checked-in media evidence binds measured byte budgets", () => {
   assert.equal(evidenceRoot, sha256(Buffer.from(stableJson(body))));
   assert.equal(evidence.qualification.profile.catalogRoot, sha256(Buffer.from(stableJson(catalog))));
   const observed = new Map(evidence.qualification.renditions.map((entry) => [entry.path, entry.bytes]));
-  for (const profileId of ["web-delivery-v1", "responsive-web-delivery-v1", "site-hero-v1"]) {
+  for (const profileId of [
+    "web-delivery-v1",
+    "responsive-web-delivery-v1",
+    "responsive-long-form-web-delivery-v1",
+    "site-hero-v1",
+  ]) {
     for (const rendition of catalog.profiles[profileId].renditions) {
       assert.equal(rendition.budgetBasis.evidence, "contracts/evidence/auditable-demo-web-delivery-v1.json");
       assert.equal(rendition.budgetBasis.observedBytes, observed.get(rendition.budgetBasis.observedPath));
