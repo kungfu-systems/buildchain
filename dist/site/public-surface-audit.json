@@ -7029,7 +7029,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "0db010925d1c60209c3dac8bc2797537f307ab21bc68084263e79004c5c16ff7",
     "workflowRegistryDigest": "b5b860965abf645e1618d7840db544d638fd8ea3d0ee04ed00ccd4c8f8ccaabb",
-    "pageRegistryDigest": "13e408bcfe519ed58f0723980506c522bf124921883c880ac89258db28b06ce5"
+    "pageRegistryDigest": "35020e931ccfcd92c06079e35d288796cb1103ec88caf9d23b357daf9b7418c3"
   },
   "comparison": {
     "missingCliRegistry": [],

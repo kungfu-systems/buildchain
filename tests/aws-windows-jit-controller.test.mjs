@@ -11,6 +11,12 @@ import {
   createWindowsJitLaunchPlan,
   windowsRunInstancesArgs,
 } from "../scripts/aws-windows-jit-controller-core.mjs";
+import {
+  createWindowsJitCampaignArmPlan,
+  windowsCampaignArmItems,
+  windowsCampaignKillArgs,
+  windowsCampaignReservationItems,
+} from "../scripts/aws-windows-jit-campaign-core.mjs";
 
 function launchPlan(overrides = {}) {
   return createWindowsJitLaunchPlan({
@@ -19,6 +25,7 @@ function launchPlan(overrides = {}) {
     runAttempt: "1",
     jobId: "91315129066",
     qualificationId: "win-full-01",
+    campaignId: "win-20260802-ledger",
     runnerLabel: "aws-us-ec2-windows-jit-win-full-01",
     runnerName: "kungfu-win-full-01-30679299189-1",
     sourceSha: "a".repeat(40),
@@ -33,6 +40,7 @@ function launchPlan(overrides = {}) {
     instanceProfileName:
       "kungfu-buildchain-windows-jit-RunnerInstanceProfile-aZfB20hvOmdz",
     evidenceBucket: "kungfu-buildchain-windows-jit-evidencebucket-3vq75oz26vmc",
+    stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
     launchedAt: "2026-08-01T02:45:54Z",
     ...overrides,
   });
@@ -44,6 +52,9 @@ test("Windows controller binds exact run, source, JIT label, and IaC ownership",
   assert.equal(plan.safety.applyMode, "dry-run");
   assert.equal(plan.safety.jitConfigInArgv, false);
   assert.equal(plan.safety.jitConfigInUserData, false);
+  assert.equal(plan.safety.persistentCampaignLedgerRequired, true);
+  assert.equal(plan.safety.campaignAcceptedInstanceCeiling, 6);
+  assert.equal(plan.safety.campaignReservationUsd, 4.35);
   assert.equal(
     plan.aws.jitParameterName,
     "/kungfu/burst/windows/30679299189/1/win-full-01",
@@ -67,6 +78,150 @@ test("Windows controller binds exact run, source, JIT label, and IaC ownership",
         entry.Value === plan.aws.jitParameterName,
     ),
   );
+  assert.ok(
+    plan.aws.instanceTags.some(
+      (entry) =>
+        entry.Key === "kungfu:campaign-id" &&
+        entry.Value === "win-20260802-ledger",
+    ),
+  );
+});
+
+test("Windows campaign is one-shot, source-bound, and atomically capped", () => {
+  const campaign = createWindowsJitCampaignArmPlan({
+    campaignId: "win-20260802-ledger",
+    sourceSha: "a".repeat(40),
+    stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+    armedAt: "2026-08-02T03:00:00Z",
+    expiresAt: "2026-08-03T03:00:00Z",
+  });
+  const arm = windowsCampaignArmItems(campaign);
+  assert.equal(arm.length, 2);
+  assert.equal(arm[0].Put.ConditionExpression, "attribute_not_exists(pk)");
+  assert.equal(arm[1].Put.Item.accepted_instances.N, "0");
+  assert.equal(arm[1].Put.Item.reserved_usd.N, "0");
+
+  const plan = launchPlan();
+  const reservation = windowsCampaignReservationItems(
+    plan,
+    "2026-08-02T03:05:00Z",
+  );
+  assert.equal(reservation.length, 3);
+  assert.match(
+    reservation[0].ConditionCheck.ConditionExpression,
+    /#state = :armed.*campaign_id = :campaign.*source_sha = :source.*expires_epoch >= :now/,
+  );
+  assert.match(
+    reservation[2].Update.ConditionExpression,
+    /accepted_instances < :max.*reserved_usd <= :remaining/,
+  );
+  assert.equal(
+    reservation[2].Update.ExpressionAttributeValues[":max"].N,
+    "6",
+  );
+  assert.equal(
+    reservation[2].Update.ExpressionAttributeValues[":remaining"].N,
+    "35.65",
+  );
+  const kill = windowsCampaignKillArgs(
+    plan.aws.stateTable,
+    "operator-kill",
+    "2026-08-02T03:06:00Z",
+  );
+  const killValues = JSON.parse(
+    kill[kill.indexOf("--expression-attribute-values") + 1],
+  );
+  assert.equal(killValues[":killed"].S, "KILLED");
+  assert.match(kill.join(" "), /operator-kill/);
+});
+
+test("Windows campaign cannot remain armed for more than 24 hours", () => {
+  assert.throws(
+    () =>
+      createWindowsJitCampaignArmPlan({
+        campaignId: "win-20260802-ledger",
+        sourceSha: "a".repeat(40),
+        stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+        armedAt: "2026-08-02T03:00:00Z",
+        expiresAt: "2026-08-03T03:00:01Z",
+      }),
+    /within 24 hours/,
+  );
+});
+
+test("Windows campaign CLI plans without mutating AWS", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      "scripts/aws-windows-jit-campaign.mjs",
+      "plan-arm",
+      "--campaign-id",
+      "win-20260802-ledger",
+      "--source-sha",
+      "a".repeat(40),
+      "--state-table",
+      "kungfu-buildchain-windows-jit-CampaignState-example",
+      "--armed-at",
+      "2026-08-02T03:00:00Z",
+      "--expires-at",
+      "2026-08-03T03:00:00Z",
+    ],
+    { cwd: path.resolve(import.meta.dirname, ".."), encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const plan = JSON.parse(result.stdout);
+  assert.equal(plan.kind, "campaign-arm-plan");
+  assert.equal(plan.limits.maxAcceptedInstances, 6);
+});
+
+test("Windows campaign kill persists state before publishing cleanup", () => {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-windows-jit-kill-test-"),
+  );
+  const log = path.join(tempRoot, "aws.jsonl");
+  fs.writeFileSync(
+    path.join(tempRoot, "aws"),
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify(args) + "\\n");
+process.stdout.write(JSON.stringify(args.includes("publish") ? { MessageId: "message-1" } : {}));
+`,
+    { mode: 0o700 },
+  );
+  try {
+    const common = [
+      "--campaign-id", "win-20260802-ledger",
+      "--confirm-campaign-id", "win-20260802-ledger",
+      "--source-sha", "a".repeat(40),
+      "--confirm-source-sha", "a".repeat(40),
+      "--state-table", "kungfu-buildchain-windows-jit-CampaignState-example",
+      "--confirm-state-table", "kungfu-buildchain-windows-jit-CampaignState-example",
+      "--kill-switch-topic", "arn:aws:sns:us-east-1:123456789012:kungfu-buildchain-windows-jit-KillSwitchTopic-example",
+      "--confirm-kill-switch-topic", "arn:aws:sns:us-east-1:123456789012:kungfu-buildchain-windows-jit-KillSwitchTopic-example",
+    ];
+    const result = spawnSync(
+      process.execPath,
+      ["scripts/aws-windows-jit-campaign.mjs", "kill-campaign", ...common],
+      {
+        cwd: path.resolve(import.meta.dirname, ".."),
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${tempRoot}:${process.env.PATH}`,
+          FAKE_COMMAND_LOG: log,
+        },
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).notificationMessageId, "message-1");
+    const calls = fs.readFileSync(log, "utf8").trim().split("\n").map(JSON.parse);
+    assert.equal(calls[0].includes("update-item"), true);
+    assert.equal(calls[1].includes("publish"), true);
+  } finally {
+    for (const file of fs.readdirSync(tempRoot)) fs.unlinkSync(path.join(tempRoot, file));
+    fs.rmdirSync(tempRoot);
+  }
 });
 
 test("Windows controller rejects a mismatched qualification label", () => {
@@ -168,6 +323,8 @@ if (joined.includes("ec2 describe-instances")) {
 } else if (joined.includes("ec2 run-instances")) {
   process.stderr.write("simulated ambiguous transport failure");
   process.exitCode = 255;
+} else if (joined.includes("dynamodb transact-write-items")) {
+  process.stdout.write(JSON.stringify({}));
 } else if (joined.includes("ec2 terminate-instances") || joined.includes("ssm delete-parameter")) {
   process.stdout.write(JSON.stringify({ ok: true }));
 } else {
@@ -184,12 +341,18 @@ if (joined.includes("ec2 describe-instances")) {
       "a".repeat(40),
       "--confirm-run-id",
       "30679299189",
+      "--confirm-campaign-id",
+      "win-20260802-ledger",
+      "--confirm-state-table",
+      "kungfu-buildchain-windows-jit-CampaignState-example",
       "--run-id",
       "30679299189",
       "--job-id",
       "91315129066",
       "--qualification-id",
       "win-full-01",
+      "--campaign-id",
+      "win-20260802-ledger",
       "--runner-label",
       "aws-us-ec2-windows-jit-win-full-01",
       "--runner-name",
@@ -210,6 +373,8 @@ if (joined.includes("ec2 describe-instances")) {
       "kungfu-buildchain-windows-jit-RunnerInstanceProfile-aZfB20hvOmdz",
       "--evidence-bucket",
       "kungfu-buildchain-windows-jit-evidencebucket-3vq75oz26vmc",
+      "--state-table",
+      "kungfu-buildchain-windows-jit-CampaignState-example",
       "--launched-at",
       "2026-08-01T02:45:54Z",
     ];
@@ -307,6 +472,8 @@ if (joined.includes("ec2 describe-instances")) {
   process.exitCode = 255;
 } else if (joined.includes("ec2 run-instances")) {
   process.stdout.write(JSON.stringify({ Instances: [{ InstanceId: "i-0123456789abcdef0", ImageId: "ami-013acec81a2c8ff79", InstanceType: "c7i.4xlarge", LaunchTime: "2026-08-01T02:45:54Z" }] }));
+} else if (joined.includes("dynamodb transact-write-items") || joined.includes("dynamodb update-item")) {
+  process.stdout.write(JSON.stringify({}));
 } else {
   process.stderr.write("unexpected aws command");
   process.exitCode = 2;
@@ -323,12 +490,18 @@ if (joined.includes("ec2 describe-instances")) {
         "a".repeat(40),
         "--confirm-run-id",
         "30679299189",
+        "--confirm-campaign-id",
+        "win-20260802-ledger",
+        "--confirm-state-table",
+        "kungfu-buildchain-windows-jit-CampaignState-example",
         "--run-id",
         "30679299189",
         "--job-id",
         "91315129066",
         "--qualification-id",
         "win-full-01",
+        "--campaign-id",
+        "win-20260802-ledger",
         "--runner-label",
         "aws-us-ec2-windows-jit-win-full-01",
         "--runner-name",
@@ -349,6 +522,8 @@ if (joined.includes("ec2 describe-instances")) {
         "kungfu-buildchain-windows-jit-RunnerInstanceProfile-aZfB20hvOmdz",
         "--evidence-bucket",
         "kungfu-buildchain-windows-jit-evidencebucket-3vq75oz26vmc",
+        "--state-table",
+        "kungfu-buildchain-windows-jit-CampaignState-example",
         "--launched-at",
         "2026-08-01T02:45:54Z",
       ],
@@ -381,7 +556,21 @@ if (joined.includes("ec2 describe-instances")) {
         entry.args.includes("run-instances") &&
         !entry.args.includes("--dry-run"),
     );
-    assert.ok(dryRunIndex >= 0 && launchIndex > dryRunIndex);
+    const reservationIndex = commands.findIndex(
+      (entry) =>
+        entry.command === "aws" &&
+        entry.args.includes("transact-write-items"),
+    );
+    const markIndex = commands.findIndex(
+      (entry) =>
+        entry.command === "aws" && entry.args.includes("update-item"),
+    );
+    assert.ok(
+      dryRunIndex >= 0 &&
+        reservationIndex > dryRunIndex &&
+        launchIndex > reservationIndex &&
+        markIndex > launchIndex,
+    );
   } finally {
     for (const entry of fs.readdirSync(tempRoot)) {
       fs.unlinkSync(path.join(tempRoot, entry));
