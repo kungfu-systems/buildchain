@@ -229,3 +229,18 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   fs.appendFileSync(path.join(media, "demo.gif"), "drift");
   assert.throws(() => materializeDemo(args), /checksum mismatch/u);
 });
+
+test("Gate smoke stays bounded while full render consumes both native captures", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.declarative-auditable-demo.yml"), "utf8");
+  const smoke = workflow.slice(
+    workflow.indexOf("smoke-output:/output"),
+    workflow.indexOf("smoke-inspection"),
+  );
+  const full = workflow.slice(
+    workflow.indexOf("render-output:/output"),
+    workflow.indexOf("render-inspection"),
+  );
+  assert.doesNotMatch(smoke, /--terminal-capture|--rendition-set/u);
+  assert.match(full, /--terminal-capture \/input\/terminal-capture\.json/u);
+  assert.match(full, /--rendition-set \/input\/rendition-set\.json/u);
+});

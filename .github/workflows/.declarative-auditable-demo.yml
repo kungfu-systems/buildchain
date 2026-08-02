@@ -275,8 +275,7 @@ jobs:
               --volume "${GITHUB_WORKSPACE}/${root}/smoke-input:/input:ro" \
               --volume "${GITHUB_WORKSPACE}/${root}/smoke-output:/output" "${RENDERER_IMAGE}" \
               demo-renderer --scene /input/scene.json --transcript /input/complete-transcript.txt \
-              --projection /input/public-projection.json --terminal-capture /input/terminal-capture.json \
-              --rendition-set /input/rendition-set.json --output /output --renderer-image "${RENDERER_IMAGE}"
+              --projection /input/public-projection.json --output /output --renderer-image "${RENDERER_IMAGE}"
             mkdir -p "${root}/smoke-inspection" && chmod 0777 "${root}/smoke-inspection"
             docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
               --volume "${GITHUB_WORKSPACE}/.buildchain/runtime:/buildchain:ro" \
