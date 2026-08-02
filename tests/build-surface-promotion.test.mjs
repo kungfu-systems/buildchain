@@ -314,6 +314,10 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /needs\.promote\.outputs\.finalization-needed == 'true' && 'partial'/,
   );
+  assert.match(
+    wrapper,
+    /Enforce qualifying release-candidate-promotion controller receipt[\s\S]*?needs\.promote\.outputs\.finalization-needed != 'true'[\s\S]*?controller-receipt-qualifying != 'true'/,
+  );
 });
 
 test("reusable build exposes release-candidate passport outputs", () => {
