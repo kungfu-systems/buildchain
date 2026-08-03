@@ -1681,13 +1681,14 @@
         "landing-mode",
         "max-merges",
         "merge-method",
+        "queue-admission-context",
         "ready-label",
         "require-approval",
         "required-status-checks",
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 13,
+      "inputCount": 14,
       "secrets": [
         "github-token"
       ],

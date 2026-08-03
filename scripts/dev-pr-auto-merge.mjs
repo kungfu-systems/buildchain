@@ -8,13 +8,7 @@ const DEFAULT_REQUIRED_CHECKS = ["check"];
 const SUCCESS_STATES = new Set(["success"]);
 const SUCCESS_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
 const VALID_LANDING_MODES = new Set(["auto", "direct", "queue"]);
-const STATIC_SKIP_REASONS = new Set([
-  "draft",
-  "fork-or-cross-repository-head",
-  "head-prefix-not-allowed",
-  "missing-ready-label",
-  "blocked-label",
-]);
+const STATIC_SKIP_REASONS = new Set(["draft", "fork-or-cross-repository-head", "head-prefix-not-allowed", "missing-ready-label", "blocked-label"]);
 const ADMISSION_CONTRACT = "kungfu-buildchain-dev-merge-queue-admission";
 
 function splitList(value, fallback = []) {
@@ -62,6 +56,7 @@ function normalizeOptions(options = {}) {
     blockLabels: splitList(options.blockLabels, DEFAULT_BLOCK_LABELS).map((label) => label.toLowerCase()),
     allowedHeadPrefixes: splitList(options.allowedHeadPrefixes, DEFAULT_ALLOWED_HEAD_PREFIXES),
     requiredChecks: splitList(options.requiredChecks, DEFAULT_REQUIRED_CHECKS),
+    queueAdmissionContext: String(options.queueAdmissionContext || "").trim(),
     requireApproval: boolOption(options.requireApproval, true),
     sameRepositoryOnly: boolOption(options.sameRepositoryOnly, true),
     maxMerges: intOption(options.maxMerges, 1),
@@ -155,8 +150,12 @@ function summarizeChecks({ statuses = [], checkRuns = [] } = {}, requiredChecks 
 function mergeableAccepted(pr, landingMode = "direct") {
   if (pr.mergeable === false) return false;
   const state = String(pr.mergeable_state || pr.mergeStateStatus || "").toLowerCase();
-  if (!state) return pr.mergeable === true;
-  return ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked"] : [])].includes(state);
+  return state ? ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked"] : [])].includes(state) : pr.mergeable === true;
+}
+async function setQueueAdmissionStatus(client, repository, sha, context, state) {
+  if (!context) return null;
+  await client.request("POST", `/repos/${repository.owner}/${repository.repo}/statuses/${sha}`, { body: { state, context, description: state === "success" ? "Buildchain admitted this exact PR head to the merge queue" : "Buildchain rejected merge queue admission for this exact PR head" } });
+  return { context, state, sha };
 }
 
 function skip(reason, details = {}) {
@@ -521,9 +520,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
     client.getMergeQueueState(options.targetBranch),
   ]);
   const landingMode = initialQueueState.enabled ? "queue" : options.landingMode === "queue" ? "queue" : "direct";
-  const orderedPullRequests = landingMode === "queue"
-    ? [...pullRequests].sort((left, right) => Number(left.number) - Number(right.number))
-    : pullRequests;
+  const orderedPullRequests = landingMode === "queue" ? [...pullRequests].sort((left, right) => Number(left.number) - Number(right.number)) : pullRequests;
   const result = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-dev-pr-auto-merge",
@@ -662,6 +659,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
           result.skipped.push(entry);
         } else {
           try {
+            entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "success");
             const queueEntry = await client.enqueuePullRequest({
               pullRequestId: decision.pullRequestId,
               expectedHeadOid: expectedHeadSha,
@@ -673,6 +671,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
             result.actions.push(entry);
             result.enqueued.push(entry);
           } catch (error) {
+            entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "failure");
             entry.action = "skip";
             entry.reason = "enqueue-rejected";
             entry.enqueueError = {
@@ -744,6 +743,7 @@ async function main() {
     blockLabels: process.env.BUILDCHAIN_DEV_PR_BLOCK_LABELS,
     allowedHeadPrefixes: process.env.BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES,
     requiredChecks: process.env.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS,
+    queueAdmissionContext: process.env.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT,
     requireApproval: process.env.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,
     sameRepositoryOnly: process.env.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,
     maxMerges: process.env.BUILDCHAIN_DEV_PR_MAX_MERGES,
