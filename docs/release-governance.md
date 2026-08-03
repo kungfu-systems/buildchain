@@ -545,6 +545,33 @@ inputs: target dev branch, required status/check names, ready and block labels,
 allowed work-branch prefixes, review requirements, maximum merges per run,
 merge method, and dry-run mode.
 
+Agent delivery uses the targeted Buildchain command instead of relying on a
+scheduled scan:
+
+```sh
+buildchain dev pr-admit \
+  --repository kungfu-systems/example \
+  --branch dev/v3/v3.0 \
+  --pull-request 123 \
+  --expected-head 0123456789abcdef0123456789abcdef01234567
+```
+
+The default is a mutation-free plan. After reviewing it, add `--execute` to
+establish the configured readiness label for only that PR and exact head, read
+the state back, and attempt native queue admission. Repeating execute is
+idempotent: an exact matching queue entry is adopted, not submitted again. A
+stale head or base, fork, draft, block label, missing approval, failed check,
+active predecessor, or rejected enqueue exits nonzero. Execute mode also
+creates or updates an exact-head PR comment and named commit status containing
+the current state, reason, receipt root, and copyable next action. The JSON
+receipt remains the complete content-addressed evidence.
+
+GitHub auto-merge is observed but is never readiness or admission authority.
+Approval plus green checks plus auto-merge enabled does not qualify a PR that
+lacks explicit Buildchain delivery intent. The targeted workflow interface
+exposes the same contract through `expected-pr-number` and
+`expected-head-sha`; cadence patrol runs leave those inputs empty.
+
 The workflow defaults are conservative. A PR is skipped unless it targets the
 configured dev line, is not a draft, has the ready label, has no block label,
 comes from the same repository, uses an allowed work-branch prefix, has a
@@ -686,6 +713,13 @@ The cadence names describe patrol intensity, not release cadence:
 - weekly patrol is for medium-cost maintenance and audit checks;
 - monthly patrol is for structural drift checks that should not block ordinary
   development velocity.
+
+Every cadence result is typed `runKind: cadence-patrol` with
+`qualification: false`. A run with no open candidates reports
+`no-op-no-candidates`; a run where every candidate is skipped reports
+`no-op-all-skipped`. Either no-op can keep maintenance green, but neither is a
+delivery qualification, a targeted admission receipt, or evidence that an
+expected PR entered the merge queue.
 
 Stable Candidate Patrol is separate from those maintenance cadences because its
 caller-owned cron is a release-intent window. Its candidate ledger and selection

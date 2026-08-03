@@ -1,15 +1,22 @@
 #!/usr/bin/env node
+import crypto from "node:crypto";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
 const DEFAULT_REQUIRED_CHECKS = ["check"];
+const DEFAULT_READY_LABEL = "ready";
 const SUCCESS_STATES = new Set(["success"]);
 const SUCCESS_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
 const VALID_LANDING_MODES = new Set(["auto", "direct", "queue"]);
 const STATIC_SKIP_REASONS = new Set(["draft", "fork-or-cross-repository-head", "head-prefix-not-allowed", "missing-ready-label", "blocked-label"]);
 const ADMISSION_CONTRACT = "kungfu-buildchain-dev-merge-queue-admission";
+const AGENT_ADMISSION_SCHEMA = "kungfu.buildchain.dev-pr-admission/v1";
+const AGENT_ADMISSION_RESULT_SCHEMA = "kungfu.buildchain.dev-pr-admission-result/v1";
+const AGENT_ADMISSION_MARKER = "buildchain-dev-pr-admission:v1";
+const SHA_PATTERN = /^[0-9a-f]{40}$/;
 
 function splitList(value, fallback = []) {
   if (Array.isArray(value)) return value.map((entry) => String(entry).trim()).filter(Boolean);
@@ -33,6 +40,11 @@ function intOption(value, fallback) {
   return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : fallback;
 }
 
+function positiveIntOption(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
 function choiceOption(value, valid, fallback, field) {
   const normalized = String(value || fallback).trim().toLowerCase();
   if (!valid.has(normalized)) {
@@ -52,7 +64,7 @@ function normalizeOptions(options = {}) {
   return {
     repository: normalizeRepo(options.repository || process.env.GITHUB_REPOSITORY),
     targetBranch: String(options.targetBranch || "").replace(/^refs\/heads\//, ""),
-    readyLabel: String(options.readyLabel ?? "ready").trim(),
+    readyLabel: String(options.readyLabel || DEFAULT_READY_LABEL).trim(),
     blockLabels: splitList(options.blockLabels, DEFAULT_BLOCK_LABELS).map((label) => label.toLowerCase()),
     allowedHeadPrefixes: splitList(options.allowedHeadPrefixes, DEFAULT_ALLOWED_HEAD_PREFIXES),
     requiredChecks: splitList(options.requiredChecks, DEFAULT_REQUIRED_CHECKS),
@@ -66,7 +78,27 @@ function normalizeOptions(options = {}) {
     pollMergeableAttempts: intOption(options.pollMergeableAttempts, 3),
     pollMergeableDelayMs: intOption(options.pollMergeableDelayMs, 1000),
     outputPath: String(options.outputPath || ".buildchain/dev-pr-auto-merge/result.json"),
+    targetPullRequestNumber: positiveIntOption(options.targetPullRequestNumber, 0),
+    expectedHeadSha: String(options.expectedHeadSha || "").trim().toLowerCase(),
+    diagnosticContext: String(options.diagnosticContext || "Buildchain delivery intent").trim(),
   };
+}
+
+function stableValue(value) {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, entry]) => entry !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, stableValue(entry)]),
+    );
+  }
+  return value;
+}
+
+function contentRoot(value) {
+  return `sha256:${crypto.createHash("sha256").update(`${JSON.stringify(stableValue(value))}\n`).digest("hex")}`;
 }
 
 function labelsOf(pr) {
@@ -418,6 +450,124 @@ export class GitHubClient {
       headSha: entry.headCommit?.oid || "",
     };
   }
+
+  async addLabels(number, labels) {
+    const { data } = await this.request(
+      "POST",
+      `/repos/${this.repository.owner}/${this.repository.repo}/issues/${number}/labels`,
+      { body: { labels } },
+    );
+    return data;
+  }
+
+  async listIssueComments(number) {
+    return this.paginate(`/repos/${this.repository.owner}/${this.repository.repo}/issues/${number}/comments?per_page=100`);
+  }
+
+  async createIssueComment(number, body) {
+    const { data } = await this.request(
+      "POST",
+      `/repos/${this.repository.owner}/${this.repository.repo}/issues/${number}/comments`,
+      { body: { body } },
+    );
+    return data;
+  }
+
+  async updateIssueComment(commentId, body) {
+    const { data } = await this.request(
+      "PATCH",
+      `/repos/${this.repository.owner}/${this.repository.repo}/issues/comments/${commentId}`,
+      { body: { body } },
+    );
+    return data;
+  }
+
+  async setCommitStatus(sha, { state, context, description, targetUrl = "" }) {
+    const { data } = await this.request(
+      "POST",
+      `/repos/${this.repository.owner}/${this.repository.repo}/statuses/${sha}`,
+      { body: { state, context, description, target_url: targetUrl } },
+    );
+    return data;
+  }
+}
+
+function ghJson(args, { input } = {}) {
+  const ghEnvironment = { ...process.env };
+  delete ghEnvironment.GITHUB_TOKEN;
+  delete ghEnvironment.GH_TOKEN;
+  const result = spawnSync("gh", args, { encoding: "utf8", input, env: ghEnvironment });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    const error = new Error((result.stderr || result.stdout || "gh command failed").trim());
+    error.status = result.status;
+    throw error;
+  }
+  return result.stdout.trim() ? JSON.parse(result.stdout) : null;
+}
+
+export class GhCliClient extends GitHubClient {
+  constructor({ repository } = {}) {
+    super({ token: "gh-cli", repository, fetchImpl: async () => { throw new Error("unexpected fetch"); } });
+  }
+
+  async request(method, requestPath, { body } = {}) {
+    const endpoint = requestPath.replace(/^https:\/\/api\.github\.com/, "");
+    const args = ["api", "--method", method, endpoint];
+    if (body !== undefined) args.push("--input", "-");
+    return {
+      data: ghJson(args, { input: body === undefined ? undefined : `${JSON.stringify(body)}\n` }),
+      response: { headers: { get: () => "" } },
+    };
+  }
+
+  async paginate(requestPath) {
+    return ghJson(["api", "--paginate", requestPath, "--slurp"]).flatMap((page) => page);
+  }
+
+  async getMergeQueueState(branch) {
+    const query = `query($owner:String!,$repo:String!,$branch:String!){repository(owner:$owner,name:$repo){mergeQueue(branch:$branch){id entries(first:100){nodes{id position state baseCommit{oid} headCommit{oid} pullRequest{number headRefOid}}}}}}`;
+    const data = ghJson([
+      "api", "graphql", "-f", `query=${query}`,
+      "-f", `owner=${this.repository.owner}`,
+      "-f", `repo=${this.repository.repo}`,
+      "-f", `branch=${branch}`,
+    ]).data;
+    const queue = data?.repository?.mergeQueue || null;
+    return {
+      enabled: Boolean(queue),
+      id: queue?.id || "",
+      entries: (queue?.entries?.nodes || []).map((entry) => ({
+        id: entry.id || "",
+        position: entry.position,
+        state: entry.state || "",
+        pullRequestNumber: entry.pullRequest?.number || null,
+        pullRequestHeadSha: entry.pullRequest?.headRefOid || "",
+        baseSha: entry.baseCommit?.oid || "",
+        headSha: entry.headCommit?.oid || "",
+      })),
+    };
+  }
+
+  async enqueuePullRequest({ pullRequestId, expectedHeadOid }) {
+    const query = `mutation($id:ID!,$head:GitObjectID!){enqueuePullRequest(input:{pullRequestId:$id,expectedHeadOid:$head}){mergeQueueEntry{id position state baseCommit{oid} headCommit{oid} pullRequest{number headRefOid}}}}`;
+    const data = ghJson([
+      "api", "graphql", "-f", `query=${query}`,
+      "-f", `id=${pullRequestId}`,
+      "-f", `head=${expectedHeadOid}`,
+    ]).data;
+    const entry = data?.enqueuePullRequest?.mergeQueueEntry;
+    if (!entry?.id) throw new Error("GitHub did not return a merge queue entry");
+    return {
+      id: entry.id,
+      position: entry.position,
+      state: entry.state || "",
+      pullRequestNumber: entry.pullRequest?.number || null,
+      pullRequestHeadSha: entry.pullRequest?.headRefOid || "",
+      baseSha: entry.baseCommit?.oid || "",
+      headSha: entry.headCommit?.oid || "",
+    };
+  }
 }
 
 function queuePredecessor(queueState, fallback = {}) {
@@ -505,6 +655,265 @@ function blockRemainingPullRequests(result, pullRequests, startIndex, options, e
   }
 }
 
+function admissionStateFor(entry = {}) {
+  if (["enqueued", "merged"].includes(entry.action)) return "queued";
+  if (["would-enqueue", "would-merge", "merge"].includes(entry.action)) return "ready";
+  if (entry.reason === "missing-approval") return "waiting-approval";
+  if (entry.reason === "required-checks-not-passing") return "waiting-checks";
+  if (entry.reason === "blocked-by-predecessor") return "waiting-queue";
+  if (["head-sha-drift", "base-branch-drift", "base-sha-drift"].includes(entry.reason)) return "stale";
+  if (["blocked-label", "fork-or-cross-repository-head"].includes(entry.reason)) return "blocked";
+  return "rejected";
+}
+
+function nextAdmissionAction({ options, state, reason, observedHeadSha = "" }) {
+  const command = [
+    "buildchain dev pr-admit",
+    `--repository ${options.repository.fullName}`,
+    `--branch ${options.targetBranch}`,
+    `--pull-request ${options.targetPullRequestNumber}`,
+    `--expected-head ${observedHeadSha || options.expectedHeadSha}`,
+    "--execute",
+  ].join(" ");
+  if (state === "queued") return `Monitor PR #${options.targetPullRequestNumber} and its native merge-group checks.`;
+  if (state === "waiting-approval") return `Obtain an independent approval, then rerun: ${command}`;
+  if (state === "waiting-checks") return `Wait for or repair required checks, then rerun: ${command}`;
+  if (state === "waiting-queue") return `Wait for the active queue predecessor to finish, then rerun: ${command}`;
+  if (state === "stale") return `Re-read the PR head and rerun with that exact SHA: ${command}`;
+  if (reason === "missing-ready-label") return `Declare the exact delivery intent by running: ${command}`;
+  if (state === "ready") return options.dryRun ? `Apply the reviewed plan: ${command}` : "Continue with native merge-group qualification.";
+  return `Inspect reason ${reason || "unknown"}, repair it, and rerun the exact-head command.`;
+}
+
+function diagnosticState(state) {
+  if (["ready", "queued"].includes(state)) return "success";
+  if (["waiting-approval", "waiting-checks", "waiting-queue"].includes(state)) return "pending";
+  return "failure";
+}
+
+function renderAdmissionComment(receipt, receiptRoot) {
+  const marker = `<!-- ${AGENT_ADMISSION_MARKER} pr=${receipt.pullRequestNumber} head=${receipt.expectedHeadSha} -->`;
+  return [
+    marker,
+    "## Buildchain dev PR admission",
+    "",
+    `- State: \`${receipt.state}\``,
+    `- Reason: \`${receipt.reason}\``,
+    `- Exact head: \`${receipt.expectedHeadSha}\``,
+    `- Readiness: \`${receipt.readiness.observed ? "present" : "missing"}\` (\`${receipt.readiness.label || "policy-equivalent"}\`)`,
+    `- Receipt root: \`${receiptRoot}\``,
+    `- Next action: ${receipt.nextAction}`,
+    "",
+    "GitHub auto-merge state is observed evidence only; it is not Buildchain admission authority.",
+  ].join("\n");
+}
+
+async function publishAdmissionDiagnostic(client, options, receipt, receiptRoot) {
+  const marker = `<!-- ${AGENT_ADMISSION_MARKER} pr=${receipt.pullRequestNumber} head=${receipt.expectedHeadSha} -->`;
+  const body = renderAdmissionComment(receipt, receiptRoot);
+  const comments = await client.listIssueComments(receipt.pullRequestNumber);
+  const existing = comments.find((comment) => String(comment.body || "").includes(marker));
+  const comment = existing
+    ? await client.updateIssueComment(existing.id, body)
+    : await client.createIssueComment(receipt.pullRequestNumber, body);
+  let status = null;
+  if (receipt.expectedHeadSha === receipt.observedHeadSha) {
+    status = await client.setCommitStatus(receipt.expectedHeadSha, {
+      state: diagnosticState(receipt.state),
+      context: options.diagnosticContext,
+      description: `${receipt.state}: ${receipt.reason}`.slice(0, 140),
+      targetUrl: receipt.pullRequestUrl,
+    });
+  }
+  return { commentId: comment?.id || null, commentUrl: comment?.html_url || "", statusPublished: Boolean(status) };
+}
+
+function createAdmissionReceipt({ options, pr = {}, state, reason, readiness, decision = {}, queue = null }) {
+  const observedHeadSha = String(pr.head?.sha || "").toLowerCase();
+  return {
+    schema: AGENT_ADMISSION_SCHEMA,
+    repository: options.repository.fullName,
+    targetBranch: options.targetBranch,
+    pullRequestNumber: options.targetPullRequestNumber,
+    pullRequestUrl: pr.html_url || `https://github.com/${options.repository.fullName}/pull/${options.targetPullRequestNumber}`,
+    expectedHeadSha: options.expectedHeadSha,
+    observedHeadSha,
+    observedBaseBranch: pr.base?.ref || "",
+    headRepository: pr.head?.repo?.full_name || "",
+    headRef: pr.head?.ref || "",
+    observedLabels: labelsOf(pr).sort(),
+    policy: {
+      readyLabel: options.readyLabel,
+      blockLabels: options.blockLabels,
+      allowedHeadPrefixes: options.allowedHeadPrefixes,
+      requiredChecks: options.requiredChecks,
+      requireApproval: options.requireApproval,
+      sameRepositoryOnly: options.sameRepositoryOnly,
+      landingMode: options.landingMode,
+      queueAdmissionContext: options.queueAdmissionContext,
+      diagnosticContext: options.diagnosticContext,
+    },
+    readiness: {
+      label: options.readyLabel,
+      observed: readiness?.observed === true,
+      established: readiness?.established === true,
+      mutationAuthorized: !options.dryRun,
+    },
+    approval: decision.approval || { required: options.requireApproval, passed: false },
+    checks: decision.checks || { required: options.requiredChecks, entries: [], passed: false },
+    queue,
+    autoMergeEnabled: Boolean(pr.auto_merge || pr.autoMergeRequest),
+    state,
+    reason,
+    decision: state,
+    qualification: ["ready", "queued"].includes(state),
+    nextAction: nextAdmissionAction({ options, state, reason, observedHeadSha }),
+  };
+}
+
+function targetedFailure({ options, pr, state, reason, readiness, decision, queue }) {
+  const receipt = createAdmissionReceipt({ options, pr, state, reason, readiness, decision, queue });
+  return {
+    schema: AGENT_ADMISSION_RESULT_SCHEMA,
+    ok: false,
+    mode: options.dryRun ? "plan" : "execute",
+    outcome: "targeted-admission-failed",
+    receipt,
+    receiptRoot: contentRoot(receipt),
+    diagnostic: null,
+  };
+}
+
+export async function runDevPrAdmission(optionsInput = {}, clientInput) {
+  const options = normalizeOptions(optionsInput);
+  if (!options.targetBranch) throw new Error("target branch is required");
+  if (!options.targetPullRequestNumber) throw new Error("pull request number is required");
+  if (!SHA_PATTERN.test(options.expectedHeadSha)) throw new Error("expected head must be an exact 40-character lowercase Git SHA");
+  const client = clientInput || (optionsInput.useGhCli || !process.env.GITHUB_TOKEN
+    ? new GhCliClient({ repository: options.repository })
+    : new GitHubClient({
+      token: optionsInput.token || process.env.GITHUB_TOKEN,
+      repository: options.repository,
+      apiUrl: optionsInput.apiUrl || process.env.GITHUB_API_URL || "https://api.github.com",
+    }));
+
+  let pr;
+  try {
+    pr = await client.getPullRequest(options.targetPullRequestNumber, {
+      attempts: options.pollMergeableAttempts,
+      delayMs: options.pollMergeableDelayMs,
+    });
+  } catch (error) {
+    return targetedFailure({ options, pr: {}, state: "missing", reason: "pull-request-not-found" });
+  }
+
+  const reject = async (state, reason, readiness = { observed: hasReadyLabel(pr, options.readyLabel), established: false }) => {
+    const result = targetedFailure({ options, pr, state, reason, readiness });
+    if (!options.dryRun) result.diagnostic = await publishAdmissionDiagnostic(client, options, result.receipt, result.receiptRoot);
+    return result;
+  };
+  if (String(pr.state || "open").toLowerCase() !== "open") return reject("rejected", "pull-request-not-open");
+  if (pr.base?.ref !== options.targetBranch) return reject("stale", "base-branch-drift");
+  if (String(pr.head?.sha || "").toLowerCase() !== options.expectedHeadSha) return reject("stale", "head-sha-drift");
+  if (!sameRepositoryAllowed(pr, options.repository, options.sameRepositoryOnly)) return reject("blocked", "fork-or-cross-repository-head");
+  if (hasBlockedLabel(pr, options.blockLabels)) return reject("blocked", "blocked-label");
+  if (pr.draft) return reject("blocked", "draft");
+  if (!headPrefixAllowed(pr, options.allowedHeadPrefixes)) return reject("blocked", "head-prefix-not-allowed");
+
+  let readiness = { observed: hasReadyLabel(pr, options.readyLabel), established: false };
+  if (!readiness.observed) {
+    if (options.dryRun) return reject("rejected", "missing-ready-label", readiness);
+    await client.addLabels(pr.number, [options.readyLabel]);
+    const readback = await client.getPullRequest(pr.number, {
+      attempts: options.pollMergeableAttempts,
+      delayMs: options.pollMergeableDelayMs,
+    });
+    if (String(readback.head?.sha || "").toLowerCase() !== options.expectedHeadSha) {
+      pr = readback;
+      return reject("stale", "head-sha-drift-after-readiness-write", readiness);
+    }
+    if (readback.base?.ref !== options.targetBranch) {
+      pr = readback;
+      return reject("stale", "base-branch-drift-after-readiness-write", readiness);
+    }
+    pr = readback;
+    readiness = { observed: hasReadyLabel(pr, options.readyLabel), established: true };
+    if (!readiness.observed) return reject("rejected", "readiness-readback-failed", readiness);
+  }
+
+  const initialQueue = await client.getMergeQueueState(options.targetBranch);
+  const matchingEntry = initialQueue.entries.find((entry) =>
+    entry.pullRequestNumber === pr.number && entry.pullRequestHeadSha === options.expectedHeadSha);
+  if (matchingEntry) {
+    const receipt = createAdmissionReceipt({
+      options,
+      pr,
+      state: "queued",
+      reason: "already-enqueued-exact-head",
+      readiness,
+      queue: { enabled: true, entry: matchingEntry },
+    });
+    const result = {
+      schema: AGENT_ADMISSION_RESULT_SCHEMA,
+      ok: true,
+      mode: options.dryRun ? "plan" : "execute",
+      outcome: "admitted",
+      receipt,
+      receiptRoot: contentRoot(receipt),
+      diagnostic: null,
+    };
+    if (!options.dryRun) result.diagnostic = await publishAdmissionDiagnostic(client, options, receipt, result.receiptRoot);
+    return result;
+  }
+
+  const targetedClient = Object.create(client);
+  targetedClient.listPullRequests = async () => [pr];
+  const controller = await runDevPrAutoMerge({ ...options, targetPullRequestNumber: 0 }, targetedClient);
+  controller.runKind = "targeted-admission-evaluation";
+  controller.outcome = controller.actions.length === 0 ? "target-not-admitted" : "target-action-selected";
+  controller.qualification = false;
+  controller.noOp = controller.actions.length === 0;
+  const entry = controller.evaluated.find((value) => value.number === pr.number) || { action: "skip", reason: "target-not-selected" };
+  const state = admissionStateFor(entry);
+  const receipt = createAdmissionReceipt({
+    options,
+    pr,
+    state,
+    reason: entry.reason,
+    readiness,
+    decision: entry,
+    queue: {
+      enabled: controller.mergeQueue?.enabled === true,
+      predecessor: entry.admissionReceipt?.predecessor || null,
+      entry: entry.queueEntry || null,
+    },
+  });
+  const result = {
+    schema: AGENT_ADMISSION_RESULT_SCHEMA,
+    ok: ["ready", "queued"].includes(state),
+    mode: options.dryRun ? "plan" : "execute",
+    outcome: ["ready", "queued"].includes(state) ? "admitted" : "targeted-admission-failed",
+    receipt,
+    receiptRoot: contentRoot(receipt),
+    diagnostic: null,
+    controller,
+  };
+  if (!options.dryRun) result.diagnostic = await publishAdmissionDiagnostic(client, options, receipt, result.receiptRoot);
+  return result;
+}
+
+function finalizePatrolResult(result) {
+  result.runKind = "cadence-patrol";
+  result.outcome = result.evaluated.length === 0
+    ? "no-op-no-candidates"
+    : result.actions.length === 0
+      ? "no-op-all-skipped"
+      : "actions-present";
+  result.qualification = false;
+  result.noOp = result.actions.length === 0;
+  return result;
+}
+
 export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
   const options = normalizeOptions(optionsInput);
   if (!options.targetBranch) throw new Error("target branch is required");
@@ -547,12 +956,12 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
       entry.admissionReceipt.reason = "merge-queue-not-enabled";
       entry.admissionReceipt.decision = "rejected";
     }
-    return result;
+    return finalizePatrolResult(result);
   }
 
   if (landingMode === "queue" && initialQueueState.entries.length > 0) {
     blockRemainingPullRequests(result, orderedPullRequests, 0, options, initialBaseSha, queuePredecessor(initialQueueState));
-    return result;
+    return finalizePatrolResult(result);
   }
 
   for (let index = 0; index < orderedPullRequests.length; index += 1) {
@@ -699,7 +1108,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
   }
 
   result.finalBaseSha = await client.getBranchSha(options.targetBranch).catch(() => "");
-  return result;
+  return finalizePatrolResult(result);
 }
 
 export function renderMarkdownSummary(result) {
@@ -735,38 +1144,76 @@ export function writeGitHubOutputs(outputs, outputFile = process.env.GITHUB_OUTP
   fs.appendFileSync(outputFile, `${lines.join("\n")}\n`);
 }
 
+function cliValue(args, name, fallback = "") {
+  const index = args.indexOf(`--${name}`);
+  return index === -1 ? fallback : args[index + 1] || "";
+}
+
+function cliFlag(args, name) {
+  return args.includes(`--${name}`);
+}
+
+export function cliOptions(args = [], environment = process.env) {
+  const targetPullRequestNumber = cliValue(args, "pull-request", environment.BUILDCHAIN_DEV_PR_EXPECTED_PR_NUMBER);
+  return {
+    repository: cliValue(args, "repository", environment.BUILDCHAIN_DEV_PR_REPOSITORY || environment.GITHUB_REPOSITORY),
+    targetBranch: cliValue(args, "branch", environment.BUILDCHAIN_DEV_PR_TARGET_BRANCH || environment.GITHUB_REF_NAME),
+    targetPullRequestNumber,
+    expectedHeadSha: cliValue(args, "expected-head", environment.BUILDCHAIN_DEV_PR_EXPECTED_HEAD_SHA),
+    readyLabel: cliValue(args, "ready-label", environment.BUILDCHAIN_DEV_PR_READY_LABEL || DEFAULT_READY_LABEL),
+    blockLabels: cliValue(args, "block-labels", environment.BUILDCHAIN_DEV_PR_BLOCK_LABELS),
+    allowedHeadPrefixes: cliValue(args, "allowed-head-prefixes", environment.BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES),
+    requiredChecks: cliValue(args, "required-checks", environment.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS),
+    queueAdmissionContext: cliValue(args, "queue-admission-context", environment.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT),
+    diagnosticContext: cliValue(args, "diagnostic-context", environment.BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT),
+    requireApproval: environment.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,
+    sameRepositoryOnly: environment.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,
+    maxMerges: environment.BUILDCHAIN_DEV_PR_MAX_MERGES,
+    mergeMethod: environment.BUILDCHAIN_DEV_PR_MERGE_METHOD,
+    landingMode: environment.BUILDCHAIN_DEV_PR_LANDING_MODE,
+    dryRun: cliFlag(args, "execute") ? false : environment.BUILDCHAIN_DEV_PR_DRY_RUN,
+    outputPath: cliValue(
+      args,
+      "output",
+      environment.BUILDCHAIN_DEV_PR_OUTPUT_PATH || (targetPullRequestNumber
+        ? ".buildchain/dev-pr-admission/result.json"
+        : ".buildchain/dev-pr-auto-merge/result.json"),
+    ),
+    useGhCli: cliFlag(args, "gh-cli"),
+  };
+}
+
 async function main() {
-  const options = normalizeOptions({
-    repository: process.env.BUILDCHAIN_DEV_PR_REPOSITORY || process.env.GITHUB_REPOSITORY,
-    targetBranch: process.env.BUILDCHAIN_DEV_PR_TARGET_BRANCH || process.env.GITHUB_REF_NAME,
-    readyLabel: process.env.BUILDCHAIN_DEV_PR_READY_LABEL,
-    blockLabels: process.env.BUILDCHAIN_DEV_PR_BLOCK_LABELS,
-    allowedHeadPrefixes: process.env.BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES,
-    requiredChecks: process.env.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS,
-    queueAdmissionContext: process.env.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT,
-    requireApproval: process.env.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,
-    sameRepositoryOnly: process.env.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,
-    maxMerges: process.env.BUILDCHAIN_DEV_PR_MAX_MERGES,
-    mergeMethod: process.env.BUILDCHAIN_DEV_PR_MERGE_METHOD,
-    landingMode: process.env.BUILDCHAIN_DEV_PR_LANDING_MODE,
-    dryRun: process.env.BUILDCHAIN_DEV_PR_DRY_RUN,
-    outputPath: process.env.BUILDCHAIN_DEV_PR_OUTPUT_PATH,
-  });
-  const result = await runDevPrAutoMerge(options);
+  const args = process.argv.slice(2);
+  if (cliFlag(args, "help")) {
+    process.stdout.write("Usage:\n  buildchain dev pr-admit --repository owner/repo --branch dev/vN/vN.M --pull-request N --expected-head SHA [--execute] [--output FILE] [--json]\n");
+    return;
+  }
+  const options = normalizeOptions(cliOptions(args));
+  const targeted = options.targetPullRequestNumber > 0 || Boolean(options.expectedHeadSha);
+  const result = targeted
+    ? await runDevPrAdmission({ ...options, useGhCli: cliFlag(args, "gh-cli") })
+    : await runDevPrAutoMerge(options);
   fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
   fs.writeFileSync(options.outputPath, `${JSON.stringify(result, null, 2)}\n`);
-  const summary = renderMarkdownSummary(result);
+  const summary = targeted ? `${renderAdmissionComment(result.receipt, result.receiptRoot)}\n` : renderMarkdownSummary(result);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+  else if (cliFlag(args, "json")) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   else process.stdout.write(summary);
   writeGitHubOutputs({
-    "evaluated-count": result.evaluated.length,
-    "merged-count": result.merged.length,
-    "enqueued-count": result.enqueued.length,
-    "action-count": result.actions.length,
-    "skipped-count": result.skipped.length,
-    "final-base-sha": result.finalBaseSha,
+    "evaluated-count": targeted ? 1 : result.evaluated.length,
+    "merged-count": targeted ? Number(result.receipt.state === "merged") : result.merged.length,
+    "enqueued-count": targeted ? Number(result.receipt.state === "queued") : result.enqueued.length,
+    "action-count": targeted ? Number(result.ok) : result.actions.length,
+    "skipped-count": targeted ? Number(!result.ok) : result.skipped.length,
+    "final-base-sha": targeted ? "" : result.finalBaseSha,
+    "targeted": targeted,
+    "targeted-ok": targeted ? result.ok : "",
+    "admission-state": targeted ? result.receipt.state : "",
+    "receipt-root": targeted ? result.receiptRoot : "",
     "result-path": options.outputPath,
   });
+  if (targeted && !result.ok) process.exitCode = 1;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

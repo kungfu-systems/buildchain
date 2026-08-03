@@ -223,6 +223,17 @@ buildchain dev
 buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]
 ```
 
+### `buildchain dev pr-admit`
+
+- Help: `buildchain dev pr-admit --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--expected-head`, `--json`, `--output`, `--pull-request`, `--repository`
+- Syntax:
+
+```text
+buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]
+```
+
 ## `diagnostics`
 
 ### `buildchain diagnostics`
