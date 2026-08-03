@@ -210,21 +210,25 @@ Each stack owns a stack-scoped reaper log group, so an independent retained
 one-shot campaign stack can be created without colliding with another
 campaign's audit log resource.
 
-The tag-filtered AWS Budget is defense in depth, not the authoritative launch
+The account-native AWS Budget is defense in depth, not the authoritative launch
 gate. It is owned by the singleton
 `kungfu-buildchain-windows-jit-budget-guard` stack rather than any retained
 campaign stack. This prevents Budget-name collisions and prevents a stale
 campaign reaper from becoming the provider-wide cost authority. The Budget
-filters exactly `user:kungfu:provider$windows-ec2-jit`; its 80% and 95% actual
-notifications persist the provider kill sentinel, terminate every tagged
-Windows JIT instance, and delete scoped JIT parameters. Every launch controller
-refuses to proceed when the sentinel exists or when the Budget identity or tag
-filter does not match.
+filters exactly `USAGE_TYPE=BoxUsage:c7i.4xlarge`,
+`OPERATION=RunInstances:0002` (Windows), and `REGION=us-east-1`; its 80% and
+95% actual notifications persist the provider kill sentinel, terminate every
+tagged Windows JIT instance, and delete scoped JIT parameters. Every launch
+controller refuses to proceed when the sentinel exists or when the Budget
+identity or dimension filter does not match.
 
-Budget installation fails closed until the AWS Organizations management
-account activates `kungfu:provider` and Cost Explorer returns
-`windows-ec2-jit` for that key. A linked account cannot activate the tag. Do not
-create an unfiltered fallback Budget or treat a tag-filtered zero as evidence.
+Budget installation is intentionally deployable by the workload account without
+AWS Organizations management-account access. It fails closed unless Cost
+Explorer exposes all three AWS-owned billing dimensions in the requested phase
+window. The `kungfu:provider=windows-ec2-jit` resource tag remains mandatory for
+ownership, cleanup, and IAM scoping, but it is not a billing filter. Do not
+create an unfiltered fallback Budget or treat an incomplete dimension readback
+as evidence.
 The DynamoDB campaign reservation remains the atomic launch authority because
 Cost Explorer and AWS Budgets can lag provider activity.
 
@@ -250,12 +254,12 @@ The modes are deliberately separated:
   provider kill sentinel, campaign stack, and zero EC2/EBS/SSM/JIT/runner
   residue.
 - `install-budget --execute` deploys or updates only the singleton Budget guard.
-  It refuses to mutate unless the provider tag value is visible, the Windows
-  workflow is disabled, and the account, campaign, source, Budget, and plan
-  digest confirmations match.
+  It refuses to mutate unless all exact Windows billing dimensions are visible,
+  the Windows workflow is disabled, and the account, campaign, source, Budget,
+  and plan digest confirmations match.
 - `prepare --execute` requires the installed Budget guard, absent kill
-  sentinel, fresh Cost Explorer readback filtered by both
-  `kungfu:provider=windows-ec2-jit` and `BoxUsage:c7i.4xlarge`, zero residue, a
+  sentinel, fresh Cost Explorer readback filtered by `BoxUsage:c7i.4xlarge`,
+  `RunInstances:0002`, and `us-east-1`, zero residue, a
   never-used campaign stack name, and the disabled workflow. The receipt binds
   the query timestamp and exact filter identity. Preparation deploys the
   campaign stack and atomically arms the ledger with that provider-spend
@@ -310,9 +314,9 @@ clear or re-arm operation.
 Every `scripts/aws-windows-jit-controller.mjs --execute` call must provide the
 same `--account-id`, `--campaign-id`, `--confirm-campaign-id`, `--state-table`,
 and `--confirm-state-table`. Before GitHub JIT material is created, the
-controller verifies the exact provider Budget/tag filter and proves the global
-Budget kill sentinel absent. After the GitHub, AMI, active-instance, SSM, and
-EC2 DryRun checks pass, the controller
+controller verifies the exact provider Budget/dimension filter and proves the
+global Budget kill sentinel absent. After the GitHub, AMI, active-instance,
+SSM, and EC2 DryRun checks pass, the controller
 atomically reserves one run. Duplicate run-attempt-qualification identities,
 source mismatch, expiry, `KILLED`, the sixth accepted instance, or a
 reservation that would exceed the USD 110 ceiling after combining the persisted
