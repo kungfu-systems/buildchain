@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-01
+  generated_at: 2026-08-03
   invisible_information: No hidden model checkpoint, parameters, or private training data were available.
 ---
 
@@ -211,11 +211,22 @@ one-shot campaign stack can be created without colliding with another
 campaign's audit log resource.
 
 The tag-filtered AWS Budget is defense in depth, not the authoritative launch
-gate. It is disabled by default because a linked account cannot activate a
-cost-allocation tag. Set `EnableTagFilteredBudget=true` only after the AWS
-Organizations management account has activated `kungfu:provider` and a Cost
-Explorer readback proves that `windows-ec2-jit` spend is visible. The DynamoDB
-reservation cap remains mandatory in either mode.
+gate. It is owned by the singleton
+`kungfu-buildchain-windows-jit-budget-guard` stack rather than any retained
+campaign stack. This prevents Budget-name collisions and prevents a stale
+campaign reaper from becoming the provider-wide cost authority. The Budget
+filters exactly `user:kungfu:provider$windows-ec2-jit`; its 80% and 95% actual
+notifications persist the provider kill sentinel, terminate every tagged
+Windows JIT instance, and delete scoped JIT parameters. Every launch controller
+refuses to proceed when the sentinel exists or when the Budget identity or tag
+filter does not match.
+
+Budget installation fails closed until the AWS Organizations management
+account activates `kungfu:provider` and Cost Explorer returns
+`windows-ec2-jit` for that key. A linked account cannot activate the tag. Do not
+create an unfiltered fallback Budget or treat a tag-filtered zero as evidence.
+The DynamoDB campaign reservation remains the atomic launch authority because
+Cost Explorer and AWS Budgets can lag provider activity.
 
 Qualification requires one runner-profile smoke and three trusted exact-source
 full Windows jobs all bound to the same campaign, independent cancellation and
@@ -223,82 +234,88 @@ timeout cleanup exercises, and zero repository runner, EC2 instance,
 disposable volume, min capacity, and desired capacity within 15 minutes of the
 final job.
 
-### Phase 2 campaign controller
+### Phase 2 operator workflow
 
-`scripts/aws-windows-jit-campaign.mjs` is the one-shot operator boundary.
-Without a mutation mode it emits the arm plan. `arm-campaign` requires the
-campaign id, exact source SHA, state table, observed prior phase spend, and a
-bounded one-to-five accepted-instance ceiling to be repeated as confirmations,
-then creates `CONTROL` and `CAMPAIGN#<id>` with
-`attribute_not_exists`
-conditions. DynamoDB therefore refuses a second campaign in the same retained
-state table. The operator can always use `kill-campaign`; there is deliberately
-no clear or re-arm operation.
+`pnpm operator:windows-jit` is the reusable lifecycle entrypoint. Its default
+mode is `plan`, which performs no AWS or GitHub call. A plan binds the account,
+region, unique campaign and stack names, source SHA/ref, Cost Explorer window,
+workflow id, network, OIDC provider, expiry, slot ceiling, singleton Budget
+identity, and exact confirmation digest.
+
+The modes are deliberately separated:
+
+- `plan` emits the deterministic mutation boundary and digest.
+- `audit` reads AWS and GitHub only. It verifies the account, disabled workflow,
+  singleton guard stack, exact Budget filter, SNS thresholds/subscribers,
+  provider kill sentinel, campaign stack, and zero EC2/EBS/SSM/JIT/runner
+  residue.
+- `install-budget --execute` deploys or updates only the singleton Budget guard.
+  It refuses to mutate unless the provider tag value is visible, the Windows
+  workflow is disabled, and the account, campaign, source, Budget, and plan
+  digest confirmations match.
+- `prepare --execute` requires the installed Budget guard, absent kill
+  sentinel, fresh Cost Explorer readback, zero residue, a never-used campaign
+  stack name, and the disabled workflow. It deploys the campaign stack and
+  atomically arms the ledger. It never enables or dispatches the workflow and
+  never creates EC2 capacity.
+- `close --execute` disables the workflow first, persists `KILLED`, publishes
+  the campaign kill switch, and reports terminal success only after EC2, EBS,
+  SSM, JIT parameter, and GitHub runner residue is zero. It is safe to rerun
+  while the reaper settles.
+
+All mutating modes require `--execute`, `--confirm-plan-digest`,
+`--confirm-account-id`, `--confirm-campaign-id`, and
+`--confirm-source-sha`. Budget installation and preparation additionally
+require `--confirm-budget-name`. A future paid workload still requires a
+separate exact workflow/run authorization and uses
+`scripts/aws-windows-jit-controller.mjs`; preparation is not paid-launch
+authority.
+
+Start by recording one reproducible plan:
+
+```bash
+pnpm operator:windows-jit plan \
+  --aws-profile us \
+  --account-id 727884401362 \
+  --campaign-id win-REPLACE \
+  --source-sha REPLACE_WITH_EXACT_40_CHARACTER_SHA \
+  --source-ref refs/heads/dev/v4/v4.0 \
+  --observed-at REPLACE_WITH_ISO_TIMESTAMP \
+  --expires-at REPLACE_WITH_ISO_TIMESTAMP_WITHIN_24_HOURS \
+  --cost-start REPLACE_WITH_PHASE_START_DATE \
+  --cost-end REPLACE_WITH_EXCLUSIVE_END_DATE \
+  --max-accepted-instances 1 \
+  --workflow-id 322620360 \
+  --vpc-id REPLACE_WITH_VPC_ID \
+  --subnet-id REPLACE_WITH_SUBNET_ID \
+  --oidc-provider-arn REPLACE_WITH_GITHUB_OIDC_PROVIDER_ARN
+```
+
+Reuse those exact arguments for `audit`, `install-budget`, `prepare`, or
+`close`; never regenerate `--observed-at` between the plan and its confirmed
+mutation. Capture stdout as the operator receipt. Do not put credentials,
+tokens, JIT configuration, or signed URLs in arguments or receipts.
+
+### Lower-level campaign and launch controllers
+
+`scripts/aws-windows-jit-campaign-core.mjs` owns the pure one-shot ledger
+contract used by the operator and launch controller. Arming creates `CONTROL`
+and `CAMPAIGN#<id>` with `attribute_not_exists` conditions, so DynamoDB refuses
+a second campaign in the same retained state table. There is deliberately no
+clear or re-arm operation.
 
 Every `scripts/aws-windows-jit-controller.mjs --execute` call must provide the
-same `--campaign-id`, `--confirm-campaign-id`, `--state-table`, and
-`--confirm-state-table`. After the GitHub, AMI, active-instance, SSM, and EC2
-DryRun checks pass, the controller
+same `--account-id`, `--campaign-id`, `--confirm-campaign-id`, `--state-table`,
+and `--confirm-state-table`. Before GitHub JIT material is created, the
+controller verifies the exact provider Budget/tag filter and proves the global
+Budget kill sentinel absent. After the GitHub, AMI, active-instance, SSM, and
+EC2 DryRun checks pass, the controller
 atomically reserves one run. Duplicate run-attempt-qualification identities,
 source mismatch, expiry, `KILLED`, the sixth accepted instance, or a
 reservation that would exceed the baseline-adjusted USD 110 phase ceiling all
-fail closed before `RunInstances`.
-
-Example dry-run and arm boundary (do not execute without a new campaign budget
-decision):
-
-```bash
-windows_campaign=win-REPLACE_WITH_CAMPAIGN_ID
-windows_source=REPLACE_WITH_EXACT_40_CHARACTER_SHA
-windows_state_table=REPLACE_WITH_CAMPAIGN_STATE_TABLE
-windows_expires_at=REPLACE_WITH_ISO_TIMESTAMP_WITHIN_24_HOURS
-windows_phase_spend_baseline_usd=REPLACE_WITH_OBSERVED_PRIOR_WINDOWS_SPEND
-windows_max_accepted_instances=REPLACE_WITH_INTEGER_FROM_1_THROUGH_5
-
-node scripts/aws-windows-jit-campaign.mjs plan-arm \
-  --campaign-id "$windows_campaign" \
-  --source-sha "$windows_source" \
-  --state-table "$windows_state_table" \
-  --expires-at "$windows_expires_at" \
-  --phase-spend-baseline-usd "$windows_phase_spend_baseline_usd" \
-  --max-accepted-instances "$windows_max_accepted_instances"
-
-node scripts/aws-windows-jit-campaign.mjs arm-campaign \
-  --campaign-id "$windows_campaign" \
-  --confirm-campaign-id "$windows_campaign" \
-  --source-sha "$windows_source" \
-  --confirm-source-sha "$windows_source" \
-  --state-table "$windows_state_table" \
-  --confirm-state-table "$windows_state_table" \
-  --expires-at "$windows_expires_at" \
-  --phase-spend-baseline-usd "$windows_phase_spend_baseline_usd" \
-  --confirm-phase-spend-baseline-usd "$windows_phase_spend_baseline_usd" \
-  --max-accepted-instances "$windows_max_accepted_instances" \
-  --confirm-max-accepted-instances "$windows_max_accepted_instances"
-```
-
-Arming creates a permanent one-shot control record and admits only the
-explicitly confirmed number of paid instances, never more than five. Its
-rollback is fail-closed, not deletion: `kill-campaign` first
-persists `KILLED`, then publishes to the dedicated SNS topic so the reaper
-terminates active card-owned instances and removes their JIT parameters. The
-command is idempotent, but the operator must read back DynamoDB, EC2, SSM, and
-GitHub runners before treating cleanup as complete:
-
-```bash
-windows_kill_topic=REPLACE_WITH_DEDICATED_KILL_SWITCH_TOPIC_ARN
-
-node scripts/aws-windows-jit-campaign.mjs kill-campaign \
-  --campaign-id "$windows_campaign" \
-  --confirm-campaign-id "$windows_campaign" \
-  --source-sha "$windows_source" \
-  --confirm-source-sha "$windows_source" \
-  --state-table "$windows_state_table" \
-  --confirm-state-table "$windows_state_table" \
-  --kill-switch-topic "$windows_kill_topic" \
-  --confirm-kill-switch-topic "$windows_kill_topic" \
-  --reason operator-kill
-```
+fail closed before `RunInstances`. The operator is the only supported mutation
+surface for campaign preparation and closeout; direct imports of the core are
+not operator authority.
 
 ## Phase 3 contract
 
