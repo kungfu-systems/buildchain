@@ -19,6 +19,17 @@ test("targeted CLI defaults to an explicit readiness label", () => {
   assert.equal(options.readyLabel, "ready");
 });
 
+test("targeted CLI preserves an explicit queue landing mode", () => {
+  const options = cliOptions([
+    "--repository", "kungfu-systems/buildchain",
+    "--branch", "dev/v3/v3.0",
+    "--pull-request", "21",
+    "--expected-head", "a".repeat(40),
+    "--landing-mode", "queue",
+  ], {});
+  assert.equal(options.landingMode, "queue");
+});
+
 function pr(overrides = {}) {
   return {
     number: overrides.number ?? 1,
