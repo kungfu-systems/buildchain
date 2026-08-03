@@ -5,11 +5,11 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 256,
-    "maxHandMaintainedSourceLines": 99502,
+    "maxHandMaintainedSourceFiles": 257,
+    "maxHandMaintainedSourceLines": 99775,
     "maxWorkflowFiles": 60,
-    "maxWorkflowLines": 20646,
-    "rationale": "The responsibility-owned unified Site upstream agent entry and exact non-force propagation push executor add two bounded modules while preserving the existing Work, Family State v2, Warrant, and receipt authority model. The structural hardening, detached artifact-signing controller and immutable control receipts, bounded AWS Windows and macOS JIT controllers, persistent one-shot Windows campaign admission ledger, cumulative Windows phase-spend baseline gate, operator-confirmed narrowed Windows campaign slot ceilings, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, generic finalized-package propagation capture, downstream-manual code-repository pickup with npm SLSA provenance, exact release-source recovery from shallow consumers, source-bound package release tags, locked consumer history selection, reusable-workflow call preflight, collision-safe macOS DMG assembly, canonical release-propagation digest comparison, declarative exact-binary demo platform, bounded long-form PTY replay, digest-prefix-compatible executable-closure restoration, pre-upload transport simulation, recursive Buildchain dogfood, protected exact-source candidate auto-merge registration, documentation hardening, audited sccache compiler binding, and one exact-source Dev qualification coalescing controller may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds build-runner release before signing waits, run-attempt and request-root correlation, non-macOS controller settlement, typed Work Control, advanced-channel-preserving durable recovery, npm and Git source coherence, public Passport or registry-provenance readback, capture-only downstream handoff, production readback, exact-source cloud preflight, credential-safe JIT delivery, atomic cost reservation against the retained prior-spend baseline, explicit one-to-five paid-slot confirmation, permanent kill state, fail-closed cleanup, exact head and tree verification across ancestry-aware source gates, bounded allowlisted resource-busy retry with execution-bound cleanup evidence, latest-head coalescing behind a single active run, release-priority runner deferral, GitHub failed-job reruns for classified external failures, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, one shared controlled workflow parser plus exact call-contract receipts, isolated native demo capture with actual elapsed timing, pre-upload executable transport diagnosis, protected README materialization, effective Cargo and CMake compiler launchers, a nonzero cache-activity gate, explicit merge-method validation, and regression guards instead of duplicated delivery behavior or product-specific recording glue; any wider ceiling requires another reviewed policy change."
+    "maxWorkflowLines": 20708,
+    "rationale": "The responsibility-owned unified Site upstream agent entry and exact non-force propagation push executor add two bounded modules while preserving the existing Work, Family State v2, Warrant, and receipt authority model. The structural hardening, detached artifact-signing controller and immutable control receipts, bounded AWS Windows and macOS JIT controllers, persistent one-shot Windows campaign admission ledger, cumulative Windows phase-spend baseline gate, operator-confirmed narrowed Windows campaign slot ceilings, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, generic finalized-package propagation capture, downstream-manual code-repository pickup with npm SLSA provenance, exact release-source recovery from shallow consumers, source-bound package release tags, locked consumer history selection, reusable-workflow call preflight, collision-safe macOS DMG assembly, canonical release-propagation digest comparison, declarative exact-binary demo platform, bounded long-form PTY replay, digest-prefix-compatible executable-closure restoration, pre-upload transport simulation, recursive Buildchain dogfood, protected exact-source candidate auto-merge registration, documentation hardening, audited sccache compiler binding, and one exact-source Dev qualification coalescing controller may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds build-runner release before signing waits, run-attempt and request-root correlation, non-macOS controller settlement, typed Work Control, advanced-channel-preserving durable recovery, npm and Git source coherence, public Passport or registry-provenance readback, capture-only downstream handoff, production readback, exact-source cloud preflight, credential-safe JIT delivery, atomic cost reservation against the retained prior-spend baseline, explicit one-to-five paid-slot confirmation, permanent kill state, fail-closed cleanup, exact head and tree verification across ancestry-aware source gates, bounded allowlisted resource-busy retry with execution-bound cleanup evidence, latest-head coalescing behind a single active run, release-priority runner deferral, GitHub failed-job reruns for classified external failures, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, one shared controlled workflow parser plus exact call-contract receipts, isolated native demo capture with actual elapsed timing, pre-upload executable transport diagnosis, protected README materialization, effective Cargo and CMake compiler launchers, a nonzero cache-activity gate, explicit merge-method validation, and regression guards instead of duplicated delivery behavior or product-specific recording glue; the exact-source lifecycle substage verifier and opt-in four-lane evidence transport add one bounded module plus fail-closed diagnostics without widening the existing lifecycle orchestrator debt; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -62,6 +62,40 @@
     }
   },
   "approvedPublicSurfaceTransitions": {
+    "action:run-lifecycle": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "run-lifecycle",
+        "path": "actions/run-lifecycle/action.yml",
+        "inputs": [
+          "artifact-name",
+          "artifact-paths",
+          "command",
+          "cwd",
+          "diagnostics-artifact-name",
+          "diagnostics-path",
+          "expected-artifacts-json",
+          "manifest-artifact-name",
+          "manifest-path",
+          "platform-id",
+          "platform-name",
+          "process-sample-interval-ms",
+          "process-samples-path",
+          "process-summary-path",
+          "process-summary-required",
+          "requested-parallelism",
+          "required",
+          "sample-process-tree",
+          "stage",
+          "substage-evidence-path",
+          "summary-path",
+          "timeout-minutes"
+        ],
+        "secrets": [],
+        "outputs": []
+      },
+      "rationale": "The action accepts one optional consumer-produced substage evidence file, independently verifies its exact source and platform roots, and embeds it in diagnostics without changing behavior for existing callers."
+    },
     "workflow:dev-alpha-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
@@ -270,6 +304,7 @@
           "shifu-cache-profile-ref",
           "untrusted-policy",
           "verify-command",
+          "verify-substage-evidence-path",
           "working-directory"
         ],
         "secrets": [
@@ -329,7 +364,7 @@
           "trusted-event"
         ]
       },
-      "rationale": "The reusable build surface adds an optional declarative pre-upload transport smoke that simulates lost executable modes before either artifact transfer path; existing consumers preserve the prior behavior when the scenario input is absent."
+      "rationale": "The reusable build surface adds optional declarative pre-upload transport smoke and lifecycle substage evidence. Existing consumers preserve prior behavior when those inputs are absent; opted-in consumers bind exact source, platform, rooted substage timings, and failure evidence."
     },
     "workflow:build": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -425,6 +460,7 @@
           "shifu-cache-profile-ref",
           "untrusted-policy",
           "verify-command",
+          "verify-substage-evidence-path",
           "working-directory"
         ],
         "secrets": [
@@ -487,7 +523,7 @@
           "trusted-event"
         ]
       },
-      "rationale": "The generated channel build router forwards the optional declarative pre-upload transport smoke without changing channel selection, runtime identity, secrets, outputs, or the default transfer behavior."
+      "rationale": "The generated channel build router forwards optional declarative pre-upload transport smoke and lifecycle substage evidence without changing channel selection, runtime identity, secrets, outputs, or default behavior."
     },
 
     "workflow:paper-release-sealed": {

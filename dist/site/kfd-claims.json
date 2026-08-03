@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e74b4e21ccfdac23e66ca44238b56f7d0d751a4884c39590fe5446f4f7ea36ff",
+    "sha256": "beaea88a72930b97bfd96a108b2f4a3df006175f3cd9919b1a52beb5036822c0",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 60,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e74b4e21ccfdac23e66ca44238b56f7d0d751a4884c39590fe5446f4f7ea36ff",
+      "sha256": "beaea88a72930b97bfd96a108b2f4a3df006175f3cd9919b1a52beb5036822c0",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 60,
@@ -3334,7 +3334,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 85,
+          "inputCount": 86,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3420,6 +3420,7 @@
             "shifu-cache-profile-ref",
             "untrusted-policy",
             "verify-command",
+            "verify-substage-evidence-path",
             "working-directory"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4072,7 +4073,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 88,
+          "inputCount": 89,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -4161,6 +4162,7 @@
             "shifu-cache-profile-ref",
             "untrusted-policy",
             "verify-command",
+            "verify-substage-evidence-path",
             "working-directory"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -5200,7 +5202,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 21,
+          "inputCount": 22,
           "inputs": [
             "artifact-name",
             "artifact-paths",
@@ -5221,6 +5223,7 @@
             "required",
             "sample-process-tree",
             "stage",
+            "substage-evidence-path",
             "summary-path",
             "timeout-minutes"
           ],

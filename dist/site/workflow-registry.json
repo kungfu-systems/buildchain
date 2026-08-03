@@ -176,9 +176,10 @@
         "shifu-cache-profile-ref",
         "untrusted-policy",
         "verify-command",
+        "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 85,
+      "inputCount": 86,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1271,9 +1272,10 @@
         "shifu-cache-profile-ref",
         "untrusted-policy",
         "verify-command",
+        "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 88,
+      "inputCount": 89,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2836,10 +2838,11 @@
         "required",
         "sample-process-tree",
         "stage",
+        "substage-evidence-path",
         "summary-path",
         "timeout-minutes"
       ],
-      "inputCount": 21,
+      "inputCount": 22,
       "capabilityGroup": "reusable-build",
       "status": "active",
       "owner": "buildchain-actions",

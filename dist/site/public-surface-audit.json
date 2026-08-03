@@ -727,9 +727,10 @@
           "shifu-cache-profile-ref",
           "untrusted-policy",
           "verify-command",
+          "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 85,
+        "inputCount": 86,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1592,9 +1593,10 @@
           "shifu-cache-profile-ref",
           "untrusted-policy",
           "verify-command",
+          "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 88,
+        "inputCount": 89,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2770,10 +2772,11 @@
           "required",
           "sample-process-tree",
           "stage",
+          "substage-evidence-path",
           "summary-path",
           "timeout-minutes"
         ],
-        "inputCount": 21
+        "inputCount": 22
       },
       {
         "id": "validate-config",
@@ -7202,7 +7205,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2012c52df8cd1c32f5cf2afbee6fa77e69818616d41ff984dad394af0523f266",
-    "workflowRegistryDigest": "a367c2b909763495c24c10e97a00f5ddd99b811e820d9500fbc0bad9f5be1e0e",
+    "workflowRegistryDigest": "d41e101265d22279f4e8e542008377aa7a44636d579548de664c8b59bd00eb18",
     "pageRegistryDigest": "021407dd5362c59a2269bd2a2761fd70e2fc8231028473c0df1eb80e738f7c3a"
   },
   "comparison": {
