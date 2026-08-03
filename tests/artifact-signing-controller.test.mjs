@@ -340,6 +340,32 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
   assert.equal(result.runId, 900);
   assert.equal(result.authorityRuntimeSha, authorityRuntimeSha);
   assert.equal(result.status, "succeeded");
+  assert.equal(
+    validateArtifactSigningAuthorityRun(
+      { ...run, path: ".github/workflows/artifact-signing-authority.yml" },
+      {
+        authorityRepository: "kungfu-systems/buildchain",
+        authorityRuntimeSha,
+        expectedTitle,
+      },
+    ).id,
+    900,
+  );
+  assert.throws(
+    () =>
+      validateArtifactSigningAuthorityRun(
+        {
+          ...run,
+          path: ".github/workflows/artifact-signing-authority.yml.backup",
+        },
+        {
+          authorityRepository: "kungfu-systems/buildchain",
+          authorityRuntimeSha,
+          expectedTitle,
+        },
+      ),
+    /workflow path mismatch/u,
+  );
   assert.throws(
     () =>
       validateArtifactSigningAuthorityRun(

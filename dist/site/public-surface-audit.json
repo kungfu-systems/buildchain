@@ -1872,13 +1872,14 @@
           "landing-mode",
           "max-merges",
           "merge-method",
+          "queue-admission-context",
           "ready-label",
           "require-approval",
           "required-status-checks",
           "same-repository-only",
           "target-branch"
         ],
-        "inputCount": 13,
+        "inputCount": 14,
         "secrets": [
           "github-token"
         ],
@@ -7201,8 +7202,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2012c52df8cd1c32f5cf2afbee6fa77e69818616d41ff984dad394af0523f266",
-    "workflowRegistryDigest": "e96718b6503e5628a0f0535e4a705d2819a7ee5512b55e35373f10c750b5facf",
-    "pageRegistryDigest": "ad80961597b664645998d29c38d11debbc168447c69cad3749e9468550f5b695"
+    "workflowRegistryDigest": "a367c2b909763495c24c10e97a00f5ddd99b811e820d9500fbc0bad9f5be1e0e",
+    "pageRegistryDigest": "53eb6d70053abb17461aae81c323dbedab6d86a7f8edc3bb0f9b13b775694fd5"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -640,6 +640,7 @@ jobs:
             const shellRef = (sameRepositoryWorkflow
               ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
               : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
+            const pinnedSelfRuntime = sameRepositoryWorkflow && exactSha.test(requested) && exactSha.test(shellRef) && requested.toLowerCase() === shellRef.toLowerCase();
             const normalizeClass = (ref) => {
               const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
               if (exactSha.test(value)) return "exact-sha";
@@ -653,12 +654,10 @@ jobs:
             let runtimeFullRef = runtimeRef;
             let runtimeClass = normalizeClass(runtimeRef);
             const officialChannel = officialChannelRef.test(requested);
-            let runtimeOverride = requested !== "" && !officialChannel;
+            let runtimeOverride = requested !== "" && !officialChannel && !pinnedSelfRuntime;
             let trustDecision = officialChannel
               ? "official-channel"
-              : runtimeOverride
-                ? "override-requested"
-                : "stable-default";
+              : runtimeOverride ? "override-requested" : pinnedSelfRuntime ? "pinned-self" : "stable-default";
             if (runtimeOverride) {
               if (!trustedSameRepositoryPullRequestHead && context.eventName !== "workflow_dispatch") {
                 throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
