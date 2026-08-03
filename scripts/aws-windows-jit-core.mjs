@@ -12,7 +12,7 @@ export const WINDOWS_EC2_JIT = Object.freeze({
   maximumInstanceLifetimeMinutes: 180,
   maxConcurrentInstances: 1,
   maxAcceptedInstances: 5,
-  budgetLimitUsd: 80,
+  budgetLimitUsd: 110,
   minimumSmokeJobs: 1,
   minimumFullJobs: 3,
   maximumCleanupLatencySeconds: 900,

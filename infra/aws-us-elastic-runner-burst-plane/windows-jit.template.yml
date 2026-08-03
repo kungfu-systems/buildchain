@@ -21,9 +21,9 @@ Parameters:
     Type: AWS::EC2::Subnet::Id
   BudgetLimitUsd:
     Type: Number
-    Default: 80
+    Default: 110
     MinValue: 1
-    MaxValue: 80
+    MaxValue: 110
   MaximumInstanceLifetimeMinutes:
     Type: Number
     Default: 180

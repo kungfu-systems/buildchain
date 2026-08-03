@@ -15,21 +15,21 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("Windows EC2 JIT plan is bounded below the USD 80 phase cap", () => {
+test("Windows EC2 JIT plan is bounded below the USD 110 phase cap", () => {
   const plan = windowsEc2JitPlan();
   assert.equal(plan.config.maxAcceptedInstances, 5);
   assert.equal(plan.config.maxConcurrentInstances, 1);
   assert.equal(plan.costEnvelope.maximumCommittedComputeUsd, 21.75);
   assert.equal(plan.costEnvelope.maximumRaceStopUsd, 4.35);
   assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 26.1);
-  assert.ok(plan.costEnvelope.maximumBoundedSpendUsd < 80);
+  assert.ok(plan.costEnvelope.maximumBoundedSpendUsd < 110);
   assert.equal(plan.invariants.oneJobPerRunner, true);
   assert.equal(plan.invariants.zeroWarmCapacity, true);
 });
 
 test("Windows EC2 JIT plan rejects an unsafe cost envelope", () => {
   assert.throws(
-    () => windowsEc2JitPlan({ maxAcceptedInstances: 18 }),
+    () => windowsEc2JitPlan({ maxAcceptedInstances: 25 }),
     /must remain below budget/,
   );
 });
@@ -225,6 +225,10 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /runner-lifetime-violation/);
   assert.match(stack, /TagFilteredBudgetConfirmed/);
   assert.match(stack, /disabled-until-cost-allocation-tag-is-active/);
+  assert.match(
+    stack,
+    /BudgetLimitUsd:\n\s+Type: Number\n\s+Default: 110\n\s+MinValue: 1\n\s+MaxValue: 110/,
+  );
   assert.match(bootstrap, /latest\/api\/token/);
   assert.match(bootstrap, /AWS\.Tools\.SimpleSystemsManagement/);
   assert.match(bootstrap, /AWS\.Tools\.S3/);
