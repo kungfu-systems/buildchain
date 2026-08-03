@@ -106,7 +106,7 @@ test("Windows campaign is one-shot, source-bound, and atomically capped", () => 
   assert.equal(arm[1].Put.Item.accepted_instances.N, "0");
   assert.equal(arm[1].Put.Item.reserved_usd.N, "0");
   assert.equal(arm[1].Put.Item.phase_spend_baseline_usd.N, "51.98572625");
-  assert.equal(arm[1].Put.Item.budget_limit_usd.N, "80");
+  assert.equal(arm[1].Put.Item.budget_limit_usd.N, "110");
   assert.equal(arm[1].Put.Item.campaign_reservation_ceiling_usd.N, "21.75");
   assert.equal(arm[1].Put.Item.campaign_safety_ceiling_usd.N, "26.1");
 
@@ -181,6 +181,30 @@ test("Windows campaign narrows its paid slot ceiling without widening the phase 
   );
 });
 
+test("Windows campaign admits the USD 110 two-allocation timeout envelope", () => {
+  const campaign = createWindowsJitCampaignArmPlan({
+    campaignId: "win-timeout-110",
+    sourceSha: "a".repeat(40),
+    stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+    armedAt: "2026-08-03T02:00:00Z",
+    expiresAt: "2026-08-04T02:00:00Z",
+    phaseSpendBaselineUsd: 88.52290745,
+    maxAcceptedInstances: 2,
+  });
+  assert.equal(campaign.limits.maxAcceptedInstances, 2);
+  assert.equal(campaign.limits.campaignReservationCeilingUsd, 8.7);
+  assert.equal(campaign.limits.campaignSafetyCeilingUsd, 13.05);
+  assert.equal(
+    windowsCampaignArmItems(campaign)[1].Put.Item.remaining_phase_budget_usd.N,
+    "21.47709255",
+  );
+  assert.equal(
+    campaign.limits.phaseSpendBaselineUsd +
+      campaign.limits.campaignSafetyCeilingUsd,
+    101.57290745,
+  );
+});
+
 test("Windows campaign requires a prior-spend baseline and rejects an exhausted cap", () => {
   const values = {
     campaignId: "win-20260802-ledger",
@@ -197,7 +221,7 @@ test("Windows campaign requires a prior-spend baseline and rejects an exhausted 
     () =>
       createWindowsJitCampaignArmPlan({
         ...values,
-        phaseSpendBaselineUsd: 53.9,
+        phaseSpendBaselineUsd: 84,
       }),
     /safety envelope must remain below the remaining Windows phase budget/,
   );
@@ -231,7 +255,7 @@ test("Windows campaign CLI plans without mutating AWS", () => {
   assert.equal(plan.kind, "campaign-arm-plan");
   assert.equal(plan.limits.maxAcceptedInstances, 1);
   assert.equal(plan.limits.phaseSpendBaselineUsd, 51.98572625);
-  assert.equal(plan.limits.remainingPhaseBudgetUsd, 28.01427375);
+  assert.equal(plan.limits.remainingPhaseBudgetUsd, 58.01427375);
   assert.equal(plan.limits.campaignSafetyCeilingUsd, 8.7);
 });
 

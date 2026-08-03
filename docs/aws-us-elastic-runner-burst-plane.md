@@ -189,7 +189,7 @@ and atomically refuses a sixth accepted instance. Five accepted instances
 therefore reserve at most USD 21.75. The campaign also persists the
 operator-observed spend from earlier Windows work, and refuses to arm unless
 that baseline, all five reservations, and one USD 4.35 fail-closed race
-allowance remain below the USD 80 phase cap.
+allowance remain below the USD 110 phase cap.
 
 The campaign starts unarmed and expires within 24 hours. Its `CONTROL` record
 can be created only once: a killed or expired campaign cannot be re-armed by
@@ -198,6 +198,13 @@ persists `KILLED` before cleanup, so later workflow dispatches fail before a
 paid launch. Reservations are never refunded: a controller crash, ambiguous
 launch, or successful launch all remain charged to the campaign, favoring a
 false stop over an accidental budget overrun.
+
+The 2026-08-03 timeout-only campaign decision narrows the campaign to two
+accepted instances with one active instance at a time. The second reservation
+is an operator-gated repair retry: it may be used only after the first attempt
+is classified as non-counting and runner, EC2, EBS, SSM, and workflow residue
+have returned to zero. The two-slot ledger is a maximum spend boundary, not an
+authorization to consume both reservations.
 
 Each stack owns a stack-scoped reaper log group, so an independent retained
 one-shot campaign stack can be created without colliding with another
@@ -234,7 +241,7 @@ same `--campaign-id`, `--confirm-campaign-id`, `--state-table`, and
 DryRun checks pass, the controller
 atomically reserves one run. Duplicate run-attempt-qualification identities,
 source mismatch, expiry, `KILLED`, the sixth accepted instance, or a
-reservation that would exceed the baseline-adjusted USD 80 phase ceiling all
+reservation that would exceed the baseline-adjusted USD 110 phase ceiling all
 fail closed before `RunInstances`.
 
 Example dry-run and arm boundary (do not execute without a new campaign budget
