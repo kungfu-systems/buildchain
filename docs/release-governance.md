@@ -648,16 +648,23 @@ jobs:
       contents: write
       pull-requests: write
       checks: read
-      statuses: read
+      statuses: write
     with:
       target-branch: dev/v3/v3.0
       required-status-checks: check / check
+      queue-admission-context: Queue admission lease
       ready-label: ready
       block-labels: blocked,do-not-merge
       max-merges: 1
       landing-mode: auto
       dry-run: ${{ inputs.dry-run || false }}
 ```
+
+When the protected branch requires a merge-group-only queue lease, the wrapper
+posts that configured context as a temporary success status on the exact PR
+head only after the ready, review, and required-check gates pass. It then
+enqueues with `expectedHeadOid`; a rejected enqueue rewrites the temporary
+status to failure, while the merge group must still produce its own final check.
 
 ## Buildchain Patrol
 
