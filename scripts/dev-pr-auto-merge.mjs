@@ -1170,7 +1170,7 @@ export function cliOptions(args = [], environment = process.env) {
     sameRepositoryOnly: environment.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,
     maxMerges: environment.BUILDCHAIN_DEV_PR_MAX_MERGES,
     mergeMethod: environment.BUILDCHAIN_DEV_PR_MERGE_METHOD,
-    landingMode: environment.BUILDCHAIN_DEV_PR_LANDING_MODE,
+    landingMode: cliValue(args, "landing-mode", environment.BUILDCHAIN_DEV_PR_LANDING_MODE),
     dryRun: cliFlag(args, "execute") ? false : environment.BUILDCHAIN_DEV_PR_DRY_RUN,
     outputPath: cliValue(
       args,
@@ -1186,7 +1186,7 @@ export function cliOptions(args = [], environment = process.env) {
 async function main() {
   const args = process.argv.slice(2);
   if (cliFlag(args, "help")) {
-    process.stdout.write("Usage:\n  buildchain dev pr-admit --repository owner/repo --branch dev/vN/vN.M --pull-request N --expected-head SHA [--execute] [--output FILE] [--json]\n");
+    process.stdout.write("Usage:\n  buildchain dev pr-admit --repository owner/repo --branch dev/vN/vN.M --pull-request N --expected-head SHA [--landing-mode auto|direct|queue] [--execute] [--output FILE] [--json]\n");
     return;
   }
   const options = normalizeOptions(cliOptions(args));
