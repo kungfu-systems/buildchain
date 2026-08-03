@@ -84,7 +84,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Git/source/version/module/product build facts | `dist/site/node-api-registry.json`, `dist/site/cli-registry.json`, `kungfu-buildchain-module-build-facts`, `kungfu-buildchain-product-build-facts` | [`build-facts.md`](build-facts.md) |
 | GitHub Release passport/evidence publication | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`release-governance.md`](release-governance.md), [`release-candidate.md`](release-candidate.md) |
 | GitHub ownership, effective protection, plan capability, and managed-zone governance receipts | `dist/site/node-api-registry.json`, `dist/site/cli-registry.json`, `kungfu-buildchain-github-governance-receipt` | [`github-governance-authority.md`](github-governance-authority.md) |
-| release propagation for package/publication/site chains | `dist/site/release-model.json` | [`release-propagation.md`](release-propagation.md) |
+| release propagation and the unified Paper/KFD/Buildchain/Core Site agent entry | `dist/site/release-model.json`, `dist/site/cli-registry.json`, `dist/site/node-api-registry.json` | [`release-propagation.md`](release-propagation.md) |
 | publication artifact manifests, immutable archive registries, source bundles, and paper repository workflows | `dist/site/publication-registry.json`, `dist/site/workflow-registry.json`, `dist/site/node-api-registry.json`, `kungfu-buildchain-publication-artifact-manifest`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md) |
 | Generated badge bundles, README badge blocks, and badge facts | `dist/site/node-api-registry.json`, `dist/site/manual-registry.json`, `kungfu-buildchain-badge-bundle-facts`, `kungfu-buildchain-readme-badge-facts` | [`readme-badges.md`](readme-badges.md) |
 | Homebrew tap distribution indexes | `dist/site/node-api-registry.json`, `dist/site/buildchain-contract.json` | [`homebrew.md`](homebrew.md) |
@@ -111,6 +111,7 @@ replace them.
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
 | How do protected dev branches and scheduled ready-PR merging work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |
 | How do slow required checks land reliably on a busy dev channel? | [`release-governance.md`](release-governance.md#protected-dev-branches) + [`cli.md`](cli.md#commands) | use | preview |
+| How do I coalesce rapid Dev changes, preserve release runner priority, and retry only transient failed jobs? | [`dev-qualification-patrol.md`](dev-qualification-patrol.md) | use/verify | preview |
 | How do I run daily, weekly, or monthly repository patrols? | [`release-governance.md`](release-governance.md#buildchain-patrol) | use | stable |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
@@ -176,6 +177,8 @@ replace them.
 - **protected dev branches / scheduled ready-PR merge / daily-weekly-monthly patrol** ->
   [`release-governance.md`](release-governance.md#protected-dev-branches) and
   [`release-governance.md`](release-governance.md#buildchain-patrol).
+- **Dev qualification coalescing / release-priority runners / failed-job retry** ->
+  [`dev-qualification-patrol.md`](dev-qualification-patrol.md).
 - **pnpm / npm / yarn / package-manager adapters** ->
   [`lifecycle-protocol.md`](lifecycle-protocol.md).
 - **pip / Conan / CMake / custom commands** -> [`lifecycle-protocol.md`](lifecycle-protocol.md)

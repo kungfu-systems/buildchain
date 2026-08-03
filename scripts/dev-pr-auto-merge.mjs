@@ -152,11 +152,11 @@ function summarizeChecks({ statuses = [], checkRuns = [] } = {}, requiredChecks 
   };
 }
 
-function mergeableAccepted(pr) {
+function mergeableAccepted(pr, landingMode = "direct") {
   if (pr.mergeable === false) return false;
   const state = String(pr.mergeable_state || pr.mergeStateStatus || "").toLowerCase();
   if (!state) return pr.mergeable === true;
-  return ["clean", "has_hooks", "unstable", "unknown"].includes(state);
+  return ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked"] : [])].includes(state);
 }
 
 function skip(reason, details = {}) {
@@ -189,7 +189,7 @@ export async function evaluatePullRequest(pr, options, client) {
       observedBaseRef: detailed.base.ref,
     });
   }
-  if (!mergeableAccepted(detailed)) {
+  if (!mergeableAccepted(detailed, options.landingMode)) {
     return skip("not-mergeable", {
       mergeable: detailed.mergeable,
       mergeableState: detailed.mergeable_state || detailed.mergeStateStatus || "",
@@ -629,7 +629,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
       } else if (observedHeadSha !== expectedHeadSha) {
         admissionDecision = "rejected";
         admissionReason = "head-sha-drift";
-      } else if (!mergeableAccepted(observedPullRequest)) {
+      } else if (!mergeableAccepted(observedPullRequest, landingMode)) {
         admissionDecision = "rejected";
         admissionReason = "not-mergeable-on-admission-recheck";
       }

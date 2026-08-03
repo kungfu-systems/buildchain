@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-29
+last_reviewed: 2026-08-03
 ai_provenance:
   model_family: GPT-5
   product: Codex
   generated_at: 2026-07-29
-  visible_context: Existing Buildchain source locks, Kungfu exact-source Alpha preflight, Dev Patrol, repository release governance, and the consumer-owned settlement renderer threat model.
+  visible_context: Existing Buildchain source locks, Kungfu exact-source Alpha preflight, Dev Patrol, protected auto-merge policy, repository release governance, and the consumer-owned settlement renderer threat model.
   invisible_context_boundary: No credentials, private logs, or private configuration were used.
 ---
 
@@ -114,12 +114,21 @@ service. Once the active PR settles or is abandoned, the next execution
 recomputes current exact-SHA qualification and creates only the newest still
 fresh candidate. It never trusts a `workflow_run` trigger SHA as evidence.
 
+The caller may additionally set `auto-merge: true` and choose `merge-method`
+from `merge`, `squash`, or `rebase`. Buildchain only arms GitHub auto-merge for
+the single managed, open, exact-source candidate after the write-permission
+settlement has revalidated the observation. GitHub still owns every required
+review, required check, branch-protection, and merge-queue gate; Buildchain does
+not approve or directly merge the PR. Invalid merge methods and GraphQL
+refusals fail the patrol run.
+
 Consumers should invoke this workflow after relevant qualification workflow
 completion and from an offset periodic fallback. GitHub may delay scheduled
 runs, so the event path supplies low latency while the fallback supplies
 recovery. Workflow concurrency plus the server-side open-PR reconciliation
 makes duplicate or delayed events idempotent.
 
-The workflow never moves the Alpha ref directly, merges or auto-merges the pull
-request, publishes npm, creates a Git tag or GitHub Release, or changes branch
-protection. Those remain repository-owned protected settlement actions.
+The workflow never moves the Alpha ref directly, directly merges the pull
+request, approves it, publishes npm, creates a Git tag or GitHub Release, or
+changes branch protection. Optional auto-merge only registers repository-owned
+intent with GitHub; protected settlement remains authoritative.

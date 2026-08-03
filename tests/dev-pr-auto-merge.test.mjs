@@ -184,6 +184,25 @@ test("policy gates reject unsafe or incomplete dev PRs", async () => {
   );
 });
 
+test("queue admission accepts blocked state only after independent gates pass", async () => {
+  const options = { ...baseOptions, landingMode: "queue", dryRun: true };
+  const blocked = pr({ mergeable: true, mergeable_state: "blocked" });
+
+  assert.equal(
+    (await evaluatePullRequest(blocked, options, client({ pullRequests: [blocked] }))).action,
+    "would-merge",
+  );
+  assert.equal(
+    (await evaluatePullRequest(blocked, { ...options, landingMode: "direct" }, client({ pullRequests: [blocked] }))).reason,
+    "not-mergeable",
+  );
+  const conflicted = { ...blocked, mergeable: false };
+  assert.equal(
+    (await evaluatePullRequest(conflicted, options, client({ pullRequests: [conflicted] }))).reason,
+    "not-mergeable",
+  );
+});
+
 test("merge mode merges eligible PRs sequentially and honors max-merges", async () => {
   const fake = client({
     pullRequests: [

@@ -3493,7 +3493,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 53
+        "line": 54
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3522,7 +3522,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 78
+        "line": 79
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14851,6 +14851,165 @@
       ]
     },
     {
+      "id": "packages/core/release-propagation-agent-entry.js#classifyReleasePropagationCondition",
+      "name": "classifyReleasePropagationCondition",
+      "kind": "function",
+      "signature": "function classifyReleasePropagationCondition(condition)",
+      "parameters": [
+        {
+          "name": "condition",
+          "signature": "condition"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-agent-entry.js",
+        "line": 171
+      },
+      "example": "import { classifyReleasePropagationCondition } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-agent-entry.js#normalizeSiteUpstreamIntent",
+      "name": "normalizeSiteUpstreamIntent",
+      "kind": "function",
+      "signature": "function normalizeSiteUpstreamIntent(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-agent-entry.js",
+        "line": 77
+      },
+      "example": "import { normalizeSiteUpstreamIntent } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-agent-entry.js#planSiteUpstreamAgentEntry",
+      "name": "planSiteUpstreamAgentEntry",
+      "kind": "function",
+      "signature": "function planSiteUpstreamAgentEntry({ sourceId: sourceInput, channel = \"\", handoffWork = null, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ sourceId: sourceInput, channel = \"\", handoffWork = null, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-agent-entry.js",
+        "line": 134
+      },
+      "example": "import { planSiteUpstreamAgentEntry } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-agent-entry.js#RELEASE_PROPAGATION_FAILURE_MATRIX",
+      "name": "RELEASE_PROPAGATION_FAILURE_MATRIX",
+      "kind": "constant",
+      "signature": "const RELEASE_PROPAGATION_FAILURE_MATRIX",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-agent-entry.js",
+        "line": 66
+      },
+      "example": "import { RELEASE_PROPAGATION_FAILURE_MATRIX } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-agent-entry.js#RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT",
+      "name": "RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-agent-entry.js",
+        "line": 11
+      },
+      "example": "import { RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-agent-entry.js#SITE_UPSTREAM_AGENT_ENTRY_CONTRACT",
+      "name": "SITE_UPSTREAM_AGENT_ENTRY_CONTRACT",
+      "kind": "constant",
+      "signature": "const SITE_UPSTREAM_AGENT_ENTRY_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-agent-entry.js",
+        "line": 9
+      },
+      "example": "import { SITE_UPSTREAM_AGENT_ENTRY_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
       "name": "createPackageReleasePropagationCapture",
       "kind": "function",
@@ -15090,6 +15249,141 @@
         "line": 167
       },
       "example": "import { resolveNpmRegistryRelease } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-push.js#createReleasePropagationPushPlan",
+      "name": "createReleasePropagationPushPlan",
+      "kind": "function",
+      "signature": "function createReleasePropagationPushPlan({ work: workInput, expectedWorkRoot, repositoryState: stateInput, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ work: workInput, expectedWorkRoot, repositoryState: stateInput, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "subprocess"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-push.js",
+        "line": 77
+      },
+      "example": "import { createReleasePropagationPushPlan } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-push.js#executeReleasePropagationPush",
+      "name": "executeReleasePropagationPush",
+      "kind": "function",
+      "signature": "function executeReleasePropagationPush({ work, expectedWorkRoot, cwd = process.cwd(), remote = \"origin\", } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ work, expectedWorkRoot, cwd = process.cwd(), remote = \"origin\", } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-push.js",
+        "line": 231
+      },
+      "example": "import { executeReleasePropagationPush } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-push.js#inspectReleasePropagationPushState",
+      "name": "inspectReleasePropagationPushState",
+      "kind": "function",
+      "signature": "function inspectReleasePropagationPushState({ work: workInput, cwd = process.cwd(), remote = \"origin\", } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ work: workInput, cwd = process.cwd(), remote = \"origin\", } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "subprocess"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-push.js",
+        "line": 174
+      },
+      "example": "import { inspectReleasePropagationPushState } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-push.js#RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT",
+      "name": "RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-push.js",
+        "line": 14
+      },
+      "example": "import { RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-propagation-push.js#RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT",
+      "name": "RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-propagation-push.js",
+        "line": 16
+      },
+      "example": "import { RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -16302,7 +16596,7 @@
         "developer",
         "agent"
       ],
-      "symbolCount": 547,
+      "symbolCount": 558,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -16402,6 +16696,7 @@
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/diagnostics.js#classifyProcessCommand",
+        "packages/core/release-propagation-agent-entry.js#classifyReleasePropagationCondition",
         "packages/core/github-governance-authority.js#codeownersForPath",
         "packages/core/readme-badges.js#collectBadgeBundleFacts",
         "packages/core/diagnostics.js#collectBuildchainDiagnostics",
@@ -16502,6 +16797,7 @@
         "packages/core/release-passport.js#createReleasePassport",
         "packages/core/release-passport-contract.js#createReleasePassportCheckManifest",
         "packages/core/release-propagation.js#createReleasePropagationLock",
+        "packages/core/release-propagation-push.js#createReleasePropagationPushPlan",
         "packages/core/release-propagation.js#createReleasePropagationReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationStageReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationWork",
@@ -16542,6 +16838,7 @@
         "packages/core/paper.js#executePaperNpmBootstrap",
         "packages/core/paper-work.js#executePaperWorkStart",
         "packages/core/paper-work.js#executePaperWorkSubmitPush",
+        "packages/core/release-propagation-push.js#executeReleasePropagationPush",
         "packages/core/artifact-passport.js#explainArtifactPassport",
         "packages/core/kfd-agent-hub.js#explainKfdAgentHub",
         "packages/core/release-line-dry-run.js#explainReleaseLineDryRun",
@@ -16579,6 +16876,7 @@
         "packages/core/release-passport.js#IMPACT_LEDGER_CONTRACT",
         "packages/core/kfd-agent-hub.js#initKfdAgentHub",
         "packages/core/kfd-agent-hub.js#inspectKfdAgentHub",
+        "packages/core/release-propagation-push.js#inspectReleasePropagationPushState",
         "packages/core/kfd-agent-hub.js#KFD_AGENT_HUB_ADOPTION_CONTRACT",
         "packages/core/kfd-agent-hub.js#KFD_AGENT_HUB_ADOPTION_SCHEMA",
         "packages/core/kfd-agent-hub.js#KFD_AGENT_HUB_DECLARATION",
@@ -16646,6 +16944,7 @@
         "packages/core/release-propagation-pickup.js#normalizeManualUpstreamPickupConfig",
         "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
+        "packages/core/release-propagation-agent-entry.js#normalizeSiteUpstreamIntent",
         "packages/core/stable-candidate-ledger.js#normalizeStableCandidateLedger",
         "packages/core/release-propagation-capture.js#PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
         "packages/core/paper.js#PAPER_ALPHA_PLAN_CONTRACT",
@@ -16672,6 +16971,7 @@
         "packages/core/paper.js#planPaperScaffold",
         "packages/core/release-line-bootstrap.js#planReleaseLineBootstrap",
         "packages/core/release-propagation.js#planReleasePropagation",
+        "packages/core/release-propagation-agent-entry.js#planSiteUpstreamAgentEntry",
         "packages/core/publish-transaction.js#planTransactionRecovery",
         "packages/core/github-artifact-attestation.js#prepareGitHubArtifactAttestation",
         "packages/core/publication-package.js#preparePublicationNpmPackage",
@@ -16732,9 +17032,13 @@
         "packages/core/release-passport.js#RELEASE_PASSPORT_CONTRACT",
         "packages/core/release-passport-contract.js#RELEASE_PASSPORT_SCHEMA",
         "packages/core/release-passport-contract.js#RELEASE_PASSPORT_SCHEMA_ID",
+        "packages/core/release-propagation-agent-entry.js#RELEASE_PROPAGATION_FAILURE_MATRIX",
+        "packages/core/release-propagation-agent-entry.js#RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_GRAPH_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_LOCK_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_PLAN_CONTRACT",
+        "packages/core/release-propagation-push.js#RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT",
+        "packages/core/release-propagation-push.js#RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_RECEIPT_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_CONTRACT",
@@ -16781,6 +17085,7 @@
         "packages/core/artifact-passport.js#sha512IntegrityFile",
         "packages/core/package-manager.js#shellJoin",
         "packages/core/detached-artifact-signature.js#signDetachedArtifactRequest",
+        "packages/core/release-propagation-agent-entry.js#SITE_UPSTREAM_AGENT_ENTRY_CONTRACT",
         "packages/core/stable-candidate-ledger.js#STABLE_CANDIDATE_LEDGER_CONTRACT",
         "packages/core/stable-candidate-ledger.js#STABLE_CANDIDATE_STATES",
         "packages/core/stable-candidate-ledger.js#stableCandidatePromotionRefs",
@@ -16947,7 +17252,7 @@
         "developer",
         "agent"
       ],
-      "symbolCount": 547,
+      "symbolCount": 558,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -17047,6 +17352,7 @@
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/diagnostics.js#classifyProcessCommand",
+        "packages/core/release-propagation-agent-entry.js#classifyReleasePropagationCondition",
         "packages/core/github-governance-authority.js#codeownersForPath",
         "packages/core/readme-badges.js#collectBadgeBundleFacts",
         "packages/core/diagnostics.js#collectBuildchainDiagnostics",
@@ -17147,6 +17453,7 @@
         "packages/core/release-passport.js#createReleasePassport",
         "packages/core/release-passport-contract.js#createReleasePassportCheckManifest",
         "packages/core/release-propagation.js#createReleasePropagationLock",
+        "packages/core/release-propagation-push.js#createReleasePropagationPushPlan",
         "packages/core/release-propagation.js#createReleasePropagationReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationStageReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationWork",
@@ -17187,6 +17494,7 @@
         "packages/core/paper.js#executePaperNpmBootstrap",
         "packages/core/paper-work.js#executePaperWorkStart",
         "packages/core/paper-work.js#executePaperWorkSubmitPush",
+        "packages/core/release-propagation-push.js#executeReleasePropagationPush",
         "packages/core/artifact-passport.js#explainArtifactPassport",
         "packages/core/kfd-agent-hub.js#explainKfdAgentHub",
         "packages/core/release-line-dry-run.js#explainReleaseLineDryRun",
@@ -17224,6 +17532,7 @@
         "packages/core/release-passport.js#IMPACT_LEDGER_CONTRACT",
         "packages/core/kfd-agent-hub.js#initKfdAgentHub",
         "packages/core/kfd-agent-hub.js#inspectKfdAgentHub",
+        "packages/core/release-propagation-push.js#inspectReleasePropagationPushState",
         "packages/core/kfd-agent-hub.js#KFD_AGENT_HUB_ADOPTION_CONTRACT",
         "packages/core/kfd-agent-hub.js#KFD_AGENT_HUB_ADOPTION_SCHEMA",
         "packages/core/kfd-agent-hub.js#KFD_AGENT_HUB_DECLARATION",
@@ -17291,6 +17600,7 @@
         "packages/core/release-propagation-pickup.js#normalizeManualUpstreamPickupConfig",
         "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
+        "packages/core/release-propagation-agent-entry.js#normalizeSiteUpstreamIntent",
         "packages/core/stable-candidate-ledger.js#normalizeStableCandidateLedger",
         "packages/core/release-propagation-capture.js#PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
         "packages/core/paper.js#PAPER_ALPHA_PLAN_CONTRACT",
@@ -17317,6 +17627,7 @@
         "packages/core/paper.js#planPaperScaffold",
         "packages/core/release-line-bootstrap.js#planReleaseLineBootstrap",
         "packages/core/release-propagation.js#planReleasePropagation",
+        "packages/core/release-propagation-agent-entry.js#planSiteUpstreamAgentEntry",
         "packages/core/publish-transaction.js#planTransactionRecovery",
         "packages/core/github-artifact-attestation.js#prepareGitHubArtifactAttestation",
         "packages/core/publication-package.js#preparePublicationNpmPackage",
@@ -17377,9 +17688,13 @@
         "packages/core/release-passport.js#RELEASE_PASSPORT_CONTRACT",
         "packages/core/release-passport-contract.js#RELEASE_PASSPORT_SCHEMA",
         "packages/core/release-passport-contract.js#RELEASE_PASSPORT_SCHEMA_ID",
+        "packages/core/release-propagation-agent-entry.js#RELEASE_PROPAGATION_FAILURE_MATRIX",
+        "packages/core/release-propagation-agent-entry.js#RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_GRAPH_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_LOCK_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_PLAN_CONTRACT",
+        "packages/core/release-propagation-push.js#RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT",
+        "packages/core/release-propagation-push.js#RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_RECEIPT_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_CONTRACT",
@@ -17426,6 +17741,7 @@
         "packages/core/artifact-passport.js#sha512IntegrityFile",
         "packages/core/package-manager.js#shellJoin",
         "packages/core/detached-artifact-signature.js#signDetachedArtifactRequest",
+        "packages/core/release-propagation-agent-entry.js#SITE_UPSTREAM_AGENT_ENTRY_CONTRACT",
         "packages/core/stable-candidate-ledger.js#STABLE_CANDIDATE_LEDGER_CONTRACT",
         "packages/core/stable-candidate-ledger.js#STABLE_CANDIDATE_STATES",
         "packages/core/stable-candidate-ledger.js#stableCandidatePromotionRefs",
@@ -18557,7 +18873,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:4ac32145cacbf15e1fa4f8c5daf24c2374a76e9f079afc5bcc8d444c64c2d246",
+      "digest": "sha256:377c23328c8d07fd98def4e2f170d68294893f695cda8cb85766c45083510e87",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -18798,36 +19114,46 @@
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
-      "digest": "sha256:959a9474d48da2090debac31eb95927652ad05ded0364ef6b736b6c12af96847",
+      "digest": "sha256:2a04d2061d8c3dbc3a5b91a48d0e0392f3e345f247251efb23d5edf95329a092",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 31,
+      "symbolCount": 42,
       "symbolIds": [
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
+        "packages/core/release-propagation-agent-entry.js#classifyReleasePropagationCondition",
         "packages/core/release-propagation-work-transitions.js#completeReleasePropagationWork",
         "packages/core/release-propagation-pickup.js#createManualUpstreamPickupCapture",
         "packages/core/release-propagation-pickup.js#createManualUpstreamPickupPlan",
         "packages/core/release-propagation-capture.js#createPackageReleasePropagationCapture",
         "packages/core/release-propagation.js#createReleasePropagationLock",
+        "packages/core/release-propagation-push.js#createReleasePropagationPushPlan",
         "packages/core/release-propagation.js#createReleasePropagationReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationStageReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationWork",
+        "packages/core/release-propagation-push.js#executeReleasePropagationPush",
+        "packages/core/release-propagation-push.js#inspectReleasePropagationPushState",
         "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT",
         "packages/core/release-propagation-pickup.js#MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT",
         "packages/core/release-propagation-pickup.js#normalizeManualUpstreamPickupConfig",
         "packages/core/release-propagation-capture.js#normalizePackageReleasePropagationConfig",
         "packages/core/release-propagation.js#normalizeReleasePropagationGraph",
+        "packages/core/release-propagation-agent-entry.js#normalizeSiteUpstreamIntent",
         "packages/core/release-propagation-capture.js#PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT",
         "packages/core/release-propagation.js#planReleasePropagation",
+        "packages/core/release-propagation-agent-entry.js#planSiteUpstreamAgentEntry",
         "packages/core/release-propagation.js#readReleasePropagationJson",
         "packages/core/release-propagation-work-transitions.js#recordReleasePropagationStage",
+        "packages/core/release-propagation-agent-entry.js#RELEASE_PROPAGATION_FAILURE_MATRIX",
+        "packages/core/release-propagation-agent-entry.js#RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_GRAPH_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_LOCK_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_PLAN_CONTRACT",
+        "packages/core/release-propagation-push.js#RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT",
+        "packages/core/release-propagation-push.js#RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT",
         "packages/core/release-propagation.js#RELEASE_PROPAGATION_RECEIPT_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_CONTRACT",
@@ -18836,6 +19162,7 @@
         "packages/core/release-propagation-pickup.js#resolveNpmRegistryRelease",
         "packages/core/release-propagation.js#resolvePropagationChannel",
         "packages/core/release-propagation-work.js#resumeReleasePropagationWork",
+        "packages/core/release-propagation-agent-entry.js#SITE_UPSTREAM_AGENT_ENTRY_CONTRACT",
         "packages/core/release-propagation-work.js#verifyReleasePropagationWork",
         "packages/core/release-propagation.js#writeReleasePropagationLock"
       ],
@@ -18947,7 +19274,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:deab508284ed365a830894205a4d293c524281d6da7126094cf8e9eea8efe223"
+      "digest": "sha256:ae49a589091d1ab91d29f2d6ac52cf2551a9d0b1f78350965b408f40fd219e29"
     },
     {
       "id": "build-facts",

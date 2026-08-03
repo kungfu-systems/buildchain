@@ -16,6 +16,10 @@
     "packages/core/paper-work.js",
     "packages/core/paper.js",
     "packages/core/public-surface-cli.js",
+    "packages/core/release-propagation-agent-entry.js",
+    "packages/core/release-propagation-push.js",
+    "packages/core/release-propagation-stage-evidence.js",
+    "packages/core/release-propagation-work.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
     "scripts/buildchain-cli-help.mjs",
@@ -24,6 +28,7 @@
     "scripts/paper-work-fleet-cli.mjs",
     "scripts/run-lifecycle-core.mjs",
     "scripts/resolve-artifact-transfer-mode.mjs",
+    "scripts/release-propagation.mjs",
     "scripts/web-surface-core.mjs",
     "scripts/web-surface-routing.mjs",
     "scripts/web-surface.mjs",
@@ -300,6 +305,26 @@
         "tests/public-surface-audit.test.mjs"
       ],
       "contracts": [
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json"
+      ]
+    },
+    {
+      "id": "site-upstream-agent-propagation",
+      "owner": "Buildchain release propagation maintainers",
+      "implementation": [
+        "packages/core/release-propagation-agent-entry.js",
+        "packages/core/release-propagation-push.js",
+        "packages/core/release-propagation-stage-evidence.js",
+        "packages/core/release-propagation-work.js",
+        "scripts/release-propagation.mjs"
+      ],
+      "tests": [
+        "tests/release-propagation.test.mjs",
+        "tests/release-propagation-pickup.test.mjs"
+      ],
+      "contracts": [
+        "docs/release-propagation.md",
         "dist/site/cli-registry.json",
         "dist/site/node-api-registry.json"
       ]

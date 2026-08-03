@@ -486,3 +486,18 @@ export {
   normalizeManualUpstreamPickupConfig,
   resolveNpmRegistryRelease,
 } from "./release-propagation-pickup.js";
+export {
+  RELEASE_PROPAGATION_FAILURE_MATRIX,
+  RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT,
+  SITE_UPSTREAM_AGENT_ENTRY_CONTRACT,
+  classifyReleasePropagationCondition,
+  normalizeSiteUpstreamIntent,
+  planSiteUpstreamAgentEntry,
+} from "./release-propagation-agent-entry.js";
+export {
+  RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT,
+  RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT,
+  createReleasePropagationPushPlan,
+  executeReleasePropagationPush,
+  inspectReleasePropagationPushState,
+} from "./release-propagation-push.js";

@@ -28,6 +28,7 @@ import {
   parseExpectedArtifactsJson,
   validateExpectedArtifacts,
 } from "./build-contract-core.mjs";
+import { verifyCompilerCacheActivity } from "./compiler-cache-evidence.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const buildchainCliCandidates = [
@@ -391,6 +392,22 @@ function writeDiagnosticsSidecarManifest(filePath, {
   return manifest;
 }
 
+export function verifyBuildLifecycleCompilerCacheActivity({
+  stageName = "",
+  executed = false,
+  cwd = process.cwd(),
+  env = process.env,
+  verifier = verifyCompilerCacheActivity,
+  frameworkLog,
+} = {}) {
+  if (stageName !== "build" || !executed) return undefined;
+  const activity = verifier({ cwd, env });
+  if (activity) {
+    frameworkLog?.info("compiler-cache.activity", { attributes: activity });
+  }
+  return activity;
+}
+
 export function runLifecycle({
   cwd = process.cwd(),
   stageName = "",
@@ -646,6 +663,13 @@ export function runLifecycle({
     throw new Error(`required lifecycle stage did not run: ${stageName || "command"}`);
   }
 
+  const compilerCacheActivity = verifyBuildLifecycleCompilerCacheActivity({
+    stageName,
+    executed,
+    cwd: resolvedCwd,
+    frameworkLog,
+  });
+
   const shouldReadProcessSummary = Boolean(
     resolvedProcessSummaryPath
       && (fs.existsSync(resolvedProcessSummaryPath) || processSummaryRequired),
@@ -739,6 +763,7 @@ export function runLifecycle({
     fileCount: summary.fileCount,
   });
   observability.lifecycle = lifecycleObservability;
+  Object.assign(observability, { compilerCacheActivity });
   observability.diagnostics = {
     contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
     path: relativeDiagnosticsPath,

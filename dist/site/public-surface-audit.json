@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 112,
-    "workflowCount": 59,
+    "workflowCount": 60,
     "actionCount": 6,
-    "sitePageCount": 63,
-    "docCommandRefCount": 822,
+    "sitePageCount": 64,
+    "docCommandRefCount": 830,
     "failureCount": 0
   },
   "enumerated": {
@@ -490,7 +490,7 @@
       {
         "id": "release-propagation",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain release-propagation <plan|write-lock|work|pickup> ..."
+        "usage": "buildchain release-propagation <plan|write-lock|work|entry|pickup> ..."
       },
       {
         "id": "release-transaction",
@@ -699,6 +699,8 @@
           "linux-container-preset",
           "node-version",
           "platforms-json",
+          "pre-upload-transport-smoke-artifact-root",
+          "pre-upload-transport-smoke-scenario-path",
           "process-sample-interval-ms",
           "process-summary-path",
           "publish-anchor-request-json",
@@ -727,7 +729,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 83,
+        "inputCount": 85,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1562,6 +1564,8 @@
           "linux-container-preset",
           "node-version",
           "platforms-json",
+          "pre-upload-transport-smoke-artifact-root",
+          "pre-upload-transport-smoke-scenario-path",
           "process-sample-interval-ms",
           "process-summary-path",
           "publish-anchor-request-json",
@@ -1590,7 +1594,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 86,
+        "inputCount": 88,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1810,12 +1814,14 @@
         "reusable": true,
         "inputs": [
           "alpha-workflow-path",
+          "auto-merge",
           "buildchain-ref",
           "buildchain-repository",
           "create-pull-request",
           "dev-workflow-path",
           "dry-run",
           "max-age-seconds",
+          "merge-method",
           "pull-request-body-prefix",
           "pull-request-body-prefix-renderer",
           "reactivation-authorized",
@@ -1823,7 +1829,7 @@
           "source-branch",
           "target-branch"
         ],
-        "inputCount": 13,
+        "inputCount": 15,
         "secrets": [
           "promotion-token"
         ],
@@ -1886,6 +1892,38 @@
           "skipped-count"
         ],
         "outputCount": 6
+      },
+      {
+        "id": "dev-qualification-patrol",
+        "path": ".github/workflows/dev-qualification-patrol.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "dev-workflow-path",
+          "dispatch-inputs-json",
+          "dry-run",
+          "max-attempts",
+          "mutation-authorized",
+          "preflight-workflow-path",
+          "priority-workflows-json",
+          "source-branch"
+        ],
+        "inputCount": 10,
+        "secrets": [
+          "qualification-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "action",
+          "active-run-id",
+          "decision-root",
+          "pending-sha",
+          "reason",
+          "source-sha",
+          "state"
+        ],
+        "outputCount": 7
       },
       {
         "id": "github-artifact-attestation",
@@ -2490,6 +2528,7 @@
           "hold",
           "hold-reason",
           "ledger-ref",
+          "merge-method",
           "minimum-soak-seconds",
           "release-now",
           "required-checks",
@@ -2497,7 +2536,7 @@
           "revoked-versions",
           "target-branch"
         ],
-        "inputCount": 15,
+        "inputCount": 16,
         "secrets": [
           "approval-token",
           "promotion-token"
@@ -2861,6 +2900,10 @@
       },
       {
         "id": "manual:dev-alpha-candidate-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:dev-qualification-patrol",
         "category": "manual"
       },
       {
@@ -6379,7 +6422,22 @@
       {
         "id": "release-propagation",
         "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
         "command": "buildchain release-propagation --help"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation entry"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation entry --help"
       },
       {
         "id": "release-propagation",
@@ -6439,6 +6497,21 @@
       {
         "id": "release-propagation",
         "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation entry plan"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation entry plan"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation entry fault-matrix"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
         "command": "buildchain release-propagation work create"
       },
       {
@@ -6475,6 +6548,16 @@
         "id": "release-propagation",
         "path": "docs/release-propagation.md",
         "command": "buildchain release-propagation work complete"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work push-plan"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work push-branch"
       },
       {
         "id": "release-transaction",
@@ -7117,9 +7200,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "c070e7bff9d1cb65a08daacd936f3567871af7844e88fa6ffcb05ea59579c15f",
-    "workflowRegistryDigest": "dff218a0f6f03602912c4f2e238cc79a1304ee2d0f6d1e3f3bae8514302f4706",
-    "pageRegistryDigest": "fcc0611c778caa08e36f91d3d5bd36f61aa90a165fb98388ade07d3ac236716f"
+    "cliRegistryDigest": "2012c52df8cd1c32f5cf2afbee6fa77e69818616d41ff984dad394af0523f266",
+    "workflowRegistryDigest": "e96718b6503e5628a0f0535e4a705d2819a7ee5512b55e35373f10c750b5facf",
+    "pageRegistryDigest": "ad80961597b664645998d29c38d11debbc168447c69cad3749e9468550f5b695"
   },
   "comparison": {
     "missingCliRegistry": [],

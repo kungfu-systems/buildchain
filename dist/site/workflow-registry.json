@@ -148,6 +148,8 @@
         "linux-container-preset",
         "node-version",
         "platforms-json",
+        "pre-upload-transport-smoke-artifact-root",
+        "pre-upload-transport-smoke-scenario-path",
         "process-sample-interval-ms",
         "process-summary-path",
         "publish-anchor-request-json",
@@ -176,7 +178,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 83,
+      "inputCount": 85,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1241,6 +1243,8 @@
         "linux-container-preset",
         "node-version",
         "platforms-json",
+        "pre-upload-transport-smoke-artifact-root",
+        "pre-upload-transport-smoke-scenario-path",
         "process-sample-interval-ms",
         "process-summary-path",
         "publish-anchor-request-json",
@@ -1269,7 +1273,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 86,
+      "inputCount": 88,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1599,12 +1603,14 @@
       "reusable": true,
       "inputs": [
         "alpha-workflow-path",
+        "auto-merge",
         "buildchain-ref",
         "buildchain-repository",
         "create-pull-request",
         "dev-workflow-path",
         "dry-run",
         "max-age-seconds",
+        "merge-method",
         "pull-request-body-prefix",
         "pull-request-body-prefix-renderer",
         "reactivation-authorized",
@@ -1612,7 +1618,7 @@
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 13,
+      "inputCount": 15,
       "secrets": [
         "promotion-token"
       ],
@@ -1696,6 +1702,48 @@
       ],
       "outputCount": 6,
       "surface": "dev-governance",
+      "capabilityGroup": "governance-versioning",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
+      "id": "dev-qualification-patrol",
+      "path": ".github/workflows/dev-qualification-patrol.yml",
+      "reusable": true,
+      "inputs": [
+        "buildchain-ref",
+        "buildchain-repository",
+        "dev-workflow-path",
+        "dispatch-inputs-json",
+        "dry-run",
+        "max-attempts",
+        "mutation-authorized",
+        "preflight-workflow-path",
+        "priority-workflows-json",
+        "source-branch"
+      ],
+      "inputCount": 10,
+      "secrets": [
+        "qualification-token"
+      ],
+      "secretCount": 1,
+      "outputs": [
+        "action",
+        "active-run-id",
+        "decision-root",
+        "pending-sha",
+        "reason",
+        "source-sha",
+        "state"
+      ],
+      "outputCount": 7,
+      "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
       "status": "active",
       "owner": "buildchain-workflows",
@@ -2489,6 +2537,7 @@
         "hold",
         "hold-reason",
         "ledger-ref",
+        "merge-method",
         "minimum-soak-seconds",
         "release-now",
         "required-checks",
@@ -2496,7 +2545,7 @@
         "revoked-versions",
         "target-branch"
       ],
-      "inputCount": 15,
+      "inputCount": 16,
       "secrets": [
         "approval-token",
         "promotion-token"
