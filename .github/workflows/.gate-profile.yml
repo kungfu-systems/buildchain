@@ -492,6 +492,7 @@ jobs:
           path: .buildchain/diagnostics/*-checkout.json
           if-no-files-found: warn
           retention-days: ${{ inputs.artifact-retention-days }}
+          overwrite: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6.4.0
@@ -572,6 +573,7 @@ jobs:
           path: .buildchain/gates/executions/${{ matrix.gate.id }}
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+          overwrite: true
 
       - name: Enforce Shifu Gate qualification
         if: ${{ steps.gate.outcome != 'success' }}
@@ -653,6 +655,7 @@ jobs:
           path: .buildchain/gates/gate-aggregate.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+          overwrite: true
 
       - name: Create Shifu profile envelope controller receipt
         id: controller-receipt
@@ -684,6 +687,7 @@ jobs:
           path: .buildchain/controller/receipt.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+          overwrite: true
 
       - name: Enforce aggregate qualification
         if: ${{ steps.aggregate.outcome != 'success' || steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}

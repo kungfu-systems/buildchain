@@ -6,16 +6,20 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  RELEASE_PROPAGATION_FAILURE_MATRIX,
   RELEASE_PROPAGATION_WORK_STAGES,
+  classifyReleasePropagationCondition,
   claimReleasePropagationWork,
   completeReleasePropagationWork,
   createReleasePropagationReceipt,
   createReleasePropagationStageReceipt,
   createReleasePropagationWork,
+  createReleasePropagationPushPlan,
   createPackageReleasePropagationCapture,
   normalizePackageReleasePropagationConfig,
   normalizeReleasePropagationGraph,
   planReleasePropagation,
+  planSiteUpstreamAgentEntry,
   recordReleasePropagationStage,
   repairReleasePropagationWork,
   verifyReleasePropagationWork,
@@ -223,6 +227,31 @@ function stageReceipt(
       bytes: 0,
       claims,
     }];
+  } else if (stage === "push-branch") {
+    const claims = {
+      provider: "git",
+      repository: work.downstream.repository,
+      remoteName: "origin",
+      sourceRef: "HEAD",
+      sourceRevision: deployedRevision,
+      destinationRef: `refs/heads/${work.downstream.branch}`,
+      expectedBaseRevision: work.downstream.expectedBaseSha,
+      expectedOldRevision: "",
+      observedRevision: deployedRevision,
+      pushMode: "fast-forward-only-exact-refspec",
+      argv: ["push", "--porcelain", "origin", `HEAD:refs/heads/${work.downstream.branch}`],
+      mutation: true,
+    };
+    evidence = [{
+      kind: "git-branch-reconciliation",
+      root: contentRoot(claims),
+      locator: locators[stage],
+      repository: work.downstream.repository,
+      revision: deployedRevision,
+      httpStatus: null,
+      bytes: 0,
+      claims,
+    }];
   } else {
     evidence = [{
       kind: kinds[stage] || `${stage}-diagnostic`,
@@ -306,6 +335,150 @@ test("release propagation graph preserves stable release channel", () => {
 
   assert.equal(plan.targets[0].channel, "release");
   assert.equal(plan.targets[0].lock.upstream.package.version, "1.4.0");
+});
+
+test("site upstream entry preserves automatic content handoffs and manual code pickup", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  const captured = createReleasePropagationWork({
+    plan,
+    expectedDownstreamBaseSha: "a".repeat(40),
+  });
+  const kfd = planSiteUpstreamAgentEntry({ sourceId: "kfd", handoffWork: captured });
+  assert.equal(kfd.policy.mode, "automatic-release-handoff");
+  assert.equal(kfd.automaticTrigger, true);
+  assert.equal(kfd.status, "handoff-ready");
+  assert.equal(kfd.work.workRoot, captured.contentRoot);
+  assert.equal(kfd.exactRelease.package.name, "@kungfu-tech/kfd");
+
+  const paper = planSiteUpstreamAgentEntry({ sourceId: "papers" });
+  assert.equal(paper.sourceId, "paper");
+  assert.equal(paper.status, "handoff-required");
+  assert.equal(paper.nextAction.action, "consume-release-handoff");
+
+  const buildchain = planSiteUpstreamAgentEntry({ sourceId: "buildchain", channel: "release" });
+  assert.equal(buildchain.policy.mode, "downstream-manual");
+  assert.equal(buildchain.automaticTrigger, false);
+  assert.equal(buildchain.status, "manual-resolution-required");
+  assert.equal(buildchain.nextAction.action, "resolve-published-release");
+
+  const core = planSiteUpstreamAgentEntry({ sourceId: "kungfu" });
+  assert.equal(core.sourceId, "kungfu-core");
+  assert.equal(core.automaticTrigger, false);
+});
+
+test("site upstream entry exposes a deterministic bounded fault matrix", () => {
+  assert.deepEqual(RELEASE_PROPAGATION_FAILURE_MATRIX.rows.map((row) => row.condition), [
+    "current", "duplicate-work", "superseded-work", "stale-downstream-base",
+    "stale-expected-old", "package-schema-mismatch", "pull-request-conflict",
+    "verification-failure", "release-race", "deployment-failure",
+    "online-readback-failure",
+  ]);
+  assert.equal(
+    classifyReleasePropagationCondition("online-readback-failure").recovery,
+    "repair-same-work",
+  );
+  assert.equal(
+    classifyReleasePropagationCondition("package-schema-mismatch").disposition,
+    "hard-safety-gate",
+  );
+  assert.throws(
+    () => classifyReleasePropagationCondition("pretend-success"),
+    /unsupported release propagation condition/,
+  );
+});
+
+test("push planning cannot advance an unrelated repository or branch", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  let work = createReleasePropagationWork({
+    plan,
+    workContext: propagationWorkContext(),
+    expectedDownstreamBaseSha: "c".repeat(40),
+  });
+  for (const stage of ["materialize", "verify-release"]) {
+    assert.equal(work.state.currentStage, stage);
+    work = recordReleasePropagationStage({
+      work,
+      expectedWorkRoot: work.contentRoot,
+      receipt: stageReceipt(work),
+    });
+  }
+  const repositoryState = {
+    repository: work.downstream.repository,
+    remoteName: "origin",
+    currentBranch: work.downstream.branch,
+    sourceRevision: "d".repeat(40),
+    remoteBaseRevision: work.downstream.expectedBaseSha,
+    remoteBranchRevision: "",
+    expectedBaseIsAncestor: true,
+  };
+  const push = createReleasePropagationPushPlan({
+    work,
+    expectedWorkRoot: work.contentRoot,
+    repositoryState,
+  });
+  assert.deepEqual(push.argv, [
+    "push", "--porcelain", "origin", `HEAD:refs/heads/${work.downstream.branch}`,
+  ]);
+  assert.equal(push.sourceRef, "HEAD");
+  assert.equal(push.pushMode, "fast-forward-only-exact-refspec");
+  assert.equal(push.argv.some((value) => value.includes("force")), false);
+
+  for (const [state, error] of [
+    [{ ...repositoryState, repository: "kungfu-systems/unrelated" }, /remote repository disagrees/],
+    [{ ...repositoryState, currentBranch: "feature/unrelated" }, /current branch disagrees/],
+    [{ ...repositoryState, remoteBaseRevision: "e".repeat(40) }, /downstream base advanced/],
+    [{ ...repositoryState, expectedBaseIsAncestor: false }, /not based on the expected downstream base/],
+  ]) {
+    assert.throws(
+      () => createReleasePropagationPushPlan({
+        work,
+        expectedWorkRoot: work.contentRoot,
+        repositoryState: state,
+      }),
+      error,
+    );
+  }
+});
+
+test("push-branch receipt rejects a forged destination ref or force argv", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  let work = createReleasePropagationWork({
+    plan,
+    workContext: propagationWorkContext(),
+    expectedDownstreamBaseSha: "c".repeat(40),
+  });
+  for (const stage of ["materialize", "verify-release"]) {
+    work = recordReleasePropagationStage({
+      work,
+      expectedWorkRoot: work.contentRoot,
+      receipt: stageReceipt(work),
+    });
+  }
+  const forged = stageReceipt(work);
+  const reconciliation = forged.evidence[0];
+  reconciliation.claims.argv = [
+    "push", "--force-with-lease", "origin", "HEAD:refs/heads/unrelated",
+  ];
+  reconciliation.root = contentRoot(reconciliation.claims);
+  assert.throws(
+    () => createReleasePropagationStageReceipt({
+      work,
+      observedAt: forged.observedAt,
+      actor: forged.actor,
+      summary: forged.summary,
+      evidence: forged.evidence,
+    }),
+    /exact non-force refspec/,
+  );
 });
 
 test("release propagation rejects npm gitHead, exact tag, source SHA, and package version disagreement", () => {
@@ -826,6 +999,33 @@ test("release propagation CLI plans and writes downstream locks", () => {
   ], { cwd: root, encoding: "utf8" });
   const receipt = JSON.parse(receiptOutput);
   assert.equal(receipt.propagationKey, plan.targets[0].propagationKey);
+});
+
+test("release propagation CLI exposes the unified Site entry and fault matrix", () => {
+  const entry = JSON.parse(execFileSync(process.execPath, [
+    bin,
+    "release-propagation",
+    "entry",
+    "plan",
+    "--source-id",
+    "buildchain",
+    "--channel",
+    "release",
+    "--json",
+  ], { cwd: root, encoding: "utf8" }));
+  assert.equal(entry.sourceId, "buildchain");
+  assert.equal(entry.policy.mode, "downstream-manual");
+  assert.equal(entry.nextAction.action, "resolve-published-release");
+
+  const matrix = JSON.parse(execFileSync(process.execPath, [
+    bin,
+    "release-propagation",
+    "entry",
+    "fault-matrix",
+    "--json",
+  ], { cwd: root, encoding: "utf8" }));
+  assert.equal(matrix.rows.length, RELEASE_PROPAGATION_FAILURE_MATRIX.rows.length);
+  assert.equal(matrix.rows.at(-1).condition, "online-readback-failure");
 });
 
 test("release propagation CLI fails fast when target is ambiguous", () => {
