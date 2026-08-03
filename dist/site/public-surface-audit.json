@@ -7,7 +7,7 @@
     "workflowCount": 60,
     "actionCount": 6,
     "sitePageCount": 64,
-    "docCommandRefCount": 822,
+    "docCommandRefCount": 830,
     "failureCount": 0
   },
   "enumerated": {
@@ -490,7 +490,7 @@
       {
         "id": "release-propagation",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain release-propagation <plan|write-lock|work|pickup> ..."
+        "usage": "buildchain release-propagation <plan|write-lock|work|entry|pickup> ..."
       },
       {
         "id": "release-transaction",
@@ -6422,7 +6422,22 @@
       {
         "id": "release-propagation",
         "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
         "command": "buildchain release-propagation --help"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation entry"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation entry --help"
       },
       {
         "id": "release-propagation",
@@ -6482,6 +6497,21 @@
       {
         "id": "release-propagation",
         "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation entry plan"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation entry plan"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation entry fault-matrix"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
         "command": "buildchain release-propagation work create"
       },
       {
@@ -6518,6 +6548,16 @@
         "id": "release-propagation",
         "path": "docs/release-propagation.md",
         "command": "buildchain release-propagation work complete"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work push-plan"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work push-branch"
       },
       {
         "id": "release-transaction",
@@ -7160,9 +7200,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "c070e7bff9d1cb65a08daacd936f3567871af7844e88fa6ffcb05ea59579c15f",
+    "cliRegistryDigest": "2012c52df8cd1c32f5cf2afbee6fa77e69818616d41ff984dad394af0523f266",
     "workflowRegistryDigest": "e96718b6503e5628a0f0535e4a705d2819a7ee5512b55e35373f10c750b5facf",
-    "pageRegistryDigest": "63cd68df8a761b7fe5d7e3a1365eb0a49234120efb0709a3bd81b7fe6cb6c70a"
+    "pageRegistryDigest": "ad80961597b664645998d29c38d11debbc168447c69cad3749e9468550f5b695"
   },
   "comparison": {
     "missingCliRegistry": [],

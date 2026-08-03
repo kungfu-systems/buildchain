@@ -1668,6 +1668,17 @@ buildchain release-governance reconcile --repository <owner/repo> --branch <dev|
 buildchain release-propagation
 ```
 
+### `buildchain release-propagation entry`
+
+- Help: `buildchain release-propagation entry --help`
+- Canonical id: `release-propagation`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
+```
+
 ### `buildchain release-propagation pickup`
 
 - Help: `buildchain release-propagation pickup --help`
@@ -1676,7 +1687,7 @@ buildchain release-propagation
 - Syntax:
 
 ```text
-buildchain release-propagation <plan|write-lock|work|pickup> ...
+buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
 ```
 
 ### `buildchain release-propagation plan`
@@ -1687,7 +1698,7 @@ buildchain release-propagation <plan|write-lock|work|pickup> ...
 - Syntax:
 
 ```text
-buildchain release-propagation <plan|write-lock|work|pickup> ...
+buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
 ```
 
 ### `buildchain release-propagation work`
@@ -1698,7 +1709,7 @@ buildchain release-propagation <plan|write-lock|work|pickup> ...
 - Syntax:
 
 ```text
-buildchain release-propagation <plan|write-lock|work|pickup> ...
+buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
 ```
 
 ### `buildchain release-propagation write-lock`
@@ -1709,7 +1720,7 @@ buildchain release-propagation <plan|write-lock|work|pickup> ...
 - Syntax:
 
 ```text
-buildchain release-propagation <plan|write-lock|work|pickup> ...
+buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
 ```
 
 ## `sample`
