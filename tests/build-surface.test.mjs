@@ -2717,6 +2717,7 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
     assert.match(workflow, /const officialChannelRef = \/\^v\\d\+/);
     assert.match(workflow, /const officialChannel = officialChannelRef\.test\(requested\)/);
     if (
+      workflowFile === ".github/workflows/.build.yml" ||
       workflowFile === ".github/workflows/paper-release.yml" ||
       workflowFile === ".github/workflows/publication-artifact.yml"
     ) {
