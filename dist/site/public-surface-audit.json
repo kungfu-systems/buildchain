@@ -7,7 +7,7 @@
     "workflowCount": 60,
     "actionCount": 6,
     "sitePageCount": 64,
-    "docCommandRefCount": 830,
+    "docCommandRefCount": 834,
     "failureCount": 0
   },
   "enumerated": {
@@ -65,7 +65,7 @@
       {
         "id": "dev",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>"
+        "usage": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>"
       },
       {
         "id": "diagnostics",
@@ -1870,7 +1870,10 @@
           "block-labels",
           "buildchain-ref",
           "buildchain-repository",
+          "diagnostic-context",
           "dry-run",
+          "expected-head-sha",
+          "expected-pr-number",
           "landing-mode",
           "max-merges",
           "merge-method",
@@ -1881,20 +1884,22 @@
           "same-repository-only",
           "target-branch"
         ],
-        "inputCount": 14,
+        "inputCount": 17,
         "secrets": [
           "github-token"
         ],
         "secretCount": 1,
         "outputs": [
           "action-count",
+          "admission-receipt-root",
+          "admission-state",
           "enqueued-count",
           "evaluated-count",
           "final-base-sha",
           "merged-count",
           "skipped-count"
         ],
-        "outputCount": 6
+        "outputCount": 8
       },
       {
         "id": "dev-qualification-patrol",
@@ -3586,6 +3591,11 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev pr-admit --repository"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev"
       },
       {
@@ -3602,6 +3612,16 @@
         "id": "dev",
         "path": "docs/cli-reference.md",
         "command": "buildchain dev merge-queue --help"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev pr-admit"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev pr-admit --help"
       },
       {
         "id": "dev",
@@ -3622,6 +3642,11 @@
         "id": "dev",
         "path": "docs/release-governance.md",
         "command": "buildchain dev merge-queue"
+      },
+      {
+        "id": "dev",
+        "path": "docs/release-governance.md",
+        "command": "buildchain dev pr-admit"
       },
       {
         "id": "diagnostics-summary",
@@ -7204,9 +7229,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "2012c52df8cd1c32f5cf2afbee6fa77e69818616d41ff984dad394af0523f266",
-    "workflowRegistryDigest": "d41e101265d22279f4e8e542008377aa7a44636d579548de664c8b59bd00eb18",
-    "pageRegistryDigest": "021407dd5362c59a2269bd2a2761fd70e2fc8231028473c0df1eb80e738f7c3a"
+    "cliRegistryDigest": "9fd9caf83ab389586635b10d5e4db329dcac0a5055440cee470ade6dd326d8c2",
+    "workflowRegistryDigest": "236333a2f8bb5e696621a0dc4793752eab18f7e8af7fc40c563217ebe05475c9",
+    "pageRegistryDigest": "7435e631e636a2f6c514b7f2abe541e0af4f34e4d01ebff7cc917716ad1bf060"
   },
   "comparison": {
     "missingCliRegistry": [],
