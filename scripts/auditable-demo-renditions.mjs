@@ -16,6 +16,63 @@ const RENDITION_SET_NON_AUTHORITIES = [
   "runtime-authority",
   ...TERMINAL_CAPTURE_NON_AUTHORITIES,
 ];
+const MAX_BUNDLE_MEMBER_BYTES = 8 * 1024 * 1024;
+const MAX_LONG_FORM_RENDERER_MANIFEST_BYTES = 32 * 1024 * 1024;
+
+function validateLongFormManifestRendition(entry, declaration, index, helpers) {
+  const { digestPattern, invariant, maxBytes, maxEvents } = helpers;
+  const scene = entry?.scene?.path;
+  const capture = entry?.terminalCapture;
+  invariant(
+    entry?.id === declaration.id
+      && entry?.role === declaration.role
+      && scene?.durationClass === "long-form"
+      && scene?.width === declaration.width
+      && scene?.height === declaration.height
+      && Number.isInteger(scene?.durationMs)
+      && scene.durationMs >= 500
+      && scene.durationMs <= 180000
+      && Number.isInteger(scene?.fps)
+      && scene.fps >= 1
+      && scene.fps <= 10
+      && capture?.schema === "kungfu.terminal-capture/v1"
+      && digestPattern.test(capture?.root)
+      && Number.isInteger(capture?.durationMs)
+      && capture.durationMs >= 500
+      && capture.durationMs <= scene.durationMs
+      && scene.durationMs - capture.durationMs <= 2000
+      && Number.isInteger(capture?.events)
+      && capture.events >= 1
+      && capture.events <= maxEvents
+      && Number.isInteger(capture?.bytes)
+      && capture.bytes >= 1
+      && capture.bytes <= maxBytes,
+    `oversized renderer manifest rendition ${index} is not bounded long-form evidence`,
+  );
+}
+
+export function readRendererManifest(filePath, helpers) {
+  const { decodeUtf8, invariant, readRegular } = helpers;
+  const bytes = readRegular(filePath, "renderer manifest", MAX_LONG_FORM_RENDERER_MANIFEST_BYTES);
+  let manifest;
+  try {
+    manifest = JSON.parse(decodeUtf8(bytes, "renderer manifest"));
+  } catch (error) {
+    if (error instanceof SyntaxError) throw new Error("renderer manifest must be valid JSON");
+    throw error;
+  }
+  invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
+  if (bytes.length > MAX_BUNDLE_MEMBER_BYTES) {
+    const renditions = manifest.inputs?.renditions;
+    invariant(Array.isArray(renditions) && renditions.length === 2, "oversized renderer manifest requires exactly two bounded long-form native renditions");
+    const expected = [
+      { id: "1080p", role: "primary", width: 1920, height: 1080 },
+      { id: "720p", role: "responsive", width: 1280, height: 720 },
+    ];
+    renditions.forEach((entry, index) => validateLongFormManifestRendition(entry, expected[index], index, helpers));
+  }
+  return { bytes, manifest };
+}
 export function validateTerminalCapture(value, scene, helpers) {
   const { decodeBase64, digestPattern, exactKeys, integer, invariant, maxBytes, maxEvents, text } = helpers;
   exactKeys(
