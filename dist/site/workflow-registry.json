@@ -41,7 +41,14 @@
       "outputCount": 13,
       "surface": "auditable-demo",
       "capabilityGroup": "api-cli-reference",
-      "status": "preview"
+      "status": "preview",
+      "owner": "buildchain-workflows",
+      "maturity": "preview",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".binary-release-assets",
@@ -71,7 +78,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".build",
@@ -112,6 +126,7 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "checkout-history-mode",
         "compiler-cache-platforms-json",
         "compiler-cache-provider",
         "compiler-cache-required",
@@ -133,6 +148,8 @@
         "linux-container-preset",
         "node-version",
         "platforms-json",
+        "pre-upload-transport-smoke-artifact-root",
+        "pre-upload-transport-smoke-scenario-path",
         "process-sample-interval-ms",
         "process-summary-path",
         "publish-anchor-request-json",
@@ -161,7 +178,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 82,
+      "inputCount": 85,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -222,7 +239,14 @@
       "outputCount": 43,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".bump-minor-version",
@@ -238,7 +262,56 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
+      "id": ".declarative-auditable-demo",
+      "path": ".github/workflows/.declarative-auditable-demo.yml",
+      "reusable": true,
+      "inputs": [
+        "artifact-retention-days",
+        "binary-artifact-digest",
+        "binary-artifact-name",
+        "buildchain-repository",
+        "materialize",
+        "materialize-base-ref",
+        "media-profile",
+        "render-media",
+        "renderer-image",
+        "scenario-path",
+        "source-ref"
+      ],
+      "inputCount": 11,
+      "secrets": [
+        "DEMO_UPDATE_TOKEN"
+      ],
+      "secretCount": 1,
+      "outputs": [
+        "capture-artifact-digest",
+        "capture-artifact-name",
+        "evidence-artifact-digest",
+        "evidence-artifact-name",
+        "publication-pr-url",
+        "source-sha"
+      ],
+      "outputCount": 6,
+      "surface": "declarative-auditable-demo",
+      "capabilityGroup": "api-cli-reference",
+      "status": "preview",
+      "owner": "buildchain-workflows",
+      "maturity": "preview",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".gate-profile",
@@ -298,7 +371,14 @@
       "outputCount": 14,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".publication-authority",
@@ -354,7 +434,14 @@
       "outputCount": 5,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".release-candidate-promote",
@@ -448,6 +535,7 @@
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
+        "release-propagation-config-path",
         "required-artifact-count",
         "required-status-check",
         "runner-preset",
@@ -456,7 +544,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 94,
+      "inputCount": 95,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -489,12 +577,20 @@
         "publication-commit-evidence-path",
         "publication-commit-payload-root",
         "publication-commit-url",
-        "release-candidate-artifact"
+        "release-candidate-artifact",
+        "release-propagation-work-artifact"
       ],
-      "outputCount": 19,
+      "outputCount": 20,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".release-docker",
@@ -514,7 +610,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".release-elastic-beanstalk",
@@ -536,7 +639,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".release-new-version",
@@ -587,7 +697,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".release-verify",
@@ -655,7 +772,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".sam-release",
@@ -676,7 +800,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".sam-verify",
@@ -698,7 +829,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".sync-release-page",
@@ -729,7 +867,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".sync-remote-git",
@@ -751,7 +896,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".web-surface",
@@ -833,7 +985,14 @@
       "outputCount": 23,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".wheel-release",
@@ -854,7 +1013,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": ".wheel-verify",
@@ -878,7 +1044,14 @@
       "outputCount": 0,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "artifact-signing-authority",
@@ -892,7 +1065,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "auditable-demo-media-profile-qualification",
@@ -906,7 +1086,35 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
+      "id": "auditable-demo",
+      "path": ".github/workflows/auditable-demo.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "binary-distribution",
@@ -920,7 +1128,14 @@
       "outputCount": 0,
       "surface": "release-passport",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "binary-release-assets",
@@ -934,7 +1149,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "build-surface-fixture",
@@ -948,7 +1170,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "repository-internal"
+      "status": "repository-internal",
+      "owner": "buildchain-workflows",
+      "maturity": "repository-internal",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "build",
@@ -992,6 +1221,7 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "checkout-history-mode",
         "compiler-cache-platforms-json",
         "compiler-cache-provider",
         "compiler-cache-required",
@@ -1013,6 +1243,8 @@
         "linux-container-preset",
         "node-version",
         "platforms-json",
+        "pre-upload-transport-smoke-artifact-root",
+        "pre-upload-transport-smoke-scenario-path",
         "process-sample-interval-ms",
         "process-summary-path",
         "publish-anchor-request-json",
@@ -1041,7 +1273,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 85,
+      "inputCount": 88,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1105,7 +1337,14 @@
       "outputCount": 46,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "buildchain-alpha-self-dogfood",
@@ -1119,7 +1358,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "buildchain-patrol-daily",
@@ -1133,7 +1379,14 @@
       "outputCount": 0,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "buildchain-patrol-monthly",
@@ -1147,7 +1400,14 @@
       "outputCount": 0,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "buildchain-patrol-weekly",
@@ -1161,7 +1421,14 @@
       "outputCount": 0,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "buildchain-patrol",
@@ -1200,7 +1467,14 @@
       "outputCount": 5,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "buildchain-ref-promotion",
@@ -1214,7 +1488,14 @@
       "outputCount": 0,
       "surface": "release-governance",
       "capabilityGroup": "release-passport-trust",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "buildchain-stable-candidate-patrol",
@@ -1228,7 +1509,14 @@
       "outputCount": 0,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "buildchain-stable-candidate-qualification",
@@ -1242,7 +1530,14 @@
       "outputCount": 0,
       "surface": "repository-patrol",
       "capabilityGroup": "api-cli-reference",
-      "status": "repository-internal"
+      "status": "repository-internal",
+      "owner": "buildchain-workflows",
+      "maturity": "repository-internal",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "candidate-lab",
@@ -1256,7 +1551,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "repository-internal"
+      "status": "repository-internal",
+      "owner": "buildchain-workflows",
+      "maturity": "repository-internal",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "check",
@@ -1286,7 +1588,14 @@
       "outputCount": 7,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "dev-alpha-candidate-patrol",
@@ -1294,12 +1603,14 @@
       "reusable": true,
       "inputs": [
         "alpha-workflow-path",
+        "auto-merge",
         "buildchain-ref",
         "buildchain-repository",
         "create-pull-request",
         "dev-workflow-path",
         "dry-run",
         "max-age-seconds",
+        "merge-method",
         "pull-request-body-prefix",
         "pull-request-body-prefix-renderer",
         "reactivation-authorized",
@@ -1307,7 +1618,7 @@
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 13,
+      "inputCount": 15,
       "secrets": [
         "promotion-token"
       ],
@@ -1327,7 +1638,14 @@
       "outputCount": 10,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "dev-merge-queue-governance",
@@ -1341,7 +1659,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "dev-pr-auto-merge",
@@ -1378,7 +1703,56 @@
       "outputCount": 6,
       "surface": "dev-governance",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
+      "id": "dev-qualification-patrol",
+      "path": ".github/workflows/dev-qualification-patrol.yml",
+      "reusable": true,
+      "inputs": [
+        "buildchain-ref",
+        "buildchain-repository",
+        "dev-workflow-path",
+        "dispatch-inputs-json",
+        "dry-run",
+        "max-attempts",
+        "mutation-authorized",
+        "preflight-workflow-path",
+        "priority-workflows-json",
+        "source-branch"
+      ],
+      "inputCount": 10,
+      "secrets": [
+        "qualification-token"
+      ],
+      "secretCount": 1,
+      "outputs": [
+        "action",
+        "active-run-id",
+        "decision-root",
+        "pending-sha",
+        "reason",
+        "source-sha",
+        "state"
+      ],
+      "outputCount": 7,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "github-artifact-attestation",
@@ -1412,7 +1786,14 @@
       "outputCount": 5,
       "surface": "release-passport",
       "capabilityGroup": "release-passport-trust",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "github-governance-audit",
@@ -1426,7 +1807,14 @@
       "outputCount": 0,
       "surface": "dev-governance",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "npm-publish",
@@ -1440,7 +1828,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "paper-release-sealed",
@@ -1487,13 +1882,22 @@
         "github-release-url",
         "package-name",
         "package-version",
+        "propagation-work-artifact",
         "public-release-tag",
-        "release-passport-path"
+        "release-passport-path",
+        "upstream-release-json"
       ],
-      "outputCount": 5,
+      "outputCount": 7,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "paper-release",
@@ -1559,7 +1963,14 @@
       "outputCount": 12,
       "surface": "reusable-build",
       "capabilityGroup": "reusable-build",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "patrol-daily",
@@ -1595,7 +2006,14 @@
       "outputCount": 5,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "patrol-monthly",
@@ -1622,7 +2040,14 @@
       "outputCount": 5,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "patrol-observed-evidence",
@@ -1651,7 +2076,14 @@
       "outputCount": 1,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "patrol-weekly",
@@ -1678,7 +2110,14 @@
       "outputCount": 5,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "publication-artifact",
@@ -1731,7 +2170,14 @@
       "outputCount": 16,
       "surface": "repository-workflow",
       "capabilityGroup": "reusable-build",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "release-candidate-promote",
@@ -1817,6 +2263,7 @@
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
+        "release-propagation-config-path",
         "required-artifact-count",
         "required-status-check",
         "runner-preset",
@@ -1825,7 +2272,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 86,
+      "inputCount": 87,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1870,12 +2317,20 @@
         "publication-commit-evidence-path",
         "publication-commit-payload-root",
         "publication-commit-url",
-        "release-candidate-artifact"
+        "release-candidate-artifact",
+        "release-propagation-work-artifact"
       ],
-      "outputCount": 31,
+      "outputCount": 32,
       "surface": "release-governance",
       "capabilityGroup": "reusable-build",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "release-governance-reconcile",
@@ -1897,7 +2352,14 @@
       "outputCount": 0,
       "surface": "release-governance",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "release-line-bootstrap",
@@ -1911,7 +2373,14 @@
       "outputCount": 0,
       "surface": "release-governance",
       "capabilityGroup": "release-passport-trust",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "release-new-version",
@@ -1925,13 +2394,22 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "release-propagation",
       "path": ".github/workflows/release-propagation.yml",
       "reusable": true,
       "inputs": [
+        "agent-work-context-json",
+        "agent-work-mode",
         "buildchain-ref",
         "buildchain-repository",
         "downstream-base-ref",
@@ -1950,7 +2428,7 @@
         "source-node",
         "upstream-release-json"
       ],
-      "inputCount": 17,
+      "inputCount": 19,
       "secrets": [
         "propagation-token"
       ],
@@ -1964,12 +2442,23 @@
         "controller-receipt-json",
         "controller-receipt-status",
         "propagation-receipt-digest",
-        "propagation-receipt-json"
+        "propagation-receipt-json",
+        "propagation-work-artifact",
+        "propagation-work-json",
+        "propagation-work-next-action",
+        "propagation-work-root"
       ],
-      "outputCount": 9,
+      "outputCount": 13,
       "surface": "release-propagation",
       "capabilityGroup": "site-and-propagation",
-      "status": "preview"
+      "status": "preview",
+      "owner": "buildchain-workflows",
+      "maturity": "preview",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "release-verify",
@@ -1983,7 +2472,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "schedule-purge-artifacts",
@@ -1997,7 +2493,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "self-hosted-runner-smoke",
@@ -2011,7 +2514,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "compatibility-fixture"
+      "status": "compatibility-fixture",
+      "owner": "buildchain-workflows",
+      "maturity": "compatibility-fixture",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "stable-candidate-patrol",
@@ -2027,6 +2537,7 @@
         "hold",
         "hold-reason",
         "ledger-ref",
+        "merge-method",
         "minimum-soak-seconds",
         "release-now",
         "required-checks",
@@ -2034,7 +2545,7 @@
         "revoked-versions",
         "target-branch"
       ],
-      "inputCount": 15,
+      "inputCount": 16,
       "secrets": [
         "approval-token",
         "promotion-token"
@@ -2051,7 +2562,14 @@
       "outputCount": 6,
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
       "id": "verify",
@@ -2065,7 +2583,14 @@
       "outputCount": 0,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     }
   ],
   "actionSource": "actions/*/action.yml reverse input enumeration",
@@ -2090,7 +2615,14 @@
       ],
       "inputCount": 13,
       "capabilityGroup": "release-passport-trust",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing action identity retained as the canonical composite or JavaScript action boundary."
     },
     {
       "id": "macos-credential-island",
@@ -2120,7 +2652,14 @@
       ],
       "inputCount": 21,
       "capabilityGroup": "api-cli-reference",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing action identity retained as the canonical composite or JavaScript action boundary."
     },
     {
       "id": "promote-buildchain-ref",
@@ -2205,7 +2744,14 @@
       ],
       "inputCount": 76,
       "capabilityGroup": "release-passport-trust",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing action identity retained as the canonical composite or JavaScript action boundary."
     },
     {
       "id": "report-buildchain-issue",
@@ -2257,7 +2803,14 @@
       ],
       "inputCount": 43,
       "capabilityGroup": "observability-diagnostics",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing action identity retained as the canonical composite or JavaScript action boundary."
     },
     {
       "id": "run-lifecycle",
@@ -2287,7 +2840,14 @@
       ],
       "inputCount": 21,
       "capabilityGroup": "reusable-build",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing action identity retained as the canonical composite or JavaScript action boundary."
     },
     {
       "id": "validate-config",
@@ -2299,7 +2859,14 @@
       ],
       "inputCount": 3,
       "capabilityGroup": "reusable-build",
-      "status": "active"
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing action identity retained as the canonical composite or JavaScript action boundary."
     }
   ]
 }

@@ -590,19 +590,7 @@ export {
   writeKfd3SurfaceRegistry,
 } from "./kfd3-surface-register.js";
 
-export {
-  RELEASE_PROPAGATION_GRAPH_CONTRACT,
-  RELEASE_PROPAGATION_LOCK_CONTRACT,
-  RELEASE_PROPAGATION_PLAN_CONTRACT,
-  RELEASE_PROPAGATION_RECEIPT_CONTRACT,
-  createReleasePropagationReceipt,
-  createReleasePropagationLock,
-  normalizeReleasePropagationGraph,
-  planReleasePropagation,
-  readReleasePropagationJson,
-  resolvePropagationChannel,
-  writeReleasePropagationLock,
-} from "./release-propagation.js";
+export * from "./release-propagation.js";
 
 export {
   RELEASE_ACTIVATION_CONTRACT,
@@ -652,7 +640,7 @@ export {
   resolvePaperRepository,
   writePaperMigration,
   writePaperScaffold,
-} from "./paper.js";
+} from "./paper.js"; export * from "./paper-work.js"; export * from "./paper-fleet.js";
 
 export {
   SURFACE_TIMESTAMP_POLICY_CONTRACT,

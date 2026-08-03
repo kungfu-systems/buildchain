@@ -1,5 +1,32 @@
 # Buildchain
 
+<!-- buildchain-auditable-demo:start -->
+## Buildchain beginner bootstrap
+
+[![Buildchain beginner bootstrap](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo.gif)](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/public-evidence.json)
+
+Animation scenario:
+
+```text
+$ buildchain init --cwd ./starter --type package --package-manager npm
+$ buildchain layout --cwd ./starter --json
+$ buildchain version
+```
+
+Native renditions: [1080p MP4](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo.mp4) · [1080p WebM](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo.webm) · [720p MP4](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo-720p.mp4) · [720p WebM](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo-720p.webm)
+
+[Static poster / reduced-motion fallback](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/poster.png)
+
+<details>
+<summary>Evidence and claim boundary</summary>
+
+This exact standalone-binary scenario proves deterministic local bootstrap behavior only; it does not grant release, repository, network, or production authority.
+
+[Release Passport](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/release-passport.json) · [auditable evidence](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/public-evidence.json)
+
+</details>
+<!-- buildchain-auditable-demo:end -->
+
 <!-- buildchain:badges:start -->
 
 [![KFD-1: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-1/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
@@ -25,6 +52,20 @@ its existing CI.
 
 The same mechanism releases Buildchain itself.
 
+## Choose Your Path
+
+| You are... | Start here | You will get... |
+| --- | --- | --- |
+| adopting Buildchain for the first time | [Golden Path](docs/getting-started.md) | an exact install, project declaration, validated config, reusable workflow, release dry-run, and Passport inspection |
+| looking up a CLI command | [Generated CLI Reference](docs/cli-reference.md) | governed syntax, options, aliases, and side-effect-free help paths |
+| writing JavaScript automation | [Generated Node API Reference](docs/node-api-reference.md) | every public subpath and symbol with source-derived signatures and behavior boundaries |
+| operating an advanced build or release | [Documentation Map](docs/MAP.md) | capability-, intent-, and maturity-based navigation to normative contracts |
+
+The Golden Path is the beginner lane. Advanced workflow, signing, publishing,
+and governance manuals remain separate so a first-time consumer does not need
+to understand the entire release control plane before reaching a valid local
+configuration.
+
 ## Where Buildchain sits in the Agent Supply Chain
 
 Buildchain binds a product's declarations to the exact source cut, build,
@@ -47,6 +88,10 @@ To evaluate the layer, inspect a release's `buildchain.release.json` and
 or protocol evidence through the repository issue tracker.
 
 ## Install and Verify
+
+New repository adopters should follow the [15–30 minute Golden Path](docs/getting-started.md).
+The commands below are the shorter verification-only route for an existing
+consumer.
 
 For v3, use the published npm package and verify the release passport before
 trusting release evidence:
@@ -197,13 +242,18 @@ Bootstrap and inspect a governed paper repository through one interface:
 npx @kungfu-tech/buildchain paper scaffold \
   --package @kungfu-tech/paper-example \
   --repository kungfu-systems/paper-example
-npx @kungfu-tech/buildchain paper preflight --offline
-npx @kungfu-tech/buildchain paper status
+pnpm add -D @kungfu-tech/buildchain@<exact-v3-version>
+pnpm exec buildchain paper work start <topic>
+pnpm exec buildchain paper work submit
+pnpm exec buildchain paper preflight --offline
+pnpm exec buildchain paper status
 ```
 
 The paper surface is dry-run first. Add `--write` only to create missing
-scaffold files; external mutations such as npm bootstrap, Alpha PR creation,
-and release resumption require `--execute`. See
+scaffold files. `work start` and `work submit` validate the canonical remote,
+exact development SHA, clean source, safe branch, and fast-forward boundary
+before changing local or GitHub state. External mutations such as npm
+bootstrap, Alpha PR creation, and release resumption require `--execute`. See
 [`docs/publication-artifacts.md`](docs/publication-artifacts.md) for the
 evidence-state model and operator flow.
 
@@ -228,12 +278,22 @@ plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
 gates preserve product-owned qualification and support decisions; they do not
 turn a schema-valid record into certification or shipped support.
 
-Buildchain's active GitHub Action surface is deliberately small:
+Buildchain's action registry currently contains six active entries. Four are
+direct consumer integration actions:
 
 - `actions/validate-config`
 - `actions/run-lifecycle`
 - `actions/promote-buildchain-ref`
 - `actions/report-buildchain-issue`
+
+Two additional release-authority components are also registered and versioned:
+
+- `actions/github-artifact-attestation`
+- `actions/macos-credential-island`
+
+`dist/site/workflow-registry.json#actions` is the machine-readable inventory;
+this split keeps the older four-action consumer list from being mistaken for
+the complete current registry.
 
 The active reusable workflow surfaces are:
 
@@ -244,6 +304,10 @@ The active reusable workflow surfaces are:
   qualification, transcript-bound renderer smoke, optional media rendering
   from the exact passing Gate bundle, and opt-in content-addressed web-delivery
   profiles with independently verified rendition roles;
+- `.github/workflows/.declarative-auditable-demo.yml` for standalone binary
+  consumers that provide only a versioned multi-demo argv scenario and exact
+  same-run binary artifact coordinates; Buildchain owns isolated native
+  capture, Gate, Release Passport, materialization, and protected README PRs;
 - `.github/workflows/.build.yml` for deterministic multi-platform build and
   artifact contracts;
 - `.github/workflows/build.yml` for the single-config channel router that uses

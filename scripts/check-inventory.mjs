@@ -15,11 +15,10 @@ import {
   generateChannelPromotionWorkflow,
   parsePromotionShellRouting,
 } from "./generate-channel-promotion-workflow.mjs";
-
+import { assertPublicReferenceRegistry } from "./site-reference-registry.mjs";
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
 const commonJsSourcePattern = /\b(require\s*\(|module\.exports|exports\.|require\.main|createRequire)\b/;
-
 function assertSelfReleaseImpactContract(impact, { expectedVersion = "" } = {}) {
   if (!impact || typeof impact !== "object" || Array.isArray(impact)) {
     throw new Error("Buildchain self release impact must be a JSON object");
@@ -74,12 +73,17 @@ const requiredPaths = [
   "docs/github-artifact-attestation.md",
   "docs/shifu-gate-profiles.md",
   "docs/auditable-demo.md",
+  "contracts/auditable-demo-scenario-v1.schema.json",
   "contracts/auditable-demo-media-profiles-v1.json",
   "contracts/evidence/auditable-demo-web-delivery-v1.json",
+  "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json",
   "contracts/buildchain-v2-residuals-v1.json",
   "contracts/fixtures/auditable-demo-web-delivery-v1/complete-transcript.txt",
   "contracts/fixtures/auditable-demo-web-delivery-v1/public-projection.json",
   "contracts/fixtures/auditable-demo-web-delivery-v1/scene.json",
+  "contracts/fixtures/auditable-demo-responsive-web-delivery-v1/complete-transcript.txt",
+  "contracts/fixtures/auditable-demo-responsive-web-delivery-v1/public-projection.json",
+  "contracts/fixtures/auditable-demo-responsive-web-delivery-v1/scene.json",
   "docs/release-propagation.md",
   "docs/site-bundle-contract.md",
   "docs/toolkit-observability.md",
@@ -100,6 +104,9 @@ const requiredPaths = [
   "scripts/seal-macos-credential-input.mjs",
   "scripts/shifu-gate-profile.mjs",
   "scripts/auditable-demo.mjs",
+  "scripts/auditable-demo-platform.mjs",
+  "scripts/auditable-demo-transport-smoke.mjs",
+  "scripts/auditable-demo-capture.py",
   "scripts/resolve-artifact-coordinates.mjs",
   "scripts/artifact-relay-s3.mjs",
   "scripts/anchored-version-material.mjs",
@@ -151,6 +158,8 @@ const requiredPaths = [
   ".github/workflows/.build.yml",
   ".github/workflows/.gate-profile.yml",
   ".github/workflows/.auditable-demo.yml",
+  ".github/workflows/.declarative-auditable-demo.yml",
+  ".github/workflows/auditable-demo.yml",
   ".github/workflows/build.yml",
   ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
@@ -267,11 +276,18 @@ for (const requiredSnippet of [
   `/${promotionShellRouting.stable.workflowPath}@${promotionShellRouting.stable.callRef}`,
   `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
   "promotion-contract-lock-digest:",
-  "promotion runtime override is only allowed for trusted workflow_dispatch runs",
+  "authorize-promotion-runtime-override.cjs",
 ]) {
   if (!channelPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`channel promotion workflow missing routing contract: ${requiredSnippet}`);
   }
+}
+const promotionOverrideAuthorization = fs.readFileSync(
+  path.join(root, "scripts/authorize-promotion-runtime-override.cjs"),
+  "utf8",
+);
+if (!promotionOverrideAuthorization.includes("promotion runtime override is only allowed for trusted workflow_dispatch runs")) {
+  throw new Error("promotion runtime override authorization must remain fail closed");
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
@@ -656,16 +672,61 @@ for (const manual of manualRegistry.manuals || []) {
   }
 }
 const cliRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/cli-registry.json"), "utf8"));
+const requiredPublicLifecycleFields = [
+  "owner",
+  "maturity",
+  "introducedVersion",
+  "compatibilityPromise",
+  "deprecationReplacement",
+  "sunsetCondition",
+  "capabilityGroup",
+  "nonDuplicationRationale",
+];
+function assertPublicLifecycle(entry, label) {
+  for (const field of requiredPublicLifecycleFields) {
+    if (!Object.prototype.hasOwnProperty.call(entry, field) || typeof entry[field] !== "string") {
+      throw new Error(`${label} missing public lifecycle field: ${field}`);
+    }
+  }
+  if (!entry.owner || !entry.maturity || !entry.introducedVersion || !entry.compatibilityPromise || !entry.sunsetCondition || !entry.nonDuplicationRationale) {
+    throw new Error(`${label} has incomplete public lifecycle metadata`);
+  }
+}
 for (const command of cliRegistry.commands || []) {
   if (!command.capabilityGroup || !capabilityGroupIds.has(command.capabilityGroup) || !Array.isArray(command.audience) || !command.maturity || !command.purpose || command.purpose.includes("Add a specific purpose")) {
     throw new Error(`cli-registry.json command missing capability metadata: ${command.id || command.usage}`);
   }
+  assertPublicLifecycle(command, `cli-registry.json command ${command.id || command.usage}`);
 }
 const nodeApiRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/node-api-registry.json"), "utf8"));
 for (const exported of nodeApiRegistry.exports || []) {
   if (!exported.capabilityGroup || !capabilityGroupIds.has(exported.capabilityGroup) || !Array.isArray(exported.audience) || !exported.maturity || !exported.summary) {
     throw new Error(`node-api-registry.json export missing capability metadata: ${exported.export || exported.specifier}`);
   }
+  assertPublicLifecycle(exported, `node-api-registry.json export ${exported.export || exported.specifier}`);
+}
+assertPublicReferenceRegistry({ cliRegistry, nodeApiRegistry });
+const workflowRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/workflow-registry.json"), "utf8"));
+for (const workflow of workflowRegistry.workflows || []) {
+  assertPublicLifecycle(workflow, `workflow-registry.json workflow ${workflow.id || workflow.path}`);
+}
+for (const action of workflowRegistry.actions || []) {
+  assertPublicLifecycle(action, `workflow-registry.json action ${action.id || action.path}`);
+}
+const registeredActionIds = (workflowRegistry.actions || []).map((entry) => entry.id).sort();
+const readmeActionIndex = fs.readFileSync(path.join(root, "README.md"), "utf8");
+const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
+const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
+if (registeredActionIds.length !== 6) {
+  throw new Error(`workflow-registry.json must expose the six current action entries, got ${registeredActionIds.length}`);
+}
+for (const actionId of registeredActionIds) {
+  if (!readmeActionIndex.includes(`actions/${actionId}`) || !mapActionIndex.includes(`actions/${actionId}`)) {
+    throw new Error(`README and docs/MAP.md must index registered action: ${actionId}`);
+  }
+}
+if (!retrospectiveActionIndex.includes("snapshot of the four consumer-facing actions")) {
+  throw new Error("the v2 four-action retrospective must remain explicitly classified as historical");
 }
 if (!pageRegistry.pages?.some((page) => page.sourcePath === "actions/promote-buildchain-ref/README.md")) {
   throw new Error("page-registry.json must include action manuals");

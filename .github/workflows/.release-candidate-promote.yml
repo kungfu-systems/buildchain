@@ -287,6 +287,11 @@ on:
         default: true
         type: boolean
         required: false
+      release-propagation-config-path:
+        description: "Optional source-controlled package propagation capture config read from the exact finalized release SHA"
+        default: ""
+        type: string
+        required: false
       release-passport-output-dir:
         description: "Release passport output directory"
         default: ".buildchain/release-passport"
@@ -510,6 +515,9 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.promote.outputs.release-candidate-artifact }}
+      release-propagation-work-artifact:
+        description: "Captured package release propagation Work artifact"
+        value: ${{ jobs.promote.outputs.release-propagation-work-artifact }}
       publication-commit-evidence-path:
         description: "Validated consumer publication commit evidence path"
         value: ${{ jobs.promote.outputs.publication-commit-evidence-path }}
@@ -602,6 +610,7 @@ jobs:
           INPUT_TARGET_REF: ${{ inputs.target-ref }}
           INPUT_TARGET_SHA: ${{ inputs.target-sha }}
           INPUT_DRY_RUN: ${{ inputs.dry-run }}
+          INPUT_PUBLISH_TRANSACTION_OVERRIDE: ${{ inputs.publish-transaction-override }}
         with:
           script: |
             const targetRef = (process.env.INPUT_TARGET_REF || context.ref.replace(/^refs\/heads\//, ""))
@@ -610,7 +619,6 @@ jobs:
             if (!/^[0-9a-f]{40}$/i.test(requestedSha)) {
               throw new Error(`promotion target SHA must be a 40-character Git SHA, got '${requestedSha}'`);
             }
-
             let derivedChannel = "";
             if (/^alpha\/v\d+\/v\d+\.\d+$/.test(targetRef)) derivedChannel = "alpha";
             if (/^release\/v\d+\/v\d+\.\d+$/.test(targetRef)) derivedChannel = "release";
@@ -622,7 +630,6 @@ jobs:
             if (channel !== derivedChannel) {
               throw new Error(`promotion channel ${channel} does not match target ref ${targetRef} (${derivedChannel})`);
             }
-
             const current = await github.rest.git.getRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -630,6 +637,7 @@ jobs:
             });
             const currentSha = current.data.object.sha;
             const dryRun = process.env.INPUT_DRY_RUN === "true";
+            const durableRecovery = process.env.INPUT_PUBLISH_TRANSACTION_OVERRIDE === "true";
             let comparisonStatus = "identical";
             if (currentSha !== requestedSha) {
               const comparison = await github.rest.repos.compareCommitsWithBasehead({
@@ -639,15 +647,15 @@ jobs:
               });
               comparisonStatus = comparison.data.status;
             }
-            const superseded = !dryRun && comparisonStatus === "ahead";
-            if (!dryRun && currentSha !== requestedSha && !superseded) {
+            const recoverableAdvance = durableRecovery && comparisonStatus === "ahead";
+            const superseded = !dryRun && !recoverableAdvance && comparisonStatus === "ahead";
+            if (!dryRun && currentSha !== requestedSha && !superseded && !recoverableAdvance) {
               throw new Error(
                 `promotion target ${targetRef} moved incompatibly: requested ${requestedSha}, current ${currentSha}, comparison ${comparisonStatus}`,
               );
             }
             const action = superseded ? "noop" : "promote";
-            const reason = superseded ? "target-ref-advanced" : "target-ref-current";
-
+            const reason = superseded ? "target-ref-advanced" : recoverableAdvance ? "durable-transaction-recovery" : "target-ref-current";
             core.setOutput("action", action);
             core.setOutput("reason", reason);
             core.setOutput("channel", channel);
@@ -894,8 +902,8 @@ jobs:
           require-version-state: "true"
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
+          publish-transaction-override: ${{ inputs.publish-transaction-override }}
           release-passport: "false"
-
       - name: Require an exact publication transaction version
         shell: bash
         env:
@@ -1100,6 +1108,7 @@ jobs:
       promoted-sha: ${{ needs.preflight.outputs.requested-sha }}
       built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
       release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
+      release-propagation-work-artifact: ${{ steps.capture-release-propagation.outputs.artifact-name }}
       release-candidate-outcome: ${{ steps.rc.outcome }}
       promotion-outcome: ${{ steps.promote.outcome }}
       finalization-needed: ${{ steps.promote.outputs.finalization-needed }}
@@ -1774,6 +1783,34 @@ jobs:
           test -f "${BUILDCHAIN_RELEASE_EVIDENCE_PATH}"
           echo "evidence-path=${BUILDCHAIN_RELEASE_EVIDENCE_PATH}" >> "${GITHUB_OUTPUT}"
 
+      - name: Capture exact package release propagation work
+        id: capture-release-propagation
+        if: ${{ inputs.release-propagation-config-path != '' && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          output_dir=.buildchain/release-propagation-capture
+          mkdir -p "$output_dir"
+          node .buildchain/runtime/scripts/capture-package-release-propagation.mjs \
+            --repository "${{ github.repository }}" \
+            --channel "${{ needs.preflight.outputs.channel }}" \
+            --source-sha "${{ steps.promote.outputs.transaction-release-sha }}" \
+            --tag "${{ steps.promote.outputs.public-release-tag }}" \
+            --config-path "${{ inputs.release-propagation-config-path }}" \
+            --release-passport-path "${{ steps.promote.outputs.release-passport-path }}" \
+            --output-dir "$output_dir" \
+            > "$output_dir/capture-result.json"
+
+      - name: Upload exact package release propagation work
+        if: ${{ steps.capture-release-propagation.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.capture-release-propagation.outputs.artifact-name }}
+          path: .buildchain/release-propagation-capture/
+          if-no-files-found: error
+
       - name: Bundle release-candidate-promotion controller evidence
         id: controller-evidence
         if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' }}
@@ -1787,6 +1824,7 @@ jobs:
           PUBLICATION_COMMIT_EVIDENCE: ${{ steps.publication-commit.outputs.evidence-path }}
           RELEASE_ACTIVATION_RECEIPTS: ${{ steps.release-activation.outputs.receipt-set-path }}
           RELEASED_PRODUCT_EVIDENCE: ${{ steps.release-evidence.outputs.evidence-path }}
+          RELEASE_PROPAGATION_CAPTURE: ${{ steps.capture-release-propagation.outcome == 'success' && '.buildchain/release-propagation-capture/capture-result.json' || '' }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
@@ -1807,6 +1845,9 @@ jobs:
           }
           if (process.env.RELEASED_PRODUCT_EVIDENCE && !finalizationNeeded) {
             files.push([process.env.RELEASED_PRODUCT_EVIDENCE, "released-product-evidence.json"]);
+          }
+          if (process.env.RELEASE_PROPAGATION_CAPTURE && !finalizationNeeded) {
+            files.push([process.env.RELEASE_PROPAGATION_CAPTURE, "release-propagation-capture.json"]);
           }
           fs.mkdirSync(".buildchain/controller/promotion-evidence", { recursive: true });
           for (const [source, name] of files) {
@@ -2090,7 +2131,7 @@ jobs:
           if-no-files-found: error
 
       - name: Enforce qualifying release-candidate-promotion controller receipt
-        if: ${{ always() && !inputs.dry-run && needs.preflight.outputs.action == 'promote' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        if: ${{ always() && !inputs.dry-run && needs.preflight.outputs.action == 'promote' && needs.promote.outputs.finalization-needed != 'true' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
         run: |
           echo "::error::release-candidate-promotion controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
           exit 1

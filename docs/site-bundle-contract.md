@@ -58,8 +58,13 @@ those surfaces.
 `manual-registry.json` enumerates the packaged Markdown manuals with source
 digests so an agent can find complete operating documentation from the npm
 artifact. `node-api-registry.json` enumerates public Node import surfaces from
-`package.json#exports`, so agents do not have to infer supported APIs from
-internal paths.
+`package.json#exports` and closes each JavaScript subpath over its exact exported
+symbols. Each symbol includes its source-derived signature and parameters,
+conservative return/error contract, detected side effects, maturity, example
+import, and source location, so agents do not have to infer supported APIs from
+internal paths. `cli-registry.json` similarly retains every governed command
+path, syntax, option, alias, and side-effect-free help command projected from
+the runtime registry and usage authority.
 `kfd-claims.json` is the Buildchain-owned KFD claim registry. It is generated
 from `packages/core/buildchain-kfd-claims.js` and enumerates the public release
 claims plus the KFD-3 collaboration surfaces that Buildchain self-verifies
@@ -130,6 +135,7 @@ import siteManifest from "@kungfu-tech/buildchain/site/site-manifest.json" with 
 ## Generation
 
 ```bash
+pnpm run generate:reference
 pnpm run generate:site
 pnpm run check:site
 ```
@@ -148,9 +154,9 @@ The P0 bundle includes:
   Node API overview, and fixtures;
 - site manifest;
 - publication archive registry for downstream papers surfaces;
-- CLI command registry;
+- CLI command registry plus full-path generated human reference;
 - manual registry for packaged agent-facing documentation;
-- Node API registry for public package exports;
+- Node API registry plus per-symbol generated human reference for public package exports;
 - workflow/action registry;
 - release model facts;
 - artifact and evidence schema index;

@@ -138,6 +138,12 @@ on:
         value: ${{ jobs.publish.outputs.release-passport-path }}
       github-release-url:
         value: ${{ jobs.publish.outputs.github-release-url }}
+      upstream-release-json:
+        description: "Exact post-publication release envelope for downstream propagation"
+        value: ${{ jobs.publish.outputs.upstream-release-json }}
+      propagation-work-artifact:
+        description: "Artifact containing one paused typed propagation work unit per configured downstream target"
+        value: ${{ jobs.publish.outputs.propagation-work-artifact }}
 
 permissions:
   contents: read
@@ -213,6 +219,8 @@ jobs:
       public-release-tag: ${{ steps.promote.outputs.public-release-tag }}
       release-passport-path: ${{ steps.promote.outputs.release-passport-path }}
       github-release-url: ${{ steps.promote.outputs.github-release-url }}
+      upstream-release-json: ${{ steps.upstream-release.outputs.json }}
+      propagation-work-artifact: ${{ steps.capture-propagation.outputs.artifact-name }}
     steps:
       - name: Setup trusted-publishing Node.js
         uses: actions/setup-node@v6.4.0
@@ -233,6 +241,10 @@ jobs:
           ref: ${{ needs.publication-candidate.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Install exact admitted Buildchain runtime dependencies
+        shell: bash
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Resolve generated-write authority config
         id: generated-write-config
@@ -328,13 +340,11 @@ jobs:
             root,
             resolvePublicationCandidateFile(bundle.evidence.files, candidatePath),
           );
-          const packageResultPath = exactPath(".buildchain/paper-release/package-result.json");
-          const packageResult = JSON.parse(fs.readFileSync(packageResultPath, "utf8"));
           const packageJsonPath = exactPath(".buildchain/publication/npm-package/package.json");
           const packageDir = path.dirname(packageJsonPath);
           const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-          if (packageJson.name !== process.env.BUILDCHAIN_PACKAGE_NAME || packageJson.version !== process.env.BUILDCHAIN_PACKAGE_VERSION) {
-            throw new Error("prepared npm package identity differs from the admitted publication plan");
+          if (packageJson.name !== process.env.BUILDCHAIN_PACKAGE_NAME || packageJson.version !== process.env.BUILDCHAIN_PACKAGE_VERSION || packageJson.gitHead !== sourceSha) {
+            throw new Error("prepared npm package identity or gitHead differs from the admitted publication plan");
           }
           const manifestPath = exactPath(".buildchain/publication/publication-artifact.json");
           const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
@@ -376,7 +386,6 @@ jobs:
           const marker = `EOF_ASSETS_${Date.now()}`;
           output.write(`github-release-artifact-paths<<${marker}\n${releaseAssets.join("\n")}\n${marker}\n`);
           output.end();
-          void packageResult;
           NODE
 
       - name: Resolve protected publication target
@@ -468,3 +477,212 @@ jobs:
           github-release-artifact-paths: ${{ steps.candidate.outputs.github-release-artifact-paths }}
           github-release-title: ${{ inputs.github-release-title }}
           github-release-notes: ${{ inputs.github-release-notes }}
+
+      - name: Seal exact downstream propagation release envelope
+        id: upstream-release
+        if: ${{ !inputs.dry-run && steps.promote.outcome == 'success' }}
+        env:
+          PACKAGE_NAME: ${{ steps.candidate.outputs.package-name }}
+          PACKAGE_VERSION: ${{ steps.candidate.outputs.package-version }}
+          RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
+          SOURCE_SHA: ${{ steps.target.outputs.sha }}
+          CHANNEL: ${{ steps.target.outputs.channel }}
+          RELEASE_PASSPORT_PATH: ${{ steps.promote.outputs.release-passport-path }}
+        shell: bash
+        run: |
+          set -euo pipefail; [ -n "$RELEASE_PASSPORT_PATH" ] || { echo "::error::paper publication is awaiting its generated version-state merge; merge the generated PR and rerun the failed jobs"; exit 1; }
+          published=false
+          for _ in 1 2 3 4 5 6; do
+            if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version dist.integrity gitHead --json \
+              --registry=https://registry.npmjs.org/ > .buildchain/published-package.json \
+              && jq -e --arg version "$PACKAGE_VERSION" --arg sha "$SOURCE_SHA" \
+                '.version == $version and .gitHead == $sha and ((.dist.integrity // .["dist.integrity"] // "") | startswith("sha512-"))' \
+                .buildchain/published-package.json >/dev/null; then
+              published=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$published" != true ]; then
+            echo "::error::npm publication did not become coherently readable within the bounded retry window"
+            exit 1
+          fi
+          remote_tag_sha="$(git ls-remote --tags origin "refs/tags/${RELEASE_TAG}" "refs/tags/${RELEASE_TAG}^{}" | tail -n 1 | cut -f1)"
+          if [ "$remote_tag_sha" != "$SOURCE_SHA" ]; then
+            echo "::error::published tag target does not match the exact paper source SHA"
+            exit 1
+          fi
+          node <<'NODE'
+          const crypto = require("crypto");
+          const fs = require("fs");
+          const path = require("path");
+          const sha256File = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+          const canonicalPublicationFile = (name) => {
+            const file = path.join(".buildchain/admitted/artifact/.buildchain/publication", name);
+            if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
+              throw new Error(`canonical publication file is missing: ${file}`);
+            }
+            return file;
+          };
+          const packageFact = JSON.parse(fs.readFileSync(".buildchain/published-package.json", "utf8"));
+          if (packageFact.version !== process.env.PACKAGE_VERSION) throw new Error("npm version readback mismatch");
+          const packageIntegrity = packageFact.dist?.integrity || packageFact["dist.integrity"]; if (!packageIntegrity?.startsWith("sha512-")) throw new Error("npm integrity readback is missing");
+          if (packageFact.gitHead !== process.env.SOURCE_SHA) throw new Error("npm gitHead readback does not match source SHA");
+          if (process.env.RELEASE_TAG !== `v${process.env.PACKAGE_VERSION}`) throw new Error("public release tag does not match package version");
+
+          const manifestPath = canonicalPublicationFile("publication-artifact.json");
+          const passportPath = canonicalPublicationFile("publication-artifact-passport.json");
+          const registryPath = canonicalPublicationFile("publication-registry.json");
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+          const archive = manifest.publication?.archive;
+          if (!archive || archive.version !== process.env.PACKAGE_VERSION) throw new Error("publication archive identity mismatch");
+          const primary = (archive.publicArtifacts?.artifacts || []).find((entry) => entry.role === "primary");
+          if (!primary) throw new Error("publication archive has no primary artifact");
+          const releasePassportPath = path.resolve(process.env.RELEASE_PASSPORT_PATH);
+          const releaseBase = `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/${process.env.RELEASE_TAG}`;
+          const envelope = {
+            repository: process.env.GITHUB_REPOSITORY,
+            channel: process.env.CHANNEL,
+            tag: process.env.RELEASE_TAG,
+            tagTargetSha: process.env.SOURCE_SHA,
+            sourceSha: process.env.SOURCE_SHA,
+            package: {
+              name: process.env.PACKAGE_NAME,
+              version: process.env.PACKAGE_VERSION,
+              integrity: packageIntegrity,
+              gitHead: packageFact.gitHead,
+            },
+            releasePassport: {
+              url: `${releaseBase}/buildchain.release.json`,
+              sha256: sha256File(releasePassportPath),
+            },
+            publicationArtifact: {
+              id: archive.id,
+              kind: manifest.publication.kind,
+              version: archive.version,
+              canonicalUrl: archive.routes.canonicalUrl,
+              latestUrl: archive.routes.latestUrl,
+              latestEvidenceUrl: archive.routes.latestEvidenceUrl || "",
+              immutableVersionUrl: archive.routes.immutableVersionUrl || archive.routes.immutableVersionPrefix,
+              immutableVersionPrefix: archive.routes.immutableVersionPrefix || archive.routes.immutableVersionUrl,
+              registry: { url: `${releaseBase}/${path.basename(registryPath)}`, sha256: sha256File(registryPath) },
+              manifest: { url: `${releaseBase}/${path.basename(manifestPath)}`, sha256: sha256File(manifestPath) },
+              passport: { url: `${releaseBase}/${path.basename(passportPath)}`, sha256: sha256File(passportPath) },
+              primaryArtifact: {
+                path: primary.path,
+                url: primary.url,
+                sha256: primary.sha256,
+                bytes: primary.bytes,
+              },
+              ...(archive.publicArtifacts.sourceBundle ? { sourceBundle: archive.publicArtifacts.sourceBundle } : {}),
+            },
+          };
+          fs.writeFileSync(".buildchain/upstream-release.json", `${JSON.stringify(envelope, null, 2)}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `json=${JSON.stringify(envelope)}\n`);
+          NODE
+
+      - name: Upload exact downstream propagation release envelope
+        if: ${{ !inputs.dry-run && steps.upstream-release.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: paper-upstream-release-${{ steps.candidate.outputs.package-version }}-${{ steps.target.outputs.sha }}
+          path: .buildchain/upstream-release.json
+          if-no-files-found: error
+
+      - name: Capture configured downstream propagation work
+        id: capture-propagation
+        if: ${{ !inputs.dry-run && steps.upstream-release.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          SOURCE_SHA: ${{ steps.target.outputs.sha }}
+          PACKAGE_VERSION: ${{ steps.candidate.outputs.package-version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          config_response=.buildchain/release-propagation-config-response.json
+          config_error=.buildchain/release-propagation-config-error.txt
+          if ! gh api \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/contents/.buildchain/release-propagation.json?ref=${SOURCE_SHA}" \
+            > "$config_response" 2> "$config_error"; then
+            if grep -q "HTTP 404" "$config_error"; then
+              echo "No managed Paper propagation config at the exact release SHA; capture is not configured."
+              echo "configured=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::failed to read the exact Paper propagation config"
+            exit 1
+          fi
+          jq -r .content "$config_response" | base64 --decode \
+            > .buildchain/release-propagation-config.json
+          node <<'NODE'
+          const fs = require("fs");
+          const config = JSON.parse(fs.readFileSync(".buildchain/release-propagation-config.json", "utf8"));
+          const expected = ["schemaVersion", "contract", "sourceNode", "graph", "targets"].sort();
+          if (JSON.stringify(Object.keys(config).sort()) !== JSON.stringify(expected)
+              || config.schemaVersion !== 1
+              || config.contract !== "kungfu-buildchain-paper-release-propagation") {
+            throw new Error("Paper propagation config must use the exact v1 contract");
+          }
+          if (!config.graph || typeof config.graph !== "object" || Array.isArray(config.graph)) {
+            throw new Error("Paper propagation config graph must be an object");
+          }
+          if (typeof config.sourceNode !== "string" || !config.sourceNode) {
+            throw new Error("Paper propagation sourceNode is required");
+          }
+          if (!Array.isArray(config.targets) || config.targets.length === 0
+              || config.targets.some((entry) => typeof entry !== "string" || !/^[A-Za-z0-9._-]+$/.test(entry))) {
+            throw new Error("Paper propagation targets must be non-empty canonical node ids");
+          }
+          const targets = [...new Set(config.targets)].sort();
+          if (JSON.stringify(targets) !== JSON.stringify(config.targets)) {
+            throw new Error("Paper propagation targets must be sorted and unique");
+          }
+          fs.writeFileSync(".buildchain/release-propagation-graph.json", `${JSON.stringify(config.graph, null, 2)}\n`);
+          fs.writeFileSync(".buildchain/release-propagation-targets.json", `${JSON.stringify(targets, null, 2)}\n`);
+          fs.writeFileSync(".buildchain/release-propagation-source-node.txt", `${config.sourceNode}\n`);
+          NODE
+          source_node="$(cat .buildchain/release-propagation-source-node.txt)"
+          node .buildchain/runtime/bin/buildchain.mjs release-propagation plan \
+            --graph .buildchain/release-propagation-graph.json \
+            --upstream-release .buildchain/upstream-release.json \
+            --source-node "$source_node" \
+            --output .buildchain/release-propagation-plan.json \
+            --json > .buildchain/release-propagation-plan.stdout.json
+          mkdir -p .buildchain/release-propagation-work
+          while IFS= read -r target; do
+            repository="$(jq -r --arg target "$target" '.targets[] | select(.target == $target) | .repository' .buildchain/release-propagation-plan.json)"
+            base_ref="$(jq -r --arg target "$target" '.targets[] | select(.target == $target) | .baseRef' .buildchain/release-propagation-plan.json)"
+            propagation_key="$(jq -r --arg target "$target" '.targets[] | select(.target == $target) | .propagationKey' .buildchain/release-propagation-plan.json)"
+            if [ -z "$repository" ] || [ -z "$base_ref" ] || ! [[ "$propagation_key" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "::error::configured propagation target is absent or ambiguous in the exact plan: $target"
+              exit 1
+            fi
+            base_sha="$(gh api "repos/${repository}/commits/${base_ref}" --jq .sha)"
+            target_dir=".buildchain/release-propagation-work/${propagation_key}"
+            mkdir -p "$target_dir"
+            node .buildchain/runtime/bin/buildchain.mjs release-propagation work create \
+              --plan .buildchain/release-propagation-plan.json \
+              --target "$target" \
+              --expected-downstream-base-sha "$base_sha" \
+              --output "$target_dir/work.json" \
+              --json > "$target_dir/work.stdout.json"
+            node .buildchain/runtime/bin/buildchain.mjs release-propagation work status \
+              --work "$target_dir/work.json" \
+              --json > "$target_dir/status.json"
+          done < <(jq -r '.[]' .buildchain/release-propagation-targets.json)
+          artifact_name="paper-propagation-work-${PACKAGE_VERSION}-${SOURCE_SHA}"
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+          echo "artifact-name=$artifact_name" >> "$GITHUB_OUTPUT"
+
+      - name: Upload configured downstream propagation work
+        if: ${{ !inputs.dry-run && steps.capture-propagation.outputs.configured == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.capture-propagation.outputs.artifact-name }}
+          path: |
+            .buildchain/release-propagation-config.json
+            .buildchain/release-propagation-plan.json
+            .buildchain/release-propagation-work/*/work.json
+            .buildchain/release-propagation-work/*/status.json
+          if-no-files-found: error

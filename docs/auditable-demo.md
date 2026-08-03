@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-02
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-08-02
   invisible_context_boundary: No hidden model build, parameter count, or private corpus is asserted.
 ---
 
@@ -30,6 +30,84 @@ The public reusable workflow is
 does not know how a Kungfu, library, service, or application artifact should be
 interpreted. The consumer owns a small checked-in executable adapter.
 
+For standalone binary CLIs, the higher-level first-class surface is
+`.github/workflows/.declarative-auditable-demo.yml`. A consumer checks in only
+`.buildchain/auditable-demo.json`, builds and uploads its exact same-run binary
+plus metadata, and passes the producer-owned artifact name and digest to that
+workflow. Buildchain then owns capture, Gate adaptation, independent native
+1080p and 720p rendering, Release Passport construction, content-addressed
+materialization, and the protected README update pull request. No
+product-specific capture, adapter, passport, or materializer is required.
+
+## Declarative Standalone Binary Scenarios
+
+The schema is `contracts/auditable-demo-scenario-v1.schema.json`. One scenario
+can declare up to eight demos, and each demo can contain up to twelve ordered
+literal argv steps. Steps in one demo share a disposable workspace; separate
+demos and the two rendition captures do not. Commands are never accepted as a
+shell string. An omitted or explicit `standard` duration class remains bounded
+to 60 seconds. A reviewed `execution.durationClass: long-form` declaration may
+raise the scenario and literal step ceilings to 180 seconds; it does not change
+the default. Both classes retain 4 MiB per step, a clean Home/XDG environment,
+no inherited credentials, and a network-disabled read-only container with
+bounded tmpfs.
+
+The uploaded metadata must bind the executable SHA-256, declare an empty
+runtime dependency set, and provide a bounded `executableFiles` array of exact
+artifact-relative paths and SHA-256 digests. GitHub Artifact transport does not
+retain Unix executable modes, so Buildchain restores mode `0755` only for this
+digest-verified executable closure and verifies the same closure again inside
+the network-disabled capture boundary. It never recursively changes artifact
+modes. This metadata controls assembly only and grants no execution,
+publication, or identity authority. Capture rejects an artifact name or upload
+digest that does not resolve to exactly one live artifact from the current workflow run.
+
+Consumers may also declare one bounded, non-interactive `transportSmoke` argv
+in the same scenario and opt the reusable build into
+`pre-upload-transport-smoke-scenario-path`. Before any GitHub Artifact or S3
+relay upload, Buildchain copies the exact distribution directory, removes Unix
+execute bits to simulate transport, restores only the digest-bound executable
+closure, and runs that real binary with a clean Home/XDG environment. A missing
+launcher, runtime, or embedded interpreter therefore fails before the expensive
+upload begins. This is a transport diagnostic with no authority grants; the
+later network-disabled capture and Gate remain the qualification authority.
+It retains ANSI terminal bytes with the real PTY read timestamps, verifies
+declared stdout and JSON file facts, enforces the total deadline while a step is
+running, and removes the disposable workspace before emitting evidence.
+
+Both manual validation and alpha or release refreshes call the same reusable
+workflow. Manual callers select Gate-only or full rendering and can explicitly
+request a materialization PR. Release callers select full rendering and the
+same materializer automatically; there is no separate release-only recording
+implementation. Publication requires a dedicated update token and target
+branch. The token is an explicit bounded capability, while actor identity,
+first-party/System classification, KFD compliance, Product System metadata,
+package metadata, registry history, scans, and generated evidence grant no
+authority.
+
+```yaml
+jobs:
+  demo:
+    needs: exact-binary
+    uses: kungfu-systems/buildchain/.github/workflows/.declarative-auditable-demo.yml@BUILDCHAIN_EXACT_SHA
+    with:
+      source-ref: ${{ github.sha }}
+      binary-artifact-name: ${{ needs.exact-binary.outputs.artifact-name }}
+      binary-artifact-digest: ${{ needs.exact-binary.outputs.artifact-digest }}
+      scenario-path: .buildchain/auditable-demo.json
+      renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:RENDERER_DIGEST
+      render-media: true
+      media-profile: responsive-web-delivery-v1
+      materialize: true
+      materialize-base-ref: dev/v1/v1.0
+    secrets:
+      DEMO_UPDATE_TOKEN: ${{ secrets.DEMO_UPDATE_TOKEN }}
+```
+
+Buildchain recursively consumes this surface in
+`.github/workflows/auditable-demo.yml` using its own exact standalone binary
+and the beginner bootstrap scenario in `.buildchain/auditable-demo.json`.
+
 ## Authority Boundary
 
 The retained build output is authoritative. The adapter reads that exact
@@ -42,10 +120,18 @@ scene.json
 ```
 
 It may additionally emit one declared `terminal-capture.json` using
-`kungfu.terminal-capture/v1`. The optional capture is bounded to 60 seconds,
+`kungfu.terminal-capture/v1`. The optional capture is bounded to 60 seconds by
+default or 180 seconds only when its scene explicitly declares `long-form`,
 fixed 80-200 by 24-80 terminal cells, 10,000 events, and 4 MiB of canonical
-base64 bytes. It must contain a passed completion sentinel and an explicitly
+base64 bytes. It must contain a qualified completion sentinel and an explicitly
 empty authority-grant list. Existing three-file adapters remain valid.
+
+The completion sentinel names a consumer-owned versioned schema, the exact
+`qualified` status, a content root, and an event count. Buildchain validates
+that envelope generically; it does not reinterpret a command-specific result
+as Agent Work Lab evidence or grant authority from the schema name. The
+consumer projection and its retained source artifact remain responsible for
+the exact claim boundary.
 
 Terminal bytes are volatile observations, not Work, Warrant, capability, or
 publication authority. First-party or System identity, KFD compliance, Product
@@ -143,6 +229,8 @@ shell fragments, arbitrary profile paths, or transcoding instructions.
 | --- | --- |
 | `archive-v1` | Default compatibility contract. Retains the exact renderer outputs and classifies GIF as README compatibility evidence without making a browser-delivery claim. |
 | `web-delivery-v1` | Independently qualifies H.264 MP4 and VP9 WebM playback sources, forbids audio, requires exact scene dimensions and bounded duration/frame-rate drift, checks per-rendition byte ceilings, and proves MP4 `moov` precedes `mdat`. PNG remains the lossless evidence poster. |
+| `responsive-web-delivery-v1` | Extends `web-delivery-v1` with exact 1280x720 H.264 MP4 and VP9 WebM responsive sources plus a 1280x720 README GIF while keeping the primary MP4/WebM and evidence poster at the source scene dimensions. Every declared downscale must preserve the scene aspect ratio and may never upscale. |
+| `responsive-long-form-web-delivery-v1` | Extends the responsive profile for explicitly admitted long-form scenes. Its measured-baseline multipliers raise only the GIF ceiling to 8 MiB and the four video ceilings to 4 MiB; all codec, native-resolution, no-audio, duration, and authority checks remain unchanged. |
 | `site-hero-v1` | Extends `web-delivery-v1` and additionally requires a qualified WebP browser poster. The current Build Images v1 renderer does not emit that member, so selecting this profile fails closed until the producer adds it. |
 
 For web-delivery profiles, Buildchain runs its own fixed `ffprobe` invocation
@@ -156,24 +244,38 @@ field remains supporting evidence, never sufficient authority.
 
 The default `archive-v1` path preserves the existing v1 media receipt exactly.
 An explicitly selected web-delivery profile emits a v2 media receipt with a
-content-addressed rendition list and explicit roles and MIME types. Agents and
-site builds select `primary-video`,
-`alternate-video`, `browser-poster`, or evidence-only roles from that receipt;
-they do not infer semantics from extensions or filenames. Additional responsive
-renditions are accepted only when the immutable renderer manifest declares the
-bounded `build-images.auditable-demo-web-delivery/v1` role and MIME metadata and
-the selected Buildchain profile supplies the byte ceiling; producer metadata
-cannot raise that ceiling. Unbound outputs,
-duplicate singleton roles, unknown profiles, or unsupported required versions
-fail closed.
+content-addressed rendition list and explicit roles, MIME types, dimensions,
+and dimension policy. Agents and site builds select `primary-video`,
+`alternate-video`, `responsive-primary-video`,
+`responsive-alternate-video`, `browser-poster`, or evidence-only roles from
+that receipt; they do not infer semantics from extensions or filenames.
+Profile-declared responsive renditions must match their exact dimensions,
+remain within the source scene, and preserve its aspect ratio. Additional
+producer-declared renditions remain bounded by the selected profile and cannot
+raise their own byte ceiling. Unbound outputs, implicit upscales, aspect-ratio
+drift, duplicate singleton roles, unknown profiles, or unsupported required
+versions fail closed.
+
+The required Gate binds the exact selected media profile and the smoke media
+qualification root before optional full rendering starts. Gate-only validation
+and full rendering therefore exercise the same profile contract; a later media
+job cannot silently switch rendition authority.
 
 Initial byte ceilings are derived from the checked-in
 `auditable-demo-web-delivery-v1` fixture rendered by Build Images
 `v1.3.0-alpha.16` at its exact source SHA and image digest. GIF, MP4, WebM, and
 PNG ceilings are the next power of two above sixteen times the measured member
-bytes. The not-yet-produced WebP poster uses eight times the measured lossless
-PNG as its conservative proxy. The path-scoped qualification workflow
+bytes. The explicit responsive long-form profile derives its 4 MiB video and
+8 MiB GIF ceilings from the same observed bytes at a bounded 128-times
+multiplier; it does not change another profile. The not-yet-produced WebP poster
+uses eight times the measured lossless PNG as its conservative proxy. The path-scoped qualification workflow
 regenerates the content-addressed evidence and fails on any byte or fact drift.
+Its matrix retains the original 1280x720 web-delivery baseline on the renderer
+that produced it and separately measures the responsive profile against a
+1920x1080 fixture and the first exact renderer release that emits both
+source-resolution and 720p renditions. This keeps historical budget evidence
+reproducible while giving the responsive contract its own immutable
+qualification root.
 
 ## Consumer Example
 
@@ -222,7 +324,8 @@ build should always call the reusable workflow. Selection policy changes only
 
 Use `web-delivery-v1` only when the rendered bundle is intended to become a
 qualified web-delivery source. Use `site-hero-v1` when an optimized browser
-poster is also required. Profile qualification does not prove browser playback,
+poster is also required. Select `responsive-long-form-web-delivery-v1` only
+with an explicit long-form scenario. Profile qualification does not prove browser playback,
 responsive layout, reduced-motion behavior, accessibility, or production
 deployment; those remain site responsibilities.
 

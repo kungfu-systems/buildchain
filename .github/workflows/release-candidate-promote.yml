@@ -248,6 +248,11 @@ on:
         default: true
         type: boolean
         required: false
+      release-propagation-config-path:
+        description: "Optional source-controlled package propagation capture config read from the exact finalized release SHA"
+        default: ""
+        type: string
+        required: false
       release-passport-output-dir:
         description: "Release passport output directory"
         default: ".buildchain/release-passport"
@@ -507,6 +512,9 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.alpha.outputs.release-candidate-artifact || jobs.stable.outputs.release-candidate-artifact }}
+      release-propagation-work-artifact:
+        description: "Captured package release propagation Work artifact"
+        value: ${{ jobs.alpha.outputs.release-propagation-work-artifact || jobs.stable.outputs.release-propagation-work-artifact }}
       publication-commit-evidence-path:
         description: "Validated consumer publication commit evidence path"
         value: ${{ jobs.alpha.outputs.publication-commit-evidence-path || jobs.stable.outputs.publication-commit-evidence-path }}
@@ -644,18 +652,8 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            if (context.eventName !== "workflow_dispatch") {
-              throw new Error("promotion runtime override is only allowed for trusted workflow_dispatch runs");
-            }
-            const permission = await github.rest.repos.getCollaboratorPermissionLevel({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              username: context.actor,
-            });
-            const level = permission.data.user?.permissions || permission.data.permission || "none";
-            if (!["write", "maintain", "admin"].includes(level)) {
-              throw new Error(`promotion runtime override requires write, maintain, or admin permission; actor has ${level}`);
-            }
+            const script = require(process.env.GITHUB_WORKSPACE + "/.buildchain/router/scripts/authorize-promotion-runtime-override.cjs");
+            await script.authorizePromotionRuntimeOverride({ github, context });
 
       - name: Resolve immutable promotion identities
         id: identities
@@ -827,6 +825,7 @@ jobs:
       publish-package-set-order: ${{ inputs.publish-package-set-order }}
       publish-package-main: ${{ inputs.publish-package-main }}
       release-passport: ${{ inputs.release-passport }}
+      release-propagation-config-path: ${{ inputs.release-propagation-config-path }}
       release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
       release-passport-product-name: ${{ inputs.release-passport-product-name }}
       release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
@@ -905,10 +904,6 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       release-candidate-workflow-file: ${{ inputs.release-candidate-workflow-file }}
       release-candidate-workflow-name: ${{ inputs.release-candidate-workflow-name }}
-      release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
-      release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
-      release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
-      release-candidate-family-assignment-id: ${{ inputs.release-candidate-family-assignment-id }}
       artifact-patterns: ${{ inputs.artifact-patterns }}
       required-status-check: ${{ inputs.required-status-check }}
       branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
@@ -944,8 +939,6 @@ jobs:
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
       release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
       release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
-      release-passport-evidence-jsons: ${{ inputs.release-passport-evidence-jsons }}
-      release-passport-attachment-command: ${{ inputs.release-passport-attachment-command }}
       release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
       release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths }}
       required-artifact-count: ${{ inputs.required-artifact-count }}

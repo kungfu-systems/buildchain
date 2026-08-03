@@ -33,7 +33,18 @@ import {
   enumerateWorkflowInputs,
 } from "../packages/core/public-surface-audit.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
+import { cliCommandMeta, nodeApiMeta } from "./site-capability-metadata.mjs";
 import { projectHomepageIntro } from "./site-bundle-homepage.mjs";
+import { BUILDCHAIN_USAGE } from "./buildchain-cli-help.mjs";
+import {
+  cliReferenceById,
+  createCliReference,
+} from "./public-reference.mjs";
+import { createSiteNodeApiRegistry } from "./site-reference-registry.mjs";
+import {
+  BUILDCHAIN_COMMAND_REGISTRY,
+  resolveBuildchainCommand,
+} from "../bin/internal/command-registry.mjs";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
@@ -322,11 +333,26 @@ function capabilityGroup(id) {
   return id;
 }
 
+function publicSurfaceLifecycle({ owner, maturity, nonDuplicationRationale }) {
+  return {
+    owner,
+    maturity,
+    introducedVersion: "pre-3.0.2-alpha.4",
+    compatibilityPromise: "preserved-through-the-v3-major-line",
+    deprecationReplacement: "",
+    sunsetCondition: "explicit-breaking-change-review-in-a-future-major-line",
+    nonDuplicationRationale,
+  };
+}
+
 const manualMetaById = new Map(Object.entries({
   map: { capabilityGroup: "getting-started", audience: ["agent", "consumer"], maturity: "stable", order: 10 },
+  "getting-started": { capabilityGroup: "getting-started", audience: ["consumer", "agent"], maturity: "stable", order: 15 },
   install: { capabilityGroup: "getting-started", audience: ["consumer"], maturity: "stable", order: 20 },
   "product-mechanism": { capabilityGroup: "getting-started", audience: ["agent", "maintainer"], maturity: "stable", order: 30 },
   cli: { capabilityGroup: "api-cli-reference", audience: ["agent", "developer"], maturity: "stable", order: 40 },
+  "cli-reference": { capabilityGroup: "api-cli-reference", audience: ["agent", "developer", "operator"], maturity: "stable", order: 42 },
+  "node-api-reference": { capabilityGroup: "api-cli-reference", audience: ["agent", "developer"], maturity: "stable", order: 44 },
   "release-passport": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 100 },
   "github-artifact-attestation": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 108 },
   "publication-authority": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 105 },
@@ -338,6 +364,7 @@ const manualMetaById = new Map(Object.entries({
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
+  "dev-qualification-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 136 },
   "dev-alpha-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 137 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
@@ -390,191 +417,52 @@ function pageCapabilityMeta(relPath, category) {
   return { capabilityGroup: capabilityGroup("getting-started"), audience: ["agent"], maturity: "stable" };
 }
 
-function cliCommandMeta(id) {
-  const map = new Map(Object.entries({
-    audit: { group: "release-passport-trust", purpose: "Inspect read-only publication authority audit commands." },
-    "audit-publication-control-plane": { group: "release-passport-trust", purpose: "Read GitHub publication controls, bind provider-enforced npm identity, and emit a sanitized expiring receipt." },
-    "audit-github-governance": { group: "governance-versioning", purpose: "Read the managed GitHub zone, aggregate native protection and ownership, and emit sanitized fail-closed governance receipts." },
-    badges: { group: "distribution-indexes", purpose: "Inspect README badge command families." },
-    "badges-bundle": { group: "distribution-indexes", purpose: "Generate or verify the combined KFD and Release Passport badge bundle." },
-    "badges-readme": { group: "distribution-indexes", purpose: "Generate or verify managed README badge blocks." },
-    "build-contract": { group: "governance-versioning", purpose: "Resolve Buildchain runtime contract metadata for floating-ref drift checks." },
-    "build-facts": { group: "observability-diagnostics", purpose: "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts." },
-    candidate: { group: "observability-diagnostics", purpose: "Inspect source-bound candidate evidence command families." },
-    "candidate-timeline": { group: "observability-diagnostics", purpose: "Create a critical-path-safe timeline across pull-request and Merge Queue attempts." },
-    collect: { group: "release-passport-trust", purpose: "Inspect release evidence collection command families." },
-    "collect-github-release": { group: "release-passport-trust", purpose: "Collect GitHub Release assets into a release passport." },
-    create: { group: "release-passport-trust", purpose: "Create canonical sealed publication evidence documents." },
-    "create-publication-admission": { group: "release-passport-trust", purpose: "Create a canonical short-lived publication admission envelope from exact consumer bindings." },
-    "create-github-artifact-attestation-policy": { group: "release-passport-trust", purpose: "Create an exact source, signer, Linux build, and Release Passport attestation policy." },
-    "create-runner-provenance": { group: "release-passport-trust", purpose: "Create runner provenance evidence with an explicit qualification floor." },
-    diagnostics: { group: "observability-diagnostics", purpose: "Inspect diagnostics command families." },
-    "diagnostics-summary": { group: "observability-diagnostics", purpose: "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables." },
-    doctor: { group: "getting-started", purpose: "Report local integration readiness." },
-    explain: { group: "release-passport-trust", purpose: "Inspect release and artifact explanation command families." },
-    "explain-artifact": { group: "release-passport-trust", purpose: "Explain artifact evidence for humans or agents." },
-    "explain-release": { group: "release-passport-trust", purpose: "Explain a release passport for humans or agents." },
-    facts: { group: "observability-diagnostics", purpose: "Inspect build facts command families." },
-    help: { group: "getting-started", purpose: "Print Buildchain CLI help." },
-    homebrew: { group: "distribution-indexes", purpose: "Inspect Homebrew distribution-index command families." },
-    "homebrew-check": { group: "distribution-indexes", purpose: "Verify Homebrew tap metadata against upstream release passport evidence." },
-    "homebrew-update-formula": { group: "distribution-indexes", purpose: "Generate Homebrew Formula metadata from upstream release passport evidence." },
-    "github-governance": { group: "governance-versioning", purpose: "Plan, apply, or roll back one root-bound GitHub branch-protection rollout after a frozen read-only inventory." },
-    "infra-contract": { group: "governance-versioning", purpose: "Validate and publish provider-neutral infrastructure contract evidence." },
-    init: { group: "getting-started", purpose: "Bootstrap a repository with Buildchain configuration and caller workflow files." },
-    inspect: { group: "release-passport-trust", purpose: "Inspect release and artifact evidence command families." },
-    "inspect-artifact": { group: "release-passport-trust", purpose: "Inspect artifact evidence." },
-    "inspect-release": { group: "release-passport-trust", purpose: "Inspect release passport evidence." },
-    kfd: { group: "kfd-trust", purpose: "Inspect KFD standards, schemas, and versioned KFD command families." },
-    "kfd-hub": { group: "kfd-trust", purpose: "Initialize, inspect, test, and explain one declarative KFD Agent Hub adapter adoption." },
-    layout: { group: "kfd-trust", purpose: "Return the versioned repository-layout and KFD registry discovery contract for tools such as Shifu." },
-    "kfd-schema": { group: "kfd-trust", purpose: "Inspect KFD schema command families." },
-    "kfd-schema-list": { group: "kfd-trust", purpose: "List machine-readable schemas exposed by the KFD package standards metadata." },
-    "kfd-schema-show": { group: "kfd-trust", purpose: "Print a machine-readable KFD schema from the KFD package standards metadata." },
-    "kfd-status": { group: "kfd-trust", purpose: "Report implemented KFD support and the active .buildchain repository layout." },
-    "kfd-migrate-layout": { group: "kfd-trust", purpose: "Plan or apply migration of legacy root Buildchain files into .buildchain/." },
-    "kfd-1": { group: "kfd-trust", purpose: "Inspect KFD-1 contract-world witness, gate, verify, and schema command families." },
-    "kfd-1-gate": { group: "kfd-trust", purpose: "Generate KFD-1 release gate evidence from declared contract-world witnesses." },
-    "kfd-1-schema": { group: "kfd-trust", purpose: "Print the default KFD-1 schema exposed by the KFD package standards metadata." },
-    "kfd-1-verify": { group: "kfd-trust", purpose: "Validate KFD-1 release gate evidence." },
-    "kfd-1-witness": { group: "kfd-trust", purpose: "Generate Buildchain's KFD-1 self contract-world witness." },
-    "kfd-2": { group: "kfd-trust", purpose: "Inspect KFD-2 trust taxonomy, public claims, and schema command families." },
-    "kfd-2-claims": { group: "kfd-trust", purpose: "Generate Buildchain's KFD-2 public trust claim evidence." },
-    "kfd-2-product-claims": { group: "kfd-trust", purpose: "Validate and render product-owned KFD-2 claims in the canonical .buildchain/kfd layout." },
-    "kfd-2-schema": { group: "kfd-trust", purpose: "Print the default KFD-2 schema exposed by the KFD package standards metadata." },
-    "kfd-2-taxonomy": { group: "kfd-trust", purpose: "Validate KFD-2 trust taxonomy entries from the KFD package standards metadata." },
-    "kfd-2-trust-assessment": { group: "kfd-trust", purpose: "Expose and validate the KFD package foundation KFD-2 trust assessment." },
-    "kfd-2-trust-claims": { group: "kfd-trust", purpose: "Expose and validate the KFD package foundation KFD-2 trust claims." },
-    "kfd-3": { group: "kfd-trust", purpose: "Inspect KFD-3 surface detection, registry, witness, audit, and query command families under the unified KFD namespace." },
-    "kfd-3-audit": { group: "kfd-trust", purpose: "Compare detected, declared, and enforced KFD-3 public surfaces." },
-    "kfd-3-detect": { group: "kfd-trust", purpose: "Detect standard KFD-3 public surface candidates from source and artifact metadata." },
-    "kfd-3-query": { group: "kfd-trust", purpose: "Return an agent-readable KFD-3 capability map for a product, registry, or release passport." },
-    "kfd-3-register": { group: "kfd-trust", purpose: "Declare detected KFD-3 public surfaces into a product-owned surface registry." },
-    "kfd-3-witness": { group: "kfd-trust", purpose: "Generate release-passport-compatible KFD-3 surface witnesses from a product registry." },
-    "kfd-4-schema": { group: "kfd-trust", purpose: "Print the default KFD-4 schema exposed by the KFD package standards metadata." },
-    "kfd-4-gate": { group: "kfd-trust", purpose: "Evaluate source-bound KFD-4 observer-perspective and contrastive-replay product evidence." },
-    "kfd-4-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-4 product-gate result without widening product support." },
-    "kfd-5-schema": { group: "kfd-trust", purpose: "Print the default KFD-5 schema exposed by the KFD package standards metadata." },
-    "kfd-5-gate": { group: "kfd-trust", purpose: "Evaluate source-bound KFD-5 Primitive discovery qualification evidence." },
-    "kfd-5-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-5 product-gate result without widening product support." },
-    "kfd-7-schema": { group: "kfd-trust", purpose: "Print the default KFD-7 schema exposed by the KFD package standards metadata." },
-    "kfd-7-gate": { group: "kfd-trust", purpose: "Evaluate a source-bound KFD-7 Domain Profile, evidence obligations, and independent review." },
-    "kfd-7-verify": { group: "kfd-trust", purpose: "Verify a retained KFD-7 product-gate result without widening product support." },
-    "kfd-support": { group: "kfd-trust", purpose: "Project and verify a product-owned KFD-1 through KFD-13 support matrix against KFD-4/5/7 gates." },
-    "kfd-aggregate": { group: "kfd-trust", purpose: "Return a product KFD view that combines own KFD status with upstream KFD aggregate facts." },
-    "kfd-upstream": { group: "kfd-trust", purpose: "Inspect KFD upstream aggregate command families." },
-    "kfd-upstream-check": { group: "kfd-trust", purpose: "Validate a KFD upstream aggregate document and fail closed on missing evidence." },
-    "kfd-upstream-collect": { group: "kfd-trust", purpose: "Collect declared KFD-aware upstream package evidence and hashes from Buildchain config." },
-    "kfd-upstream-roles": { group: "kfd-trust", purpose: "List Buildchain-managed KFD upstream role values and inference policy." },
-    lifecycle: { group: "reusable-build", purpose: "Run configured lifecycle commands and write deterministic artifact manifests." },
-    dev: { group: "governance-versioning", purpose: "Inspect protected development-channel governance command families." },
-    "dev-merge-queue": { group: "governance-versioning", purpose: "Plan or apply an exact-branch GitHub merge queue after required workflow event compatibility is verified." },
-    log: { group: "observability-diagnostics", purpose: "Inspect Buildchain logging command families." },
-    logging: { group: "observability-diagnostics", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
-    mark: { group: "observability-diagnostics", purpose: "Emit a single Buildchain log event." },
-    npm: { group: "release-passport-trust", purpose: "Inspect npm publishing command families." },
-    "portable-cache": { group: "observability-diagnostics", purpose: "Plan exact portable dependency/compiler cache inputs and seal provider outcomes." },
-    "portable-cache-plan": { group: "observability-diagnostics", purpose: "Validate a consumer-neutral cache manifest and emit exact GitHub Actions cache inputs." },
-    "portable-cache-receipt": { group: "observability-diagnostics", purpose: "Seal exact, compatible, miss, or corrupt provider evidence against one cache plan." },
-    "npm-dry-run": { group: "release-passport-trust", purpose: "Verify npm publish shape before a release transaction." },
-    paper: { group: "reusable-build", purpose: "Inspect the unified paper repository and publication command families." },
-    "paper-alpha": { group: "release-passport-trust", purpose: "Plan or open the protected dev-to-alpha paper publication PR without direct publication." },
-    "paper-bootstrap-npm": { group: "release-passport-trust", purpose: "Dry-run or explicitly bootstrap the public npm package and bind GitHub Trusted Publishing." },
-    "paper-build": { group: "reusable-build", purpose: "Plan or execute the existing two-clean-build reproducibility gate for a paper." },
-    "paper-migrate": { group: "getting-started", purpose: "Plan or write the bounded Buildchain-owned control-file migration for an existing paper repository." },
-    "paper-preflight": { group: "reusable-build", purpose: "Report exact source, runtime, permission, npm trust, deterministic build, and release-state readiness." },
-    "paper-resume": { group: "release-passport-trust", purpose: "Plan or dispatch recovery of the exact existing sealed paper release transaction." },
-    "paper-scaffold": { group: "getting-started", purpose: "Plan or write an idempotent, no-overwrite, release-ready paper repository scaffold." },
-    "paper-status": { group: "reusable-build", purpose: "Report explicit evidence for every paper lifecycle state without unsupported inference." },
-    "publish-source": { group: "release-passport-trust", purpose: "Create, inspect, or verify publish-gate source-lock refs." },
-    "publication-artifact": { group: "reusable-build", purpose: "Generate publication artifact manifests, passports, and source bundles for paper/report repositories." },
-    "publication-artifact-manifest": { group: "reusable-build", purpose: "Write a site-consumable publication artifact manifest, publication passport, and source bundle." },
-    "publication-artifact-npm-package": { group: "reusable-build", purpose: "Synthesize the declared npm paper package from a publication artifact manifest, passport, registry, source bundle, and primary artifact." },
-    project: { group: "release-passport-trust", purpose: "Inspect read-only consumer projection command families." },
-    "project-kfx-admission": { group: "release-passport-trust", purpose: "Project one verified sealed envelope into direct KFX admission inputs without reconstructing evidence." },
-    "publication-artifact-reproducibility": { group: "reusable-build", purpose: "Prove exact PDF, source bundle, publication evidence, and npm tarball bytes across two independent clean builds." },
-    "release-dry-run": { group: "governance-versioning", purpose: "Explain what a channel merge would publish before the PR is merged." },
-    "release-line-open": { group: "governance-versioning", purpose: "Plan or write the initial version-state commit for a new minor release line." },
-    "release-governance": { group: "governance-versioning", purpose: "Reconcile a managed branch's Buildchain aggregate check to an already-tested pull request SHA." },
-    "release-propagation": { group: "site-and-propagation", purpose: "Plan channel-preserving downstream release PRs and write exact upstream release locks." },
-    "release-transaction": { group: "release-passport-trust", purpose: "Inspect, recover, finalize, or abort durable release transactions." },
-    sample: { group: "observability-diagnostics", purpose: "Inspect sampler command families." },
-    "sample-process-tree": { group: "observability-diagnostics", purpose: "Sample process-tree diagnostics for a wrapped command." },
-    span: { group: "observability-diagnostics", purpose: "Run a command inside a Buildchain log span." },
-    "transaction-inspect": { group: "release-passport-trust", purpose: "Inspect durable release transaction state." },
-    validate: { group: "getting-started", purpose: "Validate .buildchain/buildchain.toml and declared lifecycle surfaces." },
-    verify: { group: "release-passport-trust", purpose: "Inspect release and artifact verification command families." },
-    "verify-artifact": { group: "release-passport-trust", purpose: "Verify artifact subjects against release passport evidence." },
-    "verify-artifact-envelope": { group: "release-passport-trust", purpose: "Verify exact roots, identity, lifecycle, revocation, and an existing KFD assessment in a sealed artifact envelope." },
-    "verify-github-artifact-attestation": { group: "release-passport-trust", purpose: "Verify GitHub keyless attestation identity plus local artifact, manifest, Passport, predicate, bundle, and evidence bindings." },
-    "verify-infra-contract-evidence-bundle": { group: "governance-versioning", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
-    "verify-observability-log": { group: "observability-diagnostics", purpose: "Verify Buildchain observability log events." },
-    "verify-publication-admission": { group: "release-passport-trust", purpose: "Independently verify sealed publication admission, runner provenance, control-plane audit, nonce freshness, and exact artifact bindings." },
-    "verify-release-passport": { group: "release-passport-trust", purpose: "Fail closed unless a release passport and its evidence are complete." },
-    version: { group: "getting-started", purpose: "Print the package or embedded binary version." },
-    "web-surface": { group: "site-and-propagation", purpose: "Plan, verify, and apply Buildchain web-surface deployments." },
-  }));
-  const meta = map.get(id);
-  if (!meta) {
-    throw new Error(`missing CLI command capability metadata: ${id}`);
+function createCliRegistry(packageJson) {
+  const commands = enumerateCliCommandsFromBin({ root });
+  const reference = createCliReference(BUILDCHAIN_USAGE);
+  const referenceById = cliReferenceById(reference);
+  const documentedTopLevelCommands = new Set();
+  for (const entry of commands) {
+    const command = entry.usage.split(/\s+/)[1] || "";
+    const registration = resolveBuildchainCommand(command);
+    if (!registration) {
+      throw new Error(`CLI help documents an unregistered top-level command: ${command}`);
+    }
+    documentedTopLevelCommands.add(registration.id);
   }
-  return { capabilityGroup: capabilityGroup(meta.group), purpose: meta.purpose, audience: ["agent", "operator"], maturity: "stable" };
-}
-
-function nodeApiMeta(exportName) {
-  const map = new Map(Object.entries({
-    ".": { group: "api-cli-reference", summary: "Root toolkit export for Buildchain's public Node API." },
-    "./core": { group: "api-cli-reference", summary: "Alias for the root public toolkit export." },
-    "./badges": { group: "distribution-indexes", summary: "Badge bundle facts, rendering, checking, and update APIs." },
-    "./readme-badges": { group: "distribution-indexes", summary: "Managed README badge block facts, rendering, drift checks, and updates." },
-    "./homebrew": { group: "distribution-indexes", summary: "Homebrew tap fact collection, Formula rendering, update, and check APIs." },
-    "./build-facts": { group: "observability-diagnostics", summary: "Git source, version, module output, product artifact, and legacy Kungfu build fact APIs." },
-    "./candidate-timeline": { group: "observability-diagnostics", summary: "Source-bound candidate event normalization, per-attempt critical-path-safe aggregation, and compact reporting APIs." },
-    "./channel-candidate": { group: "governance-versioning", summary: "Exact-source channel candidate decisions, same-SHA workflow evidence validation, and deterministic source-lock reference APIs." },
-    "./cache-evidence": { group: "observability-diagnostics", summary: "Content-addressed cache operation receipts and source/platform-bound evidence-set verification APIs." },
-    "./diagnostics": { group: "observability-diagnostics", summary: "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs." },
-    "./logging": { group: "observability-diagnostics", summary: "Buildchain JSONL logging, span, summary, and verification APIs." },
-    "./portable-dev-cache": { group: "observability-diagnostics", summary: "Portable dependency/compiler cache plan, exact-root verification, and provider receipt APIs." },
-    "./publication-artifact": { group: "reusable-build", summary: "Publication artifact manifest, source bundle, and publication passport APIs." },
-    "./publication-package": { group: "reusable-build", summary: "Publication npm package synthesis APIs for Buildchain-managed paper release presets." },
-    "./publication-reproducibility": { group: "reusable-build", summary: "Two-clean-build publication byte reproducibility receipt APIs." },
-    "./publication-sealed-bundle": { group: "reusable-build", summary: "Build-once publication bundle manifests and exact-byte resume verification APIs." },
-    "./paper": { group: "reusable-build", summary: "Unified paper scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs." },
-    "./publication-authority": { group: "release-passport-trust", summary: "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs." },
-    "./publication-control-plane-audit": { group: "release-passport-trust", summary: "Read-only publication control-plane snapshot evaluation APIs." },
-    "./buildchain-publication-authority": { group: "release-passport-trust", summary: "Buildchain-owned closed-world publication authority descriptor registry." },
-    "./github-governance-authority": { group: "governance-versioning", summary: "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs." },
-    "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
-    "./artifact-verification-envelope": { group: "release-passport-trust", summary: "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission." },
-    "./artifact-signing": { group: "reusable-build", summary: "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs." },
-    "./artifact-signing-result": { group: "release-passport-trust", summary: "Immutable signed-result, final-payload, receipt, evidence-root, and provider-verification binding APIs." },
-    "./detached-artifact-signature": { group: "release-passport-trust", summary: "Buildchain-authority Ed25519 detached signature and verification APIs for arbitrary binary artifacts." },
-    "./anchored-version-material": { group: "reusable-build", summary: "Anchored/manual derived version material preflight, exact-tree binding, and digest evidence APIs." },
-    "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
-    "./github-artifact-attestation": { group: "release-passport-trust", summary: "GitHub keyless artifact attestation policy, predicate, provider evidence, and fail-closed verification APIs." },
-    "./kfd-agent-hub": { group: "kfd-trust", summary: "Declarative Agent Hub adapter inspection, fixed-suite execution, exact KFD cut locking, and agent explanation APIs." },
-    "./release-passport-contract": { group: "release-passport-trust", summary: "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs." },
-    "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
-    "./stable-candidate-ledger": { group: "governance-versioning", summary: "Immutable alpha candidate ledger, qualification, revocation, selection, and exact stable source-lock APIs." },
-    "./release-propagation": { group: "site-and-propagation", summary: "Release propagation graph, plan, and exact upstream lock APIs." },
-    "./release-activation-transaction": { group: "release-passport-trust", summary: "Ordered cross-repository activation, exact receipt-set binding, retry, abort, rollback, and shadow-rehearsal APIs." },
-    "./release-line-bootstrap": { group: "governance-versioning", summary: "Semver release-line bootstrap planning and version-state APIs." },
-    "./buildchain-contract": { group: "governance-versioning", summary: "Runtime contract world and compatibility digest APIs for floating-ref drift checks." },
-    "./controller-evidence": { group: "reusable-build", summary: "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs." },
-    "./surface-manifest": { group: "site-and-propagation", summary: "Surface manifest timestamp and reproducibility policy APIs." },
-    "./issue-reporting": { group: "observability-diagnostics", summary: "Buildchain-owned issue reporting API for workflow friction feedback." },
-    "./buildchain-layout": { group: "kfd-trust", summary: "Versioned Buildchain repository-layout discovery contract plus canonical .buildchain path resolution and migration APIs." },
-    "./kfd": { group: "kfd-trust", summary: "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers." },
-    "./kfd-product-gates": { group: "kfd-trust", summary: "Fail-closed KFD-4, KFD-5, and KFD-7 product evidence gates plus non-widening KFD support-matrix release projections." },
-    "./public-surface-audit": { group: "kfd-trust", summary: "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces." },
-    "./kfd-gate": { group: "kfd-trust", summary: "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs." },
-    "./buildchain-kfd-claims": { group: "kfd-trust", summary: "Buildchain self KFD claim registry, witnesses, and public claim APIs." },
-  }));
-  const meta = map.get(exportName);
-  if (!meta) {
-    throw new Error(`missing Node API capability metadata: ${exportName}`);
+  for (const entry of BUILDCHAIN_COMMAND_REGISTRY) {
+    if (!documentedTopLevelCommands.has(entry.id)) {
+      throw new Error(`CLI runtime command is absent from help enumeration: ${entry.id}`);
+    }
   }
-  return { capabilityGroup: capabilityGroup(meta.group), summary: meta.summary, audience: ["developer", "agent"], maturity: "stable" };
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-cli-registry",
+    binary: "buildchain",
+    npmPackage: packageJson.name,
+    commandSource: "bin/internal/command-registry.mjs plus bin/buildchain.mjs help enumeration",
+    commands: commands.map((entry) => {
+      const meta = cliCommandMeta(entry.id);
+      return {
+        ...entry,
+        ...(referenceById.get(entry.id) || {
+          paths: [],
+          syntaxes: [],
+          options: [],
+          aliases: [],
+          helpCommands: [],
+        }),
+        purpose: meta.purpose,
+        capabilityGroup: meta.capabilityGroup,
+        audience: meta.audience,
+        ...publicSurfaceLifecycle({
+          owner: "buildchain-cli",
+          maturity: meta.maturity,
+          nonDuplicationRationale: "Existing command identity retained for CLI compatibility and discoverability.",
+        }),
+      };
+    }),
+  };
 }
 
 function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nodeApiRegistry, workflowRegistry }) {
@@ -752,6 +640,21 @@ function createPublicationReleaseRegistry({ packageJson, timestampPolicy }) {
   };
 }
 
+const RELEASE_PROPAGATION_MODEL = {
+  graphContract: "kungfu-buildchain-release-propagation-graph",
+  planContract: "kungfu-buildchain-release-propagation-plan",
+  lockContract: "kungfu-buildchain-release-propagation-lock",
+  workContract: "kungfu-buildchain-release-propagation-work",
+  stageReceiptContract: "kungfu-buildchain-release-propagation-stage-receipt",
+  workControlBindings: [
+    "kungfu.assignment-graph.work-ref/v1",
+    "kungfu.work-control.initiative-family-state/v2",
+  ],
+  completionBoundary: "production-online-readback-plus-accepted-work-control-decision",
+  defaultChannelPolicy: "preserve",
+  defaultChannelMap: { alpha: "alpha", release: "release" },
+};
+
 function buildSiteBundle() {
   const packageJson = readJson("package.json");
   const inventory = readJson("tests/buildchain-inventory.json");
@@ -792,23 +695,7 @@ function buildSiteBundle() {
     artifactDigestScope: "npm package dist/site JSON files",
   });
 
-  const cliRegistry = {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-cli-registry",
-    binary: "buildchain",
-    npmPackage: packageJson.name,
-    commandSource: "bin/buildchain.mjs reverse enumeration",
-    commands: enumerateCliCommandsFromBin({ root }).map((entry) => {
-      const meta = cliCommandMeta(entry.id);
-      return {
-        ...entry,
-        purpose: meta.purpose,
-        capabilityGroup: meta.capabilityGroup,
-        audience: meta.audience,
-        maturity: meta.maturity,
-      };
-    }),
-  };
+  const cliRegistry = createCliRegistry(packageJson);
 
   const manualRegistry = {
     schemaVersion: 1,
@@ -838,6 +725,7 @@ function buildSiteBundle() {
       "docs/reusable-build-surface.md",
       "docs/release-candidate.md",
       "docs/stable-candidate-patrol.md",
+      "docs/dev-qualification-patrol.md",
       "docs/dev-alpha-candidate-patrol.md",
       "docs/observed-evidence-patrol.md",
       "docs/release-governance.md",
@@ -870,36 +758,7 @@ function buildSiteBundle() {
     pages,
   };
 
-  const nodeApiRegistry = {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-node-api-registry",
-    package: packageJson.name,
-    moduleSystem: packageJson.type || "module",
-    exports: Object.entries(packageJson.exports || {})
-      .filter(([specifier]) => !specifier.startsWith("./site/") && specifier !== "./package.json")
-      .map(([specifier, target]) => {
-        const meta = nodeApiMeta(specifier);
-        return {
-          specifier: specifier === "." ? packageJson.name : `${packageJson.name}/${specifier.replace(/^\.\//, "")}`,
-          export: specifier,
-          target,
-          digest: typeof target === "string" ? sha256File(target.replace(/^\.\//, "")) : "",
-          summary: meta.summary,
-          capabilityGroup: meta.capabilityGroup,
-          audience: meta.audience,
-          maturity: meta.maturity,
-        };
-      }),
-    docs: [
-      { id: "cli-and-node-package", path: "docs/cli.md", digest: sha256File("docs/cli.md") },
-      { id: "build-facts", path: "docs/build-facts.md", digest: sha256File("docs/build-facts.md") },
-      { id: "kfd-support", path: "docs/kfd-support.md", digest: sha256File("docs/kfd-support.md") },
-      { id: "readme-badges", path: "docs/readme-badges.md", digest: sha256File("docs/readme-badges.md") },
-      { id: "homebrew", path: "docs/homebrew.md", digest: sha256File("docs/homebrew.md") },
-      { id: "site-bundle-contract", path: "docs/site-bundle-contract.md", digest: sha256File("docs/site-bundle-contract.md") },
-    ],
-    guidance: "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths.",
-  };
+  const nodeApiRegistry = createSiteNodeApiRegistry({ root, packageJson, nodeApiMeta, sha256File, publicSurfaceLifecycle });
 
   const workflowRegistry = {
     schemaVersion: 1,
@@ -910,6 +769,7 @@ function buildSiteBundle() {
         ["build", "channel-build-router"],
         [".build", "reusable-build"],
         [".auditable-demo", "auditable-demo"],
+        [".declarative-auditable-demo", "declarative-auditable-demo"],
         ["web-surface", "site-app-deployment"],
         ["buildchain-ref-promotion", "release-governance"],
         ["release-line-bootstrap", "release-governance"],
@@ -926,6 +786,7 @@ function buildSiteBundle() {
         ["buildchain-patrol-weekly", "repository-patrol"],
         ["buildchain-patrol-monthly", "repository-patrol"],
         ["stable-candidate-patrol", "repository-patrol"],
+        ["dev-qualification-patrol", "repository-patrol"],
         ["dev-alpha-candidate-patrol", "repository-patrol"],
         ["buildchain-stable-candidate-patrol", "repository-patrol"],
         ["buildchain-stable-candidate-qualification", "repository-patrol"],
@@ -936,6 +797,7 @@ function buildSiteBundle() {
       ]);
       const statusById = new Map([
         [".auditable-demo", "preview"],
+        [".declarative-auditable-demo", "preview"],
         ["release-propagation", "preview"],
         ["candidate-lab", "repository-internal"],
         ["build-surface-fixture", "repository-internal"],
@@ -950,6 +812,11 @@ function buildSiteBundle() {
           status: statusById.get(entry.id) || "active",
         }),
         status: statusById.get(entry.id) || "active",
+        ...publicSurfaceLifecycle({
+          owner: "buildchain-workflows",
+          maturity: statusById.get(entry.id) || "active",
+          nonDuplicationRationale: "Existing workflow identity retained for caller compatibility and repository orchestration.",
+        }),
       };
     }),
     actionSource: "actions/*/action.yml reverse input enumeration",
@@ -957,6 +824,11 @@ function buildSiteBundle() {
       ...entry,
       capabilityGroup: actionCapabilityGroup(entry.id),
       status: "active",
+      ...publicSurfaceLifecycle({
+        owner: "buildchain-actions",
+        maturity: "stable",
+        nonDuplicationRationale: "Existing action identity retained as the canonical composite or JavaScript action boundary.",
+      }),
     })),
   };
   const controllerRegistry = createControllerRegistry({ workflows: workflowRegistry.workflows });
@@ -990,13 +862,7 @@ function buildSiteBundle() {
       schema: "schemas/release-passport-v1.schema.json",
       checkManifest: "release-passport-check-manifest.json",
     },
-    releasePropagation: {
-      graphContract: "kungfu-buildchain-release-propagation-graph",
-      planContract: "kungfu-buildchain-release-propagation-plan",
-      lockContract: "kungfu-buildchain-release-propagation-lock",
-      defaultChannelPolicy: "preserve",
-      defaultChannelMap: { alpha: "alpha", release: "release" },
-    },
+    releasePropagation: RELEASE_PROPAGATION_MODEL,
     npm: {
       package: packageJson.name,
       command: packageJson.bin?.buildchain || "",

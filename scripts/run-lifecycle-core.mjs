@@ -28,6 +28,7 @@ import {
   parseExpectedArtifactsJson,
   validateExpectedArtifacts,
 } from "./build-contract-core.mjs";
+import { verifyCompilerCacheActivity } from "./compiler-cache-evidence.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const buildchainCliCandidates = [
@@ -128,6 +129,16 @@ function collectArtifactFiles(root, patterns) {
     }
   }
   return [...files].sort();
+}
+
+function signingArtifactPathsForPlatform({ loadedConfig, cwd, platformId }) {
+  const declarations = loadedConfig?.config?.signing?.artifacts || [];
+  return declarations
+    .filter(
+      (entry) =>
+        entry.platforms.length === 0 || entry.platforms.includes(platformId),
+    )
+    .map((entry) => path.resolve(cwd, entry.path));
 }
 
 function readProcessSummaryArtifact(filePath) {
@@ -379,6 +390,22 @@ function writeDiagnosticsSidecarManifest(filePath, {
   };
   fs.writeFileSync(filePath, `${JSON.stringify(manifest, null, 2)}\n`);
   return manifest;
+}
+
+export function verifyBuildLifecycleCompilerCacheActivity({
+  stageName = "",
+  executed = false,
+  cwd = process.cwd(),
+  env = process.env,
+  verifier = verifyCompilerCacheActivity,
+  frameworkLog,
+} = {}) {
+  if (stageName !== "build" || !executed) return undefined;
+  const activity = verifier({ cwd, env });
+  if (activity) {
+    frameworkLog?.info("compiler-cache.activity", { attributes: activity });
+  }
+  return activity;
 }
 
 export function runLifecycle({
@@ -636,6 +663,13 @@ export function runLifecycle({
     throw new Error(`required lifecycle stage did not run: ${stageName || "command"}`);
   }
 
+  const compilerCacheActivity = verifyBuildLifecycleCompilerCacheActivity({
+    stageName,
+    executed,
+    cwd: resolvedCwd,
+    frameworkLog,
+  });
+
   const shouldReadProcessSummary = Boolean(
     resolvedProcessSummaryPath
       && (fs.existsSync(resolvedProcessSummaryPath) || processSummaryRequired),
@@ -651,7 +685,17 @@ export function runLifecycle({
     : undefined;
   fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
   const scanStartedAt = Date.now();
-  const files = collectArtifactFiles(resolvedWorkspace, artifactPaths);
+  const signingArtifactPaths = stageName === "build"
+    ? signingArtifactPathsForPlatform({
+        loadedConfig,
+        cwd: resolvedCwd,
+        platformId,
+      })
+    : [];
+  const files = collectArtifactFiles(resolvedWorkspace, [
+    ...artifactPaths,
+    ...signingArtifactPaths,
+  ]);
   const manifestFiles = files.map((file) => {
     const stat = fs.statSync(file);
     return {
@@ -719,6 +763,7 @@ export function runLifecycle({
     fileCount: summary.fileCount,
   });
   observability.lifecycle = lifecycleObservability;
+  Object.assign(observability, { compilerCacheActivity });
   observability.diagnostics = {
     contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
     path: relativeDiagnosticsPath,

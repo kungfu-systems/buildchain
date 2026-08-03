@@ -1,6 +1,13 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  commandId,
+  enumerateCliCommandsFromBin,
+} from "./public-surface-cli.js";
+import { parseReusableWorkflowInterface } from "./workflow-yaml-contract.js";
+
+export { enumerateCliCommandsFromBin } from "./public-surface-cli.js";
 
 export const BUILDCHAIN_PUBLIC_SURFACE_AUDIT_CONTRACT = "kungfu-buildchain-public-surface-reverse-audit";
 
@@ -40,114 +47,6 @@ function listDirectories(root, dir) {
     .sort();
 }
 
-function commandId(first = "", second = "", third = "") {
-  const head = String(first || "").trim();
-  const sub = String(second || "").trim();
-  const leaf = String(third || "").trim();
-  const normalizedLeaf = leaf === "..." ? "" : leaf;
-  if (!head) return "";
-  if (["-h", "--help", "help"].includes(head)) return "help";
-  if (["-v", "--version", "version"].includes(head)) return "version";
-  if (head === "release" && ["--dry-run", "dry-run", "explain"].includes(sub)) return "release-dry-run";
-  if (head === "release" && sub === "line") return "release-line-open";
-  if (head === "release") return "release-transaction";
-  if (head === "transaction") return "transaction-inspect";
-  if (head === "collect" && sub) return `collect-${sub}`;
-  if (head === "verify" && sub) return `verify-${sub}`;
-  if (head === "explain" && sub) return `explain-${sub}`;
-  if (head === "inspect" && sub) return `inspect-${sub}`;
-  if (head === "npm" && sub) return `npm-${sub}`;
-  if (head === "lifecycle" && sub) return "lifecycle";
-  if (head === "log" && sub) return "logging";
-  if (head === "diagnostics" && sub) return `diagnostics-${sub}`;
-  if (head === "facts" && sub) return "build-facts";
-  if (head === "kfd") {
-    if (!sub || sub === "...") return "kfd";
-    if (sub === "schema") return normalizedLeaf ? `kfd-schema-${normalizedLeaf}` : "kfd-schema";
-    if (sub === "upstream") return normalizedLeaf ? `kfd-upstream-${normalizedLeaf}` : "kfd-upstream";
-    if (/^[1-9][0-9]*$/.test(sub)) return normalizedLeaf ? `kfd-${sub}-${normalizedLeaf}` : `kfd-${sub}`;
-    return `kfd-${sub}`;
-  }
-  if (head === "sample" && sub) return `sample-${sub}`;
-  if (head === "badges" && sub) return `badges-${sub}`;
-  if (head === "homebrew" && sub) return `homebrew-${sub}`;
-  if (head === "release-propagation") return "release-propagation";
-  if (head === "publish-source") return "publish-source";
-  if (head === "publication-artifact" && sub) return `publication-artifact-${sub}`;
-  if (head === "publication-artifact") return "publication-artifact";
-  if (head === "publication" && sub) return `publication-artifact-${sub}`;
-  if (head === "publication") return "publication-artifact";
-  if (head === "paper" && sub === "bootstrap" && normalizedLeaf === "npm") return "paper-bootstrap-npm";
-  if (head === "paper" && sub) return `paper-${sub}`;
-  if (head === "paper") return "paper";
-  if (head === "build-contract") return "build-contract";
-  if (head === "infra-contract") return "infra-contract";
-  if (head === "web-surface") return "web-surface";
-  return head;
-}
-
-export function enumerateCliCommandsFromBin({ root = process.cwd(), binPath = "bin/buildchain.mjs" } = {}) {
-  const source = readText(root, binPath);
-  const dispatchSource = [
-    source,
-    ...listFiles(root, "bin/internal", (name) => name.endsWith(".mjs"))
-      .map((relPath) => readText(root, relPath)),
-  ].join("\n");
-  const usageMatch = source.match(/return `Usage:\n([\s\S]*?)`;\n}/);
-  const usage = usageMatch?.[1] || "";
-  const usageCommands = [];
-  for (const line of usage.split(/\r?\n/)) {
-    const match = line.trim().match(/^buildchain\s+([^\s]+)(?:\s+([^\s]+))?(?:\s+([^\s]+))?/);
-    if (!match) continue;
-    usageCommands.push({
-      id: commandId(match[1], match[2], match[3]),
-      usage: line.trim().replace(/\s+/g, " "),
-    });
-  }
-  const dispatchCommands = [...dispatchSource.matchAll(/if\s*\(\s*command\s*===\s*"([^"]+)"/g)]
-    .map((match) => commandId(match[1]));
-  return uniqueSorted([
-    ...usageCommands.map((entry) => entry.id),
-    ...dispatchCommands,
-  ]).map((id) => ({
-    id,
-    source: "bin/buildchain.mjs",
-    usage: usageCommands.find((entry) => entry.id === id)?.usage || `buildchain ${id}`,
-  }));
-}
-
-function parseYamlWorkflowCall(text) {
-  const lines = text.split(/\r?\n/);
-  const result = { reusable: false, inputs: [], secrets: [], outputs: [] };
-  const workflowCallIndex = lines.findIndex((line) => /^(\s*)workflow_call:\s*$/.test(line));
-  if (workflowCallIndex === -1) return result;
-  result.reusable = true;
-  const workflowCallIndent = lines[workflowCallIndex].match(/^(\s*)/)?.[1].length || 0;
-  let section = "";
-  for (const line of lines.slice(workflowCallIndex + 1)) {
-    const currentIndent = line.match(/^(\s*)/)?.[1].length || 0;
-    if (line.trim() && currentIndent <= workflowCallIndent) break;
-    const sectionMatch = line.match(new RegExp(`^\\s{${workflowCallIndent + 2}}(inputs|secrets|outputs):\\s*$`));
-    if (sectionMatch) {
-      section = sectionMatch[1];
-      continue;
-    }
-    if (line.trim() && currentIndent <= workflowCallIndent + 2) {
-      section = "";
-      continue;
-    }
-    if (!section) continue;
-    const fieldMatch = line.match(new RegExp(`^\\s{${workflowCallIndent + 4}}([A-Za-z0-9_-]+):\\s*$`));
-    if (fieldMatch) result[section].push(fieldMatch[1]);
-  }
-  return {
-    reusable: result.reusable,
-    inputs: uniqueSorted(result.inputs),
-    secrets: uniqueSorted(result.secrets),
-    outputs: uniqueSorted(result.outputs),
-  };
-}
-
 function parseYamlTopLevelInputs(text) {
   const lines = text.split(/\r?\n/);
   const inputs = [];
@@ -174,14 +73,14 @@ function parseYamlTopLevelInputs(text) {
 
 export function enumerateWorkflowInputs({ root = process.cwd() } = {}) {
   return listFiles(root, ".github/workflows", (name) => /\.ya?ml$/.test(name)).map((relPath) => {
-    const contract = parseYamlWorkflowCall(readText(root, relPath));
+    const contract = parseReusableWorkflowInterface(readText(root, relPath));
     return {
       id: relPath.replace(/^\.github\/workflows\//, "").replace(/\.ya?ml$/, ""),
       path: relPath,
       reusable: contract.reusable,
-      inputs: contract.inputs,
+      inputs: contract.inputs.map((entry) => entry.name),
       inputCount: contract.inputs.length,
-      secrets: contract.secrets,
+      secrets: contract.secrets.map((entry) => entry.name),
       secretCount: contract.secrets.length,
       outputs: contract.outputs,
       outputCount: contract.outputs.length,
@@ -333,8 +232,26 @@ export function collectPublicSurfaceReverseAudit({
       mode: "closed-world-enumerable",
       scope: "Buildchain CLI usage/dispatch, reusable workflow inputs, action inputs, site pages, and documentation command references",
       residualRisk: [
-        "Shell commands delegated through helper scripts are only counted when exposed through bin/buildchain.mjs usage or docs.",
-        "YAML parsing is limited to first-class action/workflow inputs, not arbitrary step environment variables.",
+        {
+          id: "public-surface-helper-command-enumeration",
+          definedBy: "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+          riskType: "natural-language-semantic-risk",
+          trustImpact: "downgrade-warning",
+          machineProvability: "not-machine-verifiable",
+          agentAction: "semantic-review-required",
+          owner: "Buildchain maintainers",
+          reason: "Shell commands delegated through helper scripts are counted only when exposed through bin/buildchain.mjs usage or documentation.",
+        },
+        {
+          id: "public-surface-yaml-enumeration",
+          definedBy: "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+          riskType: "natural-language-semantic-risk",
+          trustImpact: "downgrade-warning",
+          machineProvability: "not-machine-verifiable",
+          agentAction: "semantic-review-required",
+          owner: "Buildchain maintainers",
+          reason: "YAML enumeration covers first-class action and workflow inputs, not arbitrary step environment variables.",
+        },
       ],
     },
   };

@@ -14,15 +14,16 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 3,
-        "pageCount": 12,
-        "cliCommandCount": 7,
+        "manualCount": 4,
+        "pageCount": 14,
+        "cliCommandCount": 9,
         "nodeApiCount": 0,
         "workflowCount": 0,
         "actionCount": 0
       },
       "manuals": [
         "docs/MAP.md",
+        "docs/getting-started.md",
         "docs/install.md",
         "docs/product-mechanism.md"
       ],
@@ -251,9 +252,9 @@
       "counts": {
         "manualCount": 8,
         "pageCount": 8,
-        "cliCommandCount": 8,
+        "cliCommandCount": 11,
         "nodeApiCount": 5,
-        "workflowCount": 12,
+        "workflowCount": 13,
         "actionCount": 0
       },
       "manuals": [
@@ -287,15 +288,17 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 1,
-        "pageCount": 8,
+        "manualCount": 3,
+        "pageCount": 10,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 37,
+        "workflowCount": 39,
         "actionCount": 1
       },
       "manuals": [
-        "docs/cli.md"
+        "docs/cli.md",
+        "docs/cli-reference.md",
+        "docs/node-api-reference.md"
       ],
       "factSources": [
         "page-registry.json",

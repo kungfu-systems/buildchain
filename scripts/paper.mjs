@@ -13,17 +13,19 @@ import {
   PAPER_SCAFFOLD_CONTRACT,
   PAPER_STATUS_CONTRACT,
   collectPaperPreflight,
+  resolvePaperBuildchainSha,
   collectPaperStatus,
   createPaperAlphaPlan,
   createPaperBuildPlan,
   createPaperResumePlan,
   executePaperNpmBootstrap,
-  planPaperMigration,
-  planPaperScaffold,
-  writePaperMigration,
-  writePaperScaffold,
 } from "../packages/core/paper.js";
 import { verifyPublicationReproducibility } from "../packages/core/publication-reproducibility.js";
+import {
+  printPaperWorkFleetSummary,
+  runPaperWorkFleetCli,
+} from "./paper-work-fleet-cli.mjs";
+import { runPaperAgentCli } from "./paper-agent-cli.mjs";
 
 function usage() {
   return `Usage:
@@ -32,6 +34,13 @@ function usage() {
                             [--version <semver>] [--site-base-url <url>]
                             [--buildchain-ref <ref>] [--write] [--json]
   buildchain paper migrate [--cwd <dir>] [--write] [--json]
+  buildchain paper work start <topic> [--cwd <dir>] [--branch <branch>]
+                              [--execute] [--json]
+  buildchain paper work submit [--cwd <dir>] [--title <title>] [--body <body>]
+                               [--execute] [--json]
+  buildchain paper fleet audit [--root <dir>] [--offline] [--json]
+  buildchain paper fleet update [--root <dir>] [--write] [--json]
+  buildchain paper agent verify [--cwd <dir>] [--offline] [--json]
   buildchain paper preflight [--cwd <dir>] [--offline] [--json]
   buildchain paper bootstrap npm [--cwd <dir>] [--package <name>]
                                   [--repository <owner/repo>] [--workflow <filename>]
@@ -49,7 +58,10 @@ function usage() {
 
 Safety:
   scaffold is a no-overwrite dry-run unless --write is present. migrate only
-  rewrites the five Buildchain-owned authority, workflow, lock, and version files.
+  rewrites only Buildchain-owned authority, workflow, lock, version, and package
+  control surfaces. work start/submit refuse dirty, stale, forked, ambiguous,
+  protected, or non-fast-forward sources. fleet update requires isolated work
+  branches and is a dry-run unless --write is present.
   npm bootstrap, Alpha PR creation, and resume dispatch never mutate externally
   unless --execute is present. Real npm bootstrap additionally requires the
   exact --confirm-public-package value.
@@ -85,10 +97,6 @@ function commandResult(command, args, { cwd, timeout = 60000 } = {}) {
     stderr: String(result.stderr || "").trim(),
     error: result.error?.message || "",
   };
-}
-
-function publicScaffoldPlan(plan) {
-  return plan;
 }
 
 function humanSummary(result) {
@@ -169,7 +177,7 @@ function humanSummary(result) {
     }
     return;
   }
-  printJson(result);
+  printPaperWorkFleetSummary(result, printJson);
 }
 
 function printResult(result, json) {
@@ -177,7 +185,8 @@ function printResult(result, json) {
   else humanSummary(result);
 }
 
-function githubPrRows({ cwd, repository, sourceRef, targetRef }) {
+function githubPrRows({ cwd, repository, sourceRef, targetRef = "" }) {
+  const targetArgs = targetRef ? ["--base", targetRef] : [];
   const query = commandResult(
     "gh",
     [
@@ -187,8 +196,7 @@ function githubPrRows({ cwd, repository, sourceRef, targetRef }) {
       repository,
       "--head",
       sourceRef,
-      "--base",
-      targetRef,
+      ...targetArgs,
       "--state",
       "open",
       "--json",
@@ -450,6 +458,7 @@ export async function runPaperCli(
     buildchainSha = "",
   } = {},
 ) {
+  buildchainSha = resolvePaperBuildchainSha(buildchainRoot, buildchainSha);
   const [command = "", maybeSubcommand = "", ...rest] = args;
   const json = hasFlag(args, "json");
   try {
@@ -461,36 +470,23 @@ export async function runPaperCli(
       ? [maybeSubcommand, ...rest]
       : rest;
     const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
+    const workFleet = runPaperWorkFleetCli({
+      command,
+      subcommand: maybeSubcommand,
+      args: effectiveArgs,
+      cwd,
+      buildchainRoot,
+      buildchainVersion,
+      buildchainRef,
+      buildchainSha,
+    });
+    // prettier-ignore
+    const paperAgent = runPaperAgentCli({ command, subcommand: maybeSubcommand, args: effectiveArgs, cwd, buildchainRoot, buildchainVersion, buildchainRef, buildchainSha });
     let result;
-    if (command === "scaffold") {
-      const plan = planPaperScaffold({
-        cwd,
-        buildchainRoot,
-        buildchainVersion,
-        buildchainRef: readFlag(effectiveArgs, "buildchain-ref", buildchainRef),
-        buildchainSha,
-        name: readFlag(effectiveArgs, "name", path.basename(cwd)),
-        title: readFlag(effectiveArgs, "title", ""),
-        packageName: readFlag(effectiveArgs, "package", ""),
-        repository: readFlag(effectiveArgs, "repository", ""),
-        version: readFlag(effectiveArgs, "version", "0.1.0-alpha.0"),
-        siteBaseUrl: readFlag(effectiveArgs, "site-base-url", ""),
-      });
-      result =
-        hasFlag(effectiveArgs, "write") || hasFlag(effectiveArgs, "execute")
-          ? writePaperScaffold(plan)
-          : publicScaffoldPlan(plan);
-    } else if (command === "migrate") {
-      const plan = planPaperMigration({
-        cwd,
-        buildchainRoot,
-        buildchainVersion,
-        buildchainSha,
-      });
-      result =
-        hasFlag(effectiveArgs, "write") || hasFlag(effectiveArgs, "execute")
-          ? writePaperMigration(plan)
-          : plan;
+    if (paperAgent.handled) {
+      result = paperAgent.result;
+    } else if (workFleet.handled) {
+      result = workFleet.result;
     } else if (command === "preflight") {
       result = collectPaperPreflight({
         cwd,
@@ -504,9 +500,12 @@ export async function runPaperCli(
           "https://registry.npmjs.org/",
         ),
         offline: hasFlag(effectiveArgs, "offline"),
+        agentEntryMode: hasFlag(effectiveArgs, "ci")
+          ? "ci"
+          : hasFlag(effectiveArgs, "agent-entry")
+            ? "local"
+            : "contract",
       });
-    } else if (command === "status") {
-      result = collectPaperStatus({ cwd });
     } else if (command === "bootstrap" && maybeSubcommand === "npm") {
       result = executePaperNpmBootstrap({
         cwd,
@@ -591,7 +590,7 @@ export async function runPaperCli(
         : plan;
     } else {
       throw new Error(
-        "usage: buildchain paper <scaffold|migrate|preflight|bootstrap npm|build|alpha|status|resume> ...",
+        "usage: buildchain paper <scaffold|migrate|work start|work submit|fleet audit|fleet update|agent verify|preflight|bootstrap npm|build|alpha|status|resume> ...",
       );
     }
     printResult(result, json);

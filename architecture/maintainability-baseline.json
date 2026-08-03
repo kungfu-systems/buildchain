@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-maintainability-baseline",
+  "revision": "5308189b09bcb5a1314195412f2807a40d678838",
+  "collectedOn": "2026-08-01",
+  "sourceEvolution": {
+    "assignmentBaselineRevision": "3e63a39cfa44ff4a923ec97baa3fe778eda212ec",
+    "reason": "The protected dev/v3/v3.0 channel advanced through reviewed Paper, signing, build aggregation, and auditable-demo work after Assignment capture. The structural line therefore starts from the later protected head instead of replaying an obsolete cut."
+  },
+  "repository": {
+    "trackedFiles": 661,
+    "handMaintainedSourceFiles": 208,
+    "handMaintainedSourceLines": 87250,
+    "testFiles": 87,
+    "testLines": 50923,
+    "workflowFiles": 57,
+    "workflowLines": 19269,
+    "documentationFiles": 71,
+    "documentationLines": 15552,
+    "generatedFiles": 7,
+    "generatedBytes": 3876580
+  },
+  "publicSurface": {
+    "cliCommands": 112,
+    "nodeApiExports": 46,
+    "workflows": 57,
+    "actions": 6,
+    "reverseAuditFailures": 0
+  },
+  "architecture": {
+    "capabilities": 12,
+    "implementationMappings": 24,
+    "testMappings": 24,
+    "dependencyRules": 4,
+    "repositorySources": 208,
+    "ownedSources": 0,
+    "excludedSources": 0,
+    "dependencyEdges": 142,
+    "dependencyCycles": 0
+  },
+  "hotspots": {
+    "promoteBuildchainRefs": {
+      "file": "actions/promote-buildchain-ref/lib.js",
+      "lines": 341,
+      "complexity": 26
+    },
+    "createReleaseCheckReport": {
+      "file": "packages/core/release-passport.js",
+      "lines": 65,
+      "complexity": 5
+    }
+  },
+  "doneCheck": {
+    "command": "pnpm run check",
+    "tests": 1092,
+    "skipped": 0,
+    "wallSeconds": 36.9
+  }
+}

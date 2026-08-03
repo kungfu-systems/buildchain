@@ -72,18 +72,17 @@ age policy blocks the install, use a temporary package/version-specific
 `minimumReleaseAgeExclude` entry instead of weakening the registry policy for
 all packages:
 
-```json
-{
-  "pnpm": {
-    "minimumReleaseAgeExclude": [
-      "@kungfu-tech/buildchain@3.0.0"
-    ]
-  }
-}
+```yaml
+minimumReleaseAgeExclude:
+  - '@kungfu-tech/buildchain@3.0.0'
 ```
 
 Remove that entry after the package is old enough for the repository's normal
 policy. Do not use a broad exclude such as `@kungfu-tech/*` for this case.
+Buildchain-managed Paper scaffold and migration commands maintain this exact
+version entry in `pnpm-workspace.yaml` so an immediately published, verified
+runtime can refresh the lockfile without weakening the policy for other
+packages.
 
 ## Repository Integration
 

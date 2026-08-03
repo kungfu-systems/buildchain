@@ -12,6 +12,7 @@ import {
   parseAdapterArguments,
   prepareSmoke,
   qualifyMediaFixture,
+  renditionInputRoots,
   runAdapter,
   sha256,
   stableJson,
@@ -32,7 +33,10 @@ function temporaryDirectory(t) {
   return directory;
 }
 
-function terminalCapture(durationMs = 2500) {
+function terminalCapture(
+  durationMs = 2500,
+  completionSchema = "kungfu.agent-work-lab.tui-autoplay/v1",
+) {
   const captureDurationMs = Math.max(500, durationMs - 500);
   return {
     schema: "kungfu.terminal-capture/v1",
@@ -45,7 +49,7 @@ function terminalCapture(durationMs = 2500) {
       { atMs: Math.max(1, captureDurationMs - 1), data: Buffer.from("completed\r\n").toString("base64") },
     ],
     completion: {
-      schema: "kungfu.agent-work-lab.tui-autoplay/v1",
+      schema: completionSchema,
       status: "qualified",
       reportRoot: `sha256:${"e".repeat(64)}`,
       eventCount: 4,
@@ -120,8 +124,15 @@ function writeRendererOutput(directory, inputs) {
   fs.writeFileSync(path.join(directory, "complete-transcript.txt"), transcript);
   fs.writeFileSync(path.join(directory, "public-projection.json"), stableJson(projection));
   fs.writeFileSync(path.join(directory, "scene.json"), stableJson(scene));
-  for (const name of ["demo.gif", "demo.mp4", "demo.webm", "poster.png"]) {
-    const bytes = name === "demo.mp4"
+  const mediaNames = [
+    "demo.gif",
+    "demo.mp4",
+    "demo.webm",
+    ...(inputs.responsive ? ["demo-720p.mp4", "demo-720p.webm"] : []),
+    "poster.png",
+  ];
+  for (const name of mediaNames) {
+    const bytes = name.endsWith(".mp4")
       ? Buffer.concat([isoBox("ftyp"), isoBox("moov"), isoBox("mdat", Buffer.from("media"))])
       : Buffer.from(`${name}-fixture-data`);
     fs.writeFileSync(path.join(directory, name), bytes);
@@ -133,7 +144,7 @@ function writeRendererOutput(directory, inputs) {
     media: [],
   }));
   const outputs = Object.fromEntries(
-    ["demo.gif", "demo.mp4", "demo.webm", "media-probe.json", "poster.png"].map((name) => [
+    [...mediaNames, "media-probe.json"].map((name) => [
       name,
       {
         root: sha256(fs.readFileSync(path.join(directory, name))),
@@ -161,16 +172,20 @@ function writeRendererOutput(directory, inputs) {
   writeChecksums(directory);
 }
 
-function mediaInspection(overrides = {}) {
+function mediaInspection(overrides = {}, options = {}) {
+  const sourceWidth = options.sourceWidth || 1280;
+  const sourceHeight = options.sourceHeight || 720;
+  const durationMs = options.durationMs || 2500;
+  const frameRate = options.frameRate || 15;
   const base = {
     "demo.mp4": {
       container: "mp4",
       videoCodec: "h264",
       pixelFormat: "yuv420p",
-      width: 1280,
-      height: 720,
-      durationMs: 2500,
-      frameRate: 15,
+      width: sourceWidth,
+      height: sourceHeight,
+      durationMs,
+      frameRate,
       audioStreams: 0,
       progressiveDownload: "moov-before-mdat",
     },
@@ -178,10 +193,10 @@ function mediaInspection(overrides = {}) {
       container: "webm",
       videoCodec: "vp9",
       pixelFormat: "yuv420p",
-      width: 1280,
-      height: 720,
-      durationMs: 2500,
-      frameRate: 15,
+      width: sourceWidth,
+      height: sourceHeight,
+      durationMs,
+      frameRate,
       audioStreams: 0,
       progressiveDownload: "not-applicable",
     },
@@ -191,7 +206,7 @@ function mediaInspection(overrides = {}) {
       pixelFormat: "bgra",
       width: 1280,
       height: 720,
-      durationMs: 2500,
+      durationMs,
       frameRate: 12,
       audioStreams: 0,
       progressiveDownload: "not-applicable",
@@ -200,13 +215,39 @@ function mediaInspection(overrides = {}) {
       container: "png",
       videoCodec: "png",
       pixelFormat: "rgba",
-      width: 1280,
-      height: 720,
+      width: sourceWidth,
+      height: sourceHeight,
       durationMs: 0,
       frameRate: 0,
       audioStreams: 0,
       progressiveDownload: "not-applicable",
     },
+    ...(options.responsive
+      ? {
+        "demo-720p.mp4": {
+          container: "mp4",
+          videoCodec: "h264",
+          pixelFormat: "yuv420p",
+          width: 1280,
+          height: 720,
+          durationMs,
+          frameRate,
+          audioStreams: 0,
+          progressiveDownload: "moov-before-mdat",
+        },
+        "demo-720p.webm": {
+          container: "webm",
+          videoCodec: "vp9",
+          pixelFormat: "yuv420p",
+          width: 1280,
+          height: 720,
+          durationMs,
+          frameRate,
+          audioStreams: 0,
+          progressiveDownload: "not-applicable",
+        },
+      }
+      : {}),
   };
   const facts = Object.fromEntries(
     Object.entries(base).map(([name, value]) => [name, { ...value, ...(overrides[name] || {}) }]),
@@ -215,8 +256,22 @@ function mediaInspection(overrides = {}) {
 }
 
 function writeMediaInspectionWitness(filePath, renderOutput, overrides = {}) {
-  const inspect = mediaInspection(overrides);
-  const members = ["demo.gif", "demo.mp4", "demo.webm", "poster.png"].map((name) => {
+  const scene = JSON.parse(fs.readFileSync(path.join(renderOutput, "scene.json"), "utf8"));
+  const responsive = fs.existsSync(path.join(renderOutput, "demo-720p.mp4"));
+  const inspect = mediaInspection(overrides, {
+    responsive,
+    sourceWidth: scene.width,
+    sourceHeight: scene.height,
+    durationMs: scene.durationMs,
+    frameRate: scene.fps,
+  });
+  const members = [
+    "demo.gif",
+    "demo.mp4",
+    "demo.webm",
+    ...(responsive ? ["demo-720p.mp4", "demo-720p.webm"] : []),
+    "poster.png",
+  ].map((name) => {
     const bytes = fs.readFileSync(path.join(renderOutput, name));
     return {
       path: name,
@@ -342,6 +397,24 @@ test("adapter output is strict and smoke input is bounded", (t) => {
   assert.throws(() => validateAdapterOutput(adapter), /undeclared adapter output/);
 });
 
+test("adapter output requires an explicit bounded long-form scene", (t) => {
+  const root = temporaryDirectory(t);
+  writeAdapterOutput(root, 61_000, true);
+  assert.throws(() => validateAdapterOutput(root), /scene\.durationMs is out of range/u);
+
+  const scenePath = path.join(root, "scene.json");
+  const scene = JSON.parse(fs.readFileSync(scenePath, "utf8"));
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", fps: 10 }));
+  const validated = validateAdapterOutput(root);
+  assert.equal(validated.scene.durationClass, "long-form");
+  assert.equal(validated.terminalCapture.durationMs, 60_500);
+
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", durationMs: 180_001, fps: 1 }));
+  assert.throws(() => validateAdapterOutput(root), /scene\.durationMs is out of range/u);
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", fps: 11 }));
+  assert.throws(() => validateAdapterOutput(root), /scene\.fps is out of range/u);
+});
+
 test("optional terminal capture is bounded and grants no implicit authority", (t) => {
   const root = temporaryDirectory(t);
   writeAdapterOutput(root, 2500, true);
@@ -349,11 +422,23 @@ test("optional terminal capture is bounded and grants no implicit authority", (t
 
   const capturePath = path.join(root, "terminal-capture.json");
   const capture = JSON.parse(fs.readFileSync(capturePath, "utf8"));
+  capture.completion.schema = "kungfu.kfd-agent-hub-qualification/v1";
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.equal(
+    validateAdapterOutput(root).terminalCapture.completion.schema,
+    "kungfu.kfd-agent-hub-qualification/v1",
+  );
+
   capture.completion.status = "passed";
   fs.writeFileSync(capturePath, stableJson(capture));
-  assert.throws(() => validateAdapterOutput(root), /not a qualified Agent Work Lab autoplay/);
+  assert.throws(() => validateAdapterOutput(root), /not a qualified versioned result/);
 
   capture.completion.status = "qualified";
+  capture.completion.schema = "unversioned-completion";
+  fs.writeFileSync(capturePath, stableJson(capture));
+  assert.throws(() => validateAdapterOutput(root), /not a qualified versioned result/);
+
+  capture.completion.schema = "kungfu.kfd-agent-hub-qualification/v1";
   capture.authority.grants = ["system-identity"];
   fs.writeFileSync(capturePath, stableJson(capture));
   assert.throws(() => validateAdapterOutput(root), /must not grant authority/);
@@ -367,6 +452,89 @@ test("optional terminal capture is bounded and grants no implicit authority", (t
   capture.events[0].atMs = 1;
   fs.writeFileSync(capturePath, stableJson(capture));
   assert.throws(() => validateAdapterOutput(root), /must start at zero/);
+});
+
+test("native rendition set binds distinct 1080p and 720p captures", (t) => {
+  const root = temporaryDirectory(t);
+  writeAdapterOutput(root, 2500, true);
+  const primaryScenePath = path.join(root, "scene.json");
+  const primaryScene = JSON.parse(fs.readFileSync(primaryScenePath, "utf8"));
+  primaryScene.width = 1920;
+  primaryScene.height = 1080;
+  fs.writeFileSync(primaryScenePath, stableJson(primaryScene));
+
+  fs.writeFileSync(path.join(root, "complete-transcript-720p.txt"), "compact layout\nartifact qualified\n");
+  fs.writeFileSync(path.join(root, "scene-720p.json"), stableJson({
+    ...primaryScene,
+    id: "qualification-720p",
+    width: 1280,
+    height: 720,
+  }));
+  fs.writeFileSync(path.join(root, "public-projection-720p.json"), stableJson({
+    schema: "build-images.demo-projection/v1",
+    evidenceClass: "qualified-build-output",
+    claimBoundary: "Presentation is traceable to the retained transcript and is not a screen capture.",
+    cues: [{ startMs: 0, endMs: 2500, transcriptLines: [1, 2], annotation: "compact output" }],
+  }));
+  const responsiveCapture = terminalCapture(2500);
+  responsiveCapture.dimensions = { columns: 100, rows: 28 };
+  responsiveCapture.events[0].data = Buffer.from("compact 100x28\r\n").toString("base64");
+  responsiveCapture.completion.reportRoot = `sha256:${"f".repeat(64)}`;
+  fs.writeFileSync(path.join(root, "terminal-capture-720p.json"), stableJson(responsiveCapture));
+
+  const primaryCaptureRoot = sha256(fs.readFileSync(path.join(root, "terminal-capture.json")));
+  const responsiveCaptureRoot = sha256(fs.readFileSync(path.join(root, "terminal-capture-720p.json")));
+  const renditionSetPath = path.join(root, "rendition-set.json");
+  fs.writeFileSync(renditionSetPath, stableJson({
+    schema: "kungfu.auditable-demo.rendition-set/v1",
+    renditions: [
+      {
+        id: "1080p", role: "primary", transcript: "complete-transcript.txt",
+        projection: "public-projection.json", scene: "scene.json",
+        terminalCapture: "terminal-capture.json", captureRoot: primaryCaptureRoot,
+      },
+      {
+        id: "720p", role: "responsive", transcript: "complete-transcript-720p.txt",
+        projection: "public-projection-720p.json", scene: "scene-720p.json",
+        terminalCapture: "terminal-capture-720p.json", captureRoot: responsiveCaptureRoot,
+      },
+    ],
+    authority: {
+      classification: "capture-routing-metadata",
+      grants: [],
+      nonAuthorities: [
+        "publication-authority",
+        "runtime-authority",
+        "first-party-identity",
+        "system-identity",
+        "kfd-compliance",
+        "product-system-metadata",
+        "package-metadata",
+        "registry-history",
+        "scan-output",
+        "standalone-generation",
+      ],
+    },
+  }));
+
+  const normalized = validateAdapterOutput(root);
+  assert.equal(normalized.renditionSet.renditions[0].scene.width, 1920);
+  assert.equal(normalized.renditionSet.renditions[1].scene.width, 1280);
+  assert.deepEqual(normalized.renditionSet.renditions.map(({ files }) => files.scene), ["scene.json", "scene-720p.json"]);
+  for (const rendition of normalized.renditionSet.renditions) {
+    ["scene", "transcript", "projection"].forEach((member) => assert.doesNotThrow(() => fs.readFileSync(path.join(root, rendition.files[member]))));
+  }
+  const inputRoots = renditionInputRoots(root, normalized.renditionSet.renditions);
+  assert.equal(stableJson(inputRoots), stableJson(JSON.parse(stableJson(inputRoots))));
+  assert.notEqual(
+    normalized.renditionSet.renditions[0].captureRoot,
+    normalized.renditionSet.renditions[1].captureRoot,
+  );
+
+  const renditionSet = JSON.parse(fs.readFileSync(renditionSetPath, "utf8"));
+  renditionSet.renditions[1].captureRoot = primaryCaptureRoot;
+  fs.writeFileSync(renditionSetPath, stableJson(renditionSet));
+  assert.throws(() => validateAdapterOutput(root), /captureRoot mismatch|capture roots must be distinct/u);
 });
 
 test("checksums cover every member and reject tampering", (t) => {
@@ -491,11 +659,28 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
   assert.match(verifyChecksums(media), /^sha256:[0-9a-f]{64}$/);
 
   const webMedia = path.join(root, "web-media");
+  const webGate = path.join(root, "web-gate");
+  const smokeInspectionPath = path.join(root, "smoke-inspection.json");
   const mediaInspectionPath = path.join(root, "media-inspection.json");
+  writeMediaInspectionWitness(smokeInspectionPath, smokeOutput);
+  finalizeGate({
+    "--adapter-output": adapter,
+    "--smoke-input": smokeInput,
+    "--smoke-output": smokeOutput,
+    "--source-coordinate": sourceCoordinate,
+    "--diagnostics": diagnostics,
+    "--adapter": "scripts/demo-adapter",
+    "--renderer-image": RENDERER_IMAGE,
+    "--source-sha": SOURCE_SHA,
+    "--media-profile": "web-delivery-v1",
+    "--media-inspection": smokeInspectionPath,
+    "--output": webGate,
+  });
+  const webGateRoot = verifyChecksums(webGate);
   writeMediaInspectionWitness(mediaInspectionPath, fullOutput);
   finalizeMedia({
-    "--gate-bundle": gate,
-    "--gate-root": gateRoot,
+    "--gate-bundle": webGate,
+    "--gate-root": webGateRoot,
     "--render-output": fullOutput,
     "--renderer-image": RENDERER_IMAGE,
     "--source-sha": SOURCE_SHA,
@@ -506,6 +691,7 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
   const webMediaReceipt = JSON.parse(fs.readFileSync(path.join(webMedia, "media-receipt.json"), "utf8"));
   assert.equal(webMediaReceipt.schema, "buildchain.auditable-demo-media/v2");
   assert.equal(webMediaReceipt.qualification.profile.id, "web-delivery-v1");
+  assert.equal(webMediaReceipt.qualifiedGateRoot, webGateRoot);
   assert.match(webMediaReceipt.qualificationRoot, /^sha256:[0-9a-f]{64}$/);
   assert.match(verifyChecksums(webMedia), /^sha256:[0-9a-f]{64}$/);
 
@@ -567,6 +753,123 @@ test("web-delivery qualification binds independently inspected rendition facts",
   );
 });
 
+test("responsive qualification binds one source scene to exact 1080p and 720p renditions", (t) => {
+  const root = temporaryDirectory(t);
+  const input = path.join(root, "input");
+  const output = path.join(root, "render");
+  writeAdapterOutput(input);
+  const inputScenePath = path.join(input, "scene.json");
+  const sourceScene = JSON.parse(fs.readFileSync(inputScenePath, "utf8"));
+  fs.writeFileSync(inputScenePath, stableJson({
+    ...sourceScene,
+    width: 1920,
+    height: 1080,
+  }));
+  writeRendererOutput(output, {
+    transcript: path.join(input, "complete-transcript.txt"),
+    projection: path.join(input, "public-projection.json"),
+    scene: inputScenePath,
+    responsive: true,
+  });
+  const expectedInputs = {
+    scene: path.join(output, "scene.json"),
+    transcript: path.join(output, "complete-transcript.txt"),
+    projection: path.join(output, "public-projection.json"),
+  };
+  const inspect = mediaInspection({}, {
+    responsive: true,
+    sourceWidth: 1920,
+    sourceHeight: 1080,
+  });
+  const result = verifyRendererOutput(output, RENDERER_IMAGE, expectedInputs, {
+    mediaProfile: "responsive-web-delivery-v1",
+    inspectMedia: inspect,
+  });
+
+  assert.equal(result.qualification.profile.id, "responsive-web-delivery-v1");
+  assert.deepEqual(
+    result.qualification.renditions.map((entry) => entry.role),
+    [
+      "readme-compatibility",
+      "primary-video",
+      "alternate-video",
+      "evidence-poster",
+      "responsive-primary-video",
+      "responsive-alternate-video",
+    ],
+  );
+  const byRole = new Map(
+    result.qualification.renditions.map((entry) => [entry.role, entry]),
+  );
+  assert.deepEqual(
+    [byRole.get("primary-video").width, byRole.get("primary-video").height],
+    [1920, 1080],
+  );
+  assert.equal(byRole.get("primary-video").dimensionPolicy, "scene-exact");
+  assert.deepEqual(
+    [
+      byRole.get("responsive-primary-video").width,
+      byRole.get("responsive-primary-video").height,
+    ],
+    [1280, 720],
+  );
+  assert.equal(
+    byRole.get("responsive-primary-video").dimensionPolicy,
+    "exact-downscale-same-aspect",
+  );
+  assert.deepEqual(
+    [
+      byRole.get("readme-compatibility").width,
+      byRole.get("readme-compatibility").height,
+    ],
+    [1280, 720],
+  );
+
+  assert.throws(
+    () => verifyRendererOutput(output, RENDERER_IMAGE, expectedInputs, {
+      mediaProfile: "responsive-web-delivery-v1",
+      inspectMedia: mediaInspection(
+        { "demo-720p.mp4": { width: 1920, height: 1080 } },
+        { responsive: true, sourceWidth: 1920, sourceHeight: 1080 },
+      ),
+    }),
+    /demo-720p\.mp4 dimensions mismatch/,
+  );
+});
+
+test("responsive qualification rejects implicit upscales and aspect-ratio drift", (t) => {
+  const root = temporaryDirectory(t);
+  const qualifyScene = (width, height) => {
+    const input = path.join(root, `input-${width}-${height}`);
+    const output = path.join(root, `render-${width}-${height}`);
+    writeAdapterOutput(input);
+    const scenePath = path.join(input, "scene.json");
+    const scene = JSON.parse(fs.readFileSync(scenePath, "utf8"));
+    fs.writeFileSync(scenePath, stableJson({ ...scene, width, height }));
+    writeRendererOutput(output, {
+      transcript: path.join(input, "complete-transcript.txt"),
+      projection: path.join(input, "public-projection.json"),
+      scene: scenePath,
+      responsive: true,
+    });
+    return () => verifyRendererOutput(output, RENDERER_IMAGE, {
+      scene: path.join(output, "scene.json"),
+      transcript: path.join(output, "complete-transcript.txt"),
+      projection: path.join(output, "public-projection.json"),
+    }, {
+      mediaProfile: "responsive-web-delivery-v1",
+      inspectMedia: mediaInspection({}, {
+        responsive: true,
+        sourceWidth: width,
+        sourceHeight: height,
+      }),
+    });
+  };
+
+  assert.throws(qualifyScene(640, 360), /dimensions would upscale the scene/);
+  assert.throws(qualifyScene(1920, 1000), /dimensions drift from the scene aspect ratio/);
+});
+
 test("checked-in media evidence binds measured byte budgets", () => {
   const catalog = JSON.parse(fs.readFileSync(
     new URL("../contracts/auditable-demo-media-profiles-v1.json", import.meta.url),
@@ -580,7 +883,12 @@ test("checked-in media evidence binds measured byte budgets", () => {
   assert.equal(evidenceRoot, sha256(Buffer.from(stableJson(body))));
   assert.equal(evidence.qualification.profile.catalogRoot, sha256(Buffer.from(stableJson(catalog))));
   const observed = new Map(evidence.qualification.renditions.map((entry) => [entry.path, entry.bytes]));
-  for (const profileId of ["web-delivery-v1", "site-hero-v1"]) {
+  for (const profileId of [
+    "web-delivery-v1",
+    "responsive-web-delivery-v1",
+    "responsive-long-form-web-delivery-v1",
+    "site-hero-v1",
+  ]) {
     for (const rendition of catalog.profiles[profileId].renditions) {
       assert.equal(rendition.budgetBasis.evidence, "contracts/evidence/auditable-demo-web-delivery-v1.json");
       assert.equal(rendition.budgetBasis.observedBytes, observed.get(rendition.budgetBasis.observedPath));
@@ -589,6 +897,47 @@ test("checked-in media evidence binds measured byte budgets", () => {
         2 ** Math.ceil(Math.log2(rendition.budgetBasis.observedBytes * rendition.budgetBasis.multiplier)),
       );
     }
+  }
+});
+
+test("checked-in responsive evidence binds one exact 1080p and 720p renderer cut", () => {
+  const evidence = JSON.parse(fs.readFileSync(
+    new URL(
+      "../contracts/evidence/auditable-demo-responsive-web-delivery-v1.json",
+      import.meta.url,
+    ),
+    "utf8",
+  ));
+  const { evidenceRoot, ...body } = evidence;
+  assert.equal(evidenceRoot, sha256(Buffer.from(stableJson(body))));
+  assert.equal(
+    evidence.renderer.image,
+    "ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:b70a2f5631665f685280bc9d7434c5ed5cf48b760b728873734d0c47bff72b25",
+  );
+  assert.equal(evidence.renderer.sourceRef, "refs/tags/v1.3.0-alpha.20");
+  assert.equal(
+    evidence.renderer.sourceSha,
+    "b3cebc2deb5f140af74db24b1b45233ac6733ef1",
+  );
+  const roles = new Map(
+    evidence.qualification.renditions.map((entry) => [entry.role, entry]),
+  );
+  for (const role of ["primary-video", "alternate-video", "evidence-poster"]) {
+    assert.equal(roles.get(role).width, 1920);
+    assert.equal(roles.get(role).height, 1080);
+    assert.equal(roles.get(role).dimensionPolicy, "scene-exact");
+  }
+  for (const role of [
+    "responsive-primary-video",
+    "responsive-alternate-video",
+    "readme-compatibility",
+  ]) {
+    assert.equal(roles.get(role).width, 1280);
+    assert.equal(roles.get(role).height, 720);
+    assert.equal(
+      roles.get(role).dimensionPolicy,
+      "exact-downscale-same-aspect",
+    );
   }
 });
 

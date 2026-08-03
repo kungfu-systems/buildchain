@@ -1,36 +1,22 @@
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  assertPlainObject,
+  assertString,
+  RELEASE_PROPAGATION_PLAN_CONTRACT,
+  normalizeChannel,
+  optionalString,
+  sha256Json,
+  stableJson,
+} from "./release-propagation-common.js";
+import { normalizeExecutionProfile } from "./release-propagation-execution-profile.js";
+import { normalizeUpstreamRelease } from "./release-propagation-release.js";
 
 export const RELEASE_PROPAGATION_GRAPH_CONTRACT = "kungfu-buildchain-release-propagation-graph";
-export const RELEASE_PROPAGATION_PLAN_CONTRACT = "kungfu-buildchain-release-propagation-plan";
+export { RELEASE_PROPAGATION_PLAN_CONTRACT };
 export const RELEASE_PROPAGATION_LOCK_CONTRACT = "kungfu-buildchain-release-propagation-lock";
 export const RELEASE_PROPAGATION_RECEIPT_CONTRACT = "kungfu-buildchain-release-propagation-receipt";
-
-const SUPPORTED_CHANNELS = new Set(["alpha", "release"]);
 const SUPPORTED_CHANNEL_POLICIES = new Set(["preserve", "explicit"]);
-
-function stableJson(value) {
-  return `${JSON.stringify(sortJson(value), null, 2)}\n`;
-}
-
-function sortJson(value) {
-  if (Array.isArray(value)) {
-    return value.map(sortJson);
-  }
-  if (!value || typeof value !== "object") {
-    return value;
-  }
-  return Object.fromEntries(
-    Object.entries(value)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, entry]) => [key, sortJson(entry)]),
-  );
-}
-
-function sha256Json(value) {
-  return crypto.createHash("sha256").update(stableJson(value)).digest("hex");
-}
 
 function releaseVersion(upstreamRelease) {
   return upstreamRelease.package?.version || upstreamRelease.publicationArtifact?.version || "";
@@ -75,32 +61,6 @@ function propagationBranch({ upstreamRelease, targetNode }) {
   return `buildchain/release-propagation/${repository}/${version}-${upstreamRelease.channel}-${digest}`;
 }
 
-function assertPlainObject(value, label) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${label} must be an object`);
-  }
-  return value;
-}
-
-function assertString(value, label) {
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`${label} must be a non-empty string`);
-  }
-  return value.trim();
-}
-
-function optionalString(value) {
-  return value === undefined || value === null ? "" : String(value).trim();
-}
-
-function normalizeChannel(value, label) {
-  const channel = assertString(value, label);
-  if (!SUPPORTED_CHANNELS.has(channel)) {
-    throw new Error(`${label} must be alpha or release`);
-  }
-  return channel;
-}
-
 function normalizeChannelMap(edge, label) {
   const policy = edge.channelPolicy || "preserve";
   if (!SUPPORTED_CHANNEL_POLICIES.has(policy)) {
@@ -130,6 +90,7 @@ function normalizeNode(node, index) {
     lockPath: optionalString(node.lockPath || node.lock_path),
     baseRef: optionalString(node.baseRef || node.base_ref),
     workflow: optionalString(node.workflow),
+    executionProfile: normalizeExecutionProfile(node.executionProfile || node.execution_profile, `nodes[${index}].executionProfile`),
   };
   if (!/^[^/\s]+\/[^/\s]+$/.test(normalized.repository)) {
     throw new Error(`nodes[${index}].repository must be owner/repo`);
@@ -235,112 +196,6 @@ export function resolvePropagationChannel(edge, upstreamChannel) {
   return downstreamChannel ? normalizeChannel(downstreamChannel, `edge ${edge.id} downstream channel`) : "";
 }
 
-function normalizeReleasePassport(passport = {}) {
-  if (!passport || typeof passport !== "object" || Array.isArray(passport)) {
-    throw new Error("upstreamRelease.releasePassport must be an object");
-  }
-  return {
-    url: assertString(passport.url, "upstreamRelease.releasePassport.url"),
-    sha256: assertString(passport.sha256 || passport.digest, "upstreamRelease.releasePassport.sha256"),
-  };
-}
-
-function normalizePackageFact(pkg = {}) {
-  if (!pkg || typeof pkg !== "object" || Array.isArray(pkg)) {
-    throw new Error("upstreamRelease.package must be an object");
-  }
-  return {
-    name: assertString(pkg.name, "upstreamRelease.package.name"),
-    version: assertString(pkg.version, "upstreamRelease.package.version"),
-    integrity: assertString(pkg.integrity, "upstreamRelease.package.integrity"),
-  };
-}
-
-function normalizeDigestUrlFact(value = {}, label) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${label} must be an object`);
-  }
-  return {
-    url: assertString(value.url, `${label}.url`),
-    sha256: assertString(value.sha256 || value.digest, `${label}.sha256`),
-  };
-}
-
-function normalizeOptionalPathDigestUrlFact(value = undefined, label) {
-  if (value === undefined || value === null) {
-    return undefined;
-  }
-  const normalized = normalizeDigestUrlFact(value, label);
-  return {
-    path: optionalString(value.path),
-    bytes: value.bytes === undefined ? undefined : Number(value.bytes),
-    ...normalized,
-  };
-}
-
-function normalizePublicationArtifactFact(value = undefined) {
-  if (value === undefined || value === null) {
-    return undefined;
-  }
-  const artifact = assertPlainObject(value, "upstreamRelease.publicationArtifact");
-  return {
-    id: optionalString(artifact.id),
-    kind: optionalString(artifact.kind),
-    version: assertString(artifact.version, "upstreamRelease.publicationArtifact.version"),
-    canonicalUrl: assertString(
-      artifact.canonicalUrl || artifact.canonical_url,
-      "upstreamRelease.publicationArtifact.canonicalUrl",
-    ),
-    latestUrl: assertString(
-      artifact.latestUrl || artifact.latest_url,
-      "upstreamRelease.publicationArtifact.latestUrl",
-    ),
-    latestEvidenceUrl: optionalString(artifact.latestEvidenceUrl || artifact.latest_evidence_url),
-    immutableVersionUrl: assertString(
-      artifact.immutableVersionUrl || artifact.immutable_version_url || artifact.immutableVersionPrefix || artifact.immutable_version_prefix,
-      "upstreamRelease.publicationArtifact.immutableVersionUrl",
-    ),
-    immutableVersionPrefix: optionalString(artifact.immutableVersionPrefix || artifact.immutable_version_prefix),
-    registry: normalizeDigestUrlFact(artifact.registry, "upstreamRelease.publicationArtifact.registry"),
-    manifest: normalizeDigestUrlFact(artifact.manifest, "upstreamRelease.publicationArtifact.manifest"),
-    passport: normalizeDigestUrlFact(artifact.passport, "upstreamRelease.publicationArtifact.passport"),
-    primaryArtifact: normalizeOptionalPathDigestUrlFact(
-      artifact.primaryArtifact || artifact.primary_artifact,
-      "upstreamRelease.publicationArtifact.primaryArtifact",
-    ),
-    sourceBundle: normalizeOptionalPathDigestUrlFact(
-      artifact.sourceBundle || artifact.source_bundle,
-      "upstreamRelease.publicationArtifact.sourceBundle",
-    ),
-  };
-}
-
-function normalizeUpstreamRelease(input) {
-  const release = assertPlainObject(input, "upstreamRelease");
-  const publicationArtifact = normalizePublicationArtifactFact(release.publicationArtifact || release.publication_artifact);
-  const packageFact = release.package === undefined ? undefined : normalizePackageFact(release.package);
-  if (!packageFact && !publicationArtifact) {
-    throw new Error("upstreamRelease requires package or publicationArtifact");
-  }
-  return {
-    repository: assertString(release.repository, "upstreamRelease.repository"),
-    channel: normalizeChannel(release.channel, "upstreamRelease.channel"),
-    tag: assertString(release.tag, "upstreamRelease.tag"),
-    sourceSha: assertString(release.sourceSha || release.source_sha, "upstreamRelease.sourceSha"),
-    package: packageFact,
-    publicationArtifact,
-    releasePassport: normalizeReleasePassport(release.releasePassport || release.release_passport),
-    siteBundle: release.siteBundle || release.site_bundle
-      ? {
-        manifestSha256: assertString(
-          release.siteBundle?.manifestSha256 || release.site_bundle?.manifest_sha256,
-          "upstreamRelease.siteBundle.manifestSha256",
-        ),
-      }
-      : undefined,
-  };
-}
-
 export function createReleasePropagationLock({
   graph,
   edge,
@@ -359,10 +214,12 @@ export function createReleasePropagationLock({
       repository: upstreamRelease.repository,
       channel: upstreamRelease.channel,
       tag: upstreamRelease.tag,
+      tagTargetSha: upstreamRelease.tagTargetSha,
       sourceSha: upstreamRelease.sourceSha,
       package: upstreamRelease.package,
       publicationArtifact: upstreamRelease.publicationArtifact,
       releasePassport: upstreamRelease.releasePassport,
+      registryProvenance: upstreamRelease.registryProvenance,
       siteBundle: upstreamRelease.siteBundle,
     },
     downstream: {
@@ -371,6 +228,7 @@ export function createReleasePropagationLock({
       channel: downstreamChannel,
       baseRef: edge.prBaseRef || targetNode.baseRef,
       lockPath: edge.lockPath || targetNode.lockPath || ".buildchain/upstream-release.lock.json",
+      executionProfile: targetNode.executionProfile,
     },
     propagation: {
       graphContract: graph.contract,
@@ -423,6 +281,7 @@ export function planReleasePropagation({ graph: graphInput, upstreamRelease: rel
       channel: downstreamChannel,
       baseRef: lock.downstream.baseRef,
       lockPath: lock.downstream.lockPath,
+      executionProfile: lock.downstream.executionProfile,
       propagationKey: lock.propagation.propagationKey,
       branch: lock.propagation.branch,
       lock,
@@ -548,6 +407,7 @@ export function createReleasePropagationReceipt({
             name: upstreamRelease.package.name,
             version: upstreamRelease.package.version,
             integrity: upstreamRelease.package.integrity,
+            gitHead: upstreamRelease.package.gitHead || null,
           }
         : null,
     },
@@ -555,7 +415,8 @@ export function createReleasePropagationReceipt({
       state: release.channel === "alpha" ? "complete" : "not-applicable",
       evidence: release.channel === "alpha"
         ? {
-            releasePassportSha256: upstreamRelease.releasePassport.sha256,
+            releasePassportSha256: upstreamRelease.releasePassport?.sha256 || null,
+            registryProvenance: upstreamRelease.registryProvenance || null,
             tag: upstreamRelease.tag,
           }
         : null,
@@ -576,6 +437,7 @@ export function createReleasePropagationReceipt({
     upstream: {
       repository: upstreamRelease.repository,
       tag: upstreamRelease.tag,
+      tagTargetSha: upstreamRelease.tagTargetSha,
       sourceSha: upstreamRelease.sourceSha,
       releasePassport: upstreamRelease.releasePassport,
     },
@@ -595,3 +457,32 @@ export function createReleasePropagationReceipt({
     receiptSha256: sha256Json(body),
   };
 }
+
+export {
+  RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT,
+  RELEASE_PROPAGATION_WORK_CONTRACT,
+  RELEASE_PROPAGATION_WORK_STAGES,
+  createReleasePropagationStageReceipt,
+  createReleasePropagationWork,
+  resumeReleasePropagationWork,
+  verifyReleasePropagationWork,
+} from "./release-propagation-work.js";
+export {
+  claimReleasePropagationWork,
+  completeReleasePropagationWork,
+  recordReleasePropagationStage,
+  repairReleasePropagationWork,
+} from "./release-propagation-work-transitions.js";
+export {
+  PACKAGE_RELEASE_PROPAGATION_CONFIG_CONTRACT,
+  createPackageReleasePropagationCapture,
+  normalizePackageReleasePropagationConfig,
+} from "./release-propagation-capture.js";
+export {
+  MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT,
+  MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT,
+  createManualUpstreamPickupCapture,
+  createManualUpstreamPickupPlan,
+  normalizeManualUpstreamPickupConfig,
+  resolveNpmRegistryRelease,
+} from "./release-propagation-pickup.js";

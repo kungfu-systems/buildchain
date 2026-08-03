@@ -1,5 +1,5 @@
 {
-  "evidenceRoot": "sha256:451adc20c423fbf680caeb14dcc4850990a3317dd5a77f94ee451a7a26edf3fb",
+  "evidenceRoot": "sha256:6875cf065ccafda0127c57a17bc81f0f999fb543341e82072bc9b89f0c7a6f0a",
   "inputs": {
     "complete-transcript.txt": "sha256:f3723a3eda614134ab724ce9fbe1e0e5f916d809a8a3096f5e37c1458cb3656c",
     "public-projection.json": "sha256:127f9877f9750a85eada4338f088bee5460c5c71a83302652d3321667002c3c7",
@@ -14,17 +14,18 @@
       "production-site-deployment"
     ],
     "profile": {
-      "catalogRoot": "sha256:b2cf52c7b087be73ea852bbbe574e1a50bb7d64d26b8bc211a2c7d53e2ff9cae",
+      "catalogRoot": "sha256:87578237079330ac2843113af2baff63031dc1363dba43cf3a59127ed2d255a2",
       "id": "web-delivery-v1",
       "mode": "web-delivery",
       "profileRoot": "sha256:b6fb0a83414d03a7222fc50429e60ed68b6d47758b86ceaa316ecc659a01ae2b"
     },
-    "qualificationRoot": "sha256:f2133bab4a3a5937ec3863972049d0a7247a8e108681d4bd247f47d766c461ae",
+    "qualificationRoot": "sha256:d8b30192c848ba1c7f6e9a59b5dd1c9f38aae835bb94ad05ad55cdad4b6a8a2f",
     "renditions": [
       {
         "audioStreams": 0,
         "bytes": 40826,
         "container": "gif",
+        "dimensionPolicy": "scene-exact",
         "durationMs": 2500,
         "frameRate": 12.5,
         "height": 720,
@@ -42,6 +43,7 @@
         "audioStreams": 0,
         "bytes": 27038,
         "container": "mp4",
+        "dimensionPolicy": "scene-exact",
         "durationMs": 2533,
         "frameRate": 15,
         "height": 720,
@@ -59,6 +61,7 @@
         "audioStreams": 0,
         "bytes": 23383,
         "container": "webm",
+        "dimensionPolicy": "scene-exact",
         "durationMs": 2534,
         "frameRate": 15,
         "height": 720,
@@ -76,6 +79,7 @@
         "audioStreams": 0,
         "bytes": 34769,
         "container": "png",
+        "dimensionPolicy": "scene-exact",
         "durationMs": 0,
         "frameRate": 25,
         "height": 720,

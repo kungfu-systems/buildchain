@@ -1856,7 +1856,7 @@ test("standalone binary builder resolves Windows package manager shims", () => {
 
 test("standalone binary runs public CLI without imported script entrypoint side effects", { timeout: 180_000 }, () => {
   const outputDir = tempDir("standalone-entrypoint");
-  const version = "2.12.1-alpha.entry-guard";
+  const version = "3.0.2-alpha.entry-guard";
   execFileSync(process.execPath, [
     path.join(root, "scripts", "build-standalone-binary.mjs"),
     "--version",
@@ -1868,6 +1868,9 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     stdio: "ignore",
   });
   const executable = path.join(outputDir, process.platform === "win32" ? "buildchain.exe" : "buildchain");
+  const metadataPath = fs.readdirSync(outputDir).map((name) => path.join(outputDir, name)).find((file) => /buildchain-[^.]+\.json$/u.test(path.basename(file)));
+  const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+  assert.deepEqual(metadata.executableFiles, [{ path: path.basename(executable), sha256: metadata.sha256 }]);
 
   assert.equal(execFileSync(executable, ["version"], { encoding: "utf8" }).trim(), version);
   const layout = JSON.parse(execFileSync(executable, ["layout", "--cwd", root, "--json"], {
@@ -1897,7 +1900,11 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     ),
   );
   assert.equal(scaffold.ok, true);
-  assert.equal(scaffold.written.length, 14);
+  assert.equal(scaffold.written.length, 18);
+  assert.equal(
+    fs.readFileSync(path.join(paperCwd, "pnpm-workspace.yaml"), "utf8"),
+    `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${version}'\n`,
+  );
   execFileSync("git", ["init", "-q"], { cwd: paperCwd });
   const preflight = JSON.parse(
     execFileSync(

@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 107,
-    "workflowCount": 57,
+    "cliCommandCount": 112,
+    "workflowCount": 60,
     "actionCount": 6,
-    "sitePageCount": 60,
-    "docCommandRefCount": 311,
+    "sitePageCount": 64,
+    "docCommandRefCount": 822,
     "failureCount": 0
   },
   "enumerated": {
@@ -373,6 +373,11 @@
         "usage": "buildchain paper"
       },
       {
+        "id": "paper-agent",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper agent verify [--cwd <dir>] [--offline] [--json]"
+      },
+      {
         "id": "paper-alpha",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]"
@@ -386,6 +391,16 @@
         "id": "paper-build",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper build [--cwd <dir>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper fleet audit [--root <dir>] [--offline] [--json]"
+      },
+      {
+        "id": "paper-fleet-update",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper fleet update [--root <dir>] [--write] [--json]"
       },
       {
         "id": "paper-migrate",
@@ -411,6 +426,16 @@
         "id": "paper-status",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain paper status [--cwd <dir>] [--json]"
+      },
+      {
+        "id": "paper-work-start",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper work start <topic> [--cwd <dir>] [--branch <branch>] [--execute] [--json]"
+      },
+      {
+        "id": "paper-work-submit",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain paper work submit [--cwd <dir>] [--title <title>] [--body <body>] [--execute] [--json]"
       },
       {
         "id": "portable-cache",
@@ -465,7 +490,7 @@
       {
         "id": "release-propagation",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain release-propagation <plan|write-lock> ..."
+        "usage": "buildchain release-propagation <plan|write-lock|work|pickup> ..."
       },
       {
         "id": "release-transaction",
@@ -652,6 +677,7 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "checkout-history-mode",
           "compiler-cache-platforms-json",
           "compiler-cache-provider",
           "compiler-cache-required",
@@ -673,6 +699,8 @@
           "linux-container-preset",
           "node-version",
           "platforms-json",
+          "pre-upload-transport-smoke-artifact-root",
+          "pre-upload-transport-smoke-scenario-path",
           "process-sample-interval-ms",
           "process-summary-path",
           "publish-anchor-request-json",
@@ -701,7 +729,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 82,
+        "inputCount": 85,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -773,6 +801,38 @@
         "secretCount": 1,
         "outputs": [],
         "outputCount": 0
+      },
+      {
+        "id": ".declarative-auditable-demo",
+        "path": ".github/workflows/.declarative-auditable-demo.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-retention-days",
+          "binary-artifact-digest",
+          "binary-artifact-name",
+          "buildchain-repository",
+          "materialize",
+          "materialize-base-ref",
+          "media-profile",
+          "render-media",
+          "renderer-image",
+          "scenario-path",
+          "source-ref"
+        ],
+        "inputCount": 11,
+        "secrets": [
+          "DEMO_UPDATE_TOKEN"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "capture-artifact-digest",
+          "capture-artifact-name",
+          "evidence-artifact-digest",
+          "evidence-artifact-name",
+          "publication-pr-url",
+          "source-sha"
+        ],
+        "outputCount": 6
       },
       {
         "id": ".gate-profile",
@@ -976,6 +1036,7 @@
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
+          "release-propagation-config-path",
           "required-artifact-count",
           "required-status-check",
           "runner-preset",
@@ -984,7 +1045,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 94,
+        "inputCount": 95,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1017,9 +1078,10 @@
           "publication-commit-evidence-path",
           "publication-commit-payload-root",
           "publication-commit-url",
-          "release-candidate-artifact"
+          "release-candidate-artifact",
+          "release-propagation-work-artifact"
         ],
-        "outputCount": 19
+        "outputCount": 20
       },
       {
         "id": ".release-docker",
@@ -1395,6 +1457,17 @@
         "outputCount": 0
       },
       {
+        "id": "auditable-demo",
+        "path": ".github/workflows/auditable-demo.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "binary-distribution",
         "path": ".github/workflows/binary-distribution.yml",
         "reusable": false,
@@ -1469,6 +1542,7 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "checkout-history-mode",
           "compiler-cache-platforms-json",
           "compiler-cache-provider",
           "compiler-cache-required",
@@ -1490,6 +1564,8 @@
           "linux-container-preset",
           "node-version",
           "platforms-json",
+          "pre-upload-transport-smoke-artifact-root",
+          "pre-upload-transport-smoke-scenario-path",
           "process-sample-interval-ms",
           "process-summary-path",
           "publish-anchor-request-json",
@@ -1518,7 +1594,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 85,
+        "inputCount": 88,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1738,12 +1814,14 @@
         "reusable": true,
         "inputs": [
           "alpha-workflow-path",
+          "auto-merge",
           "buildchain-ref",
           "buildchain-repository",
           "create-pull-request",
           "dev-workflow-path",
           "dry-run",
           "max-age-seconds",
+          "merge-method",
           "pull-request-body-prefix",
           "pull-request-body-prefix-renderer",
           "reactivation-authorized",
@@ -1751,7 +1829,7 @@
           "source-branch",
           "target-branch"
         ],
-        "inputCount": 13,
+        "inputCount": 15,
         "secrets": [
           "promotion-token"
         ],
@@ -1814,6 +1892,38 @@
           "skipped-count"
         ],
         "outputCount": 6
+      },
+      {
+        "id": "dev-qualification-patrol",
+        "path": ".github/workflows/dev-qualification-patrol.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "dev-workflow-path",
+          "dispatch-inputs-json",
+          "dry-run",
+          "max-attempts",
+          "mutation-authorized",
+          "preflight-workflow-path",
+          "priority-workflows-json",
+          "source-branch"
+        ],
+        "inputCount": 10,
+        "secrets": [
+          "qualification-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "action",
+          "active-run-id",
+          "decision-root",
+          "pending-sha",
+          "reason",
+          "source-sha",
+          "state"
+        ],
+        "outputCount": 7
       },
       {
         "id": "github-artifact-attestation",
@@ -1913,10 +2023,12 @@
           "github-release-url",
           "package-name",
           "package-version",
+          "propagation-work-artifact",
           "public-release-tag",
-          "release-passport-path"
+          "release-passport-path",
+          "upstream-release-json"
         ],
-        "outputCount": 5
+        "outputCount": 7
       },
       {
         "id": "paper-release",
@@ -2222,6 +2334,7 @@
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
+          "release-propagation-config-path",
           "required-artifact-count",
           "required-status-check",
           "runner-preset",
@@ -2230,7 +2343,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 86,
+        "inputCount": 87,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2275,9 +2388,10 @@
           "publication-commit-evidence-path",
           "publication-commit-payload-root",
           "publication-commit-url",
-          "release-candidate-artifact"
+          "release-candidate-artifact",
+          "release-propagation-work-artifact"
         ],
-        "outputCount": 31
+        "outputCount": 32
       },
       {
         "id": "release-governance-reconcile",
@@ -2325,6 +2439,8 @@
         "path": ".github/workflows/release-propagation.yml",
         "reusable": true,
         "inputs": [
+          "agent-work-context-json",
+          "agent-work-mode",
           "buildchain-ref",
           "buildchain-repository",
           "downstream-base-ref",
@@ -2343,7 +2459,7 @@
           "source-node",
           "upstream-release-json"
         ],
-        "inputCount": 17,
+        "inputCount": 19,
         "secrets": [
           "propagation-token"
         ],
@@ -2357,9 +2473,13 @@
           "controller-receipt-json",
           "controller-receipt-status",
           "propagation-receipt-digest",
-          "propagation-receipt-json"
+          "propagation-receipt-json",
+          "propagation-work-artifact",
+          "propagation-work-json",
+          "propagation-work-next-action",
+          "propagation-work-root"
         ],
-        "outputCount": 9
+        "outputCount": 13
       },
       {
         "id": "release-verify",
@@ -2408,6 +2528,7 @@
           "hold",
           "hold-reason",
           "ledger-ref",
+          "merge-method",
           "minimum-soak-seconds",
           "release-now",
           "required-checks",
@@ -2415,7 +2536,7 @@
           "revoked-versions",
           "target-branch"
         ],
-        "inputCount": 15,
+        "inputCount": 16,
         "secrets": [
           "approval-token",
           "promotion-token"
@@ -2766,6 +2887,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:cli-reference",
+        "category": "manual"
+      },
+      {
         "id": "manual:consumer-issue-reporting",
         "category": "manual"
       },
@@ -2775,6 +2900,14 @@
       },
       {
         "id": "manual:dev-alpha-candidate-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:dev-qualification-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:getting-started",
         "category": "manual"
       },
       {
@@ -2815,6 +2948,10 @@
       },
       {
         "id": "manual:migration-inventory",
+        "category": "manual"
+      },
+      {
+        "id": "manual:node-api-reference",
         "category": "manual"
       },
       {
@@ -2909,6 +3046,51 @@
     "docCommandRefs": [
       {
         "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit"
+      },
+      {
+        "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit github-governance"
+      },
+      {
+        "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit publication-control-plane --repository"
+      },
+      {
+        "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit"
+      },
+      {
+        "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit --help"
+      },
+      {
+        "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit github-governance"
+      },
+      {
+        "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit github-governance --help"
+      },
+      {
+        "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit publication-control-plane"
+      },
+      {
+        "id": "audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain audit publication-control-plane --help"
+      },
+      {
+        "id": "audit",
         "path": "docs/github-governance-authority.md",
         "command": "buildchain audit github-governance"
       },
@@ -2936,6 +3118,21 @@
         "id": "audit",
         "path": "docs/publication-authority.md",
         "command": "buildchain audit publication-control-plane"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain badges bundle --help"
       },
       {
         "id": "badges-bundle",
@@ -3004,6 +3201,21 @@
       },
       {
         "id": "badges-readme",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain badges readme --help"
+      },
+      {
+        "id": "badges-readme",
         "path": "docs/cli.md",
         "command": "buildchain badges readme --json"
       },
@@ -3054,8 +3266,33 @@
       },
       {
         "id": "badges",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain badges"
+      },
+      {
+        "id": "badges",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain badges"
+      },
+      {
+        "id": "badges",
         "path": "docs/cli.md",
         "command": "buildchain badges"
+      },
+      {
+        "id": "build-contract",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain build-contract"
+      },
+      {
+        "id": "build-contract",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain build-contract"
+      },
+      {
+        "id": "build-contract",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain build-contract --help"
       },
       {
         "id": "build-contract",
@@ -3089,6 +3326,56 @@
       },
       {
         "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts aggregate"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts module"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts --help"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts aggregate"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts aggregate --help"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts module"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts module --help"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts verify --help"
+      },
+      {
+        "id": "build-facts",
         "path": "docs/cli.md",
         "command": "buildchain facts module"
       },
@@ -3104,6 +3391,36 @@
       },
       {
         "id": "candidate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain candidate"
+      },
+      {
+        "id": "candidate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain candidate timeline --input"
+      },
+      {
+        "id": "candidate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain candidate"
+      },
+      {
+        "id": "candidate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain candidate --help"
+      },
+      {
+        "id": "candidate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain candidate timeline"
+      },
+      {
+        "id": "candidate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain candidate timeline --help"
+      },
+      {
+        "id": "candidate",
         "path": "docs/toolkit-observability.md",
         "command": "buildchain candidate timeline"
       },
@@ -3116,6 +3433,21 @@
         "id": "collect-github-release",
         "path": "docs/build-facts.md",
         "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain collect github-release --tag"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain collect github-release --help"
       },
       {
         "id": "collect-github-release",
@@ -3158,6 +3490,76 @@
         "command": "buildchain collect github-release"
       },
       {
+        "id": "collect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain collect"
+      },
+      {
+        "id": "collect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain collect"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create github-artifact-attestation-policy --input-json"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create publication-admission --input-json"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create runner-provenance --input-json"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create --help"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create github-artifact-attestation-policy"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create github-artifact-attestation-policy --help"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create publication-admission"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create publication-admission --help"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create runner-provenance"
+      },
+      {
+        "id": "create",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain create runner-provenance --help"
+      },
+      {
         "id": "create",
         "path": "docs/cli.md",
         "command": "buildchain create github-artifact-attestation-policy"
@@ -3166,6 +3568,36 @@
         "id": "create",
         "path": "docs/github-artifact-attestation.md",
         "command": "buildchain create github-artifact-attestation-policy"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev merge-queue --repository"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev --help"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev merge-queue"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev merge-queue --help"
       },
       {
         "id": "dev",
@@ -3189,6 +3621,21 @@
       },
       {
         "id": "diagnostics-summary",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain diagnostics summary"
+      },
+      {
+        "id": "diagnostics-summary",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain diagnostics summary"
+      },
+      {
+        "id": "diagnostics-summary",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain diagnostics summary --help"
+      },
+      {
+        "id": "diagnostics-summary",
         "path": "docs/cli.md",
         "command": "buildchain diagnostics summary"
       },
@@ -3208,6 +3655,31 @@
         "command": "buildchain diagnostics summary"
       },
       {
+        "id": "diagnostics",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain diagnostics"
+      },
+      {
+        "id": "diagnostics",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain diagnostics"
+      },
+      {
+        "id": "doctor",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain doctor"
+      },
+      {
+        "id": "doctor",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain doctor"
+      },
+      {
+        "id": "doctor",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain doctor --help"
+      },
+      {
         "id": "doctor",
         "path": "docs/cli.md",
         "command": "buildchain doctor --json"
@@ -3219,8 +3691,38 @@
       },
       {
         "id": "explain-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain explain artifact"
+      },
+      {
+        "id": "explain-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain explain artifact"
+      },
+      {
+        "id": "explain-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain explain artifact --help"
+      },
+      {
+        "id": "explain-artifact",
         "path": "docs/cli.md",
         "command": "buildchain explain artifact"
+      },
+      {
+        "id": "explain-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain explain release --passport"
+      },
+      {
+        "id": "explain-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain explain release"
+      },
+      {
+        "id": "explain-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain explain release --help"
       },
       {
         "id": "explain-release",
@@ -3243,9 +3745,119 @@
         "command": "buildchain explain release"
       },
       {
+        "id": "explain",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain explain"
+      },
+      {
+        "id": "explain",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain explain"
+      },
+      {
+        "id": "facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts"
+      },
+      {
+        "id": "facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts"
+      },
+      {
         "id": "facts",
         "path": "docs/cli.md",
         "command": "buildchain facts"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance --help"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance apply"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance apply --help"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance plan"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance plan --help"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance protection-policy-plan"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance protection-policy-plan --help"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance rollback"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance rollback --help"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance ruleset-policy-plan"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain github-governance ruleset-policy-plan --help"
       },
       {
         "id": "github-governance",
@@ -3294,8 +3906,38 @@
       },
       {
         "id": "help",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain help"
+      },
+      {
+        "id": "help",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain help"
+      },
+      {
+        "id": "help",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain help --help"
+      },
+      {
+        "id": "help",
         "path": "docs/cli.md",
         "command": "buildchain --help npx"
+      },
+      {
+        "id": "homebrew-check",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain homebrew check"
+      },
+      {
+        "id": "homebrew-check",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain homebrew check"
+      },
+      {
+        "id": "homebrew-check",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain homebrew check --help"
       },
       {
         "id": "homebrew-check",
@@ -3314,6 +3956,21 @@
       },
       {
         "id": "homebrew-update-formula",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain homebrew update-formula --package"
+      },
+      {
+        "id": "homebrew-update-formula",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain homebrew update-formula"
+      },
+      {
+        "id": "homebrew-update-formula",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain homebrew update-formula --help"
+      },
+      {
+        "id": "homebrew-update-formula",
         "path": "docs/cli.md",
         "command": "buildchain homebrew update-formula"
       },
@@ -3324,8 +3981,33 @@
       },
       {
         "id": "homebrew",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain homebrew"
+      },
+      {
+        "id": "homebrew",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain homebrew"
+      },
+      {
+        "id": "homebrew",
         "path": "docs/cli.md",
         "command": "buildchain homebrew"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain infra-contract"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain infra-contract"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain infra-contract --help"
       },
       {
         "id": "infra-contract",
@@ -3399,7 +4081,27 @@
       },
       {
         "id": "init",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain init"
+      },
+      {
+        "id": "init",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain init"
+      },
+      {
+        "id": "init",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain init --help"
+      },
+      {
+        "id": "init",
         "path": "docs/cli.md",
+        "command": "buildchain init"
+      },
+      {
+        "id": "init",
+        "path": "docs/getting-started.md",
         "command": "buildchain init"
       },
       {
@@ -3420,7 +4122,27 @@
       {
         "id": "init",
         "path": "README.md",
+        "command": "buildchain init --cwd"
+      },
+      {
+        "id": "init",
+        "path": "README.md",
         "command": "buildchain init --type package"
+      },
+      {
+        "id": "inspect-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain inspect artifact"
+      },
+      {
+        "id": "inspect-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain inspect artifact"
+      },
+      {
+        "id": "inspect-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain inspect artifact --help"
       },
       {
         "id": "inspect-artifact",
@@ -3429,10 +4151,50 @@
       },
       {
         "id": "inspect-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain inspect release --passport"
+      },
+      {
+        "id": "inspect-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain inspect release"
+      },
+      {
+        "id": "inspect-release",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain inspect release --help"
+      },
+      {
+        "id": "inspect-release",
         "path": "docs/cli.md",
         "command": "buildchain inspect release --passport"
       },
       {
+        "id": "inspect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain inspect"
+      },
+      {
+        "id": "inspect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain inspect"
+      },
+      {
+        "id": "kfd-1-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 gate"
+      },
+      {
+        "id": "kfd-1-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 gate"
+      },
+      {
+        "id": "kfd-1-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 gate"
+      },
+      {
         "id": "kfd-1-gate",
         "path": "docs/cli.md",
         "command": "buildchain kfd 1 gate"
@@ -3441,6 +4203,21 @@
         "id": "kfd-1-gate",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 1 gate"
+      },
+      {
+        "id": "kfd-1-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 schema"
+      },
+      {
+        "id": "kfd-1-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 schema"
+      },
+      {
+        "id": "kfd-1-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 schema"
       },
       {
         "id": "kfd-1-schema",
@@ -3454,6 +4231,21 @@
       },
       {
         "id": "kfd-1-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 verify"
+      },
+      {
+        "id": "kfd-1-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 verify"
+      },
+      {
+        "id": "kfd-1-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 verify"
+      },
+      {
+        "id": "kfd-1-verify",
         "path": "docs/cli.md",
         "command": "buildchain kfd 1 verify"
       },
@@ -3464,6 +4256,21 @@
       },
       {
         "id": "kfd-1-witness",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
         "path": "docs/cli.md",
         "command": "buildchain kfd 1 witness"
       },
@@ -3484,6 +4291,21 @@
       },
       {
         "id": "kfd-2-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
         "path": "docs/cli.md",
         "command": "buildchain kfd 2 claims"
       },
@@ -3501,6 +4323,51 @@
         "id": "kfd-2-claims",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 product-claims"
       },
       {
         "id": "kfd-2-product-claims",
@@ -3534,6 +4401,21 @@
       },
       {
         "id": "kfd-2-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 schema"
+      },
+      {
+        "id": "kfd-2-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 schema"
+      },
+      {
+        "id": "kfd-2-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 schema"
+      },
+      {
+        "id": "kfd-2-schema",
         "path": "docs/cli.md",
         "command": "buildchain kfd 2 schema"
       },
@@ -3544,6 +4426,21 @@
       },
       {
         "id": "kfd-2-taxonomy",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 taxonomy"
+      },
+      {
+        "id": "kfd-2-taxonomy",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 taxonomy"
+      },
+      {
+        "id": "kfd-2-taxonomy",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 taxonomy"
+      },
+      {
+        "id": "kfd-2-taxonomy",
         "path": "docs/cli.md",
         "command": "buildchain kfd 2 taxonomy"
       },
@@ -3554,7 +4451,17 @@
       },
       {
         "id": "kfd-2-trust-assessment",
-        "path": "docs/kfd-support.md",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 trust-assessment"
+      },
+      {
+        "id": "kfd-2-trust-assessment",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 trust-assessment"
+      },
+      {
+        "id": "kfd-2-trust-assessment",
+        "path": "docs/cli-reference.md",
         "command": "buildchain kfd 2 trust-assessment"
       },
       {
@@ -3566,6 +4473,26 @@
         "id": "kfd-2-trust-assessment",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 2 trust-assessment"
+      },
+      {
+        "id": "kfd-2-trust-assessment",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 trust-assessment"
+      },
+      {
+        "id": "kfd-2-trust-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 trust-claims"
+      },
+      {
+        "id": "kfd-2-trust-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 trust-claims"
+      },
+      {
+        "id": "kfd-2-trust-claims",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 2 trust-claims"
       },
       {
         "id": "kfd-2-trust-claims",
@@ -3584,6 +4511,21 @@
       },
       {
         "id": "kfd-3-audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 audit"
+      },
+      {
+        "id": "kfd-3-audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 audit"
+      },
+      {
+        "id": "kfd-3-audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 audit"
+      },
+      {
+        "id": "kfd-3-audit",
         "path": "docs/cli.md",
         "command": "buildchain kfd 3 audit"
       },
@@ -3594,6 +4536,21 @@
       },
       {
         "id": "kfd-3-detect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 detect"
+      },
+      {
+        "id": "kfd-3-detect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 detect"
+      },
+      {
+        "id": "kfd-3-detect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 detect"
+      },
+      {
+        "id": "kfd-3-detect",
         "path": "docs/cli.md",
         "command": "buildchain kfd 3 detect"
       },
@@ -3609,6 +4566,21 @@
       },
       {
         "id": "kfd-3-query",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 query"
+      },
+      {
+        "id": "kfd-3-query",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 query"
+      },
+      {
+        "id": "kfd-3-query",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 query"
+      },
+      {
+        "id": "kfd-3-query",
         "path": "docs/cli.md",
         "command": "buildchain kfd 3 query"
       },
@@ -3631,6 +4603,96 @@
         "id": "kfd-3-query",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 3 query"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 register"
       },
       {
         "id": "kfd-3-register",
@@ -3654,6 +4716,21 @@
       },
       {
         "id": "kfd-3-witness",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 witness"
+      },
+      {
+        "id": "kfd-3-witness",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 witness"
+      },
+      {
+        "id": "kfd-3-witness",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3 witness"
+      },
+      {
+        "id": "kfd-3-witness",
         "path": "docs/cli.md",
         "command": "buildchain kfd 3 witness"
       },
@@ -3663,6 +4740,31 @@
         "command": "buildchain kfd 3 witness"
       },
       {
+        "id": "kfd-3",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3"
+      },
+      {
+        "id": "kfd-3",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 3"
+      },
+      {
+        "id": "kfd-4-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 gate"
+      },
+      {
+        "id": "kfd-4-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 gate"
+      },
+      {
+        "id": "kfd-4-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 gate"
+      },
+      {
         "id": "kfd-4-gate",
         "path": "docs/cli.md",
         "command": "buildchain kfd 4 gate"
@@ -3674,6 +4776,21 @@
       },
       {
         "id": "kfd-4-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-4-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-4-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-4-schema",
         "path": "docs/cli.md",
         "command": "buildchain kfd 4 schema"
       },
@@ -3686,6 +4803,36 @@
         "id": "kfd-4-schema",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-4-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 verify"
+      },
+      {
+        "id": "kfd-4-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 verify"
+      },
+      {
+        "id": "kfd-4-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 4 verify"
+      },
+      {
+        "id": "kfd-5-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 gate"
+      },
+      {
+        "id": "kfd-5-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 gate"
+      },
+      {
+        "id": "kfd-5-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 gate"
       },
       {
         "id": "kfd-5-gate",
@@ -3699,8 +4846,53 @@
       },
       {
         "id": "kfd-5-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 schema"
+      },
+      {
+        "id": "kfd-5-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 schema"
+      },
+      {
+        "id": "kfd-5-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 schema"
+      },
+      {
+        "id": "kfd-5-schema",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 5 schema"
+      },
+      {
+        "id": "kfd-5-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 verify"
+      },
+      {
+        "id": "kfd-5-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 verify"
+      },
+      {
+        "id": "kfd-5-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 5 verify"
+      },
+      {
+        "id": "kfd-7-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 gate"
+      },
+      {
+        "id": "kfd-7-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 gate"
+      },
+      {
+        "id": "kfd-7-gate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 gate"
       },
       {
         "id": "kfd-7-gate",
@@ -3714,10 +4906,55 @@
       },
       {
         "id": "kfd-7-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 schema"
+      },
+      {
+        "id": "kfd-7-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 schema"
+      },
+      {
+        "id": "kfd-7-schema",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 schema"
+      },
+      {
+        "id": "kfd-7-schema",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 7 schema"
       },
       {
+        "id": "kfd-7-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 verify"
+      },
+      {
+        "id": "kfd-7-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 verify"
+      },
+      {
+        "id": "kfd-7-verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd 7 verify"
+      },
+      {
+        "id": "kfd-aggregate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd aggregate"
+      },
+      {
+        "id": "kfd-aggregate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd aggregate"
+      },
+      {
+        "id": "kfd-aggregate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd aggregate --help"
+      },
+      {
         "id": "kfd-aggregate",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd aggregate --json"
@@ -3726,6 +4963,66 @@
         "id": "kfd-aggregate",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd aggregate --json"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub explain"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub explain"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub init"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub init"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub inspect"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub inspect"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub test"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd hub test"
       },
       {
         "id": "kfd-hub",
@@ -3749,6 +5046,21 @@
       },
       {
         "id": "kfd-migrate-layout",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd migrate-layout"
+      },
+      {
+        "id": "kfd-migrate-layout",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd migrate-layout"
+      },
+      {
+        "id": "kfd-migrate-layout",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd migrate-layout --help"
+      },
+      {
+        "id": "kfd-migrate-layout",
         "path": "docs/cli.md",
         "command": "buildchain kfd migrate-layout --write"
       },
@@ -3761,6 +5073,21 @@
         "id": "kfd-migrate-layout",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd migrate-layout --write"
+      },
+      {
+        "id": "kfd-schema-list",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema list"
+      },
+      {
+        "id": "kfd-schema-list",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema list"
+      },
+      {
+        "id": "kfd-schema-list",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema list"
       },
       {
         "id": "kfd-schema-list",
@@ -3779,6 +5106,66 @@
       },
       {
         "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
         "path": "docs/cli.md",
         "command": "buildchain kfd schema show"
       },
@@ -3789,6 +5176,21 @@
       },
       {
         "id": "kfd-status",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd status"
+      },
+      {
+        "id": "kfd-status",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd status"
+      },
+      {
+        "id": "kfd-status",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd status --help"
+      },
+      {
+        "id": "kfd-status",
         "path": "docs/cli.md",
         "command": "buildchain kfd status --json"
       },
@@ -3799,6 +5201,36 @@
       },
       {
         "id": "kfd-support",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd support project"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd support verify"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd support project"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd support project"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd support verify"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd support verify"
+      },
+      {
+        "id": "kfd-support",
         "path": "docs/cli.md",
         "command": "buildchain kfd support project"
       },
@@ -3814,6 +5246,21 @@
       },
       {
         "id": "kfd-upstream-check",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd upstream check"
+      },
+      {
+        "id": "kfd-upstream-check",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd upstream check"
+      },
+      {
+        "id": "kfd-upstream-check",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd upstream check"
+      },
+      {
+        "id": "kfd-upstream-check",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd upstream check"
       },
@@ -3824,6 +5271,21 @@
       },
       {
         "id": "kfd-upstream-collect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd upstream collect"
+      },
+      {
+        "id": "kfd-upstream-collect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd upstream collect"
+      },
+      {
+        "id": "kfd-upstream-collect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd upstream collect"
+      },
+      {
+        "id": "kfd-upstream-collect",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd upstream collect"
       },
@@ -3834,7 +5296,17 @@
       },
       {
         "id": "kfd-upstream-roles",
-        "path": "docs/kfd-support.md",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd upstream roles"
+      },
+      {
+        "id": "kfd-upstream-roles",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd upstream roles"
+      },
+      {
+        "id": "kfd-upstream-roles",
+        "path": "docs/cli-reference.md",
         "command": "buildchain kfd upstream roles"
       },
       {
@@ -3846,6 +5318,21 @@
         "id": "kfd-upstream-roles",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd upstream roles"
+      },
+      {
+        "id": "kfd-upstream-roles",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd upstream roles"
+      },
+      {
+        "id": "kfd",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd"
+      },
+      {
+        "id": "kfd",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain kfd"
       },
       {
         "id": "kfd",
@@ -3869,6 +5356,21 @@
       },
       {
         "id": "layout",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain layout"
+      },
+      {
+        "id": "layout",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain layout"
+      },
+      {
+        "id": "layout",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain layout --help"
+      },
+      {
+        "id": "layout",
         "path": "docs/cli.md",
         "command": "buildchain layout --cwd"
       },
@@ -3881,6 +5383,41 @@
         "id": "layout",
         "path": "docs/kfd-support.md",
         "command": "buildchain layout --cwd"
+      },
+      {
+        "id": "layout",
+        "path": "README.md",
+        "command": "buildchain layout --cwd"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain lifecycle"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain lifecycle run"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain lifecycle"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain lifecycle --help"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain lifecycle run"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain lifecycle run --help"
       },
       {
         "id": "lifecycle",
@@ -3914,8 +5451,83 @@
       },
       {
         "id": "log",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log"
+      },
+      {
+        "id": "log",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log"
+      },
+      {
+        "id": "log",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log"
+      },
+      {
+        "id": "log",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log"
+      },
+      {
+        "id": "log",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log"
+      },
+      {
+        "id": "log",
         "path": "docs/cli.md",
         "command": "buildchain log"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log summary"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log --help"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log error"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log error --help"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log info"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log info --help"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log summary"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log summary --help"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log warn"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain log warn --help"
       },
       {
         "id": "logging",
@@ -3941,6 +5553,21 @@
         "id": "logging",
         "path": "README.md",
         "command": "buildchain log summary --json"
+      },
+      {
+        "id": "mark",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain mark --event"
+      },
+      {
+        "id": "mark",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain mark"
+      },
+      {
+        "id": "mark",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain mark --help"
       },
       {
         "id": "mark",
@@ -3979,6 +5606,21 @@
       },
       {
         "id": "npm-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain npm dry-run"
+      },
+      {
+        "id": "npm-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain npm dry-run"
+      },
+      {
+        "id": "npm-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain npm dry-run --help"
+      },
+      {
+        "id": "npm-dry-run",
         "path": "docs/cli.md",
         "command": "buildchain npm dry-run --json"
       },
@@ -3988,9 +5630,69 @@
         "command": "buildchain npm dry-run"
       },
       {
+        "id": "npm",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain npm"
+      },
+      {
+        "id": "npm",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain npm"
+      },
+      {
+        "id": "paper-agent",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper agent verify"
+      },
+      {
+        "id": "paper-agent",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper agent verify"
+      },
+      {
+        "id": "paper-agent",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper agent verify"
+      },
+      {
+        "id": "paper-agent",
+        "path": "docs/cli.md",
+        "command": "buildchain paper agent verify"
+      },
+      {
+        "id": "paper-alpha",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper alpha"
+      },
+      {
+        "id": "paper-alpha",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper alpha"
+      },
+      {
+        "id": "paper-alpha",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper alpha --help"
+      },
+      {
         "id": "paper-alpha",
         "path": "docs/cli.md",
         "command": "buildchain paper alpha --json"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper bootstrap npm"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper bootstrap npm"
+      },
+      {
+        "id": "paper-bootstrap-npm",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper bootstrap npm"
       },
       {
         "id": "paper-bootstrap-npm",
@@ -4009,13 +5711,108 @@
       },
       {
         "id": "paper-build",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper build"
+      },
+      {
+        "id": "paper-build",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper build"
+      },
+      {
+        "id": "paper-build",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper build --help"
+      },
+      {
+        "id": "paper-build",
         "path": "docs/cli.md",
         "command": "buildchain paper build --json"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "path": "docs/cli.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-audit",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper fleet audit"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/cli.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
+        "id": "paper-fleet-update",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper fleet update"
+      },
+      {
+        "id": "paper-migrate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper migrate"
+      },
+      {
+        "id": "paper-migrate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper migrate"
+      },
+      {
+        "id": "paper-migrate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper migrate --help"
       },
       {
         "id": "paper-migrate",
         "path": "docs/cli.md",
         "command": "buildchain paper migrate --json"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper preflight"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper preflight"
+      },
+      {
+        "id": "paper-preflight",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper preflight --help"
       },
       {
         "id": "paper-preflight",
@@ -4028,14 +5825,39 @@
         "command": "buildchain paper preflight --offline"
       },
       {
-        "id": "paper-preflight",
-        "path": "README.md",
-        "command": "buildchain paper preflight --offline"
+        "id": "paper-resume",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper resume"
+      },
+      {
+        "id": "paper-resume",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper resume"
+      },
+      {
+        "id": "paper-resume",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper resume --help"
       },
       {
         "id": "paper-resume",
         "path": "docs/cli.md",
         "command": "buildchain paper resume --json"
+      },
+      {
+        "id": "paper-scaffold",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper scaffold --package"
+      },
+      {
+        "id": "paper-scaffold",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper scaffold"
+      },
+      {
+        "id": "paper-scaffold",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper scaffold --help"
       },
       {
         "id": "paper-scaffold",
@@ -4049,20 +5871,80 @@
       },
       {
         "id": "paper-status",
-        "path": "docs/cli.md",
-        "command": "buildchain paper status --json"
-      },
-      {
-        "id": "paper-status",
-        "path": "docs/publication-artifacts.md",
-        "command": "buildchain paper status --json"
-      },
-      {
-        "id": "paper-status",
-        "path": "README.md",
+        "path": "docs/cli-reference.md",
         "command": "buildchain paper status"
       },
       {
+        "id": "paper-status",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper status"
+      },
+      {
+        "id": "paper-status",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper status --help"
+      },
+      {
+        "id": "paper-status",
+        "path": "docs/cli.md",
+        "command": "buildchain paper status --json"
+      },
+      {
+        "id": "paper-status",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain paper status --json"
+      },
+      {
+        "id": "paper-work-start",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper work start"
+      },
+      {
+        "id": "paper-work-start",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper work start"
+      },
+      {
+        "id": "paper-work-start",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper work start"
+      },
+      {
+        "id": "paper-work-start",
+        "path": "docs/cli.md",
+        "command": "buildchain paper work start"
+      },
+      {
+        "id": "paper-work-submit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper work submit"
+      },
+      {
+        "id": "paper-work-submit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper work submit"
+      },
+      {
+        "id": "paper-work-submit",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper work submit"
+      },
+      {
+        "id": "paper-work-submit",
+        "path": "docs/cli.md",
+        "command": "buildchain paper work submit"
+      },
+      {
+        "id": "paper",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper"
+      },
+      {
+        "id": "paper",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain paper"
+      },
+      {
         "id": "paper",
         "path": "docs/cli.md",
         "command": "buildchain paper"
@@ -4071,6 +5953,51 @@
         "id": "paper",
         "path": "docs/publication-artifacts.md",
         "command": "buildchain paper"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache plan --manifest"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache receipt --plan"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache --help"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache plan"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache plan --help"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache receipt"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain portable-cache receipt --help"
       },
       {
         "id": "portable-cache",
@@ -4094,8 +6021,53 @@
       },
       {
         "id": "project",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain project"
+      },
+      {
+        "id": "project",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain project kfx-admission"
+      },
+      {
+        "id": "project",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain project"
+      },
+      {
+        "id": "project",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain project --help"
+      },
+      {
+        "id": "project",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain project kfx-admission"
+      },
+      {
+        "id": "project",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain project kfx-admission --help"
+      },
+      {
+        "id": "project",
         "path": "docs/cli.md",
         "command": "buildchain project kfx-admission envelope"
+      },
+      {
+        "id": "publication-artifact-manifest",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact manifest"
+      },
+      {
+        "id": "publication-artifact-manifest",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact manifest"
+      },
+      {
+        "id": "publication-artifact-manifest",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact manifest --help"
       },
       {
         "id": "publication-artifact-manifest",
@@ -4109,6 +6081,21 @@
       },
       {
         "id": "publication-artifact-npm-package",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact npm-package"
+      },
+      {
+        "id": "publication-artifact-npm-package",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact npm-package"
+      },
+      {
+        "id": "publication-artifact-npm-package",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact npm-package --help"
+      },
+      {
+        "id": "publication-artifact-npm-package",
         "path": "docs/cli.md",
         "command": "buildchain publication-artifact npm-package --json"
       },
@@ -4116,6 +6103,21 @@
         "id": "publication-artifact-npm-package",
         "path": "docs/publication-artifacts.md",
         "command": "buildchain publication-artifact npm-package --json"
+      },
+      {
+        "id": "publication-artifact-reproducibility",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact reproducibility"
+      },
+      {
+        "id": "publication-artifact-reproducibility",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact reproducibility"
+      },
+      {
+        "id": "publication-artifact-reproducibility",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact reproducibility --help"
       },
       {
         "id": "publication-artifact-reproducibility",
@@ -4129,8 +6131,108 @@
       },
       {
         "id": "publication-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact"
+      },
+      {
+        "id": "publication-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publication-artifact"
+      },
+      {
+        "id": "publication-artifact",
         "path": "docs/cli.md",
         "command": "buildchain publication-artifact"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source --help"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source lock"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source lock --help"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source manifest"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source manifest --help"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source validate-anchored-release"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source validate-anchored-release --help"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source verify-channel-ref"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source verify-channel-ref --help"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source verify-lock"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain publish-source verify-lock --help"
       },
       {
         "id": "publish-source",
@@ -4151,6 +6253,51 @@
         "id": "release-dry-run",
         "path": "actions/promote-buildchain-ref/README.md",
         "command": "buildchain release --dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release --dry-run --target-ref"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release dry-run --target-ref"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release explain --target-ref"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release --dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release --dry-run --help"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release dry-run --help"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release explain"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release explain --help"
       },
       {
         "id": "release-dry-run",
@@ -4178,6 +6325,51 @@
         "command": "buildchain release --dry-run"
       },
       {
+        "id": "release-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-governance"
+      },
+      {
+        "id": "release-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-governance reconcile --repository"
+      },
+      {
+        "id": "release-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-governance"
+      },
+      {
+        "id": "release-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-governance --help"
+      },
+      {
+        "id": "release-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-governance reconcile"
+      },
+      {
+        "id": "release-governance",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-governance reconcile --help"
+      },
+      {
+        "id": "release-line-open",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release line open"
+      },
+      {
+        "id": "release-line-open",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release line open"
+      },
+      {
+        "id": "release-line-open",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release line open"
+      },
+      {
         "id": "release-line-open",
         "path": "docs/cli.md",
         "command": "buildchain release line open"
@@ -4199,6 +6391,81 @@
       },
       {
         "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation --help"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation pickup"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation pickup --help"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation plan"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation plan --help"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation work"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation work --help"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation write-lock"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-propagation write-lock --help"
+      },
+      {
+        "id": "release-propagation",
         "path": "docs/release-propagation.md",
         "command": "buildchain release-propagation plan"
       },
@@ -4213,6 +6480,121 @@
         "command": "buildchain release-propagation receipt"
       },
       {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work create"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work status"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work resume"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work claim"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work receipt"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work record"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work repair"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation work complete"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release --help"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release abort"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release abort --help"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release finalize"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release finalize --help"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release inspect"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release inspect --help"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release recover"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release recover --help"
+      },
+      {
         "id": "release-transaction",
         "path": "docs/cli.md",
         "command": "buildchain release"
@@ -4221,6 +6603,21 @@
         "id": "sample-process-tree",
         "path": "actions/run-lifecycle/README.md",
         "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain sample process-tree --help"
       },
       {
         "id": "sample-process-tree",
@@ -4251,6 +6648,31 @@
         "id": "sample-process-tree",
         "path": "docs/toolkit-observability.md",
         "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain sample"
+      },
+      {
+        "id": "sample",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain sample"
+      },
+      {
+        "id": "span",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain span --event"
+      },
+      {
+        "id": "span",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain span"
+      },
+      {
+        "id": "span",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain span --help"
       },
       {
         "id": "span",
@@ -4289,6 +6711,36 @@
       },
       {
         "id": "transaction-inspect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain transaction"
+      },
+      {
+        "id": "transaction-inspect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain transaction inspect"
+      },
+      {
+        "id": "transaction-inspect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain transaction"
+      },
+      {
+        "id": "transaction-inspect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain transaction --help"
+      },
+      {
+        "id": "transaction-inspect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain transaction inspect"
+      },
+      {
+        "id": "transaction-inspect",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain transaction inspect --help"
+      },
+      {
+        "id": "transaction-inspect",
         "path": "docs/cli.md",
         "command": "buildchain transaction inspect --version"
       },
@@ -4296,6 +6748,21 @@
         "id": "transaction-inspect",
         "path": "docs/cli.md",
         "command": "buildchain transaction inspect"
+      },
+      {
+        "id": "validate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain validate"
+      },
+      {
+        "id": "validate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain validate"
+      },
+      {
+        "id": "validate",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain validate --help"
       },
       {
         "id": "validate",
@@ -4329,8 +6796,113 @@
       },
       {
         "id": "verify-artifact-envelope",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact-envelope"
+      },
+      {
+        "id": "verify-artifact-envelope",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact-envelope"
+      },
+      {
+        "id": "verify-artifact-envelope",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact-envelope --help"
+      },
+      {
+        "id": "verify-artifact-envelope",
         "path": "docs/cli.md",
         "command": "buildchain verify artifact-envelope envelope"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact dir"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact dir"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact file"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact file"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact github-release"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact github-release"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact npm"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact npm"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact oci"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact oci"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact url"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify artifact url"
       },
       {
         "id": "verify-artifact",
@@ -4349,6 +6921,21 @@
       },
       {
         "id": "verify-github-artifact-attestation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify github-artifact-attestation"
+      },
+      {
+        "id": "verify-github-artifact-attestation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify github-artifact-attestation"
+      },
+      {
+        "id": "verify-github-artifact-attestation",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify github-artifact-attestation --help"
+      },
+      {
+        "id": "verify-github-artifact-attestation",
         "path": "docs/cli.md",
         "command": "buildchain verify github-artifact-attestation"
       },
@@ -4359,6 +6946,21 @@
       },
       {
         "id": "verify-infra-contract-evidence-bundle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify infra-contract-evidence-bundle"
+      },
+      {
+        "id": "verify-infra-contract-evidence-bundle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify infra-contract-evidence-bundle"
+      },
+      {
+        "id": "verify-infra-contract-evidence-bundle",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify infra-contract-evidence-bundle --help"
+      },
+      {
+        "id": "verify-infra-contract-evidence-bundle",
         "path": "docs/cli.md",
         "command": "buildchain verify infra-contract-evidence-bundle"
       },
@@ -4371,6 +6973,21 @@
         "id": "verify-infra-contract-evidence-bundle",
         "path": "docs/infra-contract.md",
         "command": "buildchain verify infra-contract-evidence-bundle"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify observability-log --help"
       },
       {
         "id": "verify-observability-log",
@@ -4409,8 +7026,38 @@
       },
       {
         "id": "verify-publication-admission",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify publication-admission"
+      },
+      {
+        "id": "verify-publication-admission",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify publication-admission"
+      },
+      {
+        "id": "verify-publication-admission",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify publication-admission --help"
+      },
+      {
+        "id": "verify-publication-admission",
         "path": "docs/publication-authority.md",
         "command": "buildchain verify publication-admission admission"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify release-passport --help"
       },
       {
         "id": "verify-release-passport",
@@ -4448,6 +7095,31 @@
         "command": "buildchain verify release-passport"
       },
       {
+        "id": "verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify"
+      },
+      {
+        "id": "verify",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain verify"
+      },
+      {
+        "id": "version",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain version"
+      },
+      {
+        "id": "version",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain version"
+      },
+      {
+        "id": "version",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain version --help"
+      },
+      {
         "id": "version",
         "path": "docs/install.md",
         "command": "buildchain version npx buildchain"
@@ -4455,7 +7127,27 @@
       {
         "id": "version",
         "path": "README.md",
+        "command": "buildchain version"
+      },
+      {
+        "id": "version",
+        "path": "README.md",
         "command": "buildchain version npx buildchain"
+      },
+      {
+        "id": "web-surface",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain web-surface"
+      },
+      {
+        "id": "web-surface",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain web-surface"
+      },
+      {
+        "id": "web-surface",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain web-surface --help"
       },
       {
         "id": "web-surface",
@@ -4468,9 +7160,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "14bb8d25a4560d4ce3da919a5ea5c5cbfdc75a7cf451694c713bda7129643fac",
-    "workflowRegistryDigest": "c65687f6629f8f428b2853756576b61147b96d02936ed27ca901b6fdf990cd85",
-    "pageRegistryDigest": "a9d484692de74fc69b01270236aa11c2fd3ae53c6ad480fbfb279ff3e49a22aa"
+    "cliRegistryDigest": "c070e7bff9d1cb65a08daacd936f3567871af7844e88fa6ffcb05ea59579c15f",
+    "workflowRegistryDigest": "e96718b6503e5628a0f0535e4a705d2819a7ee5512b55e35373f10c750b5facf",
+    "pageRegistryDigest": "63cd68df8a761b7fe5d7e3a1365eb0a49234120efb0709a3bd81b7fe6cb6c70a"
   },
   "comparison": {
     "missingCliRegistry": [],
@@ -4483,8 +7175,26 @@
     "mode": "closed-world-enumerable",
     "scope": "Buildchain CLI usage/dispatch, reusable workflow inputs, action inputs, site pages, and documentation command references",
     "residualRisk": [
-      "Shell commands delegated through helper scripts are only counted when exposed through bin/buildchain.mjs usage or docs.",
-      "YAML parsing is limited to first-class action/workflow inputs, not arbitrary step environment variables."
+      {
+        "id": "public-surface-helper-command-enumeration",
+        "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+        "riskType": "natural-language-semantic-risk",
+        "trustImpact": "downgrade-warning",
+        "machineProvability": "not-machine-verifiable",
+        "agentAction": "semantic-review-required",
+        "owner": "Buildchain maintainers",
+        "reason": "Shell commands delegated through helper scripts are counted only when exposed through bin/buildchain.mjs usage or documentation."
+      },
+      {
+        "id": "public-surface-yaml-enumeration",
+        "definedBy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+        "riskType": "natural-language-semantic-risk",
+        "trustImpact": "downgrade-warning",
+        "machineProvability": "not-machine-verifiable",
+        "agentAction": "semantic-review-required",
+        "owner": "Buildchain maintainers",
+        "reason": "YAML enumeration covers first-class action and workflow inputs, not arbitrary step environment variables."
+      }
     ]
   }
 }

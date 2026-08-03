@@ -6,9 +6,14 @@ restating them.
 
 ## Are you using Buildchain, or building it?
 
-- **Using Buildchain** - initialize a repository, call a reusable workflow, run
-  a release dry-run, or inspect the release model: start at the documentation
-  map, [`docs/MAP.md`](docs/MAP.md).
+- **Adopting Buildchain for the first time** - follow the 15-30 minute
+  [`Golden Path`](docs/getting-started.md).
+- **Looking up a CLI command** - use the generated
+  [`CLI Reference`](docs/cli-reference.md).
+- **Writing Node build automation** - use the generated
+  [`Node API Reference`](docs/node-api-reference.md).
+- **Exploring advanced workflows, release governance, or product
+  capabilities** - start at the [`Documentation Map`](docs/MAP.md).
 - **Building or contributing to this repo** - read the rest of this file, then
   [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
@@ -43,6 +48,19 @@ npx @kungfu-tech/buildchain validate --require-version-state
 npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
 ```
 
+For governed Paper repositories, scaffold or migrate the repository once, then
+follow the generated `AGENTS.md` entry contract. Work begins and ends through
+the pinned pnpm scripts:
+
+```sh
+pnpm paper:agent:verify
+pnpm paper:work:start -- <topic> --execute --json
+pnpm paper:work:submit -- --execute --json
+```
+
+The reusable required check independently enforces the same contract and PR
+lineage, so local command use is never treated as remote acceptance evidence.
+
 See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-protocol.md),
 and [`docs/reusable-build-surface.md`](docs/reusable-build-surface.md) for the
 consumer contract.
@@ -61,8 +79,9 @@ pnpm install --frozen-lockfile
 pnpm run check
 ```
 
-`pnpm run check` validates inventory data, lints root workflows, runs unit tests,
-and rebuilds every action bundle.
+`pnpm run check` validates inventory data, generated public references and site
+bundle drift, lints root workflows, runs unit tests, and rebuilds every action
+bundle.
 
 Before broad maintenance or consolidation work, read the current engineering
 handoff in
@@ -96,6 +115,9 @@ handoff in
 - Do not build or document official release integrations that bypass provider
   protections, hide credential boundaries, or forge release evidence.
 - Keep generated action bundles in sync with source changes.
+- When public documentation, CLI usage authority, or package exports change,
+  follow the [Site Bundle Contract generation steps](docs/site-bundle-contract.md#generation)
+  and commit the updated generated references and `dist/site/` facts.
 - Keep documentation in sync with behavior, especially release governance and
   reusable workflow contracts.
 - [`docs/MAP.md`](docs/MAP.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md) are the
