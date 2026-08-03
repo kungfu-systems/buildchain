@@ -317,7 +317,9 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ steps.runtime.outputs.runtime-sha }}
-          path: .buildchain/runtime/scripts/locked-source-checkout.mjs
+          path: |
+            .buildchain/runtime/scripts/locked-source-checkout.mjs
+            .buildchain/runtime/scripts/git-fetch-process-tree.mjs
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
