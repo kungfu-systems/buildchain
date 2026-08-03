@@ -111,6 +111,7 @@ replace them.
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
 | How do protected dev branches and scheduled ready-PR merging work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |
 | How do slow required checks land reliably on a busy dev channel? | [`release-governance.md`](release-governance.md#protected-dev-branches) + [`cli.md`](cli.md#commands) | use | preview |
+| How do I coalesce rapid Dev changes, preserve release runner priority, and retry only transient failed jobs? | [`dev-qualification-patrol.md`](dev-qualification-patrol.md) | use/verify | preview |
 | How do I run daily, weekly, or monthly repository patrols? | [`release-governance.md`](release-governance.md#buildchain-patrol) | use | stable |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
@@ -176,6 +177,8 @@ replace them.
 - **protected dev branches / scheduled ready-PR merge / daily-weekly-monthly patrol** ->
   [`release-governance.md`](release-governance.md#protected-dev-branches) and
   [`release-governance.md`](release-governance.md#buildchain-patrol).
+- **Dev qualification coalescing / release-priority runners / failed-job retry** ->
+  [`dev-qualification-patrol.md`](dev-qualification-patrol.md).
 - **pnpm / npm / yarn / package-manager adapters** ->
   [`lifecycle-protocol.md`](lifecycle-protocol.md).
 - **pip / Conan / CMake / custom commands** -> [`lifecycle-protocol.md`](lifecycle-protocol.md)

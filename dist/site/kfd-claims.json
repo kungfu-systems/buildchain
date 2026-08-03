@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "7bab22cfeeff78b96fa059bc52504e9c91c020717cd4686381a3068580ca1be0",
+    "sha256": "f97a3c7b6f0723f2f70594148ff9a95253970fe2ecc94b2d7f0fd329852dd8ef",
     "summary": {
       "cliCommandCount": 112,
-      "workflowCount": 59,
+      "workflowCount": 60,
       "actionCount": 6,
-      "sitePageCount": 63,
+      "sitePageCount": 64,
       "docCommandRefCount": 822,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "7bab22cfeeff78b96fa059bc52504e9c91c020717cd4686381a3068580ca1be0",
+      "sha256": "f97a3c7b6f0723f2f70594148ff9a95253970fe2ecc94b2d7f0fd329852dd8ef",
       "summary": {
         "cliCommandCount": 112,
-        "workflowCount": 59,
+        "workflowCount": 60,
         "actionCount": 6,
-        "sitePageCount": 63,
+        "sitePageCount": 64,
         "docCommandRefCount": 822,
         "failureCount": 0
       },
@@ -4403,6 +4403,31 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:dev-qualification-patrol",
+          "name": "workflow:dev-qualification-patrol",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/dev-qualification-patrol.yml",
+          "evidencePath": ".github/workflows/dev-qualification-patrol.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 10,
+          "inputs": [
+            "buildchain-ref",
+            "buildchain-repository",
+            "dev-workflow-path",
+            "dispatch-inputs-json",
+            "dry-run",
+            "max-attempts",
+            "mutation-authorized",
+            "preflight-workflow-path",
+            "priority-workflows-json",
+            "source-branch"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:github-artifact-attestation",
           "name": "workflow:github-artifact-attestation",
           "kind": "workflow",
@@ -5567,6 +5592,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:dev-qualification-patrol",
+          "name": "site-page:manual:dev-qualification-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:getting-started",
           "name": "site-page:manual:getting-started",
           "kind": "site-page",
@@ -6145,6 +6182,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 392
+    "publicSurfaceCount": 394
   }
 }

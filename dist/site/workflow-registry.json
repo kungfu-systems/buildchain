@@ -1713,6 +1713,48 @@
       "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
+      "id": "dev-qualification-patrol",
+      "path": ".github/workflows/dev-qualification-patrol.yml",
+      "reusable": true,
+      "inputs": [
+        "buildchain-ref",
+        "buildchain-repository",
+        "dev-workflow-path",
+        "dispatch-inputs-json",
+        "dry-run",
+        "max-attempts",
+        "mutation-authorized",
+        "preflight-workflow-path",
+        "priority-workflows-json",
+        "source-branch"
+      ],
+      "inputCount": 10,
+      "secrets": [
+        "qualification-token"
+      ],
+      "secretCount": 1,
+      "outputs": [
+        "action",
+        "active-run-id",
+        "decision-root",
+        "pending-sha",
+        "reason",
+        "source-sha",
+        "state"
+      ],
+      "outputCount": 7,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
       "id": "github-artifact-attestation",
       "path": ".github/workflows/github-artifact-attestation.yml",
       "reusable": true,
