@@ -164,6 +164,7 @@ function assertLivePreflight(plan, profile) {
     throw new Error("Windows AMI identity or availability mismatch");
   }
   return {
+    budgetGuard: jsonResult(commandResult("/bin/bash", ["scripts/aws-windows-jit-operator.sh", "launch-gate", "--region", plan.aws.region, ...(profile ? ["--aws-profile", profile] : [])]), "provider Budget launch gate"),
     runStatus: run.status,
     jobStatus: job.status,
     activeInstances: activeInstances.length,

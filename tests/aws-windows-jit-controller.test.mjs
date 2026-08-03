@@ -406,7 +406,24 @@ const args = process.argv.slice(2);
 const previous = fs.existsSync(process.env.FAKE_COMMAND_LOG) ? fs.readFileSync(process.env.FAKE_COMMAND_LOG, "utf8") : "";
 fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "aws", args }) + "\n");
 const joined = args.join(" ");
-if (joined.includes("ec2 describe-instances")) {
+if (joined.includes("sts get-caller-identity")) {
+  process.stdout.write(JSON.stringify({ Account: "123456789012" }));
+} else if (joined.includes("cloudformation describe-stacks")) {
+  if (args.includes("--query")) process.stdout.write("arn:aws:sns:us-east-1:123456789012:windows-budget-topic");
+  else process.stdout.write(JSON.stringify({ Stacks: [{ Outputs: [{ OutputKey: "KillSwitchTopic", OutputValue: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }] }));
+} else if (joined.includes("budgets describe-budget")) {
+  process.stdout.write(JSON.stringify({ Budget: { BudgetName: "kungfu-buildchain-windows-jit-actual-spend", BudgetLimit: { Amount: "110", Unit: "USD" }, BudgetType: "COST", CostFilters: { TagKeyValue: ["user:kungfu:provider$windows-ec2-jit"] } } }));
+} else if (joined.includes("budgets describe-notifications-for-budget")) {
+  process.stdout.write(JSON.stringify({ Notifications: [
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 80, ThresholdType: "PERCENTAGE" },
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 95, ThresholdType: "PERCENTAGE" }
+  ] }));
+} else if (joined.includes("budgets describe-subscribers-for-notification")) {
+  process.stdout.write(JSON.stringify({ Subscribers: [{ SubscriptionType: "SNS", Address: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }));
+} else if (joined.includes("ssm get-parameter")) {
+  process.stderr.write("ParameterNotFound");
+  process.exitCode = 254;
+} else if (joined.includes("ec2 describe-instances")) {
   const afterLaunch = previous.includes('"run-instances"') && !previous.includes('"--dry-run"}');
   process.stdout.write(JSON.stringify(afterLaunch ? { Reservations: [{ Instances: [{ InstanceId: "i-0123456789abcdef0" }] }] } : { Reservations: [] }));
 } else if (joined.includes("ssm describe-parameters")) {
@@ -554,7 +571,24 @@ const fs = require("node:fs");
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "aws", args }) + "\n");
 const joined = args.join(" ");
-if (joined.includes("ec2 describe-instances")) {
+if (joined.includes("sts get-caller-identity")) {
+  process.stdout.write(JSON.stringify({ Account: "123456789012" }));
+} else if (joined.includes("cloudformation describe-stacks")) {
+  if (args.includes("--query")) process.stdout.write("arn:aws:sns:us-east-1:123456789012:windows-budget-topic");
+  else process.stdout.write(JSON.stringify({ Stacks: [{ Outputs: [{ OutputKey: "KillSwitchTopic", OutputValue: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }] }));
+} else if (joined.includes("budgets describe-budget")) {
+  process.stdout.write(JSON.stringify({ Budget: { BudgetName: "kungfu-buildchain-windows-jit-actual-spend", BudgetLimit: { Amount: "110", Unit: "USD" }, BudgetType: "COST", CostFilters: { TagKeyValue: ["user:kungfu:provider$windows-ec2-jit"] } } }));
+} else if (joined.includes("budgets describe-notifications-for-budget")) {
+  process.stdout.write(JSON.stringify({ Notifications: [
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 80, ThresholdType: "PERCENTAGE" },
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 95, ThresholdType: "PERCENTAGE" }
+  ] }));
+} else if (joined.includes("budgets describe-subscribers-for-notification")) {
+  process.stdout.write(JSON.stringify({ Subscribers: [{ SubscriptionType: "SNS", Address: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }));
+} else if (joined.includes("ssm get-parameter")) {
+  process.stderr.write("ParameterNotFound");
+  process.exitCode = 254;
+} else if (joined.includes("ec2 describe-instances")) {
   process.stdout.write(JSON.stringify({ Reservations: [] }));
 } else if (joined.includes("ssm describe-parameters")) {
   process.stdout.write(JSON.stringify({ Parameters: [] }));
@@ -642,6 +676,14 @@ if (joined.includes("ec2 describe-instances")) {
     const log = fs.readFileSync(commandLog, "utf8");
     assert.doesNotMatch(log, /secret-jit-config/);
     const commands = log.trim().split("\n").map(JSON.parse);
+    const budgetGateIndex = commands.findIndex(
+      (entry) => entry.command === "aws" && entry.args.includes("describe-budget"),
+    );
+    const jitConfigIndex = commands.findIndex(
+      (entry) =>
+        entry.command === "gh" &&
+        entry.args.some((argument) => argument.includes("generate-jitconfig")),
+    );
     const dryRunIndex = commands.findIndex(
       (entry) =>
         entry.command === "aws" &&
@@ -662,7 +704,9 @@ if (joined.includes("ec2 describe-instances")) {
       (entry) => entry.command === "aws" && entry.args.includes("update-item"),
     );
     assert.ok(
-      dryRunIndex >= 0 &&
+      budgetGateIndex >= 0 &&
+        jitConfigIndex > budgetGateIndex &&
+        dryRunIndex > jitConfigIndex &&
         reservationIndex > dryRunIndex &&
         launchIndex > reservationIndex &&
         markIndex > launchIndex,

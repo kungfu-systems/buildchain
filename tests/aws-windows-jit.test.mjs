@@ -198,6 +198,13 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
     ),
     "utf8",
   );
+  const budgetGuard = fs.readFileSync(
+    path.join(
+      root,
+      "infra/aws-us-elastic-runner-burst-plane/windows-jit-budget-guard.template.yml",
+    ),
+    "utf8",
+  );
   assert.match(stack, /SecurityGroupIngress: \[\]/);
   assert.match(stack, /MaximumInstanceLifetimeMinutes/);
   assert.match(stack, /rate\(5 minutes\)/);
@@ -223,8 +230,18 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /kill_all = sns_kill or control_killed/);
   assert.match(stack, /if sns_kill and not control_killed:/);
   assert.match(stack, /runner-lifetime-violation/);
-  assert.match(stack, /TagFilteredBudgetConfirmed/);
-  assert.match(stack, /disabled-until-cost-allocation-tag-is-active/);
+  assert.match(stack, /ProviderBudgetKillParameterName/);
+  assert.match(stack, /budgets:ViewBudget/);
+  assert.match(stack, /billing:GetBillingViewData/);
+  assert.doesNotMatch(stack, /Type: AWS::Budgets::Budget/);
+  assert.match(budgetGuard, /Type: AWS::Budgets::Budget/);
+  assert.match(
+    budgetGuard,
+    /!Sub "user:\$\{ProviderTagKey\}\$\$\{ProviderTagValue\}"/,
+  );
+  assert.match(budgetGuard, /provider-budget-killed/);
+  assert.match(budgetGuard, /aws-tag-filtered-budget-notification/);
+  assert.match(budgetGuard, /ec2:TerminateInstances/);
   assert.match(
     stack,
     /BudgetLimitUsd:\n\s+Type: Number\n\s+Default: 110\n\s+MinValue: 1\n\s+MaxValue: 110/,
