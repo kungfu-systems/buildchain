@@ -7,10 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import {
-  validateRenditionSet,
-  validateTerminalCapture,
-} from "./auditable-demo-renditions.mjs";
+import { readRendererManifest, validateRenditionSet, validateTerminalCapture } from "./auditable-demo-renditions.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
@@ -130,7 +127,7 @@ function writeChecksums(root, checksumName = "checksums.sha256") {
   return sha256(Buffer.from(bytes));
 }
 
-function verifyChecksums(root, checksumName = "checksums.sha256") {
+function verifyChecksums(root, checksumName = "checksums.sha256", options = {}) {
   const bytes = readRegular(path.join(root, checksumName), checksumName);
   const text = decodeUtf8(bytes, checksumName);
   invariant(text.endsWith("\n"), `${checksumName} must end with a newline`);
@@ -143,8 +140,11 @@ function verifyChecksums(root, checksumName = "checksums.sha256") {
     const target = resolveInside(root, member, "checksum member");
     invariant(!declared.has(member), `duplicate checksum member: ${member}`);
     declared.add(member);
+    const maximumBytes = options.allowLongFormRendererManifest && member === "manifest.json"
+      ? 32 * 1024 * 1024
+      : MAX_BUNDLE_MEMBER_BYTES;
     invariant(
-      sha256(readRegular(target, member, MAX_BUNDLE_MEMBER_BYTES)).slice(7) === match[1],
+      sha256(readRegular(target, member, maximumBytes)).slice(7) === match[1],
       `checksum mismatch: ${member}`,
     );
   }
@@ -674,8 +674,7 @@ function inspectRendererMedia(values) {
   const rendererImage = required(values, "--renderer-image");
   invariant(IMAGE_PATTERN.test(rendererImage), "renderer image must use an immutable sha256 coordinate");
   invariant(!fs.existsSync(output), "media inspection output must not already exist");
-  const manifest = readJson(path.join(renderOutput, "manifest.json"), "renderer manifest");
-  invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
+  const { manifest } = readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS);
   invariant(manifest.renderer?.image === rendererImage, "renderer manifest image coordinate mismatch");
   const members = Object.keys(manifest.outputs || {})
     .filter((name) => name !== "media-probe.json")
@@ -739,7 +738,7 @@ function qualifyMediaFixture(values) {
         sha256(readRegular(path.join(renderOutput, name), `fixture ${name}`)),
       ]),
     ),
-    rendererManifestRoot: sha256(readRegular(path.join(renderOutput, "manifest.json"), "renderer manifest")),
+    rendererManifestRoot: sha256(readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS).bytes),
     qualification: verified.qualification,
   };
   writeJson(output, { ...body, evidenceRoot: semanticRoot(body) });
@@ -979,9 +978,8 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     "public-projection.json",
     "scene.json",
   ];
-  verifyChecksums(renderOutput);
-  const manifest = readJson(path.join(renderOutput, "manifest.json"), "renderer manifest");
-  invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
+  verifyChecksums(renderOutput, "checksums.sha256", { allowLongFormRendererManifest: true });
+  const { manifest } = readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS);
   invariant(manifest.renderer?.image === expectedImage, "renderer manifest image coordinate mismatch");
   const outputNames = Object.keys(manifest.outputs || {}).sort();
   invariant(outputNames.includes("media-probe.json"), "renderer manifest must declare media-probe.json");
@@ -1254,7 +1252,7 @@ function finalizeMedia(values) {
     sourceSha,
     qualifiedGateRoot: gateRoot,
     rendererImage,
-    rendererManifestRoot: sha256(readRegular(path.join(renderOutput, "manifest.json"), "renderer manifest")),
+    rendererManifestRoot: sha256(readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS).bytes),
   };
   const mediaReceipt = selectedProfile.mode === "archive"
     ? { schema: "buildchain.auditable-demo-media/v1", ...commonReceipt }

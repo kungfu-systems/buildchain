@@ -23,15 +23,79 @@ import {
   verifyRendererOutput,
   writeChecksums,
 } from "../scripts/auditable-demo.mjs";
+import { readRendererManifest } from "../scripts/auditable-demo-renditions.mjs";
 
 const RENDERER_IMAGE = `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"a".repeat(64)}`;
 const SOURCE_SHA = "b".repeat(40);
+
+function longFormRendererRenditions() {
+  return [
+    { id: "1080p", role: "primary", width: 1920, height: 1080 },
+    { id: "720p", role: "responsive", width: 1280, height: 720 },
+  ].map((entry) => ({
+    id: entry.id,
+    role: entry.role,
+    scene: {
+      path: {
+        durationClass: "long-form",
+        durationMs: 120000,
+        fps: 10,
+        width: entry.width,
+        height: entry.height,
+      },
+    },
+    terminalCapture: {
+      schema: "kungfu.terminal-capture/v1",
+      root: `sha256:${(entry.id === "1080p" ? "c" : "d").repeat(64)}`,
+      durationMs: 119000,
+      events: 1000,
+      bytes: 1024 * 1024,
+      path: { normalizedReplay: "x".repeat(4 * 1024 * 1024) },
+    },
+  }));
+}
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-auditable-demo-test-"));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   return directory;
 }
+
+test("oversized renderer manifests remain limited to bounded long-form native renditions", (t) => {
+  const root = temporaryDirectory(t);
+  const manifestPath = path.join(root, "manifest.json");
+  const manifest = {
+    schema: "build-images.auditable-demo-render/v1",
+    renderer: { image: RENDERER_IMAGE },
+    inputs: { renditions: longFormRendererRenditions() },
+    outputs: {},
+  };
+  fs.writeFileSync(manifestPath, stableJson(manifest));
+  assert.ok(fs.statSync(manifestPath).size > 8 * 1024 * 1024);
+  const helpers = {
+    decodeUtf8: (bytes) => bytes.toString("utf8"),
+    digestPattern: /^sha256:[0-9a-f]{64}$/,
+    invariant: (condition, message) => { if (!condition) throw new Error(message); },
+    maxBytes: 4 * 1024 * 1024,
+    maxEvents: 10_000,
+    readRegular: (file, label, maximum) => {
+      const bytes = fs.readFileSync(file);
+      assert.ok(bytes.length <= maximum, `${label} exceeds ${maximum} bytes`);
+      return bytes;
+    },
+  };
+  assert.equal(readRendererManifest(manifestPath, helpers).manifest.inputs.renditions.length, 2);
+  writeChecksums(root);
+  assert.throws(() => verifyChecksums(root), /manifest\.json exceeds 8388608 bytes/);
+  verifyChecksums(root, "checksums.sha256", { allowLongFormRendererManifest: true });
+
+  manifest.inputs.renditions[1].terminalCapture.events = 10_001;
+  fs.writeFileSync(manifestPath, stableJson(manifest));
+  assert.throws(
+    () => readRendererManifest(manifestPath, helpers),
+    /rendition 1 is not bounded long-form evidence/,
+  );
+});
 
 function terminalCapture(
   durationMs = 2500,
