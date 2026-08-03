@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { runGitFetchSync } from "./git-fetch-process-tree.mjs";
 
 export const LOCKED_SOURCE_CHECKOUT_CONTRACT = "kungfu-buildchain-locked-source-checkout-cache";
 export const ISOLATED_GIT_GLOBAL_CONFIG = process.platform === "win32" ? "NUL" : "/dev/null";
@@ -111,9 +112,10 @@ function ensureCheckoutTarget(targetPath, workspace) {
 
 function git(args, { cwd, env = {}, timeoutMs = 60000, stdio = ["ignore", "pipe", "pipe"] } = {}) {
   try {
-    const output = execFileSync("git", args, {
+    const commandEnv = { ...process.env, ...env };
+    const output = args[0] === "fetch" ? runGitFetchSync({ args, cwd, env: commandEnv, timeoutMs, stdio }) : execFileSync("git", args, {
       cwd,
-      env: { ...process.env, ...env },
+      env: commandEnv,
       encoding: "utf8",
       stdio,
       timeout: timeoutMs,
@@ -233,7 +235,8 @@ function checkoutFetchedCommit(targetPath, sha, timeoutMs) {
 function retryableGitFetchError(error) {
   const code = String(error?.code || "").toUpperCase();
   if (["ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN", "ENETUNREACH", "EPIPE"].includes(code)) return true;
-  return /timed?\s*out|timeout|connection (?:reset|refused)|remote end hung up|early eof|rpc failed|http (?:429|5\d\d)|temporary failure|network is unreachable/i.test(String(error?.message || error || ""));
+  const commandOutput = [error?.stderr, error?.stdout].filter(Boolean).map(String).join("\n").trim();
+  return /timed?\s*out|timeout|connection (?:reset|refused)|remote end hung up|early eof|rpc failed|http (?:429|5\d\d)|temporary failure|network is unreachable/i.test(commandOutput || String(error?.message || error || ""));
 }
 
 export function fetchSourceCommit({

@@ -769,6 +769,7 @@ jobs:
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ steps.runtime.outputs.runtime-sha }}
           path: |
             .buildchain/workflow-shell/scripts/locked-source-checkout.mjs
+            .buildchain/workflow-shell/scripts/git-fetch-process-tree.mjs
             .buildchain/workflow-shell/scripts/artifact-signing-delegation.mjs
             .buildchain/workflow-shell/scripts/artifact-signing-controller-core.mjs
             .buildchain/workflow-shell/scripts/artifact-signing-controller.mjs
