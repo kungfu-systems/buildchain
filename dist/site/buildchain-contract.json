@@ -670,7 +670,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:7ebf174d7cf98395792fef26d69685459b057d8ac3f82b851b4e85267148f082"
+      "auditDigest": "sha256:d5aa3131b02bfcd8f80f360bfc1b759cb9f3153f841423bae36088bb508b3534"
     },
     {
       "contractVersion": 1,
@@ -3629,5 +3629,5 @@
     }
   ],
   "compatibilityDigest": "sha256:76c3dd58a02887ecd6af33d63e749fef0a988a820fea99bdf4cb078cc48caa83",
-  "contractDigest": "sha256:ca2a2930d98cad893e29b346cbcfbf5105dc342c943f23bddc79d3340aabcee1"
+  "contractDigest": "sha256:8a5a333ea8435acd609bdf6c2385a9daa4356e55c5805e11faa5c99abaa0af07"
 }
