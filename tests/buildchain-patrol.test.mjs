@@ -71,9 +71,28 @@ test("daily patrol defaults to inspect plus ready dev PR maintenance", async () 
   assert.equal(result.summary.evaluatedCount, 1);
   assert.equal(result.summary.actionCount, 1);
   assert.equal(result.actions[0].status, "planned");
+  assert.equal(result.runKind, "cadence-patrol");
+  assert.equal(result.outcome, "actions-present");
+  assert.equal(result.qualification, false);
+  assert.equal(result.noOp, false);
   assert.deepEqual(fake.merged, []);
   assert.match(renderPatrolMarkdownSummary(result), /Buildchain patrol/);
   assert.match(renderPatrolMarkdownSummary(result), /#11/);
+});
+
+test("patrol zero-candidate and all-skipped outcomes are typed non-qualification no-ops", async () => {
+  const empty = await runBuildchainPatrol(
+    { repository: "kungfu-systems/buildchain", targetBranch: "dev/v2/v2.6", cadence: "daily", dryRun: true },
+    client(),
+  );
+  const skipped = await runBuildchainPatrol(
+    { repository: "kungfu-systems/buildchain", targetBranch: "dev/v2/v2.6", cadence: "daily", dryRun: true },
+    client({ pullRequests: [{ ...pr({ number: 12 }), labels: [] }] }),
+  );
+  assert.equal(empty.outcome, "no-op-no-candidates");
+  assert.equal(empty.qualification, false);
+  assert.equal(skipped.outcome, "no-op-all-skipped");
+  assert.equal(skipped.qualification, false);
 });
 
 test("weekly and monthly patrol expose stable planned check slots", async () => {
