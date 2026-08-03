@@ -33,7 +33,7 @@
         "scripts/dev-pr-auto-merge.mjs",
         "tests/dev-pr-auto-merge.test.mjs"
       ],
-      "revision": "sha256:141f15dc5da2bf259d4ff2ffb8c3950615d98d6423d2d51e3c7981192dda6ff6"
+      "revision": "sha256:fba3292e278f119228c5a93431744b8854ec75c21a81c00376afc0639a716ce0"
     }
   ],
   "nodes": [
@@ -59,7 +59,7 @@
       "id": "buildchain.source.dev-pr-controller",
       "kind": "implementation",
       "visibility": "public",
-      "revision": "sha256:4314cef7018b738e7f846206d4fde1d43dfe645b6d1e117d1059df7b10c9a196",
+      "revision": "sha256:210c2016d7c10b07db5c86230ebe1d3d0d2f4d7207bdae0853ff86493308ec37",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
       "source": {"provider": "buildchain.files", "path": "scripts/dev-pr-auto-merge.mjs"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
@@ -68,7 +68,7 @@
       "id": "buildchain.source.dev-pr-tests",
       "kind": "probe",
       "visibility": "public",
-      "revision": "sha256:ce11d9e41161e668dda6d505c662a8c4b63e36812fdfc0257285b263e8a06fe3",
+      "revision": "sha256:639c5830efff3ce7980feda66388fac7f7f76187f0fbd4311ea8cc7dfdbddd8d",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
       "source": {"provider": "buildchain.files", "path": "tests/dev-pr-auto-merge.test.mjs"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
@@ -77,7 +77,7 @@
       "id": "buildchain.source.patrol-controller",
       "kind": "implementation",
       "visibility": "public",
-      "revision": "sha256:d30ad6c77b684ffef648e4990cfa91151ea67f7ac0af58b600d4021d4658a501",
+      "revision": "sha256:2b5fdd5f68b3639394484b8d1d04dd6ba2e37741c0e12f7c82d2047bda275407",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
       "source": {"provider": "buildchain.files", "path": "scripts/buildchain-patrol.mjs"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
@@ -86,7 +86,7 @@
       "id": "buildchain.source.dev-pr-workflow",
       "kind": "implementation",
       "visibility": "public",
-      "revision": "sha256:bdfe50799a1c062e3ebb9c14b8f5939fcb46ea5ba0322651d0801788870e56bd",
+      "revision": "sha256:6852f5d8b4663521d80031637e9dd5fe090e596254bebe8e5e56f35c6c83d41c",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
       "source": {"provider": "buildchain.files", "path": ".github/workflows/dev-pr-auto-merge.yml"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
@@ -104,7 +104,7 @@
       "id": "buildchain.source.release-governance",
       "kind": "document",
       "visibility": "public",
-      "revision": "sha256:fc7f0add1afce775c327d50a1e269a7040865e65ca2441dbeb8d0373c5f8d5aa",
+      "revision": "sha256:617fb47c9dc8af860e3bc747553b3b48fafa058f012e414692ac1548e0fe0066",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
       "source": {"provider": "buildchain.files", "path": "docs/release-governance.md"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
