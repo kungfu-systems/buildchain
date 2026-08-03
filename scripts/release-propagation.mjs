@@ -18,7 +18,12 @@ import {
   writeReleasePropagationLock,
   createManualUpstreamPickupCapture,
   createManualUpstreamPickupPlan,
+  createReleasePropagationPushPlan,
+  executeReleasePropagationPush,
+  inspectReleasePropagationPushState,
   normalizeManualUpstreamPickupConfig,
+  planSiteUpstreamAgentEntry,
+  RELEASE_PROPAGATION_FAILURE_MATRIX,
   resolveNpmRegistryRelease,
 } from "../packages/core/release-propagation.js";
 
@@ -66,6 +71,19 @@ function usage() {
                                               --completion-decision <json-or-path>
                                               --expected-work-root <sha256:...>
                                               [--output <file>] [--json]
+  buildchain release-propagation work push-plan --work <json-or-path>
+                                             --expected-work-root <sha256:...>
+                                             [--cwd <dir>] [--remote <name>]
+                                             [--output <file>] [--json]
+  buildchain release-propagation work push-branch --work <json-or-path>
+                                               --expected-work-root <sha256:...>
+                                               [--cwd <dir>] [--remote <name>]
+                                               --execute [--output <file>] [--json]
+  buildchain release-propagation entry plan --source-id <paper|kfd|buildchain|kungfu-core>
+                                            [--channel <alpha|release>]
+                                            [--handoff-work <json-or-path>]
+                                            [--output <file>] [--json]
+  buildchain release-propagation entry fault-matrix [--json]
   buildchain release-propagation pickup plan --config <json-or-path>
                                             --source-id <id> --channel <alpha|release>
                                             --current-version <version>
@@ -182,7 +200,58 @@ function runWorkCli(args) {
     emitWorkResult(workArgs, result, `release propagation work complete: ${result.contentRoot}`);
     return;
   }
+  if (mode === "push-plan" || mode === "push-branch") {
+    const work = readJsonFlag(workArgs, "work");
+    const cwd = readFlag(workArgs, "cwd", process.cwd());
+    const remote = readFlag(workArgs, "remote", "origin");
+    let result;
+    if (mode === "push-plan") {
+      const repositoryState = inspectReleasePropagationPushState({ work, cwd, remote });
+      result = createReleasePropagationPushPlan({
+        work,
+        expectedWorkRoot: readFlag(workArgs, "expected-work-root"),
+        repositoryState,
+      });
+    } else {
+      if (!hasFlag(workArgs, "execute")) throw new Error("work push-branch requires --execute");
+      result = executeReleasePropagationPush({
+        work,
+        expectedWorkRoot: readFlag(workArgs, "expected-work-root"),
+        cwd,
+        remote,
+      });
+    }
+    emitWorkResult(workArgs, result, mode === "push-plan"
+      ? `release propagation push plan: ${result.planRoot}`
+      : `release propagation push result: ${result.resultRoot}`);
+    return;
+  }
   throw new Error(`unsupported release-propagation work command: ${mode}`);
+}
+
+function runEntryCli(args) {
+  const [mode = "", ...entryArgs] = args;
+  if (!mode || mode === "--help" || mode === "-h") {
+    process.stdout.write(usage());
+    return;
+  }
+  let result;
+  if (mode === "fault-matrix") {
+    result = RELEASE_PROPAGATION_FAILURE_MATRIX;
+  } else if (mode === "plan") {
+    result = planSiteUpstreamAgentEntry({
+      sourceId: readFlag(entryArgs, "source-id"),
+      channel: readFlag(entryArgs, "channel"),
+      handoffWork: entryArgs.includes("--handoff-work")
+        ? readJsonFlag(entryArgs, "handoff-work")
+        : null,
+    });
+  } else {
+    throw new Error(`unsupported release-propagation entry command: ${mode}`);
+  }
+  writeOutput(readFlag(entryArgs, "output", ""), result);
+  if (hasFlag(entryArgs, "json")) printJson(result);
+  else process.stdout.write(`${result.contract}\n`);
 }
 
 async function resolvePickupPlan(args) {
@@ -272,6 +341,10 @@ export async function runReleasePropagationCli(argv = process.argv.slice(2)) {
   }
   if (mode === "work") {
     runWorkCli(args);
+    return;
+  }
+  if (mode === "entry") {
+    runEntryCli(args);
     return;
   }
   if (mode === "pickup") {

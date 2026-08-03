@@ -146,8 +146,9 @@ jobs:
             exit 2
           fi
           node .buildchain/runtime/scripts/auditable-demo-platform.mjs validate --scenario "source/${SCENARIO_PATH}"
-          binary_path=$(node -e 'const fs=require("fs"); const v=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(v.artifact.binaryPath)' "source/${SCENARIO_PATH}")
-          chmod 755 "source-artifact/${binary_path}"
+          node .buildchain/runtime/scripts/auditable-demo-platform.mjs prepare-artifact \
+            --scenario "source/${SCENARIO_PATH}" \
+            --artifact-root "source-artifact"
           docker pull "${RENDERER_IMAGE}"
           mkdir -p capture-collection
           while IFS= read -r demo_id; do

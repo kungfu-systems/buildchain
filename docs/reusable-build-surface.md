@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-03
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-30
+  generated_at: 2026-08-03
   invisible_context: not asserted
 ---
 
@@ -105,6 +105,8 @@ jobs:
       artifact-paths: |
         dist
         build/stage
+      pre-upload-transport-smoke-scenario-path: .buildchain/auditable-demo.json
+      pre-upload-transport-smoke-artifact-root: .
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["dist/libnode.tar.gz","dist/checksums.txt"]}
       process-summary-path: .buildchain/diagnostics/process-summary.json
@@ -112,6 +114,15 @@ jobs:
       publish-channel: release
       publish-source-ref: publish-gate/release/v22/v22.22/22.22.3-kf.0
 ```
+
+For a standalone Linux binary demo, the optional pre-upload transport smoke
+uses the same declarative scenario as the later capture workflow. Buildchain
+copies the distribution containing the scenario metadata, strips file execute
+bits to model GitHub Artifact transport, restores only the declared
+digest-bound executable closure, and runs `transportSmoke` before either the
+GitHub Artifact or S3 relay upload step. The smoke must be non-interactive and
+is hard-capped at 60 seconds. Omitting the input preserves the ordinary build
+surface; enabling it requires a scenario with `transportSmoke`.
 
 `runner-preset` is the stable first-class surface for known runner fleets:
 
@@ -520,7 +531,14 @@ the preparation step. Buildchain probes its version, runs `sccache
 `compiler-cache-preparation.json`. The receipt binds the source commit/tree,
 Buildchain runtime, platform, cache profile, and any declared dependency,
 toolchain, or policy roots. It resets counters only; it does not delete cached
-compiler outputs.
+compiler outputs. The same preparation exports `RUSTC_WRAPPER`,
+`CMAKE_C_COMPILER_LAUNCHER`, and `CMAKE_CXX_COMPILER_LAUNCHER` so Cargo and
+CMake/Ninja compilation actually passes through the audited tool.
+
+After the build lifecycle, Buildchain probes the reset counter set again. When
+`compiler-cache-required` is true, the build fails closed if sccache observed
+zero compiler requests or zero cacheable requests. This prevents an installed
+but unbound sccache binary from being reported as an active compiler cache.
 
 Final diagnostics admit sccache hit/miss outcomes as current-run evidence only
 when that preparation receipt is present and valid. A bare `sccache
@@ -624,7 +642,8 @@ Every native and container build lane reads this declaration after the build
 lifecycle and before verification. Buildchain binds the exact artifact bytes or directory tree to
 the caller repository, source commit, source tree, immutable runtime, platform,
 and requested signature semantics, then publishes a deterministic
-`<artifact>-signing-request-<platform>-<source-sha>` request. No consumer
+`<artifact>-signing-request-<platform>-<source-sha>-<run-id>-<run-attempt>`
+request. No consumer
 workflow step is required. The lifecycle runner automatically adds declarations
 selected for the current platform to the `build` manifest scan, including
 subjects outside the caller's ordinary `artifact-paths`; this extends the
@@ -677,14 +696,27 @@ Buildchain-owned signing authority is responsible for credential selection,
 native signing, notarization where applicable, immutable result delivery, and a
 receipt bound to the request digest, runtime SHA, output digest, and signature
 evidence. Consumer repositories neither receive nor duplicate credential-island
-material. The reusable workflow dispatches the sealed request to the
-Buildchain repository, waits for its protected authority workflow, verifies the
-immutable result, replaces only the declared artifact with the returned final
-bytes. The ordinary platform lane completes the consumer's functional
-verification before delegation. A GitHub-hosted finalization lane then verifies
-the authority result against the sealed request, imports the exact signed bytes,
-and recomputes the final manifest before replacing the deterministic artifact.
-The signing result is never downloaded back to a self-hosted native runner.
+material. Each platform lane seals and uploads the unsigned request plus a
+run-attempt-bound control request, completes functional verification, and exits.
+It does not dispatch or poll the authority. A separate `ubuntu-24.04` controller
+starts only after the build matrices complete, validates the exact source,
+tree, runtime, request-set root, platform, run attempt, and correlation, then
+dispatches and awaits the protected authority workflow. Its retained receipt
+records two independent immutable identities: the consumer Buildchain runtime
+SHA carried by the control request and the exact authority-ref commit resolved
+immediately before dispatch. The former validates the request-producing
+runtime; the latter must equal the authority workflow run's `head_sha` and is
+retained with the exact authority run and result artifact. If the protected ref
+moves between resolution and dispatch, settlement fails closed. Failure, timeout, or
+cancellation produces a non-qualifying receipt and no finalization delegation.
+
+A second GitHub-hosted finalization lane downloads the original control request,
+controller receipt, and delegation, verifies their roots and coordinates agree,
+then verifies the authority result against the sealed request, imports the exact
+signed bytes, and recomputes the final manifest before replacing the
+deterministic artifact. The signing result is never downloaded back to a
+self-hosted native runner, so a macOS caller is released before credential-island
+signing and notarization complete.
 Platform manifests, KFD evidence, checksums, and Release Passport inputs
 therefore observe the final signed artifact rather than the pre-signing build
 output.

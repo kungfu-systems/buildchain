@@ -25,6 +25,7 @@ const RENDITIONS = [
 ];
 const STANDARD_MAX_SECONDS = 60;
 const LONG_FORM_MAX_SECONDS = 180;
+const MAX_EXECUTABLE_FILES = 32;
 
 function durationPolicy(value = "standard") {
   requireValue(value === "standard" || value === "long-form", "scenario duration class is invalid");
@@ -143,6 +144,54 @@ function validateArtifact(artifact) {
   requireValue(Array.isArray(artifact.runtimeDependencies) && artifact.runtimeDependencies.length === 0, "scenario artifact must be standalone");
 }
 
+function validateTransportSmoke(smoke) {
+  exactKeys(smoke, ["argv", "timeoutSeconds", "expectedExitCodes", "stdoutIncludes"], [], "scenario.transportSmoke");
+  requireValue(Array.isArray(smoke.argv) && smoke.argv.length >= 1 && smoke.argv.length <= 64 && smoke.argv.every((item) => typeof item === "string" && !item.includes("\0") && item.length <= 512), "scenario transport smoke argv is invalid");
+  requireValue(Number.isInteger(smoke.timeoutSeconds) && smoke.timeoutSeconds >= 1 && smoke.timeoutSeconds <= STANDARD_MAX_SECONDS, "scenario transport smoke timeout is invalid");
+  requireValue(Array.isArray(smoke.expectedExitCodes) && smoke.expectedExitCodes.length >= 1 && smoke.expectedExitCodes.length <= 4 && smoke.expectedExitCodes.every((item) => Number.isInteger(item) && item >= 0 && item <= 255), "scenario transport smoke expected exits are invalid");
+  requireValue(Array.isArray(smoke.stdoutIncludes) && smoke.stdoutIncludes.length <= 32 && smoke.stdoutIncludes.every((item) => typeof item === "string" && item.length >= 1 && item.length <= 256), "scenario transport smoke stdout assertions are invalid");
+}
+
+function validateExecutableClosure({ artifactRoot, scenario, requireExecutable }) {
+  const root = path.resolve(artifactRoot);
+  const artifact = scenario.artifact;
+  const metadata = readJson(inside(root, artifact.metadataPath, "artifact metadata path"), "binary metadata");
+  requireValue(metadata.contract === artifact.metadataContract, "binary metadata contract mismatch");
+  requireValue((metadata.platformId || metadata.platform) === artifact.platformId, "binary metadata platform mismatch");
+  requireValue(JSON.stringify(metadata.runtimeDependencies) === JSON.stringify(artifact.runtimeDependencies), "binary metadata runtime dependency mismatch");
+  requireValue(Array.isArray(metadata.executableFiles) && metadata.executableFiles.length >= 1 && metadata.executableFiles.length <= MAX_EXECUTABLE_FILES, "binary metadata executableFiles must be a bounded non-empty array");
+  const declared = new Set();
+  const files = metadata.executableFiles.map((entry, index) => {
+    const label = `binary metadata executableFiles[${index}]`;
+    exactKeys(entry, ["path", "sha256"], [], label);
+    requireValue(!declared.has(entry.path), `${label}.path is repeated`);
+    declared.add(entry.path);
+    requireValue(/^[0-9a-f]{64}$/u.test(entry.sha256), `${label}.sha256 is invalid`);
+    const file = inside(root, entry.path, `${label}.path`);
+    const bytes = regular(file, label, 256 * 1024 * 1024);
+    requireValue(rootBytes(bytes) === `sha256:${entry.sha256}`, `${label} digest differs from exact artifact metadata`);
+    if (requireExecutable) requireValue((fs.statSync(file).mode & 0o111) !== 0, `${label} is not executable`);
+    return { path: entry.path, file, sha256: entry.sha256 };
+  });
+  requireValue(declared.has(artifact.binaryPath), "binary metadata executableFiles must include scenario.artifact.binaryPath");
+  const binary = files.find((entry) => entry.path === artifact.binaryPath);
+  const metadataBinarySha256 = String(metadata.sha256 || "").replace(/^sha256:/u, "");
+  requireValue(/^[0-9a-f]{64}$/u.test(metadataBinarySha256) && metadataBinarySha256 === binary.sha256, "binary digest differs from exact artifact metadata");
+  return { metadata, files };
+}
+
+export function prepareArtifact({ artifactRoot, scenarioPath }) {
+  const scenario = validateScenario(readJson(path.resolve(scenarioPath), "scenario"));
+  const closure = validateExecutableClosure({ artifactRoot, scenario, requireExecutable: false });
+  for (const entry of closure.files) fs.chmodSync(entry.file, 0o755);
+  validateExecutableClosure({ artifactRoot, scenario, requireExecutable: true });
+  return {
+    executableFiles: closure.files.map(({ path: relative, sha256 }) => ({ path: relative, sha256 })),
+    metadataRoot: rootJson(closure.metadata),
+    authority: { classification: "artifact-mode-restoration", grants: [], nonAuthorities: NON_AUTHORITIES },
+  };
+}
+
 function validateExecution(execution) {
   exactKeys(execution, ["deterministic", "network", "secrets", "totalTimeoutSeconds", "environment"], ["durationClass"], "scenario.execution");
   requireValue(execution.deterministic === true && execution.network === "none" && execution.secrets === "none", "scenario execution must be deterministic, network-disabled, and secret-free");
@@ -185,7 +234,7 @@ function validateDemo(demo, index, demoIds, maximumSeconds) {
 }
 
 export function validateScenario(value) {
-  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], [], "scenario");
+  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["transportSmoke"], "scenario");
   requireValue(value.schema === "buildchain.declarative-binary-demo/v1", "unsupported scenario schema");
   validateProduct(value.product);
   validateArtifact(value.artifact);
@@ -194,6 +243,7 @@ export function validateScenario(value) {
   requireValue(Array.isArray(value.demos) && value.demos.length >= 1 && value.demos.length <= 8, "scenario requires 1 through 8 demos");
   const demoIds = new Set();
   value.demos.forEach((demo, index) => validateDemo(demo, index, demoIds, executionPolicy.maximumSeconds));
+  if (value.transportSmoke) validateTransportSmoke(value.transportSmoke);
   exactKeys(value.publication, ["evidencePath", "readmePath", "marker"], [], "scenario.publication");
   inside("/repository", value.publication.evidencePath, "scenario.publication.evidencePath");
   inside("/repository", value.publication.readmePath, "scenario.publication.readmePath");
@@ -472,6 +522,14 @@ function main(argv = process.argv.slice(2)) {
   if (command === "publication") {
     const scenario = validateScenario(readJson(path.resolve(args.scenario), "scenario"));
     process.stdout.write(stableJson(scenario.publication));
+    return;
+  }
+  if (command === "prepare-artifact") {
+    const result = prepareArtifact({
+      artifactRoot: path.resolve(args["artifact-root"]),
+      scenarioPath: path.resolve(args.scenario),
+    });
+    process.stdout.write(stableJson({ ok: true, ...result }));
     return;
   }
   if (command === "adapt") {

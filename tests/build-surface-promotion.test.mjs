@@ -72,7 +72,10 @@ import {
   contractForSelfDogfoodEvaluation,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
-import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
+import {
+  runLifecycle,
+  verifyBuildLifecycleCompilerCacheActivity,
+} from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import {
@@ -1762,6 +1765,54 @@ test("libnode-shaped fixture declares the build lifecycle contract", () => {
   assert.deepEqual(
     summary.lifecycleStages.map((stage) => stage.name),
     ["install", "build", "verify", "publish"],
+  );
+});
+
+test("runLifecycle binds compiler-cache activity verification to the runtime action", () => {
+  const events = [];
+  let verificationOptions;
+  const activity = verifyBuildLifecycleCompilerCacheActivity({
+    stageName: "build",
+    executed: true,
+    cwd: "/consumer",
+    env: { BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true" },
+    verifier: (options) => {
+      verificationOptions = options;
+      return {
+        compileRequests: 12,
+        cacheHits: 7,
+        cacheMisses: 5,
+        cacheableRequests: 12,
+      };
+    },
+    frameworkLog: {
+      info: (event, payload) => events.push({ event, payload }),
+    },
+  });
+
+  assert.deepEqual(verificationOptions, {
+    cwd: "/consumer",
+    env: { BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true" },
+  });
+  assert.deepEqual(activity, {
+    compileRequests: 12,
+    cacheHits: 7,
+    cacheMisses: 5,
+    cacheableRequests: 12,
+  });
+  assert.deepEqual(events, [
+    {
+      event: "compiler-cache.activity",
+      payload: { attributes: activity },
+    },
+  ]);
+  assert.equal(
+    verifyBuildLifecycleCompilerCacheActivity({
+      stageName: "verify",
+      executed: true,
+      verifier: () => assert.fail("non-build lifecycle must not verify cache activity"),
+    }),
+    undefined,
   );
 });
 

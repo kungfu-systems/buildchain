@@ -346,6 +346,14 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "pre-upload-transport-smoke-artifact-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "pre-upload-transport-smoke-scenario-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "process-sample-interval-ms": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -504,7 +512,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:6088b850d18b276fccb71564a2afc7fbc1a3343036635b4fe2de960b99965498"
+      "digest": "sha256:ba530907e57984abd47974cf3a9bab124f04629563676a4e37cfa302549789d6"
     },
     {
       "schemaVersion": 1,
@@ -788,6 +796,14 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "pre-upload-transport-smoke-artifact-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "pre-upload-transport-smoke-scenario-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "process-sample-interval-ms": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -922,7 +938,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:7668105652e29bf41bbdaf73288cc285c78a7beaa287bf8502b8abc107837372"
+      "digest": "sha256:0e0888527d7319a7603620520cdd76eb3e4434f80dbc92fffa0eb0d90f88b3e4"
     },
     {
       "schemaVersion": 1,
@@ -2314,5 +2330,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:1ca3dd555338d485c6aa052fa01a76fb0b20a4d0812a71965e97f7dfd748b111"
+  "digest": "sha256:bbe99942ee5b4f333470525bf9ae7c4c9c66875ab384ba6a05700dac139bf5b1"
 }

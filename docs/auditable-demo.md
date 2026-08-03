@@ -52,9 +52,25 @@ the default. Both classes retain 4 MiB per step, a clean Home/XDG environment,
 no inherited credentials, and a network-disabled read-only container with
 bounded tmpfs.
 
-The uploaded metadata must bind the executable SHA-256 and declare an empty
-runtime dependency set. Capture rejects an artifact name or upload digest that
-does not resolve to exactly one live artifact from the current workflow run.
+The uploaded metadata must bind the executable SHA-256, declare an empty
+runtime dependency set, and provide a bounded `executableFiles` array of exact
+artifact-relative paths and SHA-256 digests. GitHub Artifact transport does not
+retain Unix executable modes, so Buildchain restores mode `0755` only for this
+digest-verified executable closure and verifies the same closure again inside
+the network-disabled capture boundary. It never recursively changes artifact
+modes. This metadata controls assembly only and grants no execution,
+publication, or identity authority. Capture rejects an artifact name or upload
+digest that does not resolve to exactly one live artifact from the current workflow run.
+
+Consumers may also declare one bounded, non-interactive `transportSmoke` argv
+in the same scenario and opt the reusable build into
+`pre-upload-transport-smoke-scenario-path`. Before any GitHub Artifact or S3
+relay upload, Buildchain copies the exact distribution directory, removes Unix
+execute bits to simulate transport, restores only the digest-bound executable
+closure, and runs that real binary with a clean Home/XDG environment. A missing
+launcher, runtime, or embedded interpreter therefore fails before the expensive
+upload begins. This is a transport diagnostic with no authority grants; the
+later network-disabled capture and Gate remain the qualification authority.
 It retains ANSI terminal bytes with the real PTY read timestamps, verifies
 declared stdout and JSON file facts, enforces the total deadline while a step is
 running, and removes the disposable workspace before emitting evidence.

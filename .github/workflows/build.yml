@@ -213,6 +213,16 @@ on:
           build/stage
         type: string
         required: false
+      pre-upload-transport-smoke-scenario-path:
+        description: "Optional declarative demo scenario, relative to working-directory, whose transport smoke must pass before Linux artifact upload"
+        default: ""
+        type: string
+        required: false
+      pre-upload-transport-smoke-artifact-root:
+        description: "Artifact root, relative to working-directory, used by the pre-upload transport simulation"
+        default: "."
+        type: string
+        required: false
       credential-island-macos-app-path:
         description: "Optional exact .app path to seal for a protected macOS credential-island job"
         default: ""
@@ -791,6 +801,8 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       artifact-name-template: ${{ inputs.artifact-name-template }}
       artifact-paths: ${{ inputs.artifact-paths }}
+      pre-upload-transport-smoke-scenario-path: ${{ inputs.pre-upload-transport-smoke-scenario-path }}
+      pre-upload-transport-smoke-artifact-root: ${{ inputs.pre-upload-transport-smoke-artifact-root }}
       credential-island-macos-app-path: ${{ inputs.credential-island-macos-app-path }}
       credential-island-environment: ${{ inputs.credential-island-environment }}
       credential-island-caller-owned: ${{ inputs.credential-island-caller-owned }}
