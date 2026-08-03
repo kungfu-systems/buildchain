@@ -318,6 +318,32 @@ test("a failed latest rerun excludes that SHA and falls back to the next qualifi
   assert.equal(selected.skippedNewerCommitCount, 1);
 });
 
+test("a cancelled duplicate preserves the latest completed qualification verdict", () => {
+  const selected = selectLatestQualifiedSource({
+    sourceHistory: [SOURCE_SHA],
+    workflowRunsByPath: new Map([
+      [
+        DEV,
+        [
+          apiRun(DEV),
+          apiRun(DEV, {
+            id: 303,
+            conclusion: "cancelled",
+          }),
+        ],
+      ],
+      [ALPHA, [apiRun(ALPHA)]],
+    ]),
+    requiredWorkflowPaths: [DEV, ALPHA],
+    now: NOW,
+    maxAgeSeconds: 86400,
+  });
+  assert.equal(selected.sourceSha, SOURCE_SHA);
+  assert.equal(selected.skippedNewerCommitCount, 0);
+  assert.equal(selected.workflowEvidence[0].runId, 101);
+  assert.equal(selected.workflowEvidence[0].conclusion, "success");
+});
+
 test("patrol fails closed when no source ancestor has the complete evidence pair", async () => {
   const fake = client({ runs: [apiRun(ALPHA)] });
   const result = await runDevAlphaCandidatePatrol(
