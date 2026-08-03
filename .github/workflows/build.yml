@@ -176,6 +176,11 @@ on:
         default: ""
         type: string
         required: false
+      verify-substage-evidence-path:
+        description: "Optional lifecycle verify substage evidence path produced by the consumer command"
+        default: ""
+        type: string
+        required: false
       kfd-agent-hub:
         description: "Agent Hub conformance mode: off or auto. Auto reads .buildchain/kfd/agent-hub.json and runs the fixed KFD suite."
         default: "off"
@@ -793,6 +798,7 @@ jobs:
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}
+      verify-substage-evidence-path: ${{ inputs.verify-substage-evidence-path }}
       kfd-agent-hub: ${{ inputs.kfd-agent-hub }}
       lifecycle-timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
       require-install: ${{ inputs.require-install }}

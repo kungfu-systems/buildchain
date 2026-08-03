@@ -160,6 +160,11 @@ on:
         default: ""
         type: string
         required: false
+      verify-substage-evidence-path:
+        description: "Optional lifecycle verify substage evidence path produced by the consumer command"
+        default: ""
+        type: string
+        required: false
       kfd-agent-hub:
         description: "Agent Hub conformance mode: off or auto. Auto reads .buildchain/kfd/agent-hub.json and runs the fixed KFD suite."
         default: "off"
@@ -1611,6 +1616,7 @@ jobs:
           BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
           BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
           BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1632,6 +1638,27 @@ jobs:
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+          substage-evidence-path: ${{ inputs.verify-substage-evidence-path }}
+
+      - name: Independently verify lifecycle substage evidence
+        if: ${{ always() && inputs.verify-substage-evidence-path != '' }}
+        working-directory: ${{ inputs.working-directory }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+          --file "${{ inputs.verify-substage-evidence-path }}"
+          --stage verify
+          --source-sha "${{ needs.resolve-source.outputs.publish-source-sha }}"
+          --source-tree "${{ needs.resolve-source.outputs.publish-source-tree-sha }}"
+          --platform-id "${{ matrix.platform.id }}"
+
+      - name: Upload failed verify substage evidence
+        if: ${{ always() && steps.verify-lifecycle.outcome != 'success' && inputs.verify-substage-evidence-path != '' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-verify-substages-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_attempt }}
+          path: ${{ inputs.working-directory }}/${{ inputs.verify-substage-evidence-path }}
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Simulate artifact transport before upload
         if: ${{ matrix.platform.id == 'linux-x64' && inputs.pre-upload-transport-smoke-scenario-path != '' }}
@@ -1755,6 +1782,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/verify-substages.json
           BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}-credential-island-input-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_PATHS: ${{ matrix.platform.id == inputs.credential-island-macos-platform-id && inputs.credential-island-macos-app-path != '' && format('.buildchain/credential-island/{0}', matrix.platform.id) || '' }}
 
@@ -1806,6 +1834,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/verify-substages.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -2083,7 +2112,13 @@ jobs:
         uses: ./.buildchain/runtime/actions/run-lifecycle
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -2105,6 +2140,27 @@ jobs:
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+          substage-evidence-path: ${{ inputs.verify-substage-evidence-path }}
+
+      - name: Independently verify lifecycle substage evidence
+        if: ${{ always() && inputs.verify-substage-evidence-path != '' }}
+        working-directory: ${{ inputs.working-directory }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+          --file "${{ inputs.verify-substage-evidence-path }}"
+          --stage verify
+          --source-sha "${{ needs.resolve-source.outputs.publish-source-sha }}"
+          --source-tree "${{ needs.resolve-source.outputs.publish-source-tree-sha }}"
+          --platform-id "${{ matrix.platform.id }}"
+
+      - name: Upload failed verify substage evidence
+        if: ${{ always() && steps.verify-lifecycle.outcome != 'success' && inputs.verify-substage-evidence-path != '' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-verify-substages-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_attempt }}
+          path: ${{ inputs.working-directory }}/${{ inputs.verify-substage-evidence-path }}
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Simulate artifact transport before upload
         if: ${{ matrix.platform.id == 'linux-x64' && inputs.pre-upload-transport-smoke-scenario-path != '' }}
@@ -2190,6 +2246,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/verify-substages.json
 
       - name: Upload artifact relay manifest
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
@@ -2239,6 +2296,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/verify-substages.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -2672,6 +2730,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/verify-substages.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true

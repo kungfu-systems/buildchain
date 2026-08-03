@@ -458,6 +458,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "verify-substage-evidence-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "working-directory": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -512,7 +516,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:ba530907e57984abd47974cf3a9bab124f04629563676a4e37cfa302549789d6"
+      "digest": "sha256:9c0aacca910cef4619a797898ff5c24027c1583f84431a93a5efc854925326e7"
     },
     {
       "schemaVersion": 1,
@@ -908,6 +912,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "verify-substage-evidence-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "working-directory": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -938,7 +946,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:0e0888527d7319a7603620520cdd76eb3e4434f80dbc92fffa0eb0d90f88b3e4"
+      "digest": "sha256:48545554883888862984cdf1b6b4b56341531cdd6192600782a76b92ad22fd36"
     },
     {
       "schemaVersion": 1,
@@ -2330,5 +2338,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:bbe99942ee5b4f333470525bf9ae7c4c9c66875ab384ba6a05700dac139bf5b1"
+  "digest": "sha256:c8905bf2d8facd130d082161b2993ad2175dca54fd3d095c3d75cc325917977d"
 }
