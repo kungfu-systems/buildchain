@@ -214,7 +214,7 @@ else if (joined.includes("cloudformation describe-stacks") && args.includes("--q
 else if (joined.includes("cloudformation describe-stacks")) process.stdout.write('{"Stacks":[{"StackName":"budget-guard"}]}');
 else if (joined.includes("budgets describe-budget")) process.stdout.write('{"Budget":{"BudgetName":"kungfu-buildchain-windows-jit-actual-spend","BudgetLimit":{"Amount":"110","Unit":"USD"},"BudgetType":"COST","Metrics":["UnblendedCost"],"FilterExpression":{"And":[{"Dimensions":{"Key":"USAGE_TYPE","Values":["BoxUsage:c7i.4xlarge"],"MatchOptions":["EQUALS"]}},{"Dimensions":{"Key":"OPERATION","Values":["RunInstances:0002"],"MatchOptions":["EQUALS"]}},{"Dimensions":{"Key":"REGION","Values":["us-east-1"],"MatchOptions":["EQUALS"]}}]}}}');
 else if (joined.includes("ce get-dimension-values")) process.stdout.write(JSON.stringify({DimensionValues:[{Value:args[args.indexOf("--search-string")+1]}]}));
-else if (joined.includes("describe-notifications-for-budget")) process.stdout.write('{"Notifications":[{"NotificationType":"ACTUAL","ThresholdType":"PERCENTAGE","Threshold":80},{"NotificationType":"ACTUAL","ThresholdType":"PERCENTAGE","Threshold":95}]}');
+else if (joined.includes("describe-notifications-for-budget")) process.stdout.write('{"Notifications":[{"NotificationType":"ACTUAL","Threshold":80},{"NotificationType":"ACTUAL","Threshold":95}]}');
 else if (joined.includes("describe-subscribers-for-notification")) process.stdout.write('{"Subscribers":[{"SubscriptionType":"SNS","Address":"arn:aws:sns:us-east-1:123456789012:budget-topic"}]}');
 else if (joined.includes("ssm get-parameter")) { process.stderr.write("ParameterNotFound"); process.exit(255); }
 else if (joined.includes("ec2 describe-instances")) process.stdout.write('{"Reservations":[]}');

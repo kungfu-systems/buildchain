@@ -415,8 +415,8 @@ if (joined.includes("sts get-caller-identity")) {
   process.stdout.write(JSON.stringify({ Budget: { BudgetName: "kungfu-buildchain-windows-jit-actual-spend", BudgetLimit: { Amount: "110", Unit: "USD" }, BudgetType: "COST", Metrics: ["UnblendedCost"], FilterExpression: { And: [{ Dimensions: { Key: "USAGE_TYPE", Values: ["BoxUsage:c7i.4xlarge"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "OPERATION", Values: ["RunInstances:0002"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "REGION", Values: ["us-east-1"], MatchOptions: ["EQUALS"] } }] } } }));
 } else if (joined.includes("budgets describe-notifications-for-budget")) {
   process.stdout.write(JSON.stringify({ Notifications: [
-    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 80, ThresholdType: "PERCENTAGE" },
-    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 95, ThresholdType: "PERCENTAGE" }
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 80 },
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 95 }
   ] }));
 } else if (joined.includes("budgets describe-subscribers-for-notification")) {
   process.stdout.write(JSON.stringify({ Subscribers: [{ SubscriptionType: "SNS", Address: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }));
