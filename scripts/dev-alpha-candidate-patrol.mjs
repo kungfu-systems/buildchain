@@ -321,7 +321,7 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
 function latestWorkflowEvidence(runs, workflowPathValue, sourceSha) {
   const matching = runs
     .filter(
-      (run) => run.path === workflowPathValue && run.head_sha === sourceSha,
+      (run) => run.conclusion !== "cancelled" && run.path === workflowPathValue && run.head_sha === sourceSha,
     )
     .sort((left, right) => Number(right.id) - Number(left.id));
   if (matching.length === 0)
@@ -356,7 +356,7 @@ function workflowEvidenceIsFreshAndSuccessful(run, { now, maxAgeSeconds }) {
 
 function latestRunsBySha(runs, workflowPathValue) {
   const latest = new Map();
-  for (const run of runs.filter((row) => row.path === workflowPathValue)) {
+  for (const run of runs.filter((row) => row.path === workflowPathValue && row.conclusion !== "cancelled")) {
     const current = latest.get(run.head_sha);
     if (!current || Number(run.id) > Number(current.id))
       latest.set(run.head_sha, run);
