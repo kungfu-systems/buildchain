@@ -129,7 +129,7 @@
     "typescript": "^5.9.0"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.47",
+    "@kungfu-tech/kfd": "1.0.0-alpha.53",
     "smol-toml": "1.7.0"
   }
 }
