@@ -269,7 +269,7 @@ notifications_valid() {
   notifications=$(aws_json budgets describe-notifications-for-budget \
     --account-id "$account_id" --budget-name "$budget_name" --output json)
   printf '%s' "$notifications" | jq -e \
-    '[.Notifications[] | select(.NotificationType=="ACTUAL" and .ThresholdType=="PERCENTAGE") | .Threshold] | sort == [80,95]' >/dev/null || return 1
+    '[.Notifications[] | select(.NotificationType=="ACTUAL" and (.ThresholdType // "PERCENTAGE")=="PERCENTAGE") | .Threshold] | sort == [80,95]' >/dev/null || return 1
   while IFS= read -r notification; do
     subscribers=$(aws_json budgets describe-subscribers-for-notification \
       --account-id "$account_id" --budget-name "$budget_name" \
