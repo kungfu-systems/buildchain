@@ -18,11 +18,8 @@ on:
         default: ""
         type: string
         required: false
-      required-status-checks:
-        description: "Comma or newline separated required status/check-run name fragments"
-        default: "check / check"
-        type: string
-        required: false
+      required-status-checks: {description: "Comma or newline separated required status/check-run name fragments", default: "check / check", type: string, required: false}
+      queue-admission-context: {description: "Temporary exact-head commit status required before native queue admission", default: "", type: string, required: false}
       ready-label:
         description: "Required label for PRs eligible to merge. Empty disables the label gate."
         default: "ready"
@@ -96,7 +93,7 @@ permissions:
   contents: write
   pull-requests: write
   checks: read
-  statuses: read
+  statuses: write
 
 concurrency:
   group: buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}
@@ -151,6 +148,7 @@ jobs:
           BUILDCHAIN_DEV_PR_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_DEV_PR_TARGET_BRANCH: ${{ steps.target.outputs.branch }}
           BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ inputs.required-status-checks }}
+          BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: ${{ inputs.queue-admission-context }}
           BUILDCHAIN_DEV_PR_READY_LABEL: ${{ inputs.ready-label }}
           BUILDCHAIN_DEV_PR_BLOCK_LABELS: ${{ inputs.block-labels }}
           BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES: ${{ inputs.allowed-head-prefixes }}

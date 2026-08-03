@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e2e22e22f833384400b9e5920f6570dddace1f80ff5bd3a360a4807bf2caa1d9",
+    "sha256": "1c0357ddee57d8525d98fa5397f02d64ca3c6ebbcd5248ba6a48ee05b2d4ecc7",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 60,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e2e22e22f833384400b9e5920f6570dddace1f80ff5bd3a360a4807bf2caa1d9",
+      "sha256": "1c0357ddee57d8525d98fa5397f02d64ca3c6ebbcd5248ba6a48ee05b2d4ecc7",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 60,
@@ -4384,7 +4384,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
@@ -4394,6 +4394,7 @@
             "landing-mode",
             "max-merges",
             "merge-method",
+            "queue-admission-context",
             "ready-label",
             "require-approval",
             "required-status-checks",

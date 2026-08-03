@@ -101,6 +101,40 @@
       },
       "rationale": "Expose opt-in auto-merge registration and an explicit merge method for the already-managed exact-source Alpha candidate without adding approval or direct-merge authority."
     },
+    "workflow:dev-pr-auto-merge": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "dev-pr-auto-merge",
+        "path": ".github/workflows/dev-pr-auto-merge.yml",
+        "reusable": true,
+        "inputs": [
+          "allowed-head-prefixes",
+          "block-labels",
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "landing-mode",
+          "max-merges",
+          "merge-method",
+          "queue-admission-context",
+          "ready-label",
+          "require-approval",
+          "required-status-checks",
+          "same-repository-only",
+          "target-branch"
+        ],
+        "secrets": ["github-token"],
+        "outputs": [
+          "action-count",
+          "enqueued-count",
+          "evaluated-count",
+          "final-base-sha",
+          "merged-count",
+          "skipped-count"
+        ]
+      },
+      "rationale": "Expose an opt-in exact-head queue admission context so protected callers can mint a temporary pre-enqueue lease while preserving the merge-group check as the final authority."
+    },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {

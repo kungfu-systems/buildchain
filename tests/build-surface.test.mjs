@@ -1392,6 +1392,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /target-branch:/);
   assert.match(workflow, /required-status-checks:/);
+  assert.match(workflow, /queue-admission-context:/);
   assert.match(workflow, /default: "check \/ check"/);
   assert.match(workflow, /ready-label:/);
   assert.match(workflow, /block-labels:/);
@@ -1411,9 +1412,10 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /contents: write/);
   assert.match(workflow, /pull-requests: write/);
   assert.match(workflow, /checks: read/);
-  assert.match(workflow, /statuses: read/);
+  assert.match(workflow, /statuses: write/);
   assert.match(workflow, /buildchain-dev-pr-admission-/);
   assert.match(workflow, /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/);
+  assert.match(workflow, /BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT:/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 
   const verify = fs.readFileSync(path.join(root, ".github/workflows/verify.yml"), "utf8");

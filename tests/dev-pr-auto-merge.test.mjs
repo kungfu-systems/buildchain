@@ -37,15 +37,22 @@ function client({
   },
   branchShas = ["base-before", "base-after"],
   queueStates = [{ enabled: false, id: "", entries: [] }],
+  enqueueError = null,
 } = {}) {
   const merged = [];
   const enqueued = [];
+  const commitStatuses = [];
   let branchRead = 0;
   let queueRead = 0;
   const detailReads = new Map();
   return {
     merged,
     enqueued,
+    commitStatuses,
+    async request(method, requestPath, { body } = {}) {
+      commitStatuses.push({ method, requestPath, body });
+      return { data: { id: commitStatuses.length } };
+    },
     async listPullRequests() {
       return pullRequests;
     },
@@ -79,6 +86,7 @@ function client({
       return value;
     },
     async enqueuePullRequest(input) {
+      if (enqueueError) throw enqueueError;
       enqueued.push(input);
       return {
         id: "MQE_1",
@@ -264,11 +272,20 @@ test("queue apply binds enqueuePullRequest to the immutable PR head", async () =
     ],
   });
   const result = await runDevPrAutoMerge(
-    { ...baseOptions, landingMode: "queue", dryRun: false },
+    { ...baseOptions, landingMode: "queue", dryRun: false, queueAdmissionContext: "Queue admission lease" },
     fake,
   );
 
   assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_node_1", expectedHeadOid: "sha-1" }]);
+  assert.deepEqual(fake.commitStatuses, [{
+    method: "POST",
+    requestPath: "/repos/kungfu-systems/buildchain/statuses/sha-1",
+    body: {
+      state: "success",
+      context: "Queue admission lease",
+      description: "Buildchain admitted this exact PR head to the merge queue",
+    },
+  }]);
   assert.equal(result.enqueued[0].action, "enqueued");
   assert.equal(result.enqueued[0].admissionReceipt.finalSafetyBoundary, "github-merge-group");
 });
@@ -292,6 +309,25 @@ test("queue admission fails closed when the target base moves", async () => {
   assert.equal(result.evaluated[0].admissionReceipt.observedBaseSha, "base-2");
   assert.equal(result.evaluated[1].reason, "blocked-by-predecessor");
   assert.deepEqual(fake.enqueued, []);
+});
+
+test("queue admission revokes the temporary lease when enqueue is rejected", async () => {
+  const fake = client({
+    pullRequests: [pr({ number: 1, nodeId: "PR_node_1" })],
+    branchShas: ["base-1", "base-1", "base-1"],
+    queueStates: [
+      { enabled: true, id: "MQ_1", entries: [] },
+      { enabled: true, id: "MQ_1", entries: [] },
+    ],
+    enqueueError: new Error("expected queue rejection"),
+  });
+  const result = await runDevPrAutoMerge(
+    { ...baseOptions, landingMode: "queue", dryRun: false, queueAdmissionContext: "Queue admission lease" },
+    fake,
+  );
+
+  assert.equal(result.evaluated[0].reason, "enqueue-rejected");
+  assert.deepEqual(fake.commitStatuses.map((entry) => entry.body.state), ["success", "failure"]);
 });
 
 test("queue admission fails closed when the PR head moves", async () => {
