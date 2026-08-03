@@ -254,10 +254,13 @@ The modes are deliberately separated:
   workflow is disabled, and the account, campaign, source, Budget, and plan
   digest confirmations match.
 - `prepare --execute` requires the installed Budget guard, absent kill
-  sentinel, fresh Cost Explorer readback, zero residue, a never-used campaign
-  stack name, and the disabled workflow. It deploys the campaign stack and
-  atomically arms the ledger. It never enables or dispatches the workflow and
-  never creates EC2 capacity.
+  sentinel, fresh Cost Explorer readback filtered by both
+  `kungfu:provider=windows-ec2-jit` and `BoxUsage:c7i.4xlarge`, zero residue, a
+  never-used campaign stack name, and the disabled workflow. The receipt binds
+  the query timestamp and exact filter identity. Preparation deploys the
+  campaign stack and atomically arms the ledger with that provider-spend
+  baseline. It never enables or dispatches the workflow and never creates EC2
+  capacity.
 - `close --execute` disables the workflow first, persists `KILLED`, publishes
   the campaign kill switch, and reports terminal success only after EC2, EBS,
   SSM, JIT parameter, and GitHub runner residue is zero. It is safe to rerun
@@ -312,8 +315,11 @@ Budget kill sentinel absent. After the GitHub, AMI, active-instance, SSM, and
 EC2 DryRun checks pass, the controller
 atomically reserves one run. Duplicate run-attempt-qualification identities,
 source mismatch, expiry, `KILLED`, the sixth accepted instance, or a
-reservation that would exceed the baseline-adjusted USD 110 phase ceiling all
-fail closed before `RunInstances`. The operator is the only supported mutation
+reservation that would exceed the USD 110 ceiling after combining the persisted
+fresh Cost Explorer baseline with all in-flight campaign reservations all fail
+closed in one DynamoDB transaction before `RunInstances`. AWS Budget alarms are
+defense in depth for delayed billing telemetry; the atomic ledger is the
+authoritative launch-time guard. The operator is the only supported mutation
 surface for campaign preparation and closeout; direct imports of the core are
 not operator authority.
 
