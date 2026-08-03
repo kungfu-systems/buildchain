@@ -35,10 +35,15 @@ export {
   validateArtifactSigningControllerReceipt,
 } from "./artifact-signing-controller-core.mjs";
 
+function authorityRuntimeShaFromEnvironment() {
+  return process.env.BUILDCHAIN_AUTHORITY_RUNTIME_SHA || "";
+}
+
 export function settleArtifactSigningControl({
   request,
   authorityStatus = process.env.BUILDCHAIN_AUTHORITY_STATUS || "failed",
   authorityRunId = process.env.BUILDCHAIN_AUTHORITY_RUN_ID || "",
+  authorityRuntimeSha = authorityRuntimeShaFromEnvironment(),
   authorityRunUrl = process.env.BUILDCHAIN_AUTHORITY_RUN_URL || "",
   authorityResultArtifact = process.env.BUILDCHAIN_SIGNING_RESULT_ARTIFACT ||
     "",
@@ -88,6 +93,7 @@ export function settleArtifactSigningControl({
     request: control.request,
     authority: {
       repository: control.authority.repository,
+      runtimeSha: authorityRuntimeSha,
       runId: control.request.count > 0 ? authorityRunId : "",
       runUrl: control.request.count > 0 ? authorityRunUrl : "",
       resultArtifact: control.request.count > 0 ? authorityResultArtifact : "",
@@ -136,6 +142,7 @@ export function settleArtifactSigningControl({
       requestArtifact: control.request.artifact,
       requestRoot: control.request.root,
       authorityRunId: validatedReceipt.authority.runId,
+      authorityRuntimeSha: validatedReceipt.authority.runtimeSha,
       resultArtifact: validatedReceipt.authority.resultArtifact,
       artifactName: control.artifact.name,
       manifestArtifact: control.artifact.manifestArtifact,
@@ -195,6 +202,11 @@ export function assertArtifactSigningControllerReceipt({
       result.authority.runId,
       finalDelegation.authority.runId,
       "authority run ID",
+    ],
+    [
+      result.authority.runtimeSha,
+      finalDelegation.authority.runtimeSha,
+      "authority runtime SHA",
     ],
     [
       result.authority.resultArtifact,

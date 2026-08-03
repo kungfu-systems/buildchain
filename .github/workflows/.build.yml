@@ -2428,6 +2428,7 @@ jobs:
           BUILDCHAIN_EXPECTED_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_AUTHORITY_STATUS: ${{ steps.control-request.outputs.request-count == '0' && 'skipped' || steps.signing-authority.outputs.authority-status || 'failed' }}
           BUILDCHAIN_AUTHORITY_RUN_ID: ${{ steps.signing-authority.outputs.authority-run-id }}
+          BUILDCHAIN_AUTHORITY_RUNTIME_SHA: ${{ steps.signing-authority.outputs.authority-runtime-sha }}
           BUILDCHAIN_AUTHORITY_RUN_URL: ${{ steps.signing-authority.outputs.authority-run-url }}
           BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ steps.signing-authority.outputs.result-artifact }}
           BUILDCHAIN_AUTHORITY_CORRELATION_ID: ${{ steps.signing-authority.outputs.correlation-id }}

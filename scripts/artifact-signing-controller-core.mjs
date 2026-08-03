@@ -438,6 +438,9 @@ export function validateArtifactSigningControllerReceipt(value) {
         value.authority?.repository,
         "authority.repository",
       ),
+      runtimeSha: value.authority?.runtimeSha
+        ? exactSha(value.authority.runtimeSha, "authority.runtimeSha")
+        : "",
       runId: optional(value.authority?.runId, "authority.runId"),
       runUrl: optional(value.authority?.runUrl, "authority.runUrl"),
       resultArtifact: optional(
@@ -504,11 +507,13 @@ export function validateArtifactSigningControllerReceipt(value) {
     required(receipt.authority.runId, "authority.runId");
     required(receipt.authority.runUrl, "authority.runUrl");
     required(receipt.authority.resultArtifact, "authority.resultArtifact");
+    exactSha(receipt.authority.runtimeSha, "authority.runtimeSha");
   }
   if (
     receipt.request.count === 0 &&
     (receipt.authority.runId ||
       receipt.authority.runUrl ||
+      receipt.authority.runtimeSha ||
       receipt.authority.resultArtifact)
   ) {
     throw new Error("no-signing controller receipt has authority coordinates");
