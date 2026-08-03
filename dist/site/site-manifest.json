@@ -50,7 +50,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:409527fc5d2466c26a4d299380bc62f5a1653c34b850669bbb873cbe268de3d0"
+      "digest": "sha256:216e69758e78866e5a22fae1c4d017aaccf1b759937fcd953934407263344c03"
     },
     {
       "id": "getting-started",
@@ -130,7 +130,7 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3b7a2a0437f8a3a4e5cff7e05a2a8c427be597d85e93d49d5e35ba2a2b089afc"
+      "digest": "sha256:6e8417ff70db290ee6197f064ed9b7a7da3770738509fac06161dad05b3fca7f"
     },
     {
       "id": "readme-badges",
@@ -226,7 +226,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:94207fa353e87b087ecf53b6cebe6dfffdc1311b2b6bc90b511d83d5757e7827"
+      "digest": "sha256:73d34a3b46ecfb772b806f0d79754772446fcc13d7f349b508a0c0212e97fcec"
     },
     {
       "id": "node-api-reference",
@@ -234,7 +234,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3634029d64cd50aa0a0ce0b6bfed0aca96a56f0ef908cb86d8ad95a74625c984"
+      "digest": "sha256:ae49a589091d1ab91d29f2d6ac52cf2551a9d0b1f78350965b408f40fd219e29"
     },
     {
       "id": "build-facts",

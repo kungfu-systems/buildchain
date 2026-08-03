@@ -120,7 +120,7 @@ export function cliCommandMeta(id) {
     "release-dry-run": { group: "governance-versioning", purpose: "Explain what a channel merge would publish before the PR is merged." },
     "release-line-open": { group: "governance-versioning", purpose: "Plan or write the initial version-state commit for a new minor release line." },
     "release-governance": { group: "governance-versioning", purpose: "Reconcile a managed branch's Buildchain aggregate check to an already-tested pull request SHA." },
-    "release-propagation": { group: "site-and-propagation", purpose: "Plan channel-preserving downstream release PRs and write exact upstream release locks." },
+    "release-propagation": { group: "site-and-propagation", purpose: "Route exact Paper, KFD, Buildchain, or Core Site updates through one resumable propagation Work." },
     "release-transaction": { group: "release-passport-trust", purpose: "Inspect, recover, finalize, or abort durable release transactions." },
     sample: { group: "observability-diagnostics", purpose: "Inspect sampler command families." },
     "sample-process-tree": { group: "observability-diagnostics", purpose: "Sample process-tree diagnostics for a wrapped command." },
