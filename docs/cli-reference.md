@@ -234,6 +234,17 @@ buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--f
 buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]
 ```
 
+### `buildchain dev warrant`
+
+- Help: `buildchain dev warrant --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--command`, `--expected-base`, `--gh-cli`, `--init`, `--output`, `--repository`, `--state-ref`, `--view`
+- Syntax:
+
+```text
+buildchain dev warrant --repository <owner/repo> --state-ref <buildchain-state/dev-delivery/...> [--init --branch <dev/vN/vN.M> --expected-base <sha>] [--command <json-file> | --view] [--output <file>] [--gh-cli]
+```
+
 ## `diagnostics`
 
 ### `buildchain diagnostics`
