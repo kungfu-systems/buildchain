@@ -45,6 +45,32 @@ function operator(mode, extra = [], env = process.env) {
   );
 }
 
+function exactConfirmations(env, { budget = false } = {}) {
+  const planned = operator("plan", [], env);
+  assert.equal(planned.status, 0, planned.stderr);
+  const args = [
+    "--execute",
+    "--confirm-plan-digest",
+    JSON.parse(planned.stdout).digest,
+    "--confirm-account-id",
+    "123456789012",
+    "--confirm-campaign-id",
+    "win-operator01",
+    "--confirm-source-sha",
+    "a".repeat(40),
+  ];
+  if (budget)
+    args.push(
+      "--confirm-budget-name",
+      "kungfu-buildchain-windows-jit-actual-spend",
+    );
+  return args;
+}
+
+function executable(directory, name, body) {
+  fs.writeFileSync(path.join(directory, name), body, { mode: 0o755 });
+}
+
 test("Windows JIT operator emits one deterministic disabled plan", () => {
   const fakeBin = fs.mkdtempSync(path.join(os.tmpdir(), "windows-jit-plan-"));
   const forbidden = "#!/bin/sh\necho provider-call-forbidden >&2\nexit 99\n";
@@ -80,6 +106,10 @@ test("Windows JIT operator emits one deterministic disabled plan", () => {
     assert.equal(plan.safety.workflowEnabledDuringPrepare, false);
     assert.equal(plan.safety.dispatchDuringPrepare, false);
     assert.equal(plan.safety.paidCapacityDuringPrepare, false);
+    assert.deepEqual(plan.cost.providerTag, {
+      key: "kungfu:provider",
+      value: "windows-ec2-jit",
+    });
     assert.match(plan.aws.campaignTemplate.digest, /^sha256:[0-9a-f]{64}$/);
     assert.match(plan.aws.budgetTemplate.digest, /^sha256:[0-9a-f]{64}$/);
     assert.match(plan.digest, /^sha256:[0-9a-f]{64}$/);
@@ -89,7 +119,10 @@ test("Windows JIT operator emits one deterministic disabled plan", () => {
 });
 
 test("Windows JIT operator rejects malformed identities before provider calls", () => {
-  const result = operator("plan", ["--campaign-id", "win-too-long-for-operator-contract"]);
+  const result = operator("plan", [
+    "--campaign-id",
+    "win-too-long-for-operator-contract",
+  ]);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /--campaign-id is invalid/);
 });
@@ -99,5 +132,222 @@ test("Windows JIT operator refuses every mutation without execute and exact conf
     const result = operator(mode);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /--execute is required for mutation/);
+  }
+});
+
+test("Windows JIT prepare rejects a campaign stack collision before paid-capacity calls", () => {
+  const fakeBin = fs.mkdtempSync(
+    path.join(os.tmpdir(), "windows-jit-collision-"),
+  );
+  const log = path.join(fakeBin, "commands.jsonl");
+  try {
+    executable(
+      fakeBin,
+      "aws",
+      `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify(["aws", ...args]) + "\\n");
+if (args.includes("get-caller-identity")) process.stdout.write('{"Account":"123456789012"}');
+else if (args.includes("describe-stacks")) process.stdout.write('{"Stacks":[{"StackName":"collision"}]}');
+else process.exit(91);
+`,
+    );
+    executable(
+      fakeBin,
+      "gh",
+      `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify(["gh", ...args]) + "\\n");
+process.stdout.write('{"id":322620360,"state":"disabled_manually"}');
+`,
+    );
+    const env = {
+      ...process.env,
+      PATH: `${fakeBin}:${process.env.PATH}`,
+      FAKE_COMMAND_LOG: log,
+    };
+    const result = operator(
+      "prepare",
+      exactConfirmations(env, { budget: true }),
+      env,
+    );
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /campaign stack already exists; reuse is forbidden/,
+    );
+    const calls = fs.readFileSync(log, "utf8");
+    assert.doesNotMatch(
+      calls,
+      /run-instances|create-registration-token|get-cost-and-usage| deploy/,
+    );
+  } finally {
+    fs.rmSync(fakeBin, { recursive: true, force: true });
+  }
+});
+
+test("Windows JIT prepare reads fresh cost with exact provider-tag and usage filters", () => {
+  const fakeBin = fs.mkdtempSync(
+    path.join(os.tmpdir(), "windows-jit-cost-filter-"),
+  );
+  const log = path.join(fakeBin, "commands.jsonl");
+  try {
+    executable(
+      fakeBin,
+      "aws",
+      `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify(["aws", ...args]) + "\\n");
+const joined = args.join(" ");
+if (joined.includes("sts get-caller-identity")) process.stdout.write('{"Account":"123456789012"}');
+else if (joined.includes("cloudformation describe-stacks") && joined.includes("win-operator01")) { process.stderr.write("Stack does not exist"); process.exit(255); }
+else if (joined.includes("cloudformation describe-stacks") && args.includes("--query")) process.stdout.write("arn:aws:sns:us-east-1:123456789012:budget-topic");
+else if (joined.includes("cloudformation describe-stacks")) process.stdout.write('{"Stacks":[{"StackName":"budget-guard"}]}');
+else if (joined.includes("budgets describe-budget")) process.stdout.write('{"Budget":{"BudgetName":"kungfu-buildchain-windows-jit-actual-spend","BudgetLimit":{"Amount":"110","Unit":"USD"},"BudgetType":"COST","CostFilters":{"TagKeyValue":["user:kungfu:provider$windows-ec2-jit"]}}}');
+else if (joined.includes("ce get-tags")) process.stdout.write('{"Tags":["windows-ec2-jit"]}');
+else if (joined.includes("describe-notifications-for-budget")) process.stdout.write('{"Notifications":[{"NotificationType":"ACTUAL","ThresholdType":"PERCENTAGE","Threshold":80},{"NotificationType":"ACTUAL","ThresholdType":"PERCENTAGE","Threshold":95}]}');
+else if (joined.includes("describe-subscribers-for-notification")) process.stdout.write('{"Subscribers":[{"SubscriptionType":"SNS","Address":"arn:aws:sns:us-east-1:123456789012:budget-topic"}]}');
+else if (joined.includes("ssm get-parameter")) { process.stderr.write("ParameterNotFound"); process.exit(255); }
+else if (joined.includes("ec2 describe-instances")) process.stdout.write('{"Reservations":[]}');
+else if (joined.includes("ec2 describe-volumes")) process.stdout.write('{"Volumes":[]}');
+else if (joined.includes("ssm describe-instance-information")) process.stdout.write('{"InstanceInformationList":[]}');
+else if (joined.includes("ssm describe-parameters")) process.stdout.write('{"Parameters":[]}');
+else if (joined.includes("ce get-cost-and-usage")) { process.stderr.write("intentional stop after cost query"); process.exit(86); }
+else process.exit(91);
+`,
+    );
+    executable(
+      fakeBin,
+      "gh",
+      `#!/usr/bin/env node
+const args = process.argv.slice(2).join(" ");
+process.stdout.write(args.includes("actions/runners") ? '{"runners":[]}' : '{"id":322620360,"state":"disabled_manually"}');
+`,
+    );
+    const env = {
+      ...process.env,
+      PATH: `${fakeBin}:${process.env.PATH}`,
+      FAKE_COMMAND_LOG: log,
+    };
+    const result = operator(
+      "prepare",
+      exactConfirmations(env, { budget: true }),
+      env,
+    );
+    assert.equal(result.status, 86);
+    const calls = fs
+      .readFileSync(log, "utf8")
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    const costCall = calls.find((entry) =>
+      entry.includes("get-cost-and-usage"),
+    );
+    assert.ok(costCall, "Cost Explorer query was not made");
+    const filter = JSON.parse(costCall[costCall.indexOf("--filter") + 1]);
+    assert.deepEqual(filter, {
+      And: [
+        {
+          Dimensions: {
+            Key: "USAGE_TYPE",
+            Values: ["BoxUsage:c7i.4xlarge"],
+            MatchOptions: ["EQUALS"],
+          },
+        },
+        {
+          Tags: {
+            Key: "kungfu:provider",
+            Values: ["windows-ec2-jit"],
+            MatchOptions: ["EQUALS"],
+          },
+        },
+      ],
+    });
+    assert.equal(
+      calls.some(
+        (entry) => entry.includes("deploy") || entry.includes("run-instances"),
+      ),
+      false,
+    );
+  } finally {
+    fs.rmSync(fakeBin, { recursive: true, force: true });
+  }
+});
+
+test("Windows JIT launch gate fails closed before JIT when the Budget guard is absent", () => {
+  const fakeBin = fs.mkdtempSync(
+    path.join(os.tmpdir(), "windows-jit-budget-gate-"),
+  );
+  const log = path.join(fakeBin, "commands.jsonl");
+  try {
+    executable(
+      fakeBin,
+      "aws",
+      `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify(args) + "\\n");
+if (args.includes("get-caller-identity")) process.stdout.write('{"Account":"123456789012"}');
+else if (args.includes("describe-stacks")) { process.stderr.write("Stack does not exist"); process.exit(255); }
+else process.exit(91);
+`,
+    );
+    executable(fakeBin, "gh", "#!/bin/sh\necho forbidden >&2\nexit 99\n");
+    const env = {
+      ...process.env,
+      PATH: `${fakeBin}:${process.env.PATH}`,
+      FAKE_COMMAND_LOG: log,
+    };
+    const result = operator("launch-gate", [], env);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /provider Budget guard stack is missing/);
+    assert.doesNotMatch(
+      fs.readFileSync(log, "utf8"),
+      /run-instances|jitconfig|registration-token/,
+    );
+  } finally {
+    fs.rmSync(fakeBin, { recursive: true, force: true });
+  }
+});
+
+test("Windows JIT close is terminal and repeatable after the campaign stack is absent", () => {
+  const fakeBin = fs.mkdtempSync(path.join(os.tmpdir(), "windows-jit-close-"));
+  try {
+    executable(
+      fakeBin,
+      "aws",
+      `#!/usr/bin/env node
+const args = process.argv.slice(2).join(" ");
+if (args.includes("sts get-caller-identity")) process.stdout.write('{"Account":"123456789012"}');
+else if (args.includes("cloudformation describe-stacks")) { process.stderr.write("Stack does not exist"); process.exit(255); }
+else if (args.includes("ec2 describe-instances")) process.stdout.write('{"Reservations":[]}');
+else if (args.includes("ec2 describe-volumes")) process.stdout.write('{"Volumes":[]}');
+else if (args.includes("ssm describe-instance-information")) process.stdout.write('{"InstanceInformationList":[]}');
+else if (args.includes("ssm describe-parameters")) process.stdout.write('{"Parameters":[]}');
+else process.exit(91);
+`,
+    );
+    executable(
+      fakeBin,
+      "gh",
+      `#!/usr/bin/env node
+const args = process.argv.slice(2).join(" ");
+if (args.includes("workflow disable")) process.exit(0);
+process.stdout.write(args.includes("actions/runners") ? '{"runners":[]}' : '{"id":322620360,"state":"disabled_manually"}');
+`,
+    );
+    const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}` };
+    const confirmations = exactConfirmations(env);
+    const first = operator("close", confirmations, env);
+    const second = operator("close", confirmations, env);
+    assert.equal(first.status, 0, first.stderr);
+    assert.equal(second.status, 0, second.stderr);
+    assert.equal(JSON.parse(first.stdout).campaignStackPresent, false);
+    assert.equal(JSON.parse(second.stdout).status, "closed-zero-residue");
+  } finally {
+    fs.rmSync(fakeBin, { recursive: true, force: true });
   }
 });

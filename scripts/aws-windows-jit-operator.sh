@@ -143,7 +143,7 @@ make_plan() {
     --arg kill_parameter "$budget_kill_parameter" \
     --argjson slots "$max_accepted_instances" \
     --argjson budget "$budget_limit_usd" \
-    '{schemaVersion:1,contract:$contract,kind:"operator-plan",mode:"dry-run",account:{id:$account},aws:{region:$region,budgetGuard:{stackName:$guard_stack,budgetName:$budget_name,tagKey:$tag_key,tagValue:$tag_value,killParameterName:$kill_parameter},campaignStackName:("kungfu-buildchain-windows-jit-"+$campaign),vpcId:$vpc,subnetId:$subnet,oidcProviderArn:$oidc,campaignTemplate:{path:$campaign_template,digest:$campaign_template_digest},budgetTemplate:{path:$budget_template,digest:$budget_template_digest}},campaign:{id:$campaign,observedAt:$observed_at,expiresAt:$expires_at,maxAcceptedInstances:$slots},source:{sha:$source_sha,ref:$source_ref},github:{repository:$repository,workflowId:$workflow_id,requiredState:"disabled_manually"},cost:{start:$cost_start,end:$cost_end,usageType:"BoxUsage:c7i.4xlarge",phaseBudgetLimitUsd:$budget,maximumInstanceReservationUsd:4.35,providerTelemetryMayLag:true},safety:{defaultAction:"plan-only",workflowEnabledDuringPrepare:false,dispatchDuringPrepare:false,paidCapacityDuringPrepare:false,budgetRequired:true,budgetTagVisibilityRequired:true,budgetAlarmIsDefenseInDepth:true,atomicCampaignReservationIsAuthoritative:true,uniqueCampaignStackRequired:true,zeroResidueRequired:true}}')
+    '{schemaVersion:1,contract:$contract,kind:"operator-plan",mode:"dry-run",account:{id:$account},aws:{region:$region,budgetGuard:{stackName:$guard_stack,budgetName:$budget_name,tagKey:$tag_key,tagValue:$tag_value,killParameterName:$kill_parameter},campaignStackName:("kungfu-buildchain-windows-jit-"+$campaign),vpcId:$vpc,subnetId:$subnet,oidcProviderArn:$oidc,campaignTemplate:{path:$campaign_template,digest:$campaign_template_digest},budgetTemplate:{path:$budget_template,digest:$budget_template_digest}},campaign:{id:$campaign,observedAt:$observed_at,expiresAt:$expires_at,maxAcceptedInstances:$slots},source:{sha:$source_sha,ref:$source_ref},github:{repository:$repository,workflowId:$workflow_id,requiredState:"disabled_manually"},cost:{start:$cost_start,end:$cost_end,usageType:"BoxUsage:c7i.4xlarge",providerTag:{key:$tag_key,value:$tag_value},phaseBudgetLimitUsd:$budget,maximumInstanceReservationUsd:4.35,providerTelemetryMayLag:true},safety:{defaultAction:"plan-only",workflowEnabledDuringPrepare:false,dispatchDuringPrepare:false,paidCapacityDuringPrepare:false,budgetRequired:true,budgetTagVisibilityRequired:true,budgetAlarmIsDefenseInDepth:true,atomicCampaignReservationIsAuthoritative:true,uniqueCampaignStackRequired:true,zeroResidueRequired:true}}')
   digest=$(printf '%s' "$body" | shasum -a 256 | awk '{print "sha256:" $1}')
   printf '%s' "$body" | jq --arg digest "$digest" '. + {digest:$digest}'
 }
@@ -281,13 +281,18 @@ resource_counts() {
 }
 
 cost_readback() {
+  local filter queried_at
+  filter=$(jq -cn --arg key "$budget_tag_key" --arg value "$budget_tag_value" \
+    '{And:[{Dimensions:{Key:"USAGE_TYPE",Values:["BoxUsage:c7i.4xlarge"],MatchOptions:["EQUALS"]}},{Tags:{Key:$key,Values:[$value],MatchOptions:["EQUALS"]}}]}')
+  queried_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   aws_json ce get-cost-and-usage \
     --time-period "Start=${cost_start},End=${cost_end}" \
     --granularity DAILY \
     --metrics UnblendedCost UsageQuantity \
-    --filter '{"Dimensions":{"Key":"USAGE_TYPE","Values":["BoxUsage:c7i.4xlarge"],"MatchOptions":["EQUALS"]}}' \
+    --filter "$filter" \
     --output json | jq \
-    '{amountUsd:([.ResultsByTime[].Total.UnblendedCost.Amount|tonumber]|add),usageHours:([.ResultsByTime[].Total.UsageQuantity.Amount|tonumber]|add),estimated:any(.ResultsByTime[];.Estimated==true),rowCount:(.ResultsByTime|length)}'
+    --arg queried_at "$queried_at" --arg tag_key "$budget_tag_key" --arg tag_value "$budget_tag_value" \
+    '{amountUsd:([.ResultsByTime[].Total.UnblendedCost.Amount|tonumber]|add//0),usageHours:([.ResultsByTime[].Total.UsageQuantity.Amount|tonumber]|add//0),estimated:any(.ResultsByTime[];.Estimated==true),rowCount:(.ResultsByTime|length),queriedAt:$queried_at,filter:{usageType:"BoxUsage:c7i.4xlarge",providerTag:{key:$tag_key,value:$tag_value}}}'
 }
 
 audit() {
@@ -425,22 +430,25 @@ close_campaign() {
   assert_identity
   gh workflow disable "$workflow_id" -R "$repository"
   stack_name="kungfu-buildchain-windows-jit-${campaign_id}"
-  stack=$(aws_json cloudformation describe-stacks --stack-name "$stack_name" --output json)
-  outputs=$(printf '%s' "$stack" | jq '.Stacks[0].Outputs | map({key:.OutputKey,value:.OutputValue}) | from_entries')
-  state_table=$(printf '%s' "$outputs" | jq -r .CampaignStateTable)
-  topic=$(printf '%s' "$outputs" | jq -r .KillSwitchTopic)
-  node scripts/aws-windows-jit-campaign.mjs kill-campaign \
-    --aws-profile "$aws_profile" --region "$region" \
-    --campaign-id "$campaign_id" --confirm-campaign-id "$campaign_id" \
-    --source-sha "$source_sha" --confirm-source-sha "$source_sha" \
-    --state-table "$state_table" --confirm-state-table "$state_table" \
-    --kill-switch-topic "$topic" --confirm-kill-switch-topic "$topic" \
-    --reason "$reason" >/dev/null
+  stack=$(optional_stack "$stack_name")
+  if [[ "$stack" != "null" ]]; then
+    outputs=$(printf '%s' "$stack" | jq '.Stacks[0].Outputs | map({key:.OutputKey,value:.OutputValue}) | from_entries')
+    state_table=$(printf '%s' "$outputs" | jq -r .CampaignStateTable)
+    topic=$(printf '%s' "$outputs" | jq -r .KillSwitchTopic)
+    node scripts/aws-windows-jit-campaign.mjs kill-campaign \
+      --aws-profile "$aws_profile" --region "$region" \
+      --campaign-id "$campaign_id" --confirm-campaign-id "$campaign_id" \
+      --source-sha "$source_sha" --confirm-source-sha "$source_sha" \
+      --state-table "$state_table" --confirm-state-table "$state_table" \
+      --kill-switch-topic "$topic" --confirm-kill-switch-topic "$topic" \
+      --reason "$reason" >/dev/null
+  fi
   residue=$(resource_counts)
   [[ "$(printf '%s' "$residue" | jq '[.[]]|add')" == "0" ]] || fail "campaign is killed but cleanup is not terminal; rerun close after the reaper settles"
   assert_workflow_disabled
   jq -n --arg contract "$contract" --arg digest "$plan_digest" --argjson residue "$residue" \
-    '{schemaVersion:1,contract:$contract,kind:"campaign-close-result",status:"closed-zero-residue",residue:$residue,planDigest:$digest}'
+    --argjson stack_present "$([[ "$stack" != "null" ]] && printf true || printf false)" \
+    '{schemaVersion:1,contract:$contract,kind:"campaign-close-result",status:"closed-zero-residue",campaignStackPresent:$stack_present,residue:$residue,planDigest:$digest}'
 }
 
 if [[ "$mode" == "launch-gate" ]]; then
