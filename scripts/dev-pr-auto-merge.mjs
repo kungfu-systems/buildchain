@@ -7,6 +7,7 @@ import path from "node:path";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
 const DEFAULT_REQUIRED_CHECKS = ["check"];
+const DEFAULT_READY_LABEL = "ready";
 const SUCCESS_STATES = new Set(["success"]);
 const SUCCESS_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
 const VALID_LANDING_MODES = new Set(["auto", "direct", "queue"]);
@@ -63,7 +64,7 @@ function normalizeOptions(options = {}) {
   return {
     repository: normalizeRepo(options.repository || process.env.GITHUB_REPOSITORY),
     targetBranch: String(options.targetBranch || "").replace(/^refs\/heads\//, ""),
-    readyLabel: String(options.readyLabel ?? "ready").trim(),
+    readyLabel: String(options.readyLabel || DEFAULT_READY_LABEL).trim(),
     blockLabels: splitList(options.blockLabels, DEFAULT_BLOCK_LABELS).map((label) => label.toLowerCase()),
     allowedHeadPrefixes: splitList(options.allowedHeadPrefixes, DEFAULT_ALLOWED_HEAD_PREFIXES),
     requiredChecks: splitList(options.requiredChecks, DEFAULT_REQUIRED_CHECKS),
@@ -868,6 +869,10 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   const targetedClient = Object.create(client);
   targetedClient.listPullRequests = async () => [pr];
   const controller = await runDevPrAutoMerge({ ...options, targetPullRequestNumber: 0 }, targetedClient);
+  controller.runKind = "targeted-admission-evaluation";
+  controller.outcome = controller.actions.length === 0 ? "target-not-admitted" : "target-action-selected";
+  controller.qualification = false;
+  controller.noOp = controller.actions.length === 0;
   const entry = controller.evaluated.find((value) => value.number === pr.number) || { action: "skip", reason: "target-not-selected" };
   const state = admissionStateFor(entry);
   const receipt = createAdmissionReceipt({
@@ -1148,29 +1153,29 @@ function cliFlag(args, name) {
   return args.includes(`--${name}`);
 }
 
-function cliOptions(args = []) {
-  const targetPullRequestNumber = cliValue(args, "pull-request", process.env.BUILDCHAIN_DEV_PR_EXPECTED_PR_NUMBER);
+export function cliOptions(args = [], environment = process.env) {
+  const targetPullRequestNumber = cliValue(args, "pull-request", environment.BUILDCHAIN_DEV_PR_EXPECTED_PR_NUMBER);
   return {
-    repository: cliValue(args, "repository", process.env.BUILDCHAIN_DEV_PR_REPOSITORY || process.env.GITHUB_REPOSITORY),
-    targetBranch: cliValue(args, "branch", process.env.BUILDCHAIN_DEV_PR_TARGET_BRANCH || process.env.GITHUB_REF_NAME),
+    repository: cliValue(args, "repository", environment.BUILDCHAIN_DEV_PR_REPOSITORY || environment.GITHUB_REPOSITORY),
+    targetBranch: cliValue(args, "branch", environment.BUILDCHAIN_DEV_PR_TARGET_BRANCH || environment.GITHUB_REF_NAME),
     targetPullRequestNumber,
-    expectedHeadSha: cliValue(args, "expected-head", process.env.BUILDCHAIN_DEV_PR_EXPECTED_HEAD_SHA),
-    readyLabel: cliValue(args, "ready-label", process.env.BUILDCHAIN_DEV_PR_READY_LABEL),
-    blockLabels: cliValue(args, "block-labels", process.env.BUILDCHAIN_DEV_PR_BLOCK_LABELS),
-    allowedHeadPrefixes: cliValue(args, "allowed-head-prefixes", process.env.BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES),
-    requiredChecks: cliValue(args, "required-checks", process.env.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS),
-    queueAdmissionContext: cliValue(args, "queue-admission-context", process.env.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT),
-    diagnosticContext: cliValue(args, "diagnostic-context", process.env.BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT),
-    requireApproval: process.env.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,
-    sameRepositoryOnly: process.env.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,
-    maxMerges: process.env.BUILDCHAIN_DEV_PR_MAX_MERGES,
-    mergeMethod: process.env.BUILDCHAIN_DEV_PR_MERGE_METHOD,
-    landingMode: process.env.BUILDCHAIN_DEV_PR_LANDING_MODE,
-    dryRun: cliFlag(args, "execute") ? false : process.env.BUILDCHAIN_DEV_PR_DRY_RUN,
+    expectedHeadSha: cliValue(args, "expected-head", environment.BUILDCHAIN_DEV_PR_EXPECTED_HEAD_SHA),
+    readyLabel: cliValue(args, "ready-label", environment.BUILDCHAIN_DEV_PR_READY_LABEL || DEFAULT_READY_LABEL),
+    blockLabels: cliValue(args, "block-labels", environment.BUILDCHAIN_DEV_PR_BLOCK_LABELS),
+    allowedHeadPrefixes: cliValue(args, "allowed-head-prefixes", environment.BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES),
+    requiredChecks: cliValue(args, "required-checks", environment.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS),
+    queueAdmissionContext: cliValue(args, "queue-admission-context", environment.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT),
+    diagnosticContext: cliValue(args, "diagnostic-context", environment.BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT),
+    requireApproval: environment.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,
+    sameRepositoryOnly: environment.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,
+    maxMerges: environment.BUILDCHAIN_DEV_PR_MAX_MERGES,
+    mergeMethod: environment.BUILDCHAIN_DEV_PR_MERGE_METHOD,
+    landingMode: environment.BUILDCHAIN_DEV_PR_LANDING_MODE,
+    dryRun: cliFlag(args, "execute") ? false : environment.BUILDCHAIN_DEV_PR_DRY_RUN,
     outputPath: cliValue(
       args,
       "output",
-      process.env.BUILDCHAIN_DEV_PR_OUTPUT_PATH || (targetPullRequestNumber
+      environment.BUILDCHAIN_DEV_PR_OUTPUT_PATH || (targetPullRequestNumber
         ? ".buildchain/dev-pr-admission/result.json"
         : ".buildchain/dev-pr-auto-merge/result.json"),
     ),

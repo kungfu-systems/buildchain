@@ -1,12 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  cliOptions,
   evaluatePullRequest,
   GitHubClient,
   renderMarkdownSummary,
   runDevPrAdmission,
   runDevPrAutoMerge,
 } from "../scripts/dev-pr-auto-merge.mjs";
+
+test("targeted CLI defaults to an explicit readiness label", () => {
+  const options = cliOptions([
+    "--repository", "kungfu-systems/buildchain",
+    "--branch", "dev/v3/v3.0",
+    "--pull-request", "21",
+    "--expected-head", "a".repeat(40),
+  ], {});
+  assert.equal(options.readyLabel, "ready");
+});
 
 function pr(overrides = {}) {
   return {
@@ -519,6 +530,9 @@ test("targeted execute establishes exact-head readiness, enqueues once, and publ
   assert.equal(result.ok, true);
   assert.equal(result.receipt.state, "queued");
   assert.equal(result.receipt.readiness.established, true);
+  assert.equal(result.controller.runKind, "targeted-admission-evaluation");
+  assert.equal(result.controller.outcome, "target-action-selected");
+  assert.equal(result.controller.qualification, false);
   assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
   assert.equal(fake.comments.length, 1);
   assert.match(fake.comments[0].body, /Next action:/);
