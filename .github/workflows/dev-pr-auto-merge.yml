@@ -18,6 +18,21 @@ on:
         default: ""
         type: string
         required: false
+      expected-pr-number:
+        description: "Optional exact PR number for targeted Agent admission; requires expected-head-sha"
+        default: 0
+        type: number
+        required: false
+      expected-head-sha:
+        description: "Exact 40-character PR head required for targeted Agent admission"
+        default: ""
+        type: string
+        required: false
+      diagnostic-context:
+        description: "Commit-status context used for PR-visible targeted admission state"
+        default: "Buildchain delivery intent"
+        type: string
+        required: false
       required-status-checks: {description: "Comma or newline separated required status/check-run name fragments", default: "check / check", type: string, required: false}
       queue-admission-context: {description: "Temporary exact-head commit status required before native queue admission", default: "", type: string, required: false}
       ready-label:
@@ -88,6 +103,12 @@ on:
       final-base-sha:
         description: "Final target branch SHA after the run"
         value: ${{ jobs.merge-dev-prs.outputs.final-base-sha }}
+      admission-state:
+        description: "Typed targeted admission state; empty for cadence patrol"
+        value: ${{ jobs.merge-dev-prs.outputs.admission-state }}
+      admission-receipt-root:
+        description: "Content root of the targeted exact-head admission receipt"
+        value: ${{ jobs.merge-dev-prs.outputs.admission-receipt-root }}
 
 permissions:
   contents: write
@@ -110,6 +131,8 @@ jobs:
       action-count: ${{ steps.merge.outputs.action-count }}
       skipped-count: ${{ steps.merge.outputs.skipped-count }}
       final-base-sha: ${{ steps.merge.outputs.final-base-sha }}
+      admission-state: ${{ steps.merge.outputs.admission-state }}
+      admission-receipt-root: ${{ steps.merge.outputs.receipt-root }}
     steps:
       - name: Resolve target branch
         id: target
@@ -142,11 +165,15 @@ jobs:
 
       - name: Run Buildchain dev PR auto-merge
         id: merge
+        continue-on-error: true
         run: node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           BUILDCHAIN_DEV_PR_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_DEV_PR_TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          BUILDCHAIN_DEV_PR_EXPECTED_PR_NUMBER: ${{ inputs.expected-pr-number }}
+          BUILDCHAIN_DEV_PR_EXPECTED_HEAD_SHA: ${{ inputs.expected-head-sha }}
+          BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT: ${{ inputs.diagnostic-context }}
           BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ inputs.required-status-checks }}
           BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: ${{ inputs.queue-admission-context }}
           BUILDCHAIN_DEV_PR_READY_LABEL: ${{ inputs.ready-label }}
@@ -161,8 +188,26 @@ jobs:
           BUILDCHAIN_DEV_PR_OUTPUT_PATH: .buildchain/dev-pr-auto-merge/result.json
 
       - name: Upload dev PR auto-merge plan
+        if: always()
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-dev-pr-auto-merge-${{ steps.target.outputs.branch-artifact }}
           path: ${{ steps.merge.outputs.result-path }}
           if-no-files-found: error
+
+      - name: Enforce targeted admission result
+        if: always()
+        shell: bash
+        run: |
+          if [ "${MERGE_STEP_OUTCOME}" != "success" ]; then
+            echo "::error::Buildchain dev PR controller failed; inspect the uploaded receipt"
+            exit 1
+          fi
+          if [ "${TARGETED}" = "true" ] && [ "${TARGETED_OK}" != "true" ]; then
+            echo "::error::Targeted PR was not admitted at its expected head"
+            exit 1
+          fi
+        env:
+          MERGE_STEP_OUTCOME: ${{ steps.merge.outcome }}
+          TARGETED: ${{ steps.merge.outputs.targeted }}
+          TARGETED_OK: ${{ steps.merge.outputs.targeted-ok }}

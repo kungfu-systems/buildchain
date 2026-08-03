@@ -317,7 +317,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:73d34a3b46ecfb772b806f0d79754772446fcc13d7f349b508a0c0212e97fcec",
+      "digest": "sha256:0aa00b3513b64dfec885f143df91b42e9798a9b41ede381929bdc194c9892eaf",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -430,7 +430,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:fc7f0add1afce775c327d50a1e269a7040865e65ca2441dbeb8d0373c5f8d5aa",
+      "digest": "sha256:617fb47c9dc8af860e3bc747553b3b48fafa058f012e414692ac1548e0fe0066",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

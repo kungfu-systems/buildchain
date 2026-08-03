@@ -108,6 +108,9 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain inspect release --passport <file-or-url> [--json]
   buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]
   buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]
+  buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>
+                             --pull-request <n> --expected-head <sha>
+                             [--execute] [--output <file>] [--json]
   buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>
                              [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>]
                              [--check-response-timeout-minutes <n>]

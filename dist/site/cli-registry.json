@@ -409,29 +409,37 @@
     {
       "id": "dev",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>",
+      "usage": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>",
       "paths": [
         "dev",
-        "dev merge-queue"
+        "dev merge-queue",
+        "dev pr-admit"
       ],
       "syntaxes": [
         "buildchain dev",
-        "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]"
+        "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]",
+        "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]"
       ],
       "options": [
         "--apply",
         "--branch",
         "--check-response-timeout-minutes",
         "--cwd",
+        "--execute",
+        "--expected-head",
         "--from-config",
+        "--json",
         "--max-entries-to-build",
+        "--output",
+        "--pull-request",
         "--repository",
         "--workflow"
       ],
       "aliases": [],
       "helpCommands": [
         "buildchain dev --help",
-        "buildchain dev merge-queue --help"
+        "buildchain dev merge-queue --help",
+        "buildchain dev pr-admit --help"
       ],
       "purpose": "Inspect protected development-channel governance command families.",
       "capabilityGroup": "governance-versioning",

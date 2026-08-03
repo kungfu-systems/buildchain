@@ -1679,7 +1679,10 @@
         "block-labels",
         "buildchain-ref",
         "buildchain-repository",
+        "diagnostic-context",
         "dry-run",
+        "expected-head-sha",
+        "expected-pr-number",
         "landing-mode",
         "max-merges",
         "merge-method",
@@ -1690,20 +1693,22 @@
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 14,
+      "inputCount": 17,
       "secrets": [
         "github-token"
       ],
       "secretCount": 1,
       "outputs": [
         "action-count",
+        "admission-receipt-root",
+        "admission-state",
         "enqueued-count",
         "evaluated-count",
         "final-base-sha",
         "merged-count",
         "skipped-count"
       ],
-      "outputCount": 6,
+      "outputCount": 8,
       "surface": "dev-governance",
       "capabilityGroup": "governance-versioning",
       "status": "active",

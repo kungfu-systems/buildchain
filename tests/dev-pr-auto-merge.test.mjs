@@ -1,17 +1,31 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  cliOptions,
   evaluatePullRequest,
   GitHubClient,
   renderMarkdownSummary,
+  runDevPrAdmission,
   runDevPrAutoMerge,
 } from "../scripts/dev-pr-auto-merge.mjs";
+
+test("targeted CLI defaults to an explicit readiness label", () => {
+  const options = cliOptions([
+    "--repository", "kungfu-systems/buildchain",
+    "--branch", "dev/v3/v3.0",
+    "--pull-request", "21",
+    "--expected-head", "a".repeat(40),
+  ], {});
+  assert.equal(options.readyLabel, "ready");
+});
 
 function pr(overrides = {}) {
   return {
     number: overrides.number ?? 1,
     node_id: overrides.nodeId ?? `PR_${overrides.number ?? 1}`,
     title: overrides.title ?? "feat: ready change",
+    state: overrides.state ?? "open",
+    html_url: overrides.htmlUrl ?? `https://github.com/kungfu-systems/buildchain/pull/${overrides.number ?? 1}`,
     draft: overrides.draft ?? false,
     mergeable: overrides.mergeable ?? true,
     mergeable_state: overrides.mergeable_state ?? "clean",
@@ -24,6 +38,7 @@ function pr(overrides = {}) {
     base: {
       ref: overrides.baseRef ?? "dev/v2/v2.6",
     },
+    auto_merge: overrides.autoMerge ? { enabled_by: { login: "agent" } } : null,
   };
 }
 
@@ -38,10 +53,12 @@ function client({
   branchShas = ["base-before", "base-after"],
   queueStates = [{ enabled: false, id: "", entries: [] }],
   enqueueError = null,
+  enqueueErrors = [],
 } = {}) {
   const merged = [];
   const enqueued = [];
   const commitStatuses = [];
+  const comments = [];
   let branchRead = 0;
   let queueRead = 0;
   const detailReads = new Map();
@@ -49,6 +66,7 @@ function client({
     merged,
     enqueued,
     commitStatuses,
+    comments,
     async request(method, requestPath, { body } = {}) {
       commitStatuses.push({ method, requestPath, body });
       return { data: { id: commitStatuses.length } };
@@ -86,7 +104,8 @@ function client({
       return value;
     },
     async enqueuePullRequest(input) {
-      if (enqueueError) throw enqueueError;
+      const nextError = enqueueErrors.length > 0 ? enqueueErrors.shift() : enqueueError;
+      if (nextError) throw nextError;
       enqueued.push(input);
       return {
         id: "MQE_1",
@@ -95,6 +114,31 @@ function client({
         pullRequestNumber: 1,
         pullRequestHeadSha: input.expectedHeadOid,
       };
+    },
+    async addLabels(number, labels) {
+      const target = pullRequests.find((entry) => entry.number === number);
+      if (!target) throw new Error(`missing PR ${number}`);
+      const existing = new Set((target.labels || []).map((label) => label.name || label));
+      for (const label of labels) existing.add(label);
+      target.labels = [...existing].map((name) => ({ name }));
+      return target.labels;
+    },
+    async listIssueComments() {
+      return comments;
+    },
+    async createIssueComment(number, body) {
+      const comment = { id: comments.length + 1, html_url: `https://example.invalid/${number}/${comments.length + 1}`, body };
+      comments.push(comment);
+      return comment;
+    },
+    async updateIssueComment(commentId, body) {
+      const comment = comments.find((entry) => entry.id === commentId);
+      comment.body = body;
+      return comment;
+    },
+    async setCommitStatus(sha, body) {
+      commitStatuses.push({ method: "POST", requestPath: `statuses/${sha}`, body });
+      return { id: commitStatuses.length };
     },
   };
 }
@@ -445,4 +489,137 @@ test("GitHub client uses enqueuePullRequest with expectedHeadOid", async () => {
     expectedHeadOid: "sha-1",
   });
   assert.equal(entry.pullRequestHeadSha, "sha-1");
+});
+
+const exactHead = "a".repeat(40);
+const movedHead = "b".repeat(40);
+const targetedOptions = {
+  repository: "kungfu-systems/buildchain",
+  targetBranch: "dev/v2/v2.6",
+  targetPullRequestNumber: 21,
+  expectedHeadSha: exactHead,
+  landingMode: "queue",
+  queueAdmissionContext: "Queue admission lease",
+  requiredChecks: "check",
+  dryRun: true,
+  pollMergeableDelayMs: 0,
+};
+
+test("targeted plan fails visibly when explicit readiness is missing even with native auto-merge armed", async () => {
+  const target = pr({ number: 21, headSha: exactHead, labels: [], autoMerge: true });
+  const result = await runDevPrAdmission(targetedOptions, client({ pullRequests: [target] }));
+  assert.equal(result.ok, false);
+  assert.equal(result.receipt.reason, "missing-ready-label");
+  assert.equal(result.receipt.autoMergeEnabled, true);
+  assert.equal(result.receipt.qualification, false);
+  assert.deepEqual(result.receipt.observedLabels, []);
+  assert.equal(result.receipt.policy.readyLabel, "ready");
+  assert.deepEqual(result.receipt.policy.requiredChecks, ["check"]);
+  assert.match(result.receiptRoot, /^sha256:[0-9a-f]{64}$/);
+  assert.deepEqual(target.labels, []);
+});
+
+test("targeted execute establishes exact-head readiness, enqueues once, and publishes an idempotent PR diagnostic", async () => {
+  const target = pr({ number: 21, headSha: exactHead, labels: [] });
+  const fake = client({
+    pullRequests: [target],
+    branchShas: ["base-1", "base-1", "base-1"],
+    queueStates: Array.from({ length: 3 }, () => ({ enabled: true, id: "MQ_1", entries: [] })),
+  });
+  const result = await runDevPrAdmission({ ...targetedOptions, dryRun: false }, fake);
+  assert.equal(result.ok, true);
+  assert.equal(result.receipt.state, "queued");
+  assert.equal(result.receipt.readiness.established, true);
+  assert.equal(result.controller.runKind, "targeted-admission-evaluation");
+  assert.equal(result.controller.outcome, "target-action-selected");
+  assert.equal(result.controller.qualification, false);
+  assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
+  assert.equal(fake.comments.length, 1);
+  assert.match(fake.comments[0].body, /Next action:/);
+  assert.equal(fake.commitStatuses.at(-1).body.context, "Buildchain delivery intent");
+
+  const duplicateClient = client({
+    pullRequests: [target],
+    queueStates: [{
+      enabled: true,
+      id: "MQ_1",
+      entries: [{ id: "MQE_1", state: "QUEUED", pullRequestNumber: 21, pullRequestHeadSha: exactHead }],
+    }],
+  });
+  const duplicate = await runDevPrAdmission({ ...targetedOptions, dryRun: false }, duplicateClient);
+  assert.equal(duplicate.ok, true);
+  assert.equal(duplicate.receipt.reason, "already-enqueued-exact-head");
+  assert.deepEqual(duplicateClient.enqueued, []);
+});
+
+test("targeted admission refuses head drift, base drift, blocked labels, and forks before readiness mutation", async () => {
+  const cases = [
+    [pr({ number: 21, headSha: movedHead, labels: [] }), "head-sha-drift"],
+    [pr({ number: 21, headSha: exactHead, baseRef: "dev/v3/v3.0", labels: [] }), "base-branch-drift"],
+    [pr({ number: 21, headSha: exactHead, labels: [{ name: "blocked" }] }), "blocked-label"],
+    [pr({ number: 21, headSha: exactHead, headRepo: "other/buildchain", labels: [] }), "fork-or-cross-repository-head"],
+  ];
+  for (const [target, reason] of cases) {
+    const fake = client({ pullRequests: [target] });
+    const result = await runDevPrAdmission({ ...targetedOptions, dryRun: false }, fake);
+    assert.equal(result.ok, false);
+    assert.equal(result.receipt.reason, reason);
+    assert.equal(result.receipt.readiness.established, false);
+    assert.equal(fake.comments.length, 1);
+    assert.match(fake.comments[0].body, new RegExp(reason));
+  }
+});
+
+test("targeted admission reports approval, checks, and queue contention as non-qualifying states", async () => {
+  const ready = pr({ number: 21, headSha: exactHead });
+  const missingApproval = await runDevPrAdmission(
+    { ...targetedOptions, dryRun: false },
+    client({ pullRequests: [ready], reviews: [], queueStates: Array.from({ length: 2 }, () => ({ enabled: true, id: "MQ_1", entries: [] })) }),
+  );
+  assert.equal(missingApproval.receipt.state, "waiting-approval");
+  assert.equal(missingApproval.ok, false);
+
+  const failingChecks = await runDevPrAdmission(
+    { ...targetedOptions, dryRun: false },
+    client({
+      pullRequests: [ready],
+      checks: { statuses: [{ context: "check", state: "failure" }], checkRuns: [] },
+      queueStates: Array.from({ length: 2 }, () => ({ enabled: true, id: "MQ_1", entries: [] })),
+    }),
+  );
+  assert.equal(failingChecks.receipt.state, "waiting-checks");
+
+  const queue = { enabled: true, id: "MQ_1", entries: [{ id: "MQE_9", state: "QUEUED", pullRequestNumber: 9, pullRequestHeadSha: movedHead }] };
+  const predecessor = await runDevPrAdmission(
+    { ...targetedOptions, dryRun: false },
+    client({ pullRequests: [ready], queueStates: [queue, queue] }),
+  );
+  assert.equal(predecessor.receipt.state, "waiting-queue");
+});
+
+test("readiness label removal is repaired and enqueue rejection can retry without a duplicate enqueue", async () => {
+  const target = pr({ number: 21, headSha: exactHead, labels: [] });
+  const fake = client({
+    pullRequests: [target],
+    branchShas: Array(6).fill("base-1"),
+    queueStates: Array.from({ length: 6 }, () => ({ enabled: true, id: "MQ_1", entries: [] })),
+    enqueueErrors: [new Error("transient rejection")],
+  });
+  const rejected = await runDevPrAdmission({ ...targetedOptions, dryRun: false }, fake);
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.receipt.reason, "enqueue-rejected");
+  target.labels = [];
+  const retry = await runDevPrAdmission({ ...targetedOptions, dryRun: false }, fake);
+  assert.equal(retry.ok, true);
+  assert.equal(fake.enqueued.length, 1);
+  assert.equal(fake.comments.length, 1);
+});
+
+test("cadence patrol distinguishes zero candidates and all-skipped no-op from qualification", async () => {
+  const zero = await runDevPrAutoMerge(baseOptions, client({ pullRequests: [] }));
+  assert.equal(zero.outcome, "no-op-no-candidates");
+  assert.equal(zero.qualification, false);
+  const skipped = await runDevPrAutoMerge(baseOptions, client({ pullRequests: [pr({ draft: true })] }));
+  assert.equal(skipped.outcome, "no-op-all-skipped");
+  assert.equal(skipped.qualification, false);
 });

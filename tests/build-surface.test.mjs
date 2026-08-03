@@ -1391,6 +1391,9 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /target-branch:/);
+  assert.match(workflow, /expected-pr-number:/);
+  assert.match(workflow, /expected-head-sha:/);
+  assert.match(workflow, /diagnostic-context:/);
   assert.match(workflow, /required-status-checks:/);
   assert.match(workflow, /queue-admission-context:/);
   assert.match(workflow, /default: "check \/ check"/);
@@ -1404,6 +1407,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /default: "auto"/);
   assert.match(workflow, /enqueued-count:/);
   assert.match(workflow, /action-count:/);
+  assert.match(workflow, /admission-state:/);
+  assert.match(workflow, /admission-receipt-root:/);
   assert.match(workflow, /dry-run:/);
   assert.match(workflow, /default: true/);
   assert.match(workflow, /dev\/v\*\/v\*/);
@@ -1413,6 +1418,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /pull-requests: write/);
   assert.match(workflow, /checks: read/);
   assert.match(workflow, /statuses: write/);
+  assert.match(workflow, /continue-on-error: true/);
+  assert.match(workflow, /Enforce targeted admission result/);
   assert.match(workflow, /buildchain-dev-pr-admission-/);
   assert.match(workflow, /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/);
   assert.match(workflow, /BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT:/);

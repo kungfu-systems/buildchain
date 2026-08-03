@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "beaea88a72930b97bfd96a108b2f4a3df006175f3cd9919b1a52beb5036822c0",
+    "sha256": "0c6631cab0a25da9a6b4af6dbe1468a4f0bcd58a51689d23f663fd01dc3ec317",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 60,
       "actionCount": 6,
       "sitePageCount": 64,
-      "docCommandRefCount": 830,
+      "docCommandRefCount": 834,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "beaea88a72930b97bfd96a108b2f4a3df006175f3cd9919b1a52beb5036822c0",
+      "sha256": "0c6631cab0a25da9a6b4af6dbe1468a4f0bcd58a51689d23f663fd01dc3ec317",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 60,
         "actionCount": 6,
         "sitePageCount": 64,
-        "docCommandRefCount": 830,
+        "docCommandRefCount": 834,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -2046,7 +2046,7 @@
         },
         {
           "id": "cli:dev",
-          "name": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>",
+          "name": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4386,13 +4386,16 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 14,
+          "inputCount": 17,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
             "buildchain-ref",
             "buildchain-repository",
+            "diagnostic-context",
             "dry-run",
+            "expected-head-sha",
+            "expected-pr-number",
             "landing-mode",
             "max-merges",
             "merge-method",
