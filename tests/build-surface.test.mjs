@@ -687,6 +687,15 @@ test("reusable build workflow exposes the required surface contract", () => {
     workflow,
     /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts' && matrix\.platform\.githubHosted != true/,
   );
+  const deterministicPayloadUploads = [
+    ...workflow.matchAll(
+      /\n      - name: (?:Upload|Publish final signed) deterministic artifact\n([\s\S]*?)(?=\n      - name:|\n  [a-z])/g,
+    ),
+  ];
+  assert.equal(deterministicPayloadUploads.length, 4);
+  for (const [, uploadStep] of deterministicPayloadUploads) {
+    assert.match(uploadStep, /include-hidden-files: true/);
+  }
   const relayJob = workflow.slice(
     workflow.indexOf("\n  relay-artifacts:"),
     workflow.indexOf("\n  artifact-signing-control:"),
