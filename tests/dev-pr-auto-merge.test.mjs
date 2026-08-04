@@ -576,6 +576,22 @@ test("qualification-only proves the exact source without observing or mutating q
   assert.deepEqual(fake.enqueued, []);
 });
 
+test("qualification-only accepts a mergeable PR blocked only before queue admission", async () => {
+  const target = pr({ number: 21, headSha: exactHead, mergeable_state: "blocked" });
+  const fake = client({ pullRequests: [target] });
+  fake.getMergeQueueState = async () => {
+    throw new Error("qualification-only must not read queue authority");
+  };
+  const result = await runDevPrAdmission(
+    { ...targetedOptions, landingMode: "queue", qualificationOnly: true },
+    fake,
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.outcome, "source-qualified");
+  assert.equal(result.receipt.reason, "source-qualified-exact-head");
+  assert.deepEqual(fake.enqueued, []);
+});
+
 test("qualification-only execute may establish readiness but never admits to GitHub queue", async () => {
   const target = pr({ number: 21, headSha: exactHead, labels: [] });
   const fake = client({ pullRequests: [target] });

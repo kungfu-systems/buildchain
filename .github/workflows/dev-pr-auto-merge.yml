@@ -313,7 +313,7 @@ jobs:
             --branch "${TARGET_BRANCH}"
             --pull-request "${EXPECTED_PR}"
             --expected-head "${EXPECTED_HEAD}"
-            --landing-mode direct
+            --landing-mode queue
             --qualification-only
             --output .buildchain/dev-delivery/source-admission.json
           )

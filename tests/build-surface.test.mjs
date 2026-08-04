@@ -1419,6 +1419,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /checks: read/);
   assert.match(workflow, /statuses: write/);
   assert.match(workflow, /continue-on-error: true/);
+  assert.match(workflow, /Qualify exact source before scheduling[\s\S]*--landing-mode queue[\s\S]*--qualification-only/);
   assert.match(workflow, /Enforce targeted admission result/);
   assert.match(workflow, /buildchain-dev-pr-admission-/);
   assert.match(workflow, /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/);

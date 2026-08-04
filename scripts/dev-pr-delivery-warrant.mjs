@@ -90,7 +90,7 @@ export function readDeliveryWarrantResult(options, pullRequest) {
 }
 
 export async function runSourceQualification({ options, pullRequest, readiness, client, evaluate, admissionState, createReceipt, root, publishDiagnostic, reject }) {
-  const decision = await evaluate(pullRequest, { ...options, landingMode: "direct", dryRun: true }, client);
+  const decision = await evaluate(pullRequest, { ...options, landingMode: options.landingMode, dryRun: true }, client);
   if (decision.observedHeadSha && String(decision.observedHeadSha).toLowerCase() !== options.expectedHeadSha) {
     return reject("stale", "head-sha-drift-during-source-qualification", readiness);
   }
