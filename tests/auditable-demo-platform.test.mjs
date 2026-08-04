@@ -449,6 +449,12 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
     scenarioPath: standard.scenarioPath,
     captureRoot: standard.output,
   }), /media bundle member must be a bounded regular file/u);
+  const qualifiedVideo = fs.readFileSync(path.join(media, "demo.mp4"));
+  fs.writeFileSync(path.join(media, "demo.mp4"), Buffer.alloc(8 * 1024 * 1024 + 1, 0x61));
+  writeChecksums(media);
+  assert.throws(() => materializeDemo(args), /media bundle member must be a bounded regular file/u);
+  fs.writeFileSync(path.join(media, "demo.mp4"), qualifiedVideo);
+  writeChecksums(media);
   fs.appendFileSync(path.join(media, "demo.gif"), "drift");
   assert.throws(() => materializeDemo(args), /checksum mismatch/u);
 });
