@@ -56,7 +56,6 @@ const requireFromHere = createRequire(import.meta.url);
 function readText(rel) {
   return fs.readFileSync(path.join(root, rel), "utf8");
 }
-
 function readJson(rel) {
   return JSON.parse(readText(rel));
 }
@@ -364,7 +363,6 @@ const manualMetaById = new Map(Object.entries({
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
-  "dev-delivery-warrant-queue": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 136 },
   "dev-qualification-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 136 },
   "dev-alpha-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 137 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
@@ -519,7 +517,7 @@ function workflowCapabilityGroup(entry) {
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
   if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
-  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge")) return capabilityGroup("governance-versioning");
+  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge") || entry.id.includes("dev-delivery-warrant")) return capabilityGroup("governance-versioning");
   if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
   return capabilityGroup("api-cli-reference");
 }
@@ -726,7 +724,6 @@ function buildSiteBundle() {
       "docs/reusable-build-surface.md",
       "docs/release-candidate.md",
       "docs/stable-candidate-patrol.md",
-      "docs/dev-delivery-warrant-queue.md",
       "docs/dev-qualification-patrol.md",
       "docs/dev-alpha-candidate-patrol.md",
       "docs/observed-evidence-patrol.md",

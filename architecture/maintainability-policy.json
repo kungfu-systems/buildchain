@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 264,
-    "maxHandMaintainedSourceLines": 102670,
-    "maxWorkflowFiles": 60,
-    "maxWorkflowLines": 20756,
-    "latestTransition": "Split Dev delivery proof adds one bounded proof contract, one queue binding adapter, and one thin CLI module; every responsibility-owned file remains below the 600-line source ceiling.",
-    "rationale": "The responsibility-owned unified Site upstream agent entry and exact non-force propagation push executor add two bounded modules while preserving the existing Work, Family State v2, Warrant, and receipt authority model. The structural hardening, detached artifact-signing controller and immutable control receipts, bounded AWS Windows and macOS JIT controllers, persistent one-shot Windows campaign admission ledger, cumulative Windows phase-spend baseline gate, operator-confirmed narrowed Windows campaign slot ceilings, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, generic finalized-package propagation capture, downstream-manual code-repository pickup with npm SLSA provenance, exact release-source recovery from shallow consumers, source-bound package release tags, locked consumer history selection, reusable-workflow call preflight, collision-safe macOS DMG assembly, canonical release-propagation digest comparison, declarative exact-binary demo platform, bounded long-form PTY replay, bounded long-form renderer-manifest admission, digest-prefix-compatible executable-closure restoration, pre-upload transport simulation, recursive Buildchain dogfood, protected exact-source candidate auto-merge registration, documentation hardening, audited sccache compiler binding, and one exact-source Dev qualification coalescing controller may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds build-runner release before signing waits, run-attempt and request-root correlation, non-macOS controller settlement, typed Work Control, advanced-channel-preserving durable recovery, npm and Git source coherence, public Passport or registry-provenance readback, capture-only downstream handoff, production readback, exact-source cloud preflight, credential-safe JIT delivery, atomic cost reservation against the retained prior-spend baseline, explicit one-to-five paid-slot confirmation, permanent kill state, fail-closed cleanup, exact head and tree verification across ancestry-aware source gates, bounded allowlisted resource-busy retry with execution-bound cleanup evidence, latest-head coalescing behind a single active run, release-priority runner deferral, GitHub failed-job reruns for classified external failures, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, one shared controlled workflow parser plus exact call-contract receipts, isolated native demo capture with actual elapsed timing, pre-upload executable transport diagnosis, protected README materialization, effective Cargo and CMake compiler launchers, a nonzero cache-activity gate, explicit merge-method validation, and regression guards instead of duplicated delivery behavior or product-specific recording glue; the exact-source lifecycle substage verifier and opt-in four-lane evidence transport add one bounded module plus fail-closed diagnostics without widening the existing lifecycle orchestrator debt; targeted Agent admission adds one explicit exact-repository, base, PR, and head receipt plus PR-visible diagnostics without granting merge authority or weakening independent checks; the fair Dev Delivery Warrant Queue adds one versioned contract, one deterministic transition engine, and one provider-CAS adapter to replace workflow-concurrency scheduling with retained FIFO-aging state and fenced crash recovery; split proof adds one content-addressed proof and delta-classification module, one queue-binding adapter, and one thin public CLI while retaining exact merge-group verification and Warrant-owned provider transitions; any wider ceiling requires another reviewed policy change."
+    "maxHandMaintainedSourceLines": 102018,
+    "maxWorkflowFiles": 61,
+    "maxWorkflowLines": 21300,
+    "latestTransition": "Dev Delivery Warrant authority adds split queue, proof, command, and admission modules plus one terminal reusable workflow so source qualification remains reusable while final integration stays exact and fenced.",
+    "rationale": "The responsibility-owned unified Site upstream agent entry and exact non-force propagation push executor add two bounded modules while preserving the existing Work, Family State v2, Warrant, and receipt authority model. The structural hardening, detached artifact-signing controller and immutable control receipts, bounded AWS Windows and macOS JIT controllers, persistent one-shot Windows campaign admission ledger, cumulative Windows phase-spend baseline gate, operator-confirmed narrowed Windows campaign slot ceilings, agent-native Paper-to-Site propagation closure, exact Paper npm gitHead binding, exact-version pnpm release-age admission, generic finalized-package propagation capture, downstream-manual code-repository pickup with npm SLSA provenance, exact release-source recovery from shallow consumers, source-bound package release tags, locked consumer history selection, reusable-workflow call preflight, collision-safe macOS DMG assembly, canonical release-propagation digest comparison, declarative exact-binary demo platform, bounded long-form PTY replay, bounded long-form renderer-manifest admission, digest-prefix-compatible executable-closure restoration, pre-upload transport simulation, recursive Buildchain dogfood, protected exact-source candidate auto-merge registration, documentation hardening, audited sccache compiler binding, and one exact-source Dev qualification coalescing controller may add responsibility-owned modules and exact evidence stages but must remain below these exact repository-wide ceilings. The allowance binds build-runner release before signing waits, run-attempt and request-root correlation, non-macOS controller settlement, typed Work Control, advanced-channel-preserving durable recovery, npm and Git source coherence, public Passport or registry-provenance readback, capture-only downstream handoff, production readback, exact-source cloud preflight, credential-safe JIT delivery, atomic cost reservation against the retained prior-spend baseline, explicit one-to-five paid-slot confirmation, permanent kill state, fail-closed cleanup, exact head and tree verification across ancestry-aware source gates, bounded allowlisted resource-busy retry with execution-bound cleanup evidence, latest-head coalescing behind a single active run, release-priority runner deferral, GitHub failed-job reruns for classified external failures, the authority-derived CLI and Node reference compiler, the clean-consumer Golden Path verifier, one shared controlled workflow parser plus exact call-contract receipts, isolated native demo capture with actual elapsed timing, pre-upload executable transport diagnosis, protected README materialization, effective Cargo and CMake compiler launchers, a nonzero cache-activity gate, explicit merge-method validation, and regression guards instead of duplicated delivery behavior or product-specific recording glue; the exact-source lifecycle substage verifier and opt-in four-lane evidence transport add one bounded module plus fail-closed diagnostics without widening the existing lifecycle orchestrator debt; targeted Agent admission adds one explicit exact-repository, base, PR, and head receipt plus PR-visible diagnostics without granting merge authority or weakening independent checks; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -156,23 +156,37 @@
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
         "inputs": [
+          "affected-paths-json",
           "allowed-head-prefixes",
+          "assignment-root",
           "block-labels",
           "buildchain-ref",
           "buildchain-repository",
+          "closure-root",
+          "delivery-class",
+          "delivery-priority",
+          "delivery-warrant-mode",
+          "dependency-root",
           "diagnostic-context",
           "dry-run",
           "expected-head-sha",
           "expected-pr-number",
+          "initiative-root",
           "landing-mode",
           "max-merges",
           "merge-method",
+          "plan-root",
           "queue-admission-context",
           "ready-label",
           "require-approval",
           "required-status-checks",
           "same-repository-only",
-          "target-branch"
+          "shard-evidence-roots-json",
+          "source-identity-root",
+          "source-patch-root",
+          "target-branch",
+          "toolchain-root",
+          "warrant-lease-seconds"
         ],
         "secrets": ["github-token"],
         "outputs": [
@@ -183,10 +197,13 @@
           "evaluated-count",
           "final-base-sha",
           "merged-count",
-          "skipped-count"
+          "skipped-count",
+          "source-proof-root",
+          "warrant-receipt-root",
+          "warrant-state-root"
         ]
       },
-      "rationale": "Expose opt-in targeted PR and exact-head inputs plus typed admission outputs so an Agent can request one bounded qualification while independent approval, required checks, readiness, queue admission, and the merge-group check remain authoritative."
+      "rationale": "Extend targeted exact-head admission with opt-in source qualification, immutable candidate roots, shadow planning, and a required fenced Delivery Warrant while independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

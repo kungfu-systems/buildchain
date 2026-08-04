@@ -1,0 +1,163 @@
+import { devDeliveryClone as clone, devDeliveryContentRoot, devDeliveryExactRoot as exactRoot, devDeliveryExactSha as exactSha, devDeliveryPositiveInteger as positiveInteger, devDeliveryProtectedBase as protectedBase, devDeliveryRepository as repository, devDeliveryText as text, devDeliveryTimestamp as timestamp } from "./dev-delivery-common.js";
+
+export const SOURCE_QUALIFICATION_PROOF_SCHEMA = "kungfu.buildchain.source-qualification-proof/v1";
+export const INTEGRATION_DELIVERY_PROOF_SCHEMA = "kungfu.buildchain.integration-delivery-proof/v1";
+
+const DEV_DELIVERY_WARRANT_SCHEMA = "kungfu.buildchain.dev-delivery-warrant/v1";
+
+function exactRoots(values, label) {
+  if (!Array.isArray(values) || values.length === 0) throw new Error(`${label} must contain at least one content root`);
+  return [...new Set(values.map((value) => exactRoot(value, label)))].sort();
+}
+
+function rootedProof(body) {
+  return { ...body, proofRoot: devDeliveryContentRoot(body) };
+}
+
+export function createSourceQualificationProof(input = {}) {
+  return rootedProof({
+    schema: SOURCE_QUALIFICATION_PROOF_SCHEMA,
+    repository: repository(input.repository),
+    protectedBase: protectedBase(input.protectedBase),
+    sourceIdentityRoot: exactRoot(input.sourceIdentityRoot, "sourceIdentityRoot"),
+    sourceHead: exactSha(input.sourceHead, "sourceHead"),
+    sourcePatchRoot: exactRoot(input.sourcePatchRoot, "sourcePatchRoot"),
+    planRoot: exactRoot(input.planRoot, "planRoot"),
+    closureRoot: exactRoot(input.closureRoot, "closureRoot"),
+    dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
+    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    affectedPaths: [...new Set((input.affectedPaths || []).map(text).filter(Boolean))].sort(),
+    shardEvidenceRoots: exactRoots(input.shardEvidenceRoots, "shardEvidenceRoots"),
+    qualifiedAt: timestamp(input.qualifiedAt, "qualifiedAt"),
+  });
+}
+
+export function verifySourceQualificationProof(proofInput, expected = {}) {
+  try {
+    const proof = clone(proofInput || {});
+    if (proof.schema !== SOURCE_QUALIFICATION_PROOF_SCHEMA) return { ok: false, reason: "unsupported-schema" };
+    const proofRoot = proof.proofRoot;
+    delete proof.proofRoot;
+    if (devDeliveryContentRoot(proof) !== proofRoot) return { ok: false, reason: "proof-root-drift" };
+    for (const [field, value] of Object.entries(expected)) {
+      if (value !== undefined && proof[field] !== value) return { ok: false, reason: `${field}-mismatch` };
+    }
+    createSourceQualificationProof(proof);
+    return { ok: true, reason: "exact-source-proof", proofRoot };
+  } catch (error) {
+    return { ok: false, reason: "invalid-proof", error: error.message };
+  }
+}
+
+export function classifyDevDeliveryDelta({ proof, current = {} } = {}) {
+  const verification = verifySourceQualificationProof(proof);
+  if (!verification.ok)
+    return {
+      action: "rerun-full-source-qualification",
+      reason: verification.reason,
+      reusable: false,
+    };
+  const exactPredicates = ["sourceIdentityRoot", "sourcePatchRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot"];
+  for (const field of exactPredicates) {
+    if (!current[field] || current[field] !== proof[field]) {
+      return {
+        action: "rerun-full-source-qualification",
+        reason: `${field}-changed-or-unknown`,
+        reusable: false,
+      };
+    }
+  }
+  if (current.graphKnown !== true || !Array.isArray(current.changedPaths)) {
+    return {
+      action: "rerun-full-source-qualification",
+      reason: "dependency-attribution-unknown",
+      reusable: false,
+    };
+  }
+  const affected = new Set(proof.affectedPaths || []);
+  const overlap = [...new Set(current.changedPaths.map(text).filter((entry) => affected.has(entry)))].sort();
+  if (overlap.length > 0) {
+    return {
+      action: "rerun-affected-source-shards",
+      reason: "dev-delta-overlaps-affected-closure",
+      reusable: false,
+      overlappingPaths: overlap,
+      requiredFinalGate: "exact-integration-delivery-proof",
+    };
+  }
+  return {
+    action: "reuse-source-qualification",
+    reason: "unrelated-dev-delta",
+    reusable: true,
+    proofRoot: proof.proofRoot,
+    requiredReplay: "cheap-project-cut-replay",
+    requiredFinalGate: "exact-integration-delivery-proof",
+  };
+}
+
+export function createProjectCutReplayPlan(input = {}) {
+  const sourceHead = exactSha(input.sourceHead, "sourceHead");
+  const previousBase = exactSha(input.previousBase, "previousBase");
+  const currentBase = exactSha(input.currentBase, "currentBase");
+  return rootedProof({
+    schema: "kungfu.buildchain.project-cut-replay-plan/v1",
+    repository: repository(input.repository),
+    protectedBase: protectedBase(input.protectedBase),
+    pullRequestNumber: positiveInteger(input.pullRequestNumber, "pullRequestNumber"),
+    sourceHead,
+    previousBase,
+    currentBase,
+    sourcePatchRoot: exactRoot(input.sourcePatchRoot, "sourcePatchRoot"),
+    replayTree: exactSha(input.replayTree, "replayTree"),
+    sourceHeadMutationRequired: false,
+    action: previousBase === currentBase ? "verify-existing-replay" : "replay-on-latest-base",
+    finalAuthority: "github-merge-group",
+  });
+}
+
+export function createIntegrationDeliveryProof(input = {}) {
+  const warrant = input.warrant || {};
+  if (warrant.schema !== DEV_DELIVERY_WARRANT_SCHEMA) throw new Error("integration proof requires a Delivery Warrant");
+  return rootedProof({
+    schema: INTEGRATION_DELIVERY_PROOF_SCHEMA,
+    repository: repository(input.repository),
+    protectedBase: protectedBase(input.protectedBase),
+    sourceProofRoot: exactRoot(input.sourceProofRoot, "sourceProofRoot"),
+    currentBase: exactSha(input.currentBase, "currentBase"),
+    replayTree: exactSha(input.replayTree, "replayTree"),
+    mergeGroupHead: exactSha(input.mergeGroupHead, "mergeGroupHead"),
+    mergeGroupTree: exactSha(input.mergeGroupTree, "mergeGroupTree"),
+    warrantCandidateId: exactRoot(warrant.candidateId, "Warrant candidateId"),
+    warrantFencingToken: exactRoot(warrant.fencingToken, "Warrant fencingToken"),
+    warrantGeneration: positiveInteger(warrant.generation, "Warrant generation"),
+    requiredContextRoots: exactRoots(input.requiredContextRoots, "requiredContextRoots"),
+    verifiedAt: timestamp(input.verifiedAt, "verifiedAt"),
+    finalAuthority: "exact-github-merge-group",
+  });
+}
+
+export function verifyIntegrationDeliveryProof(proofInput, expected = {}) {
+  try {
+    const proof = clone(proofInput || {});
+    if (proof.schema !== INTEGRATION_DELIVERY_PROOF_SCHEMA) return { ok: false, reason: "unsupported-schema" };
+    const proofRoot = proof.proofRoot;
+    delete proof.proofRoot;
+    if (devDeliveryContentRoot(proof) !== proofRoot) return { ok: false, reason: "proof-root-drift" };
+    if (proof.finalAuthority !== "exact-github-merge-group") return { ok: false, reason: "non-exact-final-authority" };
+    for (const [field, value] of Object.entries(expected)) {
+      if (value !== undefined && proof[field] !== value) return { ok: false, reason: `${field}-mismatch` };
+    }
+    createIntegrationDeliveryProof({
+      ...proof,
+      warrant: {
+        schema: DEV_DELIVERY_WARRANT_SCHEMA,
+        candidateId: proof.warrantCandidateId,
+        fencingToken: proof.warrantFencingToken,
+        generation: proof.warrantGeneration,
+      },
+    });
+    return { ok: true, reason: "exact-integration-proof", proofRoot };
+  } catch (error) {
+    return { ok: false, reason: "invalid-proof", error: error.message };
+  }
+}

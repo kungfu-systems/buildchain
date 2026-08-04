@@ -1373,15 +1373,15 @@ async function handleDevCommand(args) {
       return;
     }
     if (subcommand === "warrant") {
-      runScript("dev-delivery-warrant-store.mjs", devArgs);
+      runScript("dev-delivery-warrant.mjs", devArgs);
       return;
     }
     if (subcommand === "proof") {
-      runScript("dev-delivery-proof-cli.mjs", devArgs);
+      runScript("dev-delivery-proof.mjs", devArgs);
       return;
     }
     if (subcommand !== "merge-queue") {
-      throw new Error("usage: buildchain dev <pr-admit|merge-queue|proof|warrant> [options]");
+      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant|proof> [options]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;
