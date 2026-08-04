@@ -782,10 +782,20 @@ test("runner presets resolve to explicit matrices", () => {
 
   const custom = resolveRunnerMatrix({
     platformsJson:
-      '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',
+      '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]","environment":{"CXX":"g++-14","CC":"gcc-14","JOBS":4}}]',
   });
   assert.equal(custom.runnerPreset, "custom");
   assert.equal(custom.platformCount, 1);
+  assert.deepEqual(custom.platforms[0].environment, {
+    CXX: "g++-14",
+    CC: "gcc-14",
+    JOBS: 4,
+  });
+  assert.deepEqual(JSON.parse(custom.platformsJson)[0].environment, {
+    CXX: "g++-14",
+    CC: "gcc-14",
+    JOBS: 4,
+  });
 });
 
 test("AWS CodeBuild runner preset fails closed without an exact project", () => {
