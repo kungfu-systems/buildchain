@@ -372,7 +372,7 @@
         "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority"
       ],
       "breakingDigest": "sha256:0bcba689ab5060e12230db4118895242ecb48677ff581ea0360b1833bdac558c",
-      "auditDigest": "sha256:e7e67b9d7bf9cee6103d3cf65686fa428f1d364109c95342cd20c4801a646e02"
+      "auditDigest": "sha256:f1bd6dfc2fc0ee6c96279edc59e7acb47378eefcef202c8c5f048f2516f6341f"
     },
     {
       "contractVersion": 1,
@@ -760,7 +760,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:2e44b559c8fc34e877612ade26e14a243216211920b655fcd49fa79e0d3b7a4e"
+      "auditDigest": "sha256:7a06c2869783ac757c717d392491cf68bd0f55f6206171223d7ba94ead909445"
     },
     {
       "contractVersion": 1,
@@ -3629,5 +3629,5 @@
     }
   ],
   "compatibilityDigest": "sha256:76c3dd58a02887ecd6af33d63e749fef0a988a820fea99bdf4cb078cc48caa83",
-  "contractDigest": "sha256:3df15a867d7e47fc2033033c9aebd334f5fd64da828a126bc9a1c017b5673b81"
+  "contractDigest": "sha256:1bbdfdf4d422ad3e0f21aa1a18ee5c973d7f3cfde158024c13c283213fd4b037"
 }

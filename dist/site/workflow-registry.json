@@ -284,12 +284,13 @@
         "materialize",
         "materialize-base-ref",
         "media-profile",
+        "render-failure-advisory",
         "render-media",
         "renderer-image",
         "scenario-path",
         "source-ref"
       ],
-      "inputCount": 11,
+      "inputCount": 12,
       "secrets": [
         "DEMO_UPDATE_TOKEN"
       ],
@@ -300,9 +301,10 @@
         "evidence-artifact-digest",
         "evidence-artifact-name",
         "publication-pr-url",
+        "render-result",
         "source-sha"
       ],
-      "outputCount": 6,
+      "outputCount": 7,
       "surface": "declarative-auditable-demo",
       "capabilityGroup": "api-cli-reference",
       "status": "preview",

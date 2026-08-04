@@ -28,6 +28,11 @@ on:
         default: false
         type: boolean
         required: false
+      render-failure-advisory:
+        description: Preserve a required Gate while reporting full-media render failure without failing the caller
+        default: false
+        type: boolean
+        required: false
       media-profile:
         default: responsive-web-delivery-v1
         type: string
@@ -58,6 +63,8 @@ on:
         value: ${{ jobs.qualify.outputs.evidence-artifact-name }}
       evidence-artifact-digest:
         value: ${{ jobs.qualify.outputs.evidence-artifact-digest }}
+      render-result:
+        value: ${{ jobs.qualify.outputs.render-result }}
       publication-pr-url:
         value: ${{ jobs.publish.outputs.pr-url }}
 
@@ -204,6 +211,7 @@ jobs:
     outputs:
       evidence-artifact-name: ${{ steps.identity.outputs.name }}
       evidence-artifact-digest: ${{ steps.upload.outputs.artifact-digest }}
+      render-result: ${{ steps.render.outcome }}
     steps:
       - name: Check out exact consumer source
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -248,14 +256,13 @@ jobs:
               sizeInBytes: artifact.size_in_bytes, createdAt: artifact.created_at, expiresAt: artifact.expires_at,
             }, null, 2) + "\n");
 
-      - name: Run required Gate and selective render for every demo
+      - name: Run required Gate for every declared demo
         shell: bash
         env:
           SCENARIO_PATH: ${{ inputs.scenario-path }}
           RENDERER_IMAGE: ${{ inputs.renderer-image }}
           SOURCE_SHA: ${{ needs.capture.outputs.source-sha }}
           MEDIA_PROFILE: ${{ inputs.media-profile }}
-          RENDER_MEDIA: ${{ inputs.render-media }}
         run: |
           set -euo pipefail
           docker pull "${RENDERER_IMAGE}"
@@ -289,31 +296,52 @@ jobs:
               --source-coordinate capture-coordinate.json --diagnostics "${root}/diagnostics" \
               --adapter scripts/auditable-demo-platform.mjs --renderer-image "${RENDERER_IMAGE}" --source-sha "${SOURCE_SHA}" \
               --media-profile "${MEDIA_PROFILE}" --media-inspection "${root}/smoke-inspection/media-inspection.json" --output "${root}/gate"
-            if [ "${RENDER_MEDIA}" = "true" ]; then
-              gate_root=$(sha256sum "${root}/gate/checksums.sha256" | awk '{print "sha256:"$1}')
-              docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
-                --volume "${GITHUB_WORKSPACE}/${root}/gate:/input:ro" "${RENDERER_IMAGE}" demo-renderer --validate-only \
-                --scene /input/scene.json --transcript /input/complete-transcript.txt \
-                --projection /input/public-projection.json --terminal-capture /input/terminal-capture.json \
-                --rendition-set /input/rendition-set.json
-              docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=1g \
-                --volume "${GITHUB_WORKSPACE}/${root}/gate:/input:ro" --volume "${GITHUB_WORKSPACE}/${root}/render-output:/output" \
-                "${RENDERER_IMAGE}" demo-renderer --scene /input/scene.json --transcript /input/complete-transcript.txt \
-                --projection /input/public-projection.json --terminal-capture /input/terminal-capture.json \
-                --rendition-set /input/rendition-set.json --output /output --renderer-image "${RENDERER_IMAGE}"
-              mkdir -p "${root}/render-inspection" && chmod 0777 "${root}/render-inspection"
-              docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
-                --volume "${GITHUB_WORKSPACE}/.buildchain/runtime:/buildchain:ro" \
-                --volume "${GITHUB_WORKSPACE}/${root}/render-output:/media:ro" \
-                --volume "${GITHUB_WORKSPACE}/${root}/render-inspection:/inspection" --entrypoint node "${RENDERER_IMAGE}" \
-                /buildchain/scripts/auditable-demo.mjs inspect-media --render-output /media \
-                --renderer-image "${RENDERER_IMAGE}" --output /inspection/media-inspection.json
-              node .buildchain/runtime/scripts/auditable-demo.mjs finalize-media \
-                --gate-bundle "${root}/gate" --gate-root "${gate_root}" --render-output "${root}/render-output" \
-                --renderer-image "${RENDERER_IMAGE}" --source-sha "${SOURCE_SHA}" --media-profile "${MEDIA_PROFILE}" \
-                --media-inspection "${root}/render-inspection/media-inspection.json" --output "${root}/media"
-            fi
           done < <(node .buildchain/runtime/scripts/auditable-demo-platform.mjs list --scenario "source/${SCENARIO_PATH}")
+
+      - name: Render full media for every declared demo
+        id: render
+        if: ${{ inputs.render-media }}
+        continue-on-error: ${{ inputs.render-failure-advisory }}
+        shell: bash
+        env:
+          SCENARIO_PATH: ${{ inputs.scenario-path }}
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+          SOURCE_SHA: ${{ needs.capture.outputs.source-sha }}
+          MEDIA_PROFILE: ${{ inputs.media-profile }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r demo_id; do
+            root="qualified-collection/${demo_id}"
+            gate_root=$(sha256sum "${root}/gate/checksums.sha256" | awk '{print "sha256:"$1}')
+            docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+              --volume "${GITHUB_WORKSPACE}/${root}/gate:/input:ro" "${RENDERER_IMAGE}" demo-renderer --validate-only \
+              --scene /input/scene.json --transcript /input/complete-transcript.txt \
+              --projection /input/public-projection.json --terminal-capture /input/terminal-capture.json \
+              --rendition-set /input/rendition-set.json
+            docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=1g \
+              --volume "${GITHUB_WORKSPACE}/${root}/gate:/input:ro" --volume "${GITHUB_WORKSPACE}/${root}/render-output:/output" \
+              "${RENDERER_IMAGE}" demo-renderer --scene /input/scene.json --transcript /input/complete-transcript.txt \
+              --projection /input/public-projection.json --terminal-capture /input/terminal-capture.json \
+              --rendition-set /input/rendition-set.json --output /output --renderer-image "${RENDERER_IMAGE}"
+            mkdir -p "${root}/render-inspection" && chmod 0777 "${root}/render-inspection"
+            docker run --rm --network none --read-only --user 65532:65532 --pids-limit 256 --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=128m \
+              --volume "${GITHUB_WORKSPACE}/.buildchain/runtime:/buildchain:ro" \
+              --volume "${GITHUB_WORKSPACE}/${root}/render-output:/media:ro" \
+              --volume "${GITHUB_WORKSPACE}/${root}/render-inspection:/inspection" --entrypoint node "${RENDERER_IMAGE}" \
+              /buildchain/scripts/auditable-demo.mjs inspect-media --render-output /media \
+              --renderer-image "${RENDERER_IMAGE}" --output /inspection/media-inspection.json
+            node .buildchain/runtime/scripts/auditable-demo.mjs finalize-media \
+              --gate-bundle "${root}/gate" --gate-root "${gate_root}" --render-output "${root}/render-output" \
+              --renderer-image "${RENDERER_IMAGE}" --source-sha "${SOURCE_SHA}" --media-profile "${MEDIA_PROFILE}" \
+              --media-inspection "${root}/render-inspection/media-inspection.json" --output "${root}/media"
+          done < <(node .buildchain/runtime/scripts/auditable-demo-platform.mjs list --scenario "source/${SCENARIO_PATH}")
+
+      - name: Record advisory render failure
+        if: ${{ steps.render.outcome == 'failure' && inputs.render-failure-advisory }}
+        shell: bash
+        run: |
+          echo "::warning title=Auditable demo media render failed::The required Gate passed, so the caller remains eligible while media publication is suppressed."
+          printf '%s\n' '### Auditable demo media' '' 'Full-media rendering failed in advisory mode. The required Gate remains successful and no materialization PR will be opened.' >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Bind evidence collection identity
         id: identity
@@ -335,7 +363,7 @@ jobs:
 
   publish:
     name: Open protected materialization pull request
-    if: ${{ inputs.materialize && inputs.render-media }}
+    if: ${{ inputs.materialize && inputs.render-media && needs.qualify.outputs.render-result == 'success' }}
     needs: [capture, qualify]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
