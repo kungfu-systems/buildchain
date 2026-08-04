@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "ff58dcbbd4bf9dca94c202347890fc6921e9d164f5e6142b4444c4c46fe0cb02",
+    "sha256": "9e856712dceb8873a42bd4a2f77eb35a7b37aa676a19f0c2da81904ed419c002",
     "summary": {
       "cliCommandCount": 112,
-      "workflowCount": 61,
+      "workflowCount": 62,
       "actionCount": 6,
       "sitePageCount": 65,
-      "docCommandRefCount": 876,
+      "docCommandRefCount": 880,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "ff58dcbbd4bf9dca94c202347890fc6921e9d164f5e6142b4444c4c46fe0cb02",
+      "sha256": "9e856712dceb8873a42bd4a2f77eb35a7b37aa676a19f0c2da81904ed419c002",
       "summary": {
         "cliCommandCount": 112,
-        "workflowCount": 61,
+        "workflowCount": 62,
         "actionCount": 6,
         "sitePageCount": 65,
-        "docCommandRefCount": 876,
+        "docCommandRefCount": 880,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -4375,6 +4375,33 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:dev-delivery-warrant-cancel",
+          "name": "workflow:dev-delivery-warrant-cancel",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/dev-delivery-warrant-cancel.yml",
+          "evidencePath": ".github/workflows/dev-delivery-warrant-cancel.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 12,
+          "inputs": [
+            "buildchain-ref",
+            "buildchain-repository",
+            "event-action",
+            "expected-candidate-id",
+            "expected-old-state-root",
+            "expected-pr-number",
+            "expected-source-head-sha",
+            "observed-source-head-sha",
+            "outcome",
+            "reason",
+            "target-branch",
+            "terminal-evidence-root"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:dev-delivery-warrant-close",
           "name": "workflow:dev-delivery-warrant-close",
           "kind": "workflow",
@@ -6255,6 +6282,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 397
+    "publicSurfaceCount": 398
   }
 }

@@ -118,6 +118,84 @@ test("selection and observation use the same durable state contract", async () =
   assert.equal(observed.observation.activeWarrant.fencingToken, selected.warrant.fencingToken);
 });
 
+test("queued cancellation persists once and repeats as an exact no-op", async () => {
+  const store = new MemoryStore();
+  const submitted = await runDevDeliveryCommand(submitOptions({ execute: true }), store);
+  const queued = submitted.observation.queued[0];
+  const options = {
+    command: "cancel-queued",
+    repository: "kungfu-systems/kungfu",
+    branch: "dev/v4/v4.0",
+    candidateId: queued.candidateId,
+    pullRequestNumber: queued.pullRequestNumber,
+    expectedSourceHead: queued.sourceHead,
+    observedSourceHead: "f".repeat(40),
+    expectedOldStateRoot: submitted.after.stateRoot,
+    eventAction: "closed",
+    outcome: "cancelled",
+    evidenceRoot: ROOT("e"),
+    reason: "pull request closed",
+    now: "2026-08-04T00:02:00Z",
+    execute: true,
+  };
+  const cancelled = await runDevDeliveryCommand(options, store);
+  assert.equal(cancelled.mutationApplied, true);
+  assert.equal(cancelled.receipt.action, "queued-candidate-cancelled");
+  assert.equal(cancelled.observation.states.cancelled, 1);
+  assert.equal(store.writes.length, 2);
+
+  const duplicate = await runDevDeliveryCommand(
+    {
+      ...options,
+      expectedOldStateRoot: cancelled.after.stateRoot,
+      now: "2026-08-04T00:03:00Z",
+    },
+    store,
+  );
+  assert.equal(duplicate.mutationApplied, false);
+  assert.equal(duplicate.receipt.action, "duplicate-cancellation-noop");
+  assert.equal(duplicate.after.stateRoot, cancelled.after.stateRoot);
+  assert.equal(store.writes.length, 2);
+});
+
+test("queued cancellation loses a concurrent expected-old race without writing", async () => {
+  const store = new MemoryStore();
+  const submitted = await runDevDeliveryCommand(submitOptions({ execute: true }), store);
+  const queued = submitted.observation.queued[0];
+  await runDevDeliveryCommand(
+    submitOptions({
+      pullRequestNumber: 201,
+      sourceIdentityRoot: ROOT("a"),
+      sourceHead: "b".repeat(40),
+      now: "2026-08-04T00:02:00Z",
+      execute: true,
+    }),
+    store,
+  );
+  await assert.rejects(
+    runDevDeliveryCommand(
+      {
+        command: "cancel-queued",
+        repository: "kungfu-systems/kungfu",
+        branch: "dev/v4/v4.0",
+        candidateId: queued.candidateId,
+        pullRequestNumber: queued.pullRequestNumber,
+        expectedSourceHead: queued.sourceHead,
+        observedSourceHead: queued.sourceHead,
+        expectedOldStateRoot: submitted.after.stateRoot,
+        eventAction: "closed",
+        outcome: "cancelled",
+        evidenceRoot: ROOT("e"),
+        now: "2026-08-04T00:03:00Z",
+        execute: true,
+      },
+      store,
+    ),
+    /expected-old state drift/,
+  );
+  assert.equal(store.writes.length, 2);
+});
+
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,

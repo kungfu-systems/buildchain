@@ -1,7 +1,9 @@
 import { devDeliveryClone as clone, devDeliveryContentRoot, devDeliveryExactRoot as exactRoot, devDeliveryExactSha as exactSha, devDeliveryPositiveInteger as positiveInteger, devDeliveryProtectedBase as protectedBase, devDeliveryRepository as repository, devDeliveryText as text, devDeliveryTimestamp as timestamp } from "./dev-delivery-common.js";
+import { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA, createCancelQueuedDevDeliveryCandidate } from "./dev-delivery-warrant-cancellation.js";
 
 export { devDeliveryContentRoot } from "./dev-delivery-common.js";
 export { SOURCE_QUALIFICATION_PROOF_SCHEMA, INTEGRATION_DELIVERY_PROOF_SCHEMA, classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifySourceQualificationProof } from "./dev-delivery-proof.js";
+export { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA };
 
 export const DEV_DELIVERY_QUEUE_CONTRACT = "kungfu-buildchain-dev-delivery-warrant-queue";
 export const DEV_DELIVERY_WARRANT_SCHEMA = "kungfu.buildchain.dev-delivery-warrant/v1";
@@ -561,6 +563,9 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
     receiptRoot: devDeliveryContentRoot(receipt),
   };
 }
+
+const cancelQueuedDevDeliveryCandidateTransition = createCancelQueuedDevDeliveryCandidate(normalizeDevDeliveryQueue);
+export function cancelQueuedDevDeliveryCandidate(queueInput, input, options) { return cancelQueuedDevDeliveryCandidateTransition(queueInput, input, options); }
 
 export function observeDevDeliveryQueue(queueInput, { now = new Date().toISOString() } = {}) {
   const queue = normalizeDevDeliveryQueue(queueInput);

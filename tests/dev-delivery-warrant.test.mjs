@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   classifyDevDeliveryDelta,
+  cancelQueuedDevDeliveryCandidate,
   closeDevDeliveryWarrant,
   createDevDeliveryQueue,
   createIntegrationDeliveryProof,
@@ -208,6 +209,88 @@ test("heartbeat and terminal closeout bind the current fencing generation", () =
   assert.equal(closed.queue.candidates[0].status, "merged");
   assert.equal(closed.queue.candidates[0].terminal.fencingToken, selected.warrant.fencingToken);
   assert.equal(closed.receipt.nextAction, "Select the next queued candidate, if any.");
+});
+
+test("queued cancellation binds recorded and observed heads without minting a Warrant", () => {
+  let state = submit(queue(), 150, "2026-08-04T00:00:00Z").queue;
+  state = submit(state, 151, "2026-08-04T00:01:00Z").queue;
+  const queued = state.candidates.find((entry) => entry.pullRequestNumber === 150);
+  const input = {
+    candidateId: queued.candidateId,
+    pullRequestNumber: 150,
+    expectedSourceHead: queued.sourceHead,
+    observedSourceHead: "f".repeat(40),
+    eventAction: "closed",
+    outcome: "cancelled",
+    evidenceRoot: ROOTS.evidence,
+    reason: "pull request closed after the queued source head was superseded",
+  };
+  const cancelled = cancelQueuedDevDeliveryCandidate(state, input, {
+    now: "2026-08-04T00:02:00Z",
+  });
+  assert.equal(cancelled.receipt.action, "queued-candidate-cancelled");
+  assert.equal(cancelled.queue.activeWarrant, null);
+  assert.equal(cancelled.queue.candidates[0].status, "cancelled");
+  assert.equal(cancelled.queue.candidates[0].terminal.expectedSourceHead, queued.sourceHead);
+  assert.equal(cancelled.queue.candidates[0].terminal.observedSourceHead, "f".repeat(40));
+
+  const duplicate = cancelQueuedDevDeliveryCandidate(cancelled.queue, input, {
+    now: "2026-08-04T00:03:00Z",
+  });
+  assert.equal(duplicate.receipt.action, "duplicate-cancellation-noop");
+  assert.equal(duplicate.queue.stateRoot, cancelled.queue.stateRoot);
+
+  const selected = selectDevDeliveryWarrant(cancelled.queue, {
+    now: "2026-08-04T00:03:01Z",
+  });
+  assert.equal(selected.warrant.pullRequestNumber, 151);
+});
+
+test("queued cancellation fails closed on identity, evidence, state, and event drift", () => {
+  const submitted = submit(queue(), 160, "2026-08-04T00:00:00Z");
+  const queued = submitted.queue.candidates[0];
+  const input = {
+    candidateId: queued.candidateId,
+    pullRequestNumber: 160,
+    expectedSourceHead: queued.sourceHead,
+    observedSourceHead: queued.sourceHead,
+    eventAction: "closed",
+    outcome: "cancelled",
+    evidenceRoot: ROOTS.evidence,
+    reason: "pull request closed",
+  };
+  assert.throws(
+    () => cancelQueuedDevDeliveryCandidate(submitted.queue, { ...input, expectedSourceHead: "e".repeat(40) }),
+    /recorded sourceHead mismatch/,
+  );
+  assert.throws(
+    () => cancelQueuedDevDeliveryCandidate(submitted.queue, { ...input, pullRequestNumber: 999 }),
+    /PR mismatch/,
+  );
+  assert.throws(
+    () => cancelQueuedDevDeliveryCandidate(submitted.queue, { ...input, candidateId: ROOTS.context }),
+    /does not exist/,
+  );
+  assert.throws(
+    () => cancelQueuedDevDeliveryCandidate(submitted.queue, { ...input, outcome: "dequeued" }),
+    /requires outcome cancelled/,
+  );
+
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+  assert.throws(
+    () => cancelQueuedDevDeliveryCandidate(selected.queue, input, { now: "2026-08-04T00:00:02Z" }),
+    /active candidate requires fenced Warrant closeout/,
+  );
+
+  const cancelled = cancelQueuedDevDeliveryCandidate(submitted.queue, input, {
+    now: "2026-08-04T00:00:03Z",
+  });
+  assert.throws(
+    () => cancelQueuedDevDeliveryCandidate(cancelled.queue, { ...input, evidenceRoot: ROOTS.context }),
+    /terminal candidate does not match/,
+  );
 });
 
 test("source proof reuse is exact and unknown or overlapping deltas fail closed", () => {

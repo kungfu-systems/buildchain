@@ -43,6 +43,14 @@ generation, expected-old state root, expiry, and the complete exact source
 binding. Heartbeat extends only that generation. Expiry recovery rejects the
 old token, retains queue age, and returns the candidate to selection.
 
+A terminal event may cancel a candidate before selection without minting a
+Warrant. This transition is limited to an exact non-active queued candidate and
+binds its candidate root, pull request, recorded source head, event-observed
+source head, terminal event action, evidence root, and expected-old queue root.
+An active candidate still requires its current fencing token and lease
+generation. Exact duplicate cancellation evidence is a visible no-op; identity,
+state, event, or evidence drift fails closed.
+
 The supported priority classes are `ordinary`, `expedited`, and `emergency`.
 The queue does not infer an emergency: callers must choose it explicitly under
 their reviewed policy. Delivery classes are `non-native-fast`,
@@ -83,9 +91,15 @@ buildchain dev warrant submit --repository owner/repository \
 
 buildchain dev warrant select --repository owner/repository \
   --branch dev/v4/v4.0 --execute
+
+buildchain dev warrant cancel-queued --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> --pull-request 123 \
+  --expected-source-head <queued-sha> --observed-source-head <event-sha> \
+  --expected-old <queue-root> --event-action closed --outcome cancelled \
+  --evidence-root <terminal-event-root> --execute
 ```
 
-`heartbeat`, `recover`, `close`, and `observe` use the same durable authority.
+`heartbeat`, `recover`, `close`, `cancel-queued`, and `observe` use the same durable authority.
 Warrant-scoped mutations require the exact fencing token and lease generation.
 `close` also requires a rooted terminal evidence object.
 
@@ -112,7 +126,10 @@ protected caller to `required`. Rollback is a reviewed caller change back to
 `off`; it does not delete queue history or reinterpret old receipts. The
 terminal reusable workflow creates the exact Integration Delivery Proof for a
 merged candidate (or accepts explicit evidence for another terminal outcome),
-then closes only the current fencing generation.
+then closes only the current fencing generation. The separate queued
+cancellation reusable workflow cannot close an active generation; it advances
+the state ref only when the caller's complete terminal binding and expected-old
+root still match.
 
 This mechanism schedules protected delivery only. It does not serialize local
 development, source-only checks, unrelated channels, release publication, or

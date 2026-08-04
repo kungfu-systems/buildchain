@@ -1433,6 +1433,24 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.doesNotMatch(verify, /github\.event\.pull_request/);
 });
 
+test("queued Warrant cancellation workflow binds exact terminal event authority", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-delivery-warrant-cancel.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /expected-candidate-id:/);
+  assert.match(workflow, /expected-source-head-sha:/);
+  assert.match(workflow, /observed-source-head-sha:/);
+  assert.match(workflow, /expected-old-state-root:/);
+  assert.match(workflow, /terminal-evidence-root:/);
+  assert.match(workflow, /cancel-queued/);
+  assert.match(workflow, /--expected-old/);
+  assert.match(workflow, /contents: write/);
+  assert.match(workflow, /actions\/checkout@v7\.0\.0/);
+  assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+});
+
 test("declared merge queue governance reconciles automatically on dev changes", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/dev-merge-queue-governance.yml"),

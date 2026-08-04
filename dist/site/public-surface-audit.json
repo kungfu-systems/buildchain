@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 112,
-    "workflowCount": 61,
+    "workflowCount": 62,
     "actionCount": 6,
     "sitePageCount": 65,
-    "docCommandRefCount": 876,
+    "docCommandRefCount": 880,
     "failureCount": 0
   },
   "enumerated": {
@@ -1849,6 +1849,36 @@
           "source-lock-ref"
         ],
         "outputCount": 10
+      },
+      {
+        "id": "dev-delivery-warrant-cancel",
+        "path": ".github/workflows/dev-delivery-warrant-cancel.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "event-action",
+          "expected-candidate-id",
+          "expected-old-state-root",
+          "expected-pr-number",
+          "expected-source-head-sha",
+          "observed-source-head-sha",
+          "outcome",
+          "reason",
+          "target-branch",
+          "terminal-evidence-root"
+        ],
+        "inputCount": 12,
+        "secrets": [
+          "github-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "cancellation-action",
+          "cancellation-receipt-root",
+          "final-state-root"
+        ],
+        "outputCount": 3
       },
       {
         "id": "dev-delivery-warrant-close",
@@ -3708,6 +3738,11 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev"
       },
       {
@@ -3798,6 +3833,16 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant cancel-queued"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant cancel-queued"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev warrant close"
       },
       {
@@ -3879,6 +3924,11 @@
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev warrant select"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant cancel-queued"
       },
       {
         "id": "dev",
@@ -7491,9 +7541,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "f4cf0b7ef29b411c821e7fb6d9e40980729b519437e393c6bf71ba2da6386ee7",
-    "workflowRegistryDigest": "359adc81c68acdbd67ae4917818faa53ca45268408ad4bde8f54ecb8f458efae",
-    "pageRegistryDigest": "b9abfa6ba2815bd9bebf3896cb08f806ad6faa35562de78267fe69aea207a179"
+    "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
+    "workflowRegistryDigest": "7060fd48581d21f502d49b424157be10627c87e0e01527a65a01875ec8de7e0b",
+    "pageRegistryDigest": "683f7947f7f3cbddd3e3fe1996980a5dcf0c19c48daa432555b6c456f69bc807"
   },
   "comparison": {
     "missingCliRegistry": [],
