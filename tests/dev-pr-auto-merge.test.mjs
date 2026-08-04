@@ -249,16 +249,25 @@ test("policy gates reject unsafe or incomplete dev PRs", async () => {
   );
 });
 
-test("queue admission accepts blocked state only after independent gates pass", async () => {
+test("queue admission accepts blocked or behind state only after independent gates pass", async () => {
   const options = { ...baseOptions, landingMode: "queue", dryRun: true };
   const blocked = pr({ mergeable: true, mergeable_state: "blocked" });
+  const behind = pr({ mergeable: true, mergeable_state: "behind" });
 
   assert.equal(
     (await evaluatePullRequest(blocked, options, client({ pullRequests: [blocked] }))).action,
     "would-merge",
   );
   assert.equal(
+    (await evaluatePullRequest(behind, options, client({ pullRequests: [behind] }))).action,
+    "would-merge",
+  );
+  assert.equal(
     (await evaluatePullRequest(blocked, { ...options, landingMode: "direct" }, client({ pullRequests: [blocked] }))).reason,
+    "not-mergeable",
+  );
+  assert.equal(
+    (await evaluatePullRequest(behind, { ...options, landingMode: "direct" }, client({ pullRequests: [behind] }))).reason,
     "not-mergeable",
   );
   const conflicted = { ...blocked, mergeable: false };
