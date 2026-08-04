@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-
+import { admitExistingQueueEntry, createDevPrAdmissionReceipt, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission } from "./dev-pr-delivery-warrant.mjs";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
 const DEFAULT_REQUIRED_CHECKS = ["check"];
@@ -11,9 +11,9 @@ const DEFAULT_READY_LABEL = "ready";
 const SUCCESS_STATES = new Set(["success"]);
 const SUCCESS_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
 const VALID_LANDING_MODES = new Set(["auto", "direct", "queue"]);
+const VALID_WARRANT_MODES = new Set(["off", "required"]);
 const STATIC_SKIP_REASONS = new Set(["draft", "fork-or-cross-repository-head", "head-prefix-not-allowed", "missing-ready-label", "blocked-label"]);
 const ADMISSION_CONTRACT = "kungfu-buildchain-dev-merge-queue-admission";
-const AGENT_ADMISSION_SCHEMA = "kungfu.buildchain.dev-pr-admission/v1";
 const AGENT_ADMISSION_RESULT_SCHEMA = "kungfu.buildchain.dev-pr-admission-result/v1";
 const AGENT_ADMISSION_MARKER = "buildchain-dev-pr-admission:v1";
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
@@ -81,6 +81,9 @@ function normalizeOptions(options = {}) {
     targetPullRequestNumber: positiveIntOption(options.targetPullRequestNumber, 0),
     expectedHeadSha: String(options.expectedHeadSha || "").trim().toLowerCase(),
     diagnosticContext: String(options.diagnosticContext || "Buildchain delivery intent").trim(),
+    warrantMode: choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode"),
+    warrantResultPath: String(options.warrantResultPath || "").trim(),
+    qualificationOnly: boolOption(options.qualificationOnly, false),
   };
 }
 
@@ -728,47 +731,8 @@ async function publishAdmissionDiagnostic(client, options, receipt, receiptRoot)
   return { commentId: comment?.id || null, commentUrl: comment?.html_url || "", statusPublished: Boolean(status) };
 }
 
-function createAdmissionReceipt({ options, pr = {}, state, reason, readiness, decision = {}, queue = null }) {
-  const observedHeadSha = String(pr.head?.sha || "").toLowerCase();
-  return {
-    schema: AGENT_ADMISSION_SCHEMA,
-    repository: options.repository.fullName,
-    targetBranch: options.targetBranch,
-    pullRequestNumber: options.targetPullRequestNumber,
-    pullRequestUrl: pr.html_url || `https://github.com/${options.repository.fullName}/pull/${options.targetPullRequestNumber}`,
-    expectedHeadSha: options.expectedHeadSha,
-    observedHeadSha,
-    observedBaseBranch: pr.base?.ref || "",
-    headRepository: pr.head?.repo?.full_name || "",
-    headRef: pr.head?.ref || "",
-    observedLabels: labelsOf(pr).sort(),
-    policy: {
-      readyLabel: options.readyLabel,
-      blockLabels: options.blockLabels,
-      allowedHeadPrefixes: options.allowedHeadPrefixes,
-      requiredChecks: options.requiredChecks,
-      requireApproval: options.requireApproval,
-      sameRepositoryOnly: options.sameRepositoryOnly,
-      landingMode: options.landingMode,
-      queueAdmissionContext: options.queueAdmissionContext,
-      diagnosticContext: options.diagnosticContext,
-    },
-    readiness: {
-      label: options.readyLabel,
-      observed: readiness?.observed === true,
-      established: readiness?.established === true,
-      mutationAuthorized: !options.dryRun,
-    },
-    approval: decision.approval || { required: options.requireApproval, passed: false },
-    checks: decision.checks || { required: options.requiredChecks, entries: [], passed: false },
-    queue,
-    autoMergeEnabled: Boolean(pr.auto_merge || pr.autoMergeRequest),
-    state,
-    reason,
-    decision: state,
-    qualification: ["ready", "queued"].includes(state),
-    nextAction: nextAdmissionAction({ options, state, reason, observedHeadSha }),
-  };
+function createAdmissionReceipt({ options, pr = {}, state, reason, readiness, decision = {}, queue = null, warrant = null }) {
+  return createDevPrAdmissionReceipt({ options, pr, state, reason, readiness, decision, queue, warrant, labels: labelsOf(pr), nextAction: nextAdmissionAction });
 }
 
 function targetedFailure({ options, pr, state, reason, readiness, decision, queue }) {
@@ -841,65 +805,42 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
     if (!readiness.observed) return reject("rejected", "readiness-readback-failed", readiness);
   }
 
-  const initialQueue = await client.getMergeQueueState(options.targetBranch);
-  const matchingEntry = initialQueue.entries.find((entry) =>
-    entry.pullRequestNumber === pr.number && entry.pullRequestHeadSha === options.expectedHeadSha);
-  if (matchingEntry) {
-    const receipt = createAdmissionReceipt({
-      options,
-      pr,
-      state: "queued",
-      reason: "already-enqueued-exact-head",
-      readiness,
-      queue: { enabled: true, entry: matchingEntry },
+  if (options.qualificationOnly) {
+    return runSourceQualification({
+      options, pullRequest: pr, readiness, client, reject,
+      evaluate: evaluatePullRequest,
+      admissionState: admissionStateFor,
+      createReceipt: createAdmissionReceipt,
+      root: contentRoot,
+      publishDiagnostic: publishAdmissionDiagnostic,
     });
-    const result = {
-      schema: AGENT_ADMISSION_RESULT_SCHEMA,
-      ok: true,
-      mode: options.dryRun ? "plan" : "execute",
-      outcome: "admitted",
-      receipt,
-      receiptRoot: contentRoot(receipt),
-      diagnostic: null,
-    };
-    if (!options.dryRun) result.diagnostic = await publishAdmissionDiagnostic(client, options, receipt, result.receiptRoot);
-    return result;
   }
 
-  const targetedClient = Object.create(client);
-  targetedClient.listPullRequests = async () => [pr];
-  const controller = await runDevPrAutoMerge({ ...options, targetPullRequestNumber: 0 }, targetedClient);
-  controller.runKind = "targeted-admission-evaluation";
-  controller.outcome = controller.actions.length === 0 ? "target-not-admitted" : "target-action-selected";
-  controller.qualification = false;
-  controller.noOp = controller.actions.length === 0;
-  const entry = controller.evaluated.find((value) => value.number === pr.number) || { action: "skip", reason: "target-not-selected" };
-  const state = admissionStateFor(entry);
-  const receipt = createAdmissionReceipt({
-    options,
-    pr,
-    state,
-    reason: entry.reason,
-    readiness,
-    decision: entry,
-    queue: {
-      enabled: controller.mergeQueue?.enabled === true,
-      predecessor: entry.admissionReceipt?.predecessor || null,
-      entry: entry.queueEntry || null,
-    },
+  const initialQueue = await client.getMergeQueueState(options.targetBranch);
+  let warrant = null;
+  try {
+    warrant = readDeliveryWarrantResult(options, pr);
+  } catch (error) {
+    return reject("blocked", error.code || "invalid-delivery-warrant");
+  }
+  const matchingEntry = initialQueue.entries.find((entry) =>
+    entry.pullRequestNumber === pr.number && entry.pullRequestHeadSha === options.expectedHeadSha);
+  const existing = await admitExistingQueueEntry({
+    options, pullRequest: pr, readiness, client, entry: matchingEntry, warrant,
+    createReceipt: createAdmissionReceipt,
+    root: contentRoot,
+    publishDiagnostic: publishAdmissionDiagnostic,
   });
-  const result = {
-    schema: AGENT_ADMISSION_RESULT_SCHEMA,
-    ok: ["ready", "queued"].includes(state),
-    mode: options.dryRun ? "plan" : "execute",
-    outcome: ["ready", "queued"].includes(state) ? "admitted" : "targeted-admission-failed",
-    receipt,
-    receiptRoot: contentRoot(receipt),
-    diagnostic: null,
-    controller,
-  };
-  if (!options.dryRun) result.diagnostic = await publishAdmissionDiagnostic(client, options, receipt, result.receiptRoot);
-  return result;
+  if (existing) return existing;
+
+  return runTargetedQueueAdmission({
+    options, pullRequest: pr, readiness, client, warrant,
+    runController: runDevPrAutoMerge,
+    admissionState: admissionStateFor,
+    createReceipt: createAdmissionReceipt,
+    root: contentRoot,
+    publishDiagnostic: publishAdmissionDiagnostic,
+  });
 }
 
 function finalizePatrolResult(result) {
@@ -1166,6 +1107,9 @@ export function cliOptions(args = [], environment = process.env) {
     requiredChecks: cliValue(args, "required-checks", environment.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS),
     queueAdmissionContext: cliValue(args, "queue-admission-context", environment.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT),
     diagnosticContext: cliValue(args, "diagnostic-context", environment.BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT),
+    warrantMode: cliValue(args, "warrant-mode", environment.BUILDCHAIN_DEV_PR_WARRANT_MODE),
+    warrantResultPath: cliValue(args, "warrant-result", environment.BUILDCHAIN_DEV_PR_WARRANT_RESULT_PATH),
+    qualificationOnly: cliFlag(args, "qualification-only"),
     requireApproval: environment.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,
     sameRepositoryOnly: environment.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,
     maxMerges: environment.BUILDCHAIN_DEV_PR_MAX_MERGES,
@@ -1186,7 +1130,7 @@ export function cliOptions(args = [], environment = process.env) {
 async function main() {
   const args = process.argv.slice(2);
   if (cliFlag(args, "help")) {
-    process.stdout.write("Usage:\n  buildchain dev pr-admit --repository owner/repo --branch dev/vN/vN.M --pull-request N --expected-head SHA [--landing-mode auto|direct|queue] [--execute] [--output FILE] [--json]\n");
+    process.stdout.write("Usage:\n  buildchain dev pr-admit --repository owner/repo --branch dev/vN/vN.M --pull-request N --expected-head SHA [--qualification-only] [--landing-mode auto|direct|queue] [--warrant-mode off|required] [--warrant-result FILE] [--execute] [--output FILE] [--json]\n");
     return;
   }
   const options = normalizeOptions(cliOptions(args));

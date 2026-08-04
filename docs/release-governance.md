@@ -489,7 +489,7 @@ ref update, so concurrent channel movement no longer invalidates the candidate.
 
 GitHub Merge Queue does not by itself decide which candidate may spend a long
 native proof before enqueue. Repositories with that workload use the
-[Dev Delivery Warrant Queue](dev-delivery-warrant-queue.md) as the durable,
+[Dev Delivery Warrant Queue](dev-delivery-warrant.md) as the durable,
 FIFO-aging scheduling and fencing authority before native queue admission. A
 selected Warrant owns one complete delivery attempt and later candidates remain
 visibly queued; GitHub still owns the exact `merge_group` proof and final ref
@@ -600,6 +600,15 @@ ready predecessor leaves its PR open while later PRs receive
 admission runs; GitHub still owns the atomic queue and protected-ref update.
 Repositories may explicitly select `landing-mode: direct` only when the target
 branch has no native queue. Queue presence always disables the direct path.
+
+For slow candidates on a frequently advancing dev line, the optional
+[Dev Delivery Warrant Queue](dev-delivery-warrant.md) adds durable FIFO plus
+aging scheduling before native queue admission. It separates reusable source
+qualification from exact merge-group integration, uses expected-old Git-ref
+updates and fenced leases, and keeps the PR head unchanged when only dev moves.
+The reusable caller supports `off`, read-only `shadow`, and fail-closed
+`required` rollout modes. GitHub Merge Queue remains the final protected-ref
+authority in every mode.
 
 The canonical consumer required check context is `check / check`, matching the
 reusable workflow call plus its `check` job. Buildchain's own `Verify` workflow
