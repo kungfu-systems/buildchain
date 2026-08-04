@@ -1645,7 +1645,7 @@ jobs:
         if: ${{ always() && inputs.verify-substage-evidence-path != '' }}
         working-directory: ${{ inputs.working-directory }}
         run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+          node "${{ github.workspace }}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
           --file "${{ inputs.verify-substage-evidence-path }}"
           --stage verify
           --source-sha "${{ needs.resolve-source.outputs.publish-source-sha }}"
@@ -1653,7 +1653,7 @@ jobs:
           --platform-id "${{ matrix.platform.id }}"
 
       - name: Upload failed verify substage evidence
-        if: ${{ always() && steps.verify-lifecycle.outcome != 'success' && inputs.verify-substage-evidence-path != '' }}
+        if: ${{ always() && (steps.verify-lifecycle.outcome != 'success' || failure()) && inputs.verify-substage-evidence-path != '' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-verify-substages-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_attempt }}
@@ -2147,7 +2147,7 @@ jobs:
         if: ${{ always() && inputs.verify-substage-evidence-path != '' }}
         working-directory: ${{ inputs.working-directory }}
         run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+          node "${{ github.workspace }}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
           --file "${{ inputs.verify-substage-evidence-path }}"
           --stage verify
           --source-sha "${{ needs.resolve-source.outputs.publish-source-sha }}"
@@ -2155,7 +2155,7 @@ jobs:
           --platform-id "${{ matrix.platform.id }}"
 
       - name: Upload failed verify substage evidence
-        if: ${{ always() && steps.verify-lifecycle.outcome != 'success' && inputs.verify-substage-evidence-path != '' }}
+        if: ${{ always() && (steps.verify-lifecycle.outcome != 'success' || failure()) && inputs.verify-substage-evidence-path != '' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-verify-substages-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_attempt }}

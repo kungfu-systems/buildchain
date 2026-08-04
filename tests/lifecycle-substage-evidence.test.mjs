@@ -182,6 +182,22 @@ test("the public workflow and bundled action carry the substage evidence contrac
   );
   assert.equal(
     engine.match(
+      /node "\$\{\{ github\.workspace \}\}\/\.buildchain\/runtime\/scripts\/lifecycle-substage-evidence\.mjs"/gu,
+    )?.length,
+    2,
+  );
+  assert.equal(
+    engine.match(
+      /steps\.verify-lifecycle\.outcome != 'success' \|\| failure\(\)/gu,
+    )?.length,
+    2,
+  );
+  assert.doesNotMatch(
+    engine,
+    /\$\{GITHUB_WORKSPACE\}\/\.buildchain\/runtime\/scripts\/lifecycle-substage-evidence\.mjs/u,
+  );
+  assert.equal(
+    engine.match(
       /substage-evidence-path: \$\{\{ inputs\.verify-substage-evidence-path \}\}/gu,
     )?.length,
     2,
