@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { macosJitRunnerLabel } from "./aws-macos-jit-core.mjs";
 import { windowsJitRunnerLabel } from "./aws-windows-jit-core.mjs";
-
 export const RUNNER_PRESETS = Object.freeze({
   "github-hosted": [
     { id: "linux-x64", name: "Linux x64", platform: "linux", runner: '["ubuntu-24.04"]', capabilities: ["node"] },
@@ -794,6 +793,7 @@ function normalizePlatform(platform, index) {
   if (platform?.provider !== undefined) normalized.provider = String(platform.provider || "").trim();
   if (platform?.project !== undefined) normalized.project = String(platform.project || "").trim();
   normalized.capabilities = capabilities.sort();
+  if (platform?.environment !== undefined) normalized.environment = platform.environment;
   if (platform?.required === false) normalized.required = false;
   return normalized;
 }

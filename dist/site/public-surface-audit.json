@@ -7493,7 +7493,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "f4cf0b7ef29b411c821e7fb6d9e40980729b519437e393c6bf71ba2da6386ee7",
     "workflowRegistryDigest": "359adc81c68acdbd67ae4917818faa53ca45268408ad4bde8f54ecb8f458efae",
-    "pageRegistryDigest": "7db31ad80bff96f920bc48ef46ffabbad7df19d0bf044268ad4f5027af32caaf"
+    "pageRegistryDigest": "b9abfa6ba2815bd9bebf3896cb08f806ad6faa35562de78267fe69aea207a179"
   },
   "comparison": {
     "missingCliRegistry": [],
