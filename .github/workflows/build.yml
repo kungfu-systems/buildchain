@@ -68,7 +68,7 @@ on:
         type: string
         required: false
       platforms-json:
-        description: "Optional custom JSON array of platform objects: id, name, runner JSON string"
+        description: "Optional custom JSON array of platform objects: id, name, runner JSON string, and optional githubHosted boolean"
         default: ""
         type: string
         required: false
@@ -308,7 +308,7 @@ on:
         type: string
         required: false
       artifact-transfer-mode:
-        description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
+        description: "Artifact transfer policy: GitHub-hosted platforms always upload natively; other platforms use github-artifacts or s3-to-github-artifacts"
         default: "github-artifacts"
         type: string
         required: false

@@ -52,7 +52,7 @@ on:
         type: string
         required: false
       platforms-json:
-        description: "Optional custom JSON array of platform objects: id, name, runner JSON string"
+        description: "Optional custom JSON array of platform objects: id, name, runner JSON string, and optional githubHosted boolean"
         default: ""
         type: string
         required: false
@@ -292,7 +292,7 @@ on:
         type: string
         required: false
       artifact-transfer-mode:
-        description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
+        description: "Artifact transfer policy: GitHub-hosted platforms always upload natively; other platforms use github-artifacts or s3-to-github-artifacts"
         default: "github-artifacts"
         type: string
         required: false
@@ -1120,6 +1120,11 @@ jobs:
       native-platform-count: ${{ steps.routed-runners.outputs.native-platform-count || steps.runners.outputs.native-platform-count }}
       container-platforms-json: ${{ steps.routed-runners.outputs.container-platforms-json || steps.runners.outputs.container-platforms-json }}
       container-platform-count: ${{ steps.routed-runners.outputs.container-platform-count || steps.runners.outputs.container-platform-count }}
+      github-hosted-platforms-json: ${{ steps.routed-runners.outputs.github-hosted-platforms-json || steps.runners.outputs.github-hosted-platforms-json }}
+      github-hosted-platform-ids-json: ${{ steps.routed-runners.outputs.github-hosted-platform-ids-json || steps.runners.outputs.github-hosted-platform-ids-json }}
+      github-hosted-platform-count: ${{ steps.routed-runners.outputs.github-hosted-platform-count || steps.runners.outputs.github-hosted-platform-count }}
+      relay-platforms-json: ${{ steps.routed-runners.outputs.relay-platforms-json || steps.runners.outputs.relay-platforms-json }}
+      relay-platform-count: ${{ steps.routed-runners.outputs.relay-platform-count || steps.runners.outputs.relay-platform-count }}
       linux-container-enabled: ${{ steps.routed-runners.outputs.linux-container-enabled || steps.runners.outputs.linux-container-enabled }}
       linux-container-preset: ${{ steps.routed-runners.outputs.linux-container-preset || steps.runners.outputs.linux-container-preset }}
       linux-container-image: ${{ steps.routed-runners.outputs.linux-container-image || steps.runners.outputs.linux-container-image }}
@@ -1229,6 +1234,7 @@ jobs:
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
+      - resolve-contract
     if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
     outputs:
       mode: ${{ steps.transfer.outputs.mode }}
@@ -1250,6 +1256,7 @@ jobs:
         run: node .buildchain/artifact-transfer-runtime/scripts/resolve-artifact-transfer-mode.mjs
         env:
           INPUT_TRANSFER_MODE: ${{ inputs.artifact-transfer-mode }}
+          INPUT_RELAY_REQUIRED: ${{ needs.resolve-contract.outputs.relay-platform-count != '0' }}
           INPUT_S3_BUCKET: ${{ inputs.artifact-relay-s3-bucket }}
           INPUT_S3_REGION: ${{ inputs.artifact-relay-s3-region }}
           INPUT_S3_PREFIX: ${{ inputs.artifact-relay-s3-prefix }}
@@ -1684,7 +1691,7 @@ jobs:
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
 
       - name: Upload macOS credential-island app archive
-        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id && needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true) }}
         uses: actions/upload-artifact@v7.0.1
         with:
           path: .buildchain/credential-island/${{ matrix.platform.id }}/unsigned-app.zip
@@ -1693,7 +1700,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload macOS credential-island input manifest
-        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id && needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true) }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-credential-island-input-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -1744,7 +1751,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Configure AWS credentials for artifact relay upload
-        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && matrix.platform.githubHosted != true }}
         uses: aws-actions/configure-aws-credentials@v6.1.0
         with:
           role-to-assume: ${{ inputs.artifact-relay-s3-upload-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
@@ -1753,7 +1760,7 @@ jobs:
 
       - name: Upload payload to S3 artifact relay
         id: artifact-relay
-        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && matrix.platform.githubHosted != true }}
         run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs upload
         env:
           BUILDCHAIN_ARTIFACT_RELAY_BUCKET: ${{ needs.artifact-transfer.outputs.s3-bucket }}
@@ -1788,7 +1795,7 @@ jobs:
           BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_PATHS: ${{ matrix.platform.id == inputs.credential-island-macos-platform-id && inputs.credential-island-macos-app-path != '' && format('.buildchain/credential-island/{0}', matrix.platform.id) || '' }}
 
       - name: Upload artifact relay manifest
-        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && matrix.platform.githubHosted != true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -1797,7 +1804,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload deterministic artifact
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.artifact-contract.outputs.artifact-name }}
@@ -1811,7 +1818,7 @@ jobs:
           compression-level: ${{ inputs.artifact-compression-level }}
 
       - name: Upload artifact manifest
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -1823,7 +1830,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload diagnostics artifact
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -2208,7 +2215,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Configure AWS credentials for artifact relay upload
-        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && matrix.platform.githubHosted != true }}
         uses: aws-actions/configure-aws-credentials@v6.1.0
         with:
           role-to-assume: ${{ inputs.artifact-relay-s3-upload-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
@@ -2217,7 +2224,7 @@ jobs:
 
       - name: Upload payload to S3 artifact relay
         id: artifact-relay
-        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && matrix.platform.githubHosted != true }}
         run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs upload
         env:
           BUILDCHAIN_ARTIFACT_RELAY_BUCKET: ${{ needs.artifact-transfer.outputs.s3-bucket }}
@@ -2250,7 +2257,7 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/verify-substages.json
 
       - name: Upload artifact relay manifest
-        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && matrix.platform.githubHosted != true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -2259,7 +2266,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload deterministic artifact
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.artifact-contract.outputs.artifact-name }}
@@ -2273,7 +2280,7 @@ jobs:
           compression-level: ${{ inputs.artifact-compression-level }}
 
       - name: Upload artifact manifest
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -2285,7 +2292,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload diagnostics artifact
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -2319,6 +2326,7 @@ jobs:
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     steps:
       - name: Checkout Buildchain runtime
+        if: ${{ matrix.platform.githubHosted != true }}
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
@@ -2327,10 +2335,12 @@ jobs:
           persist-credentials: false
 
       - name: Install Buildchain runtime dependencies
+        if: ${{ matrix.platform.githubHosted != true }}
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Resolve artifact contract
         id: artifact-contract
+        if: ${{ matrix.platform.githubHosted != true }}
         run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
         env:
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
@@ -2340,6 +2350,7 @@ jobs:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Download artifact relay manifest
+        if: ${{ matrix.platform.githubHosted != true }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -2347,6 +2358,7 @@ jobs:
           path: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
 
       - name: Configure AWS credentials for artifact relay download
+        if: ${{ matrix.platform.githubHosted != true }}
         uses: aws-actions/configure-aws-credentials@v6.1.0
         with:
           role-to-assume: ${{ inputs.artifact-relay-s3-download-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
@@ -2355,6 +2367,7 @@ jobs:
 
       - name: Download and verify S3 relay payload
         id: relay-download
+        if: ${{ matrix.platform.githubHosted != true }}
         run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs download
         env:
           BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
@@ -2363,6 +2376,7 @@ jobs:
           BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
 
       - name: Upload deterministic artifact
+        if: ${{ matrix.platform.githubHosted != true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.artifact-contract.outputs.artifact-name }}
@@ -2373,6 +2387,7 @@ jobs:
           compression-level: ${{ inputs.artifact-compression-level }}
 
       - name: Upload artifact manifest
+        if: ${{ matrix.platform.githubHosted != true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -2382,6 +2397,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload diagnostics artifact
+        if: ${{ matrix.platform.githubHosted != true }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -2391,7 +2407,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload relayed macOS credential-island input
-        if: ${{ matrix.platform.id == inputs.credential-island-macos-platform-id && inputs.credential-island-macos-app-path != '' }}
+        if: ${{ matrix.platform.githubHosted != true && matrix.platform.id == inputs.credential-island-macos-platform-id && inputs.credential-island-macos-app-path != '' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-credential-island-input-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -2401,7 +2417,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Cleanup S3 artifact relay payload
-        if: ${{ success() }}
+        if: ${{ success() && matrix.platform.githubHosted != true }}
         run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs cleanup
         env:
           BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
@@ -2740,6 +2756,7 @@ jobs:
     name: Sign and notarize sealed macOS application
     needs:
       - trust-gate
+      - resolve-contract
       - resolve-source
       - artifact-transfer
       - build-native
@@ -2784,7 +2801,7 @@ jobs:
           path: .buildchain/credential-island-input
 
       - name: Download source-bound sealed application archive
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || contains(fromJSON(needs.resolve-contract.outputs.github-hosted-platform-ids-json), inputs.credential-island-macos-platform-id) }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -2792,7 +2809,7 @@ jobs:
           path: .buildchain/credential-island-input
 
       - name: Download source-bound sealed application manifest
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || contains(fromJSON(needs.resolve-contract.outputs.github-hosted-platform-ids-json), inputs.credential-island-macos-platform-id) }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -2800,7 +2817,7 @@ jobs:
           path: .buildchain/credential-island-input
 
       - name: Download relayed source-bound credential-island input
-        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && !contains(fromJSON(needs.resolve-contract.outputs.github-hosted-platform-ids-json), inputs.credential-island-macos-platform-id) }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}

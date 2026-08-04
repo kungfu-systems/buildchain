@@ -815,12 +815,13 @@
           "materialize",
           "materialize-base-ref",
           "media-profile",
+          "render-failure-advisory",
           "render-media",
           "renderer-image",
           "scenario-path",
           "source-ref"
         ],
-        "inputCount": 11,
+        "inputCount": 12,
         "secrets": [
           "DEMO_UPDATE_TOKEN"
         ],
@@ -831,9 +832,10 @@
           "evidence-artifact-digest",
           "evidence-artifact-name",
           "publication-pr-url",
+          "render-result",
           "source-sha"
         ],
-        "outputCount": 6
+        "outputCount": 7
       },
       {
         "id": ".gate-profile",
@@ -7542,8 +7544,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
-    "workflowRegistryDigest": "7060fd48581d21f502d49b424157be10627c87e0e01527a65a01875ec8de7e0b",
-    "pageRegistryDigest": "683f7947f7f3cbddd3e3fe1996980a5dcf0c19c48daa432555b6c456f69bc807"
+    "workflowRegistryDigest": "7264e5ca3662b87dafcd776a161abbc056ff6b9f5c2ce0d4d4c0f7d46d07d93e",
+    "pageRegistryDigest": "a52acee80de7646cb5d38fef7117adeb3c1e4a4c10dc59bce179af6a8f2c0d91"
   },
   "comparison": {
     "missingCliRegistry": [],

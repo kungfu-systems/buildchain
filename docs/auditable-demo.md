@@ -97,6 +97,7 @@ jobs:
       scenario-path: .buildchain/auditable-demo.json
       renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:RENDERER_DIGEST
       render-media: true
+      render-failure-advisory: false
       media-profile: responsive-web-delivery-v1
       materialize: true
       materialize-base-ref: dev/v1/v1.0
@@ -202,9 +203,9 @@ passed gate receipt, and checksums covering every member exactly once.
 
 ## Selective Render
 
-`render-media: true` enables the second job. It downloads the just-uploaded Gate
-bundle by its content-addressed name, recomputes the Gate member root, verifies
-the exact source SHA and renderer digest, and only then renders the complete
+`render-media: true` enables the full-media step only after every declared demo
+has passed the required Gate. It recomputes each Gate member root, verifies the
+exact source SHA and renderer digest, and only then renders the complete
 qualified scene.
 
 The media bundle contains MP4, WebM, GIF, poster, probe, renderer manifest,
@@ -212,6 +213,13 @@ renderer checksums, passed Gate receipt, a versioned media receipt, and
 distribution checksums. A web-delivery profile also retains
 `media-inspection.json`, whose content root is bound into the receipt.
 `render-media: false` does not weaken or skip the Gate.
+
+`render-failure-advisory: true` makes only the full-media step advisory. A
+render failure remains visible as a failed step and workflow warning, while the
+required Gate keeps its normal failure semantics. Failed or partial media can
+never open a materialization PR. Use this for an Alpha lane whose binary
+publication must not depend on animation capacity; keep the default `false`
+for explicit media refreshes and other workflows that require complete media.
 
 When the Gate bundle contains a qualified terminal capture, the render job
 passes it read-only to the immutable renderer. The renderer manifest binds the
@@ -225,13 +233,13 @@ The single machine-readable source is
 profile through `media-profile`; they cannot pass ffmpeg commands, codec flags,
 shell fragments, arbitrary profile paths, or transcoding instructions.
 
-| Profile | Meaning |
-| --- | --- |
-| `archive-v1` | Default compatibility contract. Retains the exact renderer outputs and classifies GIF as README compatibility evidence without making a browser-delivery claim. |
-| `web-delivery-v1` | Independently qualifies H.264 MP4 and VP9 WebM playback sources, forbids audio, requires exact scene dimensions and bounded duration/frame-rate drift, checks per-rendition byte ceilings, and proves MP4 `moov` precedes `mdat`. PNG remains the lossless evidence poster. |
-| `responsive-web-delivery-v1` | Extends `web-delivery-v1` with exact 1280x720 H.264 MP4 and VP9 WebM responsive sources plus a 1280x720 README GIF while keeping the primary MP4/WebM and evidence poster at the source scene dimensions. Every declared downscale must preserve the scene aspect ratio and may never upscale. |
-| `responsive-long-form-web-delivery-v1` | Extends the responsive profile for explicitly admitted long-form scenes. Its measured-baseline multipliers raise only the GIF ceiling to 8 MiB and the four video ceilings to 4 MiB; all codec, native-resolution, no-audio, duration, and authority checks remain unchanged. |
-| `site-hero-v1` | Extends `web-delivery-v1` and additionally requires a qualified WebP browser poster. The current Build Images v1 renderer does not emit that member, so selecting this profile fails closed until the producer adds it. |
+| Profile                                | Meaning                                                                                                                                                                                                                                                                                        |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `archive-v1`                           | Default compatibility contract. Retains the exact renderer outputs and classifies GIF as README compatibility evidence without making a browser-delivery claim.                                                                                                                                |
+| `web-delivery-v1`                      | Independently qualifies H.264 MP4 and VP9 WebM playback sources, forbids audio, requires exact scene dimensions and bounded duration/frame-rate drift, checks per-rendition byte ceilings, and proves MP4 `moov` precedes `mdat`. PNG remains the lossless evidence poster.                    |
+| `responsive-web-delivery-v1`           | Extends `web-delivery-v1` with exact 1280x720 H.264 MP4 and VP9 WebM responsive sources plus a 1280x720 README GIF while keeping the primary MP4/WebM and evidence poster at the source scene dimensions. Every declared downscale must preserve the scene aspect ratio and may never upscale. |
+| `responsive-long-form-web-delivery-v1` | Extends the responsive profile for explicitly admitted long-form scenes. Its measured-baseline multipliers raise only the GIF ceiling to 8 MiB and the four video ceilings to 4 MiB; all codec, native-resolution, no-audio, duration, and authority checks remain unchanged.                  |
+| `site-hero-v1`                         | Extends `web-delivery-v1` and additionally requires a qualified WebP browser poster. The current Build Images v1 renderer does not emit that member, so selecting this profile fails closed until the producer adds it.                                                                        |
 
 For web-delivery profiles, Buildchain runs its own fixed `ffprobe` invocation
 inside the same immutable, network-disabled renderer image. That command is

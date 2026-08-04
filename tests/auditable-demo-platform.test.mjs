@@ -506,6 +506,18 @@ test("Gate smoke stays bounded while full render consumes both native captures",
   assert.match(workflow, /prepare-artifact[\s\S]*--artifact-root "source-artifact"/u);
 });
 
+test("advisory media failure preserves the required Gate and suppresses publication", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.declarative-auditable-demo.yml"), "utf8");
+  const gateIndex = workflow.indexOf("name: Run required Gate for every declared demo");
+  const renderIndex = workflow.indexOf("name: Render full media for every declared demo");
+  assert.ok(gateIndex >= 0 && renderIndex > gateIndex);
+  assert.match(workflow, /render-failure-advisory:[\s\S]*default: false[\s\S]*type: boolean/u);
+  assert.match(workflow.slice(renderIndex, workflow.indexOf("name: Bind evidence collection identity", renderIndex)), /id: render[\s\S]*continue-on-error: \$\{\{ inputs\.render-failure-advisory \}\}/u);
+  assert.match(workflow, /render-result: \$\{\{ steps\.render\.outcome \}\}/u);
+  assert.match(workflow, /inputs\.materialize && inputs\.render-media && needs\.qualify\.outputs\.render-result == 'success'/u);
+  assert.match(workflow, /The required Gate remains successful and no materialization PR will be opened/u);
+});
+
 test("reusable builds run the transport simulation before either artifact upload path", () => {
   const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.build.yml"), "utf8");
   assert.equal(workflow.match(/name: Simulate artifact transport before upload/gu)?.length, 2);
