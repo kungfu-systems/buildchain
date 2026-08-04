@@ -73,6 +73,41 @@ function scenario() {
   };
 }
 
+function declareLongForm(value) {
+  value.execution.durationClass = "long-form";
+  value.execution.totalTimeoutSeconds = 180;
+  for (const demo of value.demos) {
+    for (const step of demo.steps) step.timeoutSeconds = 180;
+  }
+}
+
+function oversizedLongFormRendererManifest() {
+  const replay = "x".repeat(4 * 1024 * 1024);
+  return {
+    schema: "build-images.auditable-demo-render/v1",
+    renderer: { image: `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"e".repeat(64)}` },
+    inputs: {
+      renditions: [
+        { id: "1080p", role: "primary", width: 1920, height: 1080 },
+        { id: "720p", role: "responsive", width: 1280, height: 720 },
+      ].map((rendition, index) => ({
+        id: rendition.id,
+        role: rendition.role,
+        scene: { path: { durationClass: "long-form", durationMs: 180_000, fps: 10, width: rendition.width, height: rendition.height } },
+        terminalCapture: {
+          schema: "kungfu.terminal-capture/v1",
+          root: `sha256:${(index === 0 ? "c" : "d").repeat(64)}`,
+          durationMs: 179_000,
+          events: 10_000,
+          bytes: 4 * 1024 * 1024,
+          path: { normalizedReplay: replay },
+        },
+      })),
+    },
+    outputs: {},
+  };
+}
+
 function fixture(t) {
   const root = temporary(t);
   const artifact = path.join(root, "artifact");
@@ -350,7 +385,7 @@ test("capture enforces the total deadline inside a running step", { skip: proces
 });
 
 test("materializer verifies exact bundles and updates README idempotently", { skip: process.platform === "win32" }, (t) => {
-  const value = capture(t, "shared-state");
+  const value = capture(t, "shared-state", declareLongForm);
   const repository = path.join(value.root, "consumer");
   const gate = path.join(value.root, "gate");
   const media = path.join(value.root, "media");
@@ -363,12 +398,15 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   for (const name of ["demo.gif", "demo.mp4", "demo.webm", "demo-720p.mp4", "demo-720p.webm", "poster.png", "manifest.json", "media-probe.json", "media-inspection.json", "renderer-checksums.sha256"]) {
     fs.writeFileSync(path.join(media, name), Buffer.from(`fixture:${name}\n`));
   }
-  fs.writeFileSync(path.join(media, "demo.mp4"), Buffer.alloc(8 * 1024 * 1024 + 1, 0x61));
+  const rendererManifest = Buffer.from(`${JSON.stringify(oversizedLongFormRendererManifest(), null, 2)}\n`);
+  assert.ok(rendererManifest.length > 8 * 1024 * 1024);
+  fs.writeFileSync(path.join(media, "manifest.json"), rendererManifest);
   writeJson(path.join(media, "gate-receipt.json"), { schema: "buildchain.auditable-demo-gate/v1", status: "passed" });
   writeJson(path.join(media, "media-receipt.json"), {
     schema: "buildchain.auditable-demo-media/v2",
     status: "passed",
     qualifiedGateRoot: gateRoot,
+    rendererManifestRoot: sha256(rendererManifest),
     qualification: { profile: { id: "responsive-web-delivery-v1" }, qualificationRoot: `sha256:${"c".repeat(64)}` },
     qualificationRoot: `sha256:${"c".repeat(64)}`,
   });
@@ -384,14 +422,13 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
     rendererImage: `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"e".repeat(64)}`,
   };
   const first = materializeDemo(args);
-  assert.ok(fs.statSync(path.join(repository, first.evidenceDirectory, "demo.mp4")).size > 8 * 1024 * 1024);
   const firstReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
   const second = materializeDemo(args);
   assert.equal(second.evidenceRoot, first.evidenceRoot);
   assert.equal(fs.readFileSync(path.join(repository, "README.md"), "utf8"), firstReadme);
   assert.match(firstReadme, /\$ fixture write[\s\S]*\$ fixture read/u);
   assert.match(firstReadme, /1080p MP4[\s\S]*720p MP4/u);
-  const independent = capture(t, "independent");
+  const independent = capture(t, "independent", declareLongForm);
   materializeDemo({
     ...args,
     demoId: "independent",
@@ -406,6 +443,18 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   const passport = JSON.parse(fs.readFileSync(path.join(repository, first.evidenceDirectory, "release-passport.json"), "utf8"));
   assert.deepEqual(passport.authority.grants, []);
   assert.equal(passport.authority.productSystemRole, "assembly-and-distribution-metadata-only");
+  const standard = capture(t, "shared-state");
+  assert.throws(() => materializeDemo({
+    ...args,
+    scenarioPath: standard.scenarioPath,
+    captureRoot: standard.output,
+  }), /media bundle member must be a bounded regular file/u);
+  const qualifiedVideo = fs.readFileSync(path.join(media, "demo.mp4"));
+  fs.writeFileSync(path.join(media, "demo.mp4"), Buffer.alloc(8 * 1024 * 1024 + 1, 0x61));
+  writeChecksums(media);
+  assert.throws(() => materializeDemo(args), /media bundle member must be a bounded regular file/u);
+  fs.writeFileSync(path.join(media, "demo.mp4"), qualifiedVideo);
+  writeChecksums(media);
   fs.appendFileSync(path.join(media, "demo.gif"), "drift");
   assert.throws(() => materializeDemo(args), /checksum mismatch/u);
 });
