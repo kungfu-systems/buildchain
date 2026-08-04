@@ -96,7 +96,7 @@ function listBundleFiles(root, prefix = "") {
   return files;
 }
 
-function verifyChecksums(root, label) {
+function verifyChecksums(root, label, maximumMemberBytes = 8 * 1024 * 1024) {
   const resolved = path.resolve(root);
   const bytes = regular(path.join(resolved, "checksums.sha256"), `${label} checksums`);
   const rows = bytes.toString("utf8").split("\n").filter(Boolean);
@@ -107,7 +107,7 @@ function verifyChecksums(root, label) {
     const target = inside(resolved, match[2], `${label} checksum member`);
     requireValue(!declared.has(match[2]), `${label} checksum member is repeated`);
     declared.add(match[2]);
-    requireValue(rootBytes(regular(target, `${label} member`)) === `sha256:${match[1]}`, `${label} checksum mismatch: ${match[2]}`);
+    requireValue(rootBytes(regular(target, `${label} member`, maximumMemberBytes)) === `sha256:${match[1]}`, `${label} checksum mismatch: ${match[2]}`);
   }
   const actual = listBundleFiles(resolved).filter((name) => name !== "checksums.sha256");
   requireValue(JSON.stringify([...declared].sort()) === JSON.stringify(actual), `${label} checksum member set is not exact`);
@@ -413,7 +413,7 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
   const gateReceipt = readJson(path.join(path.resolve(gateBundle), "gate-receipt.json"), "gate receipt");
   const mediaReceipt = readJson(path.join(path.resolve(mediaBundle), "media-receipt.json"), "media receipt");
   const gateRoot = verifyChecksums(gateBundle, "Gate bundle");
-  const mediaRoot = verifyChecksums(mediaBundle, "media bundle");
+  const mediaRoot = verifyChecksums(mediaBundle, "media bundle", 64 * 1024 * 1024);
   requireValue(gateReceipt.status === "passed" && mediaReceipt.status === "passed", "Gate and media receipts must pass");
   requireValue(mediaReceipt.qualifiedGateRoot === gateRoot, "media receipt is not bound to the exact qualified Gate");
   const sourceCoordinate = readJson(path.join(path.resolve(captureRoot), "source-coordinate.json"), "source coordinate");
