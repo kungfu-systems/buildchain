@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f2e1688643bdf9dd259c86cba98ff067e9aa7808d3da81de1898bb27b3e53553",
+    "sha256": "31b2bd77636566a3a3c87cfbc0222eee3876530a930d0fff4e301d3c473a5d4b",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 60,
       "actionCount": 6,
-      "sitePageCount": 64,
-      "docCommandRefCount": 834,
+      "sitePageCount": 65,
+      "docCommandRefCount": 838,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f2e1688643bdf9dd259c86cba98ff067e9aa7808d3da81de1898bb27b3e53553",
+      "sha256": "31b2bd77636566a3a3c87cfbc0222eee3876530a930d0fff4e301d3c473a5d4b",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 60,
         "actionCount": 6,
-        "sitePageCount": 64,
-        "docCommandRefCount": 834,
+        "sitePageCount": 65,
+        "docCommandRefCount": 838,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -5599,6 +5599,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:dev-delivery-warrant-queue",
+          "name": "site-page:manual:dev-delivery-warrant-queue",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:dev-qualification-patrol",
           "name": "site-page:manual:dev-qualification-patrol",
           "kind": "site-page",
@@ -6189,6 +6201,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 394
+    "publicSurfaceCount": 395
   }
 }

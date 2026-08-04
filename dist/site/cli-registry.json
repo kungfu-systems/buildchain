@@ -413,33 +413,42 @@
       "paths": [
         "dev",
         "dev merge-queue",
-        "dev pr-admit"
+        "dev pr-admit",
+        "dev warrant"
       ],
       "syntaxes": [
         "buildchain dev",
         "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]",
-        "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]"
+        "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]",
+        "buildchain dev warrant --repository <owner/repo> --state-ref <buildchain-state/dev-delivery/...> [--init --branch <dev/vN/vN.M> --expected-base <sha>] [--command <json-file> | --view] [--output <file>] [--gh-cli]"
       ],
       "options": [
         "--apply",
         "--branch",
         "--check-response-timeout-minutes",
+        "--command",
         "--cwd",
         "--execute",
+        "--expected-base",
         "--expected-head",
         "--from-config",
+        "--gh-cli",
+        "--init",
         "--json",
         "--max-entries-to-build",
         "--output",
         "--pull-request",
         "--repository",
+        "--state-ref",
+        "--view",
         "--workflow"
       ],
       "aliases": [],
       "helpCommands": [
         "buildchain dev --help",
         "buildchain dev merge-queue --help",
-        "buildchain dev pr-admit --help"
+        "buildchain dev pr-admit --help",
+        "buildchain dev warrant --help"
       ],
       "purpose": "Inspect protected development-channel governance command families.",
       "capabilityGroup": "governance-versioning",
