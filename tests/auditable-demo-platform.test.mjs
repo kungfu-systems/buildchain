@@ -363,6 +363,7 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   for (const name of ["demo.gif", "demo.mp4", "demo.webm", "demo-720p.mp4", "demo-720p.webm", "poster.png", "manifest.json", "media-probe.json", "media-inspection.json", "renderer-checksums.sha256"]) {
     fs.writeFileSync(path.join(media, name), Buffer.from(`fixture:${name}\n`));
   }
+  fs.writeFileSync(path.join(media, "demo.mp4"), Buffer.alloc(8 * 1024 * 1024 + 1, 0x61));
   writeJson(path.join(media, "gate-receipt.json"), { schema: "buildchain.auditable-demo-gate/v1", status: "passed" });
   writeJson(path.join(media, "media-receipt.json"), {
     schema: "buildchain.auditable-demo-media/v2",
@@ -383,6 +384,7 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
     rendererImage: `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"e".repeat(64)}`,
   };
   const first = materializeDemo(args);
+  assert.ok(fs.statSync(path.join(repository, first.evidenceDirectory, "demo.mp4")).size > 8 * 1024 * 1024);
   const firstReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
   const second = materializeDemo(args);
   assert.equal(second.evidenceRoot, first.evidenceRoot);
