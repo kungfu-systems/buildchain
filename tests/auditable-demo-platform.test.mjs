@@ -401,6 +401,7 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   const rendererManifest = Buffer.from(`${JSON.stringify(oversizedLongFormRendererManifest(), null, 2)}\n`);
   assert.ok(rendererManifest.length > 8 * 1024 * 1024);
   fs.writeFileSync(path.join(media, "manifest.json"), rendererManifest);
+  fs.writeFileSync(path.join(media, "demo.mp4"), Buffer.alloc(8 * 1024 * 1024 + 1, 0x61));
   writeJson(path.join(media, "gate-receipt.json"), { schema: "buildchain.auditable-demo-gate/v1", status: "passed" });
   writeJson(path.join(media, "media-receipt.json"), {
     schema: "buildchain.auditable-demo-media/v2",
@@ -422,6 +423,8 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
     rendererImage: `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"e".repeat(64)}`,
   };
   const first = materializeDemo(args);
+  assert.ok(fs.statSync(path.join(repository, first.evidenceDirectory, "demo.mp4")).size > 8 * 1024 * 1024);
+  assert.ok(fs.statSync(path.join(repository, first.evidenceDirectory, "manifest.json")).size > 8 * 1024 * 1024);
   const firstReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
   const second = materializeDemo(args);
   assert.equal(second.evidenceRoot, first.evidenceRoot);
@@ -449,8 +452,41 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
     scenarioPath: standard.scenarioPath,
     captureRoot: standard.output,
   }), /media bundle member must be a bounded regular file/u);
+
+  const checksumsPath = path.join(media, "checksums.sha256");
+  const validChecksums = fs.readFileSync(checksumsPath);
+  const firstChecksum = validChecksums.toString("utf8").split("\n")[0];
+  fs.appendFileSync(checksumsPath, `${firstChecksum}\n`);
+  assert.throws(() => materializeDemo(args), /checksum member is repeated/u);
+  fs.writeFileSync(checksumsPath, validChecksums);
+
+  fs.appendFileSync(checksumsPath, `${"0".repeat(64)}  ../escape\n`);
+  assert.throws(() => materializeDemo(args), /checksum member escapes its root/u);
+  fs.writeFileSync(checksumsPath, validChecksums);
+
+  fs.writeFileSync(path.join(media, "undeclared.bin"), "undeclared");
+  assert.throws(() => materializeDemo(args), /checksum member set is not exact/u);
+  fs.rmSync(path.join(media, "undeclared.bin"));
+
+  fs.symlinkSync(path.join(media, "demo.gif"), path.join(media, "linked.gif"));
+  assert.throws(() => materializeDemo(args), /bundle member must not be a symbolic link/u);
+  fs.rmSync(path.join(media, "linked.gif"));
+
+  const gifPath = path.join(media, "demo.gif");
+  const gifBytes = fs.readFileSync(gifPath);
   fs.appendFileSync(path.join(media, "demo.gif"), "drift");
   assert.throws(() => materializeDemo(args), /checksum mismatch/u);
+  fs.writeFileSync(gifPath, gifBytes);
+
+  const mp4Path = path.join(media, "demo.mp4");
+  const mp4Bytes = fs.statSync(mp4Path).size;
+  fs.truncateSync(mp4Path, 64 * 1024 * 1024 + 1);
+  assert.throws(() => materializeDemo(args), /media bundle member must be a bounded regular file/u);
+  fs.truncateSync(mp4Path, mp4Bytes);
+
+  fs.truncateSync(mp4Path, 64 * 1024 * 1024);
+  fs.truncateSync(path.join(media, "demo.webm"), 64 * 1024 * 1024);
+  assert.throws(() => materializeDemo(args), /media bundle exceeds its aggregate byte budget/u);
 });
 
 test("Gate smoke stays bounded while full render consumes both native captures", () => {

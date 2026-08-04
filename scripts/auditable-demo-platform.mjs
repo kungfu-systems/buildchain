@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { readRendererManifest } from "./auditable-demo-renditions.mjs";
+import { copyVerifiedRegular, verifyBundleChecksums } from "./auditable-demo-bundle-verification.mjs";
 
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const SAFE_ID = /^[a-z0-9][a-z0-9._-]{0,63}$/u;
@@ -27,9 +27,10 @@ const RENDITIONS = [
 const STANDARD_MAX_SECONDS = 60;
 const LONG_FORM_MAX_SECONDS = 180;
 const MAX_EXECUTABLE_FILES = 32;
-const MAX_TERMINAL_CAPTURE_BYTES = 4 * 1024 * 1024;
-const MAX_TERMINAL_CAPTURE_EVENTS = 10_000;
-const UTF8 = new TextDecoder("utf-8", { fatal: true });
+const MAX_METADATA_MEMBER_BYTES = 8 * 1024 * 1024;
+const MAX_MEDIA_MEMBER_BYTES = 64 * 1024 * 1024;
+const MAX_GATE_BUNDLE_BYTES = 64 * 1024 * 1024;
+const MAX_MEDIA_BUNDLE_BYTES = 128 * 1024 * 1024;
 
 function durationPolicy(value = "standard") {
   requireValue(value === "standard" || value === "long-form", "scenario duration class is invalid");
@@ -73,23 +74,6 @@ function regular(file, label, maximum = 8 * 1024 * 1024) {
   return fs.readFileSync(file);
 }
 
-function decodeUtf8(bytes, label) {
-  try {
-    return UTF8.decode(bytes);
-  } catch {
-    fail(`${label} must be valid UTF-8`);
-  }
-}
-
-const RENDERER_MANIFEST_HELPERS = {
-  decodeUtf8,
-  digestPattern: DIGEST,
-  invariant: requireValue,
-  maxBytes: MAX_TERMINAL_CAPTURE_BYTES,
-  maxEvents: MAX_TERMINAL_CAPTURE_EVENTS,
-  readRegular: regular,
-};
-
 function readJson(file, label) {
   try {
     const value = JSON.parse(regular(file, label).toString("utf8"));
@@ -99,46 +83,6 @@ function readJson(file, label) {
     if (error instanceof SyntaxError) fail(`${label} is invalid JSON`);
     throw error;
   }
-}
-
-function listBundleFiles(root, prefix = "") {
-  const entries = fs.readdirSync(path.join(root, prefix), { withFileTypes: true })
-    .sort((left, right) => left.name.localeCompare(right.name, "en"));
-  const files = [];
-  for (const entry of entries) {
-    requireValue(!entry.isSymbolicLink(), `bundle member must not be a symbolic link: ${path.join(prefix, entry.name)}`);
-    const relative = path.join(prefix, entry.name);
-    if (entry.isDirectory()) files.push(...listBundleFiles(root, relative));
-    else {
-      requireValue(entry.isFile(), `bundle member must be a regular file: ${relative}`);
-      files.push(relative.split(path.sep).join("/"));
-    }
-  }
-  return files;
-}
-
-function verifyChecksums(root, label, options = {}) {
-  const resolved = path.resolve(root);
-  const bytes = regular(path.join(resolved, "checksums.sha256"), `${label} checksums`);
-  const rows = bytes.toString("utf8").split("\n").filter(Boolean);
-  const declared = new Set();
-  for (const row of rows) {
-    const match = /^([0-9a-f]{64})  ([^\0\r\n]+)$/u.exec(row);
-    requireValue(match, `${label} checksum row is invalid`);
-    const target = inside(resolved, match[2], `${label} checksum member`);
-    requireValue(!declared.has(match[2]), `${label} checksum member is repeated`);
-    declared.add(match[2]);
-    const memberBytes = options.allowLongFormRendererManifest && match[2] === "manifest.json"
-      ? readRendererManifest(target, RENDERER_MANIFEST_HELPERS).bytes
-      : regular(target, `${label} member`);
-    requireValue(rootBytes(memberBytes) === `sha256:${match[1]}`, `${label} checksum mismatch: ${match[2]}`);
-    if (match[2] === "manifest.json" && options.rendererManifestRoot) {
-      requireValue(rootBytes(memberBytes) === options.rendererManifestRoot, `${label} renderer manifest root mismatch`);
-    }
-  }
-  const actual = listBundleFiles(resolved).filter((name) => name !== "checksums.sha256");
-  requireValue(JSON.stringify([...declared].sort()) === JSON.stringify(actual), `${label} checksum member set is not exact`);
-  return rootBytes(bytes);
 }
 
 function inside(root, relative, label) {
@@ -394,10 +338,7 @@ export function adaptCapture({ artifactRoot, output }) {
 }
 
 function copyRegular(source, destination, label) {
-  const bytes = regular(source, label, 64 * 1024 * 1024);
-  fs.mkdirSync(path.dirname(destination), { recursive: true });
-  fs.writeFileSync(destination, bytes);
-  return { path: path.basename(destination), bytes: bytes.length, root: rootBytes(bytes) };
+  return copyVerifiedRegular(source, destination, label, MAX_MEDIA_MEMBER_BYTES);
 }
 
 function replaceReadmeBlock(readme, marker, block) {
@@ -439,10 +380,12 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
   requireValue(captureManifest.demo?.id === demoId && captureManifest.scenarioRoot === rootJson(scenario), "capture does not bind the exact scenario demo");
   const gateReceipt = readJson(path.join(path.resolve(gateBundle), "gate-receipt.json"), "gate receipt");
   const mediaReceipt = readJson(path.join(path.resolve(mediaBundle), "media-receipt.json"), "media receipt");
-  const gateRoot = verifyChecksums(gateBundle, "Gate bundle");
+  const gateRoot = verifyBundleChecksums(gateBundle, "Gate bundle", { maximumBundleBytes: MAX_GATE_BUNDLE_BYTES });
   requireValue(DIGEST.test(mediaReceipt.rendererManifestRoot), "media receipt renderer manifest root is invalid");
-  const mediaRoot = verifyChecksums(mediaBundle, "media bundle", {
+  const mediaRoot = verifyBundleChecksums(mediaBundle, "media bundle", {
     allowLongFormRendererManifest: scenario.execution.durationClass === "long-form",
+    maximumBundleBytes: MAX_MEDIA_BUNDLE_BYTES,
+    maximumMemberBytes: MAX_MEDIA_MEMBER_BYTES,
     rendererManifestRoot: mediaReceipt.rendererManifestRoot,
   });
   requireValue(gateReceipt.status === "passed" && mediaReceipt.status === "passed", "Gate and media receipts must pass");
