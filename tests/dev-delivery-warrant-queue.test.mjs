@@ -15,9 +15,19 @@ import {
 import {
   applyPersistedDevDeliveryCommand,
   bootstrapPersistedDevDeliveryQueue,
+  enqueuePersistedDevDeliveryCandidate,
   loadPersistedDevDeliveryQueue,
+  observePersistedDevDeliveryMerge,
   persistDevDeliveryQueue,
 } from "../scripts/dev-delivery-warrant-store.mjs";
+import {
+  classifyDevDelta,
+  createGithubEnqueueReceipt,
+  createIntegrationDeliveryProof,
+  createSourceQualificationProof,
+  createSourceReplayReceipt,
+  planSourceReplay,
+} from "../scripts/dev-delivery-proof.mjs";
 
 const ROOT_A = `sha256:${"a".repeat(64)}`;
 const ROOT_B = `sha256:${"b".repeat(64)}`;
@@ -40,7 +50,7 @@ function queue(overrides = {}) {
 }
 
 function candidate(number, overrides = {}) {
-  return {
+  const input = {
     pullRequestNumber: number,
     sourceHeadSha: overrides.sourceHeadSha || SHA_A,
     semanticSourceRoot: overrides.semanticSourceRoot || ROOT_A,
@@ -50,6 +60,41 @@ function candidate(number, overrides = {}) {
     priority: overrides.priority || "ordinary",
     priorityReason: overrides.priorityReason,
     priorityPolicyRoot: overrides.priorityPolicyRoot,
+  };
+  return {
+    ...input,
+    sourceProof:
+      overrides.sourceProof ||
+      createSourceQualificationProof({
+        repository: "kungfu-systems/kungfu",
+        protectedBase: "dev/v4/v4.0",
+        pullRequestNumber: input.pullRequestNumber,
+        sourceHeadSha: input.sourceHeadSha,
+        semanticSourceRoot: input.semanticSourceRoot,
+        sourceIntentRoot: ROOT_B,
+        planRoot: ROOT_C,
+        affectedClosure: {
+          shards: [
+            {
+              id: "native",
+              pathPrefixes: ["framework"],
+              qualificationContext: "affected-native",
+            },
+          ],
+          unrelatedPathPrefixes: ["docs"],
+        },
+        dependencyGraphRoot: ROOT_C,
+        toolchainRoot: ROOT_D,
+        requiredContexts: [
+          {
+            name: "source-qualification",
+            conclusion: "success",
+            headSha: input.sourceHeadSha,
+            evidenceRoot: ROOT_A,
+          },
+        ],
+        evidenceRoots: [ROOT_A],
+      }),
   };
 }
 
@@ -71,6 +116,135 @@ function submit(state, number, now, overrides = {}) {
   return apply(state, "submit", now, {
     candidate: candidate(number, overrides),
   });
+}
+
+function recordProofChain(
+  state,
+  now = "2026-08-04T00:01:00Z",
+  { integration = true } = {},
+) {
+  const active = state.candidates.find(
+    (entry) => entry.submissionId === state.activeWarrant.submissionId,
+  );
+  const proof = active.sourceProof;
+  const classification = classifyDevDelta({
+    sourceProof: proof,
+    previousBaseSha: SHA_B,
+    currentBaseSha: SHA_C,
+    changedPaths: ["docs/readme.md"],
+    dependencyGraphRoot: ROOT_C,
+    toolchainRoot: ROOT_D,
+  });
+  const plan = planSourceReplay({
+    sourceProof: proof,
+    classification,
+    sourceHeadSha: active.sourceHeadSha,
+  });
+  const replayReceipt = createSourceReplayReceipt({
+    plan,
+    repository: state.repository,
+    protectedBase: state.protectedBase,
+    candidateTreeSha: SHA_C,
+    warrant: state.activeWarrant,
+    queueRevision: state.revision,
+    replayedAt: now,
+  });
+  state = apply(state, "record-replay", now, {
+    warrantId: state.activeWarrant.warrantId,
+    fencingToken: state.activeWarrant.fencingToken,
+    classification,
+    replayReceipt,
+  }).state;
+  if (!integration) return state;
+  state = apply(
+    state,
+    "transition",
+    new Date(Date.parse(now) + 500).toISOString(),
+    {
+      warrantId: state.activeWarrant.warrantId,
+      fencingToken: state.activeWarrant.fencingToken,
+      state: "merge-queued",
+      reason: "github-enqueued-exact-source-head",
+    },
+  ).state;
+  const providerReceipt = createGithubEnqueueReceipt({
+    repository: state.repository,
+    protectedBase: state.protectedBase,
+    submissionId: state.activeWarrant.submissionId,
+    sourceHeadSha: active.sourceHeadSha,
+    warrant: state.activeWarrant,
+    queueEntryId: "MQE_TEST",
+    queueEntryState: "QUEUED",
+    recoveredAfterControllerRestart: false,
+    queueRevision: state.revision,
+  });
+  const integrationProof = createIntegrationDeliveryProof({
+    repository: state.repository,
+    protectedBase: state.protectedBase,
+    sourceProofRoot: proof.sourceProofRoot,
+    replayReceiptRoot: replayReceipt.replayReceiptRoot,
+    classificationRoot: classification.classificationRoot,
+    integrationTreeSha: SHA_C,
+    protectedBaseSha: SHA_B,
+    warrant: state.activeWarrant,
+    queueRevision: state.revision,
+    providerReceipt,
+    requiredContexts: [
+      {
+        name: "merge-group",
+        conclusion: "success",
+        headSha: SHA_C,
+        evidenceRoot: ROOT_A,
+      },
+    ],
+    verifiedAt: new Date(Date.parse(now) + 1000).toISOString(),
+  });
+  return apply(
+    state,
+    "record-integration-proof",
+    new Date(Date.parse(now) + 1000).toISOString(),
+    {
+      warrantId: state.activeWarrant.warrantId,
+      fencingToken: state.activeWarrant.fencingToken,
+      integrationProof,
+      providerReceipt,
+    },
+  ).state;
+}
+
+function deliveryApi(
+  state,
+  { enqueueError = null, existingEntry = null, merged = false } = {},
+) {
+  const api = persistedApi(state);
+  api.enqueueCalls = 0;
+  api.getPullRequest = async (number) => ({
+    number,
+    node_id: `PR_${number}`,
+    head: { sha: state.candidates[0].sourceHeadSha },
+    base: { ref: state.protectedBase },
+    merged,
+    merge_commit_sha: SHA_C,
+  });
+  api.getMergeQueueState = async () => ({
+    enabled: true,
+    entries: existingEntry ? [existingEntry] : [],
+  });
+  api.enqueuePullRequest = async () => {
+    api.enqueueCalls += 1;
+    if (enqueueError) throw enqueueError;
+    return {
+      id: "MQE_1",
+      position: 1,
+      state: "QUEUED",
+      pullRequestNumber: state.candidates[0].pullRequestNumber,
+      pullRequestHeadSha: state.candidates[0].sourceHeadSha,
+      baseSha: SHA_B,
+      headSha: SHA_C,
+    };
+  };
+  api.getBranchSha = async () => SHA_C;
+  return api;
 }
 
 function persistedApi(initialState, { putError = null } = {}) {
@@ -306,6 +480,10 @@ test("same-semantic-source head repair retains age and changed source fails clos
     submissionId: original.submissionId,
     sourceHeadSha: SHA_B,
     semanticSourceRoot: original.semanticSourceRoot,
+    sourceProof: candidate(1, {
+      sourceHeadSha: SHA_B,
+      semanticSourceRoot: original.semanticSourceRoot,
+    }).sourceProof,
   });
   assert.equal(repaired.receipt.retainedEnqueuedAt, T0);
   assert.equal(repaired.state.candidates[0].sourceHeadSha, SHA_B);
@@ -313,12 +491,18 @@ test("same-semantic-source head repair retains age and changed source fails clos
     repaired.state.candidates[0].submissionId,
     original.submissionId,
   );
+  assert.equal(repaired.state.metrics.sourceHeadRepairs, 1);
+  assert.equal(repaired.state.metrics.baseOnlyHeadRotations, 0);
   assert.throws(
     () =>
       apply(repaired.state, "repair", "2026-08-04T00:03:00Z", {
         submissionId: repaired.state.candidates[0].submissionId,
         sourceHeadSha: SHA_C,
         semanticSourceRoot: ROOT_D,
+        sourceProof: candidate(1, {
+          sourceHeadSha: SHA_C,
+          semanticSourceRoot: ROOT_D,
+        }).sourceProof,
       }),
     /changed semantic source/u,
   );
@@ -337,17 +521,13 @@ test("terminal delivery closes the Warrant and exposes the next candidate", () =
     state: "proving",
     reason: "native-shards-running",
   }).state;
-  state = apply(state, "transition", "2026-08-04T00:02:00Z", {
-    warrantId: warrant.warrantId,
-    fencingToken: warrant.fencingToken,
-    state: "merge-queued",
-    reason: "native-queue-admitted",
-  }).state;
+  state = recordProofChain(state, "2026-08-04T00:01:10Z");
   state = apply(state, "transition", "2026-08-04T00:03:00Z", {
     warrantId: warrant.warrantId,
     fencingToken: warrant.fencingToken,
     state: "merged",
     reason: "exact-merge-group-qualified",
+    mergedHeadSha: SHA_C,
   }).state;
   assert.equal(state.activeWarrant, null);
   assert.equal(state.candidates[0].state, "merged");
@@ -374,6 +554,77 @@ test("lifecycle transitions cannot skip the exact merge-group boundary", () => {
   );
 });
 
+test("merge queue admission requires an exact source replay receipt", () => {
+  let state = submit(queue(), 1, T0).state;
+  state = apply(state, "select", "2026-08-04T00:00:01Z").state;
+  const warrant = state.activeWarrant;
+  state = apply(state, "transition", "2026-08-04T00:00:02Z", {
+    warrantId: warrant.warrantId,
+    fencingToken: warrant.fencingToken,
+    state: "proving",
+    reason: "qualification-started",
+  }).state;
+  assert.throws(
+    () =>
+      apply(state, "transition", "2026-08-04T00:00:03Z", {
+        warrantId: warrant.warrantId,
+        fencingToken: warrant.fencingToken,
+        state: "merge-queued",
+        reason: "forged-without-proof",
+      }),
+    /requires an exact source replay receipt/u,
+  );
+});
+
+test("one 40-minute candidate retains its Warrant while fast arrivals cannot rotate its PR head", () => {
+  let state = submit(queue({ warrantTtlSeconds: 3600 }), 1, T0).state;
+  const originalHead = state.candidates[0].sourceHeadSha;
+  state = apply(state, "select", "2026-08-04T00:00:01Z").state;
+  const selectedId = state.activeWarrant.submissionId;
+  for (let minute = 5; minute <= 40; minute += 5) {
+    state = submit(
+      state,
+      minute / 5 + 1,
+      `2026-08-04T00:${String(minute).padStart(2, "0")}:00Z`,
+      {
+        sourceHeadSha: minute.toString(16).padStart(40, "0"),
+        semanticSourceRoot: `sha256:${minute.toString(16).padStart(64, "0")}`,
+      },
+    ).state;
+    assert.equal(state.activeWarrant.submissionId, selectedId);
+  }
+  state = recordProofChain(state, "2026-08-04T00:40:00Z");
+  const selected = state.candidates.find(
+    (entry) => entry.submissionId === selectedId,
+  );
+  assert.equal(selected.sourceHeadSha, originalHead);
+  assert.equal(selected.stateReason, "exact-integration-proof-recorded");
+  assert.equal(state.metrics.baseOnlyHeadRotations, 0);
+  assert.equal(state.metrics.repeatedHeavyValidations, 0);
+  assert.equal(state.metrics.impermissibleOvertakes, 0);
+});
+
+test("GitHub enqueue rejection remains a visible recoverable terminal receipt", () => {
+  let state = submit(queue(), 1, T0).state;
+  state = apply(state, "select", "2026-08-04T00:00:01Z").state;
+  state = recordProofChain(state, "2026-08-04T00:01:00Z");
+  const warrant = state.activeWarrant;
+  state = apply(state, "transition", "2026-08-04T00:02:00Z", {
+    warrantId: warrant.warrantId,
+    fencingToken: warrant.fencingToken,
+    state: "failed",
+    reason: "github-enqueue-rejected",
+  }).state;
+  assert.equal(state.activeWarrant, null);
+  assert.equal(state.candidates[0].state, "failed");
+  assert.equal(state.candidates[0].stateReason, "github-enqueue-rejected");
+  assert.equal(
+    projectDevDeliveryQueue(state, "2026-08-04T00:03:00Z").candidates[0]
+      .nextAction,
+    "inspect-terminal-receipt",
+  );
+});
+
 test("queue projection publishes visible state, age, position, and next action", () => {
   let state = submit(queue(), 1, T0).state;
   state = submit(state, 2, "2026-08-04T00:00:01Z", {
@@ -396,6 +647,10 @@ test("selected repair and pre-expiry recovery fail closed", () => {
         submissionId,
         sourceHeadSha: SHA_B,
         semanticSourceRoot: ROOT_A,
+        sourceProof: candidate(1, {
+          sourceHeadSha: SHA_B,
+          semanticSourceRoot: ROOT_A,
+        }).sourceProof,
       }),
     /must be settled before repair/u,
   );
@@ -403,6 +658,104 @@ test("selected repair and pre-expiry recovery fail closed", () => {
     () => apply(state, "recover", "2026-08-04T00:00:03Z"),
     /has not expired/u,
   );
+});
+
+test("Warrant controller enqueues the exact PR head and persists the provider receipt", async () => {
+  let state = submit(queue(), 1, T0).state;
+  state = apply(state, "select", "2026-08-04T00:00:01Z").state;
+  state = recordProofChain(state, "2026-08-04T00:01:00Z", {
+    integration: false,
+  });
+  const api = deliveryApi(state);
+  const result = await enqueuePersistedDevDeliveryCandidate({
+    api,
+    repository: state.repository,
+    stateRef: "buildchain-state/dev-delivery/dev-v4-v4.0",
+    command: command(state, "enqueue-github", "2026-08-04T00:02:00Z", {
+      warrantId: state.activeWarrant.warrantId,
+      fencingToken: state.activeWarrant.fencingToken,
+    }),
+  });
+  assert.equal(result.status, "merge-queued");
+  assert.equal(result.state.candidates[0].state, "merge-queued");
+  assert.equal(
+    result.providerReceipt.sourceHeadSha,
+    state.candidates[0].sourceHeadSha,
+  );
+  assert.match(result.providerReceipt.receiptRoot, /^sha256:[0-9a-f]{64}$/u);
+  assert.equal(api.enqueueCalls, 1);
+});
+
+test("controller restart adopts the exact existing queue entry without duplicate enqueue", async () => {
+  let state = submit(queue(), 1, T0).state;
+  state = apply(state, "select", "2026-08-04T00:00:01Z").state;
+  state = recordProofChain(state, "2026-08-04T00:01:00Z", {
+    integration: false,
+  });
+  const existingEntry = {
+    id: "MQE_EXISTING",
+    state: "QUEUED",
+    pullRequestNumber: state.candidates[0].pullRequestNumber,
+    pullRequestHeadSha: state.candidates[0].sourceHeadSha,
+  };
+  const api = deliveryApi(state, { existingEntry });
+  const result = await enqueuePersistedDevDeliveryCandidate({
+    api,
+    repository: state.repository,
+    stateRef: "buildchain-state/dev-delivery/dev-v4-v4.0",
+    command: command(state, "enqueue-github", "2026-08-04T00:02:00Z", {
+      warrantId: state.activeWarrant.warrantId,
+      fencingToken: state.activeWarrant.fencingToken,
+    }),
+  });
+  assert.equal(result.providerReceipt.recoveredAfterControllerRestart, true);
+  assert.equal(api.enqueueCalls, 0);
+});
+
+test("GitHub enqueue rejection is persisted as a visible failed Warrant outcome", async () => {
+  let state = submit(queue(), 1, T0).state;
+  state = apply(state, "select", "2026-08-04T00:00:01Z").state;
+  state = recordProofChain(state, "2026-08-04T00:01:00Z", {
+    integration: false,
+  });
+  const rejection = new Error("provider rejected enqueue");
+  rejection.status = 422;
+  const api = deliveryApi(state, { enqueueError: rejection });
+  const result = await enqueuePersistedDevDeliveryCandidate({
+    api,
+    repository: state.repository,
+    stateRef: "buildchain-state/dev-delivery/dev-v4-v4.0",
+    command: command(state, "enqueue-github", "2026-08-04T00:02:00Z", {
+      warrantId: state.activeWarrant.warrantId,
+      fencingToken: state.activeWarrant.fencingToken,
+    }),
+  });
+  assert.equal(result.status, "failed");
+  assert.equal(result.state.candidates[0].state, "failed");
+  assert.equal(
+    result.state.candidates[0].stateReason,
+    "github-enqueue-rejected",
+  );
+  assert.equal(result.enqueueError.code, "422");
+});
+
+test("merge observation requires exact Integration Proof and protected-head readback", async () => {
+  let state = submit(queue(), 1, T0).state;
+  state = apply(state, "select", "2026-08-04T00:00:01Z").state;
+  state = recordProofChain(state, "2026-08-04T00:01:00Z");
+  const api = deliveryApi(state, { merged: true });
+  const result = await observePersistedDevDeliveryMerge({
+    api,
+    repository: state.repository,
+    stateRef: "buildchain-state/dev-delivery/dev-v4-v4.0",
+    command: command(state, "observe-merged", "2026-08-04T00:03:00Z", {
+      warrantId: state.activeWarrant.warrantId,
+      fencingToken: state.activeWarrant.fencingToken,
+    }),
+  });
+  assert.equal(result.status, "merged");
+  assert.equal(result.state.candidates[0].mergedHeadSha, SHA_C);
+  assert.equal(result.protectedHeadSha, SHA_C);
 });
 
 test("GitHub state-ref provider loads only a revision-valid bound queue", async () => {

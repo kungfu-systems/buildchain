@@ -12,6 +12,7 @@ import {
   candidateIdentity,
   contentRoot,
   emergencyPriorityEvidence,
+  exactSha,
   positiveInteger,
   priorityName,
   rankQueuedCandidates,
@@ -19,6 +20,11 @@ import {
   timestamp,
   withQueueRevision,
 } from "./dev-delivery-warrant-contract.mjs";
+import { verifySourceQualificationProof } from "./dev-delivery-proof.mjs";
+import {
+  applyIntegrationProofToQueue,
+  applySourceReplayProofToQueue,
+} from "./dev-delivery-proof-queue.mjs";
 
 export {
   DEV_DELIVERY_POLICY_VERSION,
@@ -132,7 +138,21 @@ function noOpResult(state, command, now, details = {}) {
 }
 
 function submit(state, command, now) {
-  const submissionIdentity = candidateIdentity(command.candidate || {}, state);
+  const candidateInput = command.candidate || {};
+  const sourceProof = verifySourceQualificationProof(
+    candidateInput.sourceProof,
+    {
+      repository: state.repository,
+      protectedBase: state.protectedBase,
+      pullRequestNumber: candidateInput.pullRequestNumber,
+      sourceHeadSha: candidateInput.sourceHeadSha,
+      semanticSourceRoot: candidateInput.semanticSourceRoot,
+    },
+  );
+  const submissionIdentity = candidateIdentity(
+    { ...candidateInput, sourceProofRoot: sourceProof.sourceProofRoot },
+    state,
+  );
   const existing = state.candidates.find(
     (candidate) => candidate.submissionId === submissionIdentity.submissionId,
   );
@@ -161,6 +181,16 @@ function submit(state, command, now) {
     selectedAt: null,
     terminalAt: null,
     warrantId: null,
+    proofs: {
+      sourceQualificationRoot: sourceProof.sourceProofRoot,
+      classificationRoot: null,
+      replayReceiptRoot: null,
+      integrationDeliveryRoot: null,
+    },
+    sourceProof,
+    candidateTreeSha: null,
+    integrationTreeSha: null,
+    mergedHeadSha: null,
   };
   return transitionResult(
     state,
@@ -265,6 +295,21 @@ function setCandidateState(state, command, now) {
   }
   const reason = requiredText(command.reason, "state reason");
   const terminal = TERMINAL_STATES.has(nextState);
+  if (nextState === "merge-queued" && !candidate.proofs?.replayReceiptRoot) {
+    throw new Error("merge-queued requires an exact source replay receipt");
+  }
+  let mergedHeadSha = candidate.mergedHeadSha || null;
+  if (nextState === "merged") {
+    if (!candidate.proofs?.integrationDeliveryRoot) {
+      throw new Error("merged requires an exact Integration Delivery Proof");
+    }
+    mergedHeadSha = exactSha(command.mergedHeadSha, "merged head SHA");
+    if (mergedHeadSha !== candidate.integrationTreeSha) {
+      throw new Error(
+        "merged head does not match the qualified integration tree",
+      );
+    }
+  }
   const candidates = state.candidates.map((candidate) =>
     candidate.submissionId === warrant.submissionId
       ? {
@@ -273,6 +318,7 @@ function setCandidateState(state, command, now) {
           stateReason: reason,
           terminalAt: terminal ? now.value : null,
           warrantId: terminal ? null : warrant.warrantId,
+          mergedHeadSha,
         }
       : candidate,
   );
@@ -344,11 +390,19 @@ function repair(state, command, now) {
       "selected or terminal candidates must be settled before repair",
     );
   }
+  const sourceProof = verifySourceQualificationProof(command.sourceProof, {
+    repository: state.repository,
+    protectedBase: state.protectedBase,
+    pullRequestNumber: candidate.pullRequestNumber,
+    sourceHeadSha: command.sourceHeadSha,
+    semanticSourceRoot: command.semanticSourceRoot,
+  });
   const repairedIdentity = candidateIdentity(
     {
       ...candidate,
       sourceHeadSha: command.sourceHeadSha,
       semanticSourceRoot: command.semanticSourceRoot,
+      sourceProofRoot: sourceProof.sourceProofRoot,
     },
     state,
   );
@@ -362,7 +416,17 @@ function repair(state, command, now) {
       ? {
           ...entry,
           ...repairedIdentity,
-          stateReason: "exact-head-repaired-same-semantic-source",
+          stateReason: "explicit-source-head-repair",
+          proofs: {
+            sourceQualificationRoot: sourceProof.sourceProofRoot,
+            classificationRoot: null,
+            replayReceiptRoot: null,
+            integrationDeliveryRoot: null,
+          },
+          sourceProof,
+          candidateTreeSha: null,
+          integrationTreeSha: null,
+          mergedHeadSha: null,
         }
       : entry,
   );
@@ -373,7 +437,7 @@ function repair(state, command, now) {
       candidates,
       metrics: {
         ...state.metrics,
-        baseOnlyHeadRotations: state.metrics.baseOnlyHeadRotations + 1,
+        sourceHeadRepairs: (state.metrics.sourceHeadRepairs || 0) + 1,
       },
     },
     command,
@@ -384,7 +448,20 @@ function repair(state, command, now) {
       submissionId: repairedIdentity.submissionId,
       retainedEnqueuedAt: candidate.retainedEnqueuedAt,
       semanticSourceRoot: candidate.semanticSourceRoot,
+      sourceProofRoot: sourceProof.sourceProofRoot,
     },
+  );
+}
+
+function recordProof(state, command, now, applyMutation) {
+  const warrant = requireWarrant(state, command, now);
+  const mutation = applyMutation(state, command, warrant);
+  return transitionResult(
+    state,
+    { ...state, candidates: mutation.candidates },
+    command,
+    now,
+    mutation.details,
   );
 }
 
@@ -436,6 +513,40 @@ export function applyDevDeliveryCommand(state, command = {}) {
       return recover(state, command, now);
     case "repair":
       return repair(state, command, now);
+    case "record-replay":
+      return recordProof(state, command, now, applySourceReplayProofToQueue);
+    case "record-integration-proof":
+      return recordProof(state, command, now, applyIntegrationProofToQueue);
+    case "enqueue-github":
+      return setCandidateState(
+        state,
+        {
+          ...command,
+          state: "merge-queued",
+          reason: command.reason || "github-enqueued-exact-source-head",
+        },
+        now,
+      );
+    case "enqueue-rejected":
+      return setCandidateState(
+        state,
+        {
+          ...command,
+          state: "failed",
+          reason: command.reason || "github-enqueue-rejected",
+        },
+        now,
+      );
+    case "observe-merged":
+      return setCandidateState(
+        state,
+        {
+          ...command,
+          state: "merged",
+          reason: command.reason || "exact-merged-head-observed",
+        },
+        now,
+      );
     case "reprioritize":
       return reprioritize(state, command, now);
     default:
@@ -462,6 +573,7 @@ export function projectDevDeliveryQueue(state, now) {
         submissionId: candidate.submissionId,
         pullRequestNumber: candidate.pullRequestNumber,
         sourceHeadSha: candidate.sourceHeadSha,
+        sourceProofRoot: candidate.sourceProofRoot,
         state: candidate.state,
         reason: candidate.stateReason,
         priority: candidate.priority,
@@ -476,6 +588,10 @@ export function projectDevDeliveryQueue(state, now) {
             : ACTIVE_STATES.has(candidate.state)
               ? "continue-exact-warrant-attempt"
               : "inspect-terminal-receipt",
+        proofs: candidate.proofs,
+        candidateTreeSha: candidate.candidateTreeSha,
+        integrationTreeSha: candidate.integrationTreeSha,
+        mergedHeadSha: candidate.mergedHeadSha,
       };
     }),
     metrics: state.metrics,

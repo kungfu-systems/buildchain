@@ -317,7 +317,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:5b6e50e1e8c20b3d686caab9f8fff3a1643701366db0243f82ae4e29312018b7",
+      "digest": "sha256:d0e843e5ae7a823373548a146a0fdcb4fb8fe8a301fcde2fa8bd3059512ac027",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

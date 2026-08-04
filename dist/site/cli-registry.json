@@ -414,12 +414,14 @@
         "dev",
         "dev merge-queue",
         "dev pr-admit",
+        "dev proof",
         "dev warrant"
       ],
       "syntaxes": [
         "buildchain dev",
         "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]",
         "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]",
+        "buildchain dev proof --operation <source-create|source-verify|delta-classify|delta-verify| replay-plan|replay-receipt-create|replay-receipt-verify| integration-create|integration-verify> --input <json-file> [--output <file>]",
         "buildchain dev warrant --repository <owner/repo> --state-ref <buildchain-state/dev-delivery/...> [--init --branch <dev/vN/vN.M> --expected-base <sha>] [--command <json-file> | --view] [--output <file>] [--gh-cli]"
       ],
       "options": [
@@ -434,8 +436,10 @@
         "--from-config",
         "--gh-cli",
         "--init",
+        "--input",
         "--json",
         "--max-entries-to-build",
+        "--operation",
         "--output",
         "--pull-request",
         "--repository",
@@ -448,6 +452,7 @@
         "buildchain dev --help",
         "buildchain dev merge-queue --help",
         "buildchain dev pr-admit --help",
+        "buildchain dev proof --help",
         "buildchain dev warrant --help"
       ],
       "purpose": "Inspect protected development-channel governance command families.",

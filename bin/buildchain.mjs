@@ -1376,8 +1376,12 @@ async function handleDevCommand(args) {
       runScript("dev-delivery-warrant-store.mjs", devArgs);
       return;
     }
+    if (subcommand === "proof") {
+      runScript("dev-delivery-proof-cli.mjs", devArgs);
+      return;
+    }
     if (subcommand !== "merge-queue") {
-      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant> [options]");
+      throw new Error("usage: buildchain dev <pr-admit|merge-queue|proof|warrant> [options]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;
