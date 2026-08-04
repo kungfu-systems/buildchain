@@ -1645,7 +1645,7 @@ jobs:
         if: ${{ always() && inputs.verify-substage-evidence-path != '' }}
         working-directory: ${{ inputs.working-directory }}
         run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+          node "${{ github.workspace }}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
           --file "${{ inputs.verify-substage-evidence-path }}"
           --stage verify
           --source-sha "${{ needs.resolve-source.outputs.publish-source-sha }}"
@@ -2147,7 +2147,7 @@ jobs:
         if: ${{ always() && inputs.verify-substage-evidence-path != '' }}
         working-directory: ${{ inputs.working-directory }}
         run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+          node "${{ github.workspace }}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
           --file "${{ inputs.verify-substage-evidence-path }}"
           --stage verify
           --source-sha "${{ needs.resolve-source.outputs.publish-source-sha }}"
