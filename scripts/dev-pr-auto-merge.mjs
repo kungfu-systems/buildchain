@@ -185,7 +185,7 @@ function summarizeChecks({ statuses = [], checkRuns = [] } = {}, requiredChecks 
 function mergeableAccepted(pr, landingMode = "direct") {
   if (pr.mergeable === false) return false;
   const state = String(pr.mergeable_state || pr.mergeStateStatus || "").toLowerCase();
-  return state ? ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked"] : [])].includes(state) : pr.mergeable === true;
+  return state ? ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked", "behind"] : [])].includes(state) : pr.mergeable === true;
 }
 async function setQueueAdmissionStatus(client, repository, sha, context, state) {
   if (!context) return null;
