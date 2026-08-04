@@ -125,7 +125,7 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-test("GitHub state store advances a non-forced child commit and verifies readback", async () => {
+test("GitHub state store advances a non-forced child commit and verifies its immutable commit", async () => {
   const beforeCommit = "a".repeat(40);
   const nextCommit = "b".repeat(40);
   const state = initialQueue();
@@ -156,7 +156,7 @@ test("GitHub state store advances a non-forced child commit and verifies readbac
     if (options.method === "POST" && url.endsWith("/git/trees")) return jsonResponse({ sha: "tree-sha" });
     if (options.method === "POST" && url.endsWith("/git/commits")) return jsonResponse({ sha: nextCommit });
     if (options.method === "PATCH" && url.includes("/git/refs/heads/")) return jsonResponse({ object: { sha: nextCommit } });
-    if (options.method === "GET" && url.includes("/git/ref/heads/")) return jsonResponse({ object: { sha: nextCommit } });
+    if (options.method === "GET" && url.includes("/git/ref/heads/")) throw new Error("write must not reread the mutable state ref after its expected-old update");
     if (options.method === "GET" && url.endsWith(`/git/commits/${nextCommit}`)) return jsonResponse({ tree: { sha: "tree-sha" } });
     if (options.method === "GET" && url.endsWith("/git/trees/tree-sha")) {
       return jsonResponse({
@@ -189,6 +189,7 @@ test("GitHub state store advances a non-forced child commit and verifies readbac
   assert.deepEqual(commitCall.body.parents, [beforeCommit]);
   const updateCall = calls.find((call) => call.method === "PATCH");
   assert.equal(updateCall.body.force, false);
+  assert.equal(calls.some((call) => call.method === "GET" && call.url.includes("/git/ref/heads/")), false);
 });
 
 test("GitHub state store exposes a concurrent non-fast-forward rejection", async () => {

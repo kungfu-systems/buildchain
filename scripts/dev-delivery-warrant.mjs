@@ -120,13 +120,19 @@ export class GitHubDevDeliveryStore {
       };
     }
     const commitSha = exactSha(ref?.object?.sha, "state ref commit");
+    const readback = await this.readCommit(commitSha);
+    return { exists: true, ...readback };
+  }
+
+  async readCommit(commitShaInput) {
+    const commitSha = exactSha(commitShaInput, "state commit");
     const commit = await this.request("GET", `/repos/${this.repository.fullName}/git/commits/${commitSha}`);
     const tree = await this.request("GET", `/repos/${this.repository.fullName}/git/trees/${commit.tree?.sha}`);
     const entry = (tree.tree || []).find((item) => item.path === STATE_PATH && item.type === "blob");
-    if (!entry?.sha) throw new Error(`${stateRef} does not contain ${STATE_PATH}`);
+    if (!entry?.sha) throw new Error(`${commitSha} does not contain ${STATE_PATH}`);
     const blob = await this.request("GET", `/repos/${this.repository.fullName}/git/blobs/${entry.sha}`);
     const queue = JSON.parse(decodeBlob(blob));
-    return { exists: true, commitSha, queue };
+    return { commitSha, queue };
   }
 
   async write({ stateRef, queue, expectedCommitSha, expectedStateRoot, receiptRoot }) {
@@ -151,13 +157,9 @@ export class GitHubDevDeliveryStore {
         sha: commit.sha,
       });
     }
-    const readback = await this.read({
-      stateRef,
-      protectedBase: queue.protectedBase,
-      now: queue.updatedAt,
-    });
+    const readback = await this.readCommit(commit.sha);
     if (readback.commitSha !== commit.sha || readback.queue.stateRoot !== queue.stateRoot) {
-      throw new Error("dev delivery state readback mismatch after expected-old update");
+      throw new Error("dev delivery state commit readback mismatch after expected-old update");
     }
     return { commitSha: commit.sha, stateRoot: readback.queue.stateRoot };
   }
