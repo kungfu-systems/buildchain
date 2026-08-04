@@ -669,6 +669,8 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /artifact-transfer:/);
+  assert.match(workflow, /INPUT_RELAY_REQUIRED:/);
+  assert.match(workflow, /github-hosted-platform-ids-json:/);
   assert.match(workflow, /artifact-relay-s3\.mjs upload/);
   assert.match(workflow, /artifact-relay-s3\.mjs download/);
   assert.match(workflow, /artifact-relay-s3\.mjs cleanup/);
@@ -677,6 +679,23 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /relay-artifacts:/);
   assert.match(workflow, /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'/);
   assert.match(workflow, /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts'/);
+  assert.match(
+    workflow,
+    /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts' \|\| matrix\.platform\.githubHosted == true/,
+  );
+  assert.match(
+    workflow,
+    /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts' && matrix\.platform\.githubHosted != true/,
+  );
+  const relayJob = workflow.slice(
+    workflow.indexOf("\n  relay-artifacts:"),
+    workflow.indexOf("\n  artifact-signing-control:"),
+  );
+  assert.equal(
+    (relayJob.match(/if: \$\{\{ matrix\.platform\.githubHosted != true \}\}/g) || [])
+      .length,
+    9,
+  );
   assert.match(workflow, /process-summary-required:/);
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);

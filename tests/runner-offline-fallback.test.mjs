@@ -17,6 +17,10 @@ test("every offline Kungfu self-hosted lane routes independently to GitHub-hoste
   });
   assert.equal(routed.fallbackCount, 3);
   assert.deepEqual(
+    routed.platforms.map((platform) => platform.githubHosted),
+    [true, true, true, true],
+  );
+  assert.deepEqual(
     routed.platforms.map((platform) => [platform.id, platform.runner]),
     [
       ["linux-x64", HOSTED_RUNNER_FALLBACKS["linux-x64"]],

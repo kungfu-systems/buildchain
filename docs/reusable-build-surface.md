@@ -792,7 +792,14 @@ jobs:
       artifact-relay-s3-prefix: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX }}
 ```
 
-In relay mode, each self-hosted platform job uploads the heavy payload files to
+The mode is a policy for platforms that run outside GitHub. GitHub-hosted
+platforms always upload directly with `actions/upload-artifact`, even when a
+mixed matrix requests `s3-to-github-artifacts`; they never send their payloads
+through S3 or the replay job. Buildchain recognizes its hosted presets and the
+standard hosted runner labels. Custom matrices with non-standard hosted labels
+must declare `"githubHosted": true` on those platform rows.
+
+For remaining relay-mode platforms, each job uploads the heavy payload files to
 S3 and uploads only a small `relay-manifest.json` to GitHub. A GitHub-hosted
 `relay-artifacts` job then assumes the configured download role, downloads the
 payloads from S3, verifies every file by SHA256, and re-uploads the normal
