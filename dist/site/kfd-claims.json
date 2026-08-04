@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f2e1688643bdf9dd259c86cba98ff067e9aa7808d3da81de1898bb27b3e53553",
+    "sha256": "e4560a2e325af9e10f909cd7fece6137ddc1c5b281bae0d5ab6cd1deef8fac3a",
     "summary": {
       "cliCommandCount": 112,
-      "workflowCount": 60,
+      "workflowCount": 61,
       "actionCount": 6,
-      "sitePageCount": 64,
-      "docCommandRefCount": 834,
+      "sitePageCount": 65,
+      "docCommandRefCount": 876,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f2e1688643bdf9dd259c86cba98ff067e9aa7808d3da81de1898bb27b3e53553",
+      "sha256": "e4560a2e325af9e10f909cd7fece6137ddc1c5b281bae0d5ab6cd1deef8fac3a",
       "summary": {
         "cliCommandCount": 112,
-        "workflowCount": 60,
+        "workflowCount": 61,
         "actionCount": 6,
-        "sitePageCount": 64,
-        "docCommandRefCount": 834,
+        "sitePageCount": 65,
+        "docCommandRefCount": 876,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1351,6 +1351,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./diagnostics"
+        },
+        {
+          "id": "export:./dev-delivery-warrant",
+          "name": "@kungfu-tech/buildchain/dev-delivery-warrant",
+          "kind": "package-export",
+          "sourcePath": "packages/core/dev-delivery-warrant.js",
+          "evidencePath": "packages/core/dev-delivery-warrant.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./dev-delivery-warrant"
         },
         {
           "id": "export:./homebrew",
@@ -4363,6 +4375,34 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:dev-delivery-warrant-close",
+          "name": "workflow:dev-delivery-warrant-close",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/dev-delivery-warrant-close.yml",
+          "evidencePath": ".github/workflows/dev-delivery-warrant-close.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 13,
+          "inputs": [
+            "buildchain-ref",
+            "buildchain-repository",
+            "current-base-sha",
+            "expected-head-sha",
+            "expected-pr-number",
+            "merge-group-head-sha",
+            "merge-group-tree-sha",
+            "outcome",
+            "reason",
+            "replay-tree-sha",
+            "required-context-roots-json",
+            "target-branch",
+            "terminal-evidence-root"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:dev-merge-queue-governance",
           "name": "workflow:dev-merge-queue-governance",
           "kind": "workflow",
@@ -4386,25 +4426,39 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 17,
+          "inputCount": 31,
           "inputs": [
+            "affected-paths-json",
             "allowed-head-prefixes",
+            "assignment-root",
             "block-labels",
             "buildchain-ref",
             "buildchain-repository",
+            "closure-root",
+            "delivery-class",
+            "delivery-priority",
+            "delivery-warrant-mode",
+            "dependency-root",
             "diagnostic-context",
             "dry-run",
             "expected-head-sha",
             "expected-pr-number",
+            "initiative-root",
             "landing-mode",
             "max-merges",
             "merge-method",
+            "plan-root",
             "queue-admission-context",
             "ready-label",
             "require-approval",
             "required-status-checks",
             "same-repository-only",
-            "target-branch"
+            "shard-evidence-roots-json",
+            "source-identity-root",
+            "source-patch-root",
+            "target-branch",
+            "toolchain-root",
+            "warrant-lease-seconds"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5599,6 +5653,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:dev-delivery-warrant",
+          "name": "site-page:manual:dev-delivery-warrant",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:dev-qualification-patrol",
           "name": "site-page:manual:dev-qualification-patrol",
           "kind": "site-page",
@@ -6189,6 +6255,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 394
+    "publicSurfaceCount": 397
   }
 }

@@ -592,6 +592,15 @@ admission runs; GitHub still owns the atomic queue and protected-ref update.
 Repositories may explicitly select `landing-mode: direct` only when the target
 branch has no native queue. Queue presence always disables the direct path.
 
+For slow candidates on a frequently advancing dev line, the optional
+[Dev Delivery Warrant Queue](dev-delivery-warrant.md) adds durable FIFO plus
+aging scheduling before native queue admission. It separates reusable source
+qualification from exact merge-group integration, uses expected-old Git-ref
+updates and fenced leases, and keeps the PR head unchanged when only dev moves.
+The reusable caller supports `off`, read-only `shadow`, and fail-closed
+`required` rollout modes. GitHub Merge Queue remains the final protected-ref
+authority in every mode.
+
 The canonical consumer required check context is `check / check`, matching the
 reusable workflow call plus its `check` job. Buildchain's own `Verify` workflow
 emits the repository-local context `check`, so Buildchain self-promotion,

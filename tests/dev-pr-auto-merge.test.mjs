@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 import {
   cliOptions,
@@ -18,7 +21,6 @@ test("targeted CLI defaults to an explicit readiness label", () => {
   ], {});
   assert.equal(options.readyLabel, "ready");
 });
-
 test("targeted CLI preserves an explicit queue landing mode", () => {
   const options = cliOptions([
     "--repository", "kungfu-systems/buildchain",
@@ -515,6 +517,157 @@ const targetedOptions = {
   dryRun: true,
   pollMergeableDelayMs: 0,
 };
+
+const ROOT = `sha256:${"1".repeat(64)}`;
+
+async function withWarrantResult(overrides, callback) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-warrant-"));
+  const resultPath = path.join(directory, "warrant.json");
+  const warrant = {
+    schema: "kungfu.buildchain.dev-delivery-warrant/v1",
+    repository: "kungfu-systems/buildchain",
+    protectedBase: "dev/v2/v2.6",
+    pullRequestNumber: 21,
+    sourceHead: exactHead,
+    candidateId: ROOT,
+    fencingToken: ROOT,
+    generation: 1,
+    expectedOldStateRoot: ROOT,
+    issuedAt: "2026-08-04T00:00:00.000Z",
+    expiresAt: "2099-08-04T01:00:00.000Z",
+    nextAction: "Execute the protected delivery attempt.",
+    ...overrides?.warrant,
+  };
+  const result = {
+    schema: "kungfu.buildchain.dev-delivery-command-result/v1",
+    mode: "execute",
+    stateRef: "buildchain/dev-delivery-warrant/dev-v2-v2.6",
+    receiptRoot: ROOT,
+    after: { stateRoot: ROOT },
+    warrant,
+    ...overrides?.result,
+  };
+  fs.writeFileSync(resultPath, `${JSON.stringify(result)}\n`);
+  try {
+    return await callback(resultPath, result);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+test("targeted CLI parses qualification-only and exact Warrant inputs", () => {
+  const options = cliOptions(["--repository", "kungfu-systems/buildchain", "--branch", "dev/v2/v2.6", "--pull-request", "21", "--expected-head", exactHead, "--qualification-only", "--warrant-mode", "required", "--warrant-result", "warrant.json"], {});
+  assert.equal(options.qualificationOnly, true);
+  assert.equal(options.warrantMode, "required");
+  assert.equal(options.warrantResultPath, "warrant.json");
+});
+
+test("qualification-only proves the exact source without observing or mutating queue authority", async () => {
+  const target = pr({ number: 21, headSha: exactHead });
+  const fake = client({ pullRequests: [target] });
+  fake.getMergeQueueState = async () => {
+    throw new Error("qualification-only must not read queue authority");
+  };
+  const result = await runDevPrAdmission({ ...targetedOptions, landingMode: "direct", qualificationOnly: true }, fake);
+  assert.equal(result.ok, true);
+  assert.equal(result.outcome, "source-qualified");
+  assert.equal(result.receipt.reason, "source-qualified-exact-head");
+  assert.equal(result.receipt.queue, null);
+  assert.deepEqual(fake.enqueued, []);
+});
+
+test("qualification-only execute may establish readiness but never admits to GitHub queue", async () => {
+  const target = pr({ number: 21, headSha: exactHead, labels: [] });
+  const fake = client({ pullRequests: [target] });
+  fake.getMergeQueueState = async () => {
+    throw new Error("qualification-only must not read queue authority");
+  };
+  const result = await runDevPrAdmission(
+    {
+      ...targetedOptions,
+      landingMode: "direct",
+      dryRun: false,
+      qualificationOnly: true,
+    },
+    fake,
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.mode, "execute");
+  assert.equal(result.receipt.readiness.established, true);
+  assert.equal(fake.comments.length, 1);
+  assert.deepEqual(fake.enqueued, []);
+});
+
+test("required Warrant fails closed before GitHub queue admission", async () => {
+  const target = pr({ number: 21, headSha: exactHead });
+  const fake = client({
+    pullRequests: [target],
+    queueStates: [{ enabled: true, id: "MQ_1", entries: [] }],
+  });
+  const result = await runDevPrAdmission({ ...targetedOptions, dryRun: false, warrantMode: "required" }, fake);
+  assert.equal(result.ok, false);
+  assert.equal(result.receipt.reason, "missing-delivery-warrant");
+  assert.deepEqual(fake.enqueued, []);
+});
+
+test("exact active Warrant authorizes only its bound PR head", async () => {
+  await withWarrantResult({}, async (resultPath) => {
+    const target = pr({ number: 21, headSha: exactHead });
+    const fake = client({
+      pullRequests: [target],
+      branchShas: ["base-1", "base-1", "base-1"],
+      queueStates: Array.from({ length: 3 }, () => ({
+        enabled: true,
+        id: "MQ_1",
+        entries: [],
+      })),
+    });
+    const result = await runDevPrAdmission(
+      {
+        ...targetedOptions,
+        dryRun: false,
+        warrantMode: "required",
+        warrantResultPath: resultPath,
+      },
+      fake,
+    );
+    assert.equal(result.ok, true);
+    assert.equal(result.receipt.deliveryWarrant.fencingToken, ROOT);
+    assert.equal(result.receipt.deliveryWarrant.stateRoot, ROOT);
+    assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
+  });
+});
+
+test("mismatched or expired Warrant is rejected without enqueue", async () => {
+  const cases = [
+    [{ warrant: { repository: "kungfu-systems/kungfu" } }, "delivery-warrant-repository-mismatch"],
+    [{ warrant: { protectedBase: "dev/v3/v3.0" } }, "delivery-warrant-base-mismatch"],
+    [{ warrant: { pullRequestNumber: 22 } }, "delivery-warrant-pr-mismatch"],
+    [{ warrant: { sourceHead: movedHead } }, "delivery-warrant-head-mismatch"],
+    [{ warrant: { expiresAt: "2026-08-04T00:00:00.000Z" } }, "delivery-warrant-expired"],
+  ];
+  for (const [overrides, reason] of cases) {
+    await withWarrantResult(overrides, async (resultPath) => {
+      const target = pr({ number: 21, headSha: exactHead });
+      const fake = client({
+        pullRequests: [target],
+        queueStates: [{ enabled: true, id: "MQ_1", entries: [] }],
+      });
+      const result = await runDevPrAdmission(
+        {
+          ...targetedOptions,
+          dryRun: false,
+          warrantMode: "required",
+          warrantResultPath: resultPath,
+        },
+        fake,
+      );
+      assert.equal(result.ok, false, reason);
+      assert.equal(result.receipt.reason, reason);
+      assert.deepEqual(fake.enqueued, []);
+    });
+  }
+});
 
 test("targeted plan fails visibly when explicit readiness is missing even with native auto-merge armed", async () => {
   const target = pr({ number: 21, headSha: exactHead, labels: [], autoMerge: true });

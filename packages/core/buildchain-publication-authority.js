@@ -32,6 +32,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/buildchain-stable-candidate-patrol.yml", "governance-write"],
   [".github/workflows/dev-qualification-patrol.yml", "governance-write"],
   [".github/workflows/dev-alpha-candidate-patrol.yml", "governance-write"],
+  [".github/workflows/dev-delivery-warrant-close.yml", "governance-write"],
   [".github/workflows/dev-merge-queue-governance.yml", "governance-write"],
   [".github/workflows/dev-pr-auto-merge.yml", "governance-write"],
   [".github/workflows/github-governance-audit.yml", "governance-write"],
@@ -75,7 +76,6 @@ export function buildchainPublicationAuthorityDescriptors() {
     runnerPolicy: publicationCapable ? "qualified-measured" : "unqualified",
   }));
 }
-
 export function createBuildchainPublicationAuthorityRegistry({ root = process.cwd() } = {}) {
   const workflowsDir = path.join(root, ".github", "workflows");
   const workflows = fs.readdirSync(workflowsDir)

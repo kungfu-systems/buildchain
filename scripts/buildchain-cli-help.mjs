@@ -115,6 +115,11 @@ export const BUILDCHAIN_USAGE = `Usage:
                              [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>]
                              [--check-response-timeout-minutes <n>]
                              [--max-entries-to-build <n>] [--apply]
+  buildchain dev warrant <submit|select|heartbeat|recover|close|observe>
+                             --repository <owner/repo> --branch <dev/vN/vN.M>
+                             [--execute] [--output <file>] [--json]
+  buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration>
+                             [--output <file>] [--json]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
                  [--path <jsonl>] [--json]

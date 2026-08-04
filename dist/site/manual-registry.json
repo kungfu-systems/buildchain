@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:0ea7f59030e5a087e3ff7e9eb591fec8d92c64399799e554aa1fa7ecb6a263ae",
+      "digest": "sha256:d76416d8cd04dcdb560b7d06fef287fa22d6b186a729cb92cd4cf71cebbac1e9",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -317,7 +317,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:0aa00b3513b64dfec885f143df91b42e9798a9b41ede381929bdc194c9892eaf",
+      "digest": "sha256:5b024d111ebba50d706f006e493e269aa51287ed3ddf56f71d976956e29cd207",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:ae49a589091d1ab91d29f2d6ac52cf2551a9d0b1f78350965b408f40fd219e29",
+      "digest": "sha256:35784f5eb48102993a6f65dfe69a7ccb5c8d2b3cbc2a3eb345fa706c938f5166",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -430,7 +430,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:617fb47c9dc8af860e3bc747553b3b48fafa058f012e414692ac1548e0fe0066",
+      "digest": "sha256:294e857a41b3d931eaae24bf2a272c6ed6b789929384b836ff8c7166ad5e61c3",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -472,7 +472,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:bdb155e873f9c2ea5cd40bdde057d2c2f90322f0d4575de77fe1670bd040e643",
+      "digest": "sha256:1fe4b3c82e1d22e6f0710b10ee3db2bfbdfdcb0dbc2d7a8c47a2ba9547ccdcf6",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
