@@ -234,6 +234,17 @@ buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--f
 buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]
 ```
 
+### `buildchain dev proof`
+
+- Help: `buildchain dev proof --help`
+- Canonical id: `dev`
+- Options: `--input`, `--operation`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof --operation <source-create|source-verify|delta-classify|delta-verify| replay-plan|replay-receipt-create|replay-receipt-verify| integration-create|integration-verify> --input <json-file> [--output <file>]
+```
+
 ### `buildchain dev warrant`
 
 - Help: `buildchain dev warrant --help`

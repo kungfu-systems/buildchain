@@ -45,10 +45,64 @@ The `kungfu-buildchain-dev-delivery-warrant-queue/v1` state binds:
   field itself.
 
 Each submission identity binds repository, protected base, pull request, exact
-source head, semantic source root, Assignment root, Initiative root, and
-delivery class. Repeating the exact identity is a byte-stable no-op. A repair
-may retain the original enqueue time only when the semantic source root is
-unchanged; changed source is a new submission.
+source head, semantic source root, the verified Source Qualification Proof
+root, Assignment root, Initiative root, and delivery class. Repeating the exact
+identity is a byte-stable no-op. A repair may retain the original enqueue time
+only when the semantic source root is unchanged and a new exact Source Proof is
+supplied; changed source is a new submission. A base-only advance is not a
+repair and never rewrites or rotates the physical PR head.
+
+## Split delivery proofs
+
+Protected delivery uses two different proof identities. They are deliberately
+not interchangeable:
+
+- `kungfu-buildchain-source-qualification-proof/v1` binds immutable source
+  intent, the exact source head and semantic root, qualification plan, affected
+  shard closure, dependency graph, toolchain, required successful source
+  contexts at that exact head, and evidence roots. The Warrant Queue verifies
+  this proof before accepting the submission and includes its root in the
+  submission identity.
+- `kungfu-buildchain-integration-delivery-proof/v1` binds the exact current
+  integration tree, protected-base head, Source Proof, replay receipt, delta
+  classification, active Warrant id, fencing token and generation, unexpired
+  lease, queue revision, provider receipt, and every successful required
+  context at that same tree.
+
+The `kungfu-buildchain-dev-delta-classification/v1` classifier compares the
+proof's dependency and toolchain roots with the current candidate and assigns
+every changed path to an affected shard or an explicitly unrelated prefix.
+Its outcomes are:
+
+- `reuse-source-proof` for no delta or explicit unrelated base-only movement;
+- `rerun-affected` for one or more known overlapping shards; and
+- `rerun-all` when attribution is unknown or dependency/toolchain roots
+  changed.
+
+Unknown paths never count as unrelated. Reusable Source Proof never suppresses
+the exact Integration Proof or its current `merge_group` contexts.
+
+The proof CLI reads one operation input JSON and emits a content-addressed
+operation receipt:
+
+```sh
+buildchain dev proof \
+  --operation source-create \
+  --input .buildchain/dev-delivery-warrant/source-proof-input.json \
+  --output .buildchain/dev-delivery-warrant/source-proof-result.json
+
+buildchain dev proof \
+  --operation delta-classify \
+  --input .buildchain/dev-delivery-warrant/delta-input.json
+
+buildchain dev proof \
+  --operation integration-verify \
+  --input .buildchain/dev-delivery-warrant/integration-proof-readback.json
+```
+
+The other operations are `source-verify`, `delta-verify`, `replay-plan`,
+`replay-receipt-create`, `replay-receipt-verify`, and `integration-create`.
+Creation and verification use the same canonical roots.
 
 ## Fair selection
 
@@ -80,19 +134,31 @@ transition requires all of:
 - the current fencing token; and
 - an unexpired lease.
 
-The lifecycle is intentionally constrained:
+The selected Warrant owns replay, proof recording, waiting, GitHub Merge Queue
+enqueue, merge observation, and terminal closeout. The lifecycle is
+intentionally constrained:
 
 ```text
 queued
   -> warrant-issued
-  -> replaying / proving / waiting
+  -> replaying
+  -> record-replay (Source Proof + delta classification + candidate tree)
+  -> proving
+  -> enqueue-github
   -> merge-queued
+  -> record-integration-proof (exact merge_group tree + contexts)
+  -> observe-merged (exact protected-head readback)
   -> merged
 ```
 
 `blocked`, `dequeued`, `failed`, and `stale` are visible terminal outcomes.
-The state machine refuses a direct `warrant-issued -> merged` transition, so a
-local controller cannot forge the final GitHub integration boundary.
+The state machine refuses GitHub enqueue without a recorded source replay,
+persists enqueue rejection as a terminal failure, and refuses `merged` without
+an Integration Proof whose tree equals the provider's protected-head readback.
+A local controller therefore cannot forge the final GitHub integration
+boundary. If a controller crashes after GitHub accepted enqueue but before the
+state-ref CAS, its successor adopts only an existing queue entry for the exact
+PR and source head; it does not enqueue a duplicate.
 
 After lease expiry, recovery requeues the same candidate with its original
 queue age. The next selection increments the fencing generation and changes
@@ -145,9 +211,12 @@ projection. The CLI writes the complete result to
 The queue view exposes `submitted`/`queued`, `warrant-issued`, `replaying`,
 `proving`, `waiting`, `merge-queued`, `blocked`, `stale`, `dequeued`, `failed`,
 `merged`, and recovered state through each candidate's state and reason. It
-also exposes retained age, queue position, next action, active Warrant, base-only
-head repairs, repeated heavy validations, recoveries, impermissible overtakes,
-and wasted runner seconds.
+also exposes retained age, queue position, next action, active Warrant,
+base-only head rotations, explicit source-head repairs, repeated heavy
+validations, recoveries, impermissible overtakes, and wasted runner seconds. It
+also exposes the Source Proof, delta
+classification, replay receipt, Integration Proof, candidate tree, integration
+tree, and exact merged-head roots recorded for each candidate.
 
 Initial rollout is shadow-only: compute and publish queue views without using
 them to suppress the existing position-one controller. Enforcement begins only
@@ -162,8 +231,11 @@ fallback controller can own another delivery.
 The deterministic suite covers FIFO, aging, 100 later ordinary arrivals,
 bounded priority, emergency-policy evidence, duplicate submit, expected-old
 races, provider CAS races, heartbeat, expiry, crash recovery, stale callbacks,
-same-source repair, non-preemption, lifecycle enforcement, and visible next
-actions. These tests prove the mechanism without waiting for 30 historical
-samples. Protected prospective qualification must still run one long candidate
-while later fast candidates arrive, then retain exact GitHub merge-group
-readback as integration evidence.
+same-source repair, non-preemption, lifecycle enforcement, split-proof roots,
+unrelated/overlapping/unknown delta classification, failed required contexts,
+and visible next actions. A deterministic 40-minute campaign injects eligible
+fast arrivals every five minutes and requires bounded progress, zero
+impermissible overtakes, no base-only PR-head rotation, and no repeated heavy
+validation for unrelated movement. Protected prospective qualification must
+still run the same shape against GitHub and retain exact merge-group readback as
+integration evidence.

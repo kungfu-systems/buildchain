@@ -119,6 +119,10 @@ export const BUILDCHAIN_USAGE = `Usage:
                           --state-ref <buildchain-state/dev-delivery/...>
                           [--init --branch <dev/vN/vN.M> --expected-base <sha>]
                           [--command <json-file> | --view] [--output <file>] [--gh-cli]
+  buildchain dev proof --operation <source-create|source-verify|delta-classify|delta-verify|
+                                          replay-plan|replay-receipt-create|replay-receipt-verify|
+                                          integration-create|integration-verify>
+                       --input <json-file> [--output <file>]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
                  [--path <jsonl>] [--json]

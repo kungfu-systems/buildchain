@@ -16,6 +16,7 @@ import {
   applyDevDeliveryCommand,
   projectDevDeliveryQueue,
 } from "./dev-delivery-warrant-queue.mjs";
+import { createGithubEnqueueReceipt } from "./dev-delivery-proof.mjs";
 import { GhCliClient, GitHubClient } from "./dev-pr-auto-merge.mjs";
 
 function apiData(response) {
@@ -158,6 +159,12 @@ export async function applyPersistedDevDeliveryCommand({
   command,
   ...input
 } = {}) {
+  if (command?.action === "enqueue-github") {
+    return enqueuePersistedDevDeliveryCandidate({ api, command, ...input });
+  }
+  if (command?.action === "observe-merged") {
+    return observePersistedDevDeliveryMerge({ api, command, ...input });
+  }
   const loaded = await loadPersistedDevDeliveryQueue({ api, ...input });
   const transition = applyDevDeliveryCommand(loaded.state, command);
   if (transition.state.revision === loaded.state.revision) {
@@ -179,6 +186,155 @@ export async function applyPersistedDevDeliveryCommand({
     expectedBlobSha: loaded.blobSha,
   });
   return { ...transition, persistence };
+}
+
+function activeCandidate(state) {
+  const submissionId = state.activeWarrant?.submissionId;
+  const candidate = state.candidates.find(
+    (entry) => entry.submissionId === submissionId,
+  );
+  if (!candidate) throw new Error("active Warrant candidate is missing");
+  return candidate;
+}
+
+async function pullRequest(api, repository, number) {
+  if (typeof api.getPullRequest === "function") {
+    return api.getPullRequest(number, { attempts: 1, delayMs: 0 });
+  }
+  return apiData(
+    await api.request("GET", `/repos/${repository}/pulls/${number}`),
+  );
+}
+
+async function persistTransition(loaded, transition, api, input) {
+  const persistence = await persistDevDeliveryQueue({
+    api,
+    ...input,
+    state: transition.state,
+    expectedBlobSha: loaded.blobSha,
+  });
+  return { ...transition, persistence };
+}
+
+export async function enqueuePersistedDevDeliveryCandidate({
+  api,
+  command,
+  ...input
+} = {}) {
+  const loaded = await loadPersistedDevDeliveryQueue({ api, ...input });
+  const candidate = activeCandidate(loaded.state);
+  const planned = applyDevDeliveryCommand(loaded.state, command);
+  const pr = await pullRequest(
+    api,
+    loaded.state.repository,
+    candidate.pullRequestNumber,
+  );
+  const observedHeadSha = exactSha(pr?.head?.sha, "observed PR head SHA");
+  if (observedHeadSha !== candidate.sourceHeadSha) {
+    throw new Error("PR head changed before Warrant-owned enqueue");
+  }
+  if (pr?.base?.ref && pr.base.ref !== loaded.state.protectedBase) {
+    throw new Error("PR base changed before Warrant-owned enqueue");
+  }
+  const pullRequestId = requiredText(pr?.node_id, "pull request node id");
+  let entry = null;
+  if (typeof api.getMergeQueueState === "function") {
+    const queue = await api.getMergeQueueState(loaded.state.protectedBase);
+    entry = (queue?.entries || []).find(
+      (item) =>
+        item.pullRequestNumber === candidate.pullRequestNumber &&
+        item.pullRequestHeadSha === candidate.sourceHeadSha,
+    );
+  }
+  let recovered = Boolean(entry);
+  if (!entry) {
+    try {
+      entry = await api.enqueuePullRequest({
+        pullRequestId,
+        expectedHeadOid: candidate.sourceHeadSha,
+      });
+    } catch (error) {
+      const failed = applyDevDeliveryCommand(loaded.state, {
+        ...command,
+        action: "enqueue-rejected",
+        reason: "github-enqueue-rejected",
+      });
+      const persisted = await persistTransition(loaded, failed, api, input);
+      return {
+        ...persisted,
+        status: "failed",
+        enqueueError: {
+          code: String(error?.code || statusOf(error) || "provider-error"),
+          message: String(
+            error?.message || "GitHub rejected merge queue admission",
+          ),
+        },
+      };
+    }
+  }
+  if (
+    entry.pullRequestNumber !== candidate.pullRequestNumber ||
+    entry.pullRequestHeadSha !== candidate.sourceHeadSha
+  ) {
+    throw new Error("GitHub merge queue entry exact-head readback mismatch");
+  }
+  const persisted = await persistTransition(loaded, planned, api, input);
+  const providerReceipt = createGithubEnqueueReceipt({
+    repository: loaded.state.repository,
+    protectedBase: loaded.state.protectedBase,
+    submissionId: candidate.submissionId,
+    sourceHeadSha: candidate.sourceHeadSha,
+    warrant: loaded.state.activeWarrant,
+    queueEntryId: requiredText(entry.id, "merge queue entry id"),
+    queueEntryState: requiredText(entry.state, "merge queue entry state"),
+    recoveredAfterControllerRestart: recovered,
+    queueRevision: persisted.state.revision,
+  });
+  return {
+    ...persisted,
+    status: "merge-queued",
+    providerReceipt,
+  };
+}
+
+export async function observePersistedDevDeliveryMerge({
+  api,
+  command,
+  ...input
+} = {}) {
+  const loaded = await loadPersistedDevDeliveryQueue({ api, ...input });
+  const candidate = activeCandidate(loaded.state);
+  if (!candidate.proofs?.integrationDeliveryRoot) {
+    throw new Error(
+      "merge observation requires an exact Integration Delivery Proof",
+    );
+  }
+  const pr = await pullRequest(
+    api,
+    loaded.state.repository,
+    candidate.pullRequestNumber,
+  );
+  if (pr?.merged !== true) throw new Error("pull request is not merged");
+  const mergedHeadSha = exactSha(pr?.merge_commit_sha, "merged PR head SHA");
+  if (typeof api.getBranchSha !== "function") {
+    throw new Error("protected branch exact-head readback is required");
+  }
+  const protectedHeadSha = exactSha(
+    await api.getBranchSha(loaded.state.protectedBase),
+    "protected branch head SHA",
+  );
+  if (protectedHeadSha !== mergedHeadSha) {
+    throw new Error("protected branch head does not match merged PR head");
+  }
+  const transition = applyDevDeliveryCommand(loaded.state, {
+    ...command,
+    mergedHeadSha,
+  });
+  return {
+    ...(await persistTransition(loaded, transition, api, input)),
+    status: "merged",
+    protectedHeadSha,
+  };
 }
 
 function statusOf(error) {
@@ -285,10 +441,15 @@ async function main() {
     "output",
     ".buildchain/dev-delivery-warrant/result.json",
   );
+  const [owner, repo] = repositoryName(repository).split("/");
+  const repositoryIdentity = { owner, repo, fullName: `${owner}/${repo}` };
   const client =
     args.includes("--gh-cli") || !process.env.GITHUB_TOKEN
-      ? new GhCliClient({ repository: { fullName: repository } })
-      : new GitHubClient({ token: process.env.GITHUB_TOKEN, repository });
+      ? new GhCliClient({ repository: repositoryIdentity })
+      : new GitHubClient({
+          token: process.env.GITHUB_TOKEN,
+          repository: repositoryIdentity,
+        });
   let result;
   if (args.includes("--init")) {
     result = await bootstrapPersistedDevDeliveryQueue({

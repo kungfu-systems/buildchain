@@ -7,7 +7,7 @@
     "workflowCount": 60,
     "actionCount": 6,
     "sitePageCount": 65,
-    "docCommandRefCount": 838,
+    "docCommandRefCount": 844,
     "failureCount": 0
   },
   "enumerated": {
@@ -3600,6 +3600,11 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof --operation"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev warrant --repository"
       },
       {
@@ -3635,6 +3640,16 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof --help"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev warrant"
       },
       {
@@ -3656,6 +3671,21 @@
         "id": "dev",
         "path": "docs/cli.md",
         "command": "buildchain dev merge-queue --from-config"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant-queue.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant-queue.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant-queue.md",
+        "command": "buildchain dev proof"
       },
       {
         "id": "dev",
@@ -7253,9 +7283,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "21fcaa191cdc07b47c3b74380287f796e71881200612c5bb6fa8dcb462044230",
+    "cliRegistryDigest": "2cc21bf278db70e7c05659fde5d97a883625590eee7815df5e8cc157b2742a31",
     "workflowRegistryDigest": "236333a2f8bb5e696621a0dc4793752eab18f7e8af7fc40c563217ebe05475c9",
-    "pageRegistryDigest": "b1a8c99f040d409961b125619adabf65d5e765dc2933bfb32e016e7f6210c1d6"
+    "pageRegistryDigest": "da52dc12a634fbab32f7089e36fdedb09c07952462bfcde1fa09589404083b8f"
   },
   "comparison": {
     "missingCliRegistry": [],
