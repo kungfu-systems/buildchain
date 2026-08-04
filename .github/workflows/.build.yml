@@ -1813,10 +1813,10 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           compression-level: ${{ inputs.artifact-compression-level }}
-
       - name: Upload artifact manifest
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true }}
         uses: actions/upload-artifact@v7.0.1
@@ -2275,10 +2275,10 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           compression-level: ${{ inputs.artifact-compression-level }}
-
       - name: Upload artifact manifest
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true }}
         uses: actions/upload-artifact@v7.0.1
@@ -2696,10 +2696,10 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
             .buildchain/artifacts/signing
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           overwrite: true
-
       - name: Publish native signed macOS application payload
         if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
         uses: actions/upload-artifact@v7.0.1

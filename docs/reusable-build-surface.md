@@ -774,6 +774,9 @@ Direct GitHub Artifact payloads default to compression level `0`. Buildchain
 artifacts are commonly already-compressed archives; storing them without a
 second compression pass shortens the upload window while preserving the same
 artifact name, run/id/digest binding, retention, and no-overwrite behavior.
+Direct build and signed-finalization payload uploads include hidden files under
+the caller-declared artifact paths, matching the relay path so manifest-bound
+dotfiles are not silently removed in transit.
 Callers may select `1` through `9` for payloads that materially benefit from
 compression. Manifests and diagnostics retain their existing small-artifact
 behavior.
