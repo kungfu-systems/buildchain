@@ -65,7 +65,7 @@ on:
         type: string
         required: false
       platforms-json:
-        description: "Optional runner objects: id, name, platform, runner JSON string, capabilities, and optional required=false"
+        description: "Optional runner objects: id, name, platform, runner JSON string, capabilities, non-sensitive scalar environment, and optional required=false"
         default: ""
         type: string
         required: false
