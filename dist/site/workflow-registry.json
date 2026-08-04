@@ -1650,6 +1650,46 @@
       "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
+      "id": "dev-delivery-warrant-cancel",
+      "path": ".github/workflows/dev-delivery-warrant-cancel.yml",
+      "reusable": true,
+      "inputs": [
+        "buildchain-ref",
+        "buildchain-repository",
+        "event-action",
+        "expected-candidate-id",
+        "expected-old-state-root",
+        "expected-pr-number",
+        "expected-source-head-sha",
+        "observed-source-head-sha",
+        "outcome",
+        "reason",
+        "target-branch",
+        "terminal-evidence-root"
+      ],
+      "inputCount": 12,
+      "secrets": [
+        "github-token"
+      ],
+      "secretCount": 1,
+      "outputs": [
+        "cancellation-action",
+        "cancellation-receipt-root",
+        "final-state-root"
+      ],
+      "outputCount": 3,
+      "surface": "repository-workflow",
+      "capabilityGroup": "governance-versioning",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
       "id": "dev-delivery-warrant-close",
       "path": ".github/workflows/dev-delivery-warrant-close.yml",
       "reusable": true,

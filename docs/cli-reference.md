@@ -300,6 +300,17 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
+### `buildchain dev warrant cancel-queued`
+
+- Help: `buildchain dev warrant cancel-queued --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
 ### `buildchain dev warrant close`
 
 - Help: `buildchain dev warrant close --help`
@@ -308,7 +319,7 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant heartbeat`
@@ -319,7 +330,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --reposit
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant observe`
@@ -330,7 +341,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --reposit
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant recover`
@@ -341,7 +352,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --reposit
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant select`
@@ -352,7 +363,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --reposit
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant submit`
@@ -363,7 +374,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --reposit
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ## `diagnostics`

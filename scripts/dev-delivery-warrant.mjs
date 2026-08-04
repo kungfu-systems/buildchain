@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
+import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
 
 const STATE_PATH = "queue.json";
 const STATE_REF_PREFIX = "buildchain/dev-delivery-warrant/";
@@ -216,6 +216,22 @@ function transitionFor(command, queue, options) {
       now: options.now,
     });
   }
+  if (command === "cancel-queued") {
+    return cancelQueuedDevDeliveryCandidate(
+      queue,
+      {
+        candidateId: exactRoot(options.candidateId, "candidateId"),
+        pullRequestNumber: positiveInteger(options.pullRequestNumber, "pullRequestNumber"),
+        expectedSourceHead: exactSha(options.expectedSourceHead, "expectedSourceHead"),
+        observedSourceHead: exactSha(options.observedSourceHead, "observedSourceHead"),
+        eventAction: options.eventAction,
+        outcome: options.outcome,
+        evidenceRoot: exactRoot(options.evidenceRoot, "evidenceRoot"),
+        reason: options.reason,
+      },
+      { now: options.now },
+    );
+  }
   throw new Error(`unsupported dev delivery command ${command || "<empty>"}`);
 }
 
@@ -306,7 +322,10 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
     stateRef: flag(rest, "state-ref", environment.BUILDCHAIN_DEV_DELIVERY_STATE_REF),
     expectedOldStateRoot: flag(rest, "expected-old", environment.BUILDCHAIN_DEV_DELIVERY_EXPECTED_OLD),
     pullRequestNumber: flag(rest, "pull-request", environment.BUILDCHAIN_DEV_DELIVERY_PR_NUMBER),
+    candidateId: flag(rest, "candidate-id", environment.BUILDCHAIN_DEV_DELIVERY_CANDIDATE_ID),
     sourceHead: flag(rest, "source-head", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_HEAD),
+    expectedSourceHead: flag(rest, "expected-source-head", environment.BUILDCHAIN_DEV_DELIVERY_EXPECTED_SOURCE_HEAD),
+    observedSourceHead: flag(rest, "observed-source-head", environment.BUILDCHAIN_DEV_DELIVERY_OBSERVED_SOURCE_HEAD),
     assignmentRoot: flag(rest, "assignment-root", environment.BUILDCHAIN_DEV_DELIVERY_ASSIGNMENT_ROOT),
     initiativeRoot: flag(rest, "initiative-root", environment.BUILDCHAIN_DEV_DELIVERY_INITIATIVE_ROOT),
     sourceIdentityRoot: flag(rest, "source-identity-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_IDENTITY_ROOT),
@@ -322,6 +341,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
     leaseGeneration: flag(rest, "lease-generation", environment.BUILDCHAIN_DEV_DELIVERY_LEASE_GENERATION),
     leaseSeconds: flag(rest, "lease-seconds", environment.BUILDCHAIN_DEV_DELIVERY_LEASE_SECONDS),
     outcome: flag(rest, "outcome", environment.BUILDCHAIN_DEV_DELIVERY_OUTCOME),
+    eventAction: flag(rest, "event-action", environment.BUILDCHAIN_DEV_DELIVERY_EVENT_ACTION),
     evidenceRoot: flag(rest, "evidence-root", environment.BUILDCHAIN_DEV_DELIVERY_EVIDENCE_ROOT),
     reason: flag(rest, "reason", environment.BUILDCHAIN_DEV_DELIVERY_REASON),
     now: flag(rest, "now", environment.BUILDCHAIN_DEV_DELIVERY_NOW),
@@ -332,7 +352,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n";
 }
 
 async function main() {
@@ -342,7 +362,7 @@ async function main() {
     return;
   }
   const options = devDeliveryCliOptions(args);
-  if (!["submit", "select", "heartbeat", "recover", "close", "observe"].includes(options.command)) {
+  if (!["submit", "select", "heartbeat", "recover", "close", "cancel-queued", "observe"].includes(options.command)) {
     throw new Error(usage().trim());
   }
   const result = await runDevDeliveryCommand(options);

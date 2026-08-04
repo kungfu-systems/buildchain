@@ -95,6 +95,7 @@ export function cliCommandMeta(id) {
     "dev-proof-verify-source": { group: "governance-versioning", purpose: "Verify source qualification proof against exact candidate roots." },
     "dev-merge-queue": { group: "governance-versioning", purpose: "Plan or apply an exact-branch GitHub merge queue after required workflow event compatibility is verified." },
     "dev-warrant-close": { group: "governance-versioning", purpose: "Close the active fenced Dev Delivery Warrant with terminal proof." },
+    "dev-warrant-cancel-queued": { group: "governance-versioning", purpose: "Cancel one exact non-active queued candidate from immutable terminal event evidence." },
     "dev-warrant-heartbeat": { group: "governance-versioning", purpose: "Renew the active fenced Dev Delivery Warrant without changing queue order." },
     "dev-warrant-observe": { group: "governance-versioning", purpose: "Read the durable Dev Delivery Warrant queue without mutating authority state." },
     "dev-warrant-recover": { group: "governance-versioning", purpose: "Recover an expired fenced Warrant and retain candidate age." },

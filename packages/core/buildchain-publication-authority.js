@@ -33,6 +33,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/dev-qualification-patrol.yml", "governance-write"],
   [".github/workflows/dev-alpha-candidate-patrol.yml", "governance-write"],
   [".github/workflows/dev-delivery-warrant-close.yml", "governance-write"],
+  [".github/workflows/dev-delivery-warrant-cancel.yml", "governance-write"],
   [".github/workflows/dev-merge-queue-governance.yml", "governance-write"],
   [".github/workflows/dev-pr-auto-merge.yml", "governance-write"],
   [".github/workflows/github-governance-audit.yml", "governance-write"],
