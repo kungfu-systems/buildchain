@@ -1640,12 +1640,12 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
           substage-evidence-path: ${{ inputs.verify-substage-evidence-path }}
-
       - name: Independently verify lifecycle substage evidence
+        id: verify-substage-evidence
         if: ${{ always() && inputs.verify-substage-evidence-path != '' }}
         working-directory: ${{ inputs.working-directory }}
         run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+          node "${{ github.workspace }}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
           --file "${{ inputs.verify-substage-evidence-path }}"
           --stage verify
           --source-sha "${{ needs.resolve-source.outputs.publish-source-sha }}"
@@ -1653,7 +1653,7 @@ jobs:
           --platform-id "${{ matrix.platform.id }}"
 
       - name: Upload failed verify substage evidence
-        if: ${{ always() && steps.verify-lifecycle.outcome != 'success' && inputs.verify-substage-evidence-path != '' }}
+        if: ${{ always() && inputs.verify-substage-evidence-path != '' && (steps.verify-lifecycle.outcome != 'success' || steps.verify-substage-evidence.outcome != 'success') }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-verify-substages-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_attempt }}
@@ -2142,12 +2142,12 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
           substage-evidence-path: ${{ inputs.verify-substage-evidence-path }}
-
       - name: Independently verify lifecycle substage evidence
+        id: verify-substage-evidence
         if: ${{ always() && inputs.verify-substage-evidence-path != '' }}
         working-directory: ${{ inputs.working-directory }}
         run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+          node "${{ github.workspace }}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
           --file "${{ inputs.verify-substage-evidence-path }}"
           --stage verify
           --source-sha "${{ needs.resolve-source.outputs.publish-source-sha }}"
@@ -2155,7 +2155,7 @@ jobs:
           --platform-id "${{ matrix.platform.id }}"
 
       - name: Upload failed verify substage evidence
-        if: ${{ always() && steps.verify-lifecycle.outcome != 'success' && inputs.verify-substage-evidence-path != '' }}
+        if: ${{ always() && inputs.verify-substage-evidence-path != '' && (steps.verify-lifecycle.outcome != 'success' || steps.verify-substage-evidence.outcome != 'success') }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-verify-substages-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_attempt }}
