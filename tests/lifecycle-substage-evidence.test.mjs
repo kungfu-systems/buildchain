@@ -128,7 +128,12 @@ test("a failed aggregate distinguishes substage failure from budget exhaustion",
 test("runLifecycle embeds independently verified consumer substages", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-substages-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  const evidence = fixture();
+  const evidence = fixture({
+    source: {
+      sha: process.env.BUILDCHAIN_SOURCE_SHA || "a".repeat(40),
+      tree: process.env.BUILDCHAIN_SOURCE_TREE_SHA || "b".repeat(40),
+    },
+  });
   fs.writeFileSync(
     path.join(root, "substage.json"),
     `${JSON.stringify({ substageEvidence: evidence }, null, 2)}\n`,
