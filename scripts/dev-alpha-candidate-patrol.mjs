@@ -5,6 +5,10 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { decideChannelCandidate } from "../packages/core/channel-candidate.js";
+import {
+  resolveManagedPromotionBaseline,
+  resolvePatrolSourceInputs,
+} from "../packages/core/channel-promotion-baseline.js";
 
 export const DEV_ALPHA_CANDIDATE_STATE_SCHEMA =
   "kungfu-buildchain-dev-alpha-candidate-state/v1";
@@ -301,8 +305,7 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
       false,
     ),
     mergeMethod: autoMergeMethod(
-      options.mergeMethod ??
-        process.env.BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD,
+      options.mergeMethod ?? process.env.BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD,
     ),
     dryRun: bool(
       options.dryRun ?? process.env.BUILDCHAIN_CHANNEL_PATROL_DRY_RUN,
@@ -321,7 +324,10 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
 function latestWorkflowEvidence(runs, workflowPathValue, sourceSha) {
   const matching = runs
     .filter(
-      (run) => run.path === workflowPathValue && run.head_sha === sourceSha,
+      (run) =>
+        run.conclusion !== "cancelled" &&
+        run.path === workflowPathValue &&
+        run.head_sha === sourceSha,
     )
     .sort((left, right) => Number(right.id) - Number(left.id));
   if (matching.length === 0)
@@ -356,7 +362,9 @@ function workflowEvidenceIsFreshAndSuccessful(run, { now, maxAgeSeconds }) {
 
 function latestRunsBySha(runs, workflowPathValue) {
   const latest = new Map();
-  for (const run of runs.filter((row) => row.path === workflowPathValue)) {
+  for (const run of runs.filter(
+    (row) => row.path === workflowPathValue && row.conclusion !== "cancelled",
+  )) {
     const current = latest.get(run.head_sha);
     if (!current || Number(run.id) > Number(current.id))
       latest.set(run.head_sha, run);
@@ -620,52 +628,26 @@ export async function runDevAlphaCandidatePatrol(
       repository: options.repository,
       token: process.env.GITHUB_TOKEN,
     });
-  const [observedSourceHeadSha, targetSha] = await Promise.all([
-    client.resolveBranch(options.sourceBranch),
-    client.resolveBranch(options.targetBranch),
-  ]);
-  const headComparison = await client.compare(targetSha, observedSourceHeadSha);
   const requiredWorkflowPaths = [
     options.devWorkflowPath,
     options.alphaWorkflowPath,
   ];
-  let sourceSha = observedSourceHeadSha;
-  let comparison = headComparison;
-  let workflowEvidence = [];
-  let skippedNewerCommitCount = 0;
-  let qualificationError;
-  if (
-    headComparison.status === "ahead" &&
-    Number(headComparison.ahead_by) > 0
-  ) {
-    const [sourceHistory, ...workflowRunSets] = await Promise.all([
-      client.listBranchHistory(options.sourceBranch, targetSha),
-      ...requiredWorkflowPaths.map((workflow) =>
-        client.listCompletedWorkflowRuns(workflow, options.sourceBranch),
-      ),
-    ]);
-    try {
-      const selected = selectLatestQualifiedSource({
-        sourceHistory,
-        workflowRunsByPath: new Map(
-          requiredWorkflowPaths.map((workflow, index) => [
-            workflow,
-            workflowRunSets[index],
-          ]),
-        ),
-        requiredWorkflowPaths,
-        now: options.now,
-        maxAgeSeconds: options.maxAgeSeconds,
-      });
-      sourceSha = selected.sourceSha;
-      skippedNewerCommitCount = selected.skippedNewerCommitCount;
-      workflowEvidence = selected.workflowEvidence;
-      if (sourceSha !== observedSourceHeadSha)
-        comparison = await client.compare(targetSha, sourceSha);
-    } catch (error) {
-      qualificationError = error;
-    }
-  }
+  const {
+    observedSourceHeadSha,
+    targetSha,
+    headComparison,
+    targetBaseline,
+    sourceSha,
+    comparison,
+    workflowEvidence,
+    skippedNewerCommitCount,
+    qualificationError,
+  } = await resolvePatrolSourceInputs({
+    client,
+    options,
+    requiredWorkflowPaths,
+    selectQualifiedSource: selectLatestQualifiedSource,
+  });
   const decision = qualificationError
     ? blockedCandidateDecision({
         options,
@@ -682,9 +664,12 @@ export async function runDevAlphaCandidatePatrol(
         targetSha,
         comparison: { status: comparison.status, aheadBy: comparison.ahead_by },
         selection: {
-          mode: "latest-qualified-source-ancestor",
+          mode: targetBaseline
+            ? "latest-qualified-source-after-managed-promotion"
+            : "latest-qualified-source-ancestor",
           observedSourceHeadSha,
           skippedNewerCommitCount,
+          ...(targetBaseline ? { targetBaseline } : {}),
         },
         workflowEvidence,
         requiredWorkflowPaths,
@@ -927,7 +912,12 @@ export async function runDevAlphaCandidatePatrol(
       }
     }
   }
-  const autoMerge = await armCandidateAutoMerge(options, controllerState, pullRequest, client);
+  const autoMerge = await armCandidateAutoMerge(
+    options,
+    controllerState,
+    pullRequest,
+    client,
+  );
   return {
     schema: "kungfu-buildchain-dev-alpha-candidate-patrol/v1",
     dryRun: options.dryRun,
@@ -1015,6 +1005,13 @@ export function createGitHubChannelCandidateClient({
     async compare(baseSha, headSha) {
       return api(`/repos/${owner}/${repo}/compare/${baseSha}...${headSha}`);
     },
+    resolveManagedPromotionBaseline: (targetSha, targetBranch) =>
+      resolveManagedPromotionBaseline({
+        api: (requestPath) => api(`/repos/${owner}/${repo}${requestPath}`),
+        targetSha,
+        targetBranch,
+        parseCandidate: managedCandidateFromPullRequest,
+      }),
     async listCompletedWorkflowRuns(workflowPathValue, sourceBranch) {
       const runs = [];
       for (let page = 1; page <= 10; page += 1) {

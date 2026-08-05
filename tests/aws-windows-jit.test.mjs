@@ -235,12 +235,15 @@ test("Windows stack and bootstrap enforce JIT, IMDSv2, cleanup, and no ingress",
   assert.match(stack, /billing:GetBillingViewData/);
   assert.doesNotMatch(stack, /Type: AWS::Budgets::Budget/);
   assert.match(budgetGuard, /Type: AWS::Budgets::Budget/);
-  assert.match(
-    budgetGuard,
-    /!Sub "user:\$\{ProviderTagKey\}\$\$\{ProviderTagValue\}"/,
-  );
+  assert.match(budgetGuard, /Key: USAGE_TYPE/);
+  assert.match(budgetGuard, /BoxUsage:c7i\.4xlarge/);
+  assert.match(budgetGuard, /Key: OPERATION/);
+  assert.match(budgetGuard, /RunInstances:0002/);
+  assert.match(budgetGuard, /Key: REGION/);
+  assert.match(budgetGuard, /us-east-1/);
+  assert.doesNotMatch(budgetGuard, /CostFilters:/);
   assert.match(budgetGuard, /provider-budget-killed/);
-  assert.match(budgetGuard, /aws-tag-filtered-budget-notification/);
+  assert.match(budgetGuard, /aws-dimension-filtered-budget-notification/);
   assert.match(budgetGuard, /ec2:TerminateInstances/);
   assert.match(
     stack,

@@ -23,15 +23,211 @@ import {
   verifyRendererOutput,
   writeChecksums,
 } from "../scripts/auditable-demo.mjs";
+import {
+  readRendererManifest,
+  validateRendererComposition,
+} from "../scripts/auditable-demo-renditions.mjs";
 
 const RENDERER_IMAGE = `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"a".repeat(64)}`;
 const SOURCE_SHA = "b".repeat(40);
+
+const COMPOSITION_HELPERS = {
+  exactKeys(value, required, optional, label) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error(`${label} must be an object`);
+    }
+    const allowed = new Set([...required, ...optional]);
+    for (const key of required) {
+      if (!Object.hasOwn(value, key)) throw new Error(`${label}.${key} is required`);
+    }
+    for (const key of Object.keys(value)) {
+      if (!allowed.has(key)) throw new Error(`${label}.${key} is not allowed`);
+    }
+  },
+  invariant(condition, message) {
+    if (!condition) throw new Error(message);
+  },
+};
+
+function terminalFillEvidence(width, height, columns, rows) {
+  return {
+    mode: "terminal-fill",
+    contentViewport: { x: 0, y: 0, width, height, fillRatio: 1 },
+    terminalGeometry: {
+      columns,
+      rows,
+      cellWidth: Number((width / columns).toFixed(6)),
+      cellHeight: Number((height / rows).toFixed(6)),
+      fontSize: Number((Math.min((width / columns) * 1.6, (height / rows) * 0.8)).toFixed(6)),
+      lineHeight: Number((height / rows).toFixed(6)),
+      layout: "exact-grid",
+    },
+  };
+}
+
+function terminalFillManifest() {
+  const primary = terminalFillEvidence(1920, 1080, 150, 36);
+  const responsive = terminalFillEvidence(1280, 720, 100, 28);
+  return {
+    renderer: { contractVersion: "1.4.0" },
+    policy: { compositionMode: "terminal-fill" },
+    derivation: {
+      sourceFrames: { width: 1920, height: 1080, composition: structuredClone(primary) },
+      sourceFrameSets: [
+        { id: "1080p", role: "primary", width: 1920, height: 1080, composition: primary },
+        { id: "720p", role: "responsive", width: 1280, height: 720, composition: responsive },
+      ],
+    },
+  };
+}
+
+const TERMINAL_FILL_RENDITIONS = [
+  { id: "1080p", role: "primary", width: 1920, height: 1080, columns: 150, rows: 36, compositionMode: "terminal-fill" },
+  { id: "720p", role: "responsive", width: 1280, height: 720, columns: 100, rows: 28, compositionMode: "terminal-fill" },
+];
+
+test("renderer composition admission proves exact terminal-fill viewports and fails closed on drift", () => {
+  const admitted = validateRendererComposition(
+    terminalFillManifest(),
+    TERMINAL_FILL_RENDITIONS,
+    COMPOSITION_HELPERS,
+  );
+  assert.equal(admitted.mode, "terminal-fill");
+
+  const missing = terminalFillManifest();
+  delete missing.derivation.sourceFrameSets[0].composition.contentViewport;
+  assert.throws(
+    () => validateRendererComposition(missing, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /contentViewport is required/u,
+  );
+
+  const outOfBounds = terminalFillManifest();
+  outOfBounds.derivation.sourceFrameSets[1].composition.contentViewport.x = 1;
+  assert.throws(
+    () => validateRendererComposition(outOfBounds, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /out of bounds/u,
+  );
+
+  const nonFull = terminalFillManifest();
+  nonFull.derivation.sourceFrameSets[1].composition.contentViewport.width = 1279;
+  nonFull.derivation.sourceFrameSets[1].composition.contentViewport.fillRatio = Number((1279 / 1280).toFixed(6));
+  assert.throws(
+    () => validateRendererComposition(nonFull, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /full-frame terminal viewport/u,
+  );
+
+  const renditionMismatch = terminalFillManifest();
+  renditionMismatch.derivation.sourceFrameSets[0].composition.terminalGeometry.columns = 149;
+  assert.throws(
+    () => validateRendererComposition(renditionMismatch, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /rendition-mismatched/u,
+  );
+
+  const manifestDrift = terminalFillManifest();
+  manifestDrift.derivation.sourceFrames.composition.contentViewport.width = 1919;
+  assert.throws(
+    () => validateRendererComposition(manifestDrift, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /drifted between sourceFrames and sourceFrameSets/u,
+  );
+
+  const legacyFramed = validateRendererComposition(
+    {
+      renderer: { contractVersion: "1.3.1" },
+      policy: {},
+      derivation: {
+        sourceFrames: { width: 1920, height: 1080 },
+        sourceFrameSets: [
+          { id: "1080p", role: "primary", width: 1920, height: 1080 },
+          { id: "720p", role: "responsive", width: 1280, height: 720 },
+        ],
+      },
+    },
+    TERMINAL_FILL_RENDITIONS.map(({ compositionMode: _compositionMode, ...entry }) => entry),
+    COMPOSITION_HELPERS,
+  );
+  assert.deepEqual(legacyFramed, {
+    mode: "presentation-framed",
+    frameSets: [],
+    evidence: "legacy-presentation-default",
+  });
+  assert.throws(
+    () => validateRendererComposition(
+      { renderer: { contractVersion: "1.3.1" }, policy: {}, derivation: {} },
+      TERMINAL_FILL_RENDITIONS,
+      COMPOSITION_HELPERS,
+    ),
+    /does not support composition evidence/u,
+  );
+});
+
+function longFormRendererRenditions() {
+  return [
+    { id: "1080p", role: "primary", width: 1920, height: 1080 },
+    { id: "720p", role: "responsive", width: 1280, height: 720 },
+  ].map((entry) => ({
+    id: entry.id,
+    role: entry.role,
+    scene: {
+      path: {
+        durationClass: "long-form",
+        durationMs: 120000,
+        fps: 10,
+        width: entry.width,
+        height: entry.height,
+      },
+    },
+    terminalCapture: {
+      schema: "kungfu.terminal-capture/v1",
+      root: `sha256:${(entry.id === "1080p" ? "c" : "d").repeat(64)}`,
+      durationMs: 119000,
+      events: 1000,
+      bytes: 1024 * 1024,
+      path: { normalizedReplay: "x".repeat(4 * 1024 * 1024) },
+    },
+  }));
+}
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-auditable-demo-test-"));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   return directory;
 }
+
+test("oversized renderer manifests remain limited to bounded long-form native renditions", (t) => {
+  const root = temporaryDirectory(t);
+  const manifestPath = path.join(root, "manifest.json");
+  const manifest = {
+    schema: "build-images.auditable-demo-render/v1",
+    renderer: { image: RENDERER_IMAGE },
+    inputs: { renditions: longFormRendererRenditions() },
+    outputs: {},
+  };
+  fs.writeFileSync(manifestPath, stableJson(manifest));
+  assert.ok(fs.statSync(manifestPath).size > 8 * 1024 * 1024);
+  const helpers = {
+    decodeUtf8: (bytes) => bytes.toString("utf8"),
+    digestPattern: /^sha256:[0-9a-f]{64}$/,
+    invariant: (condition, message) => { if (!condition) throw new Error(message); },
+    maxBytes: 4 * 1024 * 1024,
+    maxEvents: 10_000,
+    readRegular: (file, label, maximum) => {
+      const bytes = fs.readFileSync(file);
+      assert.ok(bytes.length <= maximum, `${label} exceeds ${maximum} bytes`);
+      return bytes;
+    },
+  };
+  assert.equal(readRendererManifest(manifestPath, helpers).manifest.inputs.renditions.length, 2);
+  writeChecksums(root);
+  assert.throws(() => verifyChecksums(root), /manifest\.json exceeds 8388608 bytes/);
+  verifyChecksums(root, "checksums.sha256", { allowLongFormRendererManifest: true });
+
+  manifest.inputs.renditions[1].terminalCapture.events = 10_001;
+  fs.writeFileSync(manifestPath, stableJson(manifest));
+  assert.throws(
+    () => readRendererManifest(manifestPath, helpers),
+    /rendition 1 is not bounded long-form evidence/,
+  );
+});
 
 function terminalCapture(
   durationMs = 2500,
@@ -121,6 +317,33 @@ function writeRendererOutput(directory, inputs) {
     ...projectionInput,
     cues: projectionInput.cues.map((cue) => ({ ...cue, annotation: cue.annotation ?? "" })),
   };
+  const terminalDimensions = inputs.terminalCapture
+    ? JSON.parse(fs.readFileSync(inputs.terminalCapture, "utf8")).dimensions
+    : null;
+  const contentViewport = {
+    x: 24,
+    y: 72,
+    width: scene.width - 48,
+    height: scene.height - 96,
+  };
+  contentViewport.fillRatio = Number((
+    (contentViewport.width * contentViewport.height) / (scene.width * scene.height)
+  ).toFixed(6));
+  const composition = {
+    mode: scene.compositionMode ?? "presentation-framed",
+    contentViewport,
+    terminalGeometry: terminalDimensions
+      ? {
+        columns: terminalDimensions.columns,
+        rows: terminalDimensions.rows,
+        cellWidth: 7.82,
+        cellHeight: 13.78,
+        fontSize: 13,
+        lineHeight: 13.78,
+        layout: "presentation-flow",
+      }
+      : null,
+  };
   fs.writeFileSync(path.join(directory, "complete-transcript.txt"), transcript);
   fs.writeFileSync(path.join(directory, "public-projection.json"), stableJson(projection));
   fs.writeFileSync(path.join(directory, "scene.json"), stableJson(scene));
@@ -154,7 +377,8 @@ function writeRendererOutput(directory, inputs) {
   );
   fs.writeFileSync(path.join(directory, "manifest.json"), stableJson({
     schema: "build-images.auditable-demo-render/v1",
-    renderer: { image: RENDERER_IMAGE },
+    renderer: { contractVersion: "1.4.0", image: RENDERER_IMAGE },
+    policy: { compositionMode: composition.mode },
     inputs: {
       scene: { root: sha256(fs.readFileSync(path.join(directory, "scene.json"))) },
       transcript: { root: sha256(fs.readFileSync(path.join(directory, "complete-transcript.txt"))) },
@@ -166,6 +390,13 @@ function writeRendererOutput(directory, inputs) {
           },
         }
         : {}),
+    },
+    derivation: {
+      sourceFrames: {
+        width: scene.width,
+        height: scene.height,
+        composition,
+      },
     },
     outputs,
   }));

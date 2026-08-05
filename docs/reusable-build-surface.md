@@ -774,6 +774,9 @@ Direct GitHub Artifact payloads default to compression level `0`. Buildchain
 artifacts are commonly already-compressed archives; storing them without a
 second compression pass shortens the upload window while preserving the same
 artifact name, run/id/digest binding, retention, and no-overwrite behavior.
+Direct build and signed-finalization payload uploads include hidden files under
+the caller-declared artifact paths, matching the relay path so manifest-bound
+dotfiles are not silently removed in transit.
 Callers may select `1` through `9` for payloads that materially benefit from
 compression. Manifests and diagnostics retain their existing small-artifact
 behavior.
@@ -792,7 +795,14 @@ jobs:
       artifact-relay-s3-prefix: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX }}
 ```
 
-In relay mode, each self-hosted platform job uploads the heavy payload files to
+The mode is a policy for platforms that run outside GitHub. GitHub-hosted
+platforms always upload directly with `actions/upload-artifact`, even when a
+mixed matrix requests `s3-to-github-artifacts`; they never send their payloads
+through S3 or the replay job. Buildchain recognizes its hosted presets and the
+standard hosted runner labels. Custom matrices with non-standard hosted labels
+must declare `"githubHosted": true` on those platform rows.
+
+For remaining relay-mode platforms, each job uploads the heavy payload files to
 S3 and uploads only a small `relay-manifest.json` to GitHub. A GitHub-hosted
 `relay-artifacts` job then assumes the configured download role, downloads the
 payloads from S3, verifies every file by SHA256, and re-uploads the normal

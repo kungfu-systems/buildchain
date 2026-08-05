@@ -11,6 +11,8 @@ budget_guard_stack="kungfu-buildchain-windows-jit-budget-guard"
 budget_name="kungfu-buildchain-windows-jit-actual-spend"
 budget_tag_key="kungfu:provider"
 budget_tag_value="windows-ec2-jit"
+budget_usage_type="BoxUsage:c7i.4xlarge"
+budget_operation="RunInstances:0002"
 budget_kill_parameter="/kungfu/burst/windows/provider-budget-killed"
 budget_limit_usd="110"
 campaign_template="infra/aws-us-elastic-runner-burst-plane/windows-jit.template.yml"
@@ -140,10 +142,12 @@ make_plan() {
     --arg budget_name "$budget_name" \
     --arg tag_key "$budget_tag_key" \
     --arg tag_value "$budget_tag_value" \
+    --arg usage_type "$budget_usage_type" \
+    --arg operation "$budget_operation" \
     --arg kill_parameter "$budget_kill_parameter" \
     --argjson slots "$max_accepted_instances" \
     --argjson budget "$budget_limit_usd" \
-    '{schemaVersion:1,contract:$contract,kind:"operator-plan",mode:"dry-run",account:{id:$account},aws:{region:$region,budgetGuard:{stackName:$guard_stack,budgetName:$budget_name,tagKey:$tag_key,tagValue:$tag_value,killParameterName:$kill_parameter},campaignStackName:("kungfu-buildchain-windows-jit-"+$campaign),vpcId:$vpc,subnetId:$subnet,oidcProviderArn:$oidc,campaignTemplate:{path:$campaign_template,digest:$campaign_template_digest},budgetTemplate:{path:$budget_template,digest:$budget_template_digest}},campaign:{id:$campaign,observedAt:$observed_at,expiresAt:$expires_at,maxAcceptedInstances:$slots},source:{sha:$source_sha,ref:$source_ref},github:{repository:$repository,workflowId:$workflow_id,requiredState:"disabled_manually"},cost:{start:$cost_start,end:$cost_end,usageType:"BoxUsage:c7i.4xlarge",providerTag:{key:$tag_key,value:$tag_value},phaseBudgetLimitUsd:$budget,maximumInstanceReservationUsd:4.35,providerTelemetryMayLag:true},safety:{defaultAction:"plan-only",workflowEnabledDuringPrepare:false,dispatchDuringPrepare:false,paidCapacityDuringPrepare:false,budgetRequired:true,budgetTagVisibilityRequired:true,budgetAlarmIsDefenseInDepth:true,atomicCampaignReservationIsAuthoritative:true,uniqueCampaignStackRequired:true,zeroResidueRequired:true}}')
+    '{schemaVersion:1,contract:$contract,kind:"operator-plan",mode:"dry-run",account:{id:$account},aws:{region:$region,budgetGuard:{stackName:$guard_stack,budgetName:$budget_name,dimensionFilter:{usageType:$usage_type,operation:$operation,region:$region},killParameterName:$kill_parameter},campaignStackName:("kungfu-buildchain-windows-jit-"+$campaign),vpcId:$vpc,subnetId:$subnet,oidcProviderArn:$oidc,campaignTemplate:{path:$campaign_template,digest:$campaign_template_digest},budgetTemplate:{path:$budget_template,digest:$budget_template_digest}},campaign:{id:$campaign,observedAt:$observed_at,expiresAt:$expires_at,maxAcceptedInstances:$slots},source:{sha:$source_sha,ref:$source_ref},github:{repository:$repository,workflowId:$workflow_id,requiredState:"disabled_manually"},cost:{start:$cost_start,end:$cost_end,dimensionFilter:{usageType:$usage_type,operation:$operation,region:$region},resourceOwnershipTag:{key:$tag_key,value:$tag_value},phaseBudgetLimitUsd:$budget,maximumInstanceReservationUsd:4.35,providerTelemetryMayLag:true},safety:{defaultAction:"plan-only",workflowEnabledDuringPrepare:false,dispatchDuringPrepare:false,paidCapacityDuringPrepare:false,budgetRequired:true,budgetDimensionVisibilityRequired:true,budgetAlarmIsDefenseInDepth:true,atomicCampaignReservationIsAuthoritative:true,uniqueCampaignStackRequired:true,zeroResidueRequired:true}}')
   digest=$(printf '%s' "$body" | shasum -a 256 | awk '{print "sha256:" $1}')
   printf '%s' "$body" | jq --arg digest "$digest" '. + {digest:$digest}'
 }
@@ -196,7 +200,7 @@ optional_stack() {
 
 optional_budget() {
   local output
-  if output=$(aws_json budgets describe-budget --account-id "$account_id" --budget-name "$budget_name" --output json 2>&1); then
+  if output=$(aws_json budgets describe-budget --account-id "$account_id" --budget-name "$budget_name" --show-filter-expression --output json 2>&1); then
     printf '%s' "$output"
   elif [[ "$output" == *"NotFoundException"* ]]; then
     printf 'null'
@@ -205,11 +209,20 @@ optional_budget() {
   fi
 }
 
-tag_visible() {
-  aws_json ce get-tags \
+dimension_visible() {
+  local dimension="$1" value="$2"
+  aws_json ce get-dimension-values \
     --time-period "Start=${cost_start},End=${cost_end}" \
-    --tag-key "$budget_tag_key" \
-    --output json | jq -e --arg value "$budget_tag_value" '.Tags | index($value) != null' >/dev/null
+    --dimension "$dimension" \
+    --search-string "$value" \
+    --output json | jq -e --arg value "$value" \
+      '.DimensionValues | any(.Value==$value)' >/dev/null
+}
+
+budget_dimensions_visible() {
+  dimension_visible USAGE_TYPE "$budget_usage_type" &&
+    dimension_visible OPERATION "$budget_operation" &&
+    dimension_visible REGION "$region"
 }
 
 kill_sentinel_present() {
@@ -230,13 +243,24 @@ guard_topic() {
 }
 
 budget_valid() {
-  local budget_json="$1" expected_filter="user:${budget_tag_key}\$${budget_tag_value}"
+  local budget_json="$1"
   [[ "$budget_json" != "null" ]] || return 1
   printf '%s' "$budget_json" | jq -e \
     --arg name "$budget_name" \
-    --arg filter "$expected_filter" \
+    --arg usage_type "$budget_usage_type" \
+    --arg operation "$budget_operation" \
+    --arg region "$region" \
     --argjson limit "$budget_limit_usd" \
-    '.Budget.BudgetName==$name and (.Budget.BudgetLimit.Amount|tonumber)==$limit and .Budget.BudgetLimit.Unit=="USD" and .Budget.BudgetType=="COST" and .Budget.CostFilters.TagKeyValue==[$filter]' >/dev/null
+    '.Budget.BudgetName==$name and
+     (.Budget.BudgetLimit.Amount|tonumber)==$limit and
+     .Budget.BudgetLimit.Unit=="USD" and
+     .Budget.BudgetType=="COST" and
+     .Budget.Metrics==["UnblendedCost"] and
+     (.Budget.FilterExpression.And|length)==3 and
+     all(.Budget.FilterExpression.And[]; has("Dimensions") and (keys|length)==1) and
+     any(.Budget.FilterExpression.And[]; .Dimensions=={Key:"USAGE_TYPE",Values:[$usage_type],MatchOptions:["EQUALS"]}) and
+     any(.Budget.FilterExpression.And[]; .Dimensions=={Key:"OPERATION",Values:[$operation],MatchOptions:["EQUALS"]}) and
+     any(.Budget.FilterExpression.And[]; .Dimensions=={Key:"REGION",Values:[$region],MatchOptions:["EQUALS"]})' >/dev/null
 }
 
 notifications_valid() {
@@ -245,7 +269,7 @@ notifications_valid() {
   notifications=$(aws_json budgets describe-notifications-for-budget \
     --account-id "$account_id" --budget-name "$budget_name" --output json)
   printf '%s' "$notifications" | jq -e \
-    '[.Notifications[] | select(.NotificationType=="ACTUAL" and .ThresholdType=="PERCENTAGE") | .Threshold] | sort == [80,95]' >/dev/null || return 1
+    '[.Notifications[] | select(.NotificationType=="ACTUAL" and (.ThresholdType // "PERCENTAGE")=="PERCENTAGE") | .Threshold] | sort == [80,95]' >/dev/null || return 1
   while IFS= read -r notification; do
     subscribers=$(aws_json budgets describe-subscribers-for-notification \
       --account-id "$account_id" --budget-name "$budget_name" \
@@ -282,8 +306,8 @@ resource_counts() {
 
 cost_readback() {
   local filter queried_at
-  filter=$(jq -cn --arg key "$budget_tag_key" --arg value "$budget_tag_value" \
-    '{And:[{Dimensions:{Key:"USAGE_TYPE",Values:["BoxUsage:c7i.4xlarge"],MatchOptions:["EQUALS"]}},{Tags:{Key:$key,Values:[$value],MatchOptions:["EQUALS"]}}]}')
+  filter=$(jq -cn --arg usage_type "$budget_usage_type" --arg operation "$budget_operation" --arg region "$region" \
+    '{And:[{Dimensions:{Key:"USAGE_TYPE",Values:[$usage_type],MatchOptions:["EQUALS"]}},{Dimensions:{Key:"OPERATION",Values:[$operation],MatchOptions:["EQUALS"]}},{Dimensions:{Key:"REGION",Values:[$region],MatchOptions:["EQUALS"]}}]}')
   queried_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   aws_json ce get-cost-and-usage \
     --time-period "Start=${cost_start},End=${cost_end}" \
@@ -291,18 +315,18 @@ cost_readback() {
     --metrics UnblendedCost UsageQuantity \
     --filter "$filter" \
     --output json | jq \
-    --arg queried_at "$queried_at" --arg tag_key "$budget_tag_key" --arg tag_value "$budget_tag_value" \
-    '{amountUsd:([.ResultsByTime[].Total.UnblendedCost.Amount|tonumber]|add//0),usageHours:([.ResultsByTime[].Total.UsageQuantity.Amount|tonumber]|add//0),estimated:any(.ResultsByTime[];.Estimated==true),rowCount:(.ResultsByTime|length),queriedAt:$queried_at,filter:{usageType:"BoxUsage:c7i.4xlarge",providerTag:{key:$tag_key,value:$tag_value}}}'
+    --arg queried_at "$queried_at" --arg usage_type "$budget_usage_type" --arg operation "$budget_operation" --arg region "$region" \
+    '{amountUsd:([.ResultsByTime[].Total.UnblendedCost.Amount|tonumber]|add//0),usageHours:([.ResultsByTime[].Total.UsageQuantity.Amount|tonumber]|add//0),estimated:any(.ResultsByTime[];.Estimated==true),rowCount:(.ResultsByTime|length),queriedAt:$queried_at,filter:{usageType:$usage_type,operation:$operation,region:$region}}'
 }
 
 audit() {
-  local plan_digest="$1" workflow guard campaign budget tags_ok budget_ok notifications_ok sentinel residue status
+  local plan_digest="$1" workflow guard campaign budget dimensions_ok budget_ok notifications_ok sentinel residue status
   assert_identity
   workflow=$(workflow_json)
   guard=$(optional_stack "$budget_guard_stack")
   campaign=$(optional_stack "kungfu-buildchain-windows-jit-${campaign_id}")
   budget=$(optional_budget)
-  tags_ok="false"; tag_visible && tags_ok="true"
+  dimensions_ok="false"; budget_dimensions_visible && dimensions_ok="true"
   budget_ok="false"; budget_valid "$budget" && budget_ok="true"
   notifications_ok="false"
   if [[ "$guard" != "null" && "$budget_ok" == "true" ]]; then
@@ -311,16 +335,16 @@ audit() {
   sentinel="false"; kill_sentinel_present && sentinel="true"
   residue=$(resource_counts)
   status="fail-closed"
-  if [[ "$(printf '%s' "$workflow" | jq -r .state)" == "disabled_manually" && "$guard" != "null" && "$tags_ok" == "true" && "$budget_ok" == "true" && "$notifications_ok" == "true" && "$sentinel" == "false" && "$(printf '%s' "$residue" | jq '[.[]]|add')" == "0" ]]; then
+  if [[ "$(printf '%s' "$workflow" | jq -r .state)" == "disabled_manually" && "$guard" != "null" && "$dimensions_ok" == "true" && "$budget_ok" == "true" && "$notifications_ok" == "true" && "$sentinel" == "false" && "$(printf '%s' "$residue" | jq '[.[]]|add')" == "0" ]]; then
     status="ready"
   fi
   jq -n \
     --arg contract "$contract" --arg status "$status" --arg digest "$plan_digest" \
     --argjson workflow "$workflow" --argjson guard "$guard" --argjson campaign "$campaign" \
-    --argjson tags "$tags_ok" --argjson budget_ok "$budget_ok" \
+    --argjson dimensions "$dimensions_ok" --argjson budget_ok "$budget_ok" \
     --argjson notifications_ok "$notifications_ok" --argjson sentinel "$sentinel" \
     --argjson residue "$residue" \
-    '{schemaVersion:1,contract:$contract,kind:"operator-audit",status:$status,workflow:{id:$workflow.id,name:$workflow.name,state:$workflow.state},budgetGuardStack:$guard,campaignStack:$campaign,budget:{tagVisible:$tags,valid:$budget_ok,notificationsValid:$notifications_ok},killSentinel:{present:$sentinel},residue:{ok:([ $residue[] ]|add)==0,counts:$residue},planDigest:$digest}'
+    '{schemaVersion:1,contract:$contract,kind:"operator-audit",status:$status,workflow:{id:$workflow.id,name:$workflow.name,state:$workflow.state},budgetGuardStack:$guard,campaignStack:$campaign,budget:{dimensionsVisible:$dimensions,valid:$budget_ok,notificationsValid:$notifications_ok},killSentinel:{present:$sentinel},residue:{ok:([ $residue[] ]|add)==0,counts:$residue},planDigest:$digest}'
 }
 
 budget_launch_gate() {
@@ -333,13 +357,14 @@ budget_launch_gate() {
   guard=$(optional_stack "$budget_guard_stack")
   [[ "$guard" != "null" ]] || fail "provider Budget guard stack is missing"
   budget=$(optional_budget)
-  budget_valid "$budget" || fail "provider Budget identity or tag filter mismatch"
+  budget_valid "$budget" || fail "provider Budget identity or dimension filter mismatch"
   notifications_valid || fail "provider Budget notification subscription mismatch"
   sentinel="false"; kill_sentinel_present && sentinel="true"
   [[ "$sentinel" == "false" ]] || fail "provider Budget kill sentinel is set"
   jq -n --arg contract "$contract" --arg account "$account" \
-    --arg budget "$budget_name" --arg filter "user:${budget_tag_key}\$${budget_tag_value}" \
-    '{schemaVersion:1,contract:$contract,kind:"budget-launch-gate",status:"ready",accountId:$account,budgetName:$budget,tagFilter:$filter,killSentinelPresent:false}'
+    --arg budget "$budget_name" --arg usage_type "$budget_usage_type" \
+    --arg operation "$budget_operation" --arg region "$region" \
+    '{schemaVersion:1,contract:$contract,kind:"budget-launch-gate",status:"ready",accountId:$account,budgetName:$budget,dimensionFilter:{usageType:$usage_type,operation:$operation,region:$region},killSentinelPresent:false}'
 }
 
 install_budget() {
@@ -348,7 +373,7 @@ install_budget() {
   [[ "$confirm_budget_name" == "$budget_name" ]] || fail "--confirm-budget-name must equal the Budget name"
   assert_identity
   assert_workflow_disabled
-  tag_visible || fail "cost allocation tag ${budget_tag_key}=${budget_tag_value} is not visible; installation fails closed"
+  budget_dimensions_visible || fail "account-native Windows billing dimensions are not visible; installation fails closed"
   existing_budget=$(optional_budget)
   existing_guard=$(optional_stack "$budget_guard_stack")
   [[ "$existing_budget" == "null" || "$existing_guard" != "null" ]] || fail "provider Budget exists outside the guard stack"
@@ -363,8 +388,6 @@ install_budget() {
     --parameter-overrides \
       "BudgetName=${budget_name}" \
       "BudgetLimitUsd=${budget_limit_usd}" \
-      "ProviderTagKey=${budget_tag_key}" \
-      "ProviderTagValue=${budget_tag_value}" \
       "KillParameterName=${budget_kill_parameter}" \
     --no-fail-on-empty-changeset
   receipt=$(audit "$plan_digest")
@@ -383,8 +406,8 @@ prepare_campaign() {
   guard=$(optional_stack "$budget_guard_stack")
   [[ "$guard" != "null" ]] || fail "Budget guard stack is missing"
   budget=$(optional_budget)
-  tag_visible || fail "cost allocation tag is not visible"
-  budget_valid "$budget" || fail "provider Budget identity or filter mismatch"
+  budget_dimensions_visible || fail "account-native Windows billing dimensions are not visible"
+  budget_valid "$budget" || fail "provider Budget identity or dimension filter mismatch"
   notifications_valid || fail "provider Budget notification subscription mismatch"
   sentinel="false"; kill_sentinel_present && sentinel="true"
   [[ "$sentinel" == "false" ]] || fail "provider Budget kill sentinel is set"

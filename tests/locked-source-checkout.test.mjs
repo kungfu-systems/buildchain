@@ -426,6 +426,59 @@ test("source fetch does not spend a second raw-SHA timeout after a ref timeout",
   assert.equal(fetches[0].at(-1), "+refs/heads/dev/v4/v4.0:refs/buildchain/source-ref");
 });
 
+test("timed out source fetch terminates its descendant process tree before retry", () => {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-fetch-tree-timeout-"));
+  const bin = path.join(fixture, "bin");
+  const descendantPidPath = path.join(fixture, "descendant.pid");
+  const fakeGitScript = path.join(fixture, "fake-git.mjs");
+  fs.mkdirSync(bin);
+  fs.writeFileSync(fakeGitScript, `
+    import { spawn } from "node:child_process";
+    import fs from "node:fs";
+    if (process.argv[2] !== "fetch") process.exit(0);
+    const child = spawn(process.execPath, ["-e", "process.on('SIGTERM', () => process.exit(0)); setInterval(() => {}, 1000)"], { stdio: "ignore" });
+    fs.writeFileSync(process.env.BUILDCHAIN_TEST_DESCENDANT_PID_PATH, String(child.pid));
+    process.on("SIGTERM", () => {});
+    setInterval(() => {}, 1000);
+  `);
+  if (process.platform === "win32") {
+    fs.writeFileSync(path.join(bin, "git.cmd"), `@echo off\r\nif not "%~1"=="fetch" exit /b 0\r\n"${process.execPath}" "${fakeGitScript}" %*\r\n`);
+  } else {
+    const fakeGit = path.join(bin, "git");
+    fs.writeFileSync(fakeGit, `#!/bin/sh\nif [ "$1" != "fetch" ]; then exit 0; fi\nexec "${process.execPath}" "${fakeGitScript}" "$@"\n`);
+    fs.chmodSync(fakeGit, 0o755);
+  }
+  const previous = {
+    path: process.env.PATH,
+    pidPath: process.env.BUILDCHAIN_TEST_DESCENDANT_PID_PATH,
+    grace: process.env.BUILDCHAIN_GIT_TIMEOUT_GRACE_MS,
+  };
+  process.env.PATH = `${bin}${path.delimiter}${process.env.PATH || ""}`;
+  process.env.BUILDCHAIN_TEST_DESCENDANT_PID_PATH = descendantPidPath;
+  process.env.BUILDCHAIN_GIT_TIMEOUT_GRACE_MS = "100";
+  try {
+    assert.throws(() => fetchSourceCommit({
+      targetPath: fixture,
+      remoteName: "origin",
+      remoteUrl: "https://github.com/kungfu-systems/example.git",
+      sha: "d".repeat(40),
+      fetchRef: "refs/heads/dev/v4/v4.0",
+      // The full suite deliberately saturates local process creation. Keep the
+      // timeout bounded, but leave enough headroom for the non-fetch setup
+      // commands so this assertion measures fetch-tree cleanup, not scheduler
+      // latency.
+      timeoutMs: 5000,
+      containsCommit: () => false,
+    }), (error) => error.code === "ETIMEDOUT" && /process tree terminated/.test(error.message));
+  } finally {
+    if (previous.path == null) delete process.env.PATH; else process.env.PATH = previous.path;
+    if (previous.pidPath == null) delete process.env.BUILDCHAIN_TEST_DESCENDANT_PID_PATH; else process.env.BUILDCHAIN_TEST_DESCENDANT_PID_PATH = previous.pidPath;
+    if (previous.grace == null) delete process.env.BUILDCHAIN_GIT_TIMEOUT_GRACE_MS; else process.env.BUILDCHAIN_GIT_TIMEOUT_GRACE_MS = previous.grace;
+  }
+  const descendantPid = Number(fs.readFileSync(descendantPidPath, "utf8"));
+  assert.throws(() => process.kill(descendantPid, 0), { code: "ESRCH" });
+});
+
 test("locked source checkout retries GitHub fallback fetch with a bounded attempt count", () => {
   let calls = 0;
   const failures = [];

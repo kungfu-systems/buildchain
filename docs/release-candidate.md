@@ -192,11 +192,28 @@ short-lived admission JSON in repository-specific workflow code:
 ```
 
 `publication-auto-no-gate` is an explicit consumer decision, not a default. A
-consumer with a Shifu Gate registry supplies `publication-gate-aggregate-json`
-instead. Buildchain still requires caller-owned RC evidence, an exact authority
+consumer with a Shifu Gate registry either supplies
+`publication-gate-aggregate-json`, or supplies a source-controlled
+`publication-gate-command` that writes the aggregate to
+`BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH`. The command runs from the exact
+consumer source in the credential-free sealed-authority job, after Buildchain
+has downloaded the exact RC passport, summary, controller receipt, manifests,
+and payload bytes. It can read those inputs through
+`BUILDCHAIN_PUBLICATION_EVIDENCE_ROOT`; it receives no publication token, OIDC
+permission, or provider write permission. Buildchain validates the aggregate
+digest and exact source binding before it seals a capability. Exactly one of
+the supplied aggregate, consumer command, or explicit no-Gate decision is
+allowed. Buildchain still requires caller-owned RC evidence, an exact authority
 runtime and source SHA, a repository-local publisher workflow, matching npm
 target/package identity or exact caller-bound GitHub Release target, and a
 qualifying control-plane audit.
+
+Promotion resolves the complete PR-stage workflow, not only the first required
+status job that becomes green. `release-candidate-wait-seconds` bounds that
+wait and defaults to three hours so long native builds can finish controller,
+publication-tail, and retained-evidence jobs without racing a merged promotion.
+An incomplete or failed workflow still fails closed; the longer bound does not
+turn a partial required-check result into candidate evidence.
 
 GitHub-Release-only consumers use the same managed admission without inventing
 an npm package identity:

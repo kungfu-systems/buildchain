@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "7a8d22353a233dae3e99b727de9fef3f3d8b78741155c4f685214227481fd8f9",
+    "sha256": "000be65d0102e56b08a7c98e12836af0b137603e1c438b248f017ac338394271",
     "summary": {
       "cliCommandCount": 112,
-      "workflowCount": 60,
+      "workflowCount": 63,
       "actionCount": 6,
-      "sitePageCount": 64,
-      "docCommandRefCount": 830,
+      "sitePageCount": 65,
+      "docCommandRefCount": 881,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "7a8d22353a233dae3e99b727de9fef3f3d8b78741155c4f685214227481fd8f9",
+      "sha256": "000be65d0102e56b08a7c98e12836af0b137603e1c438b248f017ac338394271",
       "summary": {
         "cliCommandCount": 112,
-        "workflowCount": 60,
+        "workflowCount": 63,
         "actionCount": 6,
-        "sitePageCount": 64,
-        "docCommandRefCount": 830,
+        "sitePageCount": 65,
+        "docCommandRefCount": 881,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1353,6 +1353,18 @@
           "packageExport": "./diagnostics"
         },
         {
+          "id": "export:./dev-delivery-warrant",
+          "name": "@kungfu-tech/buildchain/dev-delivery-warrant",
+          "kind": "package-export",
+          "sourcePath": "packages/core/dev-delivery-warrant.js",
+          "evidencePath": "packages/core/dev-delivery-warrant.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./dev-delivery-warrant"
+        },
+        {
           "id": "export:./homebrew",
           "name": "@kungfu-tech/buildchain/homebrew",
           "kind": "package-export",
@@ -2046,7 +2058,7 @@
         },
         {
           "id": "cli:dev",
-          "name": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>",
+          "name": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3334,7 +3346,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 85,
+          "inputCount": 86,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3420,6 +3432,7 @@
             "shifu-cache-profile-ref",
             "untrusted-policy",
             "verify-command",
+            "verify-substage-evidence-path",
             "working-directory"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -3448,7 +3461,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 11,
+          "inputCount": 12,
           "inputs": [
             "artifact-retention-days",
             "binary-artifact-digest",
@@ -3457,6 +3470,7 @@
             "materialize",
             "materialize-base-ref",
             "media-profile",
+            "render-failure-advisory",
             "render-media",
             "renderer-image",
             "scenario-path",
@@ -3519,7 +3533,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 33,
+          "inputCount": 34,
           "inputs": [
             "admission-json",
             "authority-workflow-path",
@@ -3528,6 +3542,7 @@
             "auto-no-gate",
             "buildchain-ref",
             "buildchain-repository",
+            "consumer-gate-command",
             "consumer-predicate-digest",
             "consumer-predicate-id",
             "consumer-qualification-required",
@@ -3567,7 +3582,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 95,
+          "inputCount": 97,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3612,6 +3627,7 @@
             "publication-control-plane-audit-json",
             "publication-expected-json",
             "publication-gate-aggregate-json",
+            "publication-gate-command",
             "publication-package-name",
             "publication-product",
             "publication-publisher-workflow-path",
@@ -3635,6 +3651,7 @@
             "release-candidate-family-evidence-required",
             "release-candidate-family-evidence-root",
             "release-candidate-family-initiative-id",
+            "release-candidate-wait-seconds",
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
@@ -4072,7 +4089,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 88,
+          "inputCount": 89,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -4161,6 +4178,7 @@
             "shifu-cache-profile-ref",
             "untrusted-policy",
             "verify-command",
+            "verify-substage-evidence-path",
             "working-directory"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4171,6 +4189,20 @@
           "kind": "workflow",
           "sourcePath": ".github/workflows/buildchain-alpha-self-dogfood.yml",
           "evidencePath": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:buildchain-dev-delivery",
+          "name": "workflow:buildchain-dev-delivery",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-dev-delivery.yml",
+          "evidencePath": ".github/workflows/buildchain-dev-delivery.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -4361,6 +4393,61 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:dev-delivery-warrant-cancel",
+          "name": "workflow:dev-delivery-warrant-cancel",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/dev-delivery-warrant-cancel.yml",
+          "evidencePath": ".github/workflows/dev-delivery-warrant-cancel.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 12,
+          "inputs": [
+            "buildchain-ref",
+            "buildchain-repository",
+            "event-action",
+            "expected-candidate-id",
+            "expected-old-state-root",
+            "expected-pr-number",
+            "expected-source-head-sha",
+            "observed-source-head-sha",
+            "outcome",
+            "reason",
+            "target-branch",
+            "terminal-evidence-root"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:dev-delivery-warrant-close",
+          "name": "workflow:dev-delivery-warrant-close",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/dev-delivery-warrant-close.yml",
+          "evidencePath": ".github/workflows/dev-delivery-warrant-close.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 13,
+          "inputs": [
+            "buildchain-ref",
+            "buildchain-repository",
+            "current-base-sha",
+            "expected-head-sha",
+            "expected-pr-number",
+            "merge-group-head-sha",
+            "merge-group-tree-sha",
+            "outcome",
+            "reason",
+            "replay-tree-sha",
+            "required-context-roots-json",
+            "target-branch",
+            "terminal-evidence-root"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:dev-merge-queue-governance",
           "name": "workflow:dev-merge-queue-governance",
           "kind": "workflow",
@@ -4384,22 +4471,40 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 14,
+          "inputCount": 32,
           "inputs": [
+            "affected-paths-json",
             "allowed-head-prefixes",
+            "assignment-root",
             "block-labels",
             "buildchain-ref",
             "buildchain-repository",
+            "closure-root",
+            "delivery-class",
+            "delivery-priority",
+            "delivery-warrant-mode",
+            "dependency-root",
+            "diagnostic-context",
             "dry-run",
+            "expected-head-sha",
+            "expected-pr-number",
+            "initiative-root",
             "landing-mode",
             "max-merges",
             "merge-method",
+            "plan-root",
+            "project-cut-proof-json",
             "queue-admission-context",
             "ready-label",
             "require-approval",
             "required-status-checks",
             "same-repository-only",
-            "target-branch"
+            "shard-evidence-roots-json",
+            "source-identity-root",
+            "source-patch-root",
+            "target-branch",
+            "toolchain-root",
+            "warrant-lease-seconds"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4717,7 +4822,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 87,
+          "inputCount": 89,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4754,6 +4859,7 @@
             "publication-control-plane-audit-json",
             "publication-expected-json",
             "publication-gate-aggregate-json",
+            "publication-gate-command",
             "publication-package-name",
             "publication-product",
             "publication-publisher-workflow-path",
@@ -4777,6 +4883,7 @@
             "release-candidate-family-evidence-required",
             "release-candidate-family-evidence-root",
             "release-candidate-family-initiative-id",
+            "release-candidate-wait-seconds",
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
@@ -5200,7 +5307,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 21,
+          "inputCount": 22,
           "inputs": [
             "artifact-name",
             "artifact-paths",
@@ -5221,6 +5328,7 @@
             "required",
             "sample-process-tree",
             "stage",
+            "substage-evidence-path",
             "summary-path",
             "timeout-minutes"
           ],
@@ -5583,6 +5691,18 @@
         {
           "id": "site-page:manual:dev-alpha-candidate-patrol",
           "name": "site-page:manual:dev-alpha-candidate-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:dev-delivery-warrant",
+          "name": "site-page:manual:dev-delivery-warrant",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -6183,6 +6303,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 394
+    "publicSurfaceCount": 399
   }
 }

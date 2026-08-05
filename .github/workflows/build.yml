@@ -68,7 +68,7 @@ on:
         type: string
         required: false
       platforms-json:
-        description: "Optional custom JSON array of platform objects: id, name, runner JSON string"
+        description: "Optional custom JSON array of platform objects: id, name, runner JSON string, and optional githubHosted boolean"
         default: ""
         type: string
         required: false
@@ -173,6 +173,11 @@ on:
         type: string
         required: false
       verify-command:
+        default: ""
+        type: string
+        required: false
+      verify-substage-evidence-path:
+        description: "Optional lifecycle verify substage evidence path produced by the consumer command"
         default: ""
         type: string
         required: false
@@ -303,7 +308,7 @@ on:
         type: string
         required: false
       artifact-transfer-mode:
-        description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
+        description: "Artifact transfer policy: GitHub-hosted platforms always upload natively; other platforms use github-artifacts or s3-to-github-artifacts"
         default: "github-artifacts"
         type: string
         required: false
@@ -793,6 +798,7 @@ jobs:
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}
+      verify-substage-evidence-path: ${{ inputs.verify-substage-evidence-path }}
       kfd-agent-hub: ${{ inputs.kfd-agent-hub }}
       lifecycle-timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
       require-install: ${{ inputs.require-install }}

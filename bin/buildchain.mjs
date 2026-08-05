@@ -1368,8 +1368,20 @@ async function handleDoctorCommand(args) {
 
 async function handleDevCommand(args) {
     const [subcommand = "", ...devArgs] = args;
+    if (subcommand === "pr-admit") {
+      runScript("dev-pr-auto-merge.mjs", devArgs);
+      return;
+    }
+    if (subcommand === "warrant") {
+      runScript("dev-delivery-warrant.mjs", devArgs);
+      return;
+    }
+    if (subcommand === "proof") {
+      runScript("dev-delivery-proof.mjs", devArgs);
+      return;
+    }
     if (subcommand !== "merge-queue") {
-      throw new Error("usage: buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <path>...]");
+      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant|proof> [options]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;
