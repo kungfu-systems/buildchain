@@ -55,26 +55,3 @@ permissions:
 jobs:
   deliver:
     uses: ./.github/workflows/dev-pr-auto-merge.yml
-    with:
-      buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ github.sha }}
-      target-branch: dev/v3/v3.0
-      expected-pr-number: ${{ inputs.expected-pr-number }}
-      expected-head-sha: ${{ inputs.expected-head-sha }}
-      delivery-warrant-mode: required
-      assignment-root: ${{ fromJSON(inputs.native-roots-json).assignmentRoot }}
-      initiative-root: ${{ fromJSON(inputs.native-roots-json).initiativeRoot }}
-      source-identity-root: ${{ inputs.source-identity-root }}
-      source-patch-root: ${{ inputs.source-patch-root }}
-      plan-root: ${{ inputs.plan-root }}
-      closure-root: ${{ inputs.closure-root }}
-      dependency-root: ${{ inputs.dependency-root }}
-      toolchain-root: ${{ inputs.toolchain-root }}
-      affected-paths-json: ${{ inputs.affected-paths-json }}
-      delivery-class: native-proof-required
-      delivery-priority: ordinary
-      required-status-checks: check
-      ready-label: ready
-      block-labels: blocked,do-not-merge,work-in-progress
-      landing-mode: queue
-      dry-run: false
