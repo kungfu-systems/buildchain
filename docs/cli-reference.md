@@ -223,6 +223,160 @@ buildchain dev
 buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]
 ```
 
+### `buildchain dev pr-admit`
+
+- Help: `buildchain dev pr-admit --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--expected-head`, `--json`, `--output`, `--pull-request`, `--repository`
+- Syntax:
+
+```text
+buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev proof classify`
+
+- Help: `buildchain dev proof classify --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof integration`
+
+- Help: `buildchain dev proof integration --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof replay`
+
+- Help: `buildchain dev proof replay --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof source`
+
+- Help: `buildchain dev proof source --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof verify-integration`
+
+- Help: `buildchain dev proof verify-integration --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof verify-source`
+
+- Help: `buildchain dev proof verify-source --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev warrant cancel-queued`
+
+- Help: `buildchain dev warrant cancel-queued --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant close`
+
+- Help: `buildchain dev warrant close --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant heartbeat`
+
+- Help: `buildchain dev warrant heartbeat --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant observe`
+
+- Help: `buildchain dev warrant observe --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant recover`
+
+- Help: `buildchain dev warrant recover --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant select`
+
+- Help: `buildchain dev warrant select --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant submit`
+
+- Help: `buildchain dev warrant submit --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
 ## `diagnostics`
 
 ### `buildchain diagnostics`

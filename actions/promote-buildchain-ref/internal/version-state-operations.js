@@ -336,7 +336,7 @@ function createVersionStateOperations(context) {
         version,
         changedFiles: [],
         allowedPaths: versionStateAllowedPaths,
-        env: strategyEnv,
+        env: strategyEnv, runLifecycleVerify: !dryRun,
       });
       if (verifiedChangedFiles.length > 0) {
         console.log(

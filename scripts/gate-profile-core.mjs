@@ -67,6 +67,25 @@ function uniqueStrings(value, label) {
   return normalized;
 }
 
+export function normalizeGateEnvironment(value = {}, label = "environment") {
+  const environment = assertObject(value, label);
+  return Object.fromEntries(
+    Object.entries(environment)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([name, entry]) => {
+        if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+          throw new Error(`${label} has invalid environment name: ${name}`);
+        }
+        if (!["string", "number", "boolean"].includes(typeof entry)) {
+          throw new Error(
+            `${label}.${name} must be a string, number, or boolean`,
+          );
+        }
+        return [name, String(entry)];
+      }),
+  );
+}
+
 function inferShifuPlatform(platform) {
   const explicit = String(platform.platform || "")
     .trim()
@@ -121,6 +140,10 @@ export function normalizeGatePlatform(platform, index = 0) {
       platform.capabilities || ["node"],
       `platforms[${index}].capabilities`,
     ).sort(),
+    environment: normalizeGateEnvironment(
+      platform.environment || {},
+      `platforms[${index}].environment`,
+    ),
     required: platform.required !== false,
   };
 }
@@ -259,6 +282,7 @@ export function createGateExecutionMatrix({
       platform: platform.platform,
       runner: platform.runner,
       capabilities: platform.capabilities,
+      environment: platform.environment,
       required: platform.required,
       profile,
       includeAdvisory: Boolean(includeAdvisory),

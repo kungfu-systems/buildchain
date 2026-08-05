@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 112,
-    "workflowCount": 60,
+    "workflowCount": 63,
     "actionCount": 6,
-    "sitePageCount": 64,
-    "docCommandRefCount": 830,
+    "sitePageCount": 65,
+    "docCommandRefCount": 881,
     "failureCount": 0
   },
   "enumerated": {
@@ -65,7 +65,7 @@
       {
         "id": "dev",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>"
+        "usage": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>"
       },
       {
         "id": "diagnostics",
@@ -727,9 +727,10 @@
           "shifu-cache-profile-ref",
           "untrusted-policy",
           "verify-command",
+          "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 85,
+        "inputCount": 86,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -814,12 +815,13 @@
           "materialize",
           "materialize-base-ref",
           "media-profile",
+          "render-failure-advisory",
           "render-media",
           "renderer-image",
           "scenario-path",
           "source-ref"
         ],
-        "inputCount": 11,
+        "inputCount": 12,
         "secrets": [
           "DEMO_UPDATE_TOKEN"
         ],
@@ -830,9 +832,10 @@
           "evidence-artifact-digest",
           "evidence-artifact-name",
           "publication-pr-url",
+          "render-result",
           "source-sha"
         ],
-        "outputCount": 6
+        "outputCount": 7
       },
       {
         "id": ".gate-profile",
@@ -903,6 +906,7 @@
           "auto-no-gate",
           "buildchain-ref",
           "buildchain-repository",
+          "consumer-gate-command",
           "consumer-predicate-digest",
           "consumer-predicate-id",
           "consumer-qualification-required",
@@ -930,7 +934,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 33,
+        "inputCount": 34,
         "secrets": [
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
@@ -992,6 +996,7 @@
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
+          "publication-gate-command",
           "publication-package-name",
           "publication-product",
           "publication-publisher-workflow-path",
@@ -1015,6 +1020,7 @@
           "release-candidate-family-evidence-required",
           "release-candidate-family-evidence-root",
           "release-candidate-family-initiative-id",
+          "release-candidate-wait-seconds",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
@@ -1045,7 +1051,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 95,
+        "inputCount": 97,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1592,9 +1598,10 @@
           "shifu-cache-profile-ref",
           "untrusted-policy",
           "verify-command",
+          "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 88,
+        "inputCount": 89,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1660,6 +1667,17 @@
       {
         "id": "buildchain-alpha-self-dogfood",
         "path": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "buildchain-dev-delivery",
+        "path": ".github/workflows/buildchain-dev-delivery.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -1849,6 +1867,67 @@
         "outputCount": 10
       },
       {
+        "id": "dev-delivery-warrant-cancel",
+        "path": ".github/workflows/dev-delivery-warrant-cancel.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "event-action",
+          "expected-candidate-id",
+          "expected-old-state-root",
+          "expected-pr-number",
+          "expected-source-head-sha",
+          "observed-source-head-sha",
+          "outcome",
+          "reason",
+          "target-branch",
+          "terminal-evidence-root"
+        ],
+        "inputCount": 12,
+        "secrets": [
+          "github-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "cancellation-action",
+          "cancellation-receipt-root",
+          "final-state-root"
+        ],
+        "outputCount": 3
+      },
+      {
+        "id": "dev-delivery-warrant-close",
+        "path": ".github/workflows/dev-delivery-warrant-close.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "current-base-sha",
+          "expected-head-sha",
+          "expected-pr-number",
+          "merge-group-head-sha",
+          "merge-group-tree-sha",
+          "outcome",
+          "reason",
+          "replay-tree-sha",
+          "required-context-roots-json",
+          "target-branch",
+          "terminal-evidence-root"
+        ],
+        "inputCount": 13,
+        "secrets": [
+          "github-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "close-receipt-root",
+          "final-state-root",
+          "integration-proof-root"
+        ],
+        "outputCount": 3
+      },
+      {
         "id": "dev-merge-queue-governance",
         "path": ".github/workflows/dev-merge-queue-governance.yml",
         "reusable": false,
@@ -1864,35 +1943,60 @@
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
         "inputs": [
+          "affected-paths-json",
           "allowed-head-prefixes",
+          "assignment-root",
           "block-labels",
           "buildchain-ref",
           "buildchain-repository",
+          "closure-root",
+          "delivery-class",
+          "delivery-priority",
+          "delivery-warrant-mode",
+          "dependency-root",
+          "diagnostic-context",
           "dry-run",
+          "expected-head-sha",
+          "expected-pr-number",
+          "initiative-root",
           "landing-mode",
           "max-merges",
           "merge-method",
+          "plan-root",
+          "project-cut-proof-json",
           "queue-admission-context",
           "ready-label",
           "require-approval",
           "required-status-checks",
           "same-repository-only",
-          "target-branch"
+          "shard-evidence-roots-json",
+          "source-identity-root",
+          "source-patch-root",
+          "target-branch",
+          "toolchain-root",
+          "warrant-lease-seconds"
         ],
-        "inputCount": 14,
+        "inputCount": 32,
         "secrets": [
           "github-token"
         ],
         "secretCount": 1,
         "outputs": [
           "action-count",
+          "admission-receipt-root",
+          "admission-state",
           "enqueued-count",
           "evaluated-count",
           "final-base-sha",
           "merged-count",
-          "skipped-count"
+          "project-cut-proof-root",
+          "skipped-count",
+          "source-proof-root",
+          "warrant-receipt-root",
+          "warrant-state-commit",
+          "warrant-state-root"
         ],
-        "outputCount": 6
+        "outputCount": 13
       },
       {
         "id": "dev-qualification-patrol",
@@ -2291,6 +2395,7 @@
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
+          "publication-gate-command",
           "publication-package-name",
           "publication-product",
           "publication-publisher-workflow-path",
@@ -2314,6 +2419,7 @@
           "release-candidate-family-evidence-required",
           "release-candidate-family-evidence-root",
           "release-candidate-family-initiative-id",
+          "release-candidate-wait-seconds",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
@@ -2344,7 +2450,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 87,
+        "inputCount": 89,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2770,10 +2876,11 @@
           "required",
           "sample-process-tree",
           "stage",
+          "substage-evidence-path",
           "summary-path",
           "timeout-minutes"
         ],
-        "inputCount": 21
+        "inputCount": 22
       },
       {
         "id": "validate-config",
@@ -2901,6 +3008,10 @@
       },
       {
         "id": "manual:dev-alpha-candidate-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:dev-delivery-warrant",
         "category": "manual"
       },
       {
@@ -3583,6 +3694,76 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev pr-admit --repository"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev"
       },
       {
@@ -3602,6 +3783,146 @@
       },
       {
         "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev pr-admit"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev pr-admit --help"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof classify"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof classify"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof integration"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof integration"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof replay"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof replay"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof source"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof source"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof verify-integration"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof verify-integration"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof verify-source"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev proof verify-source"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant cancel-queued"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant cancel-queued"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant close"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant close"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant heartbeat"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant heartbeat"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant observe"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant observe"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant recover"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant recover"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant select"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant select"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant submit"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev warrant submit"
+      },
+      {
+        "id": "dev",
         "path": "docs/cli.md",
         "command": "buildchain dev merge-queue"
       },
@@ -3617,8 +3938,53 @@
       },
       {
         "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant submit"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant select"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant cancel-queued"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev proof source"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev proof classify"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev proof replay"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev proof replay-proof"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev proof integration"
+      },
+      {
+        "id": "dev",
         "path": "docs/release-governance.md",
         "command": "buildchain dev merge-queue"
+      },
+      {
+        "id": "dev",
+        "path": "docs/release-governance.md",
+        "command": "buildchain dev pr-admit"
       },
       {
         "id": "diagnostics-summary",
@@ -7201,9 +7567,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "2012c52df8cd1c32f5cf2afbee6fa77e69818616d41ff984dad394af0523f266",
-    "workflowRegistryDigest": "a367c2b909763495c24c10e97a00f5ddd99b811e820d9500fbc0bad9f5be1e0e",
-    "pageRegistryDigest": "53eb6d70053abb17461aae81c323dbedab6d86a7f8edc3bb0f9b13b775694fd5"
+    "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
+    "workflowRegistryDigest": "2428307ff1f281124af8f2af4af51c9137f9e12b735cca0460ccff1123c007b1",
+    "pageRegistryDigest": "b4fba27597b91c0c372f33d6eccc4659c463b0e170f536727121869f022edb02"
   },
   "comparison": {
     "missingCliRegistry": [],

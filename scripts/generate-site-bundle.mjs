@@ -56,7 +56,6 @@ const requireFromHere = createRequire(import.meta.url);
 function readText(rel) {
   return fs.readFileSync(path.join(root, rel), "utf8");
 }
-
 function readJson(rel) {
   return JSON.parse(readText(rel));
 }
@@ -518,7 +517,7 @@ function workflowCapabilityGroup(entry) {
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
   if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
-  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge")) return capabilityGroup("governance-versioning");
+  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge") || entry.id.includes("dev-delivery-warrant") || entry.id.includes("buildchain-dev-delivery")) return capabilityGroup("governance-versioning");
   if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
   return capabilityGroup("api-cli-reference");
 }
@@ -778,6 +777,7 @@ function buildSiteBundle() {
         ["paper-release", "reusable-build"],
         ["release-propagation", "release-propagation"],
         ["dev-pr-auto-merge", "dev-governance"],
+        ["buildchain-dev-delivery", "dev-governance"],
         ["github-governance-audit", "dev-governance"],
         ["binary-distribution", "release-passport"],
         ["github-artifact-attestation", "release-passport"],

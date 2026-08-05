@@ -106,10 +106,16 @@ test("Windows JIT operator emits one deterministic disabled plan", () => {
     assert.equal(plan.safety.workflowEnabledDuringPrepare, false);
     assert.equal(plan.safety.dispatchDuringPrepare, false);
     assert.equal(plan.safety.paidCapacityDuringPrepare, false);
-    assert.deepEqual(plan.cost.providerTag, {
+    assert.deepEqual(plan.cost.dimensionFilter, {
+      usageType: "BoxUsage:c7i.4xlarge",
+      operation: "RunInstances:0002",
+      region: "us-east-1",
+    });
+    assert.deepEqual(plan.cost.resourceOwnershipTag, {
       key: "kungfu:provider",
       value: "windows-ec2-jit",
     });
+    assert.equal(plan.safety.budgetDimensionVisibilityRequired, true);
     assert.match(plan.aws.campaignTemplate.digest, /^sha256:[0-9a-f]{64}$/);
     assert.match(plan.aws.budgetTemplate.digest, /^sha256:[0-9a-f]{64}$/);
     assert.match(plan.digest, /^sha256:[0-9a-f]{64}$/);
@@ -188,7 +194,7 @@ process.stdout.write('{"id":322620360,"state":"disabled_manually"}');
   }
 });
 
-test("Windows JIT prepare reads fresh cost with exact provider-tag and usage filters", () => {
+test("Windows JIT prepare reads fresh cost with exact account-native Windows dimensions", () => {
   const fakeBin = fs.mkdtempSync(
     path.join(os.tmpdir(), "windows-jit-cost-filter-"),
   );
@@ -206,9 +212,9 @@ if (joined.includes("sts get-caller-identity")) process.stdout.write('{"Account"
 else if (joined.includes("cloudformation describe-stacks") && joined.includes("win-operator01")) { process.stderr.write("Stack does not exist"); process.exit(255); }
 else if (joined.includes("cloudformation describe-stacks") && args.includes("--query")) process.stdout.write("arn:aws:sns:us-east-1:123456789012:budget-topic");
 else if (joined.includes("cloudformation describe-stacks")) process.stdout.write('{"Stacks":[{"StackName":"budget-guard"}]}');
-else if (joined.includes("budgets describe-budget")) process.stdout.write('{"Budget":{"BudgetName":"kungfu-buildchain-windows-jit-actual-spend","BudgetLimit":{"Amount":"110","Unit":"USD"},"BudgetType":"COST","CostFilters":{"TagKeyValue":["user:kungfu:provider$windows-ec2-jit"]}}}');
-else if (joined.includes("ce get-tags")) process.stdout.write('{"Tags":["windows-ec2-jit"]}');
-else if (joined.includes("describe-notifications-for-budget")) process.stdout.write('{"Notifications":[{"NotificationType":"ACTUAL","ThresholdType":"PERCENTAGE","Threshold":80},{"NotificationType":"ACTUAL","ThresholdType":"PERCENTAGE","Threshold":95}]}');
+else if (joined.includes("budgets describe-budget")) process.stdout.write('{"Budget":{"BudgetName":"kungfu-buildchain-windows-jit-actual-spend","BudgetLimit":{"Amount":"110","Unit":"USD"},"BudgetType":"COST","Metrics":["UnblendedCost"],"FilterExpression":{"And":[{"Dimensions":{"Key":"USAGE_TYPE","Values":["BoxUsage:c7i.4xlarge"],"MatchOptions":["EQUALS"]}},{"Dimensions":{"Key":"OPERATION","Values":["RunInstances:0002"],"MatchOptions":["EQUALS"]}},{"Dimensions":{"Key":"REGION","Values":["us-east-1"],"MatchOptions":["EQUALS"]}}]}}}');
+else if (joined.includes("ce get-dimension-values")) process.stdout.write(JSON.stringify({DimensionValues:[{Value:args[args.indexOf("--search-string")+1]}]}));
+else if (joined.includes("describe-notifications-for-budget")) process.stdout.write('{"Notifications":[{"NotificationType":"ACTUAL","Threshold":80},{"NotificationType":"ACTUAL","Threshold":95}]}');
 else if (joined.includes("describe-subscribers-for-notification")) process.stdout.write('{"Subscribers":[{"SubscriptionType":"SNS","Address":"arn:aws:sns:us-east-1:123456789012:budget-topic"}]}');
 else if (joined.includes("ssm get-parameter")) { process.stderr.write("ParameterNotFound"); process.exit(255); }
 else if (joined.includes("ec2 describe-instances")) process.stdout.write('{"Reservations":[]}');
@@ -258,9 +264,16 @@ process.stdout.write(args.includes("actions/runners") ? '{"runners":[]}' : '{"id
           },
         },
         {
-          Tags: {
-            Key: "kungfu:provider",
-            Values: ["windows-ec2-jit"],
+          Dimensions: {
+            Key: "OPERATION",
+            Values: ["RunInstances:0002"],
+            MatchOptions: ["EQUALS"],
+          },
+        },
+        {
+          Dimensions: {
+            Key: "REGION",
+            Values: ["us-east-1"],
             MatchOptions: ["EQUALS"],
           },
         },
@@ -272,6 +285,53 @@ process.stdout.write(args.includes("actions/runners") ? '{"runners":[]}' : '{"id
       ),
       false,
     );
+  } finally {
+    fs.rmSync(fakeBin, { recursive: true, force: true });
+  }
+});
+
+test("Windows JIT install fails closed when an account-native billing dimension is absent", () => {
+  const fakeBin = fs.mkdtempSync(
+    path.join(os.tmpdir(), "windows-jit-dimension-gate-"),
+  );
+  const log = path.join(fakeBin, "commands.jsonl");
+  try {
+    executable(
+      fakeBin,
+      "aws",
+      `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify(args) + "\\n");
+const joined = args.join(" ");
+if (joined.includes("sts get-caller-identity")) process.stdout.write('{"Account":"123456789012"}');
+else if (joined.includes("ce get-dimension-values")) {
+  const value = args[args.indexOf("--search-string") + 1];
+  process.stdout.write(JSON.stringify({DimensionValues:value === "RunInstances:0002" ? [] : [{Value:value}]}));
+} else process.exit(91);
+`,
+    );
+    executable(
+      fakeBin,
+      "gh",
+      "#!/bin/sh\necho '{\"id\":322620360,\"state\":\"disabled_manually\"}'\n",
+    );
+    const env = {
+      ...process.env,
+      PATH: `${fakeBin}:${process.env.PATH}`,
+      FAKE_COMMAND_LOG: log,
+    };
+    const result = operator(
+      "install-budget",
+      exactConfirmations(env, { budget: true }),
+      env,
+    );
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /account-native Windows billing dimensions are not visible/,
+    );
+    assert.doesNotMatch(fs.readFileSync(log, "utf8"), /cloudformation.*deploy/);
   } finally {
     fs.rmSync(fakeBin, { recursive: true, force: true });
   }

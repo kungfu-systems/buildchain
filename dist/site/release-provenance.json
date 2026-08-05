@@ -25,6 +25,7 @@
       "./cache-evidence": "./packages/core/cache-evidence.js",
       "./controller-evidence": "./packages/core/controller-evidence.js",
       "./diagnostics": "./packages/core/diagnostics.js",
+      "./dev-delivery-warrant": "./packages/core/dev-delivery-warrant.js",
       "./homebrew": "./packages/core/homebrew.js",
       "./issue-reporting": "./packages/core/issue-reporting.js",
       "./kfd": "./packages/core/kfd.js",

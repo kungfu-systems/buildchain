@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
-  Provider-wide, tag-filtered AWS Budget guard for the zero-warm-capacity
+  Provider-wide, account-native AWS Budget guard for the zero-warm-capacity
   Windows EC2 JIT runner plane.
 
 Parameters:
@@ -13,16 +13,6 @@ Parameters:
     Default: 110
     MinValue: 1
     MaxValue: 110
-  ProviderTagKey:
-    Type: String
-    Default: kungfu:provider
-    AllowedValues:
-      - kungfu:provider
-  ProviderTagValue:
-    Type: String
-    Default: windows-ec2-jit
-    AllowedValues:
-      - windows-ec2-jit
   KillParameterName:
     Type: String
     Default: /kungfu/burst/windows/provider-budget-killed
@@ -146,7 +136,7 @@ Resources:
                   Overwrite=True,
                   Value=json.dumps({
                       "state": "KILLED",
-                      "reason": "aws-tag-filtered-budget-notification",
+                      "reason": "aws-dimension-filtered-budget-notification",
                       "observedAt": now,
                   }, separators=(",", ":")),
               )
@@ -211,9 +201,28 @@ Resources:
           Unit: USD
         BudgetType: COST
         TimeUnit: MONTHLY
-        CostFilters:
-          TagKeyValue:
-            - !Sub "user:${ProviderTagKey}$${ProviderTagValue}"
+        Metrics:
+          - UnblendedCost
+        FilterExpression:
+          And:
+            - Dimensions:
+                Key: USAGE_TYPE
+                Values:
+                  - BoxUsage:c7i.4xlarge
+                MatchOptions:
+                  - EQUALS
+            - Dimensions:
+                Key: OPERATION
+                Values:
+                  - RunInstances:0002
+                MatchOptions:
+                  - EQUALS
+            - Dimensions:
+                Key: REGION
+                Values:
+                  - us-east-1
+                MatchOptions:
+                  - EQUALS
       NotificationsWithSubscribers:
         - Notification:
             ComparisonOperator: GREATER_THAN
@@ -235,8 +244,8 @@ Resources:
 Outputs:
   BudgetName:
     Value: !Ref BudgetName
-  BudgetTagFilter:
-    Value: !Sub "user:${ProviderTagKey}$${ProviderTagValue}"
+  BudgetDimensionFilter:
+    Value: USAGE_TYPE=BoxUsage:c7i.4xlarge;OPERATION=RunInstances:0002;REGION=us-east-1
   KillSwitchTopic:
     Value: !Ref KillSwitchTopic
   GuardFunction:

@@ -7,10 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import {
-  validateRenditionSet,
-  validateTerminalCapture,
-} from "./auditable-demo-renditions.mjs";
+import { readRendererManifest, validateRendererCompositionInputs, validateRenditionSet, validateTerminalCapture } from "./auditable-demo-renditions.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
@@ -130,7 +127,7 @@ function writeChecksums(root, checksumName = "checksums.sha256") {
   return sha256(Buffer.from(bytes));
 }
 
-function verifyChecksums(root, checksumName = "checksums.sha256") {
+function verifyChecksums(root, checksumName = "checksums.sha256", options = {}) {
   const bytes = readRegular(path.join(root, checksumName), checksumName);
   const text = decodeUtf8(bytes, checksumName);
   invariant(text.endsWith("\n"), `${checksumName} must end with a newline`);
@@ -143,8 +140,11 @@ function verifyChecksums(root, checksumName = "checksums.sha256") {
     const target = resolveInside(root, member, "checksum member");
     invariant(!declared.has(member), `duplicate checksum member: ${member}`);
     declared.add(member);
+    const maximumBytes = options.allowLongFormRendererManifest && member === "manifest.json"
+      ? 32 * 1024 * 1024
+      : MAX_BUNDLE_MEMBER_BYTES;
     invariant(
-      sha256(readRegular(target, member, MAX_BUNDLE_MEMBER_BYTES)).slice(7) === match[1],
+      sha256(readRegular(target, member, maximumBytes)).slice(7) === match[1],
       `checksum mismatch: ${member}`,
     );
   }
@@ -190,7 +190,7 @@ function validateScene(value) {
   exactKeys(
     value,
     ["schema", "id", "width", "height", "fps", "durationMs", "title"],
-    ["durationClass", "commandLabel", "background", "accent"],
+    ["durationClass", "compositionMode", "commandLabel", "background", "accent"],
     "scene",
   );
   invariant(value.schema === "build-images.demo-scene/v1", "unsupported scene schema");
@@ -199,6 +199,11 @@ function validateScene(value) {
   integer(value.height, 360, 1080, "scene.height");
   const durationClass = value.durationClass ?? "standard";
   invariant(durationClass === "standard" || durationClass === "long-form", "scene.durationClass is invalid");
+  const compositionMode = value.compositionMode ?? "presentation-framed";
+  invariant(
+    compositionMode === "presentation-framed" || compositionMode === "terminal-fill",
+    "scene.compositionMode is invalid",
+  );
   const maximumDurationMs = durationClass === "long-form" ? LONG_FORM_MAX_DURATION_MS : STANDARD_MAX_DURATION_MS;
   const maximumFps = durationClass === "long-form" ? LONG_FORM_MAX_FPS : 30;
   integer(value.fps, 1, maximumFps, "scene.fps");
@@ -216,6 +221,7 @@ function validateScene(value) {
     height: value.height,
     fps: value.fps,
     ...(value.durationClass === undefined ? {} : { durationClass }),
+    compositionMode,
     durationMs: value.durationMs,
     title: value.title,
     commandLabel: value.commandLabel ?? "",
@@ -674,8 +680,7 @@ function inspectRendererMedia(values) {
   const rendererImage = required(values, "--renderer-image");
   invariant(IMAGE_PATTERN.test(rendererImage), "renderer image must use an immutable sha256 coordinate");
   invariant(!fs.existsSync(output), "media inspection output must not already exist");
-  const manifest = readJson(path.join(renderOutput, "manifest.json"), "renderer manifest");
-  invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
+  const { manifest } = readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS);
   invariant(manifest.renderer?.image === rendererImage, "renderer manifest image coordinate mismatch");
   const members = Object.keys(manifest.outputs || {})
     .filter((name) => name !== "media-probe.json")
@@ -739,7 +744,7 @@ function qualifyMediaFixture(values) {
         sha256(readRegular(path.join(renderOutput, name), `fixture ${name}`)),
       ]),
     ),
-    rendererManifestRoot: sha256(readRegular(path.join(renderOutput, "manifest.json"), "renderer manifest")),
+    rendererManifestRoot: sha256(readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS).bytes),
     qualification: verified.qualification,
   };
   writeJson(output, { ...body, evidenceRoot: semanticRoot(body) });
@@ -979,9 +984,8 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     "public-projection.json",
     "scene.json",
   ];
-  verifyChecksums(renderOutput);
-  const manifest = readJson(path.join(renderOutput, "manifest.json"), "renderer manifest");
-  invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
+  verifyChecksums(renderOutput, "checksums.sha256", { allowLongFormRendererManifest: true });
+  const { manifest } = readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS);
   invariant(manifest.renderer?.image === expectedImage, "renderer manifest image coordinate mismatch");
   const outputNames = Object.keys(manifest.outputs || {}).sort();
   invariant(outputNames.includes("media-probe.json"), "renderer manifest must declare media-probe.json");
@@ -999,21 +1003,11 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     const observed = manifest.inputs?.[key]?.root;
     invariant(observed === sha256(readRegular(filePath, `${key} input`)), `renderer ${key} input root mismatch`);
   }
-  if (expectedInputs.renditionSet) {
-    invariant(
-      manifest.derivation?.policy === "independent-native-frame-sets/v1",
-      "renderer did not use independent native frame sets",
-    );
-    invariant(
-      Array.isArray(manifest.inputs?.renditions)
-        && manifest.inputs.renditions.length === 2
-        && manifest.inputs.renditions[0]?.role === "primary"
-        && manifest.inputs.renditions[1]?.role === "responsive"
-        && manifest.inputs.renditions[0]?.terminalCapture?.root
-          !== manifest.inputs.renditions[1]?.terminalCapture?.root,
-      "renderer native rendition inputs are not independently bound",
-    );
-  }
+  const composition = validateRendererCompositionInputs(
+    manifest,
+    expectedInputs,
+    RENDITION_VALIDATION_HELPERS,
+  );
   const probe = readJson(path.join(renderOutput, "media-probe.json"), "media probe");
   invariant(probe.schema === "build-images.demo-media-probe/v1" && probe.passed === true, "renderer media probe failed");
   const qualification = qualifyRendererOutput(
@@ -1024,7 +1018,7 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     options.inspectMedia || inspectMediaFile,
     options.inspectionRoot || "",
   );
-  return { manifest, probe, qualification };
+  return { manifest, probe, qualification, composition };
 }
 
 function renditionInputRoots(root, renditions) {
@@ -1254,7 +1248,7 @@ function finalizeMedia(values) {
     sourceSha,
     qualifiedGateRoot: gateRoot,
     rendererImage,
-    rendererManifestRoot: sha256(readRegular(path.join(renderOutput, "manifest.json"), "renderer manifest")),
+    rendererManifestRoot: sha256(readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS).bytes),
   };
   const mediaReceipt = selectedProfile.mode === "archive"
     ? { schema: "buildchain.auditable-demo-media/v1", ...commonReceipt }

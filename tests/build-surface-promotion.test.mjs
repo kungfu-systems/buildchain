@@ -729,6 +729,13 @@ test("runner presets resolve to explicit matrices", () => {
   assert.equal(hosted.nativePlatformCount, 3);
   assert.equal(hosted.containerPlatformCount, 0);
   assert.equal(hosted.platforms[0].id, "linux-x64");
+  assert.equal(hosted.githubHostedPlatformCount, 3);
+  assert.equal(hosted.relayPlatformCount, 0);
+  assert.deepEqual(JSON.parse(hosted.githubHostedPlatformIdsJson), [
+    "linux-x64",
+    "macos",
+    "windows-x64",
+  ]);
 
   const kungfu = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-self-hosted" });
   assert.equal(kungfu.runnerPreset, "kungfu-v4-self-hosted");
@@ -739,6 +746,8 @@ test("runner presets resolve to explicit matrices", () => {
     ["linux-x64", "macos-arm64", "windows-x64"],
   );
   assert.match(kungfu.platforms[0].runner, /kungfu-build-v4-linux-x64/);
+  assert.equal(kungfu.githubHostedPlatformCount, 0);
+  assert.equal(kungfu.relayPlatformCount, 3);
 
   const kungfuNative = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-native" });
   assert.equal(kungfuNative.runnerPreset, "kungfu-v4-native");
@@ -749,6 +758,9 @@ test("runner presets resolve to explicit matrices", () => {
     ["linux-x64", "linux-arm64", "macos-arm64", "windows-x64"],
   );
   assert.equal(kungfuNative.platforms[1].runner, '["ubuntu-24.04-arm"]');
+  assert.equal(kungfuNative.platforms[1].githubHosted, true);
+  assert.equal(kungfuNative.githubHostedPlatformCount, 1);
+  assert.equal(kungfuNative.relayPlatformCount, 3);
 
   const codebuild = resolveRunnerMatrix({
     runnerPreset: "aws-us-codebuild-linux",
@@ -782,10 +794,40 @@ test("runner presets resolve to explicit matrices", () => {
 
   const custom = resolveRunnerMatrix({
     platformsJson:
-      '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',
+      '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]","environment":{"CXX":"g++-14","CC":"gcc-14","JOBS":4}}]',
   });
   assert.equal(custom.runnerPreset, "custom");
   assert.equal(custom.platformCount, 1);
+  assert.deepEqual(custom.platforms[0].environment, {
+    CXX: "g++-14",
+    CC: "gcc-14",
+    JOBS: 4,
+  });
+  assert.deepEqual(JSON.parse(custom.platformsJson)[0].environment, {
+    CXX: "g++-14",
+    CC: "gcc-14",
+    JOBS: 4,
+  });
+  assert.equal(custom.platforms[0].githubHosted, false);
+
+  const customHosted = resolveRunnerMatrix({
+    platformsJson:
+      '[{"id":"hosted","name":"Hosted","runner":"[\\"ubuntu-24.04\\"]"},{"id":"large","name":"Large hosted","runner":"[\\"custom-large-runner\\"]","githubHosted":true}]',
+  });
+  assert.equal(customHosted.githubHostedPlatformCount, 2);
+  assert.equal(customHosted.relayPlatformCount, 0);
+  assert.deepEqual(JSON.parse(customHosted.githubHostedPlatformIdsJson), [
+    "hosted",
+    "large",
+  ]);
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        platformsJson:
+          '[{"id":"invalid","name":"Invalid","runner":"[\\"ubuntu-24.04\\"]","githubHosted":"true"}]',
+      }),
+    /githubHosted must be a boolean/,
+  );
 });
 
 test("AWS CodeBuild runner preset fails closed without an exact project", () => {

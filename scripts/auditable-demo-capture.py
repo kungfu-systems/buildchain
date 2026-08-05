@@ -27,6 +27,7 @@ SHA = re.compile(r"^[0-9a-f]{40}$")
 REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 ARTIFACT_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$")
 SAFE_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+SAFE_MARKER = re.compile(r"^[a-z0-9][a-z0-9._:-]{0,79}$")
 NON_AUTHORITIES = [
     "first-party-identity", "system-identity", "kfd-compliance",
     "product-system-metadata", "package-metadata", "registry-history",
@@ -207,6 +208,8 @@ def assert_files(workspace: Path, assertions: list[dict[str, Any]]) -> list[dict
 
 def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
     require(value.get("schema") == "buildchain.declarative-binary-demo/v1", "scenario schema mismatch")
+    require(value.get("compositionMode", "presentation-framed") in ("presentation-framed", "terminal-fill"),
+            "scenario composition mode is invalid")
     require(value.get("renditions") == RENDITIONS, "scenario must declare the two native rendition profiles exactly")
     product = value.get("product") or {}
     require(SAFE_ID.fullmatch(str(product.get("id") or "")) is not None, "product id is invalid")
@@ -221,6 +224,20 @@ def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
     require(isinstance(execution.get("totalTimeoutSeconds"), int) and 1 <= execution["totalTimeoutSeconds"] <= maximum_seconds,
             "scenario total timeout is invalid")
     require(isinstance(execution.get("environment"), dict), "scenario environment must be an object")
+    playback = value.get("playback")
+    if playback is not None:
+        require(isinstance(playback, dict) and set(playback) == {
+            "schema", "mode", "activeDurationMs", "finalHoldMs"
+        }, "scenario playback shape is invalid")
+        require(playback.get("schema") == "buildchain.declarative-demo-playback/v1",
+                "scenario playback schema is unsupported")
+        require(playback.get("mode") == "deterministic-readable", "scenario playback mode is invalid")
+        require(isinstance(playback.get("activeDurationMs"), int) and playback["activeDurationMs"] >= 1000,
+                "scenario playback active duration is invalid")
+        require(isinstance(playback.get("finalHoldMs"), int) and 250 <= playback["finalHoldMs"] <= 5000,
+                "scenario playback final hold is invalid")
+        require(playback["activeDurationMs"] + playback["finalHoldMs"] <= maximum_seconds * 1000,
+                "scenario playback exceeds its declared duration class")
     transport_smoke = value.get("transportSmoke")
     if transport_smoke is not None:
         require(isinstance(transport_smoke, dict) and set(transport_smoke) == {
@@ -261,6 +278,50 @@ def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
                     f"demo {demo['id']} step {step['id']} expected exits are invalid")
             require(isinstance(step.get("stdoutIncludes"), list) and isinstance(step.get("fileAssertions"), list),
                     f"demo {demo['id']} step {step['id']} assertions are invalid")
+    presentation = value.get("presentation")
+    if presentation is not None:
+        require(isinstance(presentation, dict) and set(presentation) == {"schema", "proofs", "materialization"},
+                "scenario presentation shape is invalid")
+        require(presentation.get("schema") == "buildchain.declarative-demo-presentation/v1",
+                "scenario presentation schema is unsupported")
+        proofs = presentation.get("proofs")
+        require(isinstance(proofs, list) and len(proofs) == len(demos),
+                "scenario presentation must bind every demo exactly once")
+        labels: set[str] = set()
+        for index, proof in enumerate(proofs):
+            required = {"demoId", "label", "question", "summary"}
+            require(isinstance(proof, dict) and required <= set(proof) <= required | {"transitionAfter"},
+                    f"scenario presentation proof {index} shape is invalid")
+            require(proof.get("demoId") == demos[index].get("id"),
+                    f"scenario presentation proof {index} must preserve demo order")
+            label = proof.get("label")
+            require(isinstance(label, str) and 1 <= len(label) <= 80 and label not in labels,
+                    f"scenario presentation proof {index} label is invalid or repeated")
+            labels.add(label)
+            question = proof.get("question")
+            require(isinstance(question, str) and 1 <= len(question) <= 120 and question == demos[index].get("title"),
+                    f"scenario presentation proof {index} question must equal the demo title")
+            require(isinstance(proof.get("summary"), str) and 1 <= len(proof["summary"]) <= 500,
+                    f"scenario presentation proof {index} summary is invalid")
+            transition = proof.get("transitionAfter")
+            require(transition is None or isinstance(transition, str) and 1 <= len(transition) <= 500,
+                    f"scenario presentation proof {index} transition is invalid")
+        materialization = presentation.get("materialization")
+        require(isinstance(materialization, dict) and set(materialization) == {
+            "readmeMode", "technicalSpecPath", "technicalSpecTitle", "technicalMarker"
+        }, "scenario presentation materialization shape is invalid")
+        require(materialization.get("readmeMode") in ("full", "media-only"),
+                "scenario presentation README mode is invalid")
+        technical_path = inside(Path("/repository"), materialization.get("technicalSpecPath"),
+                                "scenario presentation technical specification path")
+        readme_path = inside(Path("/repository"), (value.get("publication") or {}).get("readmePath"),
+                             "scenario publication README path")
+        require(technical_path != readme_path, "scenario presentation technical specification must be separate from README")
+        title = materialization.get("technicalSpecTitle")
+        require(isinstance(title, str) and 1 <= len(title) <= 120,
+                "scenario presentation technical specification title is invalid")
+        require(SAFE_MARKER.fullmatch(str(materialization.get("technicalMarker") or "")) is not None,
+                "scenario presentation technical marker is invalid")
     authority = value.get("authority") or {}
     require(authority.get("grants") == [] and authority.get("nonAuthorities") == NON_AUTHORITIES,
             "scenario authority boundary is invalid")
@@ -371,8 +432,36 @@ def capture_rendition(binary: Path, demo: dict[str, Any], rendition: dict[str, A
                        "elapsedMs": elapsed, "outputRoot": root_bytes(public_bytes),
                        "outputEncoding": "utf-8-sanitized-terminal/v1", "fileAssertions": file_evidence}
             summaries.append({**summary, "root": root_json(summary)})
+    observed_last_event_ms = events[-1]["atMs"]
+    playback = scenario.get("playback")
+    playback_evidence = None
+    if playback is not None:
+        last_index = len(events) - 1
+        active_duration_ms = playback["activeDurationMs"]
+        events = [
+            {
+                **event,
+                "atMs": 0 if last_index == 0 else (
+                    index * active_duration_ms + last_index // 2
+                ) // last_index,
+            }
+            for index, event in enumerate(events)
+        ]
+        duration = active_duration_ms + playback["finalHoldMs"]
+        playback_evidence = {
+            "schema": "buildchain.declarative-terminal-playback/v1",
+            "mode": playback["mode"],
+            "timingSource": "declared-event-ordinal",
+            "activeDurationMs": active_duration_ms,
+            "finalHoldMs": playback["finalHoldMs"],
+            "presentedDurationMs": duration,
+            "observedLastEventMs": observed_last_event_ms,
+            "eventPayloadRoot": root_json([event["data"] for event in events]),
+            "eventOrder": "preserved",
+        }
+    else:
+        duration = max(900, min(duration_limit_ms, observed_last_event_ms + 600))
     last_event_ms = events[-1]["atMs"]
-    duration = max(900, min(duration_limit_ms, last_event_ms + 600))
     require(last_event_ms < duration, "terminal event timeline does not fit the declared duration class")
     completion = {"schema": "buildchain.declarative-demo-completion/v1", "status": "qualified",
                   "demoId": demo["id"], "steps": summaries}
@@ -382,6 +471,7 @@ def capture_rendition(binary: Path, demo: dict[str, Any], rendition: dict[str, A
         "command": f"{scenario['product']['binaryName']} ({len(demo['steps'])} declared steps)",
         "dimensions": {"columns": rendition["columns"], "rows": rendition["rows"]},
         "durationMs": duration, "encoding": "base64", "events": events,
+        **({"playback": playback_evidence} if playback_evidence is not None else {}),
         "completion": {"schema": completion["schema"], "status": "qualified", "reportRoot": completion_root, "eventCount": len(events)},
         "exitCode": 0,
         "authority": {"classification": "volatile-terminal-observation", "grants": [], "nonAuthorities": NON_AUTHORITIES},
@@ -424,7 +514,10 @@ def main() -> int:
     manifest = {
         "schema": "buildchain.declarative-demo-capture/v1", "status": "qualified",
         "demo": {"id": demo["id"], "title": demo["title"], "claimBoundary": demo["claimBoundary"]},
-        "execution": {"durationClass": scenario["execution"].get("durationClass", "standard")},
+        "execution": {
+            "durationClass": scenario["execution"].get("durationClass", "standard"),
+            **({"playback": scenario["playback"]} if scenario.get("playback") is not None else {}),
+        },
         "product": {**scenario["product"], "distribution": "standalone-binary"},
         "artifact": {"platformId": scenario["artifact"]["platformId"], "binaryRoot": binary_root,
                      "metadataContract": metadata["contract"], "metadataRoot": root_json(metadata), "runtimeDependencies": []},

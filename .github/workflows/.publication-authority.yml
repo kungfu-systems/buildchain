@@ -36,6 +36,11 @@ on:
         type: string
         required: false
         default: ""
+      consumer-gate-command:
+        description: "Consumer-owned read-only command that assembles a qualifying Gate aggregate from the downloaded exact release-candidate evidence"
+        type: string
+        required: false
+        default: ""
       expected-json:
         description: "Independent exact publication bindings JSON"
         type: string
@@ -221,6 +226,7 @@ jobs:
           BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json }}
           BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json }}
           BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
+          BUILDCHAIN_CONSUMER_GATE_COMMAND: ${{ inputs.consumer-gate-command }}
           BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json }}
         shell: bash
         run: |
@@ -249,6 +255,7 @@ jobs:
           BUILDCHAIN_AUTO_NO_GATE: ${{ inputs.auto-no-gate }}
           BUILDCHAIN_EVIDENCE_REPOSITORY: ${{ inputs.evidence-repository }}
           BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
+          BUILDCHAIN_CONSUMER_GATE_COMMAND: ${{ inputs.consumer-gate-command }}
           BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
           BUILDCHAIN_PACKAGE_NAME: ${{ inputs.package-name }}
           BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: ${{ inputs.consumer-qualification-required }}
@@ -307,8 +314,12 @@ jobs:
                   exit 1
                   ;;
               esac
-              if [[ -z "$BUILDCHAIN_GATE_AGGREGATE_JSON" && "$BUILDCHAIN_AUTO_NO_GATE" != "true" ]]; then
-                echo "::error::release-candidate admission requires a Gate aggregate or explicit publication-auto-no-gate decision"
+              gate_sources=0
+              [[ -n "$BUILDCHAIN_GATE_AGGREGATE_JSON" ]] && gate_sources=$((gate_sources + 1))
+              [[ "$BUILDCHAIN_AUTO_NO_GATE" == "true" ]] && gate_sources=$((gate_sources + 1))
+              [[ -n "$BUILDCHAIN_CONSUMER_GATE_COMMAND" ]] && gate_sources=$((gate_sources + 1))
+              if [[ "$gate_sources" -ne 1 ]]; then
+                echo "::error::release-candidate admission requires exactly one Gate aggregate, consumer Gate command, or explicit publication-auto-no-gate decision"
                 exit 1
               fi
               ;;
@@ -508,6 +519,51 @@ jobs:
           pattern: ${{ inputs.evidence-payload-pattern }}
           path: .buildchain/publication-evidence/payloads
 
+      - name: Checkout exact consumer Gate source
+        if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' && inputs.consumer-gate-command != '' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.source-sha }}
+          path: .buildchain/publication-consumer-source
+          clean: true
+          persist-credentials: false
+
+      - name: Assemble consumer Gate from exact downloaded evidence
+        if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' && inputs.consumer-gate-command != '' }}
+        id: consumer-gate
+        working-directory: .buildchain/publication-consumer-source
+        env:
+          BUILDCHAIN_CONSUMER_GATE_COMMAND: ${{ inputs.consumer-gate-command }}
+          BUILDCHAIN_PUBLICATION_EVIDENCE_ROOT: ${{ github.workspace }}/.buildchain/publication-evidence
+          BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH: ${{ github.workspace }}/.buildchain/publication-authority/consumer-gate-aggregate.json
+          BUILDCHAIN_PUBLICATION_AUTHORITY_RUNTIME_ROOT: ${{ github.workspace }}/.buildchain/authority-runtime
+          BUILDCHAIN_PUBLICATION_SOURCE_SHA: ${{ inputs.source-sha }}
+          BUILDCHAIN_PUBLICATION_TARGET_REF: ${{ inputs.target-ref }}
+          BUILDCHAIN_PUBLICATION_EVIDENCE_RUN_ID: ${{ inputs.evidence-run-id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "$BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH")"
+          bash -euo pipefail -c "$BUILDCHAIN_CONSUMER_GATE_COMMAND"
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+          import { pathToFileURL } from "node:url";
+
+          const resultPath = process.env.BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH;
+          if (!fs.existsSync(resultPath) || !fs.statSync(resultPath).isFile()) {
+            throw new Error("consumer Gate command did not write BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH");
+          }
+          const aggregate = JSON.parse(fs.readFileSync(resultPath, "utf8"));
+          const runtimeRoot = process.env.BUILDCHAIN_PUBLICATION_AUTHORITY_RUNTIME_ROOT;
+          const authority = await import(pathToFileURL(path.join(runtimeRoot, "packages/core/publication-authority.js")).href);
+          const bindings = authority.publicationGateAggregateBindings(aggregate);
+          if (bindings.sourceSha !== process.env.BUILDCHAIN_PUBLICATION_SOURCE_SHA) {
+            throw new Error("consumer Gate aggregate source SHA mismatch");
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `gate-aggregate-json=${JSON.stringify(aggregate)}\n`);
+          NODE
+
       - name: Download exact publication artifact candidate
         if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'publication-artifact' }}
         uses: actions/download-artifact@v7.0.0
@@ -591,7 +647,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
           BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
           BUILDCHAIN_PUBLICATION_CHANNEL: ${{ startsWith(inputs.target-ref, 'release/') && 'release' || startsWith(inputs.target-ref, 'alpha/') && 'alpha' || 'major' }}
-          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ steps.consumer-gate.outputs.gate-aggregate-json || inputs.gate-aggregate-json }}
           BUILDCHAIN_ALLOW_NO_GATE: ${{ inputs.auto-no-gate }}
           BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: ${{ inputs.consumer-qualification-required }}
           BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.consumer-predicate-id }}
@@ -689,7 +745,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json || steps.auto-evidence.outputs.admission-json || steps.paper-auto-evidence.outputs.admission-json || steps.binary-auto-evidence.outputs.admission-json }}
           BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json || steps.auto-evidence.outputs.runner-provenance-json || steps.paper-auto-evidence.outputs.runner-provenance-json || steps.binary-auto-evidence.outputs.runner-provenance-json }}
           BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json || steps.auto-evidence.outputs.control-plane-audit-json || steps.paper-auto-evidence.outputs.control-plane-audit-json || steps.binary-auto-evidence.outputs.control-plane-audit-json }}
-          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json || steps.auto-evidence.outputs.gate-aggregate-json || steps.paper-auto-evidence.outputs.gate-aggregate-json || steps.binary-auto-evidence.outputs.gate-aggregate-json }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ steps.consumer-gate.outputs.gate-aggregate-json || inputs.gate-aggregate-json || steps.auto-evidence.outputs.gate-aggregate-json || steps.paper-auto-evidence.outputs.gate-aggregate-json || steps.binary-auto-evidence.outputs.gate-aggregate-json }}
           BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json || steps.auto-evidence.outputs.expected-json || steps.paper-auto-evidence.outputs.expected-json || steps.binary-auto-evidence.outputs.expected-json }}
           BUILDCHAIN_USED_NONCES_JSON: ${{ inputs.used-nonces-json }}
           BUILDCHAIN_PLANNED_PUBLICATION_VERSION: ${{ inputs.publication-version }}
@@ -873,6 +929,7 @@ jobs:
           name: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             .buildchain/publication-authority/capability.json
+            .buildchain/publication-authority/gate-aggregate.json
             .buildchain/publication-authority/github-governance-audit.json
             .buildchain/publication-authority/github-governance-receipt.json
           if-no-files-found: error
