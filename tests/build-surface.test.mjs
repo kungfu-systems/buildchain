@@ -1078,6 +1078,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /allow-repository:/);
   assert.match(workflow, /default: ""/);
   assert.match(workflow, /required-status-check:/);
+  assert.match(workflow, /version-state-verification-command:/);
   assert.match(
     workflow,
     /required-status-check:\n\s+description: "Exact required protected-branch status check context"\n\s+default: "check \/ check"/,
@@ -1248,6 +1249,17 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-family-initiative-id:/);
   assert.match(workflow, /release-candidate-family-assignment-id:/);
   assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
+  assert.match(
+    workflow,
+    /verification-command: \$\{\{ inputs\.version-state-verification-command \}\}/,
+  );
+  assert.equal(
+    (workflow.match(
+      /verification-command: \$\{\{ inputs\.version-state-verification-command \}\}/g,
+    ) || []).length,
+    2,
+    "publication planning and final promotion must use the same version-state verifier",
+  );
   assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
   assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \|\| steps\.rc\.outputs\.publish-required-artifacts-json \}\}/);
   assert.match(workflow, /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/);

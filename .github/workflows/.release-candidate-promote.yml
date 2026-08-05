@@ -152,6 +152,11 @@ on:
         default: "check / check"
         type: string
         required: false
+      version-state-verification-command:
+        description: "Optional source-only command for validating generated version-state trees; overrides lifecycle.verify during publication planning and promotion"
+        default: ""
+        type: string
+        required: false
       branch-protection-bypass-apps:
         description: "GitHub App slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
         default: "github-actions"
@@ -900,6 +905,7 @@ jobs:
           dry-run: "true"
           require-governance: "false"
           require-version-state: "true"
+          verification-command: ${{ inputs.version-state-verification-command }}
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
@@ -1542,6 +1548,7 @@ jobs:
           dry-run: ${{ inputs.dry-run }}
           require-governance: "true"
           require-version-state: "true"
+          verification-command: ${{ inputs.version-state-verification-command }}
           reconciliation-workspace: ${{ steps.reconciliation.outputs.workspace }}
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}

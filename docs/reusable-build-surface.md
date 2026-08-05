@@ -1062,6 +1062,9 @@ jobs:
       trusted-publishing: true
       github-release: true
       required-status-check: check / check
+      # Keep generated version-state validation source-only when lifecycle.verify
+      # requires artifacts from the earlier release-candidate build.
+      version-state-verification-command: npm run check:source
       required-artifact-count: 3
       publish-dist-tag: alpha
       publish-package-set-order: platforms-first-main-last
@@ -1075,6 +1078,14 @@ path overrides channel-specific selection for compatibility. Migration only
 requires adding the two channel lock inputs and may retain the remaining common
 promotion declaration unchanged. Consumers must not call the dot-prefixed
 advanced workflow directly.
+
+`version-state-verification-command` is optional. When set, the promotion
+controller runs it against both the dry-run publication plan and the generated
+version-state tree instead of reusing `lifecycle.verify`. Use this boundary when
+the ordinary verify lifecycle asserts native or product artifacts that exist in
+the release-candidate bundle but are intentionally absent from the lightweight
+publication-planning checkout. The override must remain source-only; artifact
+qualification continues to come from the exact admitted release candidate.
 
 `buildchain-issue-app-id` and `buildchain-issue-app-private-key` are optional
 but recommended for cross-repository consumers. They should identify a GitHub
