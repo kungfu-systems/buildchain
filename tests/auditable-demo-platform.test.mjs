@@ -50,6 +50,7 @@ function scenario() {
   });
   return {
     schema: "buildchain.declarative-binary-demo/v1",
+    compositionMode: "terminal-fill",
     product: { id: "fixture", displayName: "Fixture CLI", binaryName: "fixture" },
     artifact: { platformId: "linux-x64", binaryPath: "fixture", metadataPath: "fixture.json", metadataContract: "fixture.binary/v1", runtimeDependencies: [] },
     execution: { deterministic: true, network: "none", secrets: "none", totalTimeoutSeconds: 30, environment: {} },
@@ -214,13 +215,18 @@ function capture(t, demoId, transformScenario = null) {
 }
 
 test("scenario contract accepts multiple demos and rejects shell command authority", () => {
-  assert.deepEqual(validateScenario(scenario()).demos.map((entry) => entry.id), ["shared-state", "independent"]);
+  const admitted = validateScenario(scenario());
+  assert.deepEqual(admitted.demos.map((entry) => entry.id), ["shared-state", "independent"]);
+  assert.equal(admitted.compositionMode, "terminal-fill");
   const invalid = structuredClone(scenario());
   invalid.demos[0].steps[0].command = "fixture write";
   assert.throws(() => validateScenario(invalid), /command is not allowed|must not use a shell/u);
   const privileged = structuredClone(scenario());
   privileged.authority.grants.push("system-identity");
   assert.throws(() => validateScenario(privileged), /authority boundary/u);
+  const invalidComposition = structuredClone(scenario());
+  invalidComposition.compositionMode = "cropped-terminal";
+  assert.throws(() => validateScenario(invalidComposition), /composition mode/u);
 });
 
 test("optional presentation binds consumer proof semantics without changing the legacy default", () => {
@@ -342,12 +348,32 @@ test("generic adapter projects exact captures into the existing Gate contract", 
   assert.notEqual(result.renditionRoots[0], result.renditionRoots[1]);
   const set = JSON.parse(fs.readFileSync(path.join(adapted, "rendition-set.json"), "utf8"));
   assert.deepEqual(set.renditions.map(({ id, role }) => [id, role]), [["1080p", "primary"], ["720p", "responsive"]]);
+  for (const name of ["scene.json", "scene-720p.json"]) {
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(adapted, name), "utf8")).compositionMode,
+      "terminal-fill",
+    );
+  }
   const gateCheck = spawnSync(process.execPath, [
     path.join(ROOT, "scripts/auditable-demo.mjs"), "prepare-smoke",
     "--adapter-output", adapted,
     "--output", path.join(root, "smoke"),
   ], { encoding: "utf8" });
   assert.equal(gateCheck.status, 0, gateCheck.stderr);
+});
+
+test("omitting composition preserves the presentation-framed adapter default", { skip: process.platform === "win32" }, (t) => {
+  const { root, output } = capture(t, "shared-state", (declared) => {
+    delete declared.compositionMode;
+  });
+  const adapted = path.join(root, "adapted-default-composition");
+  adaptCapture({ artifactRoot: output, output: adapted });
+  for (const name of ["scene.json", "scene-720p.json"]) {
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(adapted, name), "utf8")).compositionMode,
+      "presentation-framed",
+    );
+  }
 });
 
 test("generic adapter projects an explicit long-form renderer contract", { skip: process.platform === "win32" }, (t) => {

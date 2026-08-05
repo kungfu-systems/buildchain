@@ -7,6 +7,11 @@
   "required": ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"],
   "properties": {
     "schema": {"const": "buildchain.declarative-binary-demo/v1"},
+    "compositionMode": {
+      "type": "string",
+      "enum": ["presentation-framed", "terminal-fill"],
+      "default": "presentation-framed"
+    },
     "product": {
       "type": "object",
       "additionalProperties": false,

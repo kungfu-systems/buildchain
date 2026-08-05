@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "d20788232884d3ada0086a0cdd07fc0dcd9c8fdfbd31d4c6f2bd4d49d4da5622",
+    "sha256": "6f4c60a123d2c9100bb142e331f01c7f5d0fc65f9d99511d4c01b352b56446c7",
     "summary": {
       "cliCommandCount": 112,
-      "workflowCount": 62,
+      "workflowCount": 63,
       "actionCount": 6,
       "sitePageCount": 65,
       "docCommandRefCount": 881,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "d20788232884d3ada0086a0cdd07fc0dcd9c8fdfbd31d4c6f2bd4d49d4da5622",
+      "sha256": "6f4c60a123d2c9100bb142e331f01c7f5d0fc65f9d99511d4c01b352b56446c7",
       "summary": {
         "cliCommandCount": 112,
-        "workflowCount": 62,
+        "workflowCount": 63,
         "actionCount": 6,
         "sitePageCount": 65,
         "docCommandRefCount": 881,
@@ -4195,6 +4195,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:buildchain-dev-delivery",
+          "name": "workflow:buildchain-dev-delivery",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-dev-delivery.yml",
+          "evidencePath": ".github/workflows/buildchain-dev-delivery.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:buildchain-patrol-daily",
           "name": "workflow:buildchain-patrol-daily",
           "kind": "workflow",
@@ -6284,6 +6298,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 398
+    "publicSurfaceCount": 399
   }
 }

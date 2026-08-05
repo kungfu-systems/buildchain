@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-05
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -69,6 +69,12 @@ per-demo markers preserve proof order and idempotent updates. The publication
 pull request stages that specification together with the README and
 content-addressed evidence. No presentation field grants publication or Work
 authority.
+
+The optional top-level `compositionMode` is an explicit visual contract.
+Omitting it preserves `presentation-framed`; declaring `terminal-fill` makes
+the bounded PTY replay the complete pixel surface without renderer-owned
+window chrome. Buildchain carries that choice into both native scenes. It does
+not infer full-frame intent from output resolution.
 
 The uploaded metadata must bind the executable SHA-256, declare an empty
 runtime dependency set, and provide a bounded `executableFiles` array of exact
@@ -212,6 +218,10 @@ The Gate:
   bounded tmpfs;
 - verifies the renderer manifest, media probe, exact input roots, exact output
   member set, and complete checksums;
+- independently verifies the requested composition mode, browser-observed
+  content viewport, PTY rows and columns, and deterministic cell geometry for
+  every frame set; `terminal-fill` is rejected unless the viewport and cell
+  grid resolve to the complete declared frame;
 - uploads a content-addressed qualified bundle plus an independent GitHub
   Artifact id, URL, archive digest, and expiry-bearing source coordinate.
 
@@ -243,6 +253,8 @@ When the Gate bundle contains a qualified terminal capture, the render job
 passes it read-only to the immutable renderer. The renderer manifest binds the
 capture root and terminal-state-machine version, but raw capture bytes remain
 in the Gate bundle rather than being copied into the public media bundle.
+Missing, malformed, out-of-bounds, non-full-frame, rendition-mismatched, or
+internally drifted composition evidence fails before media finalization.
 
 ## Media Qualification Profiles
 

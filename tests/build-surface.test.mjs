@@ -1479,6 +1479,32 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
+test("Buildchain self-delivery requires an exact Warrant before Merge Queue admission", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-dev-delivery.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /expected-pr-number:/);
+  assert.match(workflow, /expected-head-sha:/);
+  assert.match(workflow, /assignment-root:/);
+  assert.match(workflow, /initiative-root:/);
+  assert.match(workflow, /source-identity-root:/);
+  assert.match(workflow, /source-patch-root:/);
+  assert.match(workflow, /plan-root:/);
+  assert.match(workflow, /closure-root:/);
+  assert.match(workflow, /dependency-root:/);
+  assert.match(workflow, /toolchain-root:/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
+  assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /delivery-warrant-mode: required/);
+  assert.match(workflow, /delivery-class: native-proof-required/);
+  assert.match(workflow, /required-status-checks: check/);
+  assert.match(workflow, /landing-mode: queue/);
+  assert.match(workflow, /dry-run: false/);
+  assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
+});
+
 test("declared merge queue governance reconciles automatically on dev changes", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/dev-merge-queue-governance.yml"),

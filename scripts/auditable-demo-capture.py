@@ -208,6 +208,8 @@ def assert_files(workspace: Path, assertions: list[dict[str, Any]]) -> list[dict
 
 def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
     require(value.get("schema") == "buildchain.declarative-binary-demo/v1", "scenario schema mismatch")
+    require(value.get("compositionMode", "presentation-framed") in ("presentation-framed", "terminal-fill"),
+            "scenario composition mode is invalid")
     require(value.get("renditions") == RENDITIONS, "scenario must declare the two native rendition profiles exactly")
     product = value.get("product") or {}
     require(SAFE_ID.fullmatch(str(product.get("id") or "")) is not None, "product id is invalid")

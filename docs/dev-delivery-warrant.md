@@ -145,6 +145,13 @@ cancellation reusable workflow cannot close an active generation; it advances
 the state ref only when the caller's complete terminal binding and expected-old
 root still match.
 
+Buildchain uses the same contract for its own protected dev line through
+`buildchain-dev-delivery.yml`. The manual caller requires the exact PR head and
+all native/source proof roots, pins the runtime to the caller commit, selects
+`delivery-warrant-mode: required`, and targets GitHub Merge Queue. It does not
+offer an `off` switch: rollback is a reviewed change to this caller, not an
+operator-time weakening of a specific delivery attempt.
+
 This mechanism schedules protected delivery only. It does not serialize local
 development, source-only checks, unrelated channels, release publication, or
 runner provisioning. It never grants authority to enable cloud runner

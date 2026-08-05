@@ -27,6 +27,8 @@ const RENDITIONS = [
 ];
 const STANDARD_MAX_SECONDS = 60;
 const LONG_FORM_MAX_SECONDS = 180;
+const PRESENTATION_FRAMED = "presentation-framed";
+const TERMINAL_FILL = "terminal-fill";
 const MAX_EXECUTABLE_FILES = 32;
 const MAX_METADATA_MEMBER_BYTES = 8 * 1024 * 1024;
 const MAX_MEDIA_MEMBER_BYTES = 64 * 1024 * 1024;
@@ -206,12 +208,17 @@ function validateDemo(demo, index, demoIds, maximumSeconds) {
 }
 
 export function validateScenario(value) {
-  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["transportSmoke", "presentation"], "scenario");
+  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["compositionMode", "transportSmoke", "presentation"], "scenario");
   requireValue(value.schema === "buildchain.declarative-binary-demo/v1", "unsupported scenario schema");
+  const compositionMode = value.compositionMode ?? PRESENTATION_FRAMED;
+  requireValue(
+    compositionMode === PRESENTATION_FRAMED || compositionMode === TERMINAL_FILL,
+    "scenario composition mode is invalid",
+  );
   validateProduct(value.product);
   validateArtifact(value.artifact);
   const executionPolicy = validateExecution(value.execution);
-  requireValue(JSON.stringify(value.renditions) === JSON.stringify(RENDITIONS), "scenario must declare both native rendition profiles exactly");
+  requireValue(stableJson(value.renditions) === stableJson(RENDITIONS), "scenario must declare both native rendition profiles exactly");
   requireValue(Array.isArray(value.demos) && value.demos.length >= 1 && value.demos.length <= 8, "scenario requires 1 through 8 demos");
   const demoIds = new Set();
   value.demos.forEach((demo, index) => validateDemo(demo, index, demoIds, executionPolicy.maximumSeconds));
@@ -244,7 +251,7 @@ function validateCapture(capture, rendition, summaryRoot, durationClass) {
   return capture;
 }
 
-function projection(capture, transcript, demo, rendition, durationClass, sharedCaptureDurationMs) {
+function projection(capture, transcript, demo, rendition, durationClass, sharedCaptureDurationMs, compositionMode) {
   const lines = transcript.endsWith("\n") ? transcript.slice(0, -1).split("\n") : transcript.split("\n");
   const policy = durationPolicy(durationClass);
   const durationMs = Math.min(policy.maximumSeconds * 1000, sharedCaptureDurationMs + 1000);
@@ -266,6 +273,7 @@ function projection(capture, transcript, demo, rendition, durationClass, sharedC
     height: rendition.height,
     fps: policy.durationClass === "long-form" ? 10 : 15,
     ...(policy.durationClass === "long-form" ? { durationClass: "long-form" } : {}),
+    compositionMode,
     durationMs,
     title: demo.title,
     commandLabel: capture.command,
@@ -295,6 +303,8 @@ export function adaptCapture({ artifactRoot, output }) {
   const { root: _root, ...manifestBody } = manifest;
   requireValue(DIGEST.test(declaredRoot) && rootJson(manifestBody) === declaredRoot, "capture manifest root mismatch");
   requireValue(manifest.authority?.grants?.length === 0 && JSON.stringify(manifest.authority?.nonAuthorities) === JSON.stringify(NON_AUTHORITIES), "capture manifest grants authority");
+  const scenario = validateScenario(readJson(path.join(root, "scenario.json"), "captured scenario"));
+  requireValue(rootJson(scenario) === manifest.scenarioRoot, "captured scenario root mismatch");
   requireValue(Array.isArray(manifest.renditions) && manifest.renditions.length === 2, "capture rendition set is invalid");
   const executionPolicy = durationPolicy(manifest.execution?.durationClass);
   prepareOutput(output);
@@ -322,6 +332,7 @@ export function adaptCapture({ artifactRoot, output }) {
       expected,
       executionPolicy.durationClass,
       sharedCaptureDurationMs,
+      scenario.compositionMode ?? PRESENTATION_FRAMED,
     );
     const suffix = index === 0 ? "" : "-720p";
     fs.writeFileSync(path.join(output, `complete-transcript${suffix}.txt`), transcript);
