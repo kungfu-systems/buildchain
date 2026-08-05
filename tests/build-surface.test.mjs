@@ -2867,6 +2867,14 @@ test("runtime-aware workflows pin same-repository pull request merge refs", () =
   }
 });
 
+test("Gate profile treats its exact workflow shell SHA as a pinned self runtime", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.gate-profile.yml"), "utf8");
+  assert.match(workflow, /const pinnedSelfRuntime =/);
+  assert.match(workflow, /sameRepositoryWorkflow &&[\s\S]*exactSha\.test\(requested\)[\s\S]*exactSha\.test\(shellRef\)/);
+  assert.match(workflow, /requested\.toLowerCase\(\) === shellRef\.toLowerCase\(\)/);
+  assert.match(workflow, /requested && !official\.test\(requested\) && !pinnedSelfRuntime/);
+});
+
 test("build workflow only trusts an exact same-repository pull request head override", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
   assert.match(workflow, /const trustedSameRepositoryPullRequestHead =/);
