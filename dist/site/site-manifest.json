@@ -66,7 +66,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:edfbb6a7f81ba1d28b7ecc750894c93c13a572e2dc26df473d87abf4531044d2"
+      "digest": "sha256:c49e734fdfe3b74d317e23a523e198f1194b2c7cd16cca87e8e3a3ffc7bf589f"
     },
     {
       "id": "install",
@@ -314,7 +314,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:1fe4b3c82e1d22e6f0710b10ee3db2bfbdfdcb0dbc2d7a8c47a2ba9547ccdcf6"
+      "digest": "sha256:793db9414d11aeb314ff2d37a52481826ca5f636d08eaf93772d37962a51484f"
     },
     {
       "id": "web-surface-deployments",

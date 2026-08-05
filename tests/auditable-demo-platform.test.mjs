@@ -151,7 +151,7 @@ elif sys.argv[1:] == ["read"]:
 elif sys.argv[1:] == ["independent"]:
   assert not os.path.exists("state.json")
   print("\\x1b[38;5;214mINDEPENDENT START\\x1b[0m", flush=True)
-  time.sleep(0.18)
+  time.sleep(float(os.environ.get("FIXTURE_DELAY", "0.18")))
   print("\\x1b[38;5;81mINDEPENDENT END\\x1b[0m", flush=True)
 elif sys.argv[1:] == ["slow"]:
   time.sleep(2)
@@ -227,6 +227,17 @@ test("scenario contract accepts multiple demos and rejects shell command authori
   const invalidComposition = structuredClone(scenario());
   invalidComposition.compositionMode = "cropped-terminal";
   assert.throws(() => validateScenario(invalidComposition), /composition mode/u);
+
+  const readable = structuredClone(scenario());
+  readable.playback = {
+    schema: "buildchain.declarative-demo-playback/v1",
+    mode: "deterministic-readable",
+    activeDurationMs: 1600,
+    finalHoldMs: 700,
+  };
+  assert.equal(validateScenario(readable).playback.activeDurationMs, 1600);
+  readable.playback.finalHoldMs = 60_000;
+  assert.throws(() => validateScenario(readable), /final hold|duration class/u);
 });
 
 test("optional presentation binds consumer proof semantics without changing the legacy default", () => {
@@ -374,6 +385,35 @@ test("omitting composition preserves the presentation-framed adapter default", {
       "presentation-framed",
     );
   }
+});
+
+test("declared readable playback normalizes latency without changing terminal payloads or order", { skip: process.platform === "win32" }, (t) => {
+  const declarePlayback = (delay) => (declared) => {
+    declared.execution.environment.FIXTURE_DELAY = delay;
+    declared.playback = {
+      schema: "buildchain.declarative-demo-playback/v1",
+      mode: "deterministic-readable",
+      activeDurationMs: 1600,
+      finalHoldMs: 700,
+    };
+  };
+  const fast = capture(t, "independent", declarePlayback("0.05"));
+  const slow = capture(t, "independent", declarePlayback("0.35"));
+  const readCapture = ({ output }) => JSON.parse(fs.readFileSync(path.join(output, "renditions/1080p/terminal-capture.json"), "utf8"));
+  const fastCapture = readCapture(fast);
+  const slowCapture = readCapture(slow);
+  assert.deepEqual(fastCapture.events.map((event) => event.data), slowCapture.events.map((event) => event.data));
+  assert.deepEqual(fastCapture.events.map((event) => event.atMs), slowCapture.events.map((event) => event.atMs));
+  assert.equal(fastCapture.durationMs, 2300);
+  assert.equal(fastCapture.playback.eventOrder, "preserved");
+  assert.ok(slowCapture.playback.observedLastEventMs >= 300, "the slower PTY latency remains recorded as evidence");
+
+  const adapted = path.join(fast.root, "adapted-readable");
+  adaptCapture({ artifactRoot: fast.output, output: adapted });
+  const projected = JSON.parse(fs.readFileSync(path.join(adapted, "terminal-capture.json"), "utf8"));
+  const scene = JSON.parse(fs.readFileSync(path.join(adapted, "scene.json"), "utf8"));
+  assert.equal(projected.durationMs, 2300);
+  assert.equal(scene.durationMs, 2300, "declared final hold is not extended by an implicit adapter hold");
 });
 
 test("generic adapter projects an explicit long-form renderer contract", { skip: process.platform === "win32" }, (t) => {
