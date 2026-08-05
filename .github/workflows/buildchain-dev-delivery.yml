@@ -13,12 +13,8 @@ on:
         description: "Exact 40-character PR head"
         type: string
         required: true
-      assignment-root:
-        description: "Exact native Assignment content root"
-        type: string
-        required: true
-      initiative-root:
-        description: "Exact native Initiative content root"
+      native-roots-json:
+        description: "JSON object containing exact assignmentRoot and initiativeRoot"
         type: string
         required: true
       source-identity-root:
@@ -49,15 +45,6 @@ on:
         description: "JSON array of paths covered by source qualification"
         type: string
         required: true
-      delivery-priority:
-        description: "Reviewed priority: ordinary, expedited, or emergency"
-        type: choice
-        options:
-          - ordinary
-          - expedited
-          - emergency
-        default: ordinary
-        required: true
 
 permissions:
   contents: write
@@ -75,8 +62,8 @@ jobs:
       expected-pr-number: ${{ inputs.expected-pr-number }}
       expected-head-sha: ${{ inputs.expected-head-sha }}
       delivery-warrant-mode: required
-      assignment-root: ${{ inputs.assignment-root }}
-      initiative-root: ${{ inputs.initiative-root }}
+      assignment-root: ${{ fromJSON(inputs.native-roots-json).assignmentRoot }}
+      initiative-root: ${{ fromJSON(inputs.native-roots-json).initiativeRoot }}
       source-identity-root: ${{ inputs.source-identity-root }}
       source-patch-root: ${{ inputs.source-patch-root }}
       plan-root: ${{ inputs.plan-root }}
@@ -85,7 +72,7 @@ jobs:
       toolchain-root: ${{ inputs.toolchain-root }}
       affected-paths-json: ${{ inputs.affected-paths-json }}
       delivery-class: native-proof-required
-      delivery-priority: ${{ inputs.delivery-priority }}
+      delivery-priority: ordinary
       required-status-checks: check
       ready-label: ready
       block-labels: blocked,do-not-merge,work-in-progress
