@@ -442,10 +442,10 @@ test("timed out source fetch terminates its descendant process tree before retry
     setInterval(() => {}, 1000);
   `);
   if (process.platform === "win32") {
-    fs.writeFileSync(path.join(bin, "git.cmd"), `@echo off\r\n"${process.execPath}" "${fakeGitScript}" %*\r\n`);
+    fs.writeFileSync(path.join(bin, "git.cmd"), `@echo off\r\nif not "%~1"=="fetch" exit /b 0\r\n"${process.execPath}" "${fakeGitScript}" %*\r\n`);
   } else {
     const fakeGit = path.join(bin, "git");
-    fs.writeFileSync(fakeGit, `#!/bin/sh\nexec "${process.execPath}" "${fakeGitScript}" "$@"\n`);
+    fs.writeFileSync(fakeGit, `#!/bin/sh\nif [ "$1" != "fetch" ]; then exit 0; fi\nexec "${process.execPath}" "${fakeGitScript}" "$@"\n`);
     fs.chmodSync(fakeGit, 0o755);
   }
   const previous = {
@@ -463,7 +463,11 @@ test("timed out source fetch terminates its descendant process tree before retry
       remoteUrl: "https://github.com/kungfu-systems/example.git",
       sha: "d".repeat(40),
       fetchRef: "refs/heads/dev/v4/v4.0",
-      timeoutMs: 1000,
+      // The full suite deliberately saturates local process creation. Keep the
+      // timeout bounded, but leave enough headroom for the non-fetch setup
+      // commands so this assertion measures fetch-tree cleanup, not scheduler
+      // latency.
+      timeoutMs: 5000,
       containsCommit: () => false,
     }), (error) => error.code === "ETIMEDOUT" && /process tree terminated/.test(error.message));
   } finally {

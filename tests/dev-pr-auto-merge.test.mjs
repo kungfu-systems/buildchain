@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { createProjectCutReplayProof } from "../packages/core/dev-delivery-warrant.js";
 import {
   cliOptions,
   evaluatePullRequest,
@@ -249,10 +250,12 @@ test("policy gates reject unsafe or incomplete dev PRs", async () => {
   );
 });
 
-test("queue admission accepts blocked or behind state only after independent gates pass", async () => {
+test("queue admission accepts blocked state but requires exact Project Cut proof for behind", async () => {
   const options = { ...baseOptions, landingMode: "queue", dryRun: true };
   const blocked = pr({ mergeable: true, mergeable_state: "blocked" });
-  const behind = pr({ mergeable: true, mergeable_state: "behind" });
+  const behindHead = "a".repeat(40);
+  const currentBase = "b".repeat(40);
+  const behind = pr({ mergeable: true, mergeable_state: "behind", headSha: behindHead });
 
   assert.equal(
     (await evaluatePullRequest(blocked, options, client({ pullRequests: [blocked] }))).action,
@@ -260,8 +263,49 @@ test("queue admission accepts blocked or behind state only after independent gat
   );
   assert.equal(
     (await evaluatePullRequest(behind, options, client({ pullRequests: [behind] }))).action,
-    "would-merge",
+    "skip",
   );
+  assert.equal(
+    (await evaluatePullRequest(behind, options, client({ pullRequests: [behind] }))).reason,
+    "project-cut-proof-required",
+  );
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-project-cut-"));
+  const proofPath = path.join(directory, "proof.json");
+  const proof = createProjectCutReplayProof({
+    repository: "kungfu-systems/buildchain",
+    protectedBase: "dev/v2/v2.6",
+    pullRequestNumber: 1,
+    sourceHead: behindHead,
+    sourcePatchRoot: ROOT,
+    currentBase,
+    replayTree: "c".repeat(40),
+    qualificationReceipt: {
+      schema: "project.cut.merge-queue-admission/v1",
+      ok: true,
+      decision: "qualified",
+      baseCommitOid: currentBase,
+      headCommitOid: behindHead,
+      candidateCommitOid: "d".repeat(40),
+      candidateTreeOid: "c".repeat(40),
+      replayedCommitCount: 1,
+      compositionChanged: false,
+      reasonCodes: [],
+    },
+    requiredContextRoots: [ROOT],
+    verifiedAt: "2026-08-04T00:10:00Z",
+  });
+  fs.writeFileSync(proofPath, `${JSON.stringify(proof)}\n`);
+  try {
+    const qualified = await evaluatePullRequest(
+      behind,
+      { ...options, projectCutProofPath: proofPath, sourcePatchRoot: ROOT },
+      client({ pullRequests: [behind], branchShas: [currentBase] }),
+    );
+    assert.equal(qualified.action, "would-merge");
+    assert.equal(qualified.projectCut.proofRoot, proof.proofRoot);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
   assert.equal(
     (await evaluatePullRequest(blocked, { ...options, landingMode: "direct" }, client({ pullRequests: [blocked] }))).reason,
     "not-mergeable",
@@ -275,6 +319,15 @@ test("queue admission accepts blocked or behind state only after independent gat
     (await evaluatePullRequest(conflicted, options, client({ pullRequests: [conflicted] }))).reason,
     "not-mergeable",
   );
+});
+
+test("reusable admission retains immutable Warrant and Project Cut readback coordinates", () => {
+  const workflow = fs.readFileSync(path.resolve(import.meta.dirname, "../.github/workflows/dev-pr-auto-merge.yml"), "utf8");
+  assert.match(workflow, /project-cut-proof-json:/u);
+  assert.match(workflow, /dev-delivery-proof\.mjs verify-replay/u);
+  assert.match(workflow, /\.after\.commitSha \| test\("\^\[0-9a-f\]\{40\}\$"\)/u);
+  assert.match(workflow, /\.warrant == \.observation\.activeWarrant/u);
+  assert.match(workflow, /\.observation\.activeCandidate\.candidateId == \.observation\.activeWarrant\.candidateId/u);
 });
 
 test("merge mode merges eligible PRs sequentially and honors max-merges", async () => {
@@ -326,6 +379,56 @@ test("queue-enabled branches forbid direct bypass and admit only one aligned PR"
   assert.equal(result.actions[0].admissionReceipt.expectedHeadSha, "sha-1");
   assert.equal(result.evaluated[1].reason, "blocked-by-predecessor");
   assert.deepEqual(fake.enqueued, []);
+});
+
+test("queue admission receipt retains the exact Project Cut proof root", async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-project-cut-receipt-"));
+  const proofPath = path.join(directory, "proof.json");
+  const sourceHead = "a".repeat(40);
+  const currentBase = "b".repeat(40);
+  const proof = createProjectCutReplayProof({
+    repository: "kungfu-systems/buildchain",
+    protectedBase: "dev/v2/v2.6",
+    pullRequestNumber: 1,
+    sourceHead,
+    sourcePatchRoot: ROOT,
+    currentBase,
+    replayTree: "c".repeat(40),
+    qualificationReceipt: {
+      schema: "project.cut.merge-queue-admission/v1",
+      ok: true,
+      decision: "qualified",
+      baseCommitOid: currentBase,
+      headCommitOid: sourceHead,
+      candidateCommitOid: "d".repeat(40),
+      candidateTreeOid: "c".repeat(40),
+      replayedCommitCount: 1,
+      compositionChanged: false,
+      reasonCodes: [],
+    },
+    requiredContextRoots: [ROOT],
+    verifiedAt: "2026-08-04T00:10:00Z",
+  });
+  fs.writeFileSync(proofPath, `${JSON.stringify(proof)}\n`);
+  try {
+    const candidate = pr({ mergeable_state: "behind", headSha: sourceHead });
+    const fake = client({
+      pullRequests: [candidate],
+      branchShas: [currentBase, currentBase, currentBase, currentBase],
+      queueStates: [
+        { enabled: true, id: "MQ_1", entries: [] },
+        { enabled: true, id: "MQ_1", entries: [] },
+      ],
+    });
+    const result = await runDevPrAutoMerge(
+      { ...baseOptions, landingMode: "queue", projectCutProofPath: proofPath, sourcePatchRoot: ROOT },
+      fake,
+    );
+    assert.equal(result.actions[0].admissionReceipt.projectCut.proofRoot, proof.proofRoot);
+    assert.equal(result.actions[0].admissionReceipt.projectCut.currentBase, currentBase);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("queue apply binds enqueuePullRequest to the immutable PR head", async () => {
@@ -552,8 +655,18 @@ async function withWarrantResult(overrides, callback) {
     mode: "execute",
     stateRef: "buildchain/dev-delivery-warrant/dev-v2-v2.6",
     receiptRoot: ROOT,
-    after: { stateRoot: ROOT },
+    after: { commitSha: "b".repeat(40), stateRoot: ROOT },
     warrant,
+    observation: {
+      schema: "kungfu.buildchain.dev-delivery-queue-observation/v1",
+      stateRoot: ROOT,
+      activeWarrant: warrant,
+      activeCandidate: {
+        candidateId: warrant.candidateId,
+        pullRequestNumber: warrant.pullRequestNumber,
+        sourceHead: warrant.sourceHead,
+      },
+    },
     ...overrides?.result,
   };
   fs.writeFileSync(resultPath, `${JSON.stringify(result)}\n`);
@@ -688,6 +801,40 @@ test("mismatched or expired Warrant is rejected without enqueue", async () => {
         fake,
       );
       assert.equal(result.ok, false, reason);
+      assert.equal(result.receipt.reason, reason);
+      assert.deepEqual(fake.enqueued, []);
+    });
+  }
+});
+
+test("required Warrant rejects missing immutable commit and active-candidate readback", async () => {
+  const cases = [
+    [{ result: { after: { stateRoot: ROOT } } }, "delivery-warrant-commit-readback-missing"],
+    [{
+      result: {
+        observation: {
+          schema: "kungfu.buildchain.dev-delivery-queue-observation/v1",
+          stateRoot: ROOT,
+          activeWarrant: null,
+          activeCandidate: null,
+        },
+      },
+    }, "delivery-warrant-missing"],
+  ];
+  for (const [overrides, reason] of cases) {
+    await withWarrantResult(overrides, async (resultPath) => {
+      const target = pr({ number: 21, headSha: exactHead });
+      const fake = client({
+        pullRequests: [target],
+        queueStates: [{ enabled: true, id: "MQ_1", entries: [] }],
+      });
+      const result = await runDevPrAdmission({
+        ...targetedOptions,
+        dryRun: false,
+        warrantMode: "required",
+        warrantResultPath: resultPath,
+      }, fake);
+      assert.equal(result.ok, false);
       assert.equal(result.receipt.reason, reason);
       assert.deepEqual(fake.enqueued, []);
     });

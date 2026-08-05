@@ -1,12 +1,55 @@
 import fs from "node:fs";
 
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
+const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const ADMISSION_SCHEMA = "kungfu.buildchain.dev-pr-admission/v1";
 
 function mismatch(code) {
   const error = new Error(code);
   error.code = code;
   throw error;
+}
+
+function requireMatch(condition, code) {
+  if (!condition) mismatch(code);
+}
+
+function readWarrantResult(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch (cause) {
+    const error = new Error(`delivery Warrant result is unreadable: ${cause.message}`);
+    error.code = "invalid-delivery-warrant-result";
+    throw error;
+  }
+}
+
+function exactActiveReadback(result) {
+  requireMatch(result.schema === "kungfu.buildchain.dev-delivery-command-result/v1", "unsupported-delivery-warrant-result");
+  requireMatch(result.mode === "execute", "delivery-warrant-not-executed");
+  requireMatch(SHA_PATTERN.test(String(result.after?.commitSha || "")), "delivery-warrant-commit-readback-missing");
+  requireMatch(ROOT_PATTERN.test(String(result.after?.stateRoot || "")), "delivery-warrant-state-readback-missing");
+  requireMatch(result.observation?.schema === "kungfu.buildchain.dev-delivery-queue-observation/v1", "delivery-warrant-observation-missing");
+  requireMatch(result.observation.stateRoot === result.after.stateRoot, "delivery-warrant-observation-root-mismatch");
+  const warrant = result.observation.activeWarrant;
+  const candidate = result.observation.activeCandidate;
+  requireMatch(warrant?.schema === "kungfu.buildchain.dev-delivery-warrant/v1", "delivery-warrant-missing");
+  requireMatch(candidate?.candidateId === warrant.candidateId, "delivery-warrant-candidate-readback-missing");
+  requireMatch(!result.warrant || JSON.stringify(result.warrant) === JSON.stringify(warrant), "delivery-warrant-readback-mismatch");
+  return { warrant, candidate };
+}
+
+function exactWarrantBinding({ result, warrant, candidate, options, pullRequest }) {
+  requireMatch(warrant.repository === options.repository.fullName, "delivery-warrant-repository-mismatch");
+  requireMatch(warrant.protectedBase === options.targetBranch, "delivery-warrant-base-mismatch");
+  requireMatch(Number(warrant.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-pr-mismatch");
+  requireMatch(String(warrant.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-head-mismatch");
+  requireMatch(Number(candidate.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-candidate-pr-mismatch");
+  requireMatch(String(candidate.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-candidate-head-mismatch");
+  requireMatch(ROOT_PATTERN.test(String(warrant.fencingToken || "")), "delivery-warrant-fencing-missing");
+  requireMatch(Number.isInteger(Number(warrant.generation)) && Number(warrant.generation) >= 1, "delivery-warrant-generation-invalid");
+  requireMatch(Number.isFinite(Date.parse(warrant.expiresAt)) && Date.parse(warrant.expiresAt) > Date.now(), "delivery-warrant-expired");
+  requireMatch(ROOT_PATTERN.test(String(result.receiptRoot || "")), "delivery-warrant-receipt-root-missing");
 }
 
 export function createDevPrAdmissionReceipt({ options, pr = {}, state, reason, readiness, decision = {}, queue = null, warrant = null, labels = [], nextAction }) {
@@ -42,6 +85,7 @@ export function createDevPrAdmissionReceipt({ options, pr = {}, state, reason, r
     },
     approval: decision.approval || { required: options.requireApproval, passed: false },
     checks: decision.checks || { required: options.requiredChecks, entries: [], passed: false },
+    projectCut: decision.projectCut || null,
     queue,
     deliveryWarrant: warrant,
     autoMergeEnabled: Boolean(pr.auto_merge || pr.autoMergeRequest),
@@ -56,29 +100,12 @@ export function createDevPrAdmissionReceipt({ options, pr = {}, state, reason, r
 export function readDeliveryWarrantResult(options, pullRequest) {
   if (options.warrantMode === "off") return null;
   if (!options.warrantResultPath) mismatch("missing-delivery-warrant");
-  let result;
-  try {
-    result = JSON.parse(fs.readFileSync(options.warrantResultPath, "utf8"));
-  } catch (cause) {
-    const error = new Error(`delivery Warrant result is unreadable: ${cause.message}`);
-    error.code = "invalid-delivery-warrant-result";
-    throw error;
-  }
-  const warrant = result.warrant || result.observation?.activeWarrant;
-  if (result.schema !== "kungfu.buildchain.dev-delivery-command-result/v1") mismatch("unsupported-delivery-warrant-result");
-  if (result.mode !== "execute") mismatch("delivery-warrant-not-executed");
-  if (!warrant || warrant.schema !== "kungfu.buildchain.dev-delivery-warrant/v1") mismatch("delivery-warrant-missing");
-  if (warrant.repository !== options.repository.fullName) mismatch("delivery-warrant-repository-mismatch");
-  if (warrant.protectedBase !== options.targetBranch) mismatch("delivery-warrant-base-mismatch");
-  if (Number(warrant.pullRequestNumber) !== Number(pullRequest.number)) mismatch("delivery-warrant-pr-mismatch");
-  if (String(warrant.sourceHead || "").toLowerCase() !== options.expectedHeadSha) mismatch("delivery-warrant-head-mismatch");
-  if (!ROOT_PATTERN.test(String(warrant.fencingToken || ""))) mismatch("delivery-warrant-fencing-missing");
-  if (!Number.isInteger(Number(warrant.generation)) || Number(warrant.generation) < 1) mismatch("delivery-warrant-generation-invalid");
-  if (!Number.isFinite(Date.parse(warrant.expiresAt)) || Date.parse(warrant.expiresAt) <= Date.now()) mismatch("delivery-warrant-expired");
-  if (!ROOT_PATTERN.test(String(result.receiptRoot || ""))) mismatch("delivery-warrant-receipt-root-missing");
-  if (!ROOT_PATTERN.test(String(result.after?.stateRoot || ""))) mismatch("delivery-warrant-state-readback-missing");
+  const result = readWarrantResult(options.warrantResultPath);
+  const { warrant, candidate } = exactActiveReadback(result);
+  exactWarrantBinding({ result, warrant, candidate, options, pullRequest });
   return {
     stateRef: result.stateRef || "",
+    stateCommit: result.after.commitSha,
     stateRoot: result.after.stateRoot,
     receiptRoot: result.receiptRoot,
     candidateId: warrant.candidateId,
