@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { materializeDemoPresentation, validateDemoPresentation } from "./auditable-demo-presentation.mjs";
 import { copyVerifiedRegular, verifyBundleChecksums } from "./auditable-demo-bundle-verification.mjs";
 
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
@@ -205,7 +206,7 @@ function validateDemo(demo, index, demoIds, maximumSeconds) {
 }
 
 export function validateScenario(value) {
-  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["transportSmoke"], "scenario");
+  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["transportSmoke", "presentation"], "scenario");
   requireValue(value.schema === "buildchain.declarative-binary-demo/v1", "unsupported scenario schema");
   validateProduct(value.product);
   validateArtifact(value.artifact);
@@ -219,6 +220,7 @@ export function validateScenario(value) {
   inside("/repository", value.publication.evidencePath, "scenario.publication.evidencePath");
   inside("/repository", value.publication.readmePath, "scenario.publication.readmePath");
   requireValue(SAFE_MARKER.test(value.publication.marker), "scenario publication marker is invalid");
+  if (value.presentation) validateDemoPresentation({ presentation: value.presentation, demos: value.demos, publication: value.publication, exactKeys, inside, requireValue, safeMarker: SAFE_MARKER });
   exactKeys(value.authority, ["grants", "nonAuthorities"], [], "scenario.authority");
   requireValue(JSON.stringify(value.authority) === JSON.stringify({ grants: [], nonAuthorities: NON_AUTHORITIES }), "scenario authority boundary is invalid");
   return value;
@@ -436,11 +438,12 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
     ? scenario.publication.marker
     : `${scenario.publication.marker}:${demo.id}`;
   const commandLines = demo.steps.map((step) => `$ ${scenario.product.binaryName} ${step.argv.join(" ")}`.trim()).join("\n");
-  const block = [
+  const imageLine = `[![${demo.title}](${relative}/demo.gif)](${relative}/public-evidence.json)`;
+  const legacyBlock = [
     `<!-- ${marker}:start -->`,
     `## ${demo.title}`,
     "",
-    `[![${demo.title}](${relative}/demo.gif)](${relative}/public-evidence.json)`,
+    imageLine,
     "",
     "Animation scenario:",
     "",
@@ -462,10 +465,20 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
     "</details>",
     `<!-- ${marker}:end -->`,
   ].join("\n");
+  let block = legacyBlock;
+  let technicalSpecPath = "";
+  if (scenario.presentation) {
+    const materialized = materializeDemoPresentation({
+      repository, scenario, demo, evidenceDirectory, imageLine, commandLines,
+      inside, regular, replaceBlock: replaceReadmeBlock, requireValue,
+    });
+    block = [`<!-- ${marker}:start -->`, ...materialized.blockLines, `<!-- ${marker}:end -->`].join("\n");
+    technicalSpecPath = materialized.technicalSpecPath;
+  }
   const readmePath = inside(repository, scenario.publication.readmePath, "README path");
   const readme = regular(readmePath, "README", 4 * 1024 * 1024).toString("utf8");
   fs.writeFileSync(readmePath, replaceReadmeBlock(readme, marker, block));
-  return { ok: true, demoId, evidenceRoot, evidenceDirectory: relative, passportRoot: passport.passportRoot };
+  return { ok: true, demoId, evidenceRoot, evidenceDirectory: relative, passportRoot: passport.passportRoot, technicalSpecPath };
 }
 
 function parseArgs(argv) {
@@ -495,7 +508,10 @@ function main(argv = process.argv.slice(2)) {
   }
   if (command === "publication") {
     const scenario = validateScenario(readJson(path.resolve(args.scenario), "scenario"));
-    process.stdout.write(stableJson(scenario.publication));
+    process.stdout.write(stableJson({
+      ...scenario.publication,
+      ...(scenario.presentation ? { technicalSpecPath: scenario.presentation.materialization.technicalSpecPath } : {}),
+    }));
     return;
   }
   if (command === "prepare-artifact") {

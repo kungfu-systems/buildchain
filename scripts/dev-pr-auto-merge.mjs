@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { verifyProjectCutReplayProof } from "../packages/core/dev-delivery-warrant.js";
 import { admitExistingQueueEntry, createDevPrAdmissionReceipt, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission } from "./dev-pr-delivery-warrant.mjs";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
@@ -83,6 +84,8 @@ function normalizeOptions(options = {}) {
     diagnosticContext: String(options.diagnosticContext || "Buildchain delivery intent").trim(),
     warrantMode: choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode"),
     warrantResultPath: String(options.warrantResultPath || "").trim(),
+    projectCutProofPath: String(options.projectCutProofPath || "").trim(),
+    sourcePatchRoot: String(options.sourcePatchRoot || "").trim().toLowerCase(),
     qualificationOnly: boolOption(options.qualificationOnly, false),
   };
 }
@@ -182,10 +185,32 @@ function summarizeChecks({ statuses = [], checkRuns = [] } = {}, requiredChecks 
   };
 }
 
-function mergeableAccepted(pr, landingMode = "direct") {
+function mergeableAccepted(pr, landingMode = "direct", projectCutQualified = false) {
   if (pr.mergeable === false) return false;
   const state = String(pr.mergeable_state || pr.mergeStateStatus || "").toLowerCase();
-  return state ? ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked", "behind"] : [])].includes(state) : pr.mergeable === true;
+  return state ? ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked", ...(projectCutQualified ? ["behind"] : [])] : [])].includes(state) : pr.mergeable === true;
+}
+
+async function projectCutQualification(pr, options, client) {
+  if (!options.projectCutProofPath) return { ok: false, reason: "project-cut-proof-required" };
+  let proof;
+  try {
+    proof = JSON.parse(fs.readFileSync(options.projectCutProofPath, "utf8"));
+  } catch {
+    return { ok: false, reason: "project-cut-proof-invalid" };
+  }
+  const currentBase = await client.getBranchSha(options.targetBranch).catch(() => "");
+  const verification = verifyProjectCutReplayProof(proof, {
+    repository: options.repository.fullName,
+    protectedBase: options.targetBranch,
+    pullRequestNumber: Number(pr.number),
+    sourceHead: String(pr.head?.sha || "").toLowerCase(),
+    ...(options.sourcePatchRoot ? { sourcePatchRoot: options.sourcePatchRoot } : {}),
+    currentBase,
+  });
+  return verification.ok
+    ? { ok: true, reason: verification.reason, proofRoot: verification.proofRoot, currentBase }
+    : { ok: false, reason: `project-cut-${verification.reason}`, currentBase };
 }
 async function setQueueAdmissionStatus(client, repository, sha, context, state) {
   if (!context) return null;
@@ -223,7 +248,12 @@ export async function evaluatePullRequest(pr, options, client) {
       observedBaseRef: detailed.base.ref,
     });
   }
-  if (!mergeableAccepted(detailed, options.landingMode)) {
+  const mergeableState = String(detailed.mergeable_state || detailed.mergeStateStatus || "").toLowerCase();
+  const projectCut = mergeableState === "behind" && options.landingMode === "queue"
+    ? await projectCutQualification(detailed, options, client)
+    : null;
+  if (projectCut && !projectCut.ok) return skip(projectCut.reason, { projectCut });
+  if (!mergeableAccepted(detailed, options.landingMode, projectCut?.ok === true)) {
     return skip("not-mergeable", {
       mergeable: detailed.mergeable,
       mergeableState: detailed.mergeable_state || detailed.mergeStateStatus || "",
@@ -247,6 +277,7 @@ export async function evaluatePullRequest(pr, options, client) {
     reason: options.dryRun ? "dry-run" : "eligible",
     checks: checkSummary,
     approval,
+    projectCut,
     pullRequestId: detailed.node_id || pr.node_id || "",
     observedHeadSha,
   };
@@ -603,6 +634,7 @@ function admissionReceipt({
   checks,
   approval,
   predecessor,
+  projectCut,
 } = {}) {
   return {
     schemaVersion: 1,
@@ -620,6 +652,7 @@ function admissionReceipt({
     decision,
     reason,
     predecessor: predecessor || null,
+    projectCut: projectCut || null,
     finalSafetyBoundary: "github-merge-group",
   };
 }
@@ -863,7 +896,6 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
     repository: options.repository,
     apiUrl: optionsInput.apiUrl || process.env.GITHUB_API_URL || "https://api.github.com",
   });
-
   const [pullRequests, initialBaseSha, initialQueueState] = await Promise.all([
     client.listPullRequests(options.targetBranch),
     client.getBranchSha(options.targetBranch).catch(() => ""),
@@ -889,7 +921,6 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
     finalBaseSha: initialBaseSha,
     mergeQueue: initialQueueState,
   };
-
   if (landingMode === "queue" && !initialQueueState.enabled) {
     blockRemainingPullRequests(result, orderedPullRequests, 0, options, initialBaseSha, null);
     for (const entry of result.evaluated) {
@@ -914,7 +945,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
       continue;
     }
 
-    const decision = await evaluatePullRequest(pr, options, client);
+    const decision = await evaluatePullRequest(pr, { ...options, landingMode }, client);
     const entry = evaluatedEntry(pr, decision);
     result.evaluated.push(entry);
 
@@ -944,6 +975,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
         reason: decision.reason,
         checks: decision.checks,
         approval: decision.approval,
+        projectCut: decision.projectCut,
       });
       result.skipped.push(entry);
       blockRemainingPullRequests(result, orderedPullRequests, index + 1, options, initialBaseSha, queuePredecessor(null, {
@@ -976,7 +1008,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
       } else if (observedHeadSha !== expectedHeadSha) {
         admissionDecision = "rejected";
         admissionReason = "head-sha-drift";
-      } else if (!mergeableAccepted(observedPullRequest, landingMode)) {
+      } else if (!mergeableAccepted(observedPullRequest, landingMode, decision.projectCut?.ok === true)) {
         admissionDecision = "rejected";
         admissionReason = "not-mergeable-on-admission-recheck";
       }
@@ -996,6 +1028,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
         checks: decision.checks,
         approval: decision.approval,
         predecessor,
+        projectCut: decision.projectCut,
       });
 
       if (admissionDecision === "planned") {
@@ -1109,6 +1142,8 @@ export function cliOptions(args = [], environment = process.env) {
     diagnosticContext: cliValue(args, "diagnostic-context", environment.BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT),
     warrantMode: cliValue(args, "warrant-mode", environment.BUILDCHAIN_DEV_PR_WARRANT_MODE),
     warrantResultPath: cliValue(args, "warrant-result", environment.BUILDCHAIN_DEV_PR_WARRANT_RESULT_PATH),
+    projectCutProofPath: cliValue(args, "project-cut-proof", environment.BUILDCHAIN_DEV_PR_PROJECT_CUT_PROOF_PATH),
+    sourcePatchRoot: cliValue(args, "source-patch-root", environment.BUILDCHAIN_DEV_PR_SOURCE_PATCH_ROOT),
     qualificationOnly: cliFlag(args, "qualification-only"),
     requireApproval: environment.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,
     sameRepositoryOnly: environment.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,

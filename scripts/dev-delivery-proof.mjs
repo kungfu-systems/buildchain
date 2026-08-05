@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import { classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);
@@ -58,6 +58,7 @@ export function devDeliveryProofCliOptions(args = [], environment = process.env)
     currentBase: flag(rest, "current-base", environment.BUILDCHAIN_DEV_DELIVERY_CURRENT_BASE),
     previousBase: flag(rest, "previous-base", environment.BUILDCHAIN_DEV_DELIVERY_PREVIOUS_BASE),
     replayTree: flag(rest, "replay-tree", environment.BUILDCHAIN_DEV_DELIVERY_REPLAY_TREE),
+    qualificationReceiptPath: flag(rest, "qualification-receipt", environment.BUILDCHAIN_DEV_DELIVERY_QUALIFICATION_RECEIPT),
     mergeGroupHead: flag(rest, "merge-group-head", environment.BUILDCHAIN_DEV_DELIVERY_MERGE_GROUP_HEAD),
     mergeGroupTree: flag(rest, "merge-group-tree", environment.BUILDCHAIN_DEV_DELIVERY_MERGE_GROUP_TREE),
     requiredContextRoots: flag(rest, "required-context-roots-json", environment.BUILDCHAIN_DEV_DELIVERY_REQUIRED_CONTEXT_ROOTS || "[]"),
@@ -128,6 +129,23 @@ export function runDevDeliveryProofCommand(options) {
       replayTree: options.replayTree,
     });
   }
+  if (options.command === "replay-proof") {
+    return createProjectCutReplayProof({
+      repository: options.repository,
+      protectedBase: options.protectedBase,
+      pullRequestNumber: options.pullRequestNumber,
+      sourceHead: options.sourceHead,
+      sourcePatchRoot: options.sourcePatchRoot,
+      currentBase: options.currentBase,
+      replayTree: options.replayTree,
+      qualificationReceipt: jsonFile(options.qualificationReceiptPath, "Project Cut qualification receipt"),
+      requiredContextRoots: jsonList(options.requiredContextRoots, "required context roots", { required: true }),
+      verifiedAt: options.verifiedAt,
+    });
+  }
+  if (options.command === "verify-replay") {
+    return verifyProjectCutReplayProof(jsonFile(options.sourceProofPath, "Project Cut replay proof"));
+  }
   if (options.command === "integration") {
     const sourceProofRoot = options.sourceProofRoot || jsonFile(options.sourceProofPath, "source proof").proofRoot;
     return createIntegrationDeliveryProof({
@@ -150,7 +168,7 @@ export function runDevDeliveryProofCommand(options) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [options] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev proof <source|verify-source|classify|replay|replay-proof|verify-replay|integration|verify-integration> [options] [--output FILE] [--json]\n";
 }
 
 async function main() {

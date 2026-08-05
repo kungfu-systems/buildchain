@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-05
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -51,6 +51,13 @@ An active candidate still requires its current fencing token and lease
 generation. Exact duplicate cancellation evidence is a visible no-op; identity,
 state, event, or evidence drift fails closed.
 
+The reusable terminal controller uses one `settle` operation for active,
+queued, already-terminal, and never-admitted pull requests. An active Warrant
+still requires its exact fence and evidence. A matching queued cancellation is
+persisted normally. A duplicate terminal event or a pull request that never
+entered Warrant authority returns a rooted explicit no-op instead of failing
+the workflow or inventing queue state.
+
 The supported priority classes are `ordinary`, `expedited`, and `emergency`.
 The queue does not infer an emergency: callers must choose it explicitly under
 their reviewed policy. Delivery classes are `non-native-fast`,
@@ -65,7 +72,11 @@ closure, dependencies, toolchain, covered paths, and shard evidence.
 Before reuse, the consumer classifies the dev delta:
 
 - unchanged roots plus an unrelated attributed delta reuse source
-  qualification and run only a cheap Project Cut replay;
+  qualification and run only a cheap Project Cut replay. GitHub's `behind`
+  state is accepted only when a rooted replay proof binds the exact current
+  protected base, unchanged PR head and source patch, replay tree, required
+  context roots, and a qualified `project.cut.merge-queue-admission/v1`
+  receipt;
 - an overlapping delta reruns the affected source shards;
 - an unknown graph or changed source, plan, closure, dependency, or toolchain
   root fails closed to full source qualification.
@@ -99,7 +110,7 @@ buildchain dev warrant cancel-queued --repository owner/repository \
   --evidence-root <terminal-event-root> --execute
 ```
 
-`heartbeat`, `recover`, `close`, `cancel-queued`, and `observe` use the same durable authority.
+`heartbeat`, `recover`, `close`, `settle`, `cancel-queued`, and `observe` use the same durable authority.
 Warrant-scoped mutations require the exact fencing token and lease generation.
 `close` also requires a rooted terminal evidence object.
 
@@ -109,6 +120,8 @@ Proof commands create, verify, classify, and compose the two proof layers:
 buildchain dev proof source ...
 buildchain dev proof classify --source-proof source-proof.json ...
 buildchain dev proof replay ...
+buildchain dev proof replay-proof \
+  --qualification-receipt project-cut-admission.json ...
 buildchain dev proof integration --warrant-result warrant.json ...
 ```
 
@@ -119,7 +132,8 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
 - `off` preserves the previous exact-head admission controller;
 - `shadow` qualifies the source and emits a read-only queue submission plan;
 - `required` persists the submission, selects the Warrant, and refuses GitHub
-  enqueue unless the exact active Warrant passes readback validation.
+  enqueue unless the immutable queue commit, state root, active Warrant, and
+  selected candidate all pass exact readback validation.
 
 Consumers should deploy `shadow` first, inspect receipts, then change their
 protected caller to `required`. Rollback is a reviewed caller change back to

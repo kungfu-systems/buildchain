@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
+import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
 
 const STATE_PATH = "queue.json";
 const STATE_REF_PREFIX = "buildchain/dev-delivery-warrant/";
@@ -216,6 +216,22 @@ function transitionFor(command, queue, options) {
       now: options.now,
     });
   }
+  if (command === "settle") {
+    return settleDevDeliveryTerminalEvent(
+      queue,
+      {
+        pullRequestNumber: positiveInteger(options.pullRequestNumber, "pullRequestNumber"),
+        sourceHead: exactSha(options.expectedSourceHead || options.sourceHead, "sourceHead"),
+        fencingToken: options.fencingToken,
+        leaseGeneration: options.leaseGeneration,
+        outcome: options.outcome,
+        eventAction: options.eventAction,
+        evidenceRoot: options.evidenceRoot,
+        reason: options.reason,
+      },
+      { now: options.now },
+    );
+  }
   if (command === "cancel-queued") {
     return cancelQueuedDevDeliveryCandidate(
       queue,
@@ -352,7 +368,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n";
 }
 
 async function main() {
@@ -362,7 +378,7 @@ async function main() {
     return;
   }
   const options = devDeliveryCliOptions(args);
-  if (!["submit", "select", "heartbeat", "recover", "close", "cancel-queued", "observe"].includes(options.command)) {
+  if (!["submit", "select", "heartbeat", "recover", "close", "settle", "cancel-queued", "observe"].includes(options.command)) {
     throw new Error(usage().trim());
   }
   const result = await runDevDeliveryCommand(options);

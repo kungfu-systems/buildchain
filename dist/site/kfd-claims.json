@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e6beb49afbedd223d19b6a2d6d21c1fa267cb78eb5643233c3fba45222a11724",
+    "sha256": "d20788232884d3ada0086a0cdd07fc0dcd9c8fdfbd31d4c6f2bd4d49d4da5622",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 62,
       "actionCount": 6,
       "sitePageCount": 65,
-      "docCommandRefCount": 880,
+      "docCommandRefCount": 881,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e6beb49afbedd223d19b6a2d6d21c1fa267cb78eb5643233c3fba45222a11724",
+      "sha256": "d20788232884d3ada0086a0cdd07fc0dcd9c8fdfbd31d4c6f2bd4d49d4da5622",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 62,
         "actionCount": 6,
         "sitePageCount": 65,
-        "docCommandRefCount": 880,
+        "docCommandRefCount": 881,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -4454,7 +4454,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 31,
+          "inputCount": 32,
           "inputs": [
             "affected-paths-json",
             "allowed-head-prefixes",
@@ -4476,6 +4476,7 @@
             "max-merges",
             "merge-method",
             "plan-root",
+            "project-cut-proof-json",
             "queue-admission-context",
             "ready-label",
             "require-approval",

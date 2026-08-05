@@ -27,6 +27,7 @@ SHA = re.compile(r"^[0-9a-f]{40}$")
 REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 ARTIFACT_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$")
 SAFE_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+SAFE_MARKER = re.compile(r"^[a-z0-9][a-z0-9._:-]{0,79}$")
 NON_AUTHORITIES = [
     "first-party-identity", "system-identity", "kfd-compliance",
     "product-system-metadata", "package-metadata", "registry-history",
@@ -261,6 +262,50 @@ def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
                     f"demo {demo['id']} step {step['id']} expected exits are invalid")
             require(isinstance(step.get("stdoutIncludes"), list) and isinstance(step.get("fileAssertions"), list),
                     f"demo {demo['id']} step {step['id']} assertions are invalid")
+    presentation = value.get("presentation")
+    if presentation is not None:
+        require(isinstance(presentation, dict) and set(presentation) == {"schema", "proofs", "materialization"},
+                "scenario presentation shape is invalid")
+        require(presentation.get("schema") == "buildchain.declarative-demo-presentation/v1",
+                "scenario presentation schema is unsupported")
+        proofs = presentation.get("proofs")
+        require(isinstance(proofs, list) and len(proofs) == len(demos),
+                "scenario presentation must bind every demo exactly once")
+        labels: set[str] = set()
+        for index, proof in enumerate(proofs):
+            required = {"demoId", "label", "question", "summary"}
+            require(isinstance(proof, dict) and required <= set(proof) <= required | {"transitionAfter"},
+                    f"scenario presentation proof {index} shape is invalid")
+            require(proof.get("demoId") == demos[index].get("id"),
+                    f"scenario presentation proof {index} must preserve demo order")
+            label = proof.get("label")
+            require(isinstance(label, str) and 1 <= len(label) <= 80 and label not in labels,
+                    f"scenario presentation proof {index} label is invalid or repeated")
+            labels.add(label)
+            question = proof.get("question")
+            require(isinstance(question, str) and 1 <= len(question) <= 120 and question == demos[index].get("title"),
+                    f"scenario presentation proof {index} question must equal the demo title")
+            require(isinstance(proof.get("summary"), str) and 1 <= len(proof["summary"]) <= 500,
+                    f"scenario presentation proof {index} summary is invalid")
+            transition = proof.get("transitionAfter")
+            require(transition is None or isinstance(transition, str) and 1 <= len(transition) <= 500,
+                    f"scenario presentation proof {index} transition is invalid")
+        materialization = presentation.get("materialization")
+        require(isinstance(materialization, dict) and set(materialization) == {
+            "readmeMode", "technicalSpecPath", "technicalSpecTitle", "technicalMarker"
+        }, "scenario presentation materialization shape is invalid")
+        require(materialization.get("readmeMode") in ("full", "media-only"),
+                "scenario presentation README mode is invalid")
+        technical_path = inside(Path("/repository"), materialization.get("technicalSpecPath"),
+                                "scenario presentation technical specification path")
+        readme_path = inside(Path("/repository"), (value.get("publication") or {}).get("readmePath"),
+                             "scenario publication README path")
+        require(technical_path != readme_path, "scenario presentation technical specification must be separate from README")
+        title = materialization.get("technicalSpecTitle")
+        require(isinstance(title, str) and 1 <= len(title) <= 120,
+                "scenario presentation technical specification title is invalid")
+        require(SAFE_MARKER.fullmatch(str(materialization.get("technicalMarker") or "")) is not None,
+                "scenario presentation technical marker is invalid")
     authority = value.get("authority") or {}
     require(authority.get("grants") == [] and authority.get("nonAuthorities") == NON_AUTHORITIES,
             "scenario authority boundary is invalid")
