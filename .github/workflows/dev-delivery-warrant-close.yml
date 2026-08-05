@@ -154,23 +154,32 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
 
-      - name: Bind terminal event to the active candidate
+      - name: Resolve terminal settlement mode
+        id: settlement
         shell: bash
         run: |
-          jq -e \
-            --argjson pr "${EXPECTED_PR}" \
-            --arg head "${EXPECTED_HEAD}" \
-            '.observation.activeWarrant.pullRequestNumber == $pr
-             and .observation.activeWarrant.sourceHead == $head
-             and .observation.activeCandidate.pullRequestNumber == $pr
-             and .observation.activeCandidate.sourceHead == $head' \
-            .buildchain/dev-delivery/observation.json >/dev/null
+          set -euo pipefail
+          if jq -e '.observation.activeWarrant != null' .buildchain/dev-delivery/observation.json >/dev/null; then
+            jq -e \
+              --argjson pr "${EXPECTED_PR}" \
+              --arg head "${EXPECTED_HEAD}" \
+              '.observation.activeWarrant.pullRequestNumber == $pr
+               and .observation.activeWarrant.sourceHead == $head
+               and .observation.activeCandidate.pullRequestNumber == $pr
+               and .observation.activeCandidate.sourceHead == $head
+               and .observation.activeCandidate.candidateId == .observation.activeWarrant.candidateId' \
+              .buildchain/dev-delivery/observation.json >/dev/null
+            echo "mode=active" >> "${GITHUB_OUTPUT}"
+          else
+            echo "mode=inactive" >> "${GITHUB_OUTPUT}"
+          fi
         env:
           EXPECTED_PR: ${{ inputs.expected-pr-number }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
 
       - name: Seal exact terminal evidence
         id: evidence
+        if: steps.settlement.outputs.mode == 'active' || inputs.outcome != 'merged'
         shell: bash
         run: |
           if [ "${OUTCOME}" = "merged" ]; then
@@ -207,30 +216,43 @@ jobs:
           CONTEXT_ROOTS: ${{ inputs.required-context-roots-json }}
           TERMINAL_EVIDENCE_ROOT: ${{ inputs.terminal-evidence-root }}
 
-      - name: Close current fencing generation
+      - name: Settle terminal delivery event
         id: close
         shell: bash
         run: |
-          fencing_token="$(jq -er '.observation.activeWarrant.fencingToken' .buildchain/dev-delivery/observation.json)"
-          lease_generation="$(jq -er '.observation.activeWarrant.generation' .buildchain/dev-delivery/observation.json)"
-          node .buildchain/runtime/scripts/dev-delivery-warrant.mjs close \
-            --repository "${GITHUB_REPOSITORY}" \
-            --branch "${TARGET_BRANCH}" \
-            --fencing-token "${fencing_token}" \
-            --lease-generation "${lease_generation}" \
-            --outcome "${OUTCOME}" \
-            --evidence-root "${EVIDENCE_ROOT}" \
-            --reason "${REASON}" \
-            --execute \
+          set -euo pipefail
+          args=(
+            settle
+            --repository "${GITHUB_REPOSITORY}"
+            --branch "${TARGET_BRANCH}"
+            --pull-request "${EXPECTED_PR}"
+            --expected-source-head "${EXPECTED_HEAD}"
+            --outcome "${OUTCOME}"
+            --reason "${REASON}"
+            --execute
             --output .buildchain/dev-delivery/close.json
+          )
+          if [ "${SETTLEMENT_MODE}" = "active" ]; then
+            args+=(
+              --fencing-token "$(jq -er '.observation.activeWarrant.fencingToken' .buildchain/dev-delivery/observation.json)"
+              --lease-generation "$(jq -er '.observation.activeWarrant.generation' .buildchain/dev-delivery/observation.json)"
+            )
+          fi
+          if [ -n "${EVIDENCE_ROOT}" ]; then
+            args+=(--evidence-root "${EVIDENCE_ROOT}")
+          fi
+          node .buildchain/runtime/scripts/dev-delivery-warrant.mjs "${args[@]}"
           echo "close-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/close.json)" >> "${GITHUB_OUTPUT}"
           echo "final-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/close.json)" >> "${GITHUB_OUTPUT}"
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
           OUTCOME: ${{ inputs.outcome }}
           EVIDENCE_ROOT: ${{ steps.evidence.outputs.evidence-root }}
           REASON: ${{ inputs.reason }}
+          SETTLEMENT_MODE: ${{ steps.settlement.outputs.mode }}
 
       - name: Upload terminal Warrant evidence
         if: always()

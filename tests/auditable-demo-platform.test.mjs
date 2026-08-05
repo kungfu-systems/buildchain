@@ -82,6 +82,28 @@ function declareLongForm(value) {
   }
 }
 
+function declarePresentation(value) {
+  declareLongForm(value);
+  value.presentation = {
+    schema: "buildchain.declarative-demo-presentation/v1",
+    proofs: value.demos.map((demo, index) => ({
+      demoId: demo.id,
+      label: index === 0 ? "Continuity" : "Failure retention",
+      question: demo.title,
+      summary: index === 0
+        ? "The first proof isolates continuity across sessions."
+        : "The second proof places continuity under failure.",
+      ...(index === 0 ? { transitionAfter: "Continuity must also survive failure." } : {}),
+    })),
+    materialization: {
+      readmeMode: "media-only",
+      technicalSpecPath: "docs/demo-technical-spec.md",
+      technicalSpecTitle: "Fixture demo technical specification",
+      technicalMarker: "fixture-demo:technical",
+    },
+  };
+}
+
 function oversizedLongFormRendererManifest() {
   const replay = "x".repeat(4 * 1024 * 1024);
   return {
@@ -205,6 +227,23 @@ test("scenario contract accepts multiple demos and rejects shell command authori
   const invalidComposition = structuredClone(scenario());
   invalidComposition.compositionMode = "cropped-terminal";
   assert.throws(() => validateScenario(invalidComposition), /composition mode/u);
+});
+
+test("optional presentation binds consumer proof semantics without changing the legacy default", () => {
+  const legacy = scenario();
+  assert.equal(validateScenario(legacy).presentation, undefined);
+
+  const presented = structuredClone(legacy);
+  declarePresentation(presented);
+  assert.equal(validateScenario(presented).presentation.materialization.readmeMode, "media-only");
+
+  const reordered = structuredClone(presented);
+  [reordered.presentation.proofs[0], reordered.presentation.proofs[1]] = [reordered.presentation.proofs[1], reordered.presentation.proofs[0]];
+  assert.throws(() => validateScenario(reordered), /preserve demo order/u);
+
+  const divergentQuestion = structuredClone(presented);
+  divergentQuestion.presentation.proofs[0].question = "A different product claim?";
+  assert.throws(() => validateScenario(divergentQuestion), /must equal the demo title/u);
 });
 
 test("duration class keeps standard at 60 seconds and admits only bounded long-form", () => {
@@ -457,6 +496,47 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   assert.equal(fs.readFileSync(path.join(repository, "README.md"), "utf8"), firstReadme);
   assert.match(firstReadme, /\$ fixture write[\s\S]*\$ fixture read/u);
   assert.match(firstReadme, /1080p MP4[\s\S]*720p MP4/u);
+
+  const legacyBlock = firstReadme.match(/<!-- fixture-demo:shared-state:start -->[\s\S]*?<!-- fixture-demo:shared-state:end -->/u)?.[0];
+  assert.ok(legacyBlock);
+  fs.writeFileSync(path.join(repository, "README.md"), [
+    "# Fixture consumer",
+    "",
+    "## Three consumer-owned proofs",
+    "",
+    "### Can Work survive a new Agent?",
+    "",
+    "Human-authored narrative stays outside the generated marker.",
+    "",
+    legacyBlock,
+    "",
+    "The bridge to the next proof also remains consumer-owned.",
+    "",
+  ].join("\n"));
+  const presented = capture(t, "shared-state", declarePresentation);
+  const presentedArgs = {
+    ...args,
+    scenarioPath: presented.scenarioPath,
+    captureRoot: presented.output,
+  };
+  const presentedFirst = materializeDemo(presentedArgs);
+  assert.equal(presentedFirst.technicalSpecPath, "docs/demo-technical-spec.md");
+  const presentedReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
+  assert.match(presentedReadme, /Human-authored narrative stays outside the generated marker/u);
+  assert.match(presentedReadme, /The bridge to the next proof also remains consumer-owned/u);
+  const presentedBlock = presentedReadme.match(/<!-- fixture-demo:shared-state:start -->[\s\S]*?<!-- fixture-demo:shared-state:end -->/u)?.[0] || "";
+  assert.match(presentedBlock, /\[!\[Shared state\]/u);
+  assert.doesNotMatch(presentedBlock, /Animation scenario|Native renditions|<details>/u);
+  const technicalSpec = fs.readFileSync(path.join(repository, "docs/demo-technical-spec.md"), "utf8");
+  assert.match(technicalSpec, /## Continuity: Shared state/u);
+  assert.match(technicalSpec, /\$ fixture write[\s\S]*\$ fixture read/u);
+  assert.match(technicalSpec, /Native renditions:[\s\S]*Claim boundary:/u);
+  assert.match(technicalSpec, /Continuity must also survive failure\./u);
+  assert.ok(technicalSpec.indexOf("fixture-demo:technical:shared-state:start") < technicalSpec.indexOf("fixture-demo:technical:independent:start"));
+  materializeDemo(presentedArgs);
+  assert.equal(fs.readFileSync(path.join(repository, "README.md"), "utf8"), presentedReadme);
+  assert.equal(fs.readFileSync(path.join(repository, "docs/demo-technical-spec.md"), "utf8"), technicalSpec);
+
   const independent = capture(t, "independent", declareLongForm);
   materializeDemo({
     ...args,
@@ -467,7 +547,7 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   const multiReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
   assert.match(multiReadme, /<!-- fixture-demo:shared-state:start -->/u);
   assert.match(multiReadme, /<!-- fixture-demo:independent:start -->/u);
-  assert.match(multiReadme, /\$ fixture write/u);
+  assert.match(multiReadme, /Human-authored narrative stays outside the generated marker/u);
   assert.match(multiReadme, /\$ fixture independent/u);
   const passport = JSON.parse(fs.readFileSync(path.join(repository, first.evidenceDirectory, "release-passport.json"), "utf8"));
   assert.deepEqual(passport.authority.grants, []);
@@ -542,6 +622,12 @@ test("advisory media failure preserves the required Gate and suppresses publicat
   assert.match(workflow, /render-result: \$\{\{ steps\.render\.outcome \}\}/u);
   assert.match(workflow, /inputs\.materialize && inputs\.render-media && needs\.qualify\.outputs\.render-result == 'success'/u);
   assert.match(workflow, /The required Gate remains successful and no materialization PR will be opened/u);
+});
+
+test("declarative publication stages an optional consumer-owned technical specification", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.declarative-auditable-demo.yml"), "utf8");
+  assert.match(workflow, /technical_spec_path=.*technicalSpecPath/u);
+  assert.match(workflow, /git add -- "\$\{technical_spec_path\}"/u);
 });
 
 test("reusable builds run the transport simulation before either artifact upload path", () => {
