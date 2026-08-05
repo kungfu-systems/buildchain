@@ -1189,10 +1189,14 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
   assert.match(workflow, /publication-gate-aggregate-json:/);
+  assert.match(workflow, /publication-gate-command:/);
+  assert.match(workflow, /release-candidate-wait-seconds:/);
   assert.match(workflow, /publication-auto-admission:/);
   assert.match(workflow, /auto-admission: \$\{\{ inputs\.publication-auto-admission \}\}/);
   assert.match(workflow, /publication-auto-no-gate:/);
   assert.match(workflow, /auto-no-gate: \$\{\{ inputs\.publication-auto-no-gate \}\}/);
+  assert.match(workflow, /consumer-gate-command: \$\{\{ inputs\.publication-gate-command \}\}/);
+  assert.match(workflow, /BUILDCHAIN_RC_WAIT_SECONDS: \$\{\{ inputs\.release-candidate-wait-seconds \}\}/);
   assert.match(workflow, /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/);
   assert.match(workflow, /authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/);
@@ -1324,7 +1328,11 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /release-candidate admission requires a repository-local publisher workflow path/);
   assert.match(workflow, /release-candidate GitHub Release admission requires an empty publication-package-name and exact github-release:/);
   assert.match(workflow, /publisher_mode="github-token"/);
-  assert.match(workflow, /release-candidate admission requires a Gate aggregate or explicit publication-auto-no-gate decision/);
+  assert.match(workflow, /release-candidate admission requires exactly one Gate aggregate, consumer Gate command, or explicit publication-auto-no-gate decision/);
+  assert.match(workflow, /name: Assemble consumer Gate from exact downloaded evidence/);
+  assert.match(workflow, /BUILDCHAIN_CONSUMER_GATE_COMMAND: \$\{\{ inputs\.consumer-gate-command \}\}/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH/);
+  assert.match(workflow, /publicationGateAggregateBindings/);
   assert.match(workflow, /name: Audit managed release-candidate publication control plane/);
   assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);
   assert.match(workflow, /--workflow-repository "\$\{\{ inputs\.buildchain-repository \}\}"/);

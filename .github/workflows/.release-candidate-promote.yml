@@ -122,6 +122,11 @@ on:
         default: "Build"
         type: string
         required: false
+      release-candidate-wait-seconds:
+        description: "Bounded wait for the complete PR-stage release-candidate workflow, including post-required-check evidence tails"
+        default: 10800
+        type: number
+        required: false
       release-candidate-family-evidence-required:
         description: "Require exact Initiative-family evidence before protected promotion"
         default: false
@@ -414,6 +419,11 @@ on:
         required: false
       publication-gate-aggregate-json:
         description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
+        default: ""
+        type: string
+        required: false
+      publication-gate-command:
+        description: "Consumer-owned read-only command that assembles a qualifying Gate aggregate from the exact downloaded release-candidate evidence"
         default: ""
         type: string
         required: false
@@ -818,6 +828,7 @@ jobs:
           BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
           BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
           BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RC_WAIT_SECONDS: ${{ inputs.release-candidate-wait-seconds }}
           BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
           BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
@@ -938,6 +949,7 @@ jobs:
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
+      consumer-gate-command: ${{ inputs.publication-gate-command }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       consumer-qualification-required: ${{ needs.qualification-plan.outputs.required == 'true' }}
@@ -1354,6 +1366,7 @@ jobs:
           BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS: ${{ inputs.github-release-payload-patterns }}
           BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
           BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RC_WAIT_SECONDS: ${{ inputs.release-candidate-wait-seconds }}
           BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
           BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}

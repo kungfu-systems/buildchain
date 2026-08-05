@@ -106,7 +106,7 @@
       "path": "docs/publication-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:6c91ee89d1ed5c0c570806684738916876556b2f1bcbf4be4f73f30ff89e98a4"
+      "digest": "sha256:a1650158943d95b979d164ca98a73d7919fda577d648e4a4a9d04588ec698796"
     },
     {
       "id": "github-governance-authority",
@@ -122,7 +122,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:fbcffddf1e2c50502186b7ba557e29f96be59a1da6d438aabd4d1f9ce32b5915"
+      "digest": "sha256:48e42e92174b1091e8ff32e876099f092ca12ce886d3382f019f0ccd907f1c9b"
     },
     {
       "id": "release-propagation",
