@@ -78,3 +78,5 @@ jobs:
       block-labels: blocked,do-not-merge,work-in-progress
       landing-mode: queue
       dry-run: false
+    secrets:
+      github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
