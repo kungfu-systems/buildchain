@@ -4470,7 +4470,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 53
+        "line": 75
       },
       "example": "import { classifyDevDeliveryDelta } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4499,7 +4499,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 185
+        "line": 207
       },
       "example": "import { createIntegrationDeliveryProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4528,7 +4528,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 99
+        "line": 121
       },
       "example": "import { createProjectCutReplayPlan } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4557,7 +4557,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 119
+        "line": 141
       },
       "example": "import { createProjectCutReplayProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4586,7 +4586,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 18
+        "line": 31
       },
       "example": "import { createSourceQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4691,7 +4691,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 206
+        "line": 228
       },
       "example": "import { verifyIntegrationDeliveryProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4724,7 +4724,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 165
+        "line": 187
       },
       "example": "import { verifyProjectCutReplayProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4757,7 +4757,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 36
+        "line": 52
       },
       "example": "import { verifySourceQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -20255,7 +20255,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:070b852cfd9923693f907e8eb7fb507727f25e6ec5b0446abab391f050cee818"
+      "digest": "sha256:386f59024feb5c1fb9d77e09b900b3a3fa94f0e8838eeab584be3ddbd8fb49ef"
     },
     {
       "id": "build-facts",

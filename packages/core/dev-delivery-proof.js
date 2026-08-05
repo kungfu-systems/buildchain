@@ -4,6 +4,8 @@ export const SOURCE_QUALIFICATION_PROOF_SCHEMA = "kungfu.buildchain.source-quali
 export const PROJECT_CUT_REPLAY_PROOF_SCHEMA = "kungfu.buildchain.project-cut-replay-proof/v1";
 export const INTEGRATION_DELIVERY_PROOF_SCHEMA = "kungfu.buildchain.integration-delivery-proof/v1";
 
+const SOURCE_QUALIFICATION_ROOT_SEMANTICS = "qualification-identity-v1";
+
 const DEV_DELIVERY_WARRANT_SCHEMA = "kungfu.buildchain.dev-delivery-warrant/v1";
 
 function exactRoots(values, label) {
@@ -15,9 +17,21 @@ function rootedProof(body) {
   return { ...body, proofRoot: devDeliveryContentRoot(body) };
 }
 
+function sourceQualificationIdentity(body) {
+  const identity = clone(body);
+  delete identity.qualifiedAt;
+  delete identity.observationRoot;
+  return identity;
+}
+
+function sourceQualificationObservation(body) {
+  return { qualifiedAt: body.qualifiedAt };
+}
+
 export function createSourceQualificationProof(input = {}) {
-  return rootedProof({
+  const body = {
     schema: SOURCE_QUALIFICATION_PROOF_SCHEMA,
+    rootSemantics: SOURCE_QUALIFICATION_ROOT_SEMANTICS,
     repository: repository(input.repository),
     protectedBase: protectedBase(input.protectedBase),
     sourceIdentityRoot: exactRoot(input.sourceIdentityRoot, "sourceIdentityRoot"),
@@ -30,7 +44,9 @@ export function createSourceQualificationProof(input = {}) {
     affectedPaths: [...new Set((input.affectedPaths || []).map(text).filter(Boolean))].sort(),
     shardEvidenceRoots: exactRoots(input.shardEvidenceRoots, "shardEvidenceRoots"),
     qualifiedAt: timestamp(input.qualifiedAt, "qualifiedAt"),
-  });
+  };
+  body.observationRoot = devDeliveryContentRoot(sourceQualificationObservation(body));
+  return { ...body, proofRoot: devDeliveryContentRoot(sourceQualificationIdentity(body)) };
 }
 
 export function verifySourceQualificationProof(proofInput, expected = {}) {
@@ -39,7 +55,13 @@ export function verifySourceQualificationProof(proofInput, expected = {}) {
     if (proof.schema !== SOURCE_QUALIFICATION_PROOF_SCHEMA) return { ok: false, reason: "unsupported-schema" };
     const proofRoot = proof.proofRoot;
     delete proof.proofRoot;
-    if (devDeliveryContentRoot(proof) !== proofRoot) return { ok: false, reason: "proof-root-drift" };
+    if (proof.rootSemantics === undefined) {
+      if (devDeliveryContentRoot(proof) !== proofRoot) return { ok: false, reason: "proof-root-drift" };
+    } else {
+      if (proof.rootSemantics !== SOURCE_QUALIFICATION_ROOT_SEMANTICS) return { ok: false, reason: "unsupported-root-semantics" };
+      if (devDeliveryContentRoot(sourceQualificationIdentity(proof)) !== proofRoot) return { ok: false, reason: "proof-root-drift" };
+      if (devDeliveryContentRoot(sourceQualificationObservation(proof)) !== proof.observationRoot) return { ok: false, reason: "observation-root-drift" };
+    }
     for (const [field, value] of Object.entries(expected)) {
       if (value !== undefined && proof[field] !== value) return { ok: false, reason: `${field}-mismatch` };
     }
