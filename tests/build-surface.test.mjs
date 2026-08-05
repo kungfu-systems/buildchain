@@ -1511,6 +1511,10 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /delivery-class: native-proof-required/);
   assert.match(workflow, /delivery-priority: ordinary/);
   assert.match(workflow, /required-status-checks: check/);
+  assert.match(
+    workflow,
+    /allowed-head-prefixes: feature\/,fix\/,chore\/,docs\/,ci\/,refactor\/,automation\/auditable-demo-/,
+  );
   assert.match(workflow, /landing-mode: queue/);
   assert.match(workflow, /dry-run: false/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
