@@ -44,9 +44,16 @@
       "status": "complete",
       "artifactCount": 1,
       "sealedBundleRoot": ""
+    },
+    "github_release": {
+      "status": "complete",
+      "action": "created",
+      "tag": "v3.0.6-alpha.2",
+      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.6-alpha.2",
+      "assetCount": 9
     }
   },
   "resume_command": "",
   "created_at": "2026-08-05T21:41:08.903Z",
-  "updated_at": "2026-08-05T21:51:21.005Z"
+  "updated_at": "2026-08-05T21:51:44.945Z"
 }
