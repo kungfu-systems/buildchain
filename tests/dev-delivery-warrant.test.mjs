@@ -254,6 +254,27 @@ test("terminal settlement closes the exact active Warrant and repeats idempotent
   );
 });
 
+test("duplicate terminal settlement remains a no-op after the next Warrant is selected", () => {
+  let state = submit(queue(), 149, "2026-08-04T00:00:00Z").queue;
+  state = submitDevDeliveryCandidate(state, candidate(150), { now: "2026-08-04T00:00:01Z" }).queue;
+  const first = selectDevDeliveryWarrant(state, { now: "2026-08-04T00:00:02Z" });
+  const input = {
+    pullRequestNumber: 149,
+    sourceHead: first.warrant.sourceHead,
+    fencingToken: first.warrant.fencingToken,
+    leaseGeneration: first.warrant.generation,
+    outcome: "merged",
+    evidenceRoot: ROOTS.evidence,
+    reason: "exact merge group passed",
+  };
+  const closed = settleDevDeliveryTerminalEvent(first.queue, input, { now: "2026-08-04T00:01:00Z" });
+  const second = selectDevDeliveryWarrant(closed.queue, { now: "2026-08-04T00:01:01Z" });
+  const duplicate = settleDevDeliveryTerminalEvent(second.queue, input, { now: "2026-08-04T00:01:02Z" });
+  assert.equal(duplicate.receipt.action, "duplicate-terminal-event-noop");
+  assert.equal(duplicate.queue.stateRoot, second.queue.stateRoot);
+  assert.equal(duplicate.queue.activeWarrant.candidateId, second.warrant.candidateId);
+});
+
 test("queued cancellation binds recorded and observed heads without minting a Warrant", () => {
   let state = submit(queue(), 150, "2026-08-04T00:00:00Z").queue;
   state = submit(state, 151, "2026-08-04T00:01:00Z").queue;
