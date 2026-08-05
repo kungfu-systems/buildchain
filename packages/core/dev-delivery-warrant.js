@@ -1,4 +1,5 @@
 import { devDeliveryClone as clone, devDeliveryContentRoot, devDeliveryExactRoot as exactRoot, devDeliveryExactSha as exactSha, devDeliveryPositiveInteger as positiveInteger, devDeliveryProtectedBase as protectedBase, devDeliveryRepository as repository, devDeliveryText as text, devDeliveryTimestamp as timestamp } from "./dev-delivery-common.js";
+import { chainedDevDeliveryAttemptInput, createDevDeliveryCandidateIdentity, validateDevDeliveryCandidateChain } from "./dev-delivery-candidate-identity.js";
 import { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA, createCancelQueuedDevDeliveryCandidate } from "./dev-delivery-warrant-cancellation.js";
 import { DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA, createDevDeliveryTerminalSettler } from "./dev-delivery-warrant-settlement.js";
 export { devDeliveryContentRoot } from "./dev-delivery-common.js";
@@ -50,21 +51,8 @@ function normalizePolicy(policy = {}) {
   };
 }
 
-function candidateIdentity(input, expected) {
-  const identity = {
-    repository: expected.repository,
-    protectedBase: expected.protectedBase,
-    pullRequestNumber: positiveInteger(input.pullRequestNumber, "pullRequestNumber"),
-    assignmentRoot: exactRoot(input.assignmentRoot, "assignmentRoot"),
-    initiativeRoot: exactRoot(input.initiativeRoot, "initiativeRoot"),
-    sourceIdentityRoot: exactRoot(input.sourceIdentityRoot, "sourceIdentityRoot"),
-    deliveryClass: deliveryClass(input.deliveryClass),
-  };
-  return { ...identity, candidateId: devDeliveryContentRoot(identity) };
-}
-
 function normalizeCandidate(input, expected) {
-  const identity = candidateIdentity(input, expected);
+  const identity = createDevDeliveryCandidateIdentity(input, expected, deliveryClass);
   if (input.candidateId && input.candidateId !== identity.candidateId) {
     throw new Error(`candidateId mismatch for PR #${identity.pullRequestNumber}`);
   }
@@ -136,6 +124,7 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
   queue.fencingCounter = nonNegativeInteger(queue.fencingCounter, "queue fencingCounter");
   queue.policy = normalizePolicy(queue.policy);
   queue.candidates = (queue.candidates || []).map((candidate) => normalizeCandidate(candidate, queue));
+  validateDevDeliveryCandidateChain(queue.candidates, TERMINAL_STATES);
   queue.updatedAt = timestamp(queue.updatedAt, "queue updatedAt");
   if (queue.activeWarrant) {
     const warrant = queue.activeWarrant;
@@ -216,27 +205,29 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
         },
         queue,
       );
-      const conflicting = queue.candidates.find((entry) => entry.pullRequestNumber === candidate.pullRequestNumber && entry.candidateId !== candidate.candidateId && !TERMINAL_STATES.has(entry.status));
+      const chainedInput = chainedDevDeliveryAttemptInput({ queue, candidate, input, currentTime, terminalStates: TERMINAL_STATES });
+      const attemptedCandidate = chainedInput ? normalizeCandidate(chainedInput, queue) : candidate;
+      const conflicting = queue.candidates.find((entry) => entry.pullRequestNumber === attemptedCandidate.pullRequestNumber && entry.candidateId !== attemptedCandidate.candidateId && !TERMINAL_STATES.has(entry.status));
       if (conflicting) throw new Error(`PR #${candidate.pullRequestNumber} already has a different active semantic source`);
-      const existing = queue.candidates.find((entry) => entry.candidateId === candidate.candidateId);
+      const existing = queue.candidates.find((entry) => entry.candidateId === attemptedCandidate.candidateId);
       let action = "submitted";
-      let selected = candidate;
+      let selected = attemptedCandidate;
       if (existing) {
         if (TERMINAL_STATES.has(existing.status)) {
-          throw new Error(`candidate ${candidate.candidateId} is terminal and cannot be resubmitted`);
+          throw new Error(`candidate ${attemptedCandidate.candidateId} is terminal and cannot be resubmitted`);
         }
         const exactProofFields = ["sourcePatchRoot", "sourceProofRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot"];
-        const exactProofMatches = exactProofFields.every((field) => existing[field] === candidate[field]);
-        if (existing.sourceHead === candidate.sourceHead && exactProofMatches) {
+        const exactProofMatches = exactProofFields.every((field) => existing[field] === attemptedCandidate[field]);
+        if (existing.sourceHead === attemptedCandidate.sourceHead && exactProofMatches) {
           action = "duplicate-noop";
           selected = existing;
         } else {
           if (before.activeWarrant?.candidateId === existing.candidateId) {
             throw new Error("selected candidate sourceHead cannot change before terminal Warrant closeout");
           }
-          const headChanged = existing.sourceHead !== candidate.sourceHead;
-          existing.sourceHead = candidate.sourceHead;
-          for (const field of exactProofFields) existing[field] = candidate[field];
+          const headChanged = existing.sourceHead !== attemptedCandidate.sourceHead;
+          existing.sourceHead = attemptedCandidate.sourceHead;
+          for (const field of exactProofFields) existing[field] = attemptedCandidate[field];
           existing.updatedAt = currentTime;
           existing.attempts += 1;
           existing.status = "queued";
@@ -244,7 +235,7 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
           selected = existing;
         }
       } else {
-        queue.candidates.push(candidate);
+        queue.candidates.push(attemptedCandidate);
       }
       return { candidate: selected, action };
     },
