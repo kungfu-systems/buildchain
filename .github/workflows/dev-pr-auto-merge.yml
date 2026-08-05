@@ -66,6 +66,13 @@ on:
           type: string,
           required: false,
         }
+      project-cut-proof-json:
+        {
+          description: "Optional exact rooted Project Cut replay proof required when GitHub reports the PR behind the current protected base",
+          default: "",
+          type: string,
+          required: false,
+        }
       plan-root:
         {
           description: "Exact qualification plan root",
@@ -226,6 +233,12 @@ on:
       warrant-state-root:
         description: "Exact readback root of the durable Warrant queue"
         value: ${{ jobs.merge-dev-prs.outputs.warrant-state-root }}
+      warrant-state-commit:
+        description: "Immutable queue commit containing the active Warrant readback"
+        value: ${{ jobs.merge-dev-prs.outputs.warrant-state-commit }}
+      project-cut-proof-root:
+        description: "Verified exact Project Cut replay proof root, when supplied"
+        value: ${{ jobs.merge-dev-prs.outputs.project-cut-proof-root }}
 
 permissions:
   contents: write
@@ -253,6 +266,8 @@ jobs:
       source-proof-root: ${{ steps.proof.outputs.source-proof-root }}
       warrant-receipt-root: ${{ steps.warrant.outputs.warrant-receipt-root }}
       warrant-state-root: ${{ steps.warrant.outputs.warrant-state-root }}
+      warrant-state-commit: ${{ steps.warrant.outputs.warrant-state-commit }}
+      project-cut-proof-root: ${{ steps.project-cut.outputs.proof-root }}
     steps:
       - name: Resolve target branch
         id: target
@@ -302,6 +317,24 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Verify optional exact Project Cut replay proof
+        id: project-cut
+        if: inputs.project-cut-proof-json != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/dev-delivery
+          printf '%s\n' "${PROJECT_CUT_PROOF_JSON}" > .buildchain/dev-delivery/project-cut-proof.json
+          node .buildchain/runtime/scripts/dev-delivery-proof.mjs verify-replay \
+            --source-proof .buildchain/dev-delivery/project-cut-proof.json \
+            --output .buildchain/dev-delivery/project-cut-verification.json
+          jq -e '.ok == true and .reason == "exact-project-cut-replay"' \
+            .buildchain/dev-delivery/project-cut-verification.json >/dev/null
+          echo "path=.buildchain/dev-delivery/project-cut-proof.json" >> "${GITHUB_OUTPUT}"
+          echo "proof-root=$(jq -er '.proofRoot' .buildchain/dev-delivery/project-cut-proof.json)" >> "${GITHUB_OUTPUT}"
+        env:
+          PROJECT_CUT_PROOF_JSON: ${{ inputs.project-cut-proof-json }}
+
       - name: Qualify exact source before scheduling
         id: qualify
         if: inputs.delivery-warrant-mode != 'off'
@@ -315,8 +348,12 @@ jobs:
             --expected-head "${EXPECTED_HEAD}"
             --landing-mode queue
             --qualification-only
+            --source-patch-root "${SOURCE_PATCH_ROOT}"
             --output .buildchain/dev-delivery/source-admission.json
           )
+          if [ -n "${PROJECT_CUT_PROOF_PATH}" ]; then
+            args+=(--project-cut-proof "${PROJECT_CUT_PROOF_PATH}")
+          fi
           if [ "${WARRANT_MODE}" = "required" ] || { [ "${WARRANT_MODE}" = "shadow" ] && [ "${DRY_RUN}" != "true" ]; }; then
             args+=(--execute)
           fi
@@ -328,6 +365,8 @@ jobs:
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
           WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
           DRY_RUN: ${{ inputs.dry-run }}
+          SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
+          PROJECT_CUT_PROOF_PATH: ${{ steps.project-cut.outputs.path }}
           BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT: ${{ inputs.diagnostic-context }}
           BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ inputs.required-status-checks }}
           BUILDCHAIN_DEV_PR_READY_LABEL: ${{ inputs.ready-label }}
@@ -429,12 +468,31 @@ jobs:
             --lease-seconds "${LEASE_SECONDS}" \
             --execute \
             --output .buildchain/dev-delivery/warrant.json
-          echo "warrant-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/warrant.json)" >> "${GITHUB_OUTPUT}"
-          echo "warrant-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/warrant.json)" >> "${GITHUB_OUTPUT}"
+          jq -e \
+            --argjson pr "${EXPECTED_PR}" \
+            --arg head "${EXPECTED_HEAD}" \
+            '.schema == "kungfu.buildchain.dev-delivery-command-result/v1"
+             and .mode == "execute"
+             and (.after.commitSha | test("^[0-9a-f]{40}$"))
+             and (.after.stateRoot == .observation.stateRoot)
+             and (.warrant == .observation.activeWarrant)
+             and (.observation.activeWarrant.pullRequestNumber == $pr)
+             and (.observation.activeWarrant.sourceHead == $head)
+             and (.observation.activeCandidate.pullRequestNumber == $pr)
+             and (.observation.activeCandidate.sourceHead == $head)
+             and (.observation.activeCandidate.candidateId == .observation.activeWarrant.candidateId)' \
+            .buildchain/dev-delivery/warrant.json >/dev/null
+          {
+            echo "warrant-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/warrant.json)"
+            echo "warrant-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/warrant.json)"
+            echo "warrant-state-commit=$(jq -er '.after.commitSha' .buildchain/dev-delivery/warrant.json)"
+          } >> "${GITHUB_OUTPUT}"
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           TARGET_BRANCH: ${{ steps.target.outputs.branch }}
           LEASE_SECONDS: ${{ inputs.warrant-lease-seconds }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
 
       - name: Run Buildchain dev PR auto-merge
         id: merge
@@ -449,6 +507,8 @@ jobs:
           BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT: ${{ inputs.diagnostic-context }}
           BUILDCHAIN_DEV_PR_WARRANT_MODE: ${{ inputs.delivery-warrant-mode == 'required' && 'required' || 'off' }}
           BUILDCHAIN_DEV_PR_WARRANT_RESULT_PATH: .buildchain/dev-delivery/warrant.json
+          BUILDCHAIN_DEV_PR_PROJECT_CUT_PROOF_PATH: ${{ steps.project-cut.outputs.path }}
+          BUILDCHAIN_DEV_PR_SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
           BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ inputs.required-status-checks }}
           BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: ${{ inputs.queue-admission-context }}
           BUILDCHAIN_DEV_PR_READY_LABEL: ${{ inputs.ready-label }}

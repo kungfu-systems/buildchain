@@ -1,6 +1,7 @@
 import { devDeliveryClone as clone, devDeliveryContentRoot, devDeliveryExactRoot as exactRoot, devDeliveryExactSha as exactSha, devDeliveryPositiveInteger as positiveInteger, devDeliveryProtectedBase as protectedBase, devDeliveryRepository as repository, devDeliveryText as text, devDeliveryTimestamp as timestamp } from "./dev-delivery-common.js";
 
 export const SOURCE_QUALIFICATION_PROOF_SCHEMA = "kungfu.buildchain.source-qualification-proof/v1";
+export const PROJECT_CUT_REPLAY_PROOF_SCHEMA = "kungfu.buildchain.project-cut-replay-proof/v1";
 export const INTEGRATION_DELIVERY_PROOF_SCHEMA = "kungfu.buildchain.integration-delivery-proof/v1";
 
 const DEV_DELIVERY_WARRANT_SCHEMA = "kungfu.buildchain.dev-delivery-warrant/v1";
@@ -113,6 +114,72 @@ export function createProjectCutReplayPlan(input = {}) {
     action: previousBase === currentBase ? "verify-existing-replay" : "replay-on-latest-base",
     finalAuthority: "github-merge-group",
   });
+}
+
+export function createProjectCutReplayProof(input = {}) {
+  const qualification = input.qualificationReceipt || input.qualification || {};
+  if (qualification.schema !== "project.cut.merge-queue-admission/v1") throw new Error("Project Cut qualification schema is invalid");
+  if (qualification.ok !== true || qualification.decision !== "qualified") throw new Error("Project Cut qualification is not qualified");
+  if (!Array.isArray(qualification.reasonCodes) || qualification.reasonCodes.length !== 0) throw new Error("Project Cut qualification retains failure reasons");
+  if (typeof qualification.compositionChanged !== "boolean") throw new Error("Project Cut qualification compositionChanged is invalid");
+  if (!qualification.compositionChanged && qualification.compositionRoot != null) throw new Error("unchanged Project Cut qualification must not claim a compositionRoot");
+  const sourceHead = exactSha(input.sourceHead, "sourceHead");
+  const currentBase = exactSha(input.currentBase, "currentBase");
+  const replayTree = exactSha(input.replayTree, "replayTree");
+  if (exactSha(qualification.baseCommitOid, "qualification.baseCommitOid") !== currentBase) throw new Error("Project Cut qualification base does not match currentBase");
+  if (exactSha(qualification.headCommitOid, "qualification.headCommitOid") !== sourceHead) throw new Error("Project Cut qualification head does not match sourceHead");
+  if (exactSha(qualification.candidateTreeOid, "qualification.candidateTreeOid") !== replayTree) throw new Error("Project Cut qualification tree does not match replayTree");
+  const normalizedQualification = {
+    schema: qualification.schema,
+    ok: true,
+    decision: "qualified",
+    baseCommitOid: currentBase,
+    headCommitOid: sourceHead,
+    candidateCommitOid: exactSha(qualification.candidateCommitOid, "qualification.candidateCommitOid"),
+    candidateTreeOid: replayTree,
+    replayedCommitCount: positiveInteger(qualification.replayedCommitCount, "qualification.replayedCommitCount"),
+    compositionChanged: Boolean(qualification.compositionChanged),
+    compositionRoot: qualification.compositionChanged
+      ? exactRoot(qualification.compositionRoot, "qualification.compositionRoot")
+      : null,
+    reasonCodes: [],
+  };
+  return rootedProof({
+    schema: PROJECT_CUT_REPLAY_PROOF_SCHEMA,
+    repository: repository(input.repository),
+    protectedBase: protectedBase(input.protectedBase),
+    pullRequestNumber: positiveInteger(input.pullRequestNumber, "pullRequestNumber"),
+    sourceHead,
+    sourcePatchRoot: exactRoot(input.sourcePatchRoot, "sourcePatchRoot"),
+    currentBase,
+    replayTree,
+    qualification: normalizedQualification,
+    qualificationRoot: devDeliveryContentRoot(normalizedQualification),
+    requiredContextRoots: exactRoots(input.requiredContextRoots, "requiredContextRoots"),
+    verifiedAt: timestamp(input.verifiedAt, "verifiedAt"),
+    sourceHeadMutationRequired: false,
+    finalAuthority: "exact-project-cut-replay",
+  });
+}
+
+export function verifyProjectCutReplayProof(proofInput, expected = {}) {
+  try {
+    const proof = clone(proofInput || {});
+    if (proof.schema !== PROJECT_CUT_REPLAY_PROOF_SCHEMA) return { ok: false, reason: "unsupported-schema" };
+    const proofRoot = proof.proofRoot;
+    delete proof.proofRoot;
+    if (devDeliveryContentRoot(proof) !== proofRoot) return { ok: false, reason: "proof-root-drift" };
+    if (devDeliveryContentRoot(proof.qualification) !== proof.qualificationRoot) return { ok: false, reason: "qualification-root-drift" };
+    if (proof.finalAuthority !== "exact-project-cut-replay") return { ok: false, reason: "non-exact-final-authority" };
+    if (proof.sourceHeadMutationRequired !== false) return { ok: false, reason: "source-head-mutation-required" };
+    for (const [field, value] of Object.entries(expected)) {
+      if (value !== undefined && proof[field] !== value) return { ok: false, reason: `${field}-mismatch` };
+    }
+    createProjectCutReplayProof(proof);
+    return { ok: true, reason: "exact-project-cut-replay", proofRoot };
+  } catch (error) {
+    return { ok: false, reason: "invalid-proof", error: error.message };
+  }
 }
 
 export function createIntegrationDeliveryProof(input = {}) {

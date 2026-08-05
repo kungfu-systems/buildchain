@@ -1802,6 +1802,7 @@
         "max-merges",
         "merge-method",
         "plan-root",
+        "project-cut-proof-json",
         "queue-admission-context",
         "ready-label",
         "require-approval",
@@ -1814,7 +1815,7 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 31,
+      "inputCount": 32,
       "secrets": [
         "github-token"
       ],
@@ -1827,12 +1828,14 @@
         "evaluated-count",
         "final-base-sha",
         "merged-count",
+        "project-cut-proof-root",
         "skipped-count",
         "source-proof-root",
         "warrant-receipt-root",
+        "warrant-state-commit",
         "warrant-state-root"
       ],
-      "outputCount": 11,
+      "outputCount": 13,
       "surface": "dev-governance",
       "capabilityGroup": "governance-versioning",
       "status": "active",

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
+import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
 
 const STATE_PATH = "queue.json";
 const STATE_REF_PREFIX = "buildchain/dev-delivery-warrant/";
@@ -216,6 +216,22 @@ function transitionFor(command, queue, options) {
       now: options.now,
     });
   }
+  if (command === "settle") {
+    return settleDevDeliveryTerminalEvent(
+      queue,
+      {
+        pullRequestNumber: positiveInteger(options.pullRequestNumber, "pullRequestNumber"),
+        sourceHead: exactSha(options.expectedSourceHead || options.sourceHead, "sourceHead"),
+        fencingToken: options.fencingToken,
+        leaseGeneration: options.leaseGeneration,
+        outcome: options.outcome,
+        eventAction: options.eventAction,
+        evidenceRoot: options.evidenceRoot,
+        reason: options.reason,
+      },
+      { now: options.now },
+    );
+  }
   if (command === "cancel-queued") {
     return cancelQueuedDevDeliveryCandidate(
       queue,
@@ -251,7 +267,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
       token: options.token || process.env.GITHUB_TOKEN,
       apiUrl: options.apiUrl || process.env.GITHUB_API_URL || "https://api.github.com",
     });
-  const loaded = await store.read({
+  let loaded = await store.read({
     stateRef: options.stateRef,
     protectedBase: options.branch,
     now: options.now,
@@ -269,20 +285,44 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
       observation: observeDevDeliveryQueue(loaded.queue, { now: options.now }),
     };
   }
-  const changed = transitionFor(options.command, loaded.queue, options);
-  const mutates = changed.queue.stateRoot !== loaded.queue.stateRoot;
+  const initialLoaded = loaded;
+  let changed = transitionFor(options.command, loaded.queue, options);
+  let mutates = changed.queue.stateRoot !== loaded.queue.stateRoot;
   let write = null;
+  let concurrencyRecovery = null;
   if (options.execute && mutates) {
     if (changed.receipt.expectedOldStateRoot !== loaded.queue.stateRoot) {
       throw new Error("transition receipt expected-old root does not match the loaded authority");
     }
-    write = await store.write({
-      stateRef: options.stateRef,
-      queue: changed.queue,
-      expectedCommitSha: loaded.commitSha,
-      expectedStateRoot: loaded.queue.stateRoot,
-      receiptRoot: changed.receiptRoot,
-    });
+    try {
+      write = await store.write({
+        stateRef: options.stateRef,
+        queue: changed.queue,
+        expectedCommitSha: loaded.commitSha,
+        expectedStateRoot: loaded.queue.stateRoot,
+        receiptRoot: changed.receiptRoot,
+      });
+    } catch (error) {
+      if (options.command !== "settle" || options.expectedOldStateRoot) throw error;
+      const latest = await store.read({
+        stateRef: options.stateRef,
+        protectedBase: options.branch,
+        now: options.now,
+      });
+      const reconciled = transitionFor(options.command, latest.queue, options);
+      const reconciledMutates = reconciled.queue.stateRoot !== latest.queue.stateRoot;
+      if (reconciledMutates || reconciled.receipt.action !== "duplicate-terminal-event-noop") throw error;
+      loaded = latest;
+      changed = reconciled;
+      mutates = false;
+      concurrencyRecovery = {
+        schema: "kungfu.buildchain.dev-delivery-concurrency-recovery/v1",
+        action: "terminal-settlement-race-noop",
+        initialCommitSha: initialLoaded.commitSha,
+        observedCommitSha: latest.commitSha,
+        observedStateRoot: latest.queue.stateRoot,
+      };
+    }
   }
   return {
     schema: "kungfu.buildchain.dev-delivery-command-result/v1",
@@ -297,6 +337,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     },
     mutationAuthorized: options.execute,
     mutationApplied: Boolean(write),
+    concurrencyRecovery,
     receipt: changed.receipt,
     receiptRoot: changed.receiptRoot,
     warrant: changed.warrant || changed.queue.activeWarrant || null,
@@ -352,7 +393,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n";
 }
 
 async function main() {
@@ -362,7 +403,7 @@ async function main() {
     return;
   }
   const options = devDeliveryCliOptions(args);
-  if (!["submit", "select", "heartbeat", "recover", "close", "cancel-queued", "observe"].includes(options.command)) {
+  if (!["submit", "select", "heartbeat", "recover", "close", "settle", "cancel-queued", "observe"].includes(options.command)) {
     throw new Error(usage().trim());
   }
   const result = await runDevDeliveryCommand(options);

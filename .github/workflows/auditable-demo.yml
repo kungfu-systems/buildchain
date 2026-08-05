@@ -102,7 +102,7 @@ jobs:
       binary-artifact-name: ${{ needs.exact-binary.outputs.artifact-name }}
       binary-artifact-digest: ${{ needs.exact-binary.outputs.artifact-digest }}
       scenario-path: .buildchain/auditable-demo.json
-      renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:32f5079f14ec0380c27f0df39448cb931e87fe744cc867fbd3d61cfd8a5e18de
+      renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:3a49708163fedaaabe07b45bba910026a1828151b5d4e9bbdaf0d62e75c927c1
       render-media: ${{ github.event_name != 'workflow_dispatch' || inputs.mode == 'full' }}
       media-profile: responsive-web-delivery-v1
       materialize: ${{ github.event_name != 'workflow_dispatch' || inputs.materialize }}

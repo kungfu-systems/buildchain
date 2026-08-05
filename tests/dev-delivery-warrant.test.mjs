@@ -5,8 +5,10 @@ import {
   cancelQueuedDevDeliveryCandidate,
   closeDevDeliveryWarrant,
   createDevDeliveryQueue,
+  devDeliveryContentRoot,
   createIntegrationDeliveryProof,
   createProjectCutReplayPlan,
+  createProjectCutReplayProof,
   createSourceQualificationProof,
   heartbeatDevDeliveryWarrant,
   normalizeDevDeliveryQueue,
@@ -14,8 +16,10 @@ import {
   rankDevDeliveryCandidates,
   recoverExpiredDevDeliveryWarrant,
   selectDevDeliveryWarrant,
+  settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
   verifyIntegrationDeliveryProof,
+  verifyProjectCutReplayProof,
   verifySourceQualificationProof,
 } from "../packages/core/dev-delivery-warrant.js";
 
@@ -211,6 +215,66 @@ test("heartbeat and terminal closeout bind the current fencing generation", () =
   assert.equal(closed.receipt.nextAction, "Select the next queued candidate, if any.");
 });
 
+test("terminal settlement is an explicit no-op when the PR never entered Warrant authority", () => {
+  const settled = settleDevDeliveryTerminalEvent(queue(), {
+    pullRequestNumber: 149,
+    sourceHead: "a".repeat(40),
+    outcome: "merged",
+    reason: "protected pull request merged while Warrant rollout was off",
+  }, { now: "2026-08-04T00:02:00Z" });
+  assert.equal(settled.receipt.action, "terminal-event-not-applicable");
+  assert.equal(settled.receipt.applicable, false);
+  assert.equal(settled.receipt.candidateId, null);
+  assert.equal(settled.receipt.expectedOldStateRoot, settled.queue.stateRoot);
+  assert.equal(settled.receipt.nextStateRoot, settled.queue.stateRoot);
+  assert.match(settled.receiptRoot, /^sha256:[0-9a-f]{64}$/u);
+});
+
+test("terminal settlement closes the exact active Warrant and repeats idempotently", () => {
+  const submitted = submit(queue(), 149, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  const input = {
+    pullRequestNumber: 149,
+    sourceHead: selected.warrant.sourceHead,
+    fencingToken: selected.warrant.fencingToken,
+    leaseGeneration: selected.warrant.generation,
+    outcome: "merged",
+    evidenceRoot: ROOTS.evidence,
+    reason: "exact merge group passed",
+  };
+  const closed = settleDevDeliveryTerminalEvent(selected.queue, input, { now: "2026-08-04T00:02:00Z" });
+  assert.equal(closed.receipt.action, "terminal-closeout");
+  assert.equal(closed.queue.activeWarrant, null);
+  const duplicate = settleDevDeliveryTerminalEvent(closed.queue, input, { now: "2026-08-04T00:03:00Z" });
+  assert.equal(duplicate.receipt.action, "duplicate-terminal-event-noop");
+  assert.equal(duplicate.queue.stateRoot, closed.queue.stateRoot);
+  assert.throws(
+    () => settleDevDeliveryTerminalEvent(closed.queue, { ...input, outcome: "cancelled" }),
+    /outcome does not match/u,
+  );
+});
+
+test("duplicate terminal settlement remains a no-op after the next Warrant is selected", () => {
+  let state = submit(queue(), 149, "2026-08-04T00:00:00Z").queue;
+  state = submitDevDeliveryCandidate(state, candidate(150), { now: "2026-08-04T00:00:01Z" }).queue;
+  const first = selectDevDeliveryWarrant(state, { now: "2026-08-04T00:00:02Z" });
+  const input = {
+    pullRequestNumber: 149,
+    sourceHead: first.warrant.sourceHead,
+    fencingToken: first.warrant.fencingToken,
+    leaseGeneration: first.warrant.generation,
+    outcome: "merged",
+    evidenceRoot: ROOTS.evidence,
+    reason: "exact merge group passed",
+  };
+  const closed = settleDevDeliveryTerminalEvent(first.queue, input, { now: "2026-08-04T00:01:00Z" });
+  const second = selectDevDeliveryWarrant(closed.queue, { now: "2026-08-04T00:01:01Z" });
+  const duplicate = settleDevDeliveryTerminalEvent(second.queue, input, { now: "2026-08-04T00:01:02Z" });
+  assert.equal(duplicate.receipt.action, "duplicate-terminal-event-noop");
+  assert.equal(duplicate.queue.stateRoot, second.queue.stateRoot);
+  assert.equal(duplicate.queue.activeWarrant.candidateId, second.warrant.candidateId);
+});
+
 test("queued cancellation binds recorded and observed heads without minting a Warrant", () => {
   let state = submit(queue(), 150, "2026-08-04T00:00:00Z").queue;
   state = submit(state, 151, "2026-08-04T00:01:00Z").queue;
@@ -367,6 +431,54 @@ test("base advancement replays a Project Cut without changing the PR head", () =
   assert.equal(plan.sourceHeadMutationRequired, false);
   assert.equal(plan.sourceHead, "a".repeat(40));
   assert.equal(plan.finalAuthority, "github-merge-group");
+});
+
+test("Project Cut replay proof binds the unchanged source to the exact current base", () => {
+  const proof = createProjectCutReplayProof({
+    repository: "kungfu-systems/kungfu",
+    protectedBase: "dev/v4/v4.0",
+    pullRequestNumber: 150,
+    sourceHead: "a".repeat(40),
+    sourcePatchRoot: ROOTS.patch,
+    currentBase: "c".repeat(40),
+    replayTree: "d".repeat(40),
+    qualificationReceipt: {
+      schema: "project.cut.merge-queue-admission/v1",
+      ok: true,
+      decision: "qualified",
+      baseCommitOid: "c".repeat(40),
+      headCommitOid: "a".repeat(40),
+      candidateCommitOid: "e".repeat(40),
+      candidateTreeOid: "d".repeat(40),
+      replayedCommitCount: 1,
+      compositionChanged: false,
+      reasonCodes: [],
+    },
+    requiredContextRoots: [ROOTS.context],
+    verifiedAt: "2026-08-04T00:10:00Z",
+  });
+  assert.deepEqual(verifyProjectCutReplayProof(proof), {
+    ok: true,
+    reason: "exact-project-cut-replay",
+    proofRoot: proof.proofRoot,
+  });
+  assert.equal(
+    verifyProjectCutReplayProof(proof, { currentBase: "e".repeat(40) }).reason,
+    "currentBase-mismatch",
+  );
+  assert.equal(
+    verifyProjectCutReplayProof({ ...proof, replayTree: "f".repeat(40) }).reason,
+    "proof-root-drift",
+  );
+  assert.equal(proof.qualificationRoot, devDeliveryContentRoot(proof.qualification));
+  const qualificationDrift = { ...proof, qualificationRoot: ROOTS.evidence };
+  delete qualificationDrift.proofRoot;
+  qualificationDrift.proofRoot = devDeliveryContentRoot(qualificationDrift);
+  assert.equal(verifyProjectCutReplayProof(qualificationDrift).reason, "qualification-root-drift");
+  assert.throws(
+    () => createProjectCutReplayProof({ ...proof, qualificationReceipt: { ...proof.qualification, decision: "repair-required" } }),
+    /not qualified/u,
+  );
 });
 
 test("integration proof always binds the exact merge group and current Warrant", () => {

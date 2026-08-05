@@ -7,7 +7,7 @@
     "workflowCount": 63,
     "actionCount": 6,
     "sitePageCount": 65,
-    "docCommandRefCount": 880,
+    "docCommandRefCount": 881,
     "failureCount": 0
   },
   "enumerated": {
@@ -1963,6 +1963,7 @@
           "max-merges",
           "merge-method",
           "plan-root",
+          "project-cut-proof-json",
           "queue-admission-context",
           "ready-label",
           "require-approval",
@@ -1975,7 +1976,7 @@
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 31,
+        "inputCount": 32,
         "secrets": [
           "github-token"
         ],
@@ -1988,12 +1989,14 @@
           "evaluated-count",
           "final-base-sha",
           "merged-count",
+          "project-cut-proof-root",
           "skipped-count",
           "source-proof-root",
           "warrant-receipt-root",
+          "warrant-state-commit",
           "warrant-state-root"
         ],
-        "outputCount": 11
+        "outputCount": 13
       },
       {
         "id": "dev-qualification-patrol",
@@ -3962,6 +3965,11 @@
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev proof replay"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev proof replay-proof"
       },
       {
         "id": "dev",
@@ -7560,8 +7568,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
-    "workflowRegistryDigest": "29e1f70590d7ae5b60d17f5e2a04909302b2b834455b16b3d5d879fdd3adfee5",
-    "pageRegistryDigest": "16727fe1ec167476a7297d869e3a80c3b2ed4eac2a61179ccac776ea3b6a8d80"
+    "workflowRegistryDigest": "2428307ff1f281124af8f2af4af51c9137f9e12b735cca0460ccff1123c007b1",
+    "pageRegistryDigest": "e51bd2df75843fad873c3c2c526108778d104b5a21ae62a3a46bcf0477ff49d5"
   },
   "comparison": {
     "missingCliRegistry": [],

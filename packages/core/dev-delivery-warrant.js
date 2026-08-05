@@ -1,15 +1,15 @@
 import { devDeliveryClone as clone, devDeliveryContentRoot, devDeliveryExactRoot as exactRoot, devDeliveryExactSha as exactSha, devDeliveryPositiveInteger as positiveInteger, devDeliveryProtectedBase as protectedBase, devDeliveryRepository as repository, devDeliveryText as text, devDeliveryTimestamp as timestamp } from "./dev-delivery-common.js";
 import { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA, createCancelQueuedDevDeliveryCandidate } from "./dev-delivery-warrant-cancellation.js";
-
+import { DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA, createDevDeliveryTerminalSettler } from "./dev-delivery-warrant-settlement.js";
 export { devDeliveryContentRoot } from "./dev-delivery-common.js";
-export { SOURCE_QUALIFICATION_PROOF_SCHEMA, INTEGRATION_DELIVERY_PROOF_SCHEMA, classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifySourceQualificationProof } from "./dev-delivery-proof.js";
+export { SOURCE_QUALIFICATION_PROOF_SCHEMA, PROJECT_CUT_REPLAY_PROOF_SCHEMA, INTEGRATION_DELIVERY_PROOF_SCHEMA, classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "./dev-delivery-proof.js";
 export { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA };
-
 export const DEV_DELIVERY_QUEUE_CONTRACT = "kungfu-buildchain-dev-delivery-warrant-queue";
 export const DEV_DELIVERY_WARRANT_SCHEMA = "kungfu.buildchain.dev-delivery-warrant/v1";
 export const DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA = "kungfu.buildchain.dev-delivery-submission-receipt/v1";
 export const DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA = "kungfu.buildchain.dev-delivery-selection-receipt/v1";
 export const DEV_DELIVERY_LEASE_RECEIPT_SCHEMA = "kungfu.buildchain.dev-delivery-lease-receipt/v1";
+export { DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA };
 export const DEV_DELIVERY_PRIORITIES = Object.freeze({
   ordinary: 0,
   expedited: 1,
@@ -566,6 +566,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
 
 const cancelQueuedDevDeliveryCandidateTransition = createCancelQueuedDevDeliveryCandidate(normalizeDevDeliveryQueue);
 export function cancelQueuedDevDeliveryCandidate(queueInput, input, options) { return cancelQueuedDevDeliveryCandidateTransition(queueInput, input, options); }
+export const settleDevDeliveryTerminalEvent = createDevDeliveryTerminalSettler({ normalizeQueue: normalizeDevDeliveryQueue, closeWarrant: closeDevDeliveryWarrant, cancelQueued: cancelQueuedDevDeliveryCandidate, terminalStates: TERMINAL_STATES });
 
 export function observeDevDeliveryQueue(queueInput, { now = new Date().toISOString() } = {}) {
   const queue = normalizeDevDeliveryQueue(queueInput);

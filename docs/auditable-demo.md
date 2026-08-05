@@ -52,6 +52,24 @@ the default. Both classes retain 4 MiB per step, a clean Home/XDG environment,
 no inherited credentials, and a network-disabled read-only container with
 bounded tmpfs.
 
+Consumers may optionally add a
+`buildchain.declarative-demo-presentation/v1` presentation. This contract
+binds one consumer-owned proof label, question, summary, and optional
+transition to every demo in declared order. Buildchain verifies that each
+question is the same title used by capture and media; it does not invent or
+reinterpret the product argument.
+
+The presentation also chooses one of two README materialization modes. The
+default, when no presentation is declared, remains the original full generated
+block with commands, renditions, evidence, and claim boundary. `media-only`
+updates only the image inside each existing README marker so consumer-authored
+narrative and transitions survive regeneration. The generated technical
+details move to a separately declared Markdown specification, where stable
+per-demo markers preserve proof order and idempotent updates. The publication
+pull request stages that specification together with the README and
+content-addressed evidence. No presentation field grants publication or Work
+authority.
+
 The optional top-level `compositionMode` is an explicit visual contract.
 Omitting it preserves `presentation-framed`; declaring `terminal-fill` makes
 the bounded PTY replay the complete pixel surface without renderer-owned

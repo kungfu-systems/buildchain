@@ -37,7 +37,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:591dabbaed18644959791f63babb3fe6f48ec8e636d4dbdd5f7f60bcbb696d53",
+      "digest": "sha256:edfbb6a7f81ba1d28b7ecc750894c93c13a572e2dc26df473d87abf4531044d2",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:2c6ac350589ce98375c3ac5b5e1038032d744854219ae00441b00e200a8443b2",
+      "digest": "sha256:070b852cfd9923693f907e8eb7fb507727f25e6ec5b0446abab391f050cee818",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

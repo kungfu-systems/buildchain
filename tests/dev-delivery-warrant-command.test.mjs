@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 import { GitHubDevDeliveryStore, defaultDevDeliveryStateRef, runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
-import { createDevDeliveryQueue, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
+import { createDevDeliveryQueue, selectDevDeliveryWarrant, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
+const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "..");
 
 function initialQueue() {
   return createDevDeliveryQueue({
@@ -54,6 +57,23 @@ class MemoryStore {
     this.queue = input.queue;
     this.commitSha = "b".repeat(40);
     return { commitSha: this.commitSha, stateRoot: this.queue.stateRoot };
+  }
+}
+
+class ConcurrentTerminalStore extends MemoryStore {
+  constructor(queue) {
+    super(queue);
+    this.raced = false;
+  }
+
+  async write(input) {
+    if (!this.raced) {
+      this.raced = true;
+      this.queue = input.queue;
+      this.commitSha = "c".repeat(40);
+      throw new Error("Update is not a fast forward");
+    }
+    return super.write(input);
   }
 }
 
@@ -116,6 +136,64 @@ test("selection and observation use the same durable state contract", async () =
   );
   assert.equal(observed.mode, "observe");
   assert.equal(observed.observation.activeWarrant.fencingToken, selected.warrant.fencingToken);
+});
+
+test("terminal settlement records a verified non-applicable no-op without writing", async () => {
+  const store = new MemoryStore();
+  const result = await runDevDeliveryCommand({
+    command: "settle",
+    repository: "kungfu-systems/kungfu",
+    branch: "dev/v4/v4.0",
+    pullRequestNumber: 2545,
+    expectedSourceHead: "c".repeat(40),
+    outcome: "merged",
+    reason: "Warrant rollout was off",
+    now: "2026-08-04T00:02:00Z",
+    execute: true,
+  }, store);
+  assert.equal(result.mode, "execute");
+  assert.equal(result.mutationApplied, false);
+  assert.equal(result.receipt.action, "terminal-event-not-applicable");
+  assert.equal(result.after.commitSha, store.commitSha);
+  assert.equal(result.after.stateRoot, result.before.stateRoot);
+  assert.equal(store.writes.length, 0);
+});
+
+test("terminal settlement reconciles a concurrent identical winner as an exact no-op", async () => {
+  const submitted = submitDevDeliveryCandidate(initialQueue(), {
+    ...submitOptions(),
+    pullRequestNumber: 2549,
+  }, { now: "2026-08-04T00:01:00Z" });
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:02:00Z" });
+  const store = new ConcurrentTerminalStore(selected.queue);
+  const result = await runDevDeliveryCommand({
+    command: "settle",
+    repository: "kungfu-systems/kungfu",
+    branch: "dev/v4/v4.0",
+    pullRequestNumber: 2549,
+    expectedSourceHead: "a".repeat(40),
+    fencingToken: selected.warrant.fencingToken,
+    leaseGeneration: selected.warrant.generation,
+    outcome: "merged",
+    evidenceRoot: ROOT("e"),
+    reason: "protected pull request merged",
+    now: "2026-08-04T00:03:00Z",
+    execute: true,
+  }, store);
+  assert.equal(result.mutationApplied, false);
+  assert.equal(result.receipt.action, "duplicate-terminal-event-noop");
+  assert.equal(result.before.commitSha, "c".repeat(40));
+  assert.equal(result.after.commitSha, "c".repeat(40));
+  assert.equal(result.concurrencyRecovery.action, "terminal-settlement-race-noop");
+  assert.equal(result.concurrencyRecovery.initialCommitSha, "a".repeat(40));
+});
+
+test("terminal workflow resolves active fencing or an explicit settlement no-op", () => {
+  const workflow = fs.readFileSync(path.join(REPOSITORY_ROOT, ".github/workflows/dev-delivery-warrant-close.yml"), "utf8");
+  assert.match(workflow, /name: Resolve terminal settlement mode[\s\S]*mode=inactive/u);
+  assert.match(workflow, /activeCandidate\.candidateId == \.observation\.activeWarrant\.candidateId/u);
+  assert.match(workflow, /dev-delivery-warrant\.mjs "\$\{args\[@\]\}"/u);
+  assert.match(workflow, /settle[\s\S]*--pull-request "\$\{EXPECTED_PR\}"[\s\S]*--expected-source-head "\$\{EXPECTED_HEAD\}"/u);
 });
 
 test("queued cancellation persists once and repeats as an exact no-op", async () => {

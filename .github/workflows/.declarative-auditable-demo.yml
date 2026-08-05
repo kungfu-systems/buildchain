@@ -455,7 +455,11 @@ jobs:
           publication=$(node .buildchain/runtime/scripts/auditable-demo-platform.mjs publication --scenario "${{ inputs.scenario-path }}")
           readme_path=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(v.readmePath)' "${publication}")
           evidence_path=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(v.evidencePath)' "${publication}")
+          technical_spec_path=$(node -e 'const v=JSON.parse(process.argv[1]); process.stdout.write(v.technicalSpecPath || "")' "${publication}")
           git add -- "${readme_path}" "${evidence_path}"
+          if [ -n "${technical_spec_path}" ]; then
+            git add -- "${technical_spec_path}"
+          fi
           if ! git diff --cached --quiet; then
             git commit -s -m "docs: refresh auditable demo media"
             git push origin "${branch}"
