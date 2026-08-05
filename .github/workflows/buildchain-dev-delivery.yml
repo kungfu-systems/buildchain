@@ -1,6 +1,6 @@
 name: Buildchain Dev Delivery
 
-run-name: Buildchain PR #${{ inputs.expected-pr-number }} · required Delivery Warrant
+run-name: "Buildchain PR #${{ inputs.expected-pr-number }} · required Delivery Warrant"
 
 on:
   workflow_dispatch:
@@ -96,4 +96,5 @@ jobs:
       block-labels: blocked,do-not-merge,work-in-progress
       landing-mode: queue
       dry-run: false
-    secrets: inherit
+    secrets:
+      github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

@@ -1502,6 +1502,9 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /required-status-checks: check/);
   assert.match(workflow, /landing-mode: queue/);
   assert.match(workflow, /dry-run: false/);
+  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ inputs\.expected-pr-number \}\} · required Delivery Warrant"/);
+  assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.doesNotMatch(workflow, /secrets: inherit/);
   assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
 });
 
