@@ -358,7 +358,7 @@ test("queued cancellation fails closed on identity, evidence, state, and event d
 });
 
 test("source proof reuse is exact and unknown or overlapping deltas fail closed", () => {
-  const proof = createSourceQualificationProof({
+  const input = {
     repository: "kungfu-systems/kungfu",
     protectedBase: "dev/v4/v4.0",
     sourceIdentityRoot: ROOTS.source,
@@ -371,11 +371,33 @@ test("source proof reuse is exact and unknown or overlapping deltas fail closed"
     affectedPaths: ["framework/core", "framework/yijinjing"],
     shardEvidenceRoots: [ROOTS.shard],
     qualifiedAt: "2026-08-04T00:00:00Z",
-  });
+  };
+  const proof = createSourceQualificationProof(input);
   assert.deepEqual(verifySourceQualificationProof(proof), {
     ok: true,
     reason: "exact-source-proof",
     proofRoot: proof.proofRoot,
+  });
+  const retry = createSourceQualificationProof({ ...input, qualifiedAt: "2026-08-04T00:05:00Z" });
+  assert.equal(retry.proofRoot, proof.proofRoot, "observation time must not change qualification identity");
+  assert.notEqual(retry.observationRoot, proof.observationRoot, "the observation remains independently content-addressed");
+  assert.equal(verifySourceQualificationProof(retry).ok, true);
+
+  const changedEvidence = createSourceQualificationProof({ ...input, shardEvidenceRoots: [ROOTS.evidence] });
+  assert.notEqual(changedEvidence.proofRoot, proof.proofRoot, "evidence changes must change qualification identity");
+
+  const tamperedObservation = { ...proof, qualifiedAt: "2026-08-04T00:05:00Z" };
+  assert.deepEqual(verifySourceQualificationProof(tamperedObservation), {
+    ok: false,
+    reason: "observation-root-drift",
+  });
+
+  const { rootSemantics: _rootSemantics, observationRoot: _observationRoot, proofRoot: _proofRoot, ...legacyBody } = proof;
+  const legacyProof = { ...legacyBody, proofRoot: devDeliveryContentRoot(legacyBody) };
+  assert.deepEqual(verifySourceQualificationProof(legacyProof), {
+    ok: true,
+    reason: "exact-source-proof",
+    proofRoot: legacyProof.proofRoot,
   });
   const exact = {
     sourceIdentityRoot: ROOTS.source,
