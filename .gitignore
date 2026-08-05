@@ -20,4 +20,5 @@ dist/*
 !actions/*/dist/
 !actions/*/dist/index.js
 coverage/
+__pycache__/
 *.log
