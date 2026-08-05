@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import crypto from "node:crypto";
+import { normalizeChannelCandidateSelection } from "./channel-promotion-baseline.js";
 
 export const CHANNEL_CANDIDATE_DECISION_SCHEMA =
   "kungfu-buildchain-channel-candidate-decision/v1";
@@ -95,27 +96,7 @@ export function decideChannelCandidate(input) {
     throw new Error("sourceBranch and targetBranch must differ");
   const sourceSha = sha(input.sourceSha, "sourceSha");
   const targetSha = sha(input.targetSha, "targetSha");
-  const selection = input.selection
-    ? {
-        mode: required(input.selection.mode, "selection.mode"),
-        observedSourceHeadSha: sha(
-          input.selection.observedSourceHeadSha,
-          "selection.observedSourceHeadSha",
-        ),
-        skippedNewerCommitCount: Number(
-          input.selection.skippedNewerCommitCount || 0,
-        ),
-      }
-    : undefined;
-  if (
-    selection &&
-    (!Number.isSafeInteger(selection.skippedNewerCommitCount) ||
-      selection.skippedNewerCommitCount < 0)
-  ) {
-    throw new Error(
-      "selection.skippedNewerCommitCount must be a non-negative integer",
-    );
-  }
+  const selection = normalizeChannelCandidateSelection(input.selection);
   const now = required(input.now || new Date().toISOString(), "now");
   const maxAgeSeconds = Number(input.maxAgeSeconds ?? 7 * 24 * 60 * 60);
   if (!Number.isSafeInteger(maxAgeSeconds) || maxAgeSeconds <= 0) {
