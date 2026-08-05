@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
+  "repository": "kungfu-systems/buildchain",
+  "protectedBase": "dev/v3/v3.0",
+  "generation": 1,
+  "fencingCounter": 0,
+  "policy": {
+    "agingSeconds": 900,
+    "maxPriority": 2,
+    "leaseSeconds": 3600,
+    "emergencyPolicy": "reviewed-explicit-only"
+  },
+  "activeWarrant": null,
+  "candidates": [
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2325,
+      "assignmentRoot": "sha256:41f393c42bef02b4c877096d2617fccee75cf3e182d4648c6d80707e9ed91a2d",
+      "initiativeRoot": "sha256:04de1e409d4bfac7ce60a5150e1811853f7842f238db2fd0c11c04fcd7519a78",
+      "sourceIdentityRoot": "sha256:1a647b7c11f37f2ef2debe3f5d4356aa24e55a8d5298ad38d0a7fdd7dfcce642",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:0282c81095541c23211dd14b6f32671909cb9b7316e7ba7332dd828d05d23de1",
+      "sourceHead": "b3dc5be1f59a58cf16c078e7275d809d17bc2871",
+      "sourcePatchRoot": "sha256:f222ec6082960f8e48983ee8cc785a838556e20e52ec97102b9fae21e453da35",
+      "sourceProofRoot": "sha256:38f498adace1e6a0c44aa7818972206caa7c63672a16feb17567a050a4a900a4",
+      "planRoot": "sha256:f9b05b4cf5bc69e9e1671e33a379cc6494a4d59f509a032537d81908c7cc47e1",
+      "closureRoot": "sha256:dbbfb6f8bcc8654cf975223439892e814098a3fa7cbd321e4f385423ea6677ca",
+      "dependencyRoot": "sha256:d0e7a20ea4fafd416d7af277f0b86d48f08422c05275c1bf69adc8953abd77a3",
+      "toolchainRoot": "sha256:c9cd5883c21c04c768c9d7cbd206201ddd357662ed55cb605af871ff348fefec",
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-05T07:50:25.366Z",
+      "updatedAt": "2026-08-05T07:50:25.366Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null
+    }
+  ],
+  "updatedAt": "2026-08-05T07:50:25.366Z",
+  "stateRoot": "sha256:7964f42ab2d976cdfc9edb10e4b290f99ba7794dcdfa0d9a207e7166d86fc6db"
+}
