@@ -76,6 +76,7 @@ jobs:
       required-status-checks: check
       ready-label: ready
       block-labels: blocked,do-not-merge,work-in-progress
+      allowed-head-prefixes: feature/,fix/,chore/,docs/,ci/,refactor/,automation/auditable-demo-
       landing-mode: queue
       dry-run: false
     secrets:
