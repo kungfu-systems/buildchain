@@ -361,7 +361,8 @@ test("queue-enabled branches forbid direct bypass and admit only one aligned PR"
     branchShas: ["base-1", "base-1", "base-1"],
     queueStates: [
       { enabled: true, id: "MQ_1", entries: [] },
-      { enabled: true, id: "MQ_1", entries: [] },
+      { enabled: true, id: "MQ_1", entries: [] }, { enabled: true, id: "MQ_1", entries: [
+        { id: "MQE_stale", pullRequestNumber: 1, pullRequestHeadSha: "sha-stale" }] },
     ],
   });
   const result = await runDevPrAutoMerge(
@@ -497,6 +498,22 @@ test("queue admission revokes the temporary lease when enqueue is rejected", asy
 
   assert.equal(result.evaluated[0].reason, "enqueue-rejected");
   assert.deepEqual(fake.commitStatuses.map((entry) => entry.body.state), ["success", "failure"]);
+});
+
+test("enqueue error reconciliation requires an exact PR head queue readback", async () => {
+  const exact = { id: "MQE_exact", state: "AWAITING_CHECKS", pullRequestNumber: 1, pullRequestHeadSha: "sha-1" };
+  const empty = { enabled: true, id: "MQ_1", entries: [] };
+  const fake = client({
+    pullRequests: [pr({ number: 1, nodeId: "PR_node_1" })],
+    branchShas: Array(3).fill("base-1"),
+    queueStates: [empty, empty, { ...empty, entries: [exact] }],
+    enqueueError: new Error("Pull request is already in the queue"),
+  });
+  const result = await runDevPrAutoMerge(
+    { ...baseOptions, landingMode: "queue", dryRun: false, queueAdmissionContext: "Queue admission lease" }, fake);
+  assert.equal(result.evaluated[0].reason, "already-enqueued-exact-head");
+  assert.deepEqual(result.evaluated[0].queueEntry, exact);
+  assert.deepEqual(fake.commitStatuses.map((entry) => entry.body.state), ["success"]);
 });
 
 test("queue admission fails closed when the PR head moves", async () => {

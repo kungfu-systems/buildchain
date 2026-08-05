@@ -888,6 +888,31 @@ function finalizePatrolResult(result) {
   return result;
 }
 
+async function reconcileEnqueueError({ client, options, pr, expectedHeadSha, entry, result, error }) {
+  const queueReadback = await client.getMergeQueueState(options.targetBranch).catch(() => null);
+  const exactEntry = queueReadback?.entries?.find((candidate) =>
+    candidate.pullRequestNumber === pr.number && candidate.pullRequestHeadSha === expectedHeadSha);
+  if (exactEntry) {
+    entry.action = "enqueued";
+    entry.reason = "already-enqueued-exact-head";
+    entry.queueEntry = exactEntry;
+    entry.admissionReceipt.reason = entry.reason;
+    result.actions.push(entry);
+    result.enqueued.push(entry);
+    return;
+  }
+  entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "failure");
+  entry.action = "skip";
+  entry.reason = "enqueue-rejected";
+  entry.enqueueError = {
+    status: error.status || null,
+    message: error.message || "GitHub rejected merge queue admission",
+  };
+  entry.admissionReceipt.decision = "rejected";
+  entry.admissionReceipt.reason = entry.reason;
+  result.skipped.push(entry);
+}
+
 export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
   const options = normalizeOptions(optionsInput);
   if (!options.targetBranch) throw new Error("target branch is required");
@@ -1054,16 +1079,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
             result.actions.push(entry);
             result.enqueued.push(entry);
           } catch (error) {
-            entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "failure");
-            entry.action = "skip";
-            entry.reason = "enqueue-rejected";
-            entry.enqueueError = {
-              status: error.status || null,
-              message: error.message || "GitHub rejected merge queue admission",
-            };
-            entry.admissionReceipt.decision = "rejected";
-            entry.admissionReceipt.reason = entry.reason;
-            result.skipped.push(entry);
+            await reconcileEnqueueError({ client, options, pr, expectedHeadSha, entry, result, error });
           }
         }
       } else {
