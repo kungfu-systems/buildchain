@@ -68,11 +68,6 @@ permissions:
 jobs:
   deliver:
     uses: ./.github/workflows/dev-pr-auto-merge.yml
-    permissions:
-      contents: write
-      pull-requests: write
-      checks: read
-      statuses: write
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ github.sha }}
@@ -96,4 +91,3 @@ jobs:
       block-labels: blocked,do-not-merge,work-in-progress
       landing-mode: queue
       dry-run: false
-    secrets: { github-token: "${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}" }
