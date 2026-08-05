@@ -1895,6 +1895,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "publication-gate-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "publication-package-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1984,6 +1988,10 @@
           "source": "workflow-call-input"
         },
         "release-candidate-family-initiative-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-wait-seconds": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -2145,7 +2153,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:220710d81a41b50edb4dc65cea3e1e5d20805406eaaced65bc006718700696b9"
+      "digest": "sha256:a13b820669b162ab2f39d213164e7b7ab4e24c65f93cd3265a977fcd667c1303"
     },
     {
       "schemaVersion": 1,
@@ -2338,5 +2346,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:c8905bf2d8facd130d082161b2993ad2175dca54fd3d095c3d75cc325917977d"
+  "digest": "sha256:e7d02924b5f42f513e6f6a3b2cdbccdcd92b594b63ebc7aa8dd8cd3d8376283e"
 }

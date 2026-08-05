@@ -395,6 +395,7 @@
         "auto-no-gate",
         "buildchain-ref",
         "buildchain-repository",
+        "consumer-gate-command",
         "consumer-predicate-digest",
         "consumer-predicate-id",
         "consumer-qualification-required",
@@ -422,7 +423,7 @@
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 33,
+      "inputCount": 34,
       "secrets": [
         "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
       ],
@@ -494,6 +495,7 @@
         "publication-control-plane-audit-json",
         "publication-expected-json",
         "publication-gate-aggregate-json",
+        "publication-gate-command",
         "publication-package-name",
         "publication-product",
         "publication-publisher-workflow-path",
@@ -517,6 +519,7 @@
         "release-candidate-family-evidence-required",
         "release-candidate-family-evidence-root",
         "release-candidate-family-initiative-id",
+        "release-candidate-wait-seconds",
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
@@ -547,7 +550,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 95,
+      "inputCount": 97,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2348,6 +2351,7 @@
         "publication-control-plane-audit-json",
         "publication-expected-json",
         "publication-gate-aggregate-json",
+        "publication-gate-command",
         "publication-package-name",
         "publication-product",
         "publication-publisher-workflow-path",
@@ -2371,6 +2375,7 @@
         "release-candidate-family-evidence-required",
         "release-candidate-family-evidence-root",
         "release-candidate-family-initiative-id",
+        "release-candidate-wait-seconds",
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
@@ -2401,7 +2406,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 87,
+      "inputCount": 89,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",

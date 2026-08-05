@@ -906,6 +906,7 @@
           "auto-no-gate",
           "buildchain-ref",
           "buildchain-repository",
+          "consumer-gate-command",
           "consumer-predicate-digest",
           "consumer-predicate-id",
           "consumer-qualification-required",
@@ -933,7 +934,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 33,
+        "inputCount": 34,
         "secrets": [
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
@@ -995,6 +996,7 @@
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
+          "publication-gate-command",
           "publication-package-name",
           "publication-product",
           "publication-publisher-workflow-path",
@@ -1018,6 +1020,7 @@
           "release-candidate-family-evidence-required",
           "release-candidate-family-evidence-root",
           "release-candidate-family-initiative-id",
+          "release-candidate-wait-seconds",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
@@ -1048,7 +1051,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 95,
+        "inputCount": 97,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2389,6 +2392,7 @@
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
+          "publication-gate-command",
           "publication-package-name",
           "publication-product",
           "publication-publisher-workflow-path",
@@ -2412,6 +2416,7 @@
           "release-candidate-family-evidence-required",
           "release-candidate-family-evidence-root",
           "release-candidate-family-initiative-id",
+          "release-candidate-wait-seconds",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
@@ -2442,7 +2447,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 87,
+        "inputCount": 89,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -7555,8 +7560,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
-    "workflowRegistryDigest": "6bd35675ddf883abc4e37287d3cd1cac3d47cf12ad6a533bbd30558e0516169a",
-    "pageRegistryDigest": "fac9dfa5375e9555384c6f03e6baa0873c8d989a4fcbb961a68eff2f23077518"
+    "workflowRegistryDigest": "29e1f70590d7ae5b60d17f5e2a04909302b2b834455b16b3d5d879fdd3adfee5",
+    "pageRegistryDigest": "16727fe1ec167476a7297d869e3a80c3b2ed4eac2a61179ccac776ea3b6a8d80"
   },
   "comparison": {
     "missingCliRegistry": [],
