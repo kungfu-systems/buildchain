@@ -1488,8 +1488,9 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
   assert.match(workflow, /native-roots-json:/);
-  assert.match(workflow, /assignment-root: \$\{\{ fromJSON\(inputs\.native-roots-json\)\.assignmentRoot \}\}/);
-  assert.match(workflow, /initiative-root: \$\{\{ fromJSON\(inputs\.native-roots-json\)\.initiativeRoot \}\}/);
+  assert.match(workflow, /expected-pr-number: \$\{\{ fromJSON\(github\.event\.inputs\.expected-pr-number\) \}\}/);
+  assert.match(workflow, /assignment-root: \$\{\{ fromJSON\(github\.event\.inputs\.native-roots-json\)\.assignmentRoot \}\}/);
+  assert.match(workflow, /initiative-root: \$\{\{ fromJSON\(github\.event\.inputs\.native-roots-json\)\.initiativeRoot \}\}/);
   assert.match(workflow, /source-identity-root:/);
   assert.match(workflow, /source-patch-root:/);
   assert.match(workflow, /plan-root:/);
@@ -1507,6 +1508,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ inputs\.expected-pr-number \}\} · required Delivery Warrant"/);
   assert.doesNotMatch(workflow, /secrets: inherit/);
   assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
+  assert.doesNotMatch(workflow.slice(workflow.indexOf("    with:")), /\$\{\{ inputs\./);
   const dispatchInputs = workflow
     .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
     .match(/^      [a-z][a-z0-9-]+:$/gmu);
