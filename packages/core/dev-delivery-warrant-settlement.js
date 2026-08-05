@@ -36,6 +36,12 @@ export function createDevDeliveryTerminalSettler({ normalizeQueue, closeWarrant,
     const candidate = samePullRequest.find((entry) => entry.sourceHead === identity.sourceHead) || null;
     if (!candidate && samePullRequest.length > 0) throw new Error("terminal event sourceHead does not match the recorded candidate");
 
+    if (candidate && terminalStates.has(candidate.status)) {
+      if (candidate.status !== identity.outcome) throw new Error("terminal candidate outcome does not match the terminal event");
+      const receipt = noopReceipt(queue, identity, candidate, "duplicate-terminal-event-noop");
+      return { queue, receipt, receiptRoot: devDeliveryContentRoot(receipt) };
+    }
+
     if (queue.activeWarrant) {
       if (!candidate || queue.activeWarrant.candidateId !== candidate.candidateId) throw new Error("terminal event does not match the active Delivery Warrant");
       if (!identity.evidenceRoot) throw new Error("active terminal settlement requires evidenceRoot");
@@ -48,11 +54,6 @@ export function createDevDeliveryTerminalSettler({ normalizeQueue, closeWarrant,
 
     if (!candidate) {
       const receipt = noopReceipt(queue, identity, null, "terminal-event-not-applicable");
-      return { queue, receipt, receiptRoot: devDeliveryContentRoot(receipt) };
-    }
-    if (terminalStates.has(candidate.status)) {
-      if (candidate.status !== identity.outcome) throw new Error("terminal candidate outcome does not match the terminal event");
-      const receipt = noopReceipt(queue, identity, candidate, "duplicate-terminal-event-noop");
       return { queue, receipt, receiptRoot: devDeliveryContentRoot(receipt) };
     }
     if (candidate.status !== "queued") throw new Error(`candidate status ${candidate.status} requires an active Delivery Warrant`);
