@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 112,
-    "workflowCount": 62,
+    "workflowCount": 63,
     "actionCount": 6,
     "sitePageCount": 65,
     "docCommandRefCount": 880,
@@ -1664,6 +1664,17 @@
       {
         "id": "buildchain-alpha-self-dogfood",
         "path": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "buildchain-dev-delivery",
+        "path": ".github/workflows/buildchain-dev-delivery.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -7544,8 +7555,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
-    "workflowRegistryDigest": "7264e5ca3662b87dafcd776a161abbc056ff6b9f5c2ce0d4d4c0f7d46d07d93e",
-    "pageRegistryDigest": "7d823e699085557bc30eaff1803bf02640f212beea991ba3f754e4449beb5e7b"
+    "workflowRegistryDigest": "6bd35675ddf883abc4e37287d3cd1cac3d47cf12ad6a533bbd30558e0516169a",
+    "pageRegistryDigest": "fac9dfa5375e9555384c6f03e6baa0873c8d989a4fcbb961a68eff2f23077518"
   },
   "comparison": {
     "missingCliRegistry": [],
