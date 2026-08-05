@@ -3874,7 +3874,7 @@
       ],
       "source": {
         "path": "packages/core/channel-candidate.js",
-        "line": 5
+        "line": 6
       },
       "example": "import { CHANNEL_CANDIDATE_DECISION_SCHEMA } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3907,7 +3907,7 @@
       ],
       "source": {
         "path": "packages/core/channel-candidate.js",
-        "line": 84
+        "line": 85
       },
       "example": "import { channelCandidateSourceLockRef } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3936,7 +3936,7 @@
       ],
       "source": {
         "path": "packages/core/channel-candidate.js",
-        "line": 90
+        "line": 91
       },
       "example": "import { decideChannelCandidate } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18888,7 +18888,7 @@
       "specifier": "@kungfu-tech/buildchain/channel-candidate",
       "export": "./channel-candidate",
       "target": "./packages/core/channel-candidate.js",
-      "digest": "sha256:4f667440dc1d3df1663fba13afe68358aa3fc0c9316d1393e760bd932cec8a45",
+      "digest": "sha256:2dcd0899d8c0f4bbb7876108529f4bed0e5e82f6536474a1a505e65a322d10a6",
       "summary": "Exact-source channel candidate decisions, same-SHA workflow evidence validation, and deterministic source-lock reference APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -20116,7 +20116,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:9674641a1a5eff7ebbb989a9203b79414649716598a272231d91a79919f9f160"
+      "digest": "sha256:eb0447c481c213138223295296c49c9bb916032f2a041d36c7898f0f4dcf8e27"
     },
     {
       "id": "build-facts",
