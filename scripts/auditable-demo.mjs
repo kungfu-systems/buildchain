@@ -7,7 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { readRendererManifest, validateRenditionSet, validateTerminalCapture } from "./auditable-demo-renditions.mjs";
+import { readRendererManifest, validateRendererCompositionInputs, validateRenditionSet, validateTerminalCapture } from "./auditable-demo-renditions.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
@@ -190,7 +190,7 @@ function validateScene(value) {
   exactKeys(
     value,
     ["schema", "id", "width", "height", "fps", "durationMs", "title"],
-    ["durationClass", "commandLabel", "background", "accent"],
+    ["durationClass", "compositionMode", "commandLabel", "background", "accent"],
     "scene",
   );
   invariant(value.schema === "build-images.demo-scene/v1", "unsupported scene schema");
@@ -199,6 +199,11 @@ function validateScene(value) {
   integer(value.height, 360, 1080, "scene.height");
   const durationClass = value.durationClass ?? "standard";
   invariant(durationClass === "standard" || durationClass === "long-form", "scene.durationClass is invalid");
+  const compositionMode = value.compositionMode ?? "presentation-framed";
+  invariant(
+    compositionMode === "presentation-framed" || compositionMode === "terminal-fill",
+    "scene.compositionMode is invalid",
+  );
   const maximumDurationMs = durationClass === "long-form" ? LONG_FORM_MAX_DURATION_MS : STANDARD_MAX_DURATION_MS;
   const maximumFps = durationClass === "long-form" ? LONG_FORM_MAX_FPS : 30;
   integer(value.fps, 1, maximumFps, "scene.fps");
@@ -216,6 +221,7 @@ function validateScene(value) {
     height: value.height,
     fps: value.fps,
     ...(value.durationClass === undefined ? {} : { durationClass }),
+    compositionMode,
     durationMs: value.durationMs,
     title: value.title,
     commandLabel: value.commandLabel ?? "",
@@ -997,21 +1003,11 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     const observed = manifest.inputs?.[key]?.root;
     invariant(observed === sha256(readRegular(filePath, `${key} input`)), `renderer ${key} input root mismatch`);
   }
-  if (expectedInputs.renditionSet) {
-    invariant(
-      manifest.derivation?.policy === "independent-native-frame-sets/v1",
-      "renderer did not use independent native frame sets",
-    );
-    invariant(
-      Array.isArray(manifest.inputs?.renditions)
-        && manifest.inputs.renditions.length === 2
-        && manifest.inputs.renditions[0]?.role === "primary"
-        && manifest.inputs.renditions[1]?.role === "responsive"
-        && manifest.inputs.renditions[0]?.terminalCapture?.root
-          !== manifest.inputs.renditions[1]?.terminalCapture?.root,
-      "renderer native rendition inputs are not independently bound",
-    );
-  }
+  const composition = validateRendererCompositionInputs(
+    manifest,
+    expectedInputs,
+    RENDITION_VALIDATION_HELPERS,
+  );
   const probe = readJson(path.join(renderOutput, "media-probe.json"), "media probe");
   invariant(probe.schema === "build-images.demo-media-probe/v1" && probe.passed === true, "renderer media probe failed");
   const qualification = qualifyRendererOutput(
@@ -1022,7 +1018,7 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     options.inspectMedia || inspectMediaFile,
     options.inspectionRoot || "",
   );
-  return { manifest, probe, qualification };
+  return { manifest, probe, qualification, composition };
 }
 
 function renditionInputRoots(root, renditions) {

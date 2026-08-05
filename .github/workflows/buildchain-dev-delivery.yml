@@ -1,0 +1,99 @@
+name: Buildchain Dev Delivery
+
+run-name: Buildchain PR #${{ inputs.expected-pr-number }} · required Delivery Warrant
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected-pr-number:
+        description: "Exact Buildchain PR number"
+        type: number
+        required: true
+      expected-head-sha:
+        description: "Exact 40-character PR head"
+        type: string
+        required: true
+      assignment-root:
+        description: "Exact native Assignment content root"
+        type: string
+        required: true
+      initiative-root:
+        description: "Exact native Initiative content root"
+        type: string
+        required: true
+      source-identity-root:
+        description: "Immutable semantic source identity root"
+        type: string
+        required: true
+      source-patch-root:
+        description: "Immutable source patch or tree-intent root"
+        type: string
+        required: true
+      plan-root:
+        description: "Exact qualification plan root"
+        type: string
+        required: true
+      closure-root:
+        description: "Exact affected-closure root"
+        type: string
+        required: true
+      dependency-root:
+        description: "Exact dependency-graph root"
+        type: string
+        required: true
+      toolchain-root:
+        description: "Exact qualification toolchain root"
+        type: string
+        required: true
+      affected-paths-json:
+        description: "JSON array of paths covered by source qualification"
+        type: string
+        required: true
+      delivery-priority:
+        description: "Reviewed priority: ordinary, expedited, or emergency"
+        type: choice
+        options:
+          - ordinary
+          - expedited
+          - emergency
+        default: ordinary
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: write
+
+jobs:
+  deliver:
+    uses: ./.github/workflows/dev-pr-auto-merge.yml
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      statuses: write
+    with:
+      buildchain-repository: kungfu-systems/buildchain
+      buildchain-ref: ${{ github.sha }}
+      target-branch: dev/v3/v3.0
+      expected-pr-number: ${{ inputs.expected-pr-number }}
+      expected-head-sha: ${{ inputs.expected-head-sha }}
+      delivery-warrant-mode: required
+      assignment-root: ${{ inputs.assignment-root }}
+      initiative-root: ${{ inputs.initiative-root }}
+      source-identity-root: ${{ inputs.source-identity-root }}
+      source-patch-root: ${{ inputs.source-patch-root }}
+      plan-root: ${{ inputs.plan-root }}
+      closure-root: ${{ inputs.closure-root }}
+      dependency-root: ${{ inputs.dependency-root }}
+      toolchain-root: ${{ inputs.toolchain-root }}
+      affected-paths-json: ${{ inputs.affected-paths-json }}
+      delivery-class: native-proof-required
+      delivery-priority: ${{ inputs.delivery-priority }}
+      required-status-checks: check
+      ready-label: ready
+      block-labels: blocked,do-not-merge,work-in-progress
+      landing-mode: queue
+      dry-run: false
+    secrets: inherit

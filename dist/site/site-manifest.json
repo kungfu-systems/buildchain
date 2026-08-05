@@ -66,7 +66,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:0684e589579d3027d7a716f09920aca59f2be9eff5543fd86221a0b8762402d6"
+      "digest": "sha256:591dabbaed18644959791f63babb3fe6f48ec8e636d4dbdd5f7f60bcbb696d53"
     },
     {
       "id": "install",
@@ -234,7 +234,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:eb0447c481c213138223295296c49c9bb916032f2a041d36c7898f0f4dcf8e27"
+      "digest": "sha256:2c6ac350589ce98375c3ac5b5e1038032d744854219ae00441b00e200a8443b2"
     },
     {
       "id": "build-facts",

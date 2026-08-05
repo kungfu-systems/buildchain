@@ -137,6 +137,7 @@ const requiredPaths = [
   ".github/workflows/release-line-bootstrap.yml",
   ".github/workflows/release-governance-reconcile.yml",
   ".github/workflows/dev-pr-auto-merge.yml",
+  ".github/workflows/buildchain-dev-delivery.yml",
   ".github/workflows/buildchain-patrol.yml",
   ".github/workflows/patrol-daily.yml",
   ".github/workflows/patrol-weekly.yml",

@@ -24,6 +24,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/build-surface-fixture.yml", "non-publication-oidc"],
   [".github/workflows/build.yml", "non-publication-oidc"],
   [".github/workflows/buildchain-alpha-self-dogfood.yml", "non-publication-oidc"],
+  [".github/workflows/buildchain-dev-delivery.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-daily.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-monthly.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-weekly.yml", "governance-write"],
