@@ -91,6 +91,50 @@ test("duplicate submission is idempotent and safe head repair retains queue age"
   assert.equal(repaired.receipt.sourceProofRoot, ROOTS.proof);
 });
 
+test("a terminal semantic candidate opens a chained delivery attempt without rewriting history", () => {
+  const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(first.queue, { now: "2026-08-04T00:00:01Z" });
+  const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, {
+    outcome: "dequeued",
+    evidenceRoot: ROOTS.evidence,
+    reason: "source head changed after queue admission",
+    now: "2026-08-04T00:01:00Z",
+  });
+  const retried = submitDevDeliveryCandidate(terminal.queue, candidate(100, { sourceHead: "f".repeat(40) }), { now: "2026-08-04T00:02:00Z" });
+
+  assert.equal(retried.receipt.action, "submitted");
+  assert.equal(retried.queue.candidates.length, 2);
+  assert.equal(retried.queue.candidates[0].candidateId, first.receipt.candidateId);
+  assert.equal(retried.queue.candidates[0].status, "dequeued");
+  assert.equal(retried.queue.candidates[1].identitySemantics, "chained-attempt-v2");
+  assert.equal(retried.queue.candidates[1].predecessorCandidateId, first.receipt.candidateId);
+  assert.notEqual(retried.receipt.candidateId, first.receipt.candidateId);
+  assert.equal(retried.receipt.sourceHead, "f".repeat(40));
+
+  const repaired = submitDevDeliveryCandidate(retried.queue, candidate(100, { sourceHead: "e".repeat(40) }), { now: "2026-08-04T00:03:00Z" });
+  assert.equal(repaired.receipt.action, "safe-head-repair-retained-age");
+  assert.equal(repaired.queue.candidates.length, 2);
+  assert.equal(repaired.receipt.candidateId, retried.receipt.candidateId);
+  assert.equal(repaired.receipt.sourceHead, "e".repeat(40));
+});
+
+test("chained attempt identity rejects missing, reordered, and cross-PR predecessors", () => {
+  const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(first.queue, { now: "2026-08-04T00:00:01Z" });
+  const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, {
+    outcome: "cancelled",
+    evidenceRoot: ROOTS.evidence,
+    now: "2026-08-04T00:01:00Z",
+  });
+  const retried = submitDevDeliveryCandidate(terminal.queue, candidate(100, { sourceHead: "f".repeat(40) }), { now: "2026-08-04T00:02:00Z" });
+  const [predecessor, chained] = retried.queue.candidates;
+  const normalize = (candidates) => normalizeDevDeliveryQueue({ ...retried.queue, candidates, stateRoot: undefined });
+
+  assert.throws(() => normalize([chained]), /predecessor must appear earlier/u);
+  assert.throws(() => normalize([chained, predecessor]), /predecessor must appear earlier/u);
+  assert.throws(() => normalize([predecessor, { ...chained, pullRequestNumber: 101, candidateId: undefined }]), /same pull request/u);
+});
+
 test("FIFO plus aging is deterministic and bounds priority overtakes", () => {
   let state = submit(queue(), 101, "2026-08-04T00:00:00Z").queue;
   state = submit(state, 102, "2026-08-04T00:01:00Z").queue;
