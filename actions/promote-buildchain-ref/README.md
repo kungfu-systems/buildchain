@@ -80,6 +80,14 @@ publish npm packages. The GitHub action dry-run still calls GitHub APIs to
 resolve the current target SHA and concrete pending ref updates, but every
 write is reported as a dry-run update.
 
+When the requested version already matches every declared version-state file,
+dry-run planning still runs `lifecycle.version-state` and any explicit
+`verification-command` so it can discover declared derived material. It does
+not fall back to the repository-wide `lifecycle.verify` in that no-op case;
+full product verification can require candidate artifacts that are deliberately
+not present until the later admission phase. Non-dry-run version-state writes
+continue to require the configured verification lifecycle before any ref moves.
+
 Repositories whose package version is anchored to an explicitly selected
 upstream release can opt into manual next-anchor behavior:
 
