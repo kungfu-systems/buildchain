@@ -250,7 +250,12 @@ jobs:
             const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const train = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const runtimeRef = requested || shellRef;
-            if (requested && !official.test(requested)) {
+            const pinnedSelfRuntime =
+              sameRepositoryWorkflow &&
+              exactSha.test(requested) &&
+              exactSha.test(shellRef) &&
+              requested.toLowerCase() === shellRef.toLowerCase();
+            if (requested && !official.test(requested) && !pinnedSelfRuntime) {
               if (context.eventName !== "workflow_dispatch") {
                 throw new Error("Buildchain Gate runtime override is only allowed for trusted workflow_dispatch runs");
               }
