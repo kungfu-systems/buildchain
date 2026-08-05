@@ -12,6 +12,17 @@
       "enum": ["presentation-framed", "terminal-fill"],
       "default": "presentation-framed"
     },
+    "playback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "mode", "activeDurationMs", "finalHoldMs"],
+      "properties": {
+        "schema": {"const": "buildchain.declarative-demo-playback/v1"},
+        "mode": {"const": "deterministic-readable"},
+        "activeDurationMs": {"type": "integer", "minimum": 1000, "maximum": 179750},
+        "finalHoldMs": {"type": "integer", "minimum": 250, "maximum": 5000}
+      }
+    },
     "product": {
       "type": "object",
       "additionalProperties": false,

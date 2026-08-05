@@ -76,6 +76,15 @@ the bounded PTY replay the complete pixel surface without renderer-owned
 window chrome. Buildchain carries that choice into both native scenes. It does
 not infer full-frame intent from output resolution.
 
+The optional `buildchain.declarative-demo-playback/v1` contract separates
+observed command latency from presentation timing. Its
+`deterministic-readable` mode preserves the captured terminal event payloads
+and their order, records the observed final-event time as non-authoritative
+evidence, and maps event ordinals onto the declared `activeDurationMs` before a
+bounded `finalHoldMs`. Both native renditions therefore replay at the same
+readable pace even when an identical command runs faster or slower. Omitting
+the contract preserves the original PTY timestamp behavior.
+
 The uploaded metadata must bind the executable SHA-256, declare an empty
 runtime dependency set, and provide a bounded `executableFiles` array of exact
 artifact-relative paths and SHA-256 digests. GitHub Artifact transport does not

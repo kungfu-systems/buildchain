@@ -1,6 +1,12 @@
 {
   "schema": "buildchain.declarative-binary-demo/v1",
-  "compositionMode": "terminal-fill",
+  "compositionMode": "presentation-framed",
+  "playback": {
+    "schema": "buildchain.declarative-demo-playback/v1",
+    "mode": "deterministic-readable",
+    "activeDurationMs": 2800,
+    "finalHoldMs": 1000
+  },
   "product": {
     "id": "buildchain",
     "displayName": "Buildchain",

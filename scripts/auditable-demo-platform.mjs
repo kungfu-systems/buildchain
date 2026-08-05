@@ -178,6 +178,16 @@ function validateExecution(execution) {
   return policy;
 }
 
+function validatePlayback(playback, maximumSeconds) {
+  exactKeys(playback, ["schema", "mode", "activeDurationMs", "finalHoldMs"], [], "scenario.playback");
+  requireValue(playback.schema === "buildchain.declarative-demo-playback/v1", "scenario playback schema is unsupported");
+  requireValue(playback.mode === "deterministic-readable", "scenario playback mode is invalid");
+  requireValue(Number.isInteger(playback.activeDurationMs) && playback.activeDurationMs >= 1000, "scenario playback active duration is invalid");
+  requireValue(Number.isInteger(playback.finalHoldMs) && playback.finalHoldMs >= 250 && playback.finalHoldMs <= 5000, "scenario playback final hold is invalid");
+  requireValue(playback.activeDurationMs + playback.finalHoldMs <= maximumSeconds * 1000, "scenario playback exceeds its declared duration class");
+  return playback;
+}
+
 function validateStep(step, stepLabel, stepIds, maximumSeconds) {
   exactKeys(step, ["id", "argv", "timeoutSeconds", "expectedExitCodes", "stdoutIncludes", "fileAssertions"], [], stepLabel);
   requireValue(SAFE_ID.test(step.id) && !stepIds.has(step.id), `${stepLabel}.id is invalid or repeated`);
@@ -208,7 +218,7 @@ function validateDemo(demo, index, demoIds, maximumSeconds) {
 }
 
 export function validateScenario(value) {
-  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["compositionMode", "transportSmoke", "presentation"], "scenario");
+  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["compositionMode", "playback", "transportSmoke", "presentation"], "scenario");
   requireValue(value.schema === "buildchain.declarative-binary-demo/v1", "unsupported scenario schema");
   const compositionMode = value.compositionMode ?? PRESENTATION_FRAMED;
   requireValue(
@@ -218,6 +228,7 @@ export function validateScenario(value) {
   validateProduct(value.product);
   validateArtifact(value.artifact);
   const executionPolicy = validateExecution(value.execution);
+  if (value.playback) validatePlayback(value.playback, executionPolicy.maximumSeconds);
   requireValue(stableJson(value.renditions) === stableJson(RENDITIONS), "scenario must declare both native rendition profiles exactly");
   requireValue(Array.isArray(value.demos) && value.demos.length >= 1 && value.demos.length <= 8, "scenario requires 1 through 8 demos");
   const demoIds = new Set();
@@ -233,7 +244,7 @@ export function validateScenario(value) {
   return value;
 }
 
-function validateCapture(capture, rendition, summaryRoot, durationClass) {
+function validateCapture(capture, rendition, summaryRoot, durationClass, declaredPlayback) {
   const policy = durationPolicy(durationClass);
   requireValue(capture.schema === "buildchain.declarative-terminal-capture/v1", "capture schema mismatch");
   requireValue(JSON.stringify(capture.dimensions) === JSON.stringify({ columns: rendition.columns, rows: rendition.rows }), "capture dimensions mismatch");
@@ -248,13 +259,36 @@ function validateCapture(capture, rendition, summaryRoot, durationClass) {
     requireValue(index > 0 || event.atMs === 0, "capture event timeline must start at zero");
     previousAtMs = event.atMs;
   }
+  if (!declaredPlayback) {
+    requireValue(capture.playback === undefined, "legacy capture unexpectedly declares playback evidence");
+    return capture;
+  }
+  exactKeys(capture.playback, [
+    "schema", "mode", "timingSource", "activeDurationMs", "finalHoldMs", "presentedDurationMs",
+    "observedLastEventMs", "eventPayloadRoot", "eventOrder",
+  ], [], "capture.playback");
+  requireValue(capture.playback.schema === "buildchain.declarative-terminal-playback/v1", "capture playback schema mismatch");
+  requireValue(capture.playback.mode === declaredPlayback.mode, "capture playback mode mismatch");
+  requireValue(capture.playback.timingSource === "declared-event-ordinal", "capture playback timing source mismatch");
+  requireValue(capture.playback.activeDurationMs === declaredPlayback.activeDurationMs && capture.playback.finalHoldMs === declaredPlayback.finalHoldMs, "capture playback duration mismatch");
+  requireValue(capture.playback.presentedDurationMs === capture.durationMs && capture.durationMs === declaredPlayback.activeDurationMs + declaredPlayback.finalHoldMs, "capture presented duration mismatch");
+  requireValue(Number.isInteger(capture.playback.observedLastEventMs) && capture.playback.observedLastEventMs >= 0, "capture observed duration is invalid");
+  requireValue(capture.playback.eventOrder === "preserved", "capture playback event order mismatch");
+  requireValue(capture.playback.eventPayloadRoot === rootJson(capture.events.map((event) => event.data)), "capture playback payload root mismatch");
+  const lastIndex = capture.events.length - 1;
+  for (const [index, event] of capture.events.entries()) {
+    const expectedAtMs = lastIndex === 0 ? 0 : Math.round((index * declaredPlayback.activeDurationMs) / lastIndex);
+    requireValue(event.atMs === expectedAtMs, "capture playback timeline is not deterministic");
+  }
   return capture;
 }
 
 function projection(capture, transcript, demo, rendition, durationClass, sharedCaptureDurationMs, compositionMode) {
   const lines = transcript.endsWith("\n") ? transcript.slice(0, -1).split("\n") : transcript.split("\n");
   const policy = durationPolicy(durationClass);
-  const durationMs = Math.min(policy.maximumSeconds * 1000, sharedCaptureDurationMs + 1000);
+  const durationMs = capture.playback
+    ? sharedCaptureDurationMs
+    : Math.min(policy.maximumSeconds * 1000, sharedCaptureDurationMs + 1000);
   const projected = {
     schema: "kungfu.terminal-capture/v1",
     command: capture.command,
@@ -307,6 +341,7 @@ export function adaptCapture({ artifactRoot, output }) {
   requireValue(rootJson(scenario) === manifest.scenarioRoot, "captured scenario root mismatch");
   requireValue(Array.isArray(manifest.renditions) && manifest.renditions.length === 2, "capture rendition set is invalid");
   const executionPolicy = durationPolicy(manifest.execution?.durationClass);
+  requireValue(stableJson(manifest.execution?.playback) === stableJson(scenario.playback), "capture manifest playback declaration mismatch");
   prepareOutput(output);
   const set = [];
   const loaded = RENDITIONS.map((expected, index) => {
@@ -318,7 +353,7 @@ export function adaptCapture({ artifactRoot, output }) {
     const summary = readJson(inside(root, descriptor.runSummary, "run summary"), "run summary");
     requireValue(rootJson(summary) === descriptor.runSummaryRoot, "run summary root mismatch");
     const captureBytes = regular(inside(root, descriptor.terminalCapture, "terminal capture"), "terminal capture", 4 * 1024 * 1024);
-    const capture = validateCapture(JSON.parse(captureBytes.toString("utf8")), expected, descriptor.runSummaryRoot, executionPolicy.durationClass);
+    const capture = validateCapture(JSON.parse(captureBytes.toString("utf8")), expected, descriptor.runSummaryRoot, executionPolicy.durationClass, scenario.playback);
     requireValue(rootJson(capture) === descriptor.terminalCaptureRoot, "terminal capture root mismatch");
     return { index, expected, descriptor, transcript, capture };
   });

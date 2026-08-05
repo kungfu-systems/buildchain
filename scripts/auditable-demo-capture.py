@@ -224,6 +224,20 @@ def validate_scenario(value: dict[str, Any]) -> dict[str, Any]:
     require(isinstance(execution.get("totalTimeoutSeconds"), int) and 1 <= execution["totalTimeoutSeconds"] <= maximum_seconds,
             "scenario total timeout is invalid")
     require(isinstance(execution.get("environment"), dict), "scenario environment must be an object")
+    playback = value.get("playback")
+    if playback is not None:
+        require(isinstance(playback, dict) and set(playback) == {
+            "schema", "mode", "activeDurationMs", "finalHoldMs"
+        }, "scenario playback shape is invalid")
+        require(playback.get("schema") == "buildchain.declarative-demo-playback/v1",
+                "scenario playback schema is unsupported")
+        require(playback.get("mode") == "deterministic-readable", "scenario playback mode is invalid")
+        require(isinstance(playback.get("activeDurationMs"), int) and playback["activeDurationMs"] >= 1000,
+                "scenario playback active duration is invalid")
+        require(isinstance(playback.get("finalHoldMs"), int) and 250 <= playback["finalHoldMs"] <= 5000,
+                "scenario playback final hold is invalid")
+        require(playback["activeDurationMs"] + playback["finalHoldMs"] <= maximum_seconds * 1000,
+                "scenario playback exceeds its declared duration class")
     transport_smoke = value.get("transportSmoke")
     if transport_smoke is not None:
         require(isinstance(transport_smoke, dict) and set(transport_smoke) == {
@@ -418,8 +432,36 @@ def capture_rendition(binary: Path, demo: dict[str, Any], rendition: dict[str, A
                        "elapsedMs": elapsed, "outputRoot": root_bytes(public_bytes),
                        "outputEncoding": "utf-8-sanitized-terminal/v1", "fileAssertions": file_evidence}
             summaries.append({**summary, "root": root_json(summary)})
+    observed_last_event_ms = events[-1]["atMs"]
+    playback = scenario.get("playback")
+    playback_evidence = None
+    if playback is not None:
+        last_index = len(events) - 1
+        active_duration_ms = playback["activeDurationMs"]
+        events = [
+            {
+                **event,
+                "atMs": 0 if last_index == 0 else (
+                    index * active_duration_ms + last_index // 2
+                ) // last_index,
+            }
+            for index, event in enumerate(events)
+        ]
+        duration = active_duration_ms + playback["finalHoldMs"]
+        playback_evidence = {
+            "schema": "buildchain.declarative-terminal-playback/v1",
+            "mode": playback["mode"],
+            "timingSource": "declared-event-ordinal",
+            "activeDurationMs": active_duration_ms,
+            "finalHoldMs": playback["finalHoldMs"],
+            "presentedDurationMs": duration,
+            "observedLastEventMs": observed_last_event_ms,
+            "eventPayloadRoot": root_json([event["data"] for event in events]),
+            "eventOrder": "preserved",
+        }
+    else:
+        duration = max(900, min(duration_limit_ms, observed_last_event_ms + 600))
     last_event_ms = events[-1]["atMs"]
-    duration = max(900, min(duration_limit_ms, last_event_ms + 600))
     require(last_event_ms < duration, "terminal event timeline does not fit the declared duration class")
     completion = {"schema": "buildchain.declarative-demo-completion/v1", "status": "qualified",
                   "demoId": demo["id"], "steps": summaries}
@@ -429,6 +471,7 @@ def capture_rendition(binary: Path, demo: dict[str, Any], rendition: dict[str, A
         "command": f"{scenario['product']['binaryName']} ({len(demo['steps'])} declared steps)",
         "dimensions": {"columns": rendition["columns"], "rows": rendition["rows"]},
         "durationMs": duration, "encoding": "base64", "events": events,
+        **({"playback": playback_evidence} if playback_evidence is not None else {}),
         "completion": {"schema": completion["schema"], "status": "qualified", "reportRoot": completion_root, "eventCount": len(events)},
         "exitCode": 0,
         "authority": {"classification": "volatile-terminal-observation", "grants": [], "nonAuthorities": NON_AUTHORITIES},
@@ -471,7 +514,10 @@ def main() -> int:
     manifest = {
         "schema": "buildchain.declarative-demo-capture/v1", "status": "qualified",
         "demo": {"id": demo["id"], "title": demo["title"], "claimBoundary": demo["claimBoundary"]},
-        "execution": {"durationClass": scenario["execution"].get("durationClass", "standard")},
+        "execution": {
+            "durationClass": scenario["execution"].get("durationClass", "standard"),
+            **({"playback": scenario["playback"]} if scenario.get("playback") is not None else {}),
+        },
         "product": {**scenario["product"], "distribution": "standalone-binary"},
         "artifact": {"platformId": scenario["artifact"]["platformId"], "binaryRoot": binary_root,
                      "metadataContract": metadata["contract"], "metadataRoot": root_json(metadata), "runtimeDependencies": []},
