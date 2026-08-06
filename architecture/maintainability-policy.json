@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 272,
-    "maxHandMaintainedSourceLines": 104171,
+    "maxHandMaintainedSourceLines": 104244,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22141,
-    "latestTransition": "Candidate-run recovery adds one fail-closed verifier, one exact-run resolver, and one deterministic startup-failure dogfood workflow without adding a second publication state machine or product rebuild path.",
-    "rationale": "The responsibility-owned candidate recovery verifier and exact-run resolver add two bounded modules, while one workflow_dispatch-only fixture proves startup/router failure can be recovered by a fresh event. The exact ceilings include repository, workflow, Passport, summary, controller, manifest, archive, product-payload, Git-tree, runtime, permission, and durable-transaction validation; sealed payload bytes are reused without product install, build, verify, or platform-matrix execution. Existing publication state and repair_required behavior remain authoritative, and any wider ceiling requires another reviewed policy change."
+    "latestTransition": "Candidate-run recovery binds embedded Buildchain evidence byte-for-byte to independently uploaded manifest and diagnostics artifacts without admitting undeclared product payload files.",
+    "rationale": "The bounded recovery verifier distinguishes Buildchain-owned evidence from product bytes only under the exact platform evidence prefix and only when size and sha256 match an independently uploaded manifest or diagnostics artifact from the same successful candidate run. This covers post-manifest diagnostics finalization while every product byte must still match the platform manifest exactly. It also binds transaction identity to the sealed npm payload version when Buildchain dogfood uses a fixture Passport with a different product version. Missing cross-artifact binding, byte drift, undeclared product files, or transaction-version conflict still fails closed; archive digest validation and the no-rebuild publication path remain unchanged. The exact ceiling adds live-dogfood regressions and no new workflow, state machine, or product build path; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,

@@ -148,7 +148,11 @@ function candidateArtifactNames({ passport, selected, artifacts, artifactPattern
     if (!reference.artifact) throw new Error(`Passport controller receipt ${reference.controllerId} has no artifact identity`);
     names.add(reference.artifact);
   }
-  for (const platform of passport.platformMatrix || []) names.add(platform.artifactName);
+  for (const platform of passport.platformMatrix || []) {
+    names.add(platform.artifactName);
+    const diagnosticsArtifactName = `${selected.prefix}-diagnostics-${platform.platformId}-${selected.sourceSha}`;
+    if (artifacts.some((artifact) => artifact.name === diagnosticsArtifactName)) names.add(diagnosticsArtifactName);
+  }
   const manifestPattern = new RegExp(`^${selected.prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-manifest-.+-${selected.sourceSha}$`);
   for (const artifact of artifacts) {
     if (manifestPattern.test(String(artifact.name || ""))) names.add(artifact.name);
@@ -162,18 +166,42 @@ function candidateArtifactNames({ passport, selected, artifacts, artifactPattern
 
 function normalizePlatformManifests(downloads, passport) {
   const manifests = [];
+  const evidenceByArtifact = new Map();
+  function addEvidence(artifactName, files) {
+    if (!artifactName) return;
+    const evidenceFiles = evidenceByArtifact.get(artifactName) || new Map();
+    for (const file of files) {
+      const existing = evidenceFiles.get(file.path);
+      if (existing && (existing.size !== file.size || existing.sha256 !== file.sha256)) {
+        throw new Error(`platform evidence disagrees for ${artifactName}/${file.path}`);
+      }
+      evidenceFiles.set(file.path, file);
+    }
+    evidenceByArtifact.set(artifactName, evidenceFiles);
+  }
   for (const download of downloads) {
-    if (!String(download.artifact.name).includes("-manifest-")) continue;
-    for (const file of download.files.filter((entry) => path.basename(entry.path) === "manifest.json")) {
+    if (String(download.artifact.name).includes("-manifest-")) for (const file of download.files.filter((entry) => path.basename(entry.path) === "manifest.json")) {
       const manifest = JSON.parse(fs.readFileSync(file.absolutePath, "utf8"));
       if (!manifest.artifactName) {
         const platformId = String(manifest.platform?.id || manifest.platformId || "");
         manifest.artifactName = (passport.platformMatrix || []).find((entry) => entry.platformId === platformId)?.artifactName || "";
       }
       manifests.push(manifest);
+      addEvidence(manifest.artifactName, download.record.files);
+    }
+    if (String(download.artifact.name).includes("-diagnostics-")) {
+      const diagnosticsFiles = download.files.filter((entry) => path.basename(entry.path) === "diagnostics.json");
+      if (diagnosticsFiles.length === 1) {
+        const diagnostics = JSON.parse(fs.readFileSync(diagnosticsFiles[0].absolutePath, "utf8"));
+        addEvidence(String(diagnostics.links?.artifactName || ""), download.record.files);
+      }
     }
   }
-  return manifests;
+  const evidence = [...evidenceByArtifact].map(([artifactName, files]) => ({
+    artifactName,
+    files: [...files.values()].sort((left, right) => left.path.localeCompare(right.path)),
+  }));
+  return { manifests, evidence };
 }
 
 function normalizeControllerReceipts(downloads, passport) {
@@ -258,9 +286,6 @@ async function recoverCandidateEvidence({
   for (const artifact of [selected.passport, selected.summary]) initialDownloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   const passport = readOnlyJson(initialDownloads[0].files.filter((file) => path.basename(file.path) === "release-candidate-passport.json"), "release-candidate-passport.json");
   const buildSummary = readOnlyJson(initialDownloads[1].files.filter((file) => path.basename(file.path) === "build-summary.json"), "build-summary.json");
-  const candidateVersion = String(passport.target?.version || "").trim();
-  if (!candidateVersion) throw new Error("Release Candidate Passport has no exact target version");
-  const existingTransaction = await readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version: candidateVersion });
   const requiredNames = candidateArtifactNames({ passport, selected, artifacts, artifactPatterns });
   const chosen = artifacts.filter((artifact) => requiredNames.has(artifact.name));
   if (chosen.length !== requiredNames.size) {
@@ -272,7 +297,7 @@ async function recoverCandidateEvidence({
   for (const artifact of chosen.filter((entry) => ![selected.passport.id, selected.summary.id].includes(entry.id))) downloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   return {
     run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-    passport, buildSummary, candidateVersion, existingTransaction, chosen, downloads,
+    passport, buildSummary, chosen, downloads,
   };
 }
 
@@ -311,7 +336,7 @@ export async function resumeFromCandidateRun({
   try {
     const {
       run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-      passport, buildSummary, candidateVersion, existingTransaction, chosen, downloads,
+      passport, buildSummary, chosen, downloads,
     } = await recoverCandidateEvidence({
       repoInfo, runId, artifactName, artifactPatterns, requiredArtifactCount,
       outputDir, apiUrl, token, fetchImpl, archiveDir,
@@ -323,9 +348,20 @@ export async function resumeFromCandidateRun({
     const targetRefState = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/heads/${targetRef.replace(/^refs\/heads\//, "")}` });
     if (targetRefState.object?.sha !== targetSha) throw new Error(`target ref ${targetRef} no longer points at ${targetSha}`);
     const compare = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${pullRequest.merge_commit_sha}...${targetSha}` });
-    const platformManifests = normalizePlatformManifests(downloads, passport);
+    const platformManifestEvidence = normalizePlatformManifests(downloads, passport);
     const controllerReceipts = normalizeControllerReceipts(downloads, passport);
     const productPayloadManifests = normalizeProductPayloadManifests(downloads);
+    const sealed = createSealedBundle({
+      downloads,
+      bundleRoot,
+      repository: repoInfo.fullName,
+      passport,
+      runtimeSha,
+      publishPackageMain,
+      releasePatterns,
+    });
+    const candidateVersion = sealed.manifest.npm.version;
+    const existingTransaction = await readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version: candidateVersion });
     const recovery = verifyReleaseCandidateRecovery({
       candidateRepository: repoInfo.fullName,
       targetRepository,
@@ -369,20 +405,13 @@ export async function resumeFromCandidateRun({
       passport,
       buildSummary,
       controllerReceipts,
-      platformManifests,
+      platformManifests: platformManifestEvidence.manifests,
+      platformManifestEvidence: platformManifestEvidence.evidence,
       productPayloadManifests,
       artifacts: downloads.map((download) => download.record),
+      publicationVersion: candidateVersion,
       currentToolingSha: runtimeSha,
       recoveryRunId,
-    });
-    const sealed = createSealedBundle({
-      downloads,
-      bundleRoot,
-      repository: repoInfo.fullName,
-      passport,
-      runtimeSha,
-      publishPackageMain,
-      releasePatterns,
     });
     const recoveryReceiptPath = path.join(resolvedOutput, "recovery-receipt.json");
     const sealedManifestPath = path.join(resolvedOutput, "sealed-bundle.json");

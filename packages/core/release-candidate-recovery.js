@@ -93,9 +93,14 @@ function normalizedRef(value) {
   return String(value || "").replace(/^refs\/heads\//, "").trim();
 }
 
-function validatePlatformPayloads(passport, artifacts, platformManifests) {
+function sameArtifactFile(left, right) {
+  return Boolean(left && right && left.size === right.size && left.sha256 === right.sha256);
+}
+
+function validatePlatformPayloads(passport, artifacts, platformManifests, platformManifestEvidence) {
   const byName = new Map(artifacts.map((artifact) => [artifact.name, artifact]));
   const manifestsByArtifact = new Map((platformManifests || []).map((manifest) => [manifest.artifactName, manifest]));
+  const evidenceByArtifact = new Map((platformManifestEvidence || []).map((evidence) => [evidence.artifactName, evidence]));
   if (manifestsByArtifact.size !== (passport.platformMatrix || []).length) {
     fail("platform-matrix-mismatch", "platform manifest count differs from the Passport platform matrix", "Restore every exact platform manifest from the candidate run.");
   }
@@ -118,8 +123,26 @@ function validatePlatformPayloads(passport, artifacts, platformManifests) {
       size: Number(file.size ?? file.bytes),
       sha256: `sha256:${String(file.sha256 || "").replace(/^sha256:/, "")}`,
     })).sort((left, right) => left.path.localeCompare(right.path));
-    if (JSON.stringify(payload.files) !== JSON.stringify(manifestFiles)) {
-      fail("artifact-manifest-mismatch", `platform payload bytes differ from the uploaded platform manifest: ${platform.artifactName}`, "Do not publish; preserve the mismatched manifest and payload evidence.");
+    const platformId = required(platform.platformId, `${platform.artifactName}.platformId`);
+    const buildchainEvidencePrefix = `.buildchain/artifacts/${platformId}/`;
+    const manifestByPath = new Map(manifestFiles.map((file) => [file.path, file]));
+    const evidenceFiles = new Map((evidenceByArtifact.get(platform.artifactName)?.files || []).map((file) => [file.path, file]));
+    const payloadPaths = new Set(payload.files.map((file) => file.path));
+    for (const manifestFile of manifestFiles) {
+      if (!payloadPaths.has(manifestFile.path)) {
+        fail("artifact-manifest-mismatch", `platform payload omits a manifest-declared file: ${platform.artifactName}/${manifestFile.path}`, "Do not publish; preserve the mismatched manifest and payload evidence.");
+      }
+    }
+    for (const payloadFile of payload.files) {
+      const manifestFile = manifestByPath.get(payloadFile.path);
+      if (sameArtifactFile(payloadFile, manifestFile)) continue;
+      const evidencePath = payloadFile.path.startsWith(buildchainEvidencePrefix)
+        ? payloadFile.path.slice(buildchainEvidencePrefix.length)
+        : "";
+      const evidenceFile = evidencePath ? evidenceFiles.get(evidencePath) : undefined;
+      if (!sameArtifactFile(payloadFile, evidenceFile)) {
+        fail("artifact-manifest-mismatch", `platform payload contains unbound bytes or evidence drift: ${platform.artifactName}/${payloadFile.path}`, "Do not publish; preserve the platform payload, manifest, and independently uploaded evidence.");
+      }
     }
     if (passportFiles.length > 0 && JSON.stringify(manifestFiles) !== JSON.stringify(passportFiles)) {
       fail("artifact-manifest-mismatch", `platform manifest differs from Passport inventory: ${platform.artifactName}`, "Do not publish; preserve the mismatched manifest and Passport evidence.");
@@ -230,17 +253,17 @@ function validateCandidateIdentity({
   return { sha, tree, runtimeSha, toolingSha };
 }
 
-function validateRecoveryTransaction({ existingTransaction, expectedTransactionId, repository, passport, sha, targetRef, candidateRoot }) {
+function validateRecoveryTransaction({ existingTransaction, expectedTransactionId, repository, version, passport, sha, targetRef, candidateRoot }) {
   const actualTransactionId = String(existingTransaction?.id || "");
   if (expectedTransactionId && !actualTransactionId) fail("transaction-identity-conflict", `expected transaction ${expectedTransactionId} does not exist`, "Remove the stale transaction identity only if no durable transaction was ever sealed; otherwise preserve evidence and enter repair_required.");
   if (expectedTransactionId && expectedTransactionId !== actualTransactionId) fail("transaction-identity-conflict", `existing transaction ${actualTransactionId} conflicts with expected ${expectedTransactionId}`, "Enter repair_required and inspect the durable transaction before any retry.");
   if (existingTransaction) {
-    const expectedIdentity = releaseTransactionId({ repository, version: passport.target.version, sourceSha: sha, targetRef: normalizedRef(targetRef) });
+    const expectedIdentity = releaseTransactionId({ repository, version, sourceSha: sha, targetRef: normalizedRef(targetRef) });
     assertEqual(existingTransaction.id, expectedIdentity, "transaction-identity-conflict", "durable transaction identity", "Enter repair_required; the durable transaction does not belong to this exact publication target.");
     assertEqual(existingTransaction.repository, repository, "transaction-identity-conflict", "durable transaction repository", "Enter repair_required; never cross repository transaction boundaries.");
     assertEqual(normalizedRef(existingTransaction.target_ref), normalizedRef(targetRef), "transaction-identity-conflict", "durable transaction target ref", "Enter repair_required; never retarget a sealed transaction.");
     assertEqual(existingTransaction.source_sha, sha, "transaction-identity-conflict", "durable transaction source SHA", "Resume with the transaction's exact promotion SHA or enter repair_required.");
-    assertEqual(existingTransaction.version, passport.target.version, "transaction-identity-conflict", "durable transaction version", "Enter repair_required; never change a sealed publication version.");
+    assertEqual(existingTransaction.version, version, "transaction-identity-conflict", "durable transaction version", "Enter repair_required; never change a sealed publication version.");
     assertEqual(existingTransaction.channel, passport.target.channel, "transaction-identity-conflict", "durable transaction channel", "Enter repair_required; never move a transaction between channels.");
   }
   if (existingTransaction?.candidateRoot && existingTransaction.candidateRoot !== candidateRoot) fail("transaction-identity-conflict", "existing transaction is sealed to a different candidate root", "Enter repair_required; never reuse the conflicting transaction.");
@@ -270,8 +293,10 @@ export function verifyReleaseCandidateRecovery({
   buildSummary,
   controllerReceipts = [],
   platformManifests = [],
+  platformManifestEvidence = [],
   productPayloadManifests = [],
   artifacts = [],
+  publicationVersion = "",
   currentToolingSha,
   recoveryRunId = "",
   createdAt = new Date().toISOString(),
@@ -290,7 +315,7 @@ export function verifyReleaseCandidateRecovery({
   if (new Set(recoveredArtifacts.map((artifact) => artifact.name)).size !== recoveredArtifacts.length) {
     fail("artifact-count-mismatch", "candidate artifact names are not unique", "Inspect the candidate run and remove ambiguity by creating a new candidate.");
   }
-  validatePlatformPayloads(passport, recoveredArtifacts, platformManifests);
+  validatePlatformPayloads(passport, recoveredArtifacts, platformManifests, platformManifestEvidence);
 
   const references = new Map((passport.controllerReceipts || []).map((reference) => [reference.controllerId, reference]));
   for (const receipt of controllerReceipts) {
@@ -325,8 +350,9 @@ export function verifyReleaseCandidateRecovery({
     runtimeSha,
   });
 
+  const version = required(publicationVersion || passport.target?.version, "publicationVersion");
   const actualTransactionId = validateRecoveryTransaction({
-    existingTransaction, expectedTransactionId, repository, passport, sha, targetRef, candidateRoot,
+    existingTransaction, expectedTransactionId, repository, version, passport, sha, targetRef, candidateRoot,
   });
 
   const receipt = {
@@ -345,7 +371,7 @@ export function verifyReleaseCandidateRecovery({
       mergeSha: String(pullRequest.mergeSha || ""),
       tree: passport.source.treeHash,
     },
-    target: { channel: passport.target.channel, ref: normalizedRef(targetRef), sha, tree },
+    target: { channel: passport.target.channel, ref: normalizedRef(targetRef), sha, tree, version },
     recovered: {
       candidateRoot,
       buildSummaryRoot: `sha256:${passport.diagnostics.buildSummaryHash}`,
