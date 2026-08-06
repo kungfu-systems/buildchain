@@ -181,9 +181,8 @@ jobs:
       resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
       resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
-      # Buildchain self-promotion must consume the sealed npm product payload
-      # from the exact channel PR. Falling back to the fixture platform
-      # manifests would misclassify diagnostic envelope files as npm products.
+      # Alpha consumes sealed candidate npm bytes; stable materializes final
+      # bytes from verified same-tree source and must not reuse alpha ref/digest.
       artifact-patterns: "buildchain-package-*"
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
@@ -192,6 +191,7 @@ jobs:
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       required-artifact-count: 0
       publish-transaction-override: ${{ github.event_name == 'workflow_dispatch' && (inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') }}
+      publish-required-artifacts-json: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'release/') && '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]' || '' }}
       publish-package-main: "@kungfu-tech/buildchain"
       trusted-publishing: true
       release-passport: true
