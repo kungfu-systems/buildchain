@@ -16,6 +16,16 @@ const PAYLOAD_DIGEST = `sha256:${"5".repeat(64)}`;
 const ARCHIVE_DIGEST = `sha256:${"6".repeat(64)}`;
 
 function fixture(overrides = {}) {
+  const platformFiles = [
+    { path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST },
+    {
+      path: ".buildchain/artifacts/linux-x64/diagnostics.json",
+      size: 11,
+      sha256: `sha256:${"7".repeat(64)}`,
+    },
+  ];
+  const payloadFiles = platformFiles.map((file) => ({ ...file }));
+  payloadFiles[1] = { ...payloadFiles[1], size: 13, sha256: `sha256:${"8".repeat(64)}` };
   const buildSummary = {
     contract: "kungfu-buildchain-build-summary",
     git: { repository: "kungfu-systems/buildchain", sha: SOURCE_SHA, treeSha: TREE, runId: "100", runAttempt: "1" },
@@ -24,7 +34,11 @@ function fixture(overrides = {}) {
     platforms: [{
       platform: { id: "linux-x64" },
       artifactName: "buildchain-package",
-      summary: { fileCount: 1, totalBytes: 7, files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }] },
+      summary: {
+        fileCount: platformFiles.length,
+        totalBytes: platformFiles.reduce((total, file) => total + file.size, 0),
+        files: platformFiles,
+      },
     }],
   };
   const passport = createReleaseCandidatePassport({
@@ -81,7 +95,7 @@ function fixture(overrides = {}) {
     controllerReceipts: [],
     platformManifests: [{
       artifactName: "buildchain-package",
-      files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }],
+      files: platformFiles,
     }],
     productPayloadManifests: [],
     artifacts: [{
@@ -90,7 +104,7 @@ function fixture(overrides = {}) {
       downloadedSize: 11,
       digest: ARCHIVE_DIGEST,
       downloadedDigest: ARCHIVE_DIGEST,
-      files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }],
+      files: payloadFiles,
     }],
     currentToolingSha: RUNTIME_SHA,
     recoveryRunId: "200",
@@ -141,6 +155,9 @@ test("recovery rejects the same SHA when an artifact digest drifts", () => {
   const input = fixture({ targetSha: SOURCE_SHA });
   input.artifacts[0].downloadedDigest = `sha256:${"7".repeat(64)}`;
   expectCode("artifact-digest-mismatch", input);
+  const payloadDrift = fixture();
+  payloadDrift.artifacts[0].files[0].size += 1;
+  expectCode("artifact-manifest-mismatch", payloadDrift);
 });
 
 test("recovery rejects a different target tree", () => {

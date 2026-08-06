@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 272,
-    "maxHandMaintainedSourceLines": 104171,
+    "maxHandMaintainedSourceLines": 104177,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22141,
     "latestTransition": "Candidate-run recovery adds one fail-closed verifier, one exact-run resolver, and one deterministic startup-failure dogfood workflow without adding a second publication state machine or product rebuild path.",
