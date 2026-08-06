@@ -181,8 +181,7 @@ jobs:
       resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
       resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
-      # Alpha consumes sealed candidate npm bytes; stable materializes final
-      # bytes from verified same-tree source and must not reuse alpha ref/digest.
+      # Alpha consumes sealed candidate npm bytes; stable materializes final bytes and cannot reuse alpha ref/digest.
       artifact-patterns: "buildchain-package-*"
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
