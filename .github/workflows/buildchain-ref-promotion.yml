@@ -183,7 +183,7 @@ jobs:
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
       artifact-patterns: ${{ inputs['resume-candidate-run-id'] != '' && 'buildchain-package-*' || '' }}
       github-release: true
-      github-release-payload-patterns: "*.tgz"
+      github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
       standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
       required-status-check: check
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
