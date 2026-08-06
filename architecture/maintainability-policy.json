@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 272,
-    "maxHandMaintainedSourceLines": 104302,
+    "maxHandMaintainedSourceFiles": 273,
+    "maxHandMaintainedSourceLines": 104473,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22141,
-    "latestTransition": "Candidate-run recovery binds a sealed payload publication version through the immutable recovery receipt while preserving the original candidate Passport and product bytes.",
-    "rationale": "The bounded recovery verifier continues to require byte-identical candidate archives, manifests, controller evidence, source tree, and product payloads. Promotion now accepts a fixture or consumer Passport whose product version differs from the sealed npm package only when the immutable recovery receipt root binds the original candidate root, source/tree, repository, channel, target ref/SHA, skipped build matrix, unchanged payload bytes, and exact sealed publication version. Ordinary promotion still requires direct Passport version equality, and missing or drifted recovery evidence fails before provider mutation. The exact 58-line increase adds one validator and wiring inside the existing recovery and promotion surfaces, with no new workflow, state machine, artifact format, or product build path; any wider ceiling requires another reviewed policy change."
+    "latestTransition": "The v4 planning boundary gains one read-only v3 core-mechanism inventory validator without changing a runtime, workflow, state machine, artifact format, or provider effect.",
+    "rationale": "The exact 171-line and one-file increase validates ten source- and test-grounded v3 mechanism families, their public surfaces, durable stores, recovery semantics, provider readback, compatibility callers, and unresolved v4 disposition. The frozen v3 observation remains recorded separately in architecture/v3-core-mechanism-inventory.json. This tooling-only ceiling cannot grow implicitly; any runtime or broader inventory change requires another reviewed policy transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
