@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-candidate-passport",
+  "createdAt": "2026-08-06T06:48:21.371Z",
+  "repository": "kungfu-systems/buildchain",
+  "pullRequest": {
+    "number": "2376",
+    "url": "https://github.com/kungfu-systems/buildchain/pull/2376",
+    "headRef": "dev/v3/v3.0",
+    "baseRef": "alpha/v3/v3.0"
+  },
+  "target": {
+    "channel": "alpha",
+    "ref": "refs/pull/2376/merge",
+    "version": "22.22.3-kf.0"
+  },
+  "source": {
+    "headSha": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "baseSha": "",
+    "mergeRefSha": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "treeHash": "95d56374f89b4459facef84988e30163885f7ee5",
+    "builtSourceSha": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "builtSourceTreeSha": "95d56374f89b4459facef84988e30163885f7ee5"
+  },
+  "buildchain": {
+    "ref": "1da435a13774e4e16aa10735976191959683c148",
+    "sha": "1da435a13774e4e16aa10735976191959683c148",
+    "version": "",
+    "workflowShellRef": "refs/pull/2376/merge"
+  },
+  "workflow": {
+    "name": "Build Surface Fixture",
+    "runId": "31078343118",
+    "runAttempt": "1",
+    "url": "https://github.com/kungfu-systems/buildchain/actions/runs/31078343118"
+  },
+  "platformMatrix": [
+    {
+      "platformId": "linux-x64",
+      "artifactName": "libnode-shaped-linux-x64-dc9954dfca52",
+      "runner": {
+        "labels": [],
+        "os": "",
+        "arch": ""
+      },
+      "lifecycle": {
+        "build": {
+          "durationMs": 185,
+          "eventCount": 6
+        },
+        "install": {
+          "durationMs": 34,
+          "eventCount": 6
+        },
+        "verify": {
+          "durationMs": 36,
+          "eventCount": 6
+        }
+      },
+      "summary": {
+        "fileCount": 12,
+        "totalBytes": 69054
+      },
+      "artifacts": [],
+      "manifestPath": "/home/runner/work/buildchain/buildchain/.buildchain/downloaded-manifests/libnode-shaped-manifest-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json"
+    },
+    {
+      "platformId": "macos",
+      "artifactName": "libnode-shaped-macos-dc9954dfca52",
+      "runner": {
+        "labels": [],
+        "os": "",
+        "arch": ""
+      },
+      "lifecycle": {
+        "build": {
+          "durationMs": 361,
+          "eventCount": 6
+        },
+        "install": {
+          "durationMs": 46,
+          "eventCount": 6
+        },
+        "verify": {
+          "durationMs": 65,
+          "eventCount": 6
+        }
+      },
+      "summary": {
+        "fileCount": 12,
+        "totalBytes": 68902
+      },
+      "artifacts": [],
+      "manifestPath": "/home/runner/work/buildchain/buildchain/.buildchain/downloaded-manifests/libnode-shaped-manifest-macos-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json"
+    },
+    {
+      "platformId": "windows-x64",
+      "artifactName": "libnode-shaped-windows-x64-dc9954dfca52",
+      "runner": {
+        "labels": [],
+        "os": "",
+        "arch": ""
+      },
+      "lifecycle": {
+        "build": {
+          "durationMs": 5785,
+          "eventCount": 6
+        },
+        "install": {
+          "durationMs": 67,
+          "eventCount": 6
+        },
+        "verify": {
+          "durationMs": 48,
+          "eventCount": 6
+        }
+      },
+      "summary": {
+        "fileCount": 12,
+        "totalBytes": 69275
+      },
+      "artifacts": [],
+      "manifestPath": "/home/runner/work/buildchain/buildchain/.buildchain/downloaded-manifests/libnode-shaped-manifest-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json"
+    }
+  ],
+  "diagnostics": {
+    "buildSummaryContract": "kungfu-buildchain-build-summary",
+    "buildSummaryHash": "b4a0abef2717489d47edbc69e2b53344009db77d6468c14a2e1c21f20cdbf235"
+  },
+  "controllerReceipts": [
+    {
+      "controllerId": "build-lifecycle",
+      "planDigest": "sha256:267170e654435f730c0a9c92319e25820d6298f444e37af5aac9fe5f576f2629",
+      "receiptDigest": "sha256:12e52eeae84aaf24e6714c01506f0816ed748dacc9548050c9c63bf9c087bfbf",
+      "sourceSha": "dc9954dfca523fc603986d1739575dcd84648fda",
+      "runtimeSha": "1da435a13774e4e16aa10735976191959683c148",
+      "status": "passed",
+      "artifact": "libnode-shaped-release-candidate-controller-receipt-dc9954dfca523fc603986d1739575dcd84648fda"
+    }
+  ],
+  "candidateHash": "17bd252b95825a2e15295efc0bc15d278fdae7da5e0d1b29a8671b50399d7cfe"
+}

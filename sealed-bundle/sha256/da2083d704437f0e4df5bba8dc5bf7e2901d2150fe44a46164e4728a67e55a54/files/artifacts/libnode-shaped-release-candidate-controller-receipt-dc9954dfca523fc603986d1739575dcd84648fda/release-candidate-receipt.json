@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain.controller-evidence/v1",
+  "kind": "receipt",
+  "controller": {
+    "id": "build-lifecycle",
+    "version": 1,
+    "descriptorDigest": "sha256:9c0aacca910cef4619a797898ff5c24027c1583f84431a93a5efc854925326e7",
+    "workflow": {
+      "id": ".build",
+      "path": ".github/workflows/.build.yml"
+    }
+  },
+  "source": {
+    "repository": "kungfu-systems/buildchain",
+    "sha": "dc9954dfca523fc603986d1739575dcd84648fda"
+  },
+  "runtime": {
+    "ref": "1da435a13774e4e16aa10735976191959683c148",
+    "sha": "1da435a13774e4e16aa10735976191959683c148",
+    "contractDigest": "sha256:d29e04a3d7cee5095820a581c3732a57c33c80ab9f7707d72a686bc3060d9f6d"
+  },
+  "planDigest": "sha256:267170e654435f730c0a9c92319e25820d6298f444e37af5aac9fe5f576f2629",
+  "status": "passed",
+  "qualifying": true,
+  "stages": [
+    {
+      "id": "resolve-runtime",
+      "required": true,
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "resolve-source",
+      "required": true,
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "anchored-release-preflight",
+      "required": false,
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "build",
+      "required": true,
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "signing-finalization",
+      "required": true,
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "credential-island",
+      "required": false,
+      "status": "skipped",
+      "evidence": []
+    },
+    {
+      "id": "verify",
+      "required": true,
+      "status": "passed",
+      "evidence": []
+    },
+    {
+      "id": "aggregate",
+      "required": true,
+      "status": "passed",
+      "evidence": []
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "anchored-version-material",
+      "digest": "sha256:da865e6ca399b733b3c3e4da833c6398e4bf71423b76efa84bd4d95df3d387e5"
+    },
+    {
+      "kind": "platform-manifests",
+      "digest": "sha256:f6cc9bbb7354cf1d43784550f0cf1e6472b0f89f3a1578d1b2b8cd543ca9154e"
+    },
+    {
+      "kind": "build-summary",
+      "digest": "sha256:f6cc9bbb7354cf1d43784550f0cf1e6472b0f89f3a1578d1b2b8cd543ca9154e"
+    }
+  ],
+  "issues": [],
+  "artifact": "libnode-shaped-release-candidate-controller-receipt-dc9954dfca523fc603986d1739575dcd84648fda",
+  "digest": "sha256:12e52eeae84aaf24e6714c01506f0816ed748dacc9548050c9c63bf9c087bfbf"
+}

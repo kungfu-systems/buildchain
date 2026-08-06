@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-diagnostics-manifest",
+  "generatedAt": "2026-08-06T06:47:01.753Z",
+  "artifactName": "libnode-shaped-macos-dc9954dfca52",
+  "platformId": "macos",
+  "diagnosticsArtifactName": "libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda",
+  "fileCount": 5,
+  "totalBytes": 31398,
+  "files": [
+    {
+      "kind": "diagnostics",
+      "path": ".buildchain/artifacts/macos/diagnostics.json",
+      "bytes": 21797,
+      "sha256": "44d7c093dc68bc7da73d6678f982ed94d052489480bed9f4af7f9e3cc9d74063",
+      "required": true
+    },
+    {
+      "kind": "events",
+      "path": ".buildchain/artifacts/macos/events.jsonl",
+      "bytes": 6381,
+      "sha256": "41bae51b44ec855aaba11931fcdab3bed91c822d97bf74eaf1736d5b0667aa70",
+      "required": true
+    },
+    {
+      "kind": "process-summary",
+      "path": ".buildchain/artifacts/macos/process-summary.json",
+      "bytes": 1331,
+      "sha256": "f448e557384f9b6d2676f8761998cfa4d307474e6816fb5d8ead8d7d5f465ee6",
+      "required": false
+    },
+    {
+      "kind": "process-samples",
+      "path": ".buildchain/artifacts/macos/process-samples.jsonl",
+      "bytes": 297,
+      "sha256": "8178eea1b04b63bd1d967f50175ca8c2ff39c7c4a73ca1b7bd6158d3dc198937",
+      "required": false
+    },
+    {
+      "kind": "source-checkout",
+      "path": ".buildchain/artifacts/macos/source-checkout.json",
+      "bytes": 1592,
+      "sha256": "973d48c38508cc3f79fe365bc041e2e689c37dbca5434705cff744edd45b3cec",
+      "required": false
+    }
+  ]
+}

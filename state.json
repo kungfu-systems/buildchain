@@ -1,0 +1,811 @@
+{
+  "schema": 1,
+  "id": "7b75822039d66339783a49e506c6ed6f4a7f1d6cb91134023767012441bf52d5",
+  "repository": "kungfu-systems/buildchain",
+  "target_ref": "alpha/v3/v3.0",
+  "source_sha": "7eee0d39477f568475a87fb3c41c65666a162b85",
+  "release_sha": "7eee0d39477f568475a87fb3c41c65666a162b85",
+  "release_material_sha": "7eee0d39477f568475a87fb3c41c65666a162b85",
+  "publish_tooling_sha": "7eee0d39477f568475a87fb3c41c65666a162b85",
+  "version": "3.0.6-alpha.6",
+  "exact_tag": "v3.0.6-alpha.6",
+  "channel": "alpha",
+  "line": "v3.0",
+  "version_strategy": "",
+  "lifecycle_identity": "lifecycle.publish",
+  "state_ref": "buildchain/release-state/3-0-6-alpha-6",
+  "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v3.0.6-alpha.6.json",
+  "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v3.0.6-alpha.6/evidence.json",
+  "state": "sealed",
+  "previous_state": "prepared",
+  "actor": "kungfu-origin",
+  "run_id": "31078811109",
+  "superseded_by": "",
+  "failure": "",
+  "artifacts": [],
+  "evidence": [],
+  "sealed_bundle": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-publication-sealed-bundle",
+    "root": "sha256:da2083d704437f0e4df5bba8dc5bf7e2901d2150fe44a46164e4728a67e55a54",
+    "candidate": {
+      "schemaVersion": 1,
+      "contract": "kungfu-buildchain-publication-artifact-candidate",
+      "repository": "kungfu-systems/buildchain",
+      "sourceSha": "dc9954dfca523fc603986d1739575dcd84648fda",
+      "sourceTreeSha": "95d56374f89b4459facef84988e30163885f7ee5",
+      "runtimeSha": "1da435a13774e4e16aa10735976191959683c148",
+      "releaseCandidateRoot": "sha256:17bd252b95825a2e15295efc0bc15d278fdae7da5e0d1b29a8671b50399d7cfe",
+      "files": [
+        {
+          "path": "artifacts/buildchain-package-dc9954dfca523fc603986d1739575dcd84648fda/kungfu-tech-buildchain-3.0.6-alpha.6.tgz",
+          "size": 1868761,
+          "sha256": "c19e88d3887f733ffe8453b7e0592bd405c96acf24cf9ae12fe65bef1ddefe43"
+        },
+        {
+          "path": "artifacts/buildchain-package-dc9954dfca523fc603986d1739575dcd84648fda/product-payload-manifest.json",
+          "size": 886,
+          "sha256": "6bb4d794b47c3cad9db4ef143fd187322d9e8e7804b678925bd25c6cf11c87fd"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics-manifest.json",
+          "size": 1581,
+          "sha256": "394c6e87687754dd0f5abd25d246107b1fbf96a909065736f34ee3e3550f6250"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+          "size": 21855,
+          "sha256": "7f5e379b50cd4a8aaaa7f86b42cb433cacae270d6a5ab43a779503b1bd4a9a9d"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/events.jsonl",
+          "size": 6429,
+          "sha256": "90fdc86b480ccc9daa1b45f890bc28ae71f1185db426df655af4cefee309d349"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/process-samples.jsonl",
+          "size": 399,
+          "sha256": "333c6f1a64d07699dbcc2a8a772d4a711e25c7f34da7c414bc72a8b617b0d3ab"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/process-summary.json",
+          "size": 1298,
+          "sha256": "0cea0104f50a63d46e64aa91efee2417a8ca59fed784896bcf95ca9dc9b65f60"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/source-checkout.json",
+          "size": 1592,
+          "sha256": "5c4e50ba0db00b2e9cf4703a76f82397b9be65f81541c2b009b4610aa7ff7473"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics-manifest.json",
+          "size": 1549,
+          "sha256": "5cdfe16993ea344b5785fddb3413f875a733ddb6540799298a866613f1516326"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+          "size": 21797,
+          "sha256": "44d7c093dc68bc7da73d6678f982ed94d052489480bed9f4af7f9e3cc9d74063"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/events.jsonl",
+          "size": 6381,
+          "sha256": "41bae51b44ec855aaba11931fcdab3bed91c822d97bf74eaf1736d5b0667aa70"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/process-samples.jsonl",
+          "size": 297,
+          "sha256": "8178eea1b04b63bd1d967f50175ca8c2ff39c7c4a73ca1b7bd6158d3dc198937"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/process-summary.json",
+          "size": 1331,
+          "sha256": "f448e557384f9b6d2676f8761998cfa4d307474e6816fb5d8ead8d7d5f465ee6"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/source-checkout.json",
+          "size": 1592,
+          "sha256": "973d48c38508cc3f79fe365bc041e2e689c37dbca5434705cff744edd45b3cec"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics-manifest.json",
+          "size": 1597,
+          "sha256": "a0661d766074382981d4487a2ec9229544b34687c1bb855f0ade5b9d75a15625"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+          "size": 21888,
+          "sha256": "58994b58e12df41b0a30a7300c9f7ae119d65fe088890245929ab55b047319b8"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/events.jsonl",
+          "size": 6454,
+          "sha256": "24a862ee1b5a96f4fadc2abec3115961bd7a6fa19ee4f21775988f2625bf43eb"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/process-samples.jsonl",
+          "size": 189,
+          "sha256": "4203ab61476eeee7442f1e873ff38a7eb647afeccfce6b25c1ed067c62ac9587"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/process-summary.json",
+          "size": 1357,
+          "sha256": "249242bc13f794a130b342a253ea2ca1771023a89b882799f8364e008d3f3d95"
+        },
+        {
+          "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/source-checkout.json",
+          "size": 1592,
+          "sha256": "3b58811d3014f3a2b7acf0220d5f3df1bbf3c20c122053fad4160285ad1f647e"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/diagnostics-manifest.json",
+          "size": 1581,
+          "sha256": "394c6e87687754dd0f5abd25d246107b1fbf96a909065736f34ee3e3550f6250"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/diagnostics.json",
+          "size": 21855,
+          "sha256": "7f5e379b50cd4a8aaaa7f86b42cb433cacae270d6a5ab43a779503b1bd4a9a9d"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/events.jsonl",
+          "size": 6429,
+          "sha256": "90fdc86b480ccc9daa1b45f890bc28ae71f1185db426df655af4cefee309d349"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/manifest-build.json",
+          "size": 14995,
+          "sha256": "8db82e9d266fbdee4d4c5c52e9d8a54207091ced49a9da20882048abace4a5ae"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/manifest-install.json",
+          "size": 12128,
+          "sha256": "e8d6c1311d7111f0c945d60f32f68f3c3c4cbf5342a2e46836893bd59d49c449"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/manifest.json",
+          "size": 17375,
+          "sha256": "d6fade472ac36fe148ad2d96936992a5b114ee1e9f15437505d618681530852c"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/process-samples.jsonl",
+          "size": 399,
+          "sha256": "333c6f1a64d07699dbcc2a8a772d4a711e25c7f34da7c414bc72a8b617b0d3ab"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/process-summary.json",
+          "size": 1298,
+          "sha256": "0cea0104f50a63d46e64aa91efee2417a8ca59fed784896bcf95ca9dc9b65f60"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/source-checkout.json",
+          "size": 1592,
+          "sha256": "5c4e50ba0db00b2e9cf4703a76f82397b9be65f81541c2b009b4610aa7ff7473"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/summary-build.json",
+          "size": 6367,
+          "sha256": "130813e30e4f204a4eb60757cb78ea5a710a851c8d62386af515ae3f1616f71e"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/summary-install.json",
+          "size": 5604,
+          "sha256": "41fdc090f2828c50cb10dd06abe2115b7b481a70ed6030b53779c20ba26940d7"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/summary.json",
+          "size": 6970,
+          "sha256": "90e893e7249b0ae7d8e23a9fd8345434e5207330600263bedf8bc8128d9c4140"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/fixtures/libnode-shaped/dist/install.txt",
+          "size": 11,
+          "sha256": "58ea1a700d8d18303985228c4715ae63cdd6030c591916e91adefbb71965c2e6"
+        },
+        {
+          "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/fixtures/libnode-shaped/dist/libnode-shaped.txt",
+          "size": 74,
+          "sha256": "f55e0f738b369117c498f76cb8e933cf4765358207587071b45d271672c64e6d"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/diagnostics-manifest.json",
+          "size": 1549,
+          "sha256": "5cdfe16993ea344b5785fddb3413f875a733ddb6540799298a866613f1516326"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/diagnostics.json",
+          "size": 21797,
+          "sha256": "44d7c093dc68bc7da73d6678f982ed94d052489480bed9f4af7f9e3cc9d74063"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/events.jsonl",
+          "size": 6381,
+          "sha256": "41bae51b44ec855aaba11931fcdab3bed91c822d97bf74eaf1736d5b0667aa70"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/manifest-build.json",
+          "size": 14927,
+          "sha256": "eefe09d333be6078eff61729ded834d0f075dba7e7495a701b1de4653171f3cf"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/manifest-install.json",
+          "size": 12084,
+          "sha256": "4e8f879a99ec2cbdd665bd680a5e063b72b4e9a454dfe62f454c57df503942dd"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/manifest.json",
+          "size": 17291,
+          "sha256": "e5ff9adc4e58b46aa9175cba0f27642503526e6947d1313ba21fd89e127128e8"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/process-samples.jsonl",
+          "size": 297,
+          "sha256": "8178eea1b04b63bd1d967f50175ca8c2ff39c7c4a73ca1b7bd6158d3dc198937"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/process-summary.json",
+          "size": 1331,
+          "sha256": "f448e557384f9b6d2676f8761998cfa4d307474e6816fb5d8ead8d7d5f465ee6"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/source-checkout.json",
+          "size": 1592,
+          "sha256": "973d48c38508cc3f79fe365bc041e2e689c37dbca5434705cff744edd45b3cec"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/summary-build.json",
+          "size": 6345,
+          "sha256": "e3980d3e5439d60f86a9308f28e1cd84efecaa17ce7efb007027668f87bbe5da"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/summary-install.json",
+          "size": 5582,
+          "sha256": "7f87eff1153cec560c39f1b2609b54de412109427c1e641c3f2fd5f80d4c68d7"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/summary.json",
+          "size": 6948,
+          "sha256": "c8b53e85020d58327a2fadc77da08720508d9bb35f0ef8547f3528360fc78025"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/fixtures/libnode-shaped/dist/install.txt",
+          "size": 11,
+          "sha256": "58ea1a700d8d18303985228c4715ae63cdd6030c591916e91adefbb71965c2e6"
+        },
+        {
+          "path": "artifacts/libnode-shaped-macos-dc9954dfca52/fixtures/libnode-shaped/dist/libnode-shaped.txt",
+          "size": 77,
+          "sha256": "22f1a83d1486fabfaa80dd069dec29ab45ccbc1f868f59a555a7a7e20a2fb75e"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+          "size": 21855,
+          "sha256": "7f5e379b50cd4a8aaaa7f86b42cb433cacae270d6a5ab43a779503b1bd4a9a9d"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json",
+          "size": 17375,
+          "sha256": "d6fade472ac36fe148ad2d96936992a5b114ee1e9f15437505d618681530852c"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/summary.json",
+          "size": 6970,
+          "sha256": "90e893e7249b0ae7d8e23a9fd8345434e5207330600263bedf8bc8128d9c4140"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-macos-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+          "size": 21797,
+          "sha256": "44d7c093dc68bc7da73d6678f982ed94d052489480bed9f4af7f9e3cc9d74063"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-macos-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json",
+          "size": 17291,
+          "sha256": "e5ff9adc4e58b46aa9175cba0f27642503526e6947d1313ba21fd89e127128e8"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-macos-dc9954dfca523fc603986d1739575dcd84648fda/summary.json",
+          "size": 6948,
+          "sha256": "c8b53e85020d58327a2fadc77da08720508d9bb35f0ef8547f3528360fc78025"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+          "size": 21888,
+          "sha256": "58994b58e12df41b0a30a7300c9f7ae119d65fe088890245929ab55b047319b8"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json",
+          "size": 17437,
+          "sha256": "eb520c97688ec967255dcdef604061609dc577b0b1d1331b6991888f1566d4d1"
+        },
+        {
+          "path": "artifacts/libnode-shaped-manifest-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/summary.json",
+          "size": 6991,
+          "sha256": "8a2c63f80e6431c7d66da029fd7a0f5c45a35402a82e1532a01840313a0812c8"
+        },
+        {
+          "path": "artifacts/libnode-shaped-release-candidate-controller-receipt-dc9954dfca523fc603986d1739575dcd84648fda/release-candidate-receipt.json",
+          "size": 2423,
+          "sha256": "c56f56ec5cf6f9fd4bdedbfb4923b41678f538e7e5e5c6935cc5294d6043f191"
+        },
+        {
+          "path": "artifacts/libnode-shaped-release-candidate-dc9954dfca523fc603986d1739575dcd84648fda/release-candidate-passport.json",
+          "size": 4344,
+          "sha256": "d01ac4ae86a75decf5b671ed97460b3a7f9263267f39061871af61850cd107c5"
+        },
+        {
+          "path": "artifacts/libnode-shaped-summary-dc9954dfca523fc603986d1739575dcd84648fda/build-summary.json",
+          "size": 55914,
+          "sha256": "f6cc9bbb7354cf1d43784550f0cf1e6472b0f89f3a1578d1b2b8cd543ca9154e"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/diagnostics-manifest.json",
+          "size": 1597,
+          "sha256": "a0661d766074382981d4487a2ec9229544b34687c1bb855f0ade5b9d75a15625"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/diagnostics.json",
+          "size": 21888,
+          "sha256": "58994b58e12df41b0a30a7300c9f7ae119d65fe088890245929ab55b047319b8"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/events.jsonl",
+          "size": 6454,
+          "sha256": "24a862ee1b5a96f4fadc2abec3115961bd7a6fa19ee4f21775988f2625bf43eb"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/manifest-build.json",
+          "size": 15059,
+          "sha256": "bae77d3e928dbe426dcf95034cc77bdc42457cdc098f7a338781bf2f105a0819"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/manifest-install.json",
+          "size": 12156,
+          "sha256": "fb02480fff877548eed4e0f573e668ba5139b35a9a52a4d58bf692aa3343e423"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/manifest.json",
+          "size": 17437,
+          "sha256": "eb520c97688ec967255dcdef604061609dc577b0b1d1331b6991888f1566d4d1"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/process-samples.jsonl",
+          "size": 189,
+          "sha256": "4203ab61476eeee7442f1e873ff38a7eb647afeccfce6b25c1ed067c62ac9587"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/process-summary.json",
+          "size": 1357,
+          "sha256": "249242bc13f794a130b342a253ea2ca1771023a89b882799f8364e008d3f3d95"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/source-checkout.json",
+          "size": 1592,
+          "sha256": "3b58811d3014f3a2b7acf0220d5f3df1bbf3c20c122053fad4160285ad1f647e"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/summary-build.json",
+          "size": 6393,
+          "sha256": "c291260cb0e955b3f8cd86576ede6653477f019b67afe2e5123ee0f613ce367e"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/summary-install.json",
+          "size": 5618,
+          "sha256": "7ca689e84065e59b6ff5b7d57cc5ef20ef91c2d5be3667005cef7ec4a115b553"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/summary.json",
+          "size": 6991,
+          "sha256": "8a2c63f80e6431c7d66da029fd7a0f5c45a35402a82e1532a01840313a0812c8"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/fixtures/libnode-shaped/dist/install.txt",
+          "size": 11,
+          "sha256": "58ea1a700d8d18303985228c4715ae63cdd6030c591916e91adefbb71965c2e6"
+        },
+        {
+          "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/fixtures/libnode-shaped/dist/libnode-shaped.txt",
+          "size": 74,
+          "sha256": "abb605836956b74c50ec9a1a1ce8ef7c8fafc08da70a2e1daea997fa5b79b7c3"
+        }
+      ],
+      "candidateDigest": "da2083d704437f0e4df5bba8dc5bf7e2901d2150fe44a46164e4728a67e55a54"
+    },
+    "files": [
+      {
+        "path": "artifacts/buildchain-package-dc9954dfca523fc603986d1739575dcd84648fda/kungfu-tech-buildchain-3.0.6-alpha.6.tgz",
+        "size": 1868761,
+        "sha256": "c19e88d3887f733ffe8453b7e0592bd405c96acf24cf9ae12fe65bef1ddefe43"
+      },
+      {
+        "path": "artifacts/buildchain-package-dc9954dfca523fc603986d1739575dcd84648fda/product-payload-manifest.json",
+        "size": 886,
+        "sha256": "6bb4d794b47c3cad9db4ef143fd187322d9e8e7804b678925bd25c6cf11c87fd"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics-manifest.json",
+        "size": 1581,
+        "sha256": "394c6e87687754dd0f5abd25d246107b1fbf96a909065736f34ee3e3550f6250"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+        "size": 21855,
+        "sha256": "7f5e379b50cd4a8aaaa7f86b42cb433cacae270d6a5ab43a779503b1bd4a9a9d"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/events.jsonl",
+        "size": 6429,
+        "sha256": "90fdc86b480ccc9daa1b45f890bc28ae71f1185db426df655af4cefee309d349"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/process-samples.jsonl",
+        "size": 399,
+        "sha256": "333c6f1a64d07699dbcc2a8a772d4a711e25c7f34da7c414bc72a8b617b0d3ab"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/process-summary.json",
+        "size": 1298,
+        "sha256": "0cea0104f50a63d46e64aa91efee2417a8ca59fed784896bcf95ca9dc9b65f60"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/source-checkout.json",
+        "size": 1592,
+        "sha256": "5c4e50ba0db00b2e9cf4703a76f82397b9be65f81541c2b009b4610aa7ff7473"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics-manifest.json",
+        "size": 1549,
+        "sha256": "5cdfe16993ea344b5785fddb3413f875a733ddb6540799298a866613f1516326"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+        "size": 21797,
+        "sha256": "44d7c093dc68bc7da73d6678f982ed94d052489480bed9f4af7f9e3cc9d74063"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/events.jsonl",
+        "size": 6381,
+        "sha256": "41bae51b44ec855aaba11931fcdab3bed91c822d97bf74eaf1736d5b0667aa70"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/process-samples.jsonl",
+        "size": 297,
+        "sha256": "8178eea1b04b63bd1d967f50175ca8c2ff39c7c4a73ca1b7bd6158d3dc198937"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/process-summary.json",
+        "size": 1331,
+        "sha256": "f448e557384f9b6d2676f8761998cfa4d307474e6816fb5d8ead8d7d5f465ee6"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda/source-checkout.json",
+        "size": 1592,
+        "sha256": "973d48c38508cc3f79fe365bc041e2e689c37dbca5434705cff744edd45b3cec"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics-manifest.json",
+        "size": 1597,
+        "sha256": "a0661d766074382981d4487a2ec9229544b34687c1bb855f0ade5b9d75a15625"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+        "size": 21888,
+        "sha256": "58994b58e12df41b0a30a7300c9f7ae119d65fe088890245929ab55b047319b8"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/events.jsonl",
+        "size": 6454,
+        "sha256": "24a862ee1b5a96f4fadc2abec3115961bd7a6fa19ee4f21775988f2625bf43eb"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/process-samples.jsonl",
+        "size": 189,
+        "sha256": "4203ab61476eeee7442f1e873ff38a7eb647afeccfce6b25c1ed067c62ac9587"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/process-summary.json",
+        "size": 1357,
+        "sha256": "249242bc13f794a130b342a253ea2ca1771023a89b882799f8364e008d3f3d95"
+      },
+      {
+        "path": "artifacts/libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/source-checkout.json",
+        "size": 1592,
+        "sha256": "3b58811d3014f3a2b7acf0220d5f3df1bbf3c20c122053fad4160285ad1f647e"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/diagnostics-manifest.json",
+        "size": 1581,
+        "sha256": "394c6e87687754dd0f5abd25d246107b1fbf96a909065736f34ee3e3550f6250"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/diagnostics.json",
+        "size": 21855,
+        "sha256": "7f5e379b50cd4a8aaaa7f86b42cb433cacae270d6a5ab43a779503b1bd4a9a9d"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/events.jsonl",
+        "size": 6429,
+        "sha256": "90fdc86b480ccc9daa1b45f890bc28ae71f1185db426df655af4cefee309d349"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/manifest-build.json",
+        "size": 14995,
+        "sha256": "8db82e9d266fbdee4d4c5c52e9d8a54207091ced49a9da20882048abace4a5ae"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/manifest-install.json",
+        "size": 12128,
+        "sha256": "e8d6c1311d7111f0c945d60f32f68f3c3c4cbf5342a2e46836893bd59d49c449"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/manifest.json",
+        "size": 17375,
+        "sha256": "d6fade472ac36fe148ad2d96936992a5b114ee1e9f15437505d618681530852c"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/process-samples.jsonl",
+        "size": 399,
+        "sha256": "333c6f1a64d07699dbcc2a8a772d4a711e25c7f34da7c414bc72a8b617b0d3ab"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/process-summary.json",
+        "size": 1298,
+        "sha256": "0cea0104f50a63d46e64aa91efee2417a8ca59fed784896bcf95ca9dc9b65f60"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/source-checkout.json",
+        "size": 1592,
+        "sha256": "5c4e50ba0db00b2e9cf4703a76f82397b9be65f81541c2b009b4610aa7ff7473"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/summary-build.json",
+        "size": 6367,
+        "sha256": "130813e30e4f204a4eb60757cb78ea5a710a851c8d62386af515ae3f1616f71e"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/summary-install.json",
+        "size": 5604,
+        "sha256": "41fdc090f2828c50cb10dd06abe2115b7b481a70ed6030b53779c20ba26940d7"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/.buildchain/artifacts/linux-x64/summary.json",
+        "size": 6970,
+        "sha256": "90e893e7249b0ae7d8e23a9fd8345434e5207330600263bedf8bc8128d9c4140"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/fixtures/libnode-shaped/dist/install.txt",
+        "size": 11,
+        "sha256": "58ea1a700d8d18303985228c4715ae63cdd6030c591916e91adefbb71965c2e6"
+      },
+      {
+        "path": "artifacts/libnode-shaped-linux-x64-dc9954dfca52/fixtures/libnode-shaped/dist/libnode-shaped.txt",
+        "size": 74,
+        "sha256": "f55e0f738b369117c498f76cb8e933cf4765358207587071b45d271672c64e6d"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/diagnostics-manifest.json",
+        "size": 1549,
+        "sha256": "5cdfe16993ea344b5785fddb3413f875a733ddb6540799298a866613f1516326"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/diagnostics.json",
+        "size": 21797,
+        "sha256": "44d7c093dc68bc7da73d6678f982ed94d052489480bed9f4af7f9e3cc9d74063"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/events.jsonl",
+        "size": 6381,
+        "sha256": "41bae51b44ec855aaba11931fcdab3bed91c822d97bf74eaf1736d5b0667aa70"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/manifest-build.json",
+        "size": 14927,
+        "sha256": "eefe09d333be6078eff61729ded834d0f075dba7e7495a701b1de4653171f3cf"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/manifest-install.json",
+        "size": 12084,
+        "sha256": "4e8f879a99ec2cbdd665bd680a5e063b72b4e9a454dfe62f454c57df503942dd"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/manifest.json",
+        "size": 17291,
+        "sha256": "e5ff9adc4e58b46aa9175cba0f27642503526e6947d1313ba21fd89e127128e8"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/process-samples.jsonl",
+        "size": 297,
+        "sha256": "8178eea1b04b63bd1d967f50175ca8c2ff39c7c4a73ca1b7bd6158d3dc198937"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/process-summary.json",
+        "size": 1331,
+        "sha256": "f448e557384f9b6d2676f8761998cfa4d307474e6816fb5d8ead8d7d5f465ee6"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/source-checkout.json",
+        "size": 1592,
+        "sha256": "973d48c38508cc3f79fe365bc041e2e689c37dbca5434705cff744edd45b3cec"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/summary-build.json",
+        "size": 6345,
+        "sha256": "e3980d3e5439d60f86a9308f28e1cd84efecaa17ce7efb007027668f87bbe5da"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/summary-install.json",
+        "size": 5582,
+        "sha256": "7f87eff1153cec560c39f1b2609b54de412109427c1e641c3f2fd5f80d4c68d7"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/.buildchain/artifacts/macos/summary.json",
+        "size": 6948,
+        "sha256": "c8b53e85020d58327a2fadc77da08720508d9bb35f0ef8547f3528360fc78025"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/fixtures/libnode-shaped/dist/install.txt",
+        "size": 11,
+        "sha256": "58ea1a700d8d18303985228c4715ae63cdd6030c591916e91adefbb71965c2e6"
+      },
+      {
+        "path": "artifacts/libnode-shaped-macos-dc9954dfca52/fixtures/libnode-shaped/dist/libnode-shaped.txt",
+        "size": 77,
+        "sha256": "22f1a83d1486fabfaa80dd069dec29ab45ccbc1f868f59a555a7a7e20a2fb75e"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+        "size": 21855,
+        "sha256": "7f5e379b50cd4a8aaaa7f86b42cb433cacae270d6a5ab43a779503b1bd4a9a9d"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json",
+        "size": 17375,
+        "sha256": "d6fade472ac36fe148ad2d96936992a5b114ee1e9f15437505d618681530852c"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda/summary.json",
+        "size": 6970,
+        "sha256": "90e893e7249b0ae7d8e23a9fd8345434e5207330600263bedf8bc8128d9c4140"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-macos-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+        "size": 21797,
+        "sha256": "44d7c093dc68bc7da73d6678f982ed94d052489480bed9f4af7f9e3cc9d74063"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-macos-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json",
+        "size": 17291,
+        "sha256": "e5ff9adc4e58b46aa9175cba0f27642503526e6947d1313ba21fd89e127128e8"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-macos-dc9954dfca523fc603986d1739575dcd84648fda/summary.json",
+        "size": 6948,
+        "sha256": "c8b53e85020d58327a2fadc77da08720508d9bb35f0ef8547f3528360fc78025"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/diagnostics.json",
+        "size": 21888,
+        "sha256": "58994b58e12df41b0a30a7300c9f7ae119d65fe088890245929ab55b047319b8"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/manifest.json",
+        "size": 17437,
+        "sha256": "eb520c97688ec967255dcdef604061609dc577b0b1d1331b6991888f1566d4d1"
+      },
+      {
+        "path": "artifacts/libnode-shaped-manifest-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda/summary.json",
+        "size": 6991,
+        "sha256": "8a2c63f80e6431c7d66da029fd7a0f5c45a35402a82e1532a01840313a0812c8"
+      },
+      {
+        "path": "artifacts/libnode-shaped-release-candidate-controller-receipt-dc9954dfca523fc603986d1739575dcd84648fda/release-candidate-receipt.json",
+        "size": 2423,
+        "sha256": "c56f56ec5cf6f9fd4bdedbfb4923b41678f538e7e5e5c6935cc5294d6043f191"
+      },
+      {
+        "path": "artifacts/libnode-shaped-release-candidate-dc9954dfca523fc603986d1739575dcd84648fda/release-candidate-passport.json",
+        "size": 4344,
+        "sha256": "d01ac4ae86a75decf5b671ed97460b3a7f9263267f39061871af61850cd107c5"
+      },
+      {
+        "path": "artifacts/libnode-shaped-summary-dc9954dfca523fc603986d1739575dcd84648fda/build-summary.json",
+        "size": 55914,
+        "sha256": "f6cc9bbb7354cf1d43784550f0cf1e6472b0f89f3a1578d1b2b8cd543ca9154e"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/diagnostics-manifest.json",
+        "size": 1597,
+        "sha256": "a0661d766074382981d4487a2ec9229544b34687c1bb855f0ade5b9d75a15625"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/diagnostics.json",
+        "size": 21888,
+        "sha256": "58994b58e12df41b0a30a7300c9f7ae119d65fe088890245929ab55b047319b8"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/events.jsonl",
+        "size": 6454,
+        "sha256": "24a862ee1b5a96f4fadc2abec3115961bd7a6fa19ee4f21775988f2625bf43eb"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/manifest-build.json",
+        "size": 15059,
+        "sha256": "bae77d3e928dbe426dcf95034cc77bdc42457cdc098f7a338781bf2f105a0819"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/manifest-install.json",
+        "size": 12156,
+        "sha256": "fb02480fff877548eed4e0f573e668ba5139b35a9a52a4d58bf692aa3343e423"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/manifest.json",
+        "size": 17437,
+        "sha256": "eb520c97688ec967255dcdef604061609dc577b0b1d1331b6991888f1566d4d1"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/process-samples.jsonl",
+        "size": 189,
+        "sha256": "4203ab61476eeee7442f1e873ff38a7eb647afeccfce6b25c1ed067c62ac9587"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/process-summary.json",
+        "size": 1357,
+        "sha256": "249242bc13f794a130b342a253ea2ca1771023a89b882799f8364e008d3f3d95"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/source-checkout.json",
+        "size": 1592,
+        "sha256": "3b58811d3014f3a2b7acf0220d5f3df1bbf3c20c122053fad4160285ad1f647e"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/summary-build.json",
+        "size": 6393,
+        "sha256": "c291260cb0e955b3f8cd86576ede6653477f019b67afe2e5123ee0f613ce367e"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/summary-install.json",
+        "size": 5618,
+        "sha256": "7ca689e84065e59b6ff5b7d57cc5ef20ef91c2d5be3667005cef7ec4a115b553"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/.buildchain/artifacts/windows-x64/summary.json",
+        "size": 6991,
+        "sha256": "8a2c63f80e6431c7d66da029fd7a0f5c45a35402a82e1532a01840313a0812c8"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/fixtures/libnode-shaped/dist/install.txt",
+        "size": 11,
+        "sha256": "58ea1a700d8d18303985228c4715ae63cdd6030c591916e91adefbb71965c2e6"
+      },
+      {
+        "path": "artifacts/libnode-shaped-windows-x64-dc9954dfca52/fixtures/libnode-shaped/dist/libnode-shaped.txt",
+        "size": 74,
+        "sha256": "abb605836956b74c50ec9a1a1ce8ef7c8fafc08da70a2e1daea997fa5b79b7c3"
+      }
+    ],
+    "npm": {
+      "name": "@kungfu-tech/buildchain",
+      "version": "3.0.6-alpha.6",
+      "path": "artifacts/buildchain-package-dc9954dfca523fc603986d1739575dcd84648fda/kungfu-tech-buildchain-3.0.6-alpha.6.tgz",
+      "size": 1868761,
+      "sha256": "c19e88d3887f733ffe8453b7e0592bd405c96acf24cf9ae12fe65bef1ddefe43",
+      "integrity": "sha512-9Fp4p9nhaO2ry6tECNvwTVPM9EVfVmHEj2phCfH+UMSsAY0Ae2nESm0X7WHOSmafHQXI3TME2fXKVykDTOwTsw=="
+    },
+    "releaseAssets": [
+      {
+        "path": "artifacts/buildchain-package-dc9954dfca523fc603986d1739575dcd84648fda/kungfu-tech-buildchain-3.0.6-alpha.6.tgz",
+        "size": 1868761,
+        "sha256": "c19e88d3887f733ffe8453b7e0592bd405c96acf24cf9ae12fe65bef1ddefe43"
+      }
+    ],
+    "completion": {
+      "githubReleaseRequired": true
+    },
+    "durablePath": "sealed-bundle/sha256/da2083d704437f0e4df5bba8dc5bf7e2901d2150fe44a46164e4728a67e55a54",
+    "resumeCommand": "buildchain paper resume --version \"3.0.6-alpha.6\" --state-ref \"refs/heads/buildchain/release-state/3-0-6-alpha-6\""
+  },
+  "publication_state": "sealed",
+  "milestones": {},
+  "resume_command": "buildchain paper resume --version \"3.0.6-alpha.6\" --state-ref \"refs/heads/buildchain/release-state/3-0-6-alpha-6\"",
+  "created_at": "2026-08-06T06:56:47.365Z",
+  "updated_at": "2026-08-06T06:56:47.365Z"
+}

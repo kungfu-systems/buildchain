@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-diagnostics-manifest",
+  "generatedAt": "2026-08-06T06:47:11.894Z",
+  "artifactName": "libnode-shaped-linux-x64-dc9954dfca52",
+  "platformId": "linux-x64",
+  "diagnosticsArtifactName": "libnode-shaped-diagnostics-linux-x64-dc9954dfca523fc603986d1739575dcd84648fda",
+  "fileCount": 5,
+  "totalBytes": 31573,
+  "files": [
+    {
+      "kind": "diagnostics",
+      "path": ".buildchain/artifacts/linux-x64/diagnostics.json",
+      "bytes": 21855,
+      "sha256": "7f5e379b50cd4a8aaaa7f86b42cb433cacae270d6a5ab43a779503b1bd4a9a9d",
+      "required": true
+    },
+    {
+      "kind": "events",
+      "path": ".buildchain/artifacts/linux-x64/events.jsonl",
+      "bytes": 6429,
+      "sha256": "90fdc86b480ccc9daa1b45f890bc28ae71f1185db426df655af4cefee309d349",
+      "required": true
+    },
+    {
+      "kind": "process-summary",
+      "path": ".buildchain/artifacts/linux-x64/process-summary.json",
+      "bytes": 1298,
+      "sha256": "0cea0104f50a63d46e64aa91efee2417a8ca59fed784896bcf95ca9dc9b65f60",
+      "required": false
+    },
+    {
+      "kind": "process-samples",
+      "path": ".buildchain/artifacts/linux-x64/process-samples.jsonl",
+      "bytes": 399,
+      "sha256": "333c6f1a64d07699dbcc2a8a772d4a711e25c7f34da7c414bc72a8b617b0d3ab",
+      "required": false
+    },
+    {
+      "kind": "source-checkout",
+      "path": ".buildchain/artifacts/linux-x64/source-checkout.json",
+      "bytes": 1592,
+      "sha256": "5c4e50ba0db00b2e9cf4703a76f82397b9be65f81541c2b009b4610aa7ff7473",
+      "required": false
+    }
+  ]
+}

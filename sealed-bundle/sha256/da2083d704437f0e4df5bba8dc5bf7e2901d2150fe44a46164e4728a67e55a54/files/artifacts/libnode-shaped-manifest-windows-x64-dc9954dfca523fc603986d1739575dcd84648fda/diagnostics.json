@@ -1,0 +1,786 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-diagnostics",
+  "generatedAt": "2026-08-06T06:47:15.088Z",
+  "cwd": "D:\\a\\buildchain\\buildchain\\fixtures\\libnode-shaped",
+  "buildchain": {
+    "config": {
+      "path": "buildchain.toml",
+      "project": {},
+      "versionStrategy": {
+        "strategy": "anchored",
+        "next": "manual",
+        "manifest": "libnode.release.json"
+      },
+      "publishContract": {
+        "mode": "publish-final-version",
+        "auth": "trusted-publishing",
+        "distTag": "latest",
+        "packageSetOrder": "platforms-first-main-last",
+        "mainPackage": "@kungfu-tech/libnode"
+      },
+      "lifecycleStages": [
+        "install",
+        "build",
+        "verify",
+        "publish"
+      ],
+      "diagnostics": {
+        "native": {
+          "enabled": true,
+          "sampleProcessTree": true,
+          "compilerCache": "auto",
+          "expectedTools": [
+            "node",
+            "pnpm",
+            "git",
+            "cmake",
+            "ninja",
+            "ccache",
+            "sccache"
+          ],
+          "artifactDirs": [
+            "dist",
+            "build"
+          ],
+          "cacheDirs": [
+            ".ccache",
+            ".sccache"
+          ]
+        }
+      },
+      "anchorManifest": {
+        "path": "libnode.release.json",
+        "filePath": "D:\\a\\buildchain\\buildchain\\fixtures\\libnode-shaped\\libnode.release.json",
+        "fields": {
+          "nodeVersion": "22.22.3",
+          "nodeTag": "v22.22.3",
+          "nodeCommit": "fixture-node-commit",
+          "libnodeRevision": "kf.0",
+          "npmVersion": "22.22.3-kf.0"
+        }
+      },
+      "validation": {
+        "config": {
+          "path": "buildchain.toml",
+          "filePath": "D:\\a\\buildchain\\buildchain\\fixtures\\libnode-shaped\\buildchain.toml",
+          "schema": 1
+        },
+        "version": {
+          "strategy": "anchored",
+          "next": "manual",
+          "manifest": "libnode.release.json"
+        },
+        "anchorManifest": {
+          "path": "libnode.release.json",
+          "fields": {
+            "nodeVersion": "22.22.3",
+            "nodeTag": "v22.22.3",
+            "nodeCommit": "fixture-node-commit",
+            "libnodeRevision": "kf.0",
+            "npmVersion": "22.22.3-kf.0"
+          }
+        },
+        "versionFiles": [
+          {
+            "path": "package.json",
+            "type": "json",
+            "key": "version"
+          }
+        ],
+        "derivedVersionMaterial": [],
+        "lifecycleStages": [
+          {
+            "name": "install",
+            "mode": "command",
+            "retries": 1,
+            "commandCount": 1
+          },
+          {
+            "name": "build",
+            "mode": "command",
+            "retries": 1,
+            "commandCount": 1
+          },
+          {
+            "name": "verify",
+            "mode": "command",
+            "retries": 1,
+            "commandCount": 1
+          },
+          {
+            "name": "publish",
+            "mode": "command",
+            "retries": 1,
+            "commandCount": 1
+          }
+        ],
+        "publish": {
+          "mode": "publish-final-version",
+          "auth": "trusted-publishing",
+          "distTag": "latest",
+          "packageSetOrder": "platforms-first-main-last",
+          "mainPackage": "@kungfu-tech/libnode"
+        }
+      }
+    },
+    "lifecycle": {
+      "install": {
+        "retries": 1,
+        "commands": [
+          "node scripts/install.mjs"
+        ],
+        "mode": "command"
+      },
+      "build": {
+        "retries": 1,
+        "commands": [
+          "node scripts/build.mjs"
+        ],
+        "mode": "command"
+      },
+      "verify": {
+        "retries": 1,
+        "commands": [
+          "node scripts/verify.mjs"
+        ],
+        "mode": "command"
+      },
+      "publish": {
+        "retries": 1,
+        "commands": [
+          "node scripts/verify.mjs"
+        ],
+        "mode": "command"
+      }
+    },
+    "artifactPaths": [
+      {
+        "path": "fixtures/libnode-shaped/dist",
+        "exists": false
+      },
+      {
+        "path": ".buildchain/artifacts",
+        "exists": false
+      },
+      {
+        "path": ".buildchain/artifacts/signing",
+        "exists": false
+      }
+    ]
+  },
+  "runner": {
+    "os": {
+      "platform": "win32",
+      "release": "10.0.20348",
+      "arch": "x64",
+      "type": "Windows_NT"
+    },
+    "cpu": {
+      "logicalCount": 4,
+      "model": "AMD EPYC 9V74 80-Core Processor                ",
+      "loadAverage": [
+        0,
+        0,
+        0
+      ]
+    },
+    "memory": {
+      "totalBytes": 17174360064,
+      "freeBytes": 14590046208
+    },
+    "uptimeSeconds": 380,
+    "github": {
+      "actions": true,
+      "runnerOs": "Windows",
+      "runnerArch": "X64",
+      "runnerName": "GitHub Actions 1000156307"
+    }
+  },
+  "tools": {
+    "node": {
+      "version": "v24.18.0"
+    },
+    "pnpm": {
+      "version": ""
+    },
+    "npm": {
+      "version": ""
+    },
+    "git": {
+      "version": "git version 2.55.0.windows.3"
+    },
+    "cmake": {
+      "version": "cmake version 3.31.6"
+    },
+    "ninja": {
+      "version": "1.13.2"
+    },
+    "ccache": {
+      "version": ""
+    },
+    "sccache": {
+      "version": ""
+    }
+  },
+  "cache": {
+    "packageManager": {
+      "name": "unknown",
+      "error": "Unable to detect package manager. Add packageManager to package.json or commit a supported lockfile."
+    },
+    "workspace": {},
+    "dirs": [],
+    "compilerCaches": {
+      "ccache": {
+        "available": false,
+        "command": "ccache",
+        "error": "ENOENT",
+        "logStats": {
+          "available": false,
+          "command": "ccache",
+          "error": "ENOENT"
+        }
+      },
+      "sccache": {
+        "available": false,
+        "command": "sccache",
+        "error": "ENOENT"
+      }
+    }
+  },
+  "native": {
+    "enabled": true,
+    "profile": {
+      "enabled": true,
+      "sampleProcessTree": true,
+      "compilerCache": "auto",
+      "expectedTools": [
+        "node",
+        "pnpm",
+        "git",
+        "cmake",
+        "ninja",
+        "ccache",
+        "sccache"
+      ],
+      "artifactDirs": [
+        "dist",
+        "build"
+      ],
+      "cacheDirs": [
+        ".ccache",
+        ".sccache"
+      ]
+    },
+    "tools": {
+      "node": {
+        "version": "v24.18.0"
+      },
+      "pnpm": {
+        "version": ""
+      },
+      "git": {
+        "version": "git version 2.55.0.windows.3"
+      },
+      "cmake": {
+        "version": "cmake version 3.31.6"
+      },
+      "ninja": {
+        "version": "1.13.2"
+      },
+      "ccache": {
+        "version": ""
+      },
+      "sccache": {
+        "version": ""
+      }
+    },
+    "compilerCaches": {
+      "ccache": {
+        "available": false,
+        "command": "ccache",
+        "error": "ENOENT",
+        "logStats": {
+          "available": false,
+          "command": "ccache",
+          "error": "ENOENT"
+        }
+      },
+      "sccache": {
+        "available": false,
+        "command": "sccache",
+        "error": "ENOENT"
+      }
+    },
+    "artifactDirs": [
+      {
+        "path": "dist",
+        "exists": true,
+        "type": "directory",
+        "bytes": 0
+      },
+      {
+        "path": "build",
+        "exists": false
+      }
+    ],
+    "cacheDirs": [
+      {
+        "path": ".ccache",
+        "exists": false
+      },
+      {
+        "path": ".sccache",
+        "exists": false
+      }
+    ]
+  },
+  "compilerCaches": {
+    "ccache": {
+      "available": false,
+      "command": "ccache",
+      "error": "ENOENT",
+      "logStats": {
+        "available": false,
+        "command": "ccache",
+        "error": "ENOENT"
+      }
+    },
+    "sccache": {
+      "available": false,
+      "command": "sccache",
+      "error": "ENOENT"
+    }
+  },
+  "cacheEvidence": {
+    "schema": "buildchain.cache-evidence-set/v1",
+    "repository": "kungfu-systems/buildchain",
+    "sourceCommit": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "sourceTree": "95d56374f89b4459facef84988e30163885f7ee5",
+    "runtimeCommit": "1da435a13774e4e16aa10735976191959683c148",
+    "platform": "windows-x64",
+    "operations": [
+      {
+        "schema": "buildchain.cache-operation-receipt/v1",
+        "operationId": "compiler-cache:windows-x64",
+        "operation": "restore",
+        "provider": "compiler-cache",
+        "producer": "unavailable",
+        "platform": "windows-x64",
+        "cacheKey": null,
+        "cacheRoot": null,
+        "outcome": "unavailable",
+        "bindings": {
+          "sourceCommit": "dc9954dfca523fc603986d1739575dcd84648fda",
+          "sourceTree": "95d56374f89b4459facef84988e30163885f7ee5",
+          "runtimeCommit": "1da435a13774e4e16aa10735976191959683c148"
+        },
+        "metrics": {
+          "lookupDuration": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "restoreDuration": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "saveDuration": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "restoredBytes": {
+            "status": "unavailable",
+            "unit": "bytes",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "writtenBytes": {
+            "status": "unavailable",
+            "unit": "bytes",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "savedTime": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          }
+        },
+        "evidence": {
+          "kind": "compiler-cache-diagnostics",
+          "root": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e",
+          "locator": ".buildchain/artifacts/<platform>/diagnostics.json#compilerCaches"
+        },
+        "receiptRoot": "sha256:85b66e1248b4cf2b22a82a3debb7a6eb8053ec790cb2f206077549e73c1643dd"
+      },
+      {
+        "schema": "buildchain.cache-operation-receipt/v1",
+        "operationId": "source-checkout:windows-x64",
+        "operation": "restore",
+        "provider": "git-github",
+        "producer": "kungfu-systems/buildchain",
+        "platform": "windows-x64",
+        "cacheKey": "dc9954dfca523fc603986d1739575dcd84648fda",
+        "cacheRoot": "transport:github",
+        "outcome": "miss",
+        "bindings": {
+          "sourceCommit": "dc9954dfca523fc603986d1739575dcd84648fda",
+          "sourceTree": "95d56374f89b4459facef84988e30163885f7ee5",
+          "runtimeCommit": "1da435a13774e4e16aa10735976191959683c148"
+        },
+        "metrics": {
+          "lookupDuration": {
+            "status": "observed",
+            "unit": "ms",
+            "value": 0,
+            "source": "locked-source-checkout",
+            "reason": null,
+            "evidenceRoot": "sha256:876d4c80a43699583c035b34d22e40b576de7456e608329f6c466cdc33ea3e46"
+          },
+          "restoreDuration": {
+            "status": "not-applicable",
+            "unit": "ms",
+            "value": null,
+            "source": null,
+            "reason": "no cache payload was admitted for restore",
+            "evidenceRoot": null
+          },
+          "saveDuration": {
+            "status": "not-applicable",
+            "unit": "ms",
+            "value": null,
+            "source": null,
+            "reason": "locked source checkout does not save cache state",
+            "evidenceRoot": null
+          },
+          "restoredBytes": {
+            "status": "unavailable",
+            "unit": "bytes",
+            "value": null,
+            "source": "locked-source-checkout",
+            "reason": "checkout provider did not expose restored byte evidence",
+            "evidenceRoot": "sha256:876d4c80a43699583c035b34d22e40b576de7456e608329f6c466cdc33ea3e46"
+          },
+          "writtenBytes": {
+            "status": "not-applicable",
+            "unit": "bytes",
+            "value": null,
+            "source": null,
+            "reason": "locked source checkout does not save cache state",
+            "evidenceRoot": null
+          },
+          "savedTime": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "locked-source-checkout",
+            "reason": "checkout provider did not report a measured cold-path comparison",
+            "evidenceRoot": "sha256:876d4c80a43699583c035b34d22e40b576de7456e608329f6c466cdc33ea3e46"
+          }
+        },
+        "evidence": {
+          "kind": "locked-source-checkout",
+          "root": "sha256:876d4c80a43699583c035b34d22e40b576de7456e608329f6c466cdc33ea3e46",
+          "locator": ".buildchain/diagnostics/source-checkout.json"
+        },
+        "receiptRoot": "sha256:267051f742393ee11aee1b2eddbd63ded45f82f10349488b11e475d84237005f"
+      }
+    ],
+    "evidenceRoot": "sha256:df46a6270cc065d933fe08fd1ce8c8648399c112b337783dbe31b7faf506bae2"
+  },
+  "nativeCacheDirs": [
+    {
+      "path": ".ccache",
+      "exists": false
+    },
+    {
+      "path": ".sccache",
+      "exists": false
+    }
+  ],
+  "git": {
+    "repository": "https://github.com/kungfu-systems/buildchain.git",
+    "head": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "ref": "HEAD",
+    "dirty": true
+  },
+  "lifecycleObservability": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-lifecycle-observability",
+    "log": {
+      "contract": "kungfu-buildchain-log-event",
+      "path": ".buildchain/logs/events.jsonl",
+      "summary": {
+        "schemaVersion": 1,
+        "contract": "kungfu-buildchain-log-summary",
+        "generatedAt": "2026-08-06T06:47:14.982Z",
+        "eventCount": 18,
+        "warningCount": 0,
+        "errorCount": 0,
+        "durationMs": 5900,
+        "sources": {
+          "buildchain": {
+            "count": 12,
+            "durationMs": 5
+          },
+          "user": {
+            "count": 6,
+            "durationMs": 5895
+          }
+        },
+        "phases": {
+          "build": {
+            "count": 6,
+            "durationMs": 5785
+          },
+          "install": {
+            "count": 6,
+            "durationMs": 67
+          },
+          "verify": {
+            "count": 6,
+            "durationMs": 48
+          }
+        },
+        "components": {
+          "lifecycle": {
+            "count": 18,
+            "durationMs": 5900
+          }
+        },
+        "events": {
+          "artifact.manifest.write": {
+            "count": 3,
+            "durationMs": 0
+          },
+          "artifact.scan": {
+            "count": 3,
+            "durationMs": 5
+          },
+          "lifecycle.end": {
+            "count": 3,
+            "durationMs": 0
+          },
+          "lifecycle.stage.end": {
+            "count": 3,
+            "durationMs": 5895
+          },
+          "lifecycle.stage.start": {
+            "count": 3,
+            "durationMs": 0
+          },
+          "lifecycle.start": {
+            "count": 3,
+            "durationMs": 0
+          }
+        },
+        "controlPlane": {
+          "schemaVersion": 1,
+          "contract": "kungfu-buildchain-control-plane-summary",
+          "eventCount": 0,
+          "workflowFriction": {
+            "eventCount": 0,
+            "outcomes": {},
+            "incidentReuseRate": null
+          },
+          "releaseIntent": {
+            "eventCount": 0,
+            "outcomes": {},
+            "suppressionRate": null,
+            "suppressionReasons": {}
+          }
+        }
+      }
+    },
+    "stages": {
+      "build": {
+        "durationMs": 5785,
+        "eventCount": 6
+      },
+      "install": {
+        "durationMs": 67,
+        "eventCount": 6
+      },
+      "verify": {
+        "durationMs": 48,
+        "eventCount": 6
+      }
+    },
+    "artifactScan": {
+      "durationMs": 2
+    },
+    "artifactUpload": {
+      "durationMs": 0
+    },
+    "totalBytes": 69275,
+    "fileCount": 12,
+    "topSlowSpans": [
+      {
+        "event": "lifecycle.stage.end",
+        "source": "user",
+        "component": "lifecycle",
+        "stage": "build",
+        "phase": "build",
+        "durationMs": 5783
+      },
+      {
+        "event": "lifecycle.stage.end",
+        "source": "user",
+        "component": "lifecycle",
+        "stage": "install",
+        "phase": "install",
+        "durationMs": 66
+      },
+      {
+        "event": "lifecycle.stage.end",
+        "source": "user",
+        "component": "lifecycle",
+        "stage": "verify",
+        "phase": "verify",
+        "durationMs": 46
+      },
+      {
+        "event": "artifact.scan",
+        "source": "buildchain",
+        "component": "lifecycle",
+        "stage": "build",
+        "phase": "build",
+        "durationMs": 2
+      },
+      {
+        "event": "artifact.scan",
+        "source": "buildchain",
+        "component": "lifecycle",
+        "stage": "verify",
+        "phase": "verify",
+        "durationMs": 2
+      },
+      {
+        "event": "artifact.scan",
+        "source": "buildchain",
+        "component": "lifecycle",
+        "stage": "install",
+        "phase": "install",
+        "durationMs": 1
+      }
+    ],
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "process": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-process-sample-summary",
+    "sampleCount": 1,
+    "sampler": {
+      "unavailable": false,
+      "unavailableSamples": 0,
+      "unavailableReasons": []
+    },
+    "activeCpuThreshold": 0.1,
+    "requestedParallelism": 0,
+    "requestedParallelismSource": "",
+    "requestedParallelismEvidence": {},
+    "requestedParallelismCandidates": [],
+    "observedConcurrency": {
+      "max": 0,
+      "average": 0,
+      "ratioToRequestedMax": 0
+    },
+    "cpu": {
+      "totalMax": 0,
+      "totalAverage": 0
+    },
+    "categories": {},
+    "topCommands": []
+  },
+  "sourceCheckout": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-locked-source-checkout-cache",
+    "generatedAt": "2026-08-06T06:46:55.960Z",
+    "repository": "kungfu-systems/buildchain",
+    "checkoutPath": ".",
+    "source": {
+      "sha": "dc9954dfca523fc603986d1739575dcd84648fda",
+      "treeSha": "95d56374f89b4459facef84988e30163885f7ee5",
+      "fetchRef": "refs/pull/2376/merge"
+    },
+    "policy": {
+      "mode": "auto",
+      "fallback": "github",
+      "timeoutSeconds": 60,
+      "githubTimeoutSeconds": 600,
+      "fetchAttempts": 3,
+      "mirror": {
+        "display": "",
+        "fingerprint": ""
+      },
+      "referenceRepository": {
+        "display": "",
+        "fingerprint": ""
+      }
+    },
+    "cache": {
+      "attempted": true,
+      "hit": false,
+      "transport": "github",
+      "fallbackUsed": true,
+      "fallbackReason": "checkout cache is enabled but no mirror URL or reference repository template was provided",
+      "githubFetchAttempts": 1,
+      "lookupDurationMs": 0,
+      "restoreDurationMs": 0,
+      "githubFetchDurationMs": 1362,
+      "restoredBytes": null,
+      "restoredBytesStatus": "unavailable",
+      "restoredBytesMethod": "",
+      "github": {
+        "display": "https://github.com/kungfu-systems/buildchain.git",
+        "fingerprint": "a1d4b1270e8d1d3b"
+      },
+      "fetchMode": "shallow"
+    },
+    "verification": {
+      "head": "dc9954dfca523fc603986d1739575dcd84648fda",
+      "expectedHead": "dc9954dfca523fc603986d1739575dcd84648fda",
+      "tree": "95d56374f89b4459facef84988e30163885f7ee5",
+      "headOk": true,
+      "treeOk": true,
+      "identityOk": true,
+      "identityMode": "commit"
+    },
+    "durationMs": 1620
+  },
+  "links": {
+    "artifactName": "libnode-shaped-windows-x64-dc9954dfca52",
+    "platformId": "windows-x64",
+    "manifestArtifactName": "libnode-shaped-manifest-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda",
+    "diagnosticsArtifactName": "libnode-shaped-diagnostics-windows-x64-dc9954dfca523fc603986d1739575dcd84648fda",
+    "manifest": ".buildchain/artifacts/windows-x64/manifest.json",
+    "summary": ".buildchain/artifacts/windows-x64/summary.json",
+    "log": ".buildchain/logs/events.jsonl",
+    "diagnosticsManifest": ".buildchain/artifacts/windows-x64/diagnostics-manifest.json",
+    "diagnosticsEvents": ".buildchain/artifacts/windows-x64/events.jsonl",
+    "processSummary": ".buildchain/diagnostics/process-summary.json",
+    "diagnosticsProcessSummary": ".buildchain/artifacts/windows-x64/process-summary.json",
+    "diagnosticsProcessSamples": ".buildchain/artifacts/windows-x64/process-samples.jsonl",
+    "sourceCheckout": ".buildchain/artifacts/windows-x64/source-checkout.json"
+  }
+}

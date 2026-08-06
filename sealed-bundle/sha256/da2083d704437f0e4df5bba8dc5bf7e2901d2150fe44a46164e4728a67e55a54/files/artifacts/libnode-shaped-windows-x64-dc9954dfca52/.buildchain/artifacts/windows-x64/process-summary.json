@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-process-sample-report",
+  "label": "lifecycle-build",
+  "command": "cmd.exe",
+  "argsCount": 4,
+  "exit": {
+    "status": 0,
+    "signal": "",
+    "error": ""
+  },
+  "wrappedCommand": {
+    "command": "C:\\Windows\\system32\\cmd.exe",
+    "args": [
+      "/d",
+      "/s",
+      "/c",
+      "node scripts/build.mjs"
+    ],
+    "rootPid": 1256,
+    "exitCode": 0,
+    "signal": "",
+    "error": "",
+    "stdoutTail": "",
+    "stderrTail": ""
+  },
+  "durationMs": 5643,
+  "samplesPath": "D:\\a\\buildchain\\buildchain\\.buildchain\\diagnostics\\process-samples.jsonl",
+  "summaryPath": "D:\\a\\buildchain\\buildchain\\.buildchain\\diagnostics\\process-summary.json",
+  "summary": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-process-sample-summary",
+    "sampleCount": 1,
+    "sampler": {
+      "unavailable": false,
+      "unavailableSamples": 0,
+      "unavailableReasons": []
+    },
+    "activeCpuThreshold": 0.1,
+    "requestedParallelism": 0,
+    "requestedParallelismSource": "",
+    "requestedParallelismEvidence": {},
+    "requestedParallelismCandidates": [],
+    "observedConcurrency": {
+      "max": 0,
+      "average": 0,
+      "ratioToRequestedMax": 0
+    },
+    "cpu": {
+      "totalMax": 0,
+      "totalAverage": 0
+    },
+    "categories": {},
+    "topCommands": []
+  }
+}

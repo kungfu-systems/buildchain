@@ -1,0 +1,786 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-diagnostics",
+  "generatedAt": "2026-08-06T06:47:01.462Z",
+  "cwd": "/Users/runner/work/buildchain/buildchain/fixtures/libnode-shaped",
+  "buildchain": {
+    "config": {
+      "path": "buildchain.toml",
+      "project": {},
+      "versionStrategy": {
+        "strategy": "anchored",
+        "next": "manual",
+        "manifest": "libnode.release.json"
+      },
+      "publishContract": {
+        "mode": "publish-final-version",
+        "auth": "trusted-publishing",
+        "distTag": "latest",
+        "packageSetOrder": "platforms-first-main-last",
+        "mainPackage": "@kungfu-tech/libnode"
+      },
+      "lifecycleStages": [
+        "install",
+        "build",
+        "verify",
+        "publish"
+      ],
+      "diagnostics": {
+        "native": {
+          "enabled": true,
+          "sampleProcessTree": true,
+          "compilerCache": "auto",
+          "expectedTools": [
+            "node",
+            "pnpm",
+            "git",
+            "cmake",
+            "ninja",
+            "ccache",
+            "sccache"
+          ],
+          "artifactDirs": [
+            "dist",
+            "build"
+          ],
+          "cacheDirs": [
+            ".ccache",
+            ".sccache"
+          ]
+        }
+      },
+      "anchorManifest": {
+        "path": "libnode.release.json",
+        "filePath": "/Users/runner/work/buildchain/buildchain/fixtures/libnode-shaped/libnode.release.json",
+        "fields": {
+          "nodeVersion": "22.22.3",
+          "nodeTag": "v22.22.3",
+          "nodeCommit": "fixture-node-commit",
+          "libnodeRevision": "kf.0",
+          "npmVersion": "22.22.3-kf.0"
+        }
+      },
+      "validation": {
+        "config": {
+          "path": "buildchain.toml",
+          "filePath": "/Users/runner/work/buildchain/buildchain/fixtures/libnode-shaped/buildchain.toml",
+          "schema": 1
+        },
+        "version": {
+          "strategy": "anchored",
+          "next": "manual",
+          "manifest": "libnode.release.json"
+        },
+        "anchorManifest": {
+          "path": "libnode.release.json",
+          "fields": {
+            "nodeVersion": "22.22.3",
+            "nodeTag": "v22.22.3",
+            "nodeCommit": "fixture-node-commit",
+            "libnodeRevision": "kf.0",
+            "npmVersion": "22.22.3-kf.0"
+          }
+        },
+        "versionFiles": [
+          {
+            "path": "package.json",
+            "type": "json",
+            "key": "version"
+          }
+        ],
+        "derivedVersionMaterial": [],
+        "lifecycleStages": [
+          {
+            "name": "install",
+            "mode": "command",
+            "retries": 1,
+            "commandCount": 1
+          },
+          {
+            "name": "build",
+            "mode": "command",
+            "retries": 1,
+            "commandCount": 1
+          },
+          {
+            "name": "verify",
+            "mode": "command",
+            "retries": 1,
+            "commandCount": 1
+          },
+          {
+            "name": "publish",
+            "mode": "command",
+            "retries": 1,
+            "commandCount": 1
+          }
+        ],
+        "publish": {
+          "mode": "publish-final-version",
+          "auth": "trusted-publishing",
+          "distTag": "latest",
+          "packageSetOrder": "platforms-first-main-last",
+          "mainPackage": "@kungfu-tech/libnode"
+        }
+      }
+    },
+    "lifecycle": {
+      "install": {
+        "retries": 1,
+        "commands": [
+          "node scripts/install.mjs"
+        ],
+        "mode": "command"
+      },
+      "build": {
+        "retries": 1,
+        "commands": [
+          "node scripts/build.mjs"
+        ],
+        "mode": "command"
+      },
+      "verify": {
+        "retries": 1,
+        "commands": [
+          "node scripts/verify.mjs"
+        ],
+        "mode": "command"
+      },
+      "publish": {
+        "retries": 1,
+        "commands": [
+          "node scripts/verify.mjs"
+        ],
+        "mode": "command"
+      }
+    },
+    "artifactPaths": [
+      {
+        "path": "fixtures/libnode-shaped/dist",
+        "exists": false
+      },
+      {
+        "path": ".buildchain/artifacts",
+        "exists": false
+      },
+      {
+        "path": ".buildchain/artifacts/signing",
+        "exists": false
+      }
+    ]
+  },
+  "runner": {
+    "os": {
+      "platform": "darwin",
+      "release": "25.5.0",
+      "arch": "arm64",
+      "type": "Darwin"
+    },
+    "cpu": {
+      "logicalCount": 3,
+      "model": "Apple M1 (Virtual)",
+      "loadAverage": [
+        78.0615234375,
+        32.57177734375,
+        12.89892578125
+      ]
+    },
+    "memory": {
+      "totalBytes": 7516192768,
+      "freeBytes": 276774912
+    },
+    "uptimeSeconds": 79,
+    "github": {
+      "actions": true,
+      "runnerOs": "macOS",
+      "runnerArch": "ARM64",
+      "runnerName": "GitHub Actions 1000156305"
+    }
+  },
+  "tools": {
+    "node": {
+      "version": "v24.18.0"
+    },
+    "pnpm": {
+      "version": ""
+    },
+    "npm": {
+      "version": "11.16.0"
+    },
+    "git": {
+      "version": "git version 2.55.0"
+    },
+    "cmake": {
+      "version": "cmake version 4.4.0"
+    },
+    "ninja": {
+      "version": "1.13.2"
+    },
+    "ccache": {
+      "version": ""
+    },
+    "sccache": {
+      "version": ""
+    }
+  },
+  "cache": {
+    "packageManager": {
+      "name": "unknown",
+      "error": "Unable to detect package manager. Add packageManager to package.json or commit a supported lockfile."
+    },
+    "workspace": {},
+    "dirs": [],
+    "compilerCaches": {
+      "ccache": {
+        "available": false,
+        "command": "ccache",
+        "error": "ENOENT",
+        "logStats": {
+          "available": false,
+          "command": "ccache",
+          "error": "ENOENT"
+        }
+      },
+      "sccache": {
+        "available": false,
+        "command": "sccache",
+        "error": "ENOENT"
+      }
+    }
+  },
+  "native": {
+    "enabled": true,
+    "profile": {
+      "enabled": true,
+      "sampleProcessTree": true,
+      "compilerCache": "auto",
+      "expectedTools": [
+        "node",
+        "pnpm",
+        "git",
+        "cmake",
+        "ninja",
+        "ccache",
+        "sccache"
+      ],
+      "artifactDirs": [
+        "dist",
+        "build"
+      ],
+      "cacheDirs": [
+        ".ccache",
+        ".sccache"
+      ]
+    },
+    "tools": {
+      "node": {
+        "version": "v24.18.0"
+      },
+      "pnpm": {
+        "version": ""
+      },
+      "git": {
+        "version": "git version 2.55.0"
+      },
+      "cmake": {
+        "version": "cmake version 4.4.0"
+      },
+      "ninja": {
+        "version": "1.13.2"
+      },
+      "ccache": {
+        "version": ""
+      },
+      "sccache": {
+        "version": ""
+      }
+    },
+    "compilerCaches": {
+      "ccache": {
+        "available": false,
+        "command": "ccache",
+        "error": "ENOENT",
+        "logStats": {
+          "available": false,
+          "command": "ccache",
+          "error": "ENOENT"
+        }
+      },
+      "sccache": {
+        "available": false,
+        "command": "sccache",
+        "error": "ENOENT"
+      }
+    },
+    "artifactDirs": [
+      {
+        "path": "dist",
+        "exists": true,
+        "type": "directory",
+        "bytes": 128
+      },
+      {
+        "path": "build",
+        "exists": false
+      }
+    ],
+    "cacheDirs": [
+      {
+        "path": ".ccache",
+        "exists": false
+      },
+      {
+        "path": ".sccache",
+        "exists": false
+      }
+    ]
+  },
+  "compilerCaches": {
+    "ccache": {
+      "available": false,
+      "command": "ccache",
+      "error": "ENOENT",
+      "logStats": {
+        "available": false,
+        "command": "ccache",
+        "error": "ENOENT"
+      }
+    },
+    "sccache": {
+      "available": false,
+      "command": "sccache",
+      "error": "ENOENT"
+    }
+  },
+  "cacheEvidence": {
+    "schema": "buildchain.cache-evidence-set/v1",
+    "repository": "kungfu-systems/buildchain",
+    "sourceCommit": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "sourceTree": "95d56374f89b4459facef84988e30163885f7ee5",
+    "runtimeCommit": "1da435a13774e4e16aa10735976191959683c148",
+    "platform": "macos",
+    "operations": [
+      {
+        "schema": "buildchain.cache-operation-receipt/v1",
+        "operationId": "compiler-cache:macos",
+        "operation": "restore",
+        "provider": "compiler-cache",
+        "producer": "unavailable",
+        "platform": "macos",
+        "cacheKey": null,
+        "cacheRoot": null,
+        "outcome": "unavailable",
+        "bindings": {
+          "sourceCommit": "dc9954dfca523fc603986d1739575dcd84648fda",
+          "sourceTree": "95d56374f89b4459facef84988e30163885f7ee5",
+          "runtimeCommit": "1da435a13774e4e16aa10735976191959683c148"
+        },
+        "metrics": {
+          "lookupDuration": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "restoreDuration": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "saveDuration": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "restoredBytes": {
+            "status": "unavailable",
+            "unit": "bytes",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "writtenBytes": {
+            "status": "unavailable",
+            "unit": "bytes",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          },
+          "savedTime": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "compiler-cache-diagnostics",
+            "reason": "compiler cache current-run stats were unavailable",
+            "evidenceRoot": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e"
+          }
+        },
+        "evidence": {
+          "kind": "compiler-cache-diagnostics",
+          "root": "sha256:22739192ce924b81e2a4f40f309c099d020e59590290a99d223a487ee17c3e4e",
+          "locator": ".buildchain/artifacts/<platform>/diagnostics.json#compilerCaches"
+        },
+        "receiptRoot": "sha256:dcbf8b19b789f6adf90ed3bd5cc46ad9c63d651a551dc556728de0d508539865"
+      },
+      {
+        "schema": "buildchain.cache-operation-receipt/v1",
+        "operationId": "source-checkout:macos",
+        "operation": "restore",
+        "provider": "git-github",
+        "producer": "kungfu-systems/buildchain",
+        "platform": "macos",
+        "cacheKey": "dc9954dfca523fc603986d1739575dcd84648fda",
+        "cacheRoot": "transport:github",
+        "outcome": "miss",
+        "bindings": {
+          "sourceCommit": "dc9954dfca523fc603986d1739575dcd84648fda",
+          "sourceTree": "95d56374f89b4459facef84988e30163885f7ee5",
+          "runtimeCommit": "1da435a13774e4e16aa10735976191959683c148"
+        },
+        "metrics": {
+          "lookupDuration": {
+            "status": "observed",
+            "unit": "ms",
+            "value": 1,
+            "source": "locked-source-checkout",
+            "reason": null,
+            "evidenceRoot": "sha256:3d9ce2ed1dfc58811a441b20f2fbfb9e9dd6fcda91d468c88c79e69e79a13502"
+          },
+          "restoreDuration": {
+            "status": "not-applicable",
+            "unit": "ms",
+            "value": null,
+            "source": null,
+            "reason": "no cache payload was admitted for restore",
+            "evidenceRoot": null
+          },
+          "saveDuration": {
+            "status": "not-applicable",
+            "unit": "ms",
+            "value": null,
+            "source": null,
+            "reason": "locked source checkout does not save cache state",
+            "evidenceRoot": null
+          },
+          "restoredBytes": {
+            "status": "unavailable",
+            "unit": "bytes",
+            "value": null,
+            "source": "locked-source-checkout",
+            "reason": "checkout provider did not expose restored byte evidence",
+            "evidenceRoot": "sha256:3d9ce2ed1dfc58811a441b20f2fbfb9e9dd6fcda91d468c88c79e69e79a13502"
+          },
+          "writtenBytes": {
+            "status": "not-applicable",
+            "unit": "bytes",
+            "value": null,
+            "source": null,
+            "reason": "locked source checkout does not save cache state",
+            "evidenceRoot": null
+          },
+          "savedTime": {
+            "status": "unavailable",
+            "unit": "ms",
+            "value": null,
+            "source": "locked-source-checkout",
+            "reason": "checkout provider did not report a measured cold-path comparison",
+            "evidenceRoot": "sha256:3d9ce2ed1dfc58811a441b20f2fbfb9e9dd6fcda91d468c88c79e69e79a13502"
+          }
+        },
+        "evidence": {
+          "kind": "locked-source-checkout",
+          "root": "sha256:3d9ce2ed1dfc58811a441b20f2fbfb9e9dd6fcda91d468c88c79e69e79a13502",
+          "locator": ".buildchain/diagnostics/source-checkout.json"
+        },
+        "receiptRoot": "sha256:32fcbbb8ef3f06e76343c7ab4da9cf7d64ab6ecedb218d9cf04e351ab4fa2880"
+      }
+    ],
+    "evidenceRoot": "sha256:3e322dd1977a4f874b8d26df090172823a0e4f2b0228c928445555a16c65bfd9"
+  },
+  "nativeCacheDirs": [
+    {
+      "path": ".ccache",
+      "exists": false
+    },
+    {
+      "path": ".sccache",
+      "exists": false
+    }
+  ],
+  "git": {
+    "repository": "https://github.com/kungfu-systems/buildchain.git",
+    "head": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "ref": "HEAD",
+    "dirty": true
+  },
+  "lifecycleObservability": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-lifecycle-observability",
+    "log": {
+      "contract": "kungfu-buildchain-log-event",
+      "path": ".buildchain/logs/events.jsonl",
+      "summary": {
+        "schemaVersion": 1,
+        "contract": "kungfu-buildchain-log-summary",
+        "generatedAt": "2026-08-06T06:47:01.354Z",
+        "eventCount": 18,
+        "warningCount": 0,
+        "errorCount": 0,
+        "durationMs": 472,
+        "sources": {
+          "buildchain": {
+            "count": 12,
+            "durationMs": 5
+          },
+          "user": {
+            "count": 6,
+            "durationMs": 467
+          }
+        },
+        "phases": {
+          "build": {
+            "count": 6,
+            "durationMs": 361
+          },
+          "install": {
+            "count": 6,
+            "durationMs": 46
+          },
+          "verify": {
+            "count": 6,
+            "durationMs": 65
+          }
+        },
+        "components": {
+          "lifecycle": {
+            "count": 18,
+            "durationMs": 472
+          }
+        },
+        "events": {
+          "artifact.manifest.write": {
+            "count": 3,
+            "durationMs": 0
+          },
+          "artifact.scan": {
+            "count": 3,
+            "durationMs": 5
+          },
+          "lifecycle.end": {
+            "count": 3,
+            "durationMs": 0
+          },
+          "lifecycle.stage.end": {
+            "count": 3,
+            "durationMs": 467
+          },
+          "lifecycle.stage.start": {
+            "count": 3,
+            "durationMs": 0
+          },
+          "lifecycle.start": {
+            "count": 3,
+            "durationMs": 0
+          }
+        },
+        "controlPlane": {
+          "schemaVersion": 1,
+          "contract": "kungfu-buildchain-control-plane-summary",
+          "eventCount": 0,
+          "workflowFriction": {
+            "eventCount": 0,
+            "outcomes": {},
+            "incidentReuseRate": null
+          },
+          "releaseIntent": {
+            "eventCount": 0,
+            "outcomes": {},
+            "suppressionRate": null,
+            "suppressionReasons": {}
+          }
+        }
+      }
+    },
+    "stages": {
+      "build": {
+        "durationMs": 361,
+        "eventCount": 6
+      },
+      "install": {
+        "durationMs": 46,
+        "eventCount": 6
+      },
+      "verify": {
+        "durationMs": 65,
+        "eventCount": 6
+      }
+    },
+    "artifactScan": {
+      "durationMs": 3
+    },
+    "artifactUpload": {
+      "durationMs": 0
+    },
+    "totalBytes": 68902,
+    "fileCount": 12,
+    "topSlowSpans": [
+      {
+        "event": "lifecycle.stage.end",
+        "source": "user",
+        "component": "lifecycle",
+        "stage": "build",
+        "phase": "build",
+        "durationMs": 360
+      },
+      {
+        "event": "lifecycle.stage.end",
+        "source": "user",
+        "component": "lifecycle",
+        "stage": "verify",
+        "phase": "verify",
+        "durationMs": 62
+      },
+      {
+        "event": "lifecycle.stage.end",
+        "source": "user",
+        "component": "lifecycle",
+        "stage": "install",
+        "phase": "install",
+        "durationMs": 45
+      },
+      {
+        "event": "artifact.scan",
+        "source": "buildchain",
+        "component": "lifecycle",
+        "stage": "verify",
+        "phase": "verify",
+        "durationMs": 3
+      },
+      {
+        "event": "artifact.scan",
+        "source": "buildchain",
+        "component": "lifecycle",
+        "stage": "install",
+        "phase": "install",
+        "durationMs": 1
+      },
+      {
+        "event": "artifact.scan",
+        "source": "buildchain",
+        "component": "lifecycle",
+        "stage": "build",
+        "phase": "build",
+        "durationMs": 1
+      }
+    ],
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "process": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-process-sample-summary",
+    "sampleCount": 1,
+    "sampler": {
+      "unavailable": false,
+      "unavailableSamples": 0,
+      "unavailableReasons": []
+    },
+    "activeCpuThreshold": 0.1,
+    "requestedParallelism": 0,
+    "requestedParallelismSource": "",
+    "requestedParallelismEvidence": {},
+    "requestedParallelismCandidates": [],
+    "observedConcurrency": {
+      "max": 0,
+      "average": 0,
+      "ratioToRequestedMax": 0
+    },
+    "cpu": {
+      "totalMax": 0,
+      "totalAverage": 0
+    },
+    "categories": {},
+    "topCommands": []
+  },
+  "sourceCheckout": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-locked-source-checkout-cache",
+    "generatedAt": "2026-08-06T06:46:51.722Z",
+    "repository": "kungfu-systems/buildchain",
+    "checkoutPath": ".",
+    "source": {
+      "sha": "dc9954dfca523fc603986d1739575dcd84648fda",
+      "treeSha": "95d56374f89b4459facef84988e30163885f7ee5",
+      "fetchRef": "refs/pull/2376/merge"
+    },
+    "policy": {
+      "mode": "auto",
+      "fallback": "github",
+      "timeoutSeconds": 60,
+      "githubTimeoutSeconds": 600,
+      "fetchAttempts": 3,
+      "mirror": {
+        "display": "",
+        "fingerprint": ""
+      },
+      "referenceRepository": {
+        "display": "",
+        "fingerprint": ""
+      }
+    },
+    "cache": {
+      "attempted": true,
+      "hit": false,
+      "transport": "github",
+      "fallbackUsed": true,
+      "fallbackReason": "checkout cache is enabled but no mirror URL or reference repository template was provided",
+      "githubFetchAttempts": 1,
+      "lookupDurationMs": 1,
+      "restoreDurationMs": 0,
+      "githubFetchDurationMs": 1589,
+      "restoredBytes": null,
+      "restoredBytesStatus": "unavailable",
+      "restoredBytesMethod": "",
+      "github": {
+        "display": "https://github.com/kungfu-systems/buildchain.git",
+        "fingerprint": "a1d4b1270e8d1d3b"
+      },
+      "fetchMode": "shallow"
+    },
+    "verification": {
+      "head": "dc9954dfca523fc603986d1739575dcd84648fda",
+      "expectedHead": "dc9954dfca523fc603986d1739575dcd84648fda",
+      "tree": "95d56374f89b4459facef84988e30163885f7ee5",
+      "headOk": true,
+      "treeOk": true,
+      "identityOk": true,
+      "identityMode": "commit"
+    },
+    "durationMs": 1828
+  },
+  "links": {
+    "artifactName": "libnode-shaped-macos-dc9954dfca52",
+    "platformId": "macos",
+    "manifestArtifactName": "libnode-shaped-manifest-macos-dc9954dfca523fc603986d1739575dcd84648fda",
+    "diagnosticsArtifactName": "libnode-shaped-diagnostics-macos-dc9954dfca523fc603986d1739575dcd84648fda",
+    "manifest": ".buildchain/artifacts/macos/manifest.json",
+    "summary": ".buildchain/artifacts/macos/summary.json",
+    "log": ".buildchain/logs/events.jsonl",
+    "diagnosticsManifest": ".buildchain/artifacts/macos/diagnostics-manifest.json",
+    "diagnosticsEvents": ".buildchain/artifacts/macos/events.jsonl",
+    "processSummary": ".buildchain/diagnostics/process-summary.json",
+    "diagnosticsProcessSummary": ".buildchain/artifacts/macos/process-summary.json",
+    "diagnosticsProcessSamples": ".buildchain/artifacts/macos/process-samples.jsonl",
+    "sourceCheckout": ".buildchain/artifacts/macos/source-checkout.json"
+  }
+}

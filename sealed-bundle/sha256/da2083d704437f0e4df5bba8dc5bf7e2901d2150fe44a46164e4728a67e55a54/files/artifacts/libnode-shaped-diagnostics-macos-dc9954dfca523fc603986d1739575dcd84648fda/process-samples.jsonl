@@ -1,0 +1,1 @@
+{"timestamp":"2026-08-06T06:46:58.415Z","label":"lifecycle-build","elapsedMs":2,"requestedParallelism":0,"requestedParallelismSource":"","rootPid":"1690","platform":"darwin","rootProcess":{"pid":"1690","ppid":"1688","cpu":0,"command":"node","commandLine":"node scripts/build.mjs"},"processes":[]}

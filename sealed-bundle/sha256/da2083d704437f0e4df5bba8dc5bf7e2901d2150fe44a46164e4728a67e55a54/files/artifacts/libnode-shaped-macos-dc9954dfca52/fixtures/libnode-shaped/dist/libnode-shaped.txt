@@ -1,0 +1,5 @@
+{
+  "fixture": "libnode-shaped",
+  "platform": "darwin",
+  "arch": "arm64"
+}

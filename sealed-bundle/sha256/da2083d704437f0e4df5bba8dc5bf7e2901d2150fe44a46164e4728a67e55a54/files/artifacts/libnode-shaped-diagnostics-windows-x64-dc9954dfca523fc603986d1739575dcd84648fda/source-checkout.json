@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-locked-source-checkout-cache",
+  "generatedAt": "2026-08-06T06:46:55.960Z",
+  "repository": "kungfu-systems/buildchain",
+  "checkoutPath": ".",
+  "source": {
+    "sha": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "treeSha": "95d56374f89b4459facef84988e30163885f7ee5",
+    "fetchRef": "refs/pull/2376/merge"
+  },
+  "policy": {
+    "mode": "auto",
+    "fallback": "github",
+    "timeoutSeconds": 60,
+    "githubTimeoutSeconds": 600,
+    "fetchAttempts": 3,
+    "mirror": {
+      "display": "",
+      "fingerprint": ""
+    },
+    "referenceRepository": {
+      "display": "",
+      "fingerprint": ""
+    }
+  },
+  "cache": {
+    "attempted": true,
+    "hit": false,
+    "transport": "github",
+    "fallbackUsed": true,
+    "fallbackReason": "checkout cache is enabled but no mirror URL or reference repository template was provided",
+    "githubFetchAttempts": 1,
+    "lookupDurationMs": 0,
+    "restoreDurationMs": 0,
+    "githubFetchDurationMs": 1362,
+    "restoredBytes": null,
+    "restoredBytesStatus": "unavailable",
+    "restoredBytesMethod": "",
+    "github": {
+      "display": "https://github.com/kungfu-systems/buildchain.git",
+      "fingerprint": "a1d4b1270e8d1d3b"
+    },
+    "fetchMode": "shallow"
+  },
+  "verification": {
+    "head": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "expectedHead": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "tree": "95d56374f89b4459facef84988e30163885f7ee5",
+    "headOk": true,
+    "treeOk": true,
+    "identityOk": true,
+    "identityMode": "commit"
+  },
+  "durationMs": 1620
+}

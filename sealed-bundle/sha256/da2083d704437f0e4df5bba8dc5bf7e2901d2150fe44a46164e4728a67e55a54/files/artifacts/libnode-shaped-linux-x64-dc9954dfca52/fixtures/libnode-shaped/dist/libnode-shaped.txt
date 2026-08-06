@@ -1,0 +1,5 @@
+{
+  "fixture": "libnode-shaped",
+  "platform": "linux",
+  "arch": "x64"
+}

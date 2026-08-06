@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-artifact",
+  "artifactName": "libnode-shaped-linux-x64-dc9954dfca52",
+  "platform": {
+    "id": "linux-x64",
+    "name": "Linux x64",
+    "os": "Linux",
+    "arch": "X64"
+  },
+  "git": {
+    "repository": "kungfu-systems/buildchain",
+    "sha": "dc9954dfca523fc603986d1739575dcd84648fda",
+    "ref": "refs/pull/2376/merge",
+    "runId": "31078343118",
+    "runAttempt": "1"
+  },
+  "lifecycle": {
+    "stage": "install",
+    "commandSource": "buildchain.toml",
+    "executed": true
+  },
+  "observability": {
+    "log": {
+      "contract": "kungfu-buildchain-log-event",
+      "runId": "720e6428-8d57-4e11-a177-c651c54fe7a7",
+      "path": ".buildchain/logs/events.jsonl",
+      "summary": {
+        "schemaVersion": 1,
+        "contract": "kungfu-buildchain-log-summary",
+        "generatedAt": "2026-08-06T06:47:06.686Z",
+        "eventCount": 6,
+        "warningCount": 0,
+        "errorCount": 0,
+        "durationMs": 34,
+        "sources": {
+          "buildchain": {
+            "count": 4,
+            "durationMs": 1
+          },
+          "user": {
+            "count": 2,
+            "durationMs": 33
+          }
+        },
+        "phases": {
+          "install": {
+            "count": 6,
+            "durationMs": 34
+          }
+        },
+        "components": {
+          "lifecycle": {
+            "count": 6,
+            "durationMs": 34
+          }
+        },
+        "events": {
+          "artifact.manifest.write": {
+            "count": 1,
+            "durationMs": 0
+          },
+          "artifact.scan": {
+            "count": 1,
+            "durationMs": 1
+          },
+          "lifecycle.end": {
+            "count": 1,
+            "durationMs": 0
+          },
+          "lifecycle.stage.end": {
+            "count": 1,
+            "durationMs": 33
+          },
+          "lifecycle.stage.start": {
+            "count": 1,
+            "durationMs": 0
+          },
+          "lifecycle.start": {
+            "count": 1,
+            "durationMs": 0
+          }
+        },
+        "controlPlane": {
+          "schemaVersion": 1,
+          "contract": "kungfu-buildchain-control-plane-summary",
+          "eventCount": 0,
+          "workflowFriction": {
+            "eventCount": 0,
+            "outcomes": {},
+            "incidentReuseRate": null
+          },
+          "releaseIntent": {
+            "eventCount": 0,
+            "outcomes": {},
+            "suppressionRate": null,
+            "suppressionReasons": {}
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "schemaVersion": 1,
+      "contract": "kungfu-buildchain-lifecycle-observability",
+      "log": {
+        "contract": "kungfu-buildchain-log-event",
+        "path": ".buildchain/logs/events.jsonl",
+        "summary": {
+          "schemaVersion": 1,
+          "contract": "kungfu-buildchain-log-summary",
+          "generatedAt": "2026-08-06T06:47:06.694Z",
+          "eventCount": 6,
+          "warningCount": 0,
+          "errorCount": 0,
+          "durationMs": 34,
+          "sources": {
+            "buildchain": {
+              "count": 4,
+              "durationMs": 1
+            },
+            "user": {
+              "count": 2,
+              "durationMs": 33
+            }
+          },
+          "phases": {
+            "install": {
+              "count": 6,
+              "durationMs": 34
+            }
+          },
+          "components": {
+            "lifecycle": {
+              "count": 6,
+              "durationMs": 34
+            }
+          },
+          "events": {
+            "artifact.manifest.write": {
+              "count": 1,
+              "durationMs": 0
+            },
+            "artifact.scan": {
+              "count": 1,
+              "durationMs": 1
+            },
+            "lifecycle.end": {
+              "count": 1,
+              "durationMs": 0
+            },
+            "lifecycle.stage.end": {
+              "count": 1,
+              "durationMs": 33
+            },
+            "lifecycle.stage.start": {
+              "count": 1,
+              "durationMs": 0
+            },
+            "lifecycle.start": {
+              "count": 1,
+              "durationMs": 0
+            }
+          },
+          "controlPlane": {
+            "schemaVersion": 1,
+            "contract": "kungfu-buildchain-control-plane-summary",
+            "eventCount": 0,
+            "workflowFriction": {
+              "eventCount": 0,
+              "outcomes": {},
+              "incidentReuseRate": null
+            },
+            "releaseIntent": {
+              "eventCount": 0,
+              "outcomes": {},
+              "suppressionRate": null,
+              "suppressionReasons": {}
+            }
+          }
+        }
+      },
+      "stages": {
+        "install": {
+          "durationMs": 34,
+          "eventCount": 6
+        }
+      },
+      "artifactScan": {
+        "durationMs": 1
+      },
+      "artifactUpload": {
+        "durationMs": 0
+      },
+      "totalBytes": 11,
+      "fileCount": 1,
+      "topSlowSpans": [
+        {
+          "event": "lifecycle.stage.end",
+          "source": "user",
+          "component": "lifecycle",
+          "stage": "install",
+          "phase": "install",
+          "durationMs": 33
+        },
+        {
+          "event": "artifact.scan",
+          "source": "buildchain",
+          "component": "lifecycle",
+          "stage": "install",
+          "phase": "install",
+          "durationMs": 1
+        }
+      ],
+      "warningCount": 0,
+      "errorCount": 0
+    },
+    "diagnostics": {
+      "contract": "kungfu-buildchain-diagnostics",
+      "path": ".buildchain/artifacts/linux-x64/diagnostics.json",
+      "manifestPath": ".buildchain/artifacts/linux-x64/diagnostics-manifest.json",
+      "eventsPath": ".buildchain/artifacts/linux-x64/events.jsonl"
+    }
+  },
+  "summary": {
+    "contract": "kungfu-buildchain-artifact-summary",
+    "artifactName": "libnode-shaped-linux-x64-dc9954dfca52",
+    "platform": {
+      "id": "linux-x64",
+      "name": "Linux x64",
+      "os": "Linux",
+      "arch": "X64"
+    },
+    "fileCount": 1,
+    "totalBytes": 11,
+    "digest": "72a923147ff4616e91ddabef537970dda5d79efa2cf7be62fe334c3e3ca1b71a",
+    "observability": {
+      "log": {
+        "contract": "kungfu-buildchain-log-event",
+        "runId": "720e6428-8d57-4e11-a177-c651c54fe7a7",
+        "path": ".buildchain/logs/events.jsonl",
+        "summary": {
+          "schemaVersion": 1,
+          "contract": "kungfu-buildchain-log-summary",
+          "generatedAt": "2026-08-06T06:47:06.686Z",
+          "eventCount": 6,
+          "warningCount": 0,
+          "errorCount": 0,
+          "durationMs": 34,
+          "sources": {
+            "buildchain": {
+              "count": 4,
+              "durationMs": 1
+            },
+            "user": {
+              "count": 2,
+              "durationMs": 33
+            }
+          },
+          "phases": {
+            "install": {
+              "count": 6,
+              "durationMs": 34
+            }
+          },
+          "components": {
+            "lifecycle": {
+              "count": 6,
+              "durationMs": 34
+            }
+          },
+          "events": {
+            "artifact.manifest.write": {
+              "count": 1,
+              "durationMs": 0
+            },
+            "artifact.scan": {
+              "count": 1,
+              "durationMs": 1
+            },
+            "lifecycle.end": {
+              "count": 1,
+              "durationMs": 0
+            },
+            "lifecycle.stage.end": {
+              "count": 1,
+              "durationMs": 33
+            },
+            "lifecycle.stage.start": {
+              "count": 1,
+              "durationMs": 0
+            },
+            "lifecycle.start": {
+              "count": 1,
+              "durationMs": 0
+            }
+          },
+          "controlPlane": {
+            "schemaVersion": 1,
+            "contract": "kungfu-buildchain-control-plane-summary",
+            "eventCount": 0,
+            "workflowFriction": {
+              "eventCount": 0,
+              "outcomes": {},
+              "incidentReuseRate": null
+            },
+            "releaseIntent": {
+              "eventCount": 0,
+              "outcomes": {},
+              "suppressionRate": null,
+              "suppressionReasons": {}
+            }
+          }
+        }
+      },
+      "lifecycle": {
+        "schemaVersion": 1,
+        "contract": "kungfu-buildchain-lifecycle-observability",
+        "log": {
+          "contract": "kungfu-buildchain-log-event",
+          "path": ".buildchain/logs/events.jsonl",
+          "summary": {
+            "schemaVersion": 1,
+            "contract": "kungfu-buildchain-log-summary",
+            "generatedAt": "2026-08-06T06:47:06.694Z",
+            "eventCount": 6,
+            "warningCount": 0,
+            "errorCount": 0,
+            "durationMs": 34,
+            "sources": {
+              "buildchain": {
+                "count": 4,
+                "durationMs": 1
+              },
+              "user": {
+                "count": 2,
+                "durationMs": 33
+              }
+            },
+            "phases": {
+              "install": {
+                "count": 6,
+                "durationMs": 34
+              }
+            },
+            "components": {
+              "lifecycle": {
+                "count": 6,
+                "durationMs": 34
+              }
+            },
+            "events": {
+              "artifact.manifest.write": {
+                "count": 1,
+                "durationMs": 0
+              },
+              "artifact.scan": {
+                "count": 1,
+                "durationMs": 1
+              },
+              "lifecycle.end": {
+                "count": 1,
+                "durationMs": 0
+              },
+              "lifecycle.stage.end": {
+                "count": 1,
+                "durationMs": 33
+              },
+              "lifecycle.stage.start": {
+                "count": 1,
+                "durationMs": 0
+              },
+              "lifecycle.start": {
+                "count": 1,
+                "durationMs": 0
+              }
+            },
+            "controlPlane": {
+              "schemaVersion": 1,
+              "contract": "kungfu-buildchain-control-plane-summary",
+              "eventCount": 0,
+              "workflowFriction": {
+                "eventCount": 0,
+                "outcomes": {},
+                "incidentReuseRate": null
+              },
+              "releaseIntent": {
+                "eventCount": 0,
+                "outcomes": {},
+                "suppressionRate": null,
+                "suppressionReasons": {}
+              }
+            }
+          }
+        },
+        "stages": {
+          "install": {
+            "durationMs": 34,
+            "eventCount": 6
+          }
+        },
+        "artifactScan": {
+          "durationMs": 1
+        },
+        "artifactUpload": {
+          "durationMs": 0
+        },
+        "totalBytes": 11,
+        "fileCount": 1,
+        "topSlowSpans": [
+          {
+            "event": "lifecycle.stage.end",
+            "source": "user",
+            "component": "lifecycle",
+            "stage": "install",
+            "phase": "install",
+            "durationMs": 33
+          },
+          {
+            "event": "artifact.scan",
+            "source": "buildchain",
+            "component": "lifecycle",
+            "stage": "install",
+            "phase": "install",
+            "durationMs": 1
+          }
+        ],
+        "warningCount": 0,
+        "errorCount": 0
+      },
+      "diagnostics": {
+        "contract": "kungfu-buildchain-diagnostics",
+        "path": ".buildchain/artifacts/linux-x64/diagnostics.json",
+        "manifestPath": ".buildchain/artifacts/linux-x64/diagnostics-manifest.json",
+        "eventsPath": ".buildchain/artifacts/linux-x64/events.jsonl"
+      }
+    }
+  },
+  "expectedArtifacts": {
+    "ok": true,
+    "source": "none",
+    "checks": []
+  },
+  "files": [
+    {
+      "path": "fixtures/libnode-shaped/dist/install.txt",
+      "size": 11,
+      "sha256": "58ea1a700d8d18303985228c4715ae63cdd6030c591916e91adefbb71965c2e6"
+    }
+  ]
+}

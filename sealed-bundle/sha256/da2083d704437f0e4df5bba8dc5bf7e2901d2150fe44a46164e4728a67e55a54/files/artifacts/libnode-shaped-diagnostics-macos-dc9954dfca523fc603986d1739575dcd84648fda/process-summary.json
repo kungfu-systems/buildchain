@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-process-sample-report",
+  "label": "lifecycle-build",
+  "command": "bash",
+  "argsCount": 2,
+  "exit": {
+    "status": 0,
+    "signal": "",
+    "error": ""
+  },
+  "wrappedCommand": {
+    "command": "/bin/bash",
+    "args": [
+      "-c",
+      "set -e\nnode scripts/build.mjs"
+    ],
+    "rootPid": 1690,
+    "exitCode": 0,
+    "signal": "",
+    "error": "",
+    "stdoutTail": "",
+    "stderrTail": ""
+  },
+  "durationMs": 56,
+  "samplesPath": "/Users/runner/work/buildchain/buildchain/.buildchain/diagnostics/process-samples.jsonl",
+  "summaryPath": "/Users/runner/work/buildchain/buildchain/.buildchain/diagnostics/process-summary.json",
+  "summary": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-process-sample-summary",
+    "sampleCount": 1,
+    "sampler": {
+      "unavailable": false,
+      "unavailableSamples": 0,
+      "unavailableReasons": []
+    },
+    "activeCpuThreshold": 0.1,
+    "requestedParallelism": 0,
+    "requestedParallelismSource": "",
+    "requestedParallelismEvidence": {},
+    "requestedParallelismCandidates": [],
+    "observedConcurrency": {
+      "max": 0,
+      "average": 0,
+      "ratioToRequestedMax": 0
+    },
+    "cpu": {
+      "totalMax": 0,
+      "totalAverage": 0
+    },
+    "categories": {},
+    "topCommands": []
+  }
+}
