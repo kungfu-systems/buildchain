@@ -97,6 +97,10 @@ function fixture(overrides = {}) {
       artifactName: "buildchain-package",
       files: platformFiles,
     }],
+    platformManifestEvidence: [{
+      artifactName: "buildchain-package",
+      files: [{ path: "diagnostics.json", size: payloadFiles[1].size, sha256: payloadFiles[1].sha256 }],
+    }],
     productPayloadManifests: [],
     artifacts: [{
       name: "buildchain-package",
@@ -145,10 +149,28 @@ test("recovery accepts the same tree at a different promotion commit and records
   assert.equal(receipt.action, "reused");
   assert.equal(receipt.originalCandidate.sourceSha, SOURCE_SHA);
   assert.equal(receipt.target.sha, TARGET_SHA);
+  assert.equal(receipt.target.version, "3.1.0-alpha.1");
   assert.equal(receipt.originalCandidate.tree, receipt.target.tree);
   assert.deepEqual(receipt.skippedBuildStages, ["install", "build", "verify", "platform-matrix"]);
   assert.equal(receipt.payloadBytes, "unchanged");
   assert.match(receipt.root, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("recovery binds transaction identity to the sealed product publication version", () => {
+  const input = fixture({ publicationVersion: "3.1.0-alpha.2" });
+  input.existingTransaction = {
+    ...durableTransaction(input),
+    id: releaseTransactionId({
+      repository: input.candidateRepository,
+      version: input.publicationVersion,
+      sourceSha: input.targetSha,
+      targetRef: input.targetRef,
+    }),
+    version: input.publicationVersion,
+  };
+  const { receipt } = verifyReleaseCandidateRecovery(input);
+  assert.equal(receipt.target.version, input.publicationVersion);
+  assert.equal(receipt.transaction.identity, input.existingTransaction.id);
 });
 
 test("recovery rejects the same SHA when an artifact digest drifts", () => {
@@ -158,6 +180,42 @@ test("recovery rejects the same SHA when an artifact digest drifts", () => {
   const payloadDrift = fixture();
   payloadDrift.artifacts[0].files[0].size += 1;
   expectCode("artifact-manifest-mismatch", payloadDrift);
+});
+
+test("recovery accepts only byte-identical Buildchain manifest and summary sidecars", () => {
+  const input = fixture();
+  const platformId = input.passport.platformMatrix[0].platformId;
+  const manifestSidecar = {
+    path: `.buildchain/artifacts/${platformId}/manifest.json`,
+    size: 17,
+    sha256: `sha256:${"7".repeat(64)}`,
+  };
+  const summarySidecar = {
+    path: `.buildchain/artifacts/${platformId}/summary.json`,
+    size: 19,
+    sha256: `sha256:${"8".repeat(64)}`,
+  };
+  input.artifacts[0].files.push(manifestSidecar, summarySidecar);
+  input.platformManifestEvidence[0].files.push(
+    { path: "manifest.json", size: manifestSidecar.size, sha256: manifestSidecar.sha256 },
+    { path: "summary.json", size: summarySidecar.size, sha256: summarySidecar.sha256 },
+  );
+  assert.equal(verifyReleaseCandidateRecovery(input).receipt.action, "reused");
+
+  input.platformManifestEvidence[0].files[2].sha256 = `sha256:${"9".repeat(64)}`;
+  expectCode("artifact-manifest-mismatch", input);
+
+  input.platformManifestEvidence[0].files[2].sha256 = summarySidecar.sha256;
+  input.artifacts[0].files.push({ path: "undeclared.bin", size: 1, sha256: PAYLOAD_DIGEST });
+  expectCode("artifact-manifest-mismatch", input);
+});
+
+test("recovery accepts post-manifest Buildchain diagnostics only when independently uploaded bytes match", () => {
+  const input = fixture();
+  assert.equal(verifyReleaseCandidateRecovery(input).receipt.action, "reused");
+
+  input.platformManifestEvidence[0].files[0].sha256 = `sha256:${"9".repeat(64)}`;
+  expectCode("artifact-manifest-mismatch", input);
 });
 
 test("recovery rejects a different target tree", () => {
