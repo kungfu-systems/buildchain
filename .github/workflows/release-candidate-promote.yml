@@ -433,6 +433,11 @@ on:
         default: ""
         type: string
         required: false
+      publication-gate-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer Gate command; empty uses the publication source SHA"
+        default: ""
+        type: string
+        required: false
       publication-expected-json:
         description: "Independent exact source/runtime/product/channel/artifact bindings"
         default: ""
@@ -942,6 +947,7 @@ jobs:
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       publication-gate-command: ${{ inputs.publication-gate-command }}
+      publication-gate-controller-sha: ${{ inputs.publication-gate-controller-sha }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       publication-consumer-qualification-command: ${{ inputs.publication-consumer-qualification-command }}
@@ -1038,6 +1044,7 @@ jobs:
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
+      publication-gate-controller-sha: ${{ inputs.publication-gate-controller-sha }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       publication-consumer-qualification-command: ${{ inputs.publication-consumer-qualification-command }}
