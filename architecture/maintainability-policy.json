@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 275,
-    "maxHandMaintainedSourceLines": 104945,
+    "maxHandMaintainedSourceLines": 104953,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22177,
-    "latestTransition": "Candidate recovery preserves complete public evidence while rebinding the original evidence source to an equivalent-tree publication target.",
-    "rationale": "The bounded recovery path verifies and preserves an existing complete Release Passport, reconciles only sealed payload bytes, and rebinds publication only after exact source-tree equivalence. It adds no product install, build, repackaging, workflow, or package publication path."
+    "latestTransition": "Publication control-plane audit admits bounded GitHub commit responses larger than the Node child-process default buffer.",
+    "rationale": "One shared 16 MiB JSON response ceiling preserves fail-closed parsing while allowing audited large merge commits to reach the existing provenance checks. The regression fixture exceeds the prior 1 MiB default and adds no publication authority or product build path."
   },
   "sourceBudgets": {
     "newFileLines": 600,
