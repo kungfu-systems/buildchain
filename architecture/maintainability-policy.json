@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104536,
+    "maxHandMaintainedSourceLines": 104538,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
     "latestTransition": "Repeated candidate recovery preserves both durable Alpha finalization material and the original candidate runtime identity across newer recovery tooling.",

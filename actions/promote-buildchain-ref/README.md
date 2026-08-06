@@ -460,7 +460,11 @@ it does not have to equal the original `source_sha` or the transaction
 `release_sha`. Reruns accept exact tags that already point at the transaction
 release/material SHA or the finalized channel head, and continue moving any
 missing floating tags or dev/alpha refs before marking the transaction
-`complete`.
+`complete`. An explicit recovery of an already `complete` transaction is also
+accepted when the requested source SHA, version, exact tag, channel, and target
+all match the durable record exactly. It returns the completed transaction
+without republishing package bytes; a source accepted only through later branch
+history is not sufficient for this terminal-state reuse.
 
 Normal reruns accept already-published artifacts only when evidence matches.
 Missing required artifacts can be published on the next run. Conflicting

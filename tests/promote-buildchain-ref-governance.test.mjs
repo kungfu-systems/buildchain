@@ -271,7 +271,7 @@ test("governed promotion resumes its exact durable transaction after the target 
   fs.unlinkSync(evidencePath);
 
   const plan = await promoteBuildchainRefs({ octokit, owner: "kungfu-systems", repo: "buildchain", sha: SHA, targetRef: "alpha/v1/v1.0", cwd, dryRun: true, publishTransaction: true, publishTransactionOverride: true, requireVersionState: false, releasePassport: false }); assert.equal(plan.updates.find((update) => update.action === "dry-run-publish-transaction")?.version, "1.0.0-alpha.0"); assert.equal(plan.updates[0].action, "resumed-advanced-publication");
-  const result = await promoteBuildchainRefs({
+  const recovery = {
     octokit,
     owner: "kungfu-systems",
     repo: "buildchain",
@@ -284,7 +284,8 @@ test("governed promotion resumes its exact durable transaction after the target 
     publishTransactionOverride: true,
     expectedPublicationVersion: "1.0.0-alpha.0",
     releasePassport: false,
-  });
+  };
+  const result = await promoteBuildchainRefs(recovery);
 
   assert.equal(result.superseded, undefined);
   assert.equal(result.publishTransaction.state, "complete");
@@ -298,6 +299,15 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
   assert.equal(result.updates[0].action, "resumed-advanced-publication");
   assert.equal(result.updates.at(-1).action, "finalized-advanced-publication");
+
+  const repeated = await promoteBuildchainRefs(recovery);
+  assert.equal(repeated.publishTransaction.state, "complete");
+  assert.equal(repeated.publishTransaction.id, "tx-advanced-alpha");
+  assert.equal(repeated.publishTransaction.exactTag, "v1.0.0-alpha.0");
+  assert.equal(repeated.sha, advancedSha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), advancedSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
+  assert.equal(repeated.updates[0].action, "resumed-advanced-publication");
 });
 
 test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {
