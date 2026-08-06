@@ -1881,7 +1881,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 945
+        "line": 973
       },
       "example": "import { contractSummary } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1910,7 +1910,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 787
+        "line": 815
       },
       "example": "import { createBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1968,7 +1968,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 853
+        "line": 881
       },
       "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1997,7 +1997,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 762
+        "line": 790
       },
       "example": "import { finalizeBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2026,7 +2026,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 838
+        "line": 866
       },
       "example": "import { readBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2055,7 +2055,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 818
+        "line": 846
       },
       "example": "import { readBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2084,7 +2084,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 957
+        "line": 985
       },
       "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14781,6 +14781,112 @@
       ]
     },
     {
+      "id": "packages/core/release-candidate-recovery.js#recoveryFailure",
+      "name": "recoveryFailure",
+      "kind": "function",
+      "signature": "function recoveryFailure(error)",
+      "parameters": [
+        {
+          "name": "error",
+          "signature": "error"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-candidate-recovery.js",
+        "line": 370
+      },
+      "example": "import { recoveryFailure } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-candidate-recovery.js#RELEASE_CANDIDATE_RECOVERY_CONTRACT",
+      "name": "RELEASE_CANDIDATE_RECOVERY_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_CANDIDATE_RECOVERY_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-candidate-recovery.js",
+        "line": 11
+      },
+      "example": "import { RELEASE_CANDIDATE_RECOVERY_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-candidate-recovery.js#ReleaseCandidateRecoveryError",
+      "name": "ReleaseCandidateRecoveryError",
+      "kind": "class",
+      "signature": "class ReleaseCandidateRecoveryError",
+      "parameters": [],
+      "returns": "ReleaseCandidateRecoveryError",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/release-candidate-recovery.js",
+        "line": 18
+      },
+      "example": "import { ReleaseCandidateRecoveryError } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
+      "name": "verifyReleaseCandidateRecovery",
+      "kind": "function",
+      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], productPayloadManifests = [], artifacts = [], currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], productPayloadManifests = [], artifacts = [], currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-candidate-recovery.js",
+        "line": 250
+      },
+      "example": "import { verifyReleaseCandidateRecovery } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release-candidate.js#createReleaseCandidatePassport",
       "name": "createReleaseCandidatePassport",
       "kind": "function",
@@ -17516,14 +17622,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:0a415732a05ad95fe9a8ae4da20df826f392c9c5227e9f0eee3722a3d97af49d",
+      "digest": "sha256:6f22c5a7afd733e03d948cd322e01f7255b973780c89a70892c869eb3c15d05f",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 558,
+      "symbolCount": 562,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -17944,6 +18050,7 @@
         "packages/core/publish-transaction.js#readReleaseTransaction",
         "packages/core/release-activation-transaction.js#recordReleaseActivationPhase",
         "packages/core/release-propagation-work-transitions.js#recordReleasePropagationStage",
+        "packages/core/release-candidate-recovery.js#recoveryFailure",
         "packages/core/logging.js#redactBuildchainLogAttributes",
         "packages/core/diagnostics.js#redactDiagnosticsValue",
         "packages/core/issue-reporting.js#redactIssueText",
@@ -17953,6 +18060,7 @@
         "packages/core/release-activation-transaction.js#RELEASE_ACTIVATION_PHASES",
         "packages/core/release-activation-transaction.js#RELEASE_ACTIVATION_RECEIPT_SET_CONTRACT",
         "packages/core/release-candidate.js#RELEASE_CANDIDATE_PASSPORT_CONTRACT",
+        "packages/core/release-candidate-recovery.js#RELEASE_CANDIDATE_RECOVERY_CONTRACT",
         "packages/core/release-passport.js#RELEASE_CHECK_REPORT_CONTRACT",
         "packages/core/release-passport.js#RELEASE_EVIDENCE_ATTACHMENT_CONTRACT",
         "packages/core/release-passport-contract.js#RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT",
@@ -17971,6 +18079,7 @@
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_STAGES",
         "packages/core/release-activation-transaction.js#releaseActivationRoot",
+        "packages/core/release-candidate-recovery.js#ReleaseCandidateRecoveryError",
         "packages/core/readme-badges.js#renderBadgeBundleBlock",
         "packages/core/buildchain-contract.js#renderBuildchainContractDriftIssueBody",
         "packages/core/homebrew.js#renderHomebrewFormula",
@@ -18065,6 +18174,7 @@
         "packages/core/publication-authority.js#verifyPublicationQualificationReceipt",
         "packages/core/publication-reproducibility.js#verifyPublicationReproducibility",
         "packages/core/publication-sealed-bundle.js#verifyPublicationSealedBundle",
+        "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
         "packages/core/release-passport.js#verifyReleasePassport",
         "packages/core/release-propagation-work.js#verifyReleasePropagationWork",
         "packages/core/web-surface-publication-candidate.js#WEB_SURFACE_PRODUCTION_DECISION_CONTRACT",
@@ -18172,14 +18282,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:0a415732a05ad95fe9a8ae4da20df826f392c9c5227e9f0eee3722a3d97af49d",
+      "digest": "sha256:6f22c5a7afd733e03d948cd322e01f7255b973780c89a70892c869eb3c15d05f",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 558,
+      "symbolCount": 562,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -18600,6 +18710,7 @@
         "packages/core/publish-transaction.js#readReleaseTransaction",
         "packages/core/release-activation-transaction.js#recordReleaseActivationPhase",
         "packages/core/release-propagation-work-transitions.js#recordReleasePropagationStage",
+        "packages/core/release-candidate-recovery.js#recoveryFailure",
         "packages/core/logging.js#redactBuildchainLogAttributes",
         "packages/core/diagnostics.js#redactDiagnosticsValue",
         "packages/core/issue-reporting.js#redactIssueText",
@@ -18609,6 +18720,7 @@
         "packages/core/release-activation-transaction.js#RELEASE_ACTIVATION_PHASES",
         "packages/core/release-activation-transaction.js#RELEASE_ACTIVATION_RECEIPT_SET_CONTRACT",
         "packages/core/release-candidate.js#RELEASE_CANDIDATE_PASSPORT_CONTRACT",
+        "packages/core/release-candidate-recovery.js#RELEASE_CANDIDATE_RECOVERY_CONTRACT",
         "packages/core/release-passport.js#RELEASE_CHECK_REPORT_CONTRACT",
         "packages/core/release-passport.js#RELEASE_EVIDENCE_ATTACHMENT_CONTRACT",
         "packages/core/release-passport-contract.js#RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT",
@@ -18627,6 +18739,7 @@
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_STAGES",
         "packages/core/release-activation-transaction.js#releaseActivationRoot",
+        "packages/core/release-candidate-recovery.js#ReleaseCandidateRecoveryError",
         "packages/core/readme-badges.js#renderBadgeBundleBlock",
         "packages/core/buildchain-contract.js#renderBuildchainContractDriftIssueBody",
         "packages/core/homebrew.js#renderHomebrewFormula",
@@ -18721,6 +18834,7 @@
         "packages/core/publication-authority.js#verifyPublicationQualificationReceipt",
         "packages/core/publication-reproducibility.js#verifyPublicationReproducibility",
         "packages/core/publication-sealed-bundle.js#verifyPublicationSealedBundle",
+        "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
         "packages/core/release-passport.js#verifyReleasePassport",
         "packages/core/release-propagation-work.js#verifyReleasePropagationWork",
         "packages/core/web-surface-publication-candidate.js#WEB_SURFACE_PRODUCTION_DECISION_CONTRACT",
@@ -18961,7 +19075,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:876f747eccd92d31e821c85b2f38a54ba6056704adfb30cbf7e545ff61148625",
+      "digest": "sha256:90e88e4ac4759838afc4d760811ab30aad3e79066ba64fc69c81a31f3fffd291",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -19987,6 +20101,32 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
+      "export": "./release-candidate-recovery",
+      "target": "./packages/core/release-candidate-recovery.js",
+      "digest": "sha256:de7d16b8bcfd6883e098a232f2dd774f70258cdcefd5c1157be4ce83ccda9980",
+      "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 4,
+      "symbolIds": [
+        "packages/core/release-candidate-recovery.js#recoveryFailure",
+        "packages/core/release-candidate-recovery.js#RELEASE_CANDIDATE_RECOVERY_CONTRACT",
+        "packages/core/release-candidate-recovery.js#ReleaseCandidateRecoveryError",
+        "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/stable-candidate-ledger",
       "export": "./stable-candidate-ledger",
       "target": "./packages/core/stable-candidate-ledger.js",
@@ -20255,7 +20395,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:e0e720eeacfa61a1ca235142858f544e18d3f7a000e300a4311e246fe738ff81"
+      "digest": "sha256:d61f17343ed2cf062c75b36d98ca5a39870d667aec7f16401c4a63e536146116"
     },
     {
       "id": "build-facts",
