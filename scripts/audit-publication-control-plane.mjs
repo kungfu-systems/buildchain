@@ -363,9 +363,6 @@ function main() {
       review.user?.login !== mergedPullRequest?.user?.login &&
       String(review.commit_id || "").toLowerCase() === pullRequestHeadSha
     );
-    const checkRuns = /^[0-9a-f]{40}$/.test(pullRequestHeadSha)
-      ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?per_page=100`, "merged pull-request head check runs")
-      : { check_runs: [] };
     const requiredStatusCheckPolicy = branchState.protection?.required_status_checks || {};
     const requiredStatusChecks = [...new Set([
       ...(requiredStatusCheckPolicy.contexts || []),
@@ -380,6 +377,9 @@ function main() {
     const resolvedRequiredStatusCheck = exactRequiredStatusCheck ||
       (prefixedRequiredStatusChecks.length === 1 ? prefixedRequiredStatusChecks[0] : requiredStatusCheck);
     const requiredStatusCheckMatchCount = exactRequiredStatusCheck ? 1 : prefixedRequiredStatusChecks.length;
+    const checkRuns = /^[0-9a-f]{40}$/.test(pullRequestHeadSha)
+      ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?check_name=${encodeURIComponent(resolvedRequiredStatusCheck)}&filter=latest&per_page=100`, "merged pull-request required check runs")
+      : { check_runs: [] };
     const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) =>
       entry.context === resolvedRequiredStatusCheck
     );
