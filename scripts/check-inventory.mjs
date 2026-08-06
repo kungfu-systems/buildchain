@@ -992,7 +992,7 @@ for (const requiredSnippet of [
   "resume-buildchain-runtime-sha:",
   "github-release: true",
   "release-passport-buildchain-self-kfd: true",
-  "artifact-patterns: ${{ inputs['resume-candidate-run-id'] != '' && 'buildchain-package-*' || '' }}",
+  'artifact-patterns: "buildchain-package-*"',
   "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {

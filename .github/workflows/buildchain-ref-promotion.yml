@@ -181,7 +181,10 @@ jobs:
       resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
       resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
-      artifact-patterns: ${{ inputs['resume-candidate-run-id'] != '' && 'buildchain-package-*' || '' }}
+      # Buildchain self-promotion must consume the sealed npm product payload
+      # from the exact channel PR. Falling back to the fixture platform
+      # manifests would misclassify diagnostic envelope files as npm products.
+      artifact-patterns: "buildchain-package-*"
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
       standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
