@@ -963,6 +963,12 @@ preserves an existing asset when its SHA-256 digest matches the regenerated
 bytes, uploads only missing assets, and fails with an immutable-release
 collision when a same-name asset has different bytes. It never deletes and
 replaces an existing asset during retry or duplicate workflow delivery.
+An explicit candidate recovery whose validated receipt records an already
+complete transaction instead verifies the existing public Release Passport
+bundle and preserves its Buildchain-owned evidence generation. Product payload
+bytes remain digest-bound to the restored candidate, and missing product assets
+alone may be filled from that sealed bundle. This exception is unavailable to
+ordinary reruns or receipts from earlier transaction states.
 
 Product payloads are included only through the explicit
 `github-release-payload-patterns` input. Patterns match basenames inside the

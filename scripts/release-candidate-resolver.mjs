@@ -4,6 +4,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { pathToFileURL } from "node:url";
 import { createResolvedPublicationSealedBundle } from "./publication-candidate-sealer.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
@@ -37,6 +39,9 @@ function assertSha(value, label = "sha") {
   }
   return sha;
 }
+
+export const releaseCandidateRuntimeSha = (passport) =>
+  assertSha(passport?.buildchain?.sha, "release candidate Passport Buildchain runtime SHA").toLowerCase();
 
 function githubHeaders(token) {
   const headers = {
@@ -77,8 +82,30 @@ export async function githubDownload({ apiUrl, token, path: requestPath, outputP
     }
     throw new Error(`GitHub artifact download ${requestPath} failed with ${response.status}${detail ? `: ${detail}` : ""}`);
   }
-  fs.writeFileSync(outputPath, Buffer.from(await response.arrayBuffer()));
+  try {
+    if (response.body && typeof response.body.getReader === "function") {
+      await pipeline(Readable.fromWeb(response.body), fs.createWriteStream(outputPath));
+    } else {
+      fs.writeFileSync(outputPath, Buffer.from(await response.arrayBuffer()));
+    }
+  } catch (error) {
+    fs.rmSync(outputPath, { force: true });
+    throw error;
+  }
   return outputPath;
+}
+
+function digestFileSync(filePath, algorithm, encoding) {
+  const hash = crypto.createHash(algorithm);
+  const descriptor = fs.openSync(filePath, "r");
+  const chunk = Buffer.allocUnsafe(8 * 1024 * 1024);
+  try {
+    let bytesRead = 0;
+    while ((bytesRead = fs.readSync(descriptor, chunk, 0, chunk.length, null)) > 0) hash.update(chunk.subarray(0, bytesRead));
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return hash.digest(encoding);
 }
 
 export function selectMergedChannelPullRequest({ pullRequests = [], targetRef, repository }) {
@@ -256,7 +283,7 @@ function packageNameFromArtifactPath(filePath) {
 }
 
 function npmIntegrity(filePath) {
-  return `sha512-${crypto.createHash("sha512").update(fs.readFileSync(filePath)).digest("base64")}`;
+  return `sha512-${digestFileSync(filePath, "sha512", "base64")}`;
 }
 
 function readNpmPackageJsonFromTarball(tarballPath) {
@@ -360,9 +387,8 @@ export function selectReleaseCandidateArtifacts({ artifacts = [], artifactName =
 }
 
 export function verifyArtifactArchive({ artifact, archivePath } = {}) {
-  const bytes = fs.readFileSync(archivePath);
-  const size = bytes.length;
-  const digest = `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
+  const size = fs.statSync(archivePath).size;
+  const digest = `sha256:${digestFileSync(archivePath, "sha256", "hex")}`;
   if (!artifact || artifact.expired === true) {
     throw new Error(`candidate artifact is missing or expired: ${artifact?.name || "<unknown>"}`);
   }
@@ -676,7 +702,7 @@ export async function resolveReleaseCandidateArtifacts({
         repository: repoInfo.fullName,
         sourceSha: passport.source?.headSha,
         sourceTreeSha: passport.source?.treeHash,
-        runtimeSha: runtimeSha || sha,
+        runtimeSha: releaseCandidateRuntimeSha(passport),
         releaseCandidateRoot: passport.candidateHash,
         npmArtifacts: npmTarballPaths.map((tarballPath) => ({
           path: tarballPath,

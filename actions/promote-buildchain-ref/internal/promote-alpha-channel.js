@@ -221,6 +221,7 @@ async function finalizeContainedAlpha(context, state) {
       publishToolingShaOverride:
         transaction.publish_tooling_sha || transaction.release_sha,
       publishDistTagOverride: state.alphaPublishDistTag,
+      durablePublicationMaterial: transaction,
     });
     await context.markFinalizing();
     await context.ensureTag(transaction.exact_tag, transaction.source_sha, {
@@ -579,7 +580,6 @@ async function finalizeAlphaPublication(context, state, publication) {
     updates: context.updates,
   });
 }
-
 async function promoteAlphaChannel(context) {
   const plan = await planAlphaPublication(context);
   const state = await evaluateAlphaRecovery(context, plan);

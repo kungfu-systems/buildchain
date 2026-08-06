@@ -1899,6 +1899,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "publication-gate-controller-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "publication-package-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -2189,7 +2193,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:bc03b3ac295e33b738fe5168e14ebf4d0fabf2325b4ae4a3d2b3c12afe816068"
+      "digest": "sha256:bb49305be1f2176c47920532d414954e1d058156abf3411ae66cc97ba526d186"
     },
     {
       "schemaVersion": 1,
@@ -2382,5 +2386,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:cc205cd0abe4ba5023d8afc38dea9d3f17c06f4a3622a6b8ccd3fc90b10e3fb7"
+  "digest": "sha256:6c9eab44f162f2c142827c63bcd7c14cb92ba92e6021ffdc0bdf7baee7ffad8c"
 }
