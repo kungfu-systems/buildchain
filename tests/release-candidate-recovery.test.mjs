@@ -16,6 +16,16 @@ const PAYLOAD_DIGEST = `sha256:${"5".repeat(64)}`;
 const ARCHIVE_DIGEST = `sha256:${"6".repeat(64)}`;
 
 function fixture(overrides = {}) {
+  const platformFiles = [
+    { path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST },
+    {
+      path: ".buildchain/artifacts/linux-x64/diagnostics.json",
+      size: 11,
+      sha256: `sha256:${"7".repeat(64)}`,
+    },
+  ];
+  const payloadFiles = platformFiles.map((file) => ({ ...file }));
+  payloadFiles[1] = { ...payloadFiles[1], size: 13, sha256: `sha256:${"8".repeat(64)}` };
   const buildSummary = {
     contract: "kungfu-buildchain-build-summary",
     git: { repository: "kungfu-systems/buildchain", sha: SOURCE_SHA, treeSha: TREE, runId: "100", runAttempt: "1" },
@@ -24,7 +34,11 @@ function fixture(overrides = {}) {
     platforms: [{
       platform: { id: "linux-x64" },
       artifactName: "buildchain-package",
-      summary: { fileCount: 1, totalBytes: 7, files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }] },
+      summary: {
+        fileCount: platformFiles.length,
+        totalBytes: platformFiles.reduce((total, file) => total + file.size, 0),
+        files: platformFiles,
+      },
     }],
   };
   const passport = createReleaseCandidatePassport({
@@ -81,7 +95,11 @@ function fixture(overrides = {}) {
     controllerReceipts: [],
     platformManifests: [{
       artifactName: "buildchain-package",
-      files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }],
+      files: platformFiles,
+    }],
+    platformManifestEvidence: [{
+      artifactName: "buildchain-package",
+      files: [{ path: "diagnostics.json", size: payloadFiles[1].size, sha256: payloadFiles[1].sha256 }],
     }],
     productPayloadManifests: [],
     artifacts: [{
@@ -90,7 +108,7 @@ function fixture(overrides = {}) {
       downloadedSize: 11,
       digest: ARCHIVE_DIGEST,
       downloadedDigest: ARCHIVE_DIGEST,
-      files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }],
+      files: payloadFiles,
     }],
     currentToolingSha: RUNTIME_SHA,
     recoveryRunId: "200",
@@ -105,21 +123,6 @@ function expectCode(code, input) {
     assert.ok(error.nextAction);
     return true;
   });
-}
-
-function refreshCandidateRoot(input) {
-  const passport = input.passport;
-  passport.candidateHash = sha256Json({
-    repository: passport.repository,
-    target: passport.target,
-    source: passport.source,
-    platformMatrix: passport.platformMatrix,
-    buildchain: passport.buildchain,
-    ...(passport.gateProfileEvidence ? { gateProfileEvidence: passport.gateProfileEvidence } : {}),
-    ...(passport.familyEvidence ? { familyEvidence: passport.familyEvidence } : {}),
-    ...(passport.controllerReceipts ? { controllerReceipts: passport.controllerReceipts } : {}),
-  });
-  input.expectedCandidateRoot = `sha256:${passport.candidateHash}`;
 }
 
 function durableTransaction(input, state = "complete") {
@@ -174,6 +177,9 @@ test("recovery rejects the same SHA when an artifact digest drifts", () => {
   const input = fixture({ targetSha: SOURCE_SHA });
   input.artifacts[0].downloadedDigest = `sha256:${"7".repeat(64)}`;
   expectCode("artifact-digest-mismatch", input);
+  const payloadDrift = fixture();
+  payloadDrift.artifacts[0].files[0].size += 1;
+  expectCode("artifact-manifest-mismatch", payloadDrift);
 });
 
 test("recovery accepts only byte-identical Buildchain manifest and summary sidecars", () => {
@@ -190,39 +196,22 @@ test("recovery accepts only byte-identical Buildchain manifest and summary sidec
     sha256: `sha256:${"8".repeat(64)}`,
   };
   input.artifacts[0].files.push(manifestSidecar, summarySidecar);
-  input.platformManifestEvidence = [{
-    artifactName: input.passport.platformMatrix[0].artifactName,
-    files: [
-      { path: "manifest.json", size: manifestSidecar.size, sha256: manifestSidecar.sha256 },
-      { path: "summary.json", size: summarySidecar.size, sha256: summarySidecar.sha256 },
-    ],
-  }];
+  input.platformManifestEvidence[0].files.push(
+    { path: "manifest.json", size: manifestSidecar.size, sha256: manifestSidecar.sha256 },
+    { path: "summary.json", size: summarySidecar.size, sha256: summarySidecar.sha256 },
+  );
   assert.equal(verifyReleaseCandidateRecovery(input).receipt.action, "reused");
 
-  input.platformManifestEvidence[0].files[1].sha256 = `sha256:${"9".repeat(64)}`;
+  input.platformManifestEvidence[0].files[2].sha256 = `sha256:${"9".repeat(64)}`;
   expectCode("artifact-manifest-mismatch", input);
 
-  input.platformManifestEvidence[0].files[1].sha256 = summarySidecar.sha256;
+  input.platformManifestEvidence[0].files[2].sha256 = summarySidecar.sha256;
   input.artifacts[0].files.push({ path: "undeclared.bin", size: 1, sha256: PAYLOAD_DIGEST });
   expectCode("artifact-manifest-mismatch", input);
 });
 
 test("recovery accepts post-manifest Buildchain diagnostics only when independently uploaded bytes match", () => {
   const input = fixture();
-  const platformId = input.passport.platformMatrix[0].platformId;
-  const diagnosticPath = `.buildchain/artifacts/${platformId}/diagnostics.json`;
-  const manifestDiagnostic = { path: diagnosticPath, size: 17, sha256: `sha256:${"7".repeat(64)}` };
-  const finalDiagnostic = { path: diagnosticPath, size: 19, sha256: `sha256:${"8".repeat(64)}` };
-  input.platformManifests[0].files.push(manifestDiagnostic);
-  input.passport.platformMatrix[0].artifacts.push(manifestDiagnostic);
-  input.passport.platformMatrix[0].summary.fileCount += 1;
-  input.passport.platformMatrix[0].summary.totalBytes += manifestDiagnostic.size;
-  input.artifacts[0].files.push(finalDiagnostic);
-  input.platformManifestEvidence = [{
-    artifactName: input.passport.platformMatrix[0].artifactName,
-    files: [{ path: "diagnostics.json", size: finalDiagnostic.size, sha256: finalDiagnostic.sha256 }],
-  }];
-  refreshCandidateRoot(input);
   assert.equal(verifyReleaseCandidateRecovery(input).receipt.action, "reused");
 
   input.platformManifestEvidence[0].files[0].sha256 = `sha256:${"9".repeat(64)}`;
