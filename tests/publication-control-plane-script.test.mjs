@@ -12,7 +12,7 @@ const HEAD_SHA = "b".repeat(40);
 const BRANCH_HEAD_SHA = "c".repeat(40);
 const MERGE_SHA = "d".repeat(40);
 
-function fakeGithubCli(requiredCheckConclusion, historicalSource) {
+function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit) {
   const workflow = `permissions:\n  contents: read\njobs:\n  promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: read\n      id-token: write\n`;
   const responses = {
     "repos/kungfu-systems/buildchain/contents/.github/workflows/release-candidate-promote.yml": {
@@ -61,7 +61,7 @@ function fakeGithubCli(requiredCheckConclusion, historicalSource) {
     "repos/kungfu-systems/buildchain/actions/oidc/customization/sub": { use_default: true },
     [`repos/kungfu-systems/buildchain/commits/${SOURCE_SHA}`]: {
       parents: [{ sha: HEAD_SHA }],
-      files: [],
+      files: largeSourceCommit ? [{ filename: "large-change.txt", patch: "x".repeat(2 * 1024 * 1024) }] : [],
       commit: { message: "Merge pull request #7" },
     },
     [`repos/kungfu-systems/buildchain/commits/${SOURCE_SHA}/pulls`]: [{
@@ -95,12 +95,12 @@ function fakeGithubCli(requiredCheckConclusion, historicalSource) {
   return `#!/usr/bin/env node\nconst responses = ${JSON.stringify(responses)};\nconst route = process.argv[3];\nif (!(route in responses)) { console.error(\`missing fake route: \${route}\`); process.exit(1); }\nprocess.stdout.write(JSON.stringify(responses[route]));\n`;
 }
 
-function runAudit({ requiredCheckConclusion = "success", historicalSource = false } = {}) {
+function runAudit({ requiredCheckConclusion = "success", historicalSource = false, largeSourceCommit = false } = {}) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-control-plane-"));
   const bin = path.join(cwd, "bin");
   fs.mkdirSync(bin);
   const gh = path.join(bin, "gh");
-  fs.writeFileSync(gh, fakeGithubCli(requiredCheckConclusion, historicalSource));
+  fs.writeFileSync(gh, fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit));
   fs.chmodSync(gh, 0o755);
   const result = spawnSync(process.execPath, [
     path.join(root, "scripts/audit-publication-control-plane.mjs"),
@@ -135,6 +135,13 @@ test("non-strict managed rulesets reject a failed required check", () => {
 
 test("non-strict managed rulesets accept an exact historical pull-request head still contained in the branch", () => {
   const result = runAudit({ historicalSource: true });
+  assert.equal(result.status, 0, result.stderr);
+  const receipt = JSON.parse(result.stdout);
+  assert.equal(receipt.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+});
+
+test("publication control-plane audit accepts source commit JSON beyond the default spawn buffer", () => {
+  const result = runAudit({ largeSourceCommit: true });
   assert.equal(result.status, 0, result.stderr);
   const receipt = JSON.parse(result.stdout);
   assert.equal(receipt.facts.find((entry) => entry.id === "branch-policy").status, "pass");

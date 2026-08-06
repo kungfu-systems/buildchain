@@ -9,13 +9,19 @@ import {
   matchesGithubDeploymentPolicy,
 } from "../packages/core/publication-control-plane-audit.js";
 
+const GITHUB_JSON_MAX_BUFFER = 16 * 1024 * 1024;
+
 function flag(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
   return index === -1 ? fallback : String(process.argv[index + 1] || "");
 }
 
 function commandJson(command, args, label) {
-  const result = spawnSync(command, args, { encoding: "utf8", timeout: 60_000 });
+  const result = spawnSync(command, args, {
+    encoding: "utf8",
+    timeout: 60_000,
+    maxBuffer: GITHUB_JSON_MAX_BUFFER,
+  });
   if (result.status !== 0) {
     const category = /401|E401|unauthorized/i.test(result.stderr) ? "unauthorized" : "unavailable";
     throw new Error(`${label} is ${category}; publication control-plane audit fails closed`);
@@ -35,6 +41,7 @@ function githubJsonOptional(apiPath, label, fallback) {
   const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
     encoding: "utf8",
     timeout: 60_000,
+    maxBuffer: GITHUB_JSON_MAX_BUFFER,
   });
   if (result.status !== 0) {
     if (/404|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
@@ -52,6 +59,7 @@ function githubJsonReadLimited(apiPath, label, fallback) {
   const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
     encoding: "utf8",
     timeout: 60_000,
+    maxBuffer: GITHUB_JSON_MAX_BUFFER,
   });
   if (result.status !== 0) {
     if (/401|403|404|unauthorized|forbidden|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
