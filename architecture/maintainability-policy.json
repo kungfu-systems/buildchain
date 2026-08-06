@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 272,
-    "maxHandMaintainedSourceLines": 104302,
+    "maxHandMaintainedSourceFiles": 273,
+    "maxHandMaintainedSourceLines": 104434,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22141,
-    "latestTransition": "Candidate-run recovery binds a sealed payload publication version through the immutable recovery receipt while preserving the original candidate Passport and product bytes.",
-    "rationale": "The bounded recovery verifier continues to require byte-identical candidate archives, manifests, controller evidence, source tree, and product payloads. Promotion now accepts a fixture or consumer Passport whose product version differs from the sealed npm package only when the immutable recovery receipt root binds the original candidate root, source/tree, repository, channel, target ref/SHA, skipped build matrix, unchanged payload bytes, and exact sealed publication version. Ordinary promotion still requires direct Passport version equality, and missing or drifted recovery evidence fails before provider mutation. The exact 58-line increase adds one validator and wiring inside the existing recovery and promotion surfaces, with no new workflow, state machine, artifact format, or product build path; any wider ceiling requires another reviewed policy change."
+    "latestTransition": "Normal PR-stage npm promotion now seals and publishes the exact qualified candidate tarball instead of rematerializing package bytes from source.",
+    "rationale": "The bounded resolver addition inventories the already-downloaded payload artifact, binds its package integrity and release assets into the existing publication sealed-bundle contract, and passes that exact bundle to the existing durable publish transaction. This closes a live fail-closed digest mismatch while preserving the recovery receipt version binding already on dev, without adding a workflow, publication state, or alternate product build path. The exact ceiling includes both reviewed transitions plus the normal-path regression and manifest wiring; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -45,9 +45,10 @@
       "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, and no-product-install condition; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 756,
-      "maxFunctionLines": 282,
-      "rationale": "The shared candidate resolver exports its GitHub transport and safe unzip seams and verifies GitHub archive size and sha256 metadata before extraction for both discovery and recovery; this exact ceiling cannot grow implicitly."
+      "maxLines": 784,
+      "maxFunctionLines": 306,
+      "maxFunctionComplexity": 63,
+      "rationale": "The shared candidate resolver now seals the exact downloaded normal-path npm payload under the existing publication bundle contract while retaining GitHub archive size and sha256 verification; the bounded terminal growth only connects resolved evidence to that fail-closed contract and cannot grow implicitly."
     },
     "scripts/auditable-demo.mjs": {
       "maxLines": 1330,
