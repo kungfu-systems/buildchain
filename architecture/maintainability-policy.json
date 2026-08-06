@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104538,
+    "maxHandMaintainedSourceLines": 104541,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
-    "latestTransition": "Repeated candidate recovery preserves both durable Alpha finalization material and the original candidate runtime identity across newer recovery tooling.",
-    "rationale": "Contained finalization restores already-published durable artifacts instead of transient rebuilt bytes, while one bounded candidate constructor prevents the current recovery tooling SHA from perturbing the sealed payload root. The combined exact ceiling preserves ancestry, transaction, artifact, original-runtime, and fail-closed conflict gates without adding a product install, build, repackaging, workflow, or publication path."
+    "latestTransition": "Every candidate resolver preserves the original Passport runtime identity across newer recovery tooling.",
+    "rationale": "One bounded runtime selector keeps normal promotion and durable recovery on the same sealed candidate root while preserving exact Passport validation. The exact ceiling adds no product install, build, repackaging, workflow, or publication path."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -45,10 +45,10 @@
       "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, and the bounded Buildchain self-runtime dependency bridge; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 784,
+      "maxLines": 787,
       "maxFunctionLines": 306,
       "maxFunctionComplexity": 63,
-      "rationale": "The shared candidate resolver now seals the exact downloaded normal-path npm payload under the existing publication bundle contract while retaining GitHub archive size and sha256 verification; the bounded terminal growth only connects resolved evidence to that fail-closed contract and cannot grow implicitly."
+      "rationale": "The shared candidate resolver seals the exact downloaded npm payload under the existing publication bundle contract and selects the original Passport runtime for both normal promotion and durable recovery; the exact ceiling retains GitHub archive verification and cannot grow implicitly."
     },
     "scripts/auditable-demo.mjs": {
       "maxLines": 1330,
