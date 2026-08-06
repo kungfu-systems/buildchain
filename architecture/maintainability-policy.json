@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104509,
+    "maxHandMaintainedSourceLines": 104511,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22141,
-    "latestTransition": "Recovered candidates with unchanged version state skip consumer lifecycle verification, while any attempted version-state rematerialization fails closed.",
-    "rationale": "The bounded existing-version-state resolver extracts inherited no-op handling from the already capped promotion transaction and adds one recovery-specific decision: a validated immutable recovery receipt may reuse exact existing version state without running product lifecycle commands, while non-empty version changes remain rejected before publication. The exact ceiling includes the isolated resolver and its regression proof; it adds no workflow, product build path, or publication state."
+    "maxWorkflowLines": 22142,
+    "latestTransition": "Recovered Buildchain self-promotion reuses installed runtime dependencies, then accepts unchanged recovered version state without running consumer lifecycle verification.",
+    "rationale": "The integrated recovery tail creates only the transient ignored runtime dependency bridge already reviewed on dev and one bounded existing-version-state resolver. A validated immutable recovery receipt may reuse exact existing version state without product lifecycle commands, while any non-empty recovery version change fails closed. The combined exact ceiling adds no product dependency installation, build path, payload rematerialization, workflow, or publication state."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -41,8 +41,8 @@
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1457,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, and no-product-install condition; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1459,
+      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, and the bounded Buildchain self-runtime dependency bridge; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
       "maxLines": 784,
