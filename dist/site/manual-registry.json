@@ -136,7 +136,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:9cb06463e0cbb06180ae4e9ed3258a9e7466237916ffc766c548ef5faa730651",
+      "digest": "sha256:d76bbd75aab3c4dd94756c1c64562a125e74369c7c8b97342dbcacc5d7561602",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:f8ae86b9182811d9f980b3ae1f1a42d2c84cd6c133003c996946848f938099a8",
+      "digest": "sha256:f5592359584e98ab4283d56b0262fdcf9c5da61f48033cecad1b0404aa95bd2e",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -430,7 +430,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:481640f398d966dca4f1f2e29a8100f0f479315ee19e65b0e259720f2b61213f",
+      "digest": "sha256:34fb81d1dd9f913cbed6ee76ac9f0bdb095669e55c1bee67389601fd494470cf",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

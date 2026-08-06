@@ -3,7 +3,7 @@
   "major": 3,
   "alpha": {
     "logicalRef": "v3-alpha",
-    "callRef": "v3-alpha",
+    "callRef": "train/v3/v3.0/resume-candidate-run",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true
   },

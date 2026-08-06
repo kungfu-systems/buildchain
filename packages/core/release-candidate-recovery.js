@@ -7,13 +7,51 @@ import {
   validateReleaseCandidatePassport,
 } from "./release-candidate.js";
 import { releaseTransactionId } from "./publish-transaction.js";
+import {
+  publicationAuthorityDigest,
+  publicationGateAggregateBindings,
+} from "./publication-authority.js";
 
 export const RELEASE_CANDIDATE_RECOVERY_CONTRACT =
   "kungfu-buildchain-release-candidate-recovery/v1";
 
+export function rebindPublicationGateAggregateForEquivalentTree(
+  gateAggregate,
+  { evidenceSourceSha = "", targetSourceSha = "", targetSourceTreeSha = "", expectedSourceTreeSha = "" } = {},
+) {
+  const bindings = publicationGateAggregateBindings(gateAggregate);
+  const evidenceSource = exactSha(evidenceSourceSha, "evidenceSourceSha");
+  const targetSource = exactSha(targetSourceSha, "targetSourceSha");
+  if (bindings.sourceSha !== evidenceSource) {
+    throw new Error("consumer Gate aggregate evidence source SHA mismatch");
+  }
+  if (evidenceSource === targetSource) return gateAggregate;
+  const targetTree = exactSha(targetSourceTreeSha, "targetSourceTreeSha");
+  const expectedTree = exactSha(expectedSourceTreeSha, "expectedSourceTreeSha");
+  if (targetTree !== expectedTree) throw new Error("consumer Gate aggregate source tree mismatch");
+  if (gateAggregate.candidateReuse !== undefined) {
+    throw new Error("consumer Gate aggregate already declares candidate reuse");
+  }
+  const { digest: _digest, ...payload } = gateAggregate;
+  const rebound = {
+    ...payload,
+    sourceSha: targetSource,
+    candidateReuse: { action: "reused", evidenceSourceSha: evidenceSource, sourceTreeSha: expectedTree },
+  };
+  return { ...rebound, digest: `sha256:${publicationAuthorityDigest(rebound)}` };
+}
+
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const TRUSTED_ASSOCIATIONS = new Set(["COLLABORATOR", "MEMBER", "OWNER"]);
+const RESUMABLE_TRANSACTION_STATES = new Set([
+  "sealed",
+  "publishing",
+  "published",
+  "package-published",
+  "finalizing",
+  "complete",
+]);
 
 export class ReleaseCandidateRecoveryError extends Error {
   constructor(code, message, nextAction) {
@@ -91,6 +129,48 @@ function assertEqual(actual, expected, code, label, nextAction) {
 
 function normalizedRef(value) {
   return String(value || "").replace(/^refs\/heads\//, "").trim();
+}
+
+export function validateRecoveryTargetRef({
+  targetSha,
+  observedTargetSha,
+  expectedTransactionId = "",
+  existingTransaction = undefined,
+  ancestry = undefined,
+} = {}) {
+  const expected = exactSha(targetSha, "targetSha");
+  const observed = exactSha(observedTargetSha, "observedTargetSha");
+  if (observed === expected) return { advanced: false, observedSha: observed };
+  if (!expectedTransactionId) {
+    fail(
+      "target-ref-moved",
+      `target ref advanced from ${expected} to ${observed} without an explicit durable transaction identity`,
+      "Resume with the exact existing transaction identity, or select a new candidate explicitly; never rebuild implicitly.",
+    );
+  }
+  if (!existingTransaction || existingTransaction.id !== expectedTransactionId) {
+    fail(
+      "transaction-identity-conflict",
+      `target ref advanced but durable transaction ${expectedTransactionId} was not found exactly`,
+      "Enter repair_required and inspect the durable transaction before any retry.",
+    );
+  }
+  const state = String(existingTransaction.state || existingTransaction.publication_state || "");
+  if (!RESUMABLE_TRANSACTION_STATES.has(state)) {
+    fail(
+      "transaction-state-conflict",
+      `target ref advanced while durable transaction ${expectedTransactionId} is in non-resumable state ${state || "<empty>"}`,
+      "Preserve the transaction evidence and enter repair_required; do not republish or rebuild automatically.",
+    );
+  }
+  if (ancestry?.mergeIsAncestor !== true || !["ahead", "identical"].includes(String(ancestry?.status || ""))) {
+    fail(
+      "target-ancestry-mismatch",
+      `observed target ${observed} is not an ancestry-bound continuation of transaction source ${expected}`,
+      "Preserve the candidate and transaction evidence; inspect the target ref for unrelated advancement before retrying.",
+    );
+  }
+  return { advanced: true, observedSha: observed };
 }
 
 export function validateReleaseCandidateRecoveryReceipt({
@@ -324,6 +404,7 @@ export function verifyReleaseCandidateRecovery({
   channel,
   targetRef,
   targetSha,
+  targetRefSha = targetSha,
   targetTree,
   expectedSourceTree = "",
   expectedCandidateRoot = "",
@@ -416,7 +497,14 @@ export function verifyReleaseCandidateRecovery({
       mergeSha: String(pullRequest.mergeSha || ""),
       tree: passport.source.treeHash,
     },
-    target: { channel: passport.target.channel, ref: normalizedRef(targetRef), sha, tree, version },
+    target: {
+      channel: passport.target.channel,
+      ref: normalizedRef(targetRef),
+      sha,
+      observedRefSha: exactSha(targetRefSha, "targetRefSha"),
+      tree,
+      version,
+    },
     recovered: {
       candidateRoot,
       buildSummaryRoot: `sha256:${passport.diagnostics.buildSummaryHash}`,

@@ -49,6 +49,7 @@
         "channel": { "enum": ["alpha", "release", "major"] },
         "ref": { "type": "string" },
         "sha": { "$ref": "#/$defs/gitSha" },
+        "observedRefSha": { "$ref": "#/$defs/gitSha" },
         "tree": { "$ref": "#/$defs/gitSha" },
         "version": { "type": "string", "minLength": 1 }
       }
