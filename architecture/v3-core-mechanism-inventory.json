@@ -28,6 +28,90 @@
       "docs/cli-reference.md",
       "docs/node-api-reference.md"
     ],
+    "authoritySourceRules": [
+      {
+        "mechanismId": "dev-delivery-warrant",
+        "root": "packages/core",
+        "pattern": "^dev-delivery-(?:warrant(?:-[a-z-]+)?|proof)\\.js$"
+      },
+      {
+        "mechanismId": "release-candidate-passport",
+        "root": "packages/core",
+        "pattern": "^release-candidate\\.js$"
+      },
+      {
+        "mechanismId": "release-candidate-recovery",
+        "root": "packages/core",
+        "pattern": "^release-candidate-recovery\\.js$"
+      },
+      {
+        "mechanismId": "stable-candidate-ledger",
+        "root": "packages/core",
+        "pattern": "^stable-candidate-ledger\\.js$"
+      },
+      {
+        "mechanismId": "publish-transaction",
+        "root": "packages/core",
+        "pattern": "^publish-transaction\\.js$"
+      },
+      {
+        "mechanismId": "publish-transaction",
+        "root": "actions/promote-buildchain-ref/internal",
+        "pattern": "^(?:durable-transaction-[a-z-]+|existing-version-state)\\.js$"
+      },
+      {
+        "mechanismId": "publish-transaction",
+        "root": "actions/promote-buildchain-ref",
+        "pattern": "^reuse-complete-release\\.js$"
+      },
+      {
+        "mechanismId": "release-activation-transaction",
+        "root": "packages/core",
+        "pattern": "^release-activation-transaction\\.js$"
+      },
+      {
+        "mechanismId": "publication-authority",
+        "root": "packages/core",
+        "pattern": "^(?:(?:buildchain-)?publication-authority|publication-control-plane-audit)\\.js$"
+      },
+      {
+        "mechanismId": "publication-authority",
+        "root": "scripts",
+        "pattern": "^publication-candidate-sealer\\.mjs$"
+      },
+      {
+        "mechanismId": "github-governance-authority",
+        "root": "packages/core",
+        "pattern": "^github-governance-authority\\.js$"
+      },
+      {
+        "mechanismId": "release-passport-and-artifact-proof",
+        "root": "packages/core",
+        "pattern": "^(?:release-passport(?:-contract)?|artifact-passport|github-artifact-attestation|publication-artifact|publication-sealed-bundle)\\.js$"
+      },
+      {
+        "mechanismId": "release-propagation-work-control",
+        "root": "packages/core",
+        "pattern": "^release-propagation(?:-[a-z-]+)?\\.js$"
+      }
+    ],
+    "gitRefStores": [
+      {
+        "mechanismId": "dev-delivery-warrant",
+        "sourcePath": "scripts/dev-delivery-warrant.mjs",
+        "marker": "buildchain/dev-delivery-warrant/"
+      },
+      {
+        "mechanismId": "stable-candidate-ledger",
+        "sourcePath": "scripts/stable-candidate-patrol.mjs",
+        "marker": "ledgerRef"
+      },
+      {
+        "mechanismId": "publish-transaction",
+        "sourcePath": "packages/core/publish-transaction.js",
+        "marker": "buildchain/release-state/"
+      }
+    ],
     "orphanPolicy": "Every state-bearing mechanism must own source, tests, public surfaces, durable-store disposition, recovery, and v4 migration disposition; missing or ambiguous ownership fails validation."
   },
   "mechanisms": [
@@ -101,8 +185,13 @@
         ".github/workflows/dev-pr-auto-merge.yml"
       ],
       "sourcePaths": [
+        "packages/core/dev-delivery-proof.js",
+        "packages/core/dev-delivery-warrant-cancellation.js",
+        "packages/core/dev-delivery-warrant-settlement.js",
         "packages/core/dev-delivery-warrant.js",
+        "scripts/dev-delivery-proof.mjs",
         "scripts/dev-delivery-warrant.mjs",
+        "scripts/dev-pr-auto-merge.mjs",
         "scripts/dev-pr-delivery-warrant.mjs"
       ],
       "testPaths": [
@@ -356,6 +445,7 @@
         "durable state ref"
       ],
       "publicSurfaces": [
+        "action:promote-buildchain-ref",
         "cli:release-transaction",
         "workflow:release-candidate-promote",
         "workflow:paper-release-sealed"
@@ -367,6 +457,8 @@
       "sourcePaths": [
         "packages/core/publish-transaction.js",
         "scripts/release-transaction.mjs",
+        "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
+        "actions/promote-buildchain-ref/internal/durable-transaction-store.js",
         "actions/promote-buildchain-ref/internal/existing-version-state.js",
         "actions/promote-buildchain-ref/reuse-complete-release.js"
       ],
@@ -480,6 +572,7 @@
       "sourcePaths": [
         "packages/core/publication-authority.js",
         "packages/core/buildchain-publication-authority.js",
+        "packages/core/publication-control-plane-audit.js",
         "scripts/audit-publication-control-plane.mjs",
         "scripts/publication-candidate-sealer.mjs"
       ],
@@ -606,6 +699,7 @@
         "local package/sidecar"
       ],
       "publicSurfaces": [
+        "action:github-artifact-attestation",
         "export:./release-passport",
         "export:./artifact-passport",
         "cli:verify-release-passport",
@@ -619,9 +713,12 @@
         "site and package publication consumers"
       ],
       "sourcePaths": [
-        "packages/core/release-passport.js",
         "packages/core/artifact-passport.js",
-        "packages/core/release-passport-contract.js"
+        "packages/core/github-artifact-attestation.js",
+        "packages/core/publication-artifact.js",
+        "packages/core/publication-sealed-bundle.js",
+        "packages/core/release-passport-contract.js",
+        "packages/core/release-passport.js"
       ],
       "testPaths": [
         "tests/release-passport.test.mjs",
@@ -687,6 +784,16 @@
       ],
       "compatibilityCallers": ["Paper/KFD/Buildchain/Core Site agent entry"],
       "sourcePaths": [
+        "packages/core/release-propagation-agent-entry.js",
+        "packages/core/release-propagation-capture.js",
+        "packages/core/release-propagation-common.js",
+        "packages/core/release-propagation-execution-profile.js",
+        "packages/core/release-propagation-pickup.js",
+        "packages/core/release-propagation-push.js",
+        "packages/core/release-propagation-release.js",
+        "packages/core/release-propagation-stage-evidence.js",
+        "packages/core/release-propagation-work-capture.js",
+        "packages/core/release-propagation-work-control.js",
         "packages/core/release-propagation-work.js",
         "packages/core/release-propagation-work-transitions.js",
         "packages/core/release-propagation-work-constants.js",

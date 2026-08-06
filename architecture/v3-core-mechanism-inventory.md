@@ -57,3 +57,11 @@ and Node exports, tests, generated references, and Git-ref-backed stores. A
 missing coordinate, absent public surface, empty evidence dimension, or
 ambiguous source owner fails the check instead of becoming an implicit v4
 assumption.
+
+The executable scan walks 13 declared discovery rules against the repository,
+not only against the paths already listed in the inventory. It currently owns
+50 exact source coordinates, independently rediscovers 38 state-bearing
+authority coordinates, validates 39 public surfaces across action, CLI, Node
+export, and workflow registries, and checks three concrete Git-ref store
+markers. A newly matching split state-machine or authority file therefore
+fails as an orphan until the inventory gives it one mechanism owner.

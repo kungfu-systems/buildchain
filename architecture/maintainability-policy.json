@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 276,
-    "maxHandMaintainedSourceLines": 105124,
+    "maxHandMaintainedSourceLines": 105300,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22241,
     "latestTransition": "The v4 planning boundary gains one read-only v3 core-mechanism inventory validator after the candidate-recovery and publication-audit integration, without changing a runtime, workflow, state machine, artifact format, or provider effect.",
