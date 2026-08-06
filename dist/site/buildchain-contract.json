@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "3.0.5-alpha.6",
+    "version": "3.0.6-alpha.5",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v3",
@@ -249,7 +249,7 @@
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:2bc947b42da3c5b06cf75c498658c76d58b0205e7ad408011c3d1ecb4ecfa415"
+      "auditDigest": "sha256:72f7e99799d2c66aa6e766d346df968c73db983f1ae8974694a714055db0e22c"
     },
     {
       "contractVersion": 1,
@@ -790,7 +790,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:bdf4e59ed5e196d65908db3c49f03b48531267643a0472e51e3be587dd5eeb9e"
+      "auditDigest": "sha256:e0f89bde8d396a58cb94c6f0d278c9182af8067a01bbcf4c1fd453ec39325a57"
     },
     {
       "contractVersion": 1,
@@ -812,7 +812,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:112220cb1cf159296aff92b81289359e3360a41e86c797ae11fd416a1ea5147d"
+      "auditDigest": "sha256:a998faa0ef3da00e99e88988826dea520fa9be9402ae047ef17b1451ec476bf2"
     },
     {
       "contractVersion": 1,
@@ -3500,7 +3500,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:2bc947b42da3c5b06cf75c498658c76d58b0205e7ad408011c3d1ecb4ecfa415"
+      "auditDigest": "sha256:72f7e99799d2c66aa6e766d346df968c73db983f1ae8974694a714055db0e22c"
     },
     {
       "contractVersion": 1,
@@ -3714,5 +3714,5 @@
     }
   ],
   "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe",
-  "contractDigest": "sha256:bca49d1c8613b74aec9394fef97c582b543bc37275e27a99b21a1c886080935a"
+  "contractDigest": "sha256:1d2d5b05d36c97b6c0f5f8324678f8978959415e014cb682ea5b3e49ae444a8b"
 }

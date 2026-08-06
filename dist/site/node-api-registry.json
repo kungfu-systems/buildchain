@@ -14800,7 +14800,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 370
+        "line": 441
       },
       "example": "import { recoveryFailure } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14858,14 +14858,14 @@
       ]
     },
     {
-      "id": "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
-      "name": "verifyReleaseCandidateRecovery",
+      "id": "packages/core/release-candidate-recovery.js#validateReleaseCandidateRecoveryReceipt",
+      "name": "validateReleaseCandidateRecoveryReceipt",
       "kind": "function",
-      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], productPayloadManifests = [], artifacts = [], currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
+      "signature": "function validateReleaseCandidateRecoveryReceipt({ receipt, passport, repository = \"\", targetChannel = \"\", targetRef = \"\", targetSha = \"\", targetTree = \"\", version = \"\", } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], productPayloadManifests = [], artifacts = [], currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
+          "signature": "{ receipt, passport, repository = \"\", targetChannel = \"\", targetRef = \"\", targetSha = \"\", targetTree = \"\", version = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -14877,7 +14877,36 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 250
+        "line": 96
+      },
+      "example": "import { validateReleaseCandidateRecoveryReceipt } from \"@kungfu-tech/buildchain/release-candidate-recovery\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
+      "name": "verifyReleaseCandidateRecovery",
+      "kind": "function",
+      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-candidate-recovery.js",
+        "line": 318
       },
       "example": "import { verifyReleaseCandidateRecovery } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20104,18 +20133,19 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
       "export": "./release-candidate-recovery",
       "target": "./packages/core/release-candidate-recovery.js",
-      "digest": "sha256:de7d16b8bcfd6883e098a232f2dd774f70258cdcefd5c1157be4ce83ccda9980",
+      "digest": "sha256:d495ef85f9e56a5c0e7ab9234b3e0a6471179386693f9e825b2cf4f384087f45",
       "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 4,
+      "symbolCount": 5,
       "symbolIds": [
         "packages/core/release-candidate-recovery.js#recoveryFailure",
         "packages/core/release-candidate-recovery.js#RELEASE_CANDIDATE_RECOVERY_CONTRACT",
         "packages/core/release-candidate-recovery.js#ReleaseCandidateRecoveryError",
+        "packages/core/release-candidate-recovery.js#validateReleaseCandidateRecoveryReceipt",
         "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery"
       ],
       "owner": "buildchain-core",
@@ -20395,7 +20425,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:d61f17343ed2cf062c75b36d98ca5a39870d667aec7f16401c4a63e536146116"
+      "digest": "sha256:f8ae86b9182811d9f980b3ae1f1a42d2c84cd6c133003c996946848f938099a8"
     },
     {
       "id": "build-facts",

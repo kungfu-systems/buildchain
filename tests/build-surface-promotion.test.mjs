@@ -451,7 +451,13 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.match(
     workflow,
-    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.outputs\['release-candidate-artifact'\] != '' \}\}/,
+    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.result == 'success' && github\.event_name == 'pull_request' && \(startsWith\(github\.base_ref, 'alpha\/'\) \|\| startsWith\(github\.base_ref, 'release\/'\)\) \}\}/,
+  );
+  assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
+  assert.match(workflow, /merge-multiple: true/);
+  assert.doesNotMatch(
+    workflow,
+    /needs\.libnode-shaped\.outputs\['release-candidate-artifact'\]/,
   );
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
@@ -642,7 +648,11 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
       bootstrap.indexOf("name: Set default branch"),
   );
   assert.doesNotMatch(workflow, /publish-required-artifacts-json: "\[\]"/);
-  assert.match(workflow, /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && 'buildchain-package-\*' \|\| '' \}\}/);
+  assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/);
+  assert.doesNotMatch(
+    workflow,
+    /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != ''/,
+  );
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,

@@ -195,6 +195,15 @@ the skipped stages, current tooling SHA, transaction identity/state, and an
 exact receipt root. The receipt is uploaded as an Actions artifact and staged
 with immutable GitHub Release Passport assets.
 
+The original candidate Passport is never rewritten when a reusable fixture or
+consumer build records a product version different from the sealed publication
+package. In that case the promote action validates the Passport without
+discarding its original target, then requires the immutable recovery receipt to
+bind the original candidate root and source/tree to the exact version read from
+the sealed payload. Without that receipt, the existing direct Passport version
+check remains mandatory; receipt, candidate-root, target, or version drift fails
+before publication side effects.
+
 Missing or expired artifacts, archive or payload digest drift, tree/root,
 repository/workflow/channel/target mismatch, untrusted run/PR provenance,
 incomplete controller evidence, and transaction conflict fail closed with an

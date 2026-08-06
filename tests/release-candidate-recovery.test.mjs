@@ -5,6 +5,7 @@ import { createReleaseCandidatePassport, sha256Json } from "../packages/core/rel
 import { releaseTransactionId } from "../packages/core/publish-transaction.js";
 import {
   ReleaseCandidateRecoveryError,
+  validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
 
@@ -16,6 +17,16 @@ const PAYLOAD_DIGEST = `sha256:${"5".repeat(64)}`;
 const ARCHIVE_DIGEST = `sha256:${"6".repeat(64)}`;
 
 function fixture(overrides = {}) {
+  const platformFiles = [
+    { path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST },
+    {
+      path: ".buildchain/artifacts/linux-x64/diagnostics.json",
+      size: 11,
+      sha256: `sha256:${"7".repeat(64)}`,
+    },
+  ];
+  const payloadFiles = platformFiles.map((file) => ({ ...file }));
+  payloadFiles[1] = { ...payloadFiles[1], size: 13, sha256: `sha256:${"8".repeat(64)}` };
   const buildSummary = {
     contract: "kungfu-buildchain-build-summary",
     git: { repository: "kungfu-systems/buildchain", sha: SOURCE_SHA, treeSha: TREE, runId: "100", runAttempt: "1" },
@@ -24,7 +35,11 @@ function fixture(overrides = {}) {
     platforms: [{
       platform: { id: "linux-x64" },
       artifactName: "buildchain-package",
-      summary: { fileCount: 1, totalBytes: 7, files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }] },
+      summary: {
+        fileCount: platformFiles.length,
+        totalBytes: platformFiles.reduce((total, file) => total + file.size, 0),
+        files: platformFiles,
+      },
     }],
   };
   const passport = createReleaseCandidatePassport({
@@ -81,7 +96,11 @@ function fixture(overrides = {}) {
     controllerReceipts: [],
     platformManifests: [{
       artifactName: "buildchain-package",
-      files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }],
+      files: platformFiles,
+    }],
+    platformManifestEvidence: [{
+      artifactName: "buildchain-package",
+      files: [{ path: "diagnostics.json", size: payloadFiles[1].size, sha256: payloadFiles[1].sha256 }],
     }],
     productPayloadManifests: [],
     artifacts: [{
@@ -90,7 +109,7 @@ function fixture(overrides = {}) {
       downloadedSize: 11,
       digest: ARCHIVE_DIGEST,
       downloadedDigest: ARCHIVE_DIGEST,
-      files: [{ path: "buildchain.tgz", size: 7, sha256: PAYLOAD_DIGEST }],
+      files: payloadFiles,
     }],
     currentToolingSha: RUNTIME_SHA,
     recoveryRunId: "200",
@@ -131,16 +150,73 @@ test("recovery accepts the same tree at a different promotion commit and records
   assert.equal(receipt.action, "reused");
   assert.equal(receipt.originalCandidate.sourceSha, SOURCE_SHA);
   assert.equal(receipt.target.sha, TARGET_SHA);
+  assert.equal(receipt.target.version, "3.1.0-alpha.1");
   assert.equal(receipt.originalCandidate.tree, receipt.target.tree);
   assert.deepEqual(receipt.skippedBuildStages, ["install", "build", "verify", "platform-matrix"]);
   assert.equal(receipt.payloadBytes, "unchanged");
   assert.match(receipt.root, /^sha256:[0-9a-f]{64}$/);
 });
 
+test("recovery binds transaction identity to the sealed product publication version", () => {
+  const input = fixture({ publicationVersion: "3.1.0-alpha.2" });
+  input.existingTransaction = {
+    ...durableTransaction(input),
+    id: releaseTransactionId({
+      repository: input.candidateRepository,
+      version: input.publicationVersion,
+      sourceSha: input.targetSha,
+      targetRef: input.targetRef,
+    }),
+    version: input.publicationVersion,
+  };
+  const { receipt } = verifyReleaseCandidateRecovery(input);
+  assert.equal(receipt.target.version, input.publicationVersion);
+  assert.equal(receipt.transaction.identity, input.existingTransaction.id);
+});
+
 test("recovery rejects the same SHA when an artifact digest drifts", () => {
   const input = fixture({ targetSha: SOURCE_SHA });
   input.artifacts[0].downloadedDigest = `sha256:${"7".repeat(64)}`;
   expectCode("artifact-digest-mismatch", input);
+  const payloadDrift = fixture();
+  payloadDrift.artifacts[0].files[0].size += 1;
+  expectCode("artifact-manifest-mismatch", payloadDrift);
+});
+
+test("recovery accepts only byte-identical Buildchain manifest and summary sidecars", () => {
+  const input = fixture();
+  const platformId = input.passport.platformMatrix[0].platformId;
+  const manifestSidecar = {
+    path: `.buildchain/artifacts/${platformId}/manifest.json`,
+    size: 17,
+    sha256: `sha256:${"7".repeat(64)}`,
+  };
+  const summarySidecar = {
+    path: `.buildchain/artifacts/${platformId}/summary.json`,
+    size: 19,
+    sha256: `sha256:${"8".repeat(64)}`,
+  };
+  input.artifacts[0].files.push(manifestSidecar, summarySidecar);
+  input.platformManifestEvidence[0].files.push(
+    { path: "manifest.json", size: manifestSidecar.size, sha256: manifestSidecar.sha256 },
+    { path: "summary.json", size: summarySidecar.size, sha256: summarySidecar.sha256 },
+  );
+  assert.equal(verifyReleaseCandidateRecovery(input).receipt.action, "reused");
+
+  input.platformManifestEvidence[0].files[2].sha256 = `sha256:${"9".repeat(64)}`;
+  expectCode("artifact-manifest-mismatch", input);
+
+  input.platformManifestEvidence[0].files[2].sha256 = summarySidecar.sha256;
+  input.artifacts[0].files.push({ path: "undeclared.bin", size: 1, sha256: PAYLOAD_DIGEST });
+  expectCode("artifact-manifest-mismatch", input);
+});
+
+test("recovery accepts post-manifest Buildchain diagnostics only when independently uploaded bytes match", () => {
+  const input = fixture();
+  assert.equal(verifyReleaseCandidateRecovery(input).receipt.action, "reused");
+
+  input.platformManifestEvidence[0].files[0].sha256 = `sha256:${"9".repeat(64)}`;
+  expectCode("artifact-manifest-mismatch", input);
 });
 
 test("recovery rejects a different target tree", () => {
@@ -239,6 +315,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   const fs = await import("node:fs");
   const advanced = fs.readFileSync(new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url), "utf8");
   const publicWorkflow = fs.readFileSync(new URL("../.github/workflows/release-candidate-promote.yml", import.meta.url), "utf8");
+  const refPromotion = fs.readFileSync(new URL("../.github/workflows/buildchain-ref-promotion.yml", import.meta.url), "utf8");
   const dogfoodFailure = fs.readFileSync(new URL("../.github/workflows/buildchain-candidate-recovery-dogfood-failure.yml", import.meta.url), "utf8");
   for (const input of [
     "resume-candidate-repository",
@@ -255,11 +332,22 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   }
   assert.match(advanced, /node \.buildchain\/runtime\/scripts\/resume-from-candidate-run\.mjs/);
   assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
+  assert.match(
+    advanced,
+    /name: Bridge Buildchain self-runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' && github\.repository == inputs\.buildchain-repository \}\}/,
+  );
+  assert.match(advanced, /ln -s \.buildchain\/runtime\/node_modules node_modules/);
   assert.match(advanced, /name: Install exact publication planning dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Resolve exact publication transaction version\n\s+id: plan\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Reuse sealed candidate publication version/);
   assert.match(advanced, /publish-sealed-bundle-root: \$\{\{ steps\.rc\.outputs\.publish-sealed-bundle-root \}\}/);
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
+  assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
+  assert.match(
+    refPromotion,
+    /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/,
+  );
+  assert.doesNotMatch(refPromotion, /^\s+github-release-payload-patterns: "\*\.tgz"$/m);
   assert.match(dogfoodFailure, /workflow_dispatch:/);
   assert.match(dogfoodFailure, /__candidate-recovery-dogfood-missing\.yml@v3-alpha/);
   assert.doesNotMatch(advanced, /gh run rerun/);
@@ -273,4 +361,40 @@ test("recovery receipt schema exposes the immutable reused contract", async () =
   assert.equal(schema.properties.action.const, "reused");
   assert.deepEqual(schema.properties.skippedBuildStages.const, ["install", "build", "verify", "platform-matrix"]);
   assert.ok(schema.required.includes("root"));
+});
+
+test("recovery receipt binds a sealed payload publication version without rewriting the candidate passport", () => {
+  const input = fixture({ publicationVersion: "3.1.0-alpha.2" });
+  const originalCandidateHash = input.passport.candidateHash;
+  const { receipt } = verifyReleaseCandidateRecovery(input);
+  const validation = validateReleaseCandidateRecoveryReceipt({
+    receipt,
+    passport: input.passport,
+    repository: input.targetRepository,
+    targetChannel: input.channel,
+    targetRef: input.targetRef,
+    targetSha: input.targetSha,
+    targetTree: input.targetTree,
+    version: "3.1.0-alpha.2",
+  });
+  assert.equal(validation.ok, true);
+  assert.equal(validation.publicationVersion, "3.1.0-alpha.2");
+  assert.equal(input.passport.target.version, "3.1.0-alpha.1");
+  assert.equal(input.passport.candidateHash, originalCandidateHash);
+
+  const driftedVersion = structuredClone(receipt);
+  driftedVersion.target.version = "3.1.0-alpha.3";
+  assert.match(
+    validateReleaseCandidateRecoveryReceipt({
+      receipt: driftedVersion,
+      passport: input.passport,
+      repository: input.targetRepository,
+      targetChannel: input.channel,
+      targetRef: input.targetRef,
+      targetSha: input.targetSha,
+      targetTree: input.targetTree,
+      version: "3.1.0-alpha.2",
+    }).errors.join("; "),
+    /receipt root mismatch.*publication version mismatch/,
+  );
 });
