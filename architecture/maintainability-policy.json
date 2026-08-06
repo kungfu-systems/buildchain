@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 275,
-    "maxHandMaintainedSourceLines": 104945,
+    "maxHandMaintainedSourceLines": 104953,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22241,
-    "latestTransition": "Candidate recovery can bind an exact consumer Gate controller independently from the immutable product subject.",
-    "rationale": "The additive controller SHA keeps the recovered product tree and payload immutable while allowing a separately reviewed read-only Gate implementation to evolve. The Gate aggregate binds the exact controller repository, commit, and command digest; no product install, build, repackaging, or alternate publication path is added."
+    "latestTransition": "Candidate recovery can bind an exact consumer Gate controller independently from the immutable product subject after the publication audit gained a bounded large-commit response ceiling.",
+    "rationale": "The additive controller SHA keeps the recovered product tree and payload immutable while allowing a separately reviewed read-only Gate implementation to evolve. The Gate aggregate binds the exact controller repository, commit, and command digest; no product install, build, repackaging, or alternate publication path is added. The integrated 16 MiB GitHub commit response ceiling remains fail-closed and changes no publication authority."
   },
   "sourceBudgets": {
     "newFileLines": 600,
