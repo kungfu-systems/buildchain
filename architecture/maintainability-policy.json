@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 273,
-    "maxHandMaintainedSourceLines": 104436,
+    "maxHandMaintainedSourceFiles": 274,
+    "maxHandMaintainedSourceLines": 104511,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
-    "latestTransition": "Recovered Buildchain self-promotion resolves source-side version verification from the already installed immutable runtime dependencies without installing product dependencies.",
-    "rationale": "The exact self-repository resume path creates one transient node_modules symlink to the already checked-out and production-installed Buildchain runtime before version-state verification. Consumers remain unchanged, product installation remains statically excluded, and the link is ignored local workspace state that cannot enter a generated Git tree. The bounded workflow and regression inventory close the live missing smol-toml failure without adding a workflow, dependency set, product build, or publication path; any wider ceiling requires another reviewed policy change."
+    "latestTransition": "Recovered Buildchain self-promotion reuses installed runtime dependencies, then accepts unchanged recovered version state without running consumer lifecycle verification.",
+    "rationale": "The integrated recovery tail creates only the transient ignored runtime dependency bridge already reviewed on dev and one bounded existing-version-state resolver. A validated immutable recovery receipt may reuse exact existing version state without product lifecycle commands, while any non-empty recovery version change fails closed. The combined exact ceiling adds no product dependency installation, build path, payload rematerialization, workflow, or publication state."
   },
   "sourceBudgets": {
     "newFileLines": 600,
