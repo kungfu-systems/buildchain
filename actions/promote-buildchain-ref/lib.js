@@ -605,6 +605,7 @@ function validatePromotionReleaseCandidate({
     promotionChannelTreeSha: sourceTreeSha || "",
     treeEquivalent: Boolean(sourceTreeSha && sourceTreeHash && sourceTreeSha === sourceTreeHash,
     ),
+    recoveredCandidate: recoveryReceiptValidation?.ok === true,
     publicationVersionBinding: recoveryReceiptValidation?.ok ? "recovery-receipt" : "candidate-passport",
   };
 }
@@ -2833,14 +2834,17 @@ async function resumableAlphaTransactionState({
           transactionReleaseSha: transaction?.release_material_sha,
         })
       ));
+    const exactCompletedTransaction =
+      transaction?.state === "complete" && exactTransactionSource;
     if (
       transaction &&
       (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state,
-      ) &&
-      (exactTransactionSource || transactionInSourceHistory)
+      !["abandoned", "failed_permanently"].includes(transaction.state) &&
+      (exactCompletedTransaction ||
+        (transaction.state !== "complete" &&
+          (exactTransactionSource || transactionInSourceHistory)))
     ) {
       return {
         ...candidate,

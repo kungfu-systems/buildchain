@@ -472,6 +472,11 @@ on:
         default: ""
         type: string
         required: false
+      publication-gate-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer Gate command; empty uses the publication source SHA"
+        default: ""
+        type: string
+        required: false
       publication-expected-json:
         description: "Independent exact source/runtime/product/channel/artifact bindings"
         default: ""
@@ -854,6 +859,7 @@ jobs:
       pull-requests: read
     outputs:
       evidence-run-id: ${{ steps.release-candidate.outputs.release-candidate-run-id }}
+      source-sha: ${{ steps.release-candidate.outputs.release-candidate-source-sha }}
       version: ${{ steps.release-candidate.outputs.release-candidate-version }}
       passport-artifact: ${{ steps.release-candidate.outputs.release-candidate-artifact }}
       summary-artifact: ${{ steps.release-candidate.outputs.release-candidate-build-summary-artifact }}
@@ -1053,6 +1059,9 @@ jobs:
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       consumer-gate-command: ${{ inputs.publication-gate-command }}
+      consumer-gate-controller-sha: ${{ inputs.publication-gate-controller-sha }}
+      consumer-gate-evidence-source-sha: ${{ inputs.resume-candidate-run-id != '' && needs.release-candidate-preflight.outputs.source-sha || '' }}
+      consumer-gate-evidence-source-tree: ${{ inputs.resume-candidate-run-id != '' && inputs.resume-expected-source-tree || '' }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       consumer-qualification-required: ${{ needs.qualification-plan.outputs.required == 'true' }}
@@ -1397,6 +1406,13 @@ jobs:
 
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Bridge Buildchain self-runtime dependencies
+        if: ${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository }}
+        shell: bash
+        run: |
+          test ! -e node_modules
+          ln -s .buildchain/runtime/node_modules node_modules
 
       - name: Check Buildchain contract lock
         id: contract-lock

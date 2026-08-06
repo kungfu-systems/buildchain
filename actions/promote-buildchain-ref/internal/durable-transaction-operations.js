@@ -124,6 +124,7 @@ function createDurableTransactionOperations(context) {
     releaseMaterialShaOverride = releaseMaterialSha,
     publishToolingShaOverride = publishToolingSha,
     publishDistTagOverride = publishDistTag,
+    durablePublicationMaterial,
     allowVersionStateFinalization = false,
   }) => {
     const transactionVersion = version;
@@ -167,8 +168,12 @@ function createDurableTransactionOperations(context) {
       transactionStatePath,
       expectedTransactionId,
       publishSealedBundleRoot,
-      publishSealedBundleManifest,
-      publishRequiredArtifactsJson,
+      publishSealedBundleManifest: durablePublicationMaterial
+        ? ""
+        : publishSealedBundleManifest,
+      publishRequiredArtifactsJson: durablePublicationMaterial
+        ? JSON.stringify(durablePublicationMaterial.artifacts || [])
+        : publishRequiredArtifactsJson,
       releaseMaterialSha: releaseMaterialShaOverride,
       publishToolingSha: publishToolingShaOverride,
       publishMode,

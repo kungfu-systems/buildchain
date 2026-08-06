@@ -276,14 +276,23 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
-  `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}-alpha`,
+  `/${promotionShellRouting.alpha.workflowPath}@${promotionShellRouting.alpha.callRef}`,
   `/${promotionShellRouting.stable.workflowPath}@${promotionShellRouting.stable.callRef}`,
   `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
   "promotion-contract-lock-digest:",
   "authorize-promotion-runtime-override.cjs",
+  "BUILDCHAIN_ROUTER_REPOSITORY: ${{ inputs.buildchain-repository }}",
+  "BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}",
+  "git ls-remote",
+  "Recovery router ref does not match resume-buildchain-runtime-sha",
 ]) {
   if (!channelPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`channel promotion workflow missing routing contract: ${requiredSnippet}`);
+  }
+}
+for (const forbiddenSnippet of ["job.workflow_repository", "job.workflow_sha"]) {
+  if (channelPromotionWorkflow.includes(forbiddenSnippet)) {
+    throw new Error(`channel promotion workflow uses unsupported GitHub context: ${forbiddenSnippet}`);
   }
 }
 const promotionOverrideAuthorization = fs.readFileSync(
@@ -1051,6 +1060,8 @@ for (const requiredSnippet of [
   "publish-sealed-bundle-root: ${{ steps.rc.outputs.publish-sealed-bundle-root }}",
   "BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}",
   "if: ${{ inputs.resume-candidate-run-id == '' }}",
+  "Bridge Buildchain self-runtime dependencies",
+  "ln -s .buildchain/runtime/node_modules node_modules",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
     throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);

@@ -24,9 +24,9 @@ The JSON inventory is authoritative and validated by
 `scripts/check-core-mechanism-inventory.mjs`.
 
 The exact `dev/v3/v3.0` cut is commit
-`82350d064d68c7faba9165166c978e19e70e0983`, tree
-`0031ee6e19877a0abbb001f0663184f891ce1fa4`. It contains 272
-hand-maintained source files, 104,302 source lines, 64 workflows, 220 internal
+`9cc135335cd4966b47fb95081dad4e281789bd0d`, tree
+`2fbcc21ebf525eb665fcab4f1d839f0cca103f15`. It contains 275
+hand-maintained source files, 104,953 source lines, 64 workflows, 225 internal
 dependency edges, and zero dependency cycles. These numbers constrain migration
 drift; they do not prove semantic correctness.
 

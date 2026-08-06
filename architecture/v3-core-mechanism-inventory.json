@@ -3,15 +3,15 @@
   "contract": "kungfu-buildchain-v3-core-mechanism-inventory",
   "baseline": {
     "branch": "dev/v3/v3.0",
-    "commit": "82350d064d68c7faba9165166c978e19e70e0983",
-    "tree": "0031ee6e19877a0abbb001f0663184f891ce1fa4"
+    "commit": "9cc135335cd4966b47fb95081dad4e281789bd0d",
+    "tree": "2fbcc21ebf525eb665fcab4f1d839f0cca103f15"
   },
   "maintainability": {
-    "handMaintainedSourceFiles": 272,
-    "handMaintainedSourceLines": 104302,
+    "handMaintainedSourceFiles": 275,
+    "handMaintainedSourceLines": 104953,
     "workflowFiles": 64,
-    "workflowLines": 22135,
-    "dependencyEdges": 220,
+    "workflowLines": 22240,
+    "dependencyEdges": 225,
     "dependencyCycles": 0,
     "interpretation": "Structural metrics are an exact migration baseline, not correctness evidence."
   },
@@ -366,7 +366,9 @@
       ],
       "sourcePaths": [
         "packages/core/publish-transaction.js",
-        "scripts/release-transaction.mjs"
+        "scripts/release-transaction.mjs",
+        "actions/promote-buildchain-ref/internal/existing-version-state.js",
+        "actions/promote-buildchain-ref/reuse-complete-release.js"
       ],
       "testPaths": [
         "tests/publish-transaction.test.mjs",
@@ -478,7 +480,8 @@
       "sourcePaths": [
         "packages/core/publication-authority.js",
         "packages/core/buildchain-publication-authority.js",
-        "scripts/audit-publication-control-plane.mjs"
+        "scripts/audit-publication-control-plane.mjs",
+        "scripts/publication-candidate-sealer.mjs"
       ],
       "testPaths": [
         "tests/publication-authority.test.mjs",

@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 273,
-    "maxHandMaintainedSourceLines": 104473,
+    "maxHandMaintainedSourceFiles": 276,
+    "maxHandMaintainedSourceLines": 105124,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22141,
-    "latestTransition": "The v4 planning boundary gains one read-only v3 core-mechanism inventory validator without changing a runtime, workflow, state machine, artifact format, or provider effect.",
-    "rationale": "The exact 171-line and one-file increase validates ten source- and test-grounded v3 mechanism families, their public surfaces, durable stores, recovery semantics, provider readback, compatibility callers, and unresolved v4 disposition. The frozen v3 observation remains recorded separately in architecture/v3-core-mechanism-inventory.json. This tooling-only ceiling cannot grow implicitly; any runtime or broader inventory change requires another reviewed policy transition."
+    "maxWorkflowLines": 22241,
+    "latestTransition": "The v4 planning boundary gains one read-only v3 core-mechanism inventory validator after the candidate-recovery and publication-audit integration, without changing a runtime, workflow, state machine, artifact format, or provider effect.",
+    "rationale": "The exact 171-line and one-file increase over 9cc135335cd4966b47fb95081dad4e281789bd0d validates ten source- and test-grounded v3 mechanism families, including the integrated recovery-wrapper and publication-candidate-sealer coordinates, their public surfaces, durable stores, recovery semantics, provider readback, compatibility callers, and unresolved v4 disposition. The exact observed cut remains recorded in architecture/v3-core-mechanism-inventory.json. This tooling-only ceiling cannot grow implicitly; any runtime or broader inventory change requires another reviewed policy transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -41,13 +41,18 @@
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1457,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, and no-product-install condition; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1468,
+      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, bounded Buildchain self-runtime dependency bridge, and contained durable-finalization helper; this exact post-integration ceiling cannot grow implicitly."
+    },
+    "scripts/generate-channel-promotion-workflow.mjs": {
+      "maxFunctionLines": 288,
+      "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator; this combined train ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 756,
-      "maxFunctionLines": 282,
-      "rationale": "The shared candidate resolver exports its GitHub transport and safe unzip seams and verifies GitHub archive size and sha256 metadata before extraction for both discovery and recovery; this exact ceiling cannot grow implicitly."
+      "maxLines": 810,
+      "maxFunctionLines": 306,
+      "maxFunctionComplexity": 63,
+      "rationale": "The shared candidate resolver selects the original Passport runtime, seals exact payloads under the existing publication bundle contract, streams GitHub archives to disk, and verifies size and sha256 with bounded-memory reads; the exact ceiling cannot grow implicitly."
     },
     "scripts/auditable-demo.mjs": {
       "maxLines": 1330,
@@ -689,6 +694,9 @@
           "buildchain-ref",
           "buildchain-repository",
           "consumer-gate-command",
+          "consumer-gate-controller-sha",
+          "consumer-gate-evidence-source-sha",
+          "consumer-gate-evidence-source-tree",
           "consumer-predicate-digest",
           "consumer-predicate-id",
           "consumer-qualification-required",
@@ -725,7 +733,7 @@
           "gate-aggregate-json"
         ]
       },
-      "rationale": "The sealed read-only authority adds one optional consumer Gate command that runs from exact source only after exact candidate evidence download. The command receives no publication credential, OIDC permission, or provider write permission; Buildchain revalidates its complete aggregate and exact source binding before capability sealing."
+      "rationale": "The sealed read-only authority accepts an optional exact caller-repository controller commit for the consumer Gate. It independently checks out the immutable publication subject and controller, verifies both SHAs and the subject tree, and binds controller repository, SHA, and command digest into the qualifying aggregate without granting publication credentials or provider write permission."
     },
     "workflow:.release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -778,6 +786,7 @@
           "publication-expected-json",
           "publication-gate-aggregate-json",
           "publication-gate-command",
+          "publication-gate-controller-sha",
           "publication-package-name",
           "publication-product",
           "publication-publisher-workflow-path",
@@ -879,7 +888,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The advanced promotion workflow adds an exact candidate-run recovery entry, immutable reused receipt outputs, and optional durable transaction identity. A fresh event verifies the complete sealed candidate before publication and conditionally skips consumer installs; incomplete, expired, mismatched, or untrusted evidence fails closed without a hidden rebuild."
+      "rationale": "The advanced promotion workflow forwards one optional exact consumer Gate controller SHA into the credential-free authority. Candidate, target tree, controller, and command identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -924,6 +933,7 @@
           "publication-expected-json",
           "publication-gate-aggregate-json",
           "publication-gate-command",
+          "publication-gate-controller-sha",
           "publication-package-name",
           "publication-product",
           "publication-publisher-workflow-path",
@@ -1037,7 +1047,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The generated v3 promotion router forwards the additive exact candidate-run recovery identity and immutable receipt outputs to both alpha and stable shells without changing channel selection, contract-lock routing, or existing publication authority."
+      "rationale": "The generated v3 promotion router forwards the additive exact consumer Gate controller SHA together with the existing candidate recovery identity, without changing channel selection, contract-lock routing, payload handling, or publication authority."
     }
   },
   "approvedExtractedDebt": {
@@ -1062,9 +1072,9 @@
       "rationale": "The existing version-state commit transaction remains nested under its extracted operation factory and is independently regression-tested; this exact inherited ceiling cannot grow."
     },
     "actions/promote-buildchain-ref/internal/durable-transaction-operations.js#createDurableTransactionOperations": {
-      "maxLines": 371,
+      "maxLines": 376,
       "maxComplexity": 1,
-      "rationale": "Transplanted legacy durable transaction and Passport operations now live in an independently owned module; explicit dependency injection adds seams while this exact inherited ceiling cannot grow."
+      "rationale": "Transplanted legacy durable transaction and Passport operations now live in an independently owned module; one semantic durable-material seam lets already-proven contained finalization restore immutable publication facts without accepting a transient rebuilt candidate or inconsistent per-field overrides, and this exact inherited ceiling cannot grow."
     },
     "packages/core/paper-npm-bootstrap.js#executePaperNpmBootstrap": {
       "maxLines": 490,
