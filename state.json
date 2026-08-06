@@ -16,12 +16,12 @@
   "state_ref": "buildchain/release-state/3-0-6-alpha-8",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v3.0.6-alpha.8.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v3.0.6-alpha.8/evidence.json",
-  "state": "publishing",
-  "previous_state": "sealed",
+  "state": "publish_failed",
+  "previous_state": "publishing",
   "actor": "dongkeren",
   "run_id": "31097060055",
   "superseded_by": "",
-  "failure": "",
+  "failure": "Command failed: node scripts/npm-publish-transaction.mjs",
   "artifacts": [],
   "evidence": [],
   "sealed_bundle": {
@@ -87,5 +87,5 @@
   "milestones": {},
   "resume_command": "buildchain paper resume --version \"3.0.6-alpha.6\" --state-ref \"refs/heads/buildchain/release-state/3-0-6-alpha-6\"",
   "created_at": "2026-08-06T11:32:39.162Z",
-  "updated_at": "2026-08-06T11:32:43.280Z"
+  "updated_at": "2026-08-06T11:32:52.460Z"
 }
