@@ -648,7 +648,11 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
       bootstrap.indexOf("name: Set default branch"),
   );
   assert.doesNotMatch(workflow, /publish-required-artifacts-json: "\[\]"/);
-  assert.match(workflow, /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && 'buildchain-package-\*' \|\| '' \}\}/);
+  assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/);
+  assert.doesNotMatch(
+    workflow,
+    /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != ''/,
+  );
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,
