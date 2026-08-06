@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104517,
+    "maxHandMaintainedSourceLines": 104550,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22142,
-    "latestTransition": "Contained Alpha version-state finalization restores the already published durable artifacts and sealed bundle instead of admitting rebuilt bytes for the same version.",
-    "rationale": "The bounded finalization override is reachable only after the existing ancestry, transaction-state, exact-version, exact-tag, target-ref, and published-material gates prove that the current Alpha head contains the durable published transaction. It clears the transient candidate manifest and reuses the transaction's exact artifact set, so rebuilt version-state bytes cannot replace public release evidence. The exact ceiling adds no workflow, publication path, or product build."
+    "maxWorkflowLines": 22158,
+    "latestTransition": "Candidate recovery combines the bounded train router with contained Alpha version-state finalization and normalizes GitHub's collaborator-permission response.",
+    "rationale": "The train retains the exact candidate-run recovery inputs and outputs while incorporating the latest durable finalization path. The authorization change accepts GitHub's documented string permission before its nested boolean permission map and still requires write, maintain, or admin. The exact combined ceiling adds no workflow, publication path, product build, or payload mutation."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -41,8 +41,12 @@
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1459,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, and the bounded Buildchain self-runtime dependency bridge; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1468,
+      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, bounded Buildchain self-runtime dependency bridge, and contained durable-finalization helper; this exact post-integration ceiling cannot grow implicitly."
+    },
+    "scripts/generate-channel-promotion-workflow.mjs": {
+      "maxFunctionLines": 288,
+      "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator; this combined train ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
       "maxLines": 784,
