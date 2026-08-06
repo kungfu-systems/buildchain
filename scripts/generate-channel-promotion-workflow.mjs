@@ -130,8 +130,8 @@ function validateWorkflowRoute(name, route, expectedLogicalRef) {
   if (!/^\.github\/workflows\/[.a-z0-9-]+\.ya?ml$/.test(route.workflowPath || "")) {
     throw new Error(`promotion shell ${name} workflowPath must name a reusable workflow`);
   }
-  if (!/^(?:v[0-9]+(?:-alpha)?|[0-9a-f]{40})$/.test(route.callRef || "")) {
-    throw new Error(`promotion shell ${name} callRef must be an official channel ref or exact SHA`);
+  if (!/^(?:v[0-9]+(?:-alpha)?|train\/[A-Za-z0-9._+\/-]+|[0-9a-f]{40})$/.test(route.callRef || "")) {
+    throw new Error(`promotion shell ${name} callRef must be an official channel ref, trusted train, or exact SHA`);
   }
   if (typeof route.forwardInternalInputs !== "boolean") {
     throw new Error(`promotion shell ${name} forwardInternalInputs must be boolean`);

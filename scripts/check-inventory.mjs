@@ -276,7 +276,7 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
-  `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}-alpha`,
+  `/${promotionShellRouting.alpha.workflowPath}@${promotionShellRouting.alpha.callRef}`,
   `/${promotionShellRouting.stable.workflowPath}@${promotionShellRouting.stable.callRef}`,
   `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
   "promotion-contract-lock-digest:",

@@ -178,7 +178,7 @@ test("generated promotion router preserves every public input and output exactly
   assert.equal(new Set(actualOutputs).size, actualOutputs.length);
 });
 
-test("generated router delegates alpha and stable lanes to the current major refs", () => {
+test("generated router delegates alpha and stable lanes to their configured shell refs", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const fixture = advanced.replace(
     "name: Release Candidate Promote Advanced",
@@ -186,7 +186,10 @@ test("generated router delegates alpha and stable lanes to the current major ref
   );
   const generated = generateChannelPromotionWorkflow(fixture, { major: 3, shellRouting });
 
-  assert.match(generated, /\.release-candidate-promote\.yml@v3-alpha/);
+  assert.match(
+    generated,
+    /\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
+  );
   assert.match(generated, /\.release-candidate-promote\.yml@v3(?:\n|$)/);
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
@@ -239,6 +242,18 @@ test("stable route calls the hidden advanced workflow through the current major 
   assert.match(generated, /ref: \$\{\{ steps\.router\.outputs\.sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.shell-sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
+});
+
+test("candidate recovery train calls the matching advanced alpha shell", () => {
+  const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
+
+  assert.match(generated, /ALPHA_SHELL_REF: v3-alpha/);
+  assert.match(generated, /ALPHA_SHELL_CALL_REF: train\/v3\/v3\.0\/resume-candidate-run/);
+  assert.match(
+    generated,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
+  );
 });
 
 test("stable route forwards only inputs supported by the current workflow shell", () => {
