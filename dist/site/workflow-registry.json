@@ -396,6 +396,8 @@
         "buildchain-ref",
         "buildchain-repository",
         "consumer-gate-command",
+        "consumer-gate-evidence-source-sha",
+        "consumer-gate-evidence-source-tree",
         "consumer-predicate-digest",
         "consumer-predicate-id",
         "consumer-qualification-required",
@@ -423,7 +425,7 @@
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 34,
+      "inputCount": 36,
       "secrets": [
         "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
       ],

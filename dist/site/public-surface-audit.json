@@ -907,6 +907,8 @@
           "buildchain-ref",
           "buildchain-repository",
           "consumer-gate-command",
+          "consumer-gate-evidence-source-sha",
+          "consumer-gate-evidence-source-tree",
           "consumer-predicate-digest",
           "consumer-predicate-id",
           "consumer-qualification-required",
@@ -934,7 +936,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 34,
+        "inputCount": 36,
         "secrets": [
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
@@ -7603,8 +7605,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
-    "workflowRegistryDigest": "1ab8b8d32f2ceb8dffad69d1f877f6ad6b37355dbe62c6ef5c0e6b9f4f197acb",
-    "pageRegistryDigest": "5f2b22a1c9898d1045f16fcd33d4873ef96ebb46ce42333c74793c56c6cd3ef6"
+    "workflowRegistryDigest": "d8a7729f4ab1456d54b72d2a07846b5c4a06bfede57346d807ce4fbc437d3e34",
+    "pageRegistryDigest": "50489f303fc5343c6c13ed307f0f7d008fa8deee7f32dd8ff701d47775b210df"
   },
   "comparison": {
     "missingCliRegistry": [],

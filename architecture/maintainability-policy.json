@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 275,
-    "maxHandMaintainedSourceLines": 104819,
+    "maxHandMaintainedSourceLines": 104945,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22142,
-    "latestTransition": "Complete candidate recovery verifies and preserves the already-published Release Passport generation while reconciling only sealed payload bytes.",
-    "rationale": "One bounded public-release verifier separates complete-transaction readback from ordinary same-name evidence upload. The exact ceiling adds no product install, build, repackaging, workflow, or package publication path."
+    "maxWorkflowLines": 22177,
+    "latestTransition": "Candidate recovery preserves complete public evidence while rebinding the original evidence source to an equivalent-tree publication target.",
+    "rationale": "The bounded recovery path verifies and preserves an existing complete Release Passport, reconciles only sealed payload bytes, and rebinds publication only after exact source-tree equivalence. It adds no product install, build, repackaging, workflow, or package publication path."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -41,14 +41,18 @@
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1459,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, and the bounded Buildchain self-runtime dependency bridge; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1468,
+      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, bounded Buildchain self-runtime dependency bridge, and contained durable-finalization helper; this exact post-integration ceiling cannot grow implicitly."
+    },
+    "scripts/generate-channel-promotion-workflow.mjs": {
+      "maxFunctionLines": 288,
+      "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator; this combined train ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 787,
+      "maxLines": 810,
       "maxFunctionLines": 306,
       "maxFunctionComplexity": 63,
-      "rationale": "The shared candidate resolver seals the exact downloaded npm payload under the existing publication bundle contract and selects the original Passport runtime for both normal promotion and durable recovery; the exact ceiling retains GitHub archive verification and cannot grow implicitly."
+      "rationale": "The shared candidate resolver selects the original Passport runtime, seals exact payloads under the existing publication bundle contract, streams GitHub archives to disk, and verifies size and sha256 with bounded-memory reads; the exact ceiling cannot grow implicitly."
     },
     "scripts/auditable-demo.mjs": {
       "maxLines": 1330,
@@ -690,6 +694,8 @@
           "buildchain-ref",
           "buildchain-repository",
           "consumer-gate-command",
+          "consumer-gate-evidence-source-sha",
+          "consumer-gate-evidence-source-tree",
           "consumer-predicate-digest",
           "consumer-predicate-id",
           "consumer-qualification-required",
@@ -726,7 +732,7 @@
           "gate-aggregate-json"
         ]
       },
-      "rationale": "The sealed read-only authority adds one optional consumer Gate command that runs from exact source only after exact candidate evidence download. The command receives no publication credential, OIDC permission, or provider write permission; Buildchain revalidates its complete aggregate and exact source binding before capability sealing."
+      "rationale": "The sealed read-only authority accepts an optional original candidate source and shared tree for recovery. The consumer Gate receives no publication credential, OIDC permission, or provider write permission; Buildchain verifies the candidate source, exact equivalent target tree, complete aggregate, and explicit reuse binding before capability sealing."
     },
     "workflow:.release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

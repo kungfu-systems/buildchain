@@ -15,6 +15,7 @@ import {
 import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
 import {
   generatePublishRequiredArtifacts,
+  githubDownload,
   readNpmPackageArtifact,
   resolveReleaseCandidateArtifacts,
   releaseCandidateDownloadEnabled,
@@ -25,6 +26,7 @@ import {
   selectReleaseCandidateArtifacts,
   selectReleaseCandidateRun,
   selectReleaseCandidateRuns,
+  verifyArtifactArchive,
 } from "../scripts/release-candidate-resolver.mjs";
 import { createResolvedPublicationSealedBundle } from "../scripts/publication-candidate-sealer.mjs";
 import {
@@ -34,6 +36,39 @@ import {
 } from "../scripts/workflow-friction-report.mjs";
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
+
+test("GitHub artifact downloads stream to disk without materializing one Buffer", async () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-stream-download-"));
+  const outputPath = path.join(workspace, "artifact.zip");
+  try {
+    const chunks = [Buffer.alloc(5 * 1024 * 1024, 0x61), Buffer.alloc(5 * 1024 * 1024, 0x62)];
+    const body = new ReadableStream({ start(controller) { for (const chunk of chunks) controller.enqueue(chunk); controller.close(); } });
+    await githubDownload({
+      apiUrl: "https://api.example.test", token: "fixture", path: "/artifact", outputPath,
+      fetchImpl: async () => ({
+        ok: true, status: 200, body,
+        arrayBuffer: async () => { throw new Error("arrayBuffer must not be used for streamed artifacts"); },
+      }),
+    });
+    assert.equal(fs.statSync(outputPath).size, 10 * 1024 * 1024);
+    assert.equal(fs.readFileSync(outputPath).subarray(0, 1).toString(), "a");
+    assert.equal(fs.readFileSync(outputPath).subarray(-1).toString(), "b");
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("candidate archive verification hashes files larger than one digest chunk", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-chunked-digest-"));
+  const archivePath = path.join(workspace, "artifact.zip");
+  try {
+    fs.writeFileSync(archivePath, Buffer.alloc(9 * 1024 * 1024, 0x63));
+    const digest = `sha256:${crypto.createHash("sha256").update(fs.readFileSync(archivePath)).digest("hex")}`;
+    assert.deepEqual(verifyArtifactArchive({ artifact: { name: "large-fixture", size_in_bytes: fs.statSync(archivePath).size, digest }, archivePath }), { size: 9 * 1024 * 1024, digest });
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
 
 function root(character) {
   return `sha256:${character.repeat(64)}`;

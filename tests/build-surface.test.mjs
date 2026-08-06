@@ -1332,7 +1332,9 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /name: Assemble consumer Gate from exact downloaded evidence/);
   assert.match(workflow, /BUILDCHAIN_CONSUMER_GATE_COMMAND: \$\{\{ inputs\.consumer-gate-command \}\}/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH/);
-  assert.match(workflow, /publicationGateAggregateBindings/);
+  assert.match(workflow, /rebindPublicationGateAggregateForEquivalentTree/);
+  assert.match(workflow, /consumer-gate-evidence-source-sha:/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_EVIDENCE_SOURCE_TREE/);
   assert.match(workflow, /name: Audit managed release-candidate publication control plane/);
   assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);
   assert.match(workflow, /--workflow-repository "\$\{\{ inputs\.buildchain-repository \}\}"/);

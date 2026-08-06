@@ -854,6 +854,7 @@ jobs:
       pull-requests: read
     outputs:
       evidence-run-id: ${{ steps.release-candidate.outputs.release-candidate-run-id }}
+      source-sha: ${{ steps.release-candidate.outputs.release-candidate-source-sha }}
       version: ${{ steps.release-candidate.outputs.release-candidate-version }}
       passport-artifact: ${{ steps.release-candidate.outputs.release-candidate-artifact }}
       summary-artifact: ${{ steps.release-candidate.outputs.release-candidate-build-summary-artifact }}
@@ -1053,6 +1054,8 @@ jobs:
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       consumer-gate-command: ${{ inputs.publication-gate-command }}
+      consumer-gate-evidence-source-sha: ${{ inputs.resume-candidate-run-id != '' && needs.release-candidate-preflight.outputs.source-sha || '' }}
+      consumer-gate-evidence-source-tree: ${{ inputs.resume-candidate-run-id != '' && inputs.resume-expected-source-tree || '' }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       consumer-qualification-required: ${{ needs.qualification-plan.outputs.required == 'true' }}

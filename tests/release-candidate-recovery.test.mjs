@@ -1,4 +1,8 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import { createReleaseCandidatePassport, sha256Json } from "../packages/core/release-candidate.js";
@@ -9,7 +13,11 @@ import {
   validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
-import { createRecoveredPublicationCandidate } from "../scripts/resume-from-candidate-run.mjs";
+import {
+  createRecoveredPublication,
+  createRecoveredPublicationCandidate,
+  normalizePlatformManifests,
+} from "../scripts/resume-from-candidate-run.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -158,6 +166,68 @@ test("recovery accepts the same tree at a different promotion commit and records
   assert.deepEqual(receipt.skippedBuildStages, ["install", "build", "verify", "platform-matrix"]);
   assert.equal(receipt.payloadBytes, "unchanged");
   assert.match(receipt.root, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("custom-product recovery uses Passport version and manifests without treating product archives as npm", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-custom-recovery-"));
+  try {
+    const first = path.join(workspace, "kungfu-episodes-cli-linux-x64.tar.gz");
+    const second = path.join(workspace, "kungfu-desktop-linux-x64.tgz");
+    fs.writeFileSync(first, "first-product-archive");
+    fs.writeFileSync(second, "second-product-archive");
+    const files = [first, second].map((absolutePath) => ({
+      path: path.basename(absolutePath),
+      absolutePath,
+      size: fs.statSync(absolutePath).size,
+      sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex")}`,
+    }));
+    const manifest = { platform: { id: "linux-x64" }, files: files.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })) };
+    const publication = createRecoveredPublication({
+      downloads: [{ files }],
+      bundleRoot: workspace,
+      repository: "kungfu-systems/kungfu",
+      passport: {
+        buildchain: { sha: RUNTIME_SHA },
+        candidateHash: "a".repeat(64),
+        source: { headSha: SOURCE_SHA, treeHash: TREE },
+        target: { version: "4.0.0-alpha.1" },
+      },
+      candidateRuntimeSha: RUNTIME_SHA,
+      publishArtifactKind: "kungfu-product",
+      releasePatterns: "kungfu-episodes-cli-*.tar.gz",
+      platformManifests: [manifest],
+    });
+    assert.equal(publication.version, "4.0.0-alpha.1");
+    assert.equal(publication.manifest, undefined);
+    assert.deepEqual(publication.npmArtifacts, []);
+    assert.deepEqual(publication.releaseAssets.map((entry) => path.basename(entry.absolutePath)), [path.basename(first)]);
+    assert.equal(publication.publishRequiredArtifacts.length, 2);
+    assert.ok(publication.publishRequiredArtifacts.every((entry) => entry.kind === "kungfu-product"));
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("candidate recovery excludes credential-island manifests outside the Passport platform matrix", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-platform-manifests-"));
+  try {
+    const downloads = [
+      ["kungfu-manifest-macos-arm64-source", "macos-arm64", "kungfu-macos-arm64-source"],
+      ["kungfu-credential-manifest-macos-source", "macos-arm64-credential", "native-kungfu-desktop-macos-arm64-credential"],
+    ].map(([name, platformId, artifactName]) => {
+      const absolutePath = path.join(workspace, `${platformId}.json`);
+      fs.writeFileSync(absolutePath, `${JSON.stringify({ artifactName, platform: { id: platformId }, files: [] })}\n`);
+      const evidence = { path: "manifest.json", size: fs.statSync(absolutePath).size, sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex")}` };
+      return { artifact: { name }, files: [{ ...evidence, absolutePath }], record: { files: [evidence] } };
+    });
+    const normalized = normalizePlatformManifests(downloads, {
+      platformMatrix: [{ platformId: "macos-arm64", artifactName: "kungfu-macos-arm64-source" }],
+    });
+    assert.deepEqual(normalized.manifests.map((entry) => entry.platform.id), ["macos-arm64"]);
+    assert.deepEqual(normalized.evidence.map((entry) => entry.artifactName), ["kungfu-macos-arm64-source"]);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("recovery accepts a target advanced by the same explicit durable transaction", () => {

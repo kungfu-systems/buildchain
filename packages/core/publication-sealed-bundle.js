@@ -36,7 +36,16 @@ function normalizeSha256(value, label) {
 }
 
 function sha256File(filePath) {
-  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+  const hash = crypto.createHash("sha256");
+  const descriptor = fs.openSync(filePath, "r");
+  const chunk = Buffer.allocUnsafe(8 * 1024 * 1024);
+  try {
+    let bytesRead = 0;
+    while ((bytesRead = fs.readSync(descriptor, chunk, 0, chunk.length, null)) > 0) hash.update(chunk.subarray(0, bytesRead));
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return hash.digest("hex");
 }
 
 function normalizeFile(entry, label) {

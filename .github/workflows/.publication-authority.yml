@@ -41,6 +41,16 @@ on:
         type: string
         required: false
         default: ""
+      consumer-gate-evidence-source-sha:
+        description: "Original candidate source SHA used only to validate a reused candidate Gate; empty uses source-sha"
+        type: string
+        required: false
+        default: ""
+      consumer-gate-evidence-source-tree:
+        description: "Exact tree shared by the reused candidate source and current publication source"
+        type: string
+        required: false
+        default: ""
       expected-json:
         description: "Independent exact publication bindings JSON"
         type: string
@@ -537,7 +547,9 @@ jobs:
           BUILDCHAIN_PUBLICATION_EVIDENCE_ROOT: ${{ github.workspace }}/.buildchain/publication-evidence
           BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH: ${{ github.workspace }}/.buildchain/publication-authority/consumer-gate-aggregate.json
           BUILDCHAIN_PUBLICATION_AUTHORITY_RUNTIME_ROOT: ${{ github.workspace }}/.buildchain/authority-runtime
-          BUILDCHAIN_PUBLICATION_SOURCE_SHA: ${{ inputs.source-sha }}
+          BUILDCHAIN_PUBLICATION_SOURCE_SHA: ${{ inputs.consumer-gate-evidence-source-sha || inputs.source-sha }}
+          BUILDCHAIN_PUBLICATION_TARGET_SOURCE_SHA: ${{ inputs.source-sha }}
+          BUILDCHAIN_PUBLICATION_EVIDENCE_SOURCE_TREE: ${{ inputs.consumer-gate-evidence-source-tree }}
           BUILDCHAIN_PUBLICATION_TARGET_REF: ${{ inputs.target-ref }}
           BUILDCHAIN_PUBLICATION_EVIDENCE_RUN_ID: ${{ inputs.evidence-run-id }}
         shell: bash
@@ -548,19 +560,23 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from "node:fs";
           import path from "node:path";
+          import { execFileSync } from "node:child_process";
           import { pathToFileURL } from "node:url";
 
           const resultPath = process.env.BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH;
           if (!fs.existsSync(resultPath) || !fs.statSync(resultPath).isFile()) {
             throw new Error("consumer Gate command did not write BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH");
           }
-          const aggregate = JSON.parse(fs.readFileSync(resultPath, "utf8"));
+          let aggregate = JSON.parse(fs.readFileSync(resultPath, "utf8"));
           const runtimeRoot = process.env.BUILDCHAIN_PUBLICATION_AUTHORITY_RUNTIME_ROOT;
-          const authority = await import(pathToFileURL(path.join(runtimeRoot, "packages/core/publication-authority.js")).href);
-          const bindings = authority.publicationGateAggregateBindings(aggregate);
-          if (bindings.sourceSha !== process.env.BUILDCHAIN_PUBLICATION_SOURCE_SHA) {
-            throw new Error("consumer Gate aggregate source SHA mismatch");
-          }
+          const recovery = await import(pathToFileURL(path.join(runtimeRoot, "packages/core/release-candidate-recovery.js")).href);
+          const targetTree = execFileSync("git", ["rev-parse", "HEAD^{tree}"], { encoding: "utf8" }).trim();
+          aggregate = recovery.rebindPublicationGateAggregateForEquivalentTree(aggregate, {
+            evidenceSourceSha: process.env.BUILDCHAIN_PUBLICATION_SOURCE_SHA,
+            targetSourceSha: process.env.BUILDCHAIN_PUBLICATION_TARGET_SOURCE_SHA,
+            targetSourceTreeSha: targetTree,
+            expectedSourceTreeSha: process.env.BUILDCHAIN_PUBLICATION_EVIDENCE_SOURCE_TREE || targetTree,
+          });
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `gate-aggregate-json=${JSON.stringify(aggregate)}\n`);
           NODE
 
