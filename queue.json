@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 22,
+  "generation": 23,
   "fencingCounter": 7,
   "policy": {
     "agingSeconds": 900,
@@ -231,8 +231,32 @@
         "eventAction": "dequeued",
         "closedAt": "2026-08-06T00:24:29.915Z"
       }
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2342,
+      "assignmentRoot": "sha256:485c2c948058a9ab6278c6d2c5914c3e560cfe0285b57fc99e06c25e7af9df25",
+      "initiativeRoot": "sha256:d5e787540659bdafe1db478caa2e883914b4dc28cf254d0efbb8cbf3354441f1",
+      "sourceIdentityRoot": "sha256:e9b5d41a051097650149b10759ab33abfcd1e1c5d8ebc53d9e321877cd5fc60e",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:abf1fd07d16586ac9d534fee3ebea909461e503b83f7c7908de80016a7c649d0",
+      "sourceHead": "510987ed3070819a8d5ccb308f00fe2242ddfffe",
+      "sourcePatchRoot": "sha256:13c81b9dd08032f6fddfb85a46406dc12b5300134f64c03a5653fb1c3aaa0261",
+      "sourceProofRoot": "sha256:2479034121c77de3f8d4987d30d46a8e331709ce140e0844c3c0ebb06fd27929",
+      "planRoot": "sha256:801adfe2247cdab78abc61646954abfb4c01c8dfd832057add520c78cc4b6695",
+      "closureRoot": "sha256:442050cad5742a82211cd96335dc37ffaa4520ec63b60656a1787be78738a73b",
+      "dependencyRoot": "sha256:fe701e84e643f31c7588a039840d99eaefd224f7070b085d9d8fc61fd90dd745",
+      "toolchainRoot": "sha256:e341a78cb20608852d81e8dba082c7ca6bc60abb340b9440635f6e21016eab6b",
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-06T00:27:10.702Z",
+      "updatedAt": "2026-08-06T00:27:10.702Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null
     }
   ],
-  "updatedAt": "2026-08-06T00:24:29.915Z",
-  "stateRoot": "sha256:f1bfb2f7ff3cc7b5b27814559f794d2c5fcbf776a2b0571a6a69213c27ff2519"
+  "updatedAt": "2026-08-06T00:27:10.702Z",
+  "stateRoot": "sha256:5ceccddd6953251d75b139c496bfc713143a58a0c5e56d5da03d4e3ac0e0bd18"
 }
