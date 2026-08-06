@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 273,
-    "maxHandMaintainedSourceLines": 104434,
+    "maxHandMaintainedSourceLines": 104436,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22141,
-    "latestTransition": "Normal PR-stage npm promotion now seals and publishes the exact qualified candidate tarball instead of rematerializing package bytes from source.",
-    "rationale": "The bounded resolver addition inventories the already-downloaded payload artifact, binds its package integrity and release assets into the existing publication sealed-bundle contract, and passes that exact bundle to the existing durable publish transaction. This closes a live fail-closed digest mismatch while preserving the recovery receipt version binding already on dev, without adding a workflow, publication state, or alternate product build path. The exact ceiling includes both reviewed transitions plus the normal-path regression and manifest wiring; any wider ceiling requires another reviewed policy change."
+    "maxWorkflowLines": 22142,
+    "latestTransition": "Recovered Buildchain self-promotion resolves source-side version verification from the already installed immutable runtime dependencies without installing product dependencies.",
+    "rationale": "The exact self-repository resume path creates one transient node_modules symlink to the already checked-out and production-installed Buildchain runtime before version-state verification. Consumers remain unchanged, product installation remains statically excluded, and the link is ignored local workspace state that cannot enter a generated Git tree. The bounded workflow and regression inventory close the live missing smol-toml failure without adding a workflow, dependency set, product build, or publication path; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -41,8 +41,8 @@
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1457,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, and no-product-install condition; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1459,
+      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, and the bounded Buildchain self-runtime dependency bridge; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
       "maxLines": 784,

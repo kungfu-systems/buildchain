@@ -1051,6 +1051,8 @@ for (const requiredSnippet of [
   "publish-sealed-bundle-root: ${{ steps.rc.outputs.publish-sealed-bundle-root }}",
   "BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}",
   "if: ${{ inputs.resume-candidate-run-id == '' }}",
+  "Bridge Buildchain self-runtime dependencies",
+  "ln -s .buildchain/runtime/node_modules node_modules",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
     throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);
