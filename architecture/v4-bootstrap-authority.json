@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-bootstrap-authority",
+  "releaseLine": {
+    "candidateBranch": "dev/v4/v4.0",
+    "sourceBranch": "dev/v3/v3.0",
+    "sourceCommit": "7c8956e8babb521d3e743d40108f115a59a40427",
+    "sourceTree": "7e24ca6bafe98b571d94c3bcf07a9d38b31092c5",
+    "status": "pending-protected-v3-merge"
+  },
+  "authorityFiles": [
+    "architecture/v4-bootstrap-authority.json",
+    "architecture/v4-capability-state-machine-manifest.json",
+    "architecture/v4-exception-ledger.json"
+  ],
+  "bootstrapRule": {
+    "authorityRevision": "the exact protected dev/v3/v3.0 merge containing this contract",
+    "candidateRevision": "the exact dev/v4/v4.0 candidate revision",
+    "requiredRelationship": "candidate descends from authority revision",
+    "selfQualification": "forbidden",
+    "fallback": "dev/v3/v3.0 remains production and bootstrap authority"
+  },
+  "handoffRule": {
+    "condition": "a protected v4 release has passed N-1 qualification, recovery, independent review, and exact readback",
+    "nextAuthority": "the exact prior qualified protected v4 revision",
+    "candidateMayWidenCeilings": false,
+    "candidateMayCreateQualificationExceptions": false
+  }
+}

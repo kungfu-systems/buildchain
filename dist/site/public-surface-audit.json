@@ -3,15 +3,20 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 112,
+    "cliCommandCount": 113,
     "workflowCount": 64,
     "actionCount": 6,
     "sitePageCount": 65,
-    "docCommandRefCount": 881,
+    "docCommandRefCount": 896,
     "failureCount": 0
   },
   "enumerated": {
     "cliCommands": [
+      {
+        "id": "architecture",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain architecture validate [--cwd <dir>] [--json]"
+      },
       {
         "id": "audit",
         "source": "bin/buildchain.mjs",
@@ -3196,6 +3201,81 @@
       }
     ],
     "docCommandRefs": [
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture list"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture qualify --authority-revision"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture show"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture validate"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture --help"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture list"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture list --help"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture qualify"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture qualify --help"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture show"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture show --help"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture validate"
+      },
+      {
+        "id": "architecture",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain architecture validate --help"
+      },
       {
         "id": "audit",
         "path": "docs/cli-reference.md",
@@ -7607,9 +7687,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
+    "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
     "workflowRegistryDigest": "20c6b31e754f9f0ffb15362bd1b646376e9cf2698951d5f502a5bafcdfd523e7",
-    "pageRegistryDigest": "50489f303fc5343c6c13ed307f0f7d008fa8deee7f32dd8ff701d47775b210df"
+    "pageRegistryDigest": "39c7274ae3e68fe9ca26e53463cfe54aa259cd4e90a9df328e2e063c445d64b8"
   },
   "comparison": {
     "missingCliRegistry": [],

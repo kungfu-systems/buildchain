@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 276,
-    "maxHandMaintainedSourceLines": 105300,
+    "maxHandMaintainedSourceFiles": 277,
+    "maxHandMaintainedSourceLines": 105918,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22241,
-    "latestTransition": "The v4 planning boundary gains one read-only v3 core-mechanism inventory validator after the candidate-recovery and publication-audit integration, without changing a runtime, workflow, state machine, artifact format, or provider effect.",
-    "rationale": "The exact 171-line and one-file increase over e6d6ecd6204518298898962f01aba5d73ed70b60 validates ten source- and test-grounded v3 mechanism families, including the integrated recovery-wrapper and publication-candidate-sealer coordinates, their public surfaces, durable stores, recovery semantics, provider readback, compatibility callers, and unresolved v4 disposition. The exact observed cut remains recorded in architecture/v3-core-mechanism-inventory.json. This tooling-only ceiling cannot grow implicitly; any runtime or broader inventory change requires another reviewed policy transition."
+    "latestTransition": "Wave 0 adds one read-only v4 architecture validator and generated Agent discovery command family without migrating a production writer, adding a workflow, or changing provider effects.",
+    "rationale": "The exact one-file and 618-line increase over the prior approved ceiling implements the v4 Constitution validator, capability and state-machine projection, six independent complexity-budget dimensions, owned exception checks, v3 drift checks, exact Git N-1 qualification, and a public-surface regression assertion. The new script stays at the 600-line file budget and every new function stays within the existing length and complexity ceilings. Generated references expose list and show without creating a second authority. This ceiling is exact and cannot grow implicitly; runtime migration or additional architecture machinery requires another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -83,6 +83,14 @@
     }
   },
   "approvedPublicSurfaceTransitions": {
+    "cli:architecture": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "architecture",
+        "usage": "buildchain architecture validate [--cwd <dir>] [--json]"
+      },
+      "rationale": "Add a read-only generated list/show/validate surface plus exact Git N-1 qualification; the manifest remains the single authority and the commands do not migrate or write production state."
+    },
     "cli:dev": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {

@@ -22,6 +22,63 @@ ai_provenance:
 
 Every listed help command is intercepted before dispatch, exits zero, and performs no command side effects.
 
+## `architecture`
+
+### `buildchain architecture`
+
+- Help: `buildchain architecture --help`
+- Canonical id: `architecture`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain architecture
+```
+
+### `buildchain architecture list`
+
+- Help: `buildchain architecture list --help`
+- Canonical id: `architecture`
+- Options: `--cwd`, `--json`
+- Syntax:
+
+```text
+buildchain architecture list [--cwd <dir>] [--json]
+```
+
+### `buildchain architecture qualify`
+
+- Help: `buildchain architecture qualify --help`
+- Canonical id: `architecture`
+- Options: `--authority-revision`, `--candidate-revision`, `--cwd`, `--json`
+- Syntax:
+
+```text
+buildchain architecture qualify --authority-revision <git-revision> [--candidate-revision <git-revision>] [--cwd <dir>] [--json]
+```
+
+### `buildchain architecture show`
+
+- Help: `buildchain architecture show --help`
+- Canonical id: `architecture`
+- Options: `--cwd`, `--json`
+- Syntax:
+
+```text
+buildchain architecture show <capability-id> [--cwd <dir>] [--json]
+```
+
+### `buildchain architecture validate`
+
+- Help: `buildchain architecture validate --help`
+- Canonical id: `architecture`
+- Options: `--cwd`, `--json`
+- Syntax:
+
+```text
+buildchain architecture validate [--cwd <dir>] [--json]
+```
+
 ## `audit`
 
 ### `buildchain audit`
