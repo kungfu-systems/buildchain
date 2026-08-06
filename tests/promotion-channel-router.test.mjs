@@ -209,6 +209,7 @@ test("stable route calls the hidden advanced workflow through the current major 
       "github-artifact-attestation-policy-json",
       "github-artifact-attestation-retention-days",
       "publication-gate-command",
+      "publication-gate-controller-sha",
       "release-activation-command",
       "release-activation-receipt-set-path",
       "release-candidate-wait-seconds",
@@ -289,6 +290,7 @@ test("stable route forwards only inputs supported by the current workflow shell"
   assert.doesNotMatch(stableBlock, /^      release-passport-attachment-command:/m);
   assert.doesNotMatch(stableBlock, /^      release-passport-evidence-jsons:/m);
   assert.doesNotMatch(stableBlock, /^      publication-gate-command:/m);
+  assert.doesNotMatch(stableBlock, /^      publication-gate-controller-sha:/m);
   assert.doesNotMatch(stableBlock, /^      release-candidate-wait-seconds:/m);
   assert.match(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(stableBlock, /^      publish-rematerialize-on-resume:/m);
