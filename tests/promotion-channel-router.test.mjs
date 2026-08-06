@@ -238,7 +238,16 @@ test("stable route calls the hidden advanced workflow through the current major 
   assert.match(generated, /STABLE_SHELL_CALL_REF: v3/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
-  assert.match(generated, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
+  assert.match(
+    generated,
+    /BUILDCHAIN_ROUTER_REPOSITORY: \$\{\{ inputs\.buildchain-repository \}\}/,
+  );
+  assert.match(
+    generated,
+    /BUILDCHAIN_RESUME_RUNTIME_SHA: \$\{\{ inputs\.resume-buildchain-runtime-sha \}\}/,
+  );
+  assert.match(generated, /Recovery router ref does not match resume-buildchain-runtime-sha/);
+  assert.doesNotMatch(generated, /job\.workflow_(?:repository|sha)/);
   assert.match(generated, /ref: \$\{\{ steps\.router\.outputs\.sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.shell-sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
