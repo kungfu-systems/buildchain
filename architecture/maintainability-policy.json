@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104601,
+    "maxHandMaintainedSourceLines": 104620,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22158,
-    "latestTransition": "Candidate recovery streams multi-gigabyte GitHub artifacts and hashes them in bounded chunks without changing sealed payload bytes.",
-    "rationale": "The train retains the exact candidate-run recovery inputs and outputs while incorporating the latest durable finalization path. GitHub collaborator authorization still requires write, maintain, or admin, and recovery now avoids Node's 2 GiB Buffer ceiling by streaming downloads and bounded hashing. The exact combined ceiling adds no workflow, publication path, product build, or payload mutation."
+    "latestTransition": "Candidate recovery preserves custom-product publication semantics while streaming multi-gigabyte artifacts and hashing them in bounded chunks.",
+    "rationale": "The train retains the exact candidate-run recovery inputs and outputs while incorporating the latest durable finalization path. GitHub collaborator authorization still requires write, maintain, or admin, recovery avoids Node's 2 GiB Buffer ceiling, and non-npm products derive version and required artifacts from the same Passport and platform manifests as the normal path. The exact combined ceiling adds no workflow, product build, or payload mutation."
   },
   "sourceBudgets": {
     "newFileLines": 600,

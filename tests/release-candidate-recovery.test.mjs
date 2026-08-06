@@ -1,4 +1,8 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import { createReleaseCandidatePassport, sha256Json } from "../packages/core/release-candidate.js";
@@ -8,6 +12,7 @@ import {
   validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
+import { createRecoveredPublication } from "../scripts/resume-from-candidate-run.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -155,6 +160,41 @@ test("recovery accepts the same tree at a different promotion commit and records
   assert.deepEqual(receipt.skippedBuildStages, ["install", "build", "verify", "platform-matrix"]);
   assert.equal(receipt.payloadBytes, "unchanged");
   assert.match(receipt.root, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("custom-product recovery uses Passport version and manifests without treating product archives as npm", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-custom-recovery-"));
+  try {
+    const first = path.join(workspace, "kungfu-episodes-cli-linux-x64.tar.gz");
+    const second = path.join(workspace, "kungfu-desktop-linux-x64.tgz");
+    fs.writeFileSync(first, "first-product-archive");
+    fs.writeFileSync(second, "second-product-archive");
+    const files = [first, second].map((absolutePath) => ({
+      path: path.basename(absolutePath),
+      absolutePath,
+      size: fs.statSync(absolutePath).size,
+      sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex")}`,
+    }));
+    const manifest = { platform: { id: "linux-x64" }, files: files.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })) };
+    const publication = createRecoveredPublication({
+      downloads: [{ files }],
+      bundleRoot: workspace,
+      repository: "kungfu-systems/kungfu",
+      passport: { target: { version: "4.0.0-alpha.1" } },
+      runtimeSha: RUNTIME_SHA,
+      publishArtifactKind: "kungfu-product",
+      releasePatterns: "kungfu-episodes-cli-*.tar.gz",
+      platformManifests: [manifest],
+    });
+    assert.equal(publication.version, "4.0.0-alpha.1");
+    assert.equal(publication.manifest, undefined);
+    assert.deepEqual(publication.npmArtifacts, []);
+    assert.deepEqual(publication.releaseAssets.map((entry) => path.basename(entry.absolutePath)), [path.basename(first)]);
+    assert.equal(publication.publishRequiredArtifacts.length, 2);
+    assert.ok(publication.publishRequiredArtifacts.every((entry) => entry.kind === "kungfu-product"));
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("recovery binds transaction identity to the sealed product publication version", () => {

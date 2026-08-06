@@ -236,20 +236,34 @@ function normalizeProductPayloadManifests(downloads) {
     .map((file) => JSON.parse(fs.readFileSync(file.absolutePath, "utf8"))));
 }
 
-function createSealedBundle({ downloads, bundleRoot, repository, passport, runtimeSha, publishPackageMain, releasePatterns }) {
+export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, runtimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests }) {
   const allFiles = downloads.flatMap((download) => download.files.map((file) => ({
     path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
     size: file.size,
     sha256: file.sha256.replace(/^sha256:/, ""),
     absolutePath: file.absolutePath,
   }))).sort((left, right) => left.path.localeCompare(right.path));
+  const kind = String(publishArtifactKind || "npm");
+  const releaseMatchers = splitPatterns(releasePatterns).map(patternMatcher);
+  const releaseAssets = allFiles.filter((file) => releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
+  if (kind !== "npm") {
+    const version = String(passport.target?.version || "").trim();
+    if (!version) throw new Error("candidate recovery requires a passport publication version");
+    return {
+      manifest: undefined,
+      npmArtifacts: [],
+      allFiles,
+      releaseAssets,
+      version,
+      publishRequiredArtifacts: generatePublishRequiredArtifacts({ manifests: platformManifests, version, kind }),
+    };
+  }
   const tarballs = allFiles.filter((file) => file.path.toLowerCase().endsWith(".tgz"));
   if (tarballs.length === 0) throw new Error("candidate recovery for npm publication requires at least one exact .tgz payload artifact");
   const npmArtifacts = tarballs.map((file) => ({ file, metadata: readNpmPackageArtifact({ tarballPath: file.absolutePath, mainPackage: publishPackageMain }) }));
   const main = npmArtifacts.find((entry) => entry.metadata.role === "main") || (npmArtifacts.length === 1 ? npmArtifacts[0] : undefined);
   if (!main) throw new Error("candidate npm payload set has no unique main package tarball");
-  const releaseMatchers = splitPatterns(releasePatterns).map(patternMatcher);
-  const releaseAssets = allFiles.filter((file) => releaseMatchers.length
+  const npmReleaseAssets = allFiles.filter((file) => releaseMatchers.length
     ? releaseMatchers.some((matcher) => matcher.test(path.basename(file.path)))
     : file.path.toLowerCase().endsWith(".tgz"));
   const payload = {
@@ -269,9 +283,20 @@ function createSealedBundle({ downloads, bundleRoot, repository, passport, runti
     packageVersion: main.metadata.ref,
     npmTarballPath: main.file.path,
     npmIntegrity: main.metadata.integrity,
-    releaseAssetPaths: releaseAssets.map((file) => file.path),
+    releaseAssetPaths: npmReleaseAssets.map((file) => file.path),
   });
-  return { manifest, npmArtifacts, allFiles };
+  return {
+    manifest,
+    npmArtifacts,
+    allFiles,
+    releaseAssets: npmReleaseAssets,
+    version: manifest.npm.version,
+    publishRequiredArtifacts: generatePublishRequiredArtifacts({
+      kind: "npm",
+      tarballPaths: npmArtifacts.map((entry) => entry.file.absolutePath),
+      mainPackage: publishPackageMain,
+    }),
+  };
 }
 
 async function recoverCandidateEvidence({
@@ -332,6 +357,7 @@ export async function resumeFromCandidateRun({
   artifactPatterns = "",
   releasePatterns = "",
   requiredArtifactCount = 0,
+  publishArtifactKind = "npm",
   publishPackageMain = "",
   outputDir = ".buildchain/release-candidate-recovery",
   token = env("GITHUB_TOKEN"),
@@ -364,16 +390,18 @@ export async function resumeFromCandidateRun({
     const platformManifestEvidence = normalizePlatformManifests(downloads, passport);
     const controllerReceipts = normalizeControllerReceipts(downloads, passport);
     const productPayloadManifests = normalizeProductPayloadManifests(downloads);
-    const sealed = createSealedBundle({
+    const publication = createRecoveredPublication({
       downloads,
       bundleRoot,
       repository: repoInfo.fullName,
       passport,
       runtimeSha,
+      publishArtifactKind,
       publishPackageMain,
       releasePatterns,
+      platformManifests: platformManifestEvidence.manifests,
     });
-    const candidateVersion = sealed.manifest.npm.version;
+    const candidateVersion = publication.version;
     const existingTransaction = await readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version: candidateVersion });
     const recovery = verifyReleaseCandidateRecovery({
       candidateRepository: repoInfo.fullName,
@@ -430,14 +458,10 @@ export async function resumeFromCandidateRun({
     const sealedManifestPath = path.join(resolvedOutput, "sealed-bundle.json");
     const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
     fs.writeFileSync(recoveryReceiptPath, `${JSON.stringify(recovery.receipt, null, 2)}\n`);
-    fs.writeFileSync(sealedManifestPath, `${JSON.stringify(sealed.manifest, null, 2)}\n`);
-    const publishRequiredArtifacts = generatePublishRequiredArtifacts({
-      kind: "npm",
-      tarballPaths: sealed.npmArtifacts.map((entry) => entry.file.absolutePath),
-      mainPackage: publishPackageMain,
-    });
+    if (publication.manifest) fs.writeFileSync(sealedManifestPath, `${JSON.stringify(publication.manifest, null, 2)}\n`);
+    const publishRequiredArtifacts = publication.publishRequiredArtifacts;
     fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(publishRequiredArtifacts, null, 2)}\n`);
-    const tarballs = sealed.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
+    const tarballs = publication.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
     return {
       enabled: true,
       action: "reused",
@@ -455,10 +479,10 @@ export async function resumeFromCandidateRun({
         payloads: outputPath(path.join(bundleRoot, "artifacts")),
         platformManifests: downloads.flatMap((download) => download.files.filter((file) => path.basename(file.path) === "manifest.json").map((file) => outputPath(file.absolutePath))),
         npmTarballs: tarballs,
-        releaseAssets: sealed.manifest.releaseAssets.map((asset) => outputPath(path.join(bundleRoot, asset.path))),
+        releaseAssets: publication.releaseAssets.map((asset) => outputPath(asset.absolutePath)),
         publishRequiredArtifacts: outputPath(requiredArtifactsPath),
-        sealedBundleRoot: outputPath(bundleRoot),
-        sealedBundleManifest: outputPath(sealedManifestPath),
+        sealedBundleRoot: publication.manifest ? outputPath(bundleRoot) : "",
+        sealedBundleManifest: publication.manifest ? outputPath(sealedManifestPath) : "",
         recoveryReceipt: outputPath(recoveryReceiptPath),
       },
     };
@@ -487,6 +511,7 @@ export async function resumeFromCandidateRunCli() {
       artifactPatterns: env("BUILDCHAIN_ARTIFACT_PATTERNS"),
       releasePatterns: env("BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS"),
       requiredArtifactCount: env("BUILDCHAIN_REQUIRED_ARTIFACT_COUNT", "0"),
+      publishArtifactKind: env("BUILDCHAIN_PUBLISH_ARTIFACT_KIND", "npm"),
       publishPackageMain: env("BUILDCHAIN_PUBLISH_PACKAGE_MAIN"),
       outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate-recovery"),
     });
