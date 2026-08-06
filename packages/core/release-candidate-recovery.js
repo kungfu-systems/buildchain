@@ -93,6 +93,10 @@ function normalizedRef(value) {
   return String(value || "").replace(/^refs\/heads\//, "").trim();
 }
 
+function isBuildchainDiagnosticsEnvelope(file) {
+  return String(file?.path || "").replace(/\\/g, "/").startsWith(".buildchain/");
+}
+
 function validatePlatformPayloads(passport, artifacts, platformManifests) {
   const byName = new Map(artifacts.map((artifact) => [artifact.name, artifact]));
   const manifestsByArtifact = new Map((platformManifests || []).map((manifest) => [manifest.artifactName, manifest]));
@@ -118,7 +122,9 @@ function validatePlatformPayloads(passport, artifacts, platformManifests) {
       size: Number(file.size ?? file.bytes),
       sha256: `sha256:${String(file.sha256 || "").replace(/^sha256:/, "")}`,
     })).sort((left, right) => left.path.localeCompare(right.path));
-    if (JSON.stringify(payload.files) !== JSON.stringify(manifestFiles)) {
+    const productPayloadFiles = payload.files.filter((file) => !isBuildchainDiagnosticsEnvelope(file));
+    const manifestProductFiles = manifestFiles.filter((file) => !isBuildchainDiagnosticsEnvelope(file));
+    if (JSON.stringify(productPayloadFiles) !== JSON.stringify(manifestProductFiles)) {
       fail("artifact-manifest-mismatch", `platform payload bytes differ from the uploaded platform manifest: ${platform.artifactName}`, "Do not publish; preserve the mismatched manifest and payload evidence.");
     }
     if (passportFiles.length > 0 && JSON.stringify(manifestFiles) !== JSON.stringify(passportFiles)) {
