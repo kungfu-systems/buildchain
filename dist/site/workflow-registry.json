@@ -489,12 +489,14 @@
         "promotion-shell-sha",
         "promotion-target-ref",
         "publication-admission-json",
+        "publication-authority-workflow-path",
         "publication-auto-admission",
         "publication-auto-no-gate",
         "publication-commit-command",
         "publication-commit-evidence-path",
         "publication-consumer-predicate-id",
         "publication-consumer-qualification-command",
+        "publication-consumer-qualification-controller-sha",
         "publication-control-plane-audit-json",
         "publication-expected-json",
         "publication-gate-aggregate-json",
@@ -563,7 +565,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 107,
+      "inputCount": 109,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2388,6 +2390,7 @@
         "publication-commit-evidence-path",
         "publication-consumer-predicate-id",
         "publication-consumer-qualification-command",
+        "publication-consumer-qualification-controller-sha",
         "publication-control-plane-audit-json",
         "publication-expected-json",
         "publication-gate-aggregate-json",
@@ -2456,7 +2459,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 99,
+      "inputCount": 100,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",

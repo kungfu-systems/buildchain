@@ -164,7 +164,7 @@ test("generated promotion router preserves every public input and output exactly
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
   const current = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
-  const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-")));
+  const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-") || name === "publication-authority-workflow-path"));
   const expectedInputs = workflowFields(advanced, "inputs").filter((name) => !internal.has(name));
   expectedInputs.push("buildchain-channel", "buildchain-alpha-contract-lock-path", "buildchain-stable-contract-lock-path");
   const actualInputs = workflowFields(generated, "inputs");
@@ -210,6 +210,8 @@ test("stable route calls the hidden advanced workflow through the current major 
       "github-artifact-attestation-retention-days",
       "publication-gate-command",
       "publication-gate-controller-sha",
+      "publication-authority-workflow-path",
+      "publication-consumer-qualification-controller-sha",
       "release-activation-command",
       "release-activation-receipt-set-path",
       "release-candidate-wait-seconds",
