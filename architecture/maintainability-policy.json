@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 273,
-    "maxHandMaintainedSourceLines": 104436,
+    "maxHandMaintainedSourceFiles": 274,
+    "maxHandMaintainedSourceLines": 104517,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
-    "latestTransition": "Recovered Buildchain self-promotion resolves source-side version verification from the already installed immutable runtime dependencies without installing product dependencies.",
-    "rationale": "The exact self-repository resume path creates one transient node_modules symlink to the already checked-out and production-installed Buildchain runtime before version-state verification. Consumers remain unchanged, product installation remains statically excluded, and the link is ignored local workspace state that cannot enter a generated Git tree. The bounded workflow and regression inventory close the live missing smol-toml failure without adding a workflow, dependency set, product build, or publication path; any wider ceiling requires another reviewed policy change."
+    "latestTransition": "Contained Alpha version-state finalization restores the already published durable artifacts and sealed bundle instead of admitting rebuilt bytes for the same version.",
+    "rationale": "The bounded finalization override is reachable only after the existing ancestry, transaction-state, exact-version, exact-tag, target-ref, and published-material gates prove that the current Alpha head contains the durable published transaction. It clears the transient candidate manifest and reuses the transaction's exact artifact set, so rebuilt version-state bytes cannot replace public release evidence. The exact ceiling adds no workflow, publication path, or product build."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -1063,9 +1063,9 @@
       "rationale": "The existing version-state commit transaction remains nested under its extracted operation factory and is independently regression-tested; this exact inherited ceiling cannot grow."
     },
     "actions/promote-buildchain-ref/internal/durable-transaction-operations.js#createDurableTransactionOperations": {
-      "maxLines": 371,
+      "maxLines": 376,
       "maxComplexity": 1,
-      "rationale": "Transplanted legacy durable transaction and Passport operations now live in an independently owned module; explicit dependency injection adds seams while this exact inherited ceiling cannot grow."
+      "rationale": "Transplanted legacy durable transaction and Passport operations now live in an independently owned module; one semantic durable-material seam lets already-proven contained finalization restore immutable publication facts without accepting a transient rebuilt candidate or inconsistent per-field overrides, and this exact inherited ceiling cannot grow."
     },
     "packages/core/paper-npm-bootstrap.js#executePaperNpmBootstrap": {
       "maxLines": 490,
