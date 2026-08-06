@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "1119e81672e251057d4259008337af3df19dbc67399aedd9ce146418ff68f6ea",
+    "sha256": "e37f94305762bde4ecad076297dedd212f015f12ffc5c0a524f1350969ad00d1",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 64,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "1119e81672e251057d4259008337af3df19dbc67399aedd9ce146418ff68f6ea",
+      "sha256": "e37f94305762bde4ecad076297dedd212f015f12ffc5c0a524f1350969ad00d1",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 64,
@@ -3545,7 +3545,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 36,
+          "inputCount": 37,
           "inputs": [
             "admission-json",
             "authority-workflow-path",
@@ -3555,6 +3555,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "consumer-gate-command",
+            "consumer-gate-controller-sha",
             "consumer-gate-evidence-source-sha",
             "consumer-gate-evidence-source-tree",
             "consumer-predicate-digest",
@@ -3596,7 +3597,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 106,
+          "inputCount": 107,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3642,6 +3643,7 @@
             "publication-expected-json",
             "publication-gate-aggregate-json",
             "publication-gate-command",
+            "publication-gate-controller-sha",
             "publication-package-name",
             "publication-product",
             "publication-publisher-workflow-path",
@@ -4859,7 +4861,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 98,
+          "inputCount": 99,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4897,6 +4899,7 @@
             "publication-expected-json",
             "publication-gate-aggregate-json",
             "publication-gate-command",
+            "publication-gate-controller-sha",
             "publication-package-name",
             "publication-product",
             "publication-publisher-workflow-path",

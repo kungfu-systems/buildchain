@@ -396,6 +396,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "consumer-gate-command",
+        "consumer-gate-controller-sha",
         "consumer-gate-evidence-source-sha",
         "consumer-gate-evidence-source-tree",
         "consumer-predicate-digest",
@@ -425,7 +426,7 @@
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 36,
+      "inputCount": 37,
       "secrets": [
         "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
       ],
@@ -498,6 +499,7 @@
         "publication-expected-json",
         "publication-gate-aggregate-json",
         "publication-gate-command",
+        "publication-gate-controller-sha",
         "publication-package-name",
         "publication-product",
         "publication-publisher-workflow-path",
@@ -561,7 +563,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 106,
+      "inputCount": 107,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2390,6 +2392,7 @@
         "publication-expected-json",
         "publication-gate-aggregate-json",
         "publication-gate-command",
+        "publication-gate-controller-sha",
         "publication-package-name",
         "publication-product",
         "publication-publisher-workflow-path",
@@ -2453,7 +2456,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 98,
+      "inputCount": 99,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
