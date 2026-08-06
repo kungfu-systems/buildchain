@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104517,
+    "maxHandMaintainedSourceLines": 104536,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
-    "latestTransition": "Contained Alpha version-state finalization restores the already published durable artifacts and sealed bundle instead of admitting rebuilt bytes for the same version.",
-    "rationale": "The bounded finalization override is reachable only after the existing ancestry, transaction-state, exact-version, exact-tag, target-ref, and published-material gates prove that the current Alpha head contains the durable published transaction. It clears the transient candidate manifest and reuses the transaction's exact artifact set, so rebuilt version-state bytes cannot replace public release evidence. The exact ceiling adds no workflow, publication path, or product build."
+    "latestTransition": "Repeated candidate recovery preserves both durable Alpha finalization material and the original candidate runtime identity across newer recovery tooling.",
+    "rationale": "Contained finalization restores already-published durable artifacts instead of transient rebuilt bytes, while one bounded candidate constructor prevents the current recovery tooling SHA from perturbing the sealed payload root. The combined exact ceiling preserves ancestry, transaction, artifact, original-runtime, and fail-closed conflict gates without adding a product install, build, repackaging, workflow, or publication path."
   },
   "sourceBudgets": {
     "newFileLines": 600,

@@ -223,7 +223,31 @@ function normalizeProductPayloadManifests(downloads) {
     .map((file) => JSON.parse(fs.readFileSync(file.absolutePath, "utf8"))));
 }
 
-function createSealedBundle({ downloads, bundleRoot, repository, passport, runtimeSha, publishPackageMain, releasePatterns }) {
+export function createRecoveredPublicationCandidate({
+  allFiles,
+  repository,
+  passport,
+  candidateRuntimeSha,
+}) {
+  if (passport.buildchain?.sha !== candidateRuntimeSha) {
+    throw new Error(
+      `recovered publication candidate runtime mismatch: passport=${passport.buildchain?.sha || "<empty>"} expected=${candidateRuntimeSha || "<empty>"}`,
+    );
+  }
+  const payload = {
+    schemaVersion: 1,
+    contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+    repository,
+    sourceSha: passport.source.headSha,
+    sourceTreeSha: passport.source.treeHash,
+    runtimeSha: candidateRuntimeSha,
+    releaseCandidateRoot: `sha256:${passport.candidateHash}`,
+    files: allFiles.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })),
+  };
+  return { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
+}
+
+function createSealedBundle({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishPackageMain, releasePatterns }) {
   const allFiles = downloads.flatMap((download) => download.files.map((file) => ({
     path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
     size: file.size,
@@ -239,17 +263,12 @@ function createSealedBundle({ downloads, bundleRoot, repository, passport, runti
   const releaseAssets = allFiles.filter((file) => releaseMatchers.length
     ? releaseMatchers.some((matcher) => matcher.test(path.basename(file.path)))
     : file.path.toLowerCase().endsWith(".tgz"));
-  const payload = {
-    schemaVersion: 1,
-    contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+  const candidate = createRecoveredPublicationCandidate({
+    allFiles,
     repository,
-    sourceSha: passport.source.headSha,
-    sourceTreeSha: passport.source.treeHash,
-    runtimeSha,
-    releaseCandidateRoot: `sha256:${passport.candidateHash}`,
-    files: allFiles.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })),
-  };
-  const candidate = { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
+    passport,
+    candidateRuntimeSha,
+  });
   const manifest = createPublicationSealedBundle({
     candidate,
     packageName: main.metadata.name,
@@ -356,7 +375,7 @@ export async function resumeFromCandidateRun({
       bundleRoot,
       repository: repoInfo.fullName,
       passport,
-      runtimeSha,
+      candidateRuntimeSha,
       publishPackageMain,
       releasePatterns,
     });
