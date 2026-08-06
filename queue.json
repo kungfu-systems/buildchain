@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 67,
+  "generation": 68,
   "fencingCounter": 22,
   "policy": {
     "agingSeconds": 900,
@@ -712,8 +712,32 @@
       "recoveries": 0,
       "status": "selected",
       "terminal": null
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2388,
+      "assignmentRoot": "sha256:485c2c948058a9ab6278c6d2c5914c3e560cfe0285b57fc99e06c25e7af9df25",
+      "initiativeRoot": "sha256:d5e787540659bdafe1db478caa2e883914b4dc28cf254d0efbb8cbf3354441f1",
+      "sourceIdentityRoot": "sha256:3161a65633ce8d841f58f9661830f6ddf746c59708b2f7879cb54a9910d29866",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:b730fade38853765698e4c9d150eebd57e23467426da14856d048133b56c8b83",
+      "sourceHead": "f6a950823baa35f1e5e32fbecb484f3fde5c45f1",
+      "sourcePatchRoot": "sha256:047777d077bc060c7b2ce9aa40ed4ba66228edc12aebadcedde809a4f0c1038a",
+      "sourceProofRoot": "sha256:b372b128cecb781459399c4e710ea43880cc4d6f149d9062fc496b5e8ffad014",
+      "planRoot": "sha256:6ef94847f1af2ca6c557f90a9ca89f3efd365f6a35ce7f6b31778e7296d55819",
+      "closureRoot": "sha256:a40ede1fa511579ca085a433a5e2aec17de113c0e3970b0ede0c400253e09fc2",
+      "dependencyRoot": "sha256:df06f2f0bbbcb79e8beaec2bbd949f3b70061bb3e2bd5fff0b5e7431ce1310e1",
+      "toolchainRoot": "sha256:5765c2a9d57a35c0209500208306a5ab4f3c470d653d775017a43f5845ebb635",
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-06T11:08:11.998Z",
+      "updatedAt": "2026-08-06T11:08:11.998Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null
     }
   ],
-  "updatedAt": "2026-08-06T10:48:40.287Z",
-  "stateRoot": "sha256:e5eaccef205c7cdc277bd5637b2238ff8cb630e9f54e98f026e60ff93402bbf0"
+  "updatedAt": "2026-08-06T11:08:11.998Z",
+  "stateRoot": "sha256:67cbe9dc2568abcb556c8a3e326acec0ec77973e8ff234f684880e7fd057e8cd"
 }
