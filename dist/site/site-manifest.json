@@ -125,7 +125,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:9cb06463e0cbb06180ae4e9ed3258a9e7466237916ffc766c548ef5faa730651"
+      "digest": "sha256:85f392b04badfc2d3f006a22c313d4a67dc720d67af2ba4d78520a0e67525673"
     },
     {
       "id": "release-propagation",

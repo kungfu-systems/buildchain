@@ -8,6 +8,7 @@ import {
   validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
+import { createRecoveredPublicationCandidate } from "../scripts/resume-from-candidate-run.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -155,6 +156,43 @@ test("recovery accepts the same tree at a different promotion commit and records
   assert.deepEqual(receipt.skippedBuildStages, ["install", "build", "verify", "platform-matrix"]);
   assert.equal(receipt.payloadBytes, "unchanged");
   assert.match(receipt.root, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("recovered sealed publication identity stays bound to the original candidate runtime", () => {
+  const firstInput = fixture({ currentToolingSha: "a".repeat(40) });
+  const secondInput = fixture({ currentToolingSha: "b".repeat(40) });
+  const allFiles = firstInput.artifacts[0].files.map((file) => ({
+    path: `artifacts/buildchain-package/${file.path}`,
+    size: file.size,
+    sha256: file.sha256,
+  }));
+  const first = createRecoveredPublicationCandidate({
+    allFiles,
+    repository: firstInput.candidateRepository,
+    passport: firstInput.passport,
+    candidateRuntimeSha: RUNTIME_SHA,
+  });
+  const second = createRecoveredPublicationCandidate({
+    allFiles,
+    repository: secondInput.candidateRepository,
+    passport: secondInput.passport,
+    candidateRuntimeSha: RUNTIME_SHA,
+  });
+  assert.notEqual(
+    verifyReleaseCandidateRecovery(firstInput).receipt.buildchainToolingSha,
+    verifyReleaseCandidateRecovery(secondInput).receipt.buildchainToolingSha,
+  );
+  assert.deepEqual(second, first);
+  assert.equal(first.runtimeSha, RUNTIME_SHA);
+  assert.throws(
+    () => createRecoveredPublicationCandidate({
+      allFiles,
+      repository: firstInput.candidateRepository,
+      passport: firstInput.passport,
+      candidateRuntimeSha: "9".repeat(40),
+    }),
+    /recovered publication candidate runtime mismatch/,
+  );
 });
 
 test("recovery binds transaction identity to the sealed product publication version", () => {

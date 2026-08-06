@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104511,
+    "maxHandMaintainedSourceLines": 104530,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
-    "latestTransition": "Recovered Buildchain self-promotion reuses installed runtime dependencies, then accepts unchanged recovered version state without running consumer lifecycle verification.",
-    "rationale": "The integrated recovery tail creates only the transient ignored runtime dependency bridge already reviewed on dev and one bounded existing-version-state resolver. A validated immutable recovery receipt may reuse exact existing version state without product lifecycle commands, while any non-empty recovery version change fails closed. The combined exact ceiling adds no product dependency installation, build path, payload rematerialization, workflow, or publication state."
+    "latestTransition": "Repeated candidate recovery keeps the durable sealed-bundle root bound to the original candidate runtime while recording newer recovery tooling only in evidence.",
+    "rationale": "One bounded candidate constructor and regression test prevent current recovery tooling changes from perturbing an existing durable payload identity. The exact ceiling preserves byte verification, original runtime provenance, and fail-closed transaction conflict handling without adding product installation, build, repackaging, workflow, or publication paths."
   },
   "sourceBudgets": {
     "newFileLines": 600,
