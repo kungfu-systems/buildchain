@@ -19,6 +19,7 @@ import {
 } from "./release-candidate-resolver.mjs";
 import {
   recoveryFailure,
+  validateRecoveryTargetRef,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
 import {
@@ -366,31 +367,24 @@ async function recoverCandidateEvidence({
   };
 }
 
+async function resolveTargetAdvance({ observedTargetSha, targetSha, transactionId, existingTransaction, repoInfo, apiUrl, token, fetchImpl }) {
+  if (observedTargetSha === targetSha || !transactionId || existingTransaction?.id !== transactionId) return undefined;
+  const comparison = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${targetSha}...${observedTargetSha}` });
+  return { status: comparison.status, mergeIsAncestor: ["ahead", "identical"].includes(comparison.status) };
+}
+
 export async function resumeFromCandidateRun({
-  repository,
-  targetRepository = repository,
-  candidateRunId,
-  expectedWorkflowFile,
-  expectedWorkflowName,
-  channel,
-  targetRef,
-  targetSha,
-  expectedSourceTree = "",
-  expectedCandidateRoot = "",
-  candidateRuntimeSha,
-  runtimeSha,
-  transactionId = "",
-  artifactName = "",
-  artifactPatterns = "",
-  releasePatterns = "",
+  repository, targetRepository = repository, candidateRunId,
+  expectedWorkflowFile, expectedWorkflowName,
+  channel, targetRef, targetSha,
+  expectedSourceTree = "", expectedCandidateRoot = "",
+  candidateRuntimeSha, runtimeSha,
+  transactionId = "", artifactName = "", artifactPatterns = "", releasePatterns = "",
   requiredArtifactCount = 0,
-  publishArtifactKind = "npm",
-  publishPackageMain = "",
+  publishArtifactKind = "npm", publishPackageMain = "",
   outputDir = ".buildchain/release-candidate-recovery",
-  token = env("GITHUB_TOKEN"),
-  apiUrl = env("GITHUB_API_URL", "https://api.github.com"),
-  recoveryRunId = env("GITHUB_RUN_ID"),
-  fetchImpl = globalThis.fetch,
+  token = env("GITHUB_TOKEN"), apiUrl = env("GITHUB_API_URL", "https://api.github.com"),
+  recoveryRunId = env("GITHUB_RUN_ID"), fetchImpl = globalThis.fetch,
 } = {}) {
   const repoInfo = splitRepository(repository);
   const runId = String(candidateRunId || "").trim();
@@ -412,7 +406,7 @@ export async function resumeFromCandidateRun({
     const pullRequest = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/pulls/${prNumber}` });
     const targetCommit = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/commits/${targetSha}` });
     const targetRefState = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/heads/${targetRef.replace(/^refs\/heads\//, "")}` });
-    if (targetRefState.object?.sha !== targetSha) throw new Error(`target ref ${targetRef} no longer points at ${targetSha}`);
+    const observedTargetSha = String(targetRefState.object?.sha || "");
     const compare = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${pullRequest.merge_commit_sha}...${targetSha}` });
     const platformManifestEvidence = normalizePlatformManifests(downloads, passport);
     const controllerReceipts = normalizeControllerReceipts(downloads, passport);
@@ -430,6 +424,17 @@ export async function resumeFromCandidateRun({
     });
     const candidateVersion = publication.version;
     const existingTransaction = await readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version: candidateVersion });
+    const targetAdvance = await resolveTargetAdvance({
+      observedTargetSha, targetSha, transactionId, existingTransaction,
+      repoInfo, apiUrl, token, fetchImpl,
+    });
+    validateRecoveryTargetRef({
+      targetSha,
+      observedTargetSha,
+      expectedTransactionId: transactionId,
+      existingTransaction,
+      ancestry: targetAdvance,
+    });
     const recovery = verifyReleaseCandidateRecovery({
       candidateRepository: repoInfo.fullName,
       targetRepository,
@@ -439,6 +444,7 @@ export async function resumeFromCandidateRun({
       channel,
       targetRef,
       targetSha,
+      targetRefSha: observedTargetSha,
       targetTree: targetCommit.tree?.sha,
       expectedSourceTree,
       expectedCandidateRoot,

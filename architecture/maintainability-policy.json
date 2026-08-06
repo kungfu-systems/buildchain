@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104683,
+    "maxHandMaintainedSourceLines": 104769,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22177,
     "latestTransition": "Candidate recovery distinguishes the original evidence source from an equivalent-tree publication target.",

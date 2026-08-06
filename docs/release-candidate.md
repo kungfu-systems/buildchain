@@ -186,10 +186,12 @@ of those identities still agree.
 The recovery path conditionally skips consumer dependency installation and all
 product `install`, `build`, `verify`, and platform-matrix jobs. It restores the
 downloaded bytes as a content-addressed sealed bundle, so npm publication uses
-the original `.tgz`. Both the explicit recovery entry and durable-transaction
-re-resolution bind the bundle identity to the original candidate runtime
-recorded in the Passport; a newer recovery tooling SHA is recorded only in the
-recovery evidence and cannot perturb the durable payload root. Recovery may
+the original `.tgz`. The explicit recovery entry binds the bundle identity to
+the original candidate runtime recorded in the Passport; a newer recovery
+tooling SHA is recorded only in the recovery evidence and cannot perturb the
+durable payload root. A transaction-only re-resolution remains a narrower
+finalization path and is not a substitute for the candidate-run entry when the
+original complete artifact inventory must be reconstructed. Recovery may
 regenerate only Buildchain-owned receipts,
 attestations, signatures, Release Passport data, publication, and readback.
 
@@ -220,6 +222,14 @@ candidate. Existing `sealed`, `publishing`, `package-published`, `finalizing`,
 and `complete` transactions use the normal idempotent state machine. Matching
 registry and GitHub bytes are preserved, only missing publication work is
 performed, and conflicting public digests enter `repair_required`.
+
+After a transaction finalizes, the target branch can legitimately advance from
+the original promotion SHA. Repeating explicit recovery accepts that movement
+only when the caller supplies the exact durable transaction identity, the
+transaction remains resumable, and GitHub proves the observed target head is a
+descendant of the original transaction source. The recovery receipt records
+both the immutable transaction SHA and the observed ref SHA. Missing identity,
+unrelated advancement, or a repair state fails closed.
 
 By default, the wrapper forwards GitHub Release publication to the underlying
 `promote-buildchain-ref` semver model. Once the release transaction is complete,
