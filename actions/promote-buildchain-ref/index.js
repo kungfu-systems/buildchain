@@ -388,6 +388,7 @@ async function main() {
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
+    expectedTransactionId: process.env.BUILDCHAIN_EXPECTED_TRANSACTION_ID,
     publishSealedBundleRoot,
     publishSealedBundleManifest,
     publishRequiredArtifactsJson,
@@ -437,7 +438,6 @@ async function main() {
     runId: String(github.context.runId || ""),
     publishTransactionOverride,
   });
-
   for (const update of result.updates) {
     const target =
       update.tag ||

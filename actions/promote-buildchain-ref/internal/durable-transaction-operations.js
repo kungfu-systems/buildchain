@@ -25,6 +25,7 @@ function createDurableTransactionOperations(context) {
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
+    expectedTransactionId,
     publishSealedBundleRoot,
     publishSealedBundleManifest,
     publishRequiredArtifactsJson,
@@ -164,6 +165,7 @@ function createDurableTransactionOperations(context) {
       publishCommand,
       publishEvidencePath,
       transactionStatePath,
+      expectedTransactionId,
       publishSealedBundleRoot,
       publishSealedBundleManifest,
       publishRequiredArtifactsJson,
@@ -203,7 +205,6 @@ function createDurableTransactionOperations(context) {
     }
     return latestPublishTransaction;
   };
-
   const markFinalizing = async () => {
     latestPublishTransaction = await beginTransactionFinalization(
       latestPublishTransaction,
@@ -211,7 +212,6 @@ function createDurableTransactionOperations(context) {
       runId,
     );
   };
-
   const markComplete = async ({
     channel,
     line,

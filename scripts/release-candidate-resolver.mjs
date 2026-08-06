@@ -49,7 +49,7 @@ function githubHeaders(token) {
   return headers;
 }
 
-async function githubJson({ apiUrl, token, method = "GET", path: requestPath, fetchImpl = globalThis.fetch }) {
+export async function githubJson({ apiUrl, token, method = "GET", path: requestPath, fetchImpl = globalThis.fetch, allowNotFound = false }) {
   if (typeof fetchImpl !== "function") {
     throw new Error("fetch is required to resolve release candidate artifacts");
   }
@@ -57,13 +57,14 @@ async function githubJson({ apiUrl, token, method = "GET", path: requestPath, fe
   const response = await fetchImpl(url, { method, headers: githubHeaders(token) });
   const text = await response.text();
   const body = text ? JSON.parse(text) : {};
+  if (allowNotFound && response.status === 404) return undefined;
   if (!response.ok) {
     throw new Error(`GitHub API ${method} ${requestPath} failed with ${response.status}: ${body.message || text}`);
   }
   return body;
 }
 
-async function githubDownload({ apiUrl, token, path: requestPath, outputPath, fetchImpl = globalThis.fetch }) {
+export async function githubDownload({ apiUrl, token, path: requestPath, outputPath, fetchImpl = globalThis.fetch }) {
   const url = `${String(apiUrl || "https://api.github.com").replace(/\/+$/, "")}${requestPath}`;
   const response = await fetchImpl(url, { headers: githubHeaders(token) });
   if (!response.ok) {
@@ -357,7 +358,35 @@ export function selectReleaseCandidateArtifacts({ artifacts = [], artifactName =
   return { passport, summary: summaries[0], prefix, sourceSha: sha };
 }
 
-function unzip(zipPath, outputDir) {
+export function verifyArtifactArchive({ artifact, archivePath } = {}) {
+  const bytes = fs.readFileSync(archivePath);
+  const size = bytes.length;
+  const digest = `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
+  if (!artifact || artifact.expired === true) {
+    throw new Error(`candidate artifact is missing or expired: ${artifact?.name || "<unknown>"}`);
+  }
+  if (Number(artifact.size_in_bytes) !== size) {
+    throw new Error(`candidate artifact size mismatch for ${artifact.name}: expected ${artifact.size_in_bytes}, got ${size}`);
+  }
+  if (!/^sha256:[0-9a-f]{64}$/i.test(String(artifact.digest || ""))) {
+    throw new Error(`candidate artifact ${artifact.name} has no trusted sha256 digest metadata`);
+  }
+  if (String(artifact.digest).toLowerCase() !== digest) {
+    throw new Error(`candidate artifact digest mismatch for ${artifact.name}: expected ${artifact.digest}, got ${digest}`);
+  }
+  return { size, digest };
+}
+
+export function unzip(zipPath, outputDir) {
+  const entries = execFileSync("unzip", ["-Z1", zipPath], { encoding: "utf8" })
+    .split(/\r?\n/)
+    .filter(Boolean);
+  for (const entry of entries) {
+    const normalized = entry.replaceAll("\\", "/");
+    if (normalized.startsWith("/") || normalized.split("/").some((part) => part === "..")) {
+      throw new Error(`candidate artifact contains an unsafe zip entry: ${entry}`);
+    }
+  }
   fs.mkdirSync(outputDir, { recursive: true });
   execFileSync("unzip", ["-q", "-o", zipPath, "-d", outputDir], { stdio: "inherit" });
 }
@@ -579,6 +608,7 @@ export async function resolveReleaseCandidateArtifacts({
     outputPath: passportZip,
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${selected.passport.id}/zip`,
   });
+  verifyArtifactArchive({ artifact: selected.passport, archivePath: passportZip });
   await githubDownload({
     apiUrl,
     token,
@@ -586,6 +616,7 @@ export async function resolveReleaseCandidateArtifacts({
     outputPath: summaryZip,
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${selected.summary.id}/zip`,
   });
+  verifyArtifactArchive({ artifact: selected.summary, archivePath: summaryZip });
   for (const artifact of payloadArtifacts) {
     const safeName = String(artifact.name || `artifact-${artifact.id}`).replace(/[^A-Za-z0-9._-]/g, "_");
     const payloadZip = path.join(tempDir, `${safeName}.zip`);
@@ -596,6 +627,7 @@ export async function resolveReleaseCandidateArtifacts({
       outputPath: payloadZip,
       path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${artifact.id}/zip`,
     });
+    verifyArtifactArchive({ artifact, archivePath: payloadZip });
     unzip(payloadZip, path.join(payloadDir, safeName));
   }
   unzip(passportZip, passportDir);

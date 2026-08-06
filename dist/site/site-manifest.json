@@ -122,7 +122,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:48e42e92174b1091e8ff32e876099f092ca12ce886d3382f019f0ccd907f1c9b"
+      "digest": "sha256:71161bb57229fe6b66ca131189d3ff3f1dd1a8ca7f6894aa1f596827cb8167f3"
     },
     {
       "id": "release-propagation",
@@ -234,7 +234,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:e0e720eeacfa61a1ca235142858f544e18d3f7a000e300a4311e246fe738ff81"
+      "digest": "sha256:d61f17343ed2cf062c75b36d98ca5a39870d667aec7f16401c4a63e536146116"
     },
     {
       "id": "build-facts",
@@ -282,7 +282,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:3a9ef099d5d93d9b558c7b6a0aa4403dfcce1479ce5d6fc36ecb3e34cdd5bb6d"
+      "digest": "sha256:72466943bb459f6857f23ac6f92bcf4714dcd2f535c38a9f0e34864b36404e06"
     },
     {
       "id": "release-governance",

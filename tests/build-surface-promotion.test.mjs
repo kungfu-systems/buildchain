@@ -607,7 +607,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(\(inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != ''\) && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
   );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
@@ -637,15 +637,16 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     bootstrap.indexOf("name: Reconcile dev merge queue governance") <
       bootstrap.indexOf("name: Set default branch"),
   );
-  assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
+  assert.doesNotMatch(workflow, /publish-required-artifacts-json: "\[\]"/);
+  assert.match(workflow, /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && 'buildchain-package-\*' \|\| '' \}\}/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,
-    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
   );
   assert.match(
     workflow,
-    /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+    /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
   );
   assert.match(workflow, /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml/);
   assert.doesNotMatch(workflow, /Buildchain v2\.10 patch release/);
@@ -1680,7 +1681,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
 
   assert.match(
     promotion,
-    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(\(inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != ''\) && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
   );
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
 });
