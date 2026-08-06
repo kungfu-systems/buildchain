@@ -136,7 +136,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:468d2bb4b4b547402fa9fbae69f996b28c1dcac28f702fa88e1dc3113a41a475",
+      "digest": "sha256:cae33072f382c25d44e84a5bc9c1c78eafc508c94af67536f10978f32933bd57",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:f8ae86b9182811d9f980b3ae1f1a42d2c84cd6c133003c996946848f938099a8",
+      "digest": "sha256:9c08d42216c68204fb289ec587c4afaaa0e556a835129788ad217f33465613ec",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

@@ -5,6 +5,7 @@ import { createReleaseCandidatePassport, sha256Json } from "../packages/core/rel
 import { releaseTransactionId } from "../packages/core/publish-transaction.js";
 import {
   ReleaseCandidateRecoveryError,
+  validateRecoveryTargetRef,
   validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
@@ -151,11 +152,51 @@ test("recovery accepts the same tree at a different promotion commit and records
   assert.equal(receipt.action, "reused");
   assert.equal(receipt.originalCandidate.sourceSha, SOURCE_SHA);
   assert.equal(receipt.target.sha, TARGET_SHA);
+  assert.equal(receipt.target.observedRefSha, TARGET_SHA);
   assert.equal(receipt.target.version, "3.1.0-alpha.1");
   assert.equal(receipt.originalCandidate.tree, receipt.target.tree);
   assert.deepEqual(receipt.skippedBuildStages, ["install", "build", "verify", "platform-matrix"]);
   assert.equal(receipt.payloadBytes, "unchanged");
   assert.match(receipt.root, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("recovery accepts a target advanced by the same explicit durable transaction", () => {
+  const input = fixture();
+  const existingTransaction = durableTransaction(input, "complete");
+  const observedTargetSha = "a".repeat(40);
+  assert.deepEqual(validateRecoveryTargetRef({
+    targetSha: input.targetSha,
+    observedTargetSha,
+    expectedTransactionId: existingTransaction.id,
+    existingTransaction,
+    ancestry: { status: "ahead", mergeIsAncestor: true },
+  }), { advanced: true, observedSha: observedTargetSha });
+
+  assert.throws(() => validateRecoveryTargetRef({
+    targetSha: input.targetSha,
+    observedTargetSha,
+  }), (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "target-ref-moved");
+});
+
+test("recovery rejects unrelated target advancement and conflicting transaction state", () => {
+  const input = fixture();
+  const existingTransaction = durableTransaction(input, "complete");
+  assert.throws(() => validateRecoveryTargetRef({
+    targetSha: input.targetSha,
+    observedTargetSha: "a".repeat(40),
+    expectedTransactionId: existingTransaction.id,
+    existingTransaction,
+    ancestry: { status: "diverged", mergeIsAncestor: false },
+  }), (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "target-ancestry-mismatch");
+
+  existingTransaction.state = "repair_required";
+  assert.throws(() => validateRecoveryTargetRef({
+    targetSha: input.targetSha,
+    observedTargetSha: "a".repeat(40),
+    expectedTransactionId: existingTransaction.id,
+    existingTransaction,
+    ancestry: { status: "ahead", mergeIsAncestor: true },
+  }), (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "transaction-state-conflict");
 });
 
 test("recovered sealed publication identity stays bound to the original candidate runtime", () => {
