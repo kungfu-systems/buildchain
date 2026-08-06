@@ -177,9 +177,11 @@ function candidateArtifactNames({ passport, selected, artifacts, artifactPattern
   return names;
 }
 
-function normalizePlatformManifests(downloads, passport) {
+export function normalizePlatformManifests(downloads, passport) {
   const manifests = [];
   const evidenceByArtifact = new Map();
+  const platformById = new Map((passport.platformMatrix || []).map((entry) => [String(entry.platformId || ""), entry]));
+  const seenPlatformIds = new Set();
   function addEvidence(artifactName, files) {
     if (!artifactName) return;
     const evidenceFiles = evidenceByArtifact.get(artifactName) || new Map();
@@ -195,10 +197,15 @@ function normalizePlatformManifests(downloads, passport) {
   for (const download of downloads) {
     if (String(download.artifact.name).includes("-manifest-")) for (const file of download.files.filter((entry) => path.basename(entry.path) === "manifest.json")) {
       const manifest = JSON.parse(fs.readFileSync(file.absolutePath, "utf8"));
-      if (!manifest.artifactName) {
-        const platformId = String(manifest.platform?.id || manifest.platformId || "");
-        manifest.artifactName = (passport.platformMatrix || []).find((entry) => entry.platformId === platformId)?.artifactName || "";
+      const platformId = String(manifest.platform?.id || manifest.platformId || "");
+      const expectedPlatform = platformById.get(platformId);
+      if (!expectedPlatform) continue;
+      if (seenPlatformIds.has(platformId)) throw new Error(`candidate recovery found duplicate platform manifest for ${platformId}`);
+      if (manifest.artifactName && manifest.artifactName !== expectedPlatform.artifactName) {
+        throw new Error(`candidate recovery platform manifest ${platformId} names unexpected artifact ${manifest.artifactName}`);
       }
+      manifest.artifactName = expectedPlatform.artifactName;
+      seenPlatformIds.add(platformId);
       manifests.push(manifest);
       addEvidence(manifest.artifactName, download.record.files);
     }

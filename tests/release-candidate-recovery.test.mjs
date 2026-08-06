@@ -15,6 +15,7 @@ import {
 import {
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
+  normalizePlatformManifests,
 } from "../scripts/resume-from-candidate-run.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
@@ -200,6 +201,28 @@ test("custom-product recovery uses Passport version and manifests without treati
     assert.deepEqual(publication.releaseAssets.map((entry) => path.basename(entry.absolutePath)), [path.basename(first)]);
     assert.equal(publication.publishRequiredArtifacts.length, 2);
     assert.ok(publication.publishRequiredArtifacts.every((entry) => entry.kind === "kungfu-product"));
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("candidate recovery excludes credential-island manifests outside the Passport platform matrix", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-platform-manifests-"));
+  try {
+    const downloads = [
+      ["kungfu-manifest-macos-arm64-source", "macos-arm64", "kungfu-macos-arm64-source"],
+      ["kungfu-credential-manifest-macos-source", "macos-arm64-credential", "native-kungfu-desktop-macos-arm64-credential"],
+    ].map(([name, platformId, artifactName]) => {
+      const absolutePath = path.join(workspace, `${platformId}.json`);
+      fs.writeFileSync(absolutePath, `${JSON.stringify({ artifactName, platform: { id: platformId }, files: [] })}\n`);
+      const evidence = { path: "manifest.json", size: fs.statSync(absolutePath).size, sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex")}` };
+      return { artifact: { name }, files: [{ ...evidence, absolutePath }], record: { files: [evidence] } };
+    });
+    const normalized = normalizePlatformManifests(downloads, {
+      platformMatrix: [{ platformId: "macos-arm64", artifactName: "kungfu-macos-arm64-source" }],
+    });
+    assert.deepEqual(normalized.manifests.map((entry) => entry.platform.id), ["macos-arm64"]);
+    assert.deepEqual(normalized.evidence.map((entry) => entry.artifactName), ["kungfu-macos-arm64-source"]);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104643,
+    "maxHandMaintainedSourceLines": 104653,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22158,
-    "latestTransition": "Repeated candidate recovery preserves custom-product semantics, durable finalization material, and the original candidate runtime identity.",
-    "rationale": "Contained finalization restores already-built bytes, keeps sealed identity bound to the original candidate runtime, and derives non-npm product version and required artifacts from the Passport and platform manifests. The combined exact ceiling preserves ancestry, transaction, artifact, original-runtime, and fail-closed conflict gates without adding a product install, build, repackaging, workflow, or publication path."
+    "latestTransition": "Every candidate resolver preserves custom-product semantics, durable finalization material, and the original Passport runtime identity.",
+    "rationale": "Normal promotion and contained recovery stay on the same sealed candidate root, restore already-built bytes, and derive non-npm product version and required artifacts from the Passport and platform manifests. The combined exact ceiling preserves ancestry, transaction, artifact, original-runtime, and fail-closed conflict gates without adding a product install, build, repackaging, workflow, or publication path."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -49,10 +49,10 @@
       "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator; this combined train ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 809,
+      "maxLines": 810,
       "maxFunctionLines": 306,
       "maxFunctionComplexity": 63,
-      "rationale": "The shared candidate resolver seals exact payloads under the existing publication bundle contract and streams GitHub archives to disk, then verifies size and sha256 with bounded-memory reads; the exact ceiling cannot grow implicitly."
+      "rationale": "The shared candidate resolver selects the original Passport runtime, seals exact payloads under the existing publication bundle contract, streams GitHub archives to disk, and verifies size and sha256 with bounded-memory reads; the exact ceiling cannot grow implicitly."
     },
     "scripts/auditable-demo.mjs": {
       "maxLines": 1330,

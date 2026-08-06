@@ -40,6 +40,9 @@ function assertSha(value, label = "sha") {
   return sha;
 }
 
+export const releaseCandidateRuntimeSha = (passport) =>
+  assertSha(passport?.buildchain?.sha, "release candidate Passport Buildchain runtime SHA").toLowerCase();
+
 function githubHeaders(token) {
   const headers = {
     accept: "application/vnd.github+json",
@@ -699,7 +702,7 @@ export async function resolveReleaseCandidateArtifacts({
         repository: repoInfo.fullName,
         sourceSha: passport.source?.headSha,
         sourceTreeSha: passport.source?.treeHash,
-        runtimeSha: runtimeSha || sha,
+        runtimeSha: releaseCandidateRuntimeSha(passport),
         releaseCandidateRoot: passport.candidateHash,
         npmArtifacts: npmTarballPaths.map((tarballPath) => ({
           path: tarballPath,
