@@ -45,7 +45,7 @@ jobs:
   buildchain-package-candidate:
     name: Seal Buildchain npm product payload
     needs: [libnode-shaped]
-    if: ${{ needs.libnode-shaped.outputs.release-candidate-artifact != '' }}
+    if: ${{ needs.libnode-shaped.outputs['release-candidate-artifact'] != '' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -64,7 +64,7 @@ jobs:
       - name: Download exact Release Candidate Passport
         uses: actions/download-artifact@v7.0.0
         with:
-          name: ${{ needs.libnode-shaped.outputs.release-candidate-artifact }}
+          name: ${{ needs.libnode-shaped.outputs['release-candidate-artifact'] }}
           path: .buildchain/buildchain-package-candidate/passport
 
       - name: Pack Buildchain product bytes once and bind them to the candidate

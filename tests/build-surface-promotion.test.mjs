@@ -451,7 +451,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.match(
     workflow,
-    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.outputs\.release-candidate-artifact != '' \}\}/,
+    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.outputs\['release-candidate-artifact'\] != '' \}\}/,
   );
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
