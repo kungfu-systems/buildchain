@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-08-05T20:21:42.376Z"
+    "updatedAt": "2026-08-06T10:36:50.397Z"
   },
   "candidates": [
     {
@@ -764,9 +764,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-07-30T10:19:42.000Z",
-        "soakElapsedSeconds": 554520,
+        "soakElapsedSeconds": 605828,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -791,7 +791,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -812,9 +812,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-07-31T13:57:29.000Z",
-        "soakElapsedSeconds": 455053,
+        "soakElapsedSeconds": 506361,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -839,7 +839,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -852,9 +852,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-07-31T15:40:10.000Z",
-        "soakElapsedSeconds": 448892,
+        "soakElapsedSeconds": 500200,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -879,7 +879,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -892,9 +892,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-07-31T16:16:47.000Z",
-        "soakElapsedSeconds": 446695,
+        "soakElapsedSeconds": 498003,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -919,7 +919,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -940,9 +940,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T00:28:54.000Z",
-        "soakElapsedSeconds": 417168,
+        "soakElapsedSeconds": 468476,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -967,7 +967,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -980,9 +980,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T01:08:19.000Z",
-        "soakElapsedSeconds": 414803,
+        "soakElapsedSeconds": 466111,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1007,7 +1007,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1020,9 +1020,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T01:35:50.000Z",
-        "soakElapsedSeconds": 413152,
+        "soakElapsedSeconds": 464460,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1047,7 +1047,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1060,9 +1060,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T07:41:28.000Z",
-        "soakElapsedSeconds": 391214,
+        "soakElapsedSeconds": 442522,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1087,7 +1087,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1100,9 +1100,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T08:15:14.000Z",
-        "soakElapsedSeconds": 389188,
+        "soakElapsedSeconds": 440496,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1127,7 +1127,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1140,9 +1140,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T09:29:35.000Z",
-        "soakElapsedSeconds": 384727,
+        "soakElapsedSeconds": 436035,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1167,7 +1167,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1180,9 +1180,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T11:20:59.000Z",
-        "soakElapsedSeconds": 378043,
+        "soakElapsedSeconds": 429351,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1207,7 +1207,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1220,9 +1220,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T12:08:34.000Z",
-        "soakElapsedSeconds": 375188,
+        "soakElapsedSeconds": 426496,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1247,7 +1247,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1260,9 +1260,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T13:00:25.000Z",
-        "soakElapsedSeconds": 372077,
+        "soakElapsedSeconds": 423385,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1287,7 +1287,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1300,9 +1300,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T13:18:26.000Z",
-        "soakElapsedSeconds": 370996,
+        "soakElapsedSeconds": 422304,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1327,7 +1327,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1340,9 +1340,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-01T14:15:22.000Z",
-        "soakElapsedSeconds": 367580,
+        "soakElapsedSeconds": 418888,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1367,7 +1367,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -1388,7 +1388,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1415,7 +1415,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1428,7 +1428,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1455,7 +1455,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1468,9 +1468,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "2026-08-02T01:32:26.000Z",
-        "soakElapsedSeconds": 326956,
+        "soakElapsedSeconds": 378264,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1495,7 +1495,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -1516,7 +1516,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1543,7 +1543,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1556,7 +1556,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1583,7 +1583,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1596,7 +1596,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1623,7 +1623,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1636,7 +1636,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1663,7 +1663,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1676,7 +1676,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1703,7 +1703,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1716,7 +1716,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1743,7 +1743,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1756,7 +1756,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1783,7 +1783,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1796,7 +1796,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1823,7 +1823,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1836,7 +1836,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1863,7 +1863,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1876,7 +1876,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-05T20:21:42.376Z",
+        "observedAt": "2026-08-06T10:36:50.397Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1903,12 +1903,100 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-05T20:21:42.376Z",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
         "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.6-alpha.2",
+      "stableVersion": "3.0.6",
+      "sha": "931e1a448f3460a29d6b6765c1f1e3e3e26f19cc",
+      "tag": "v3.0.6-alpha.2",
+      "publishedAt": "2026-08-05T21:51:39.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-06T10:36:50.397Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-05T21:51:39.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.6-alpha.2"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-06T10:36:50.397Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "3.0.6-alpha.6",
+      "stableVersion": "3.0.6",
+      "sha": "7eee0d39477f568475a87fb3c41c65666a162b85",
+      "tag": "v3.0.6-alpha.6",
+      "publishedAt": "2026-08-06T07:41:46.000Z",
+      "state": "qualified",
+      "qualification": {
+        "ok": true,
+        "observedAt": "2026-08-06T10:36:50.397Z",
+        "soakStartedAt": "2026-08-06T07:47:53.000Z",
+        "soakElapsedSeconds": 10137,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-06T07:41:46.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.6-alpha.6"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-08-06T07:01:59.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/31079099111"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-08-06T07:47:53.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/31082209899"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "human-release-now",
+        "actor": "human",
+        "updatedAt": "2026-08-06T10:36:50.397Z"
+      },
+      "promotionRequest": {
+        "stableTag": "v3.0.6",
+        "sourceRef": "publish-gate/release/v3/v3.0/3.0.6-alpha.6",
+        "targetRef": "release/v3/v3.0",
+        "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/2387",
+        "requestedAt": "2026-08-06T10:36:50.397Z",
+        "authority": "human"
       }
     }
   ],
-  "updatedAt": "2026-08-05T20:21:42.376Z",
+  "updatedAt": "2026-08-06T10:36:50.397Z",
   "stableReleases": [
     {
       "version": "3.0.2",
