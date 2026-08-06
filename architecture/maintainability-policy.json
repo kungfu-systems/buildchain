@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104530,
+    "maxHandMaintainedSourceLines": 104536,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
-    "latestTransition": "Repeated candidate recovery keeps the durable sealed-bundle root bound to the original candidate runtime while recording newer recovery tooling only in evidence.",
-    "rationale": "One bounded candidate constructor and regression test prevent current recovery tooling changes from perturbing an existing durable payload identity. The exact ceiling preserves byte verification, original runtime provenance, and fail-closed transaction conflict handling without adding product installation, build, repackaging, workflow, or publication paths."
+    "latestTransition": "Repeated candidate recovery preserves both durable Alpha finalization material and the original candidate runtime identity across newer recovery tooling.",
+    "rationale": "Contained finalization restores already-published durable artifacts instead of transient rebuilt bytes, while one bounded candidate constructor prevents the current recovery tooling SHA from perturbing the sealed payload root. The combined exact ceiling preserves ancestry, transaction, artifact, original-runtime, and fail-closed conflict gates without adding a product install, build, repackaging, workflow, or publication path."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -1063,9 +1063,9 @@
       "rationale": "The existing version-state commit transaction remains nested under its extracted operation factory and is independently regression-tested; this exact inherited ceiling cannot grow."
     },
     "actions/promote-buildchain-ref/internal/durable-transaction-operations.js#createDurableTransactionOperations": {
-      "maxLines": 371,
+      "maxLines": 376,
       "maxComplexity": 1,
-      "rationale": "Transplanted legacy durable transaction and Passport operations now live in an independently owned module; explicit dependency injection adds seams while this exact inherited ceiling cannot grow."
+      "rationale": "Transplanted legacy durable transaction and Passport operations now live in an independently owned module; one semantic durable-material seam lets already-proven contained finalization restore immutable publication facts without accepting a transient rebuilt candidate or inconsistent per-field overrides, and this exact inherited ceiling cannot grow."
     },
     "packages/core/paper-npm-bootstrap.js#executePaperNpmBootstrap": {
       "maxLines": 490,
