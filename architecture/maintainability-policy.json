@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 276,
-    "maxHandMaintainedSourceLines": 105300,
+    "maxHandMaintainedSourceLines": 105306,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22241,
-    "latestTransition": "The v4 planning boundary gains one read-only v3 core-mechanism inventory validator after the candidate-recovery and publication-audit integration, without changing a runtime, workflow, state machine, artifact format, or provider effect.",
-    "rationale": "The exact 171-line and one-file increase over e6d6ecd6204518298898962f01aba5d73ed70b60 validates ten source- and test-grounded v3 mechanism families, including the integrated recovery-wrapper and publication-candidate-sealer coordinates, their public surfaces, durable stores, recovery semantics, provider readback, compatibility callers, and unresolved v4 disposition. The exact observed cut remains recorded in architecture/v3-core-mechanism-inventory.json. This tooling-only ceiling cannot grow implicitly; any runtime or broader inventory change requires another reviewed policy transition."
+    "maxWorkflowLines": 22268,
+    "latestTransition": "Candidate recovery binds the public authority workflow path and the exact consumer qualification controller commit through the generated channel router without changing candidate payloads or scheduling a product build.",
+    "rationale": "The exact 27-line workflow and six-line generator/test increase over 7c8956e8babb521d3e743d40108f115a59a40427 adds two immutable recovery coordinates: the authority workflow path exposed by the public router and the caller-repository controller SHA that owns the consumer qualification predicate. Both coordinates are validated and sealed into the publication capability path; the existing promote-only workflow and no-product-build boundary remain unchanged. This exact ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -776,12 +776,14 @@
           "promotion-shell-sha",
           "promotion-target-ref",
           "publication-admission-json",
+          "publication-authority-workflow-path",
           "publication-auto-admission",
           "publication-auto-no-gate",
           "publication-commit-command",
           "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
+          "publication-consumer-qualification-controller-sha",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -888,7 +890,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The advanced promotion workflow forwards one optional exact consumer Gate controller SHA into the credential-free authority. Candidate, target tree, controller, and command identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
+      "rationale": "The advanced promotion workflow accepts an explicit public authority path and an optional exact consumer qualification controller SHA. Candidate, target tree, Gate controller, predicate controller, command, and authority workflow identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -929,6 +931,7 @@
           "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
+          "publication-consumer-qualification-controller-sha",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -1047,7 +1050,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The generated v3 promotion router forwards the additive exact consumer Gate controller SHA together with the existing candidate recovery identity, without changing channel selection, contract-lock routing, payload handling, or publication authority."
+      "rationale": "The generated v3 promotion router forwards the optional exact consumer qualification controller SHA and fixes the authority identity to its public workflow path together with the existing candidate recovery identity, without changing channel selection, contract-lock routing, payload handling, or publication effects."
     }
   },
   "approvedExtractedDebt": {

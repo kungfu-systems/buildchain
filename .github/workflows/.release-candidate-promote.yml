@@ -492,6 +492,11 @@ on:
         default: ""
         type: string
         required: false
+      publication-consumer-qualification-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer qualification command; empty uses the Gate controller SHA, then the publication source SHA"
+        default: ""
+        type: string
+        required: false
       publication-consumer-predicate-id:
         description: "Stable identifier for the opt-in consumer-owned publication predicate"
         default: ""
@@ -515,6 +520,11 @@ on:
       publication-publisher-workflow-path:
         description: "Caller workflow path bound by the provider trusted-publisher policy"
         default: ""
+        type: string
+        required: false
+      publication-authority-workflow-path:
+        description: "Buildchain workflow path exposed as the publication authority; empty uses the internal promotion shell path"
+        default: ".github/workflows/.release-candidate-promote.yml"
         type: string
         required: false
       publication-product:
@@ -1073,7 +1083,7 @@ jobs:
       target-ref: ${{ needs.preflight.outputs.target-ref }}
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
-      authority-workflow-path: .github/workflows/.release-candidate-promote.yml
+      authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
@@ -1097,25 +1107,36 @@ jobs:
       required: ${{ steps.plan.outputs.required }}
       predicate-id: ${{ steps.plan.outputs.predicate-id }}
       predicate-digest: ${{ steps.plan.outputs.predicate-digest }}
+      controller-sha: ${{ steps.plan.outputs.controller-sha }}
     steps:
       - name: Seal exact predicate identity
         id: plan
         shell: bash
         env:
           BUILDCHAIN_CONSUMER_PREDICATE_COMMAND: ${{ inputs.publication-consumer-qualification-command }}
+          BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: ${{ inputs.publication-consumer-qualification-controller-sha }}
+          BUILDCHAIN_CONSUMER_GATE_CONTROLLER_SHA: ${{ inputs.publication-gate-controller-sha }}
+          BUILDCHAIN_PUBLICATION_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.publication-consumer-predicate-id }}
         run: |
           node <<'NODE'
           const crypto = require("node:crypto");
           const fs = require("node:fs");
           const command = String(process.env.BUILDCHAIN_CONSUMER_PREDICATE_COMMAND || "");
+          const explicitControllerSha = String(process.env.BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA || "").trim();
+          const gateControllerSha = String(process.env.BUILDCHAIN_CONSUMER_GATE_CONTROLLER_SHA || "").trim();
+          const sourceSha = String(process.env.BUILDCHAIN_PUBLICATION_SOURCE_SHA || "").trim();
+          const controllerSha = explicitControllerSha || gateControllerSha || sourceSha;
           const predicateId = String(process.env.BUILDCHAIN_CONSUMER_PREDICATE_ID || "").trim();
           if (command && !predicateId) throw new Error("consumer qualification command requires publication-consumer-predicate-id");
           if (!command && predicateId) throw new Error("consumer predicate id requires publication-consumer-qualification-command");
+          if (explicitControllerSha && !command) throw new Error("consumer qualification controller requires publication-consumer-qualification-command");
+          if (command && !/^[0-9a-f]{40}$/.test(controllerSha)) throw new Error("consumer qualification command requires an exact controller SHA");
           const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
           output.write(`required=${command ? "true" : "false"}\n`);
           output.write(`predicate-id=${predicateId}\n`);
-          output.write(`predicate-digest=${command ? crypto.createHash("sha256").update(command).digest("hex") : ""}\n`);
+          output.write(`predicate-digest=${command ? crypto.createHash("sha256").update(`${command}\0${controllerSha}`).digest("hex") : ""}\n`);
+          output.write(`controller-sha=${command ? controllerSha : ""}\n`);
           output.end();
           NODE
 
@@ -1135,7 +1156,7 @@ jobs:
         if: ${{ needs.qualification-plan.outputs.required == 'true' }}
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ needs.preflight.outputs.requested-sha }}
+          ref: ${{ needs.qualification-plan.outputs.controller-sha }}
           persist-credentials: false
 
       - name: Checkout exact Buildchain qualification runtime
