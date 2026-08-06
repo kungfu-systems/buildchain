@@ -186,10 +186,11 @@ of those identities still agree.
 The recovery path conditionally skips consumer dependency installation and all
 product `install`, `build`, `verify`, and platform-matrix jobs. It restores the
 downloaded bytes as a content-addressed sealed bundle, so npm publication uses
-the original `.tgz`. The bundle identity remains bound to the original
-candidate runtime recorded in the Passport; a newer recovery tooling SHA is
-recorded only in the recovery evidence and cannot perturb the durable payload
-root. Recovery may regenerate only Buildchain-owned receipts,
+the original `.tgz`. Both the explicit recovery entry and durable-transaction
+re-resolution bind the bundle identity to the original candidate runtime
+recorded in the Passport; a newer recovery tooling SHA is recorded only in the
+recovery evidence and cannot perturb the durable payload root. Recovery may
+regenerate only Buildchain-owned receipts,
 attestations, signatures, Release Passport data, publication, and readback.
 
 Success emits `kungfu-buildchain-release-candidate-recovery/v1` with

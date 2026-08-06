@@ -18,6 +18,7 @@ import {
   readNpmPackageArtifact,
   resolveReleaseCandidateArtifacts,
   releaseCandidateDownloadEnabled,
+  releaseCandidateRuntimeSha,
   selectReleaseAssetPaths,
   selectMergedChannelPullRequest,
   selectPayloadArtifacts,
@@ -1110,6 +1111,19 @@ test("release candidate resolver seals the exact normal-path npm candidate bytes
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("release candidate resolver binds sealed identity to the Passport runtime", () => {
+  const candidateRuntimeSha = "4".repeat(40);
+  const currentToolingSha = "5".repeat(40);
+  const passport = { buildchain: { sha: candidateRuntimeSha } };
+
+  assert.equal(releaseCandidateRuntimeSha(passport), candidateRuntimeSha);
+  assert.notEqual(releaseCandidateRuntimeSha(passport), currentToolingSha);
+  assert.throws(
+    () => releaseCandidateRuntimeSha({ buildchain: { sha: "floating-runtime" } }),
+    /release candidate Passport Buildchain runtime SHA must be a 40-character Git SHA/,
+  );
 });
 
 test("workflow friction classifier prioritizes duplicate PRs, heavy builds, and late fail-fast", () => {
