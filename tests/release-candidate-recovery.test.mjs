@@ -5,6 +5,7 @@ import { createReleaseCandidatePassport, sha256Json } from "../packages/core/rel
 import { releaseTransactionId } from "../packages/core/publish-transaction.js";
 import {
   ReleaseCandidateRecoveryError,
+  validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
 
@@ -336,6 +337,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   assert.match(advanced, /name: Reuse sealed candidate publication version/);
   assert.match(advanced, /publish-sealed-bundle-root: \$\{\{ steps\.rc\.outputs\.publish-sealed-bundle-root \}\}/);
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
+  assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
   assert.match(
     refPromotion,
     /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/,
@@ -354,4 +356,40 @@ test("recovery receipt schema exposes the immutable reused contract", async () =
   assert.equal(schema.properties.action.const, "reused");
   assert.deepEqual(schema.properties.skippedBuildStages.const, ["install", "build", "verify", "platform-matrix"]);
   assert.ok(schema.required.includes("root"));
+});
+
+test("recovery receipt binds a sealed payload publication version without rewriting the candidate passport", () => {
+  const input = fixture({ publicationVersion: "3.1.0-alpha.2" });
+  const originalCandidateHash = input.passport.candidateHash;
+  const { receipt } = verifyReleaseCandidateRecovery(input);
+  const validation = validateReleaseCandidateRecoveryReceipt({
+    receipt,
+    passport: input.passport,
+    repository: input.targetRepository,
+    targetChannel: input.channel,
+    targetRef: input.targetRef,
+    targetSha: input.targetSha,
+    targetTree: input.targetTree,
+    version: "3.1.0-alpha.2",
+  });
+  assert.equal(validation.ok, true);
+  assert.equal(validation.publicationVersion, "3.1.0-alpha.2");
+  assert.equal(input.passport.target.version, "3.1.0-alpha.1");
+  assert.equal(input.passport.candidateHash, originalCandidateHash);
+
+  const driftedVersion = structuredClone(receipt);
+  driftedVersion.target.version = "3.1.0-alpha.3";
+  assert.match(
+    validateReleaseCandidateRecoveryReceipt({
+      receipt: driftedVersion,
+      passport: input.passport,
+      repository: input.targetRepository,
+      targetChannel: input.channel,
+      targetRef: input.targetRef,
+      targetSha: input.targetSha,
+      targetTree: input.targetTree,
+      version: "3.1.0-alpha.2",
+    }).errors.join("; "),
+    /receipt root mismatch.*publication version mismatch/,
+  );
 });

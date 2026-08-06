@@ -25,6 +25,7 @@ import {
   selectReleaseCandidateRun,
   selectReleaseCandidateRuns,
 } from "../scripts/release-candidate-resolver.mjs";
+import { createResolvedPublicationSealedBundle } from "../scripts/publication-candidate-sealer.mjs";
 import {
   buildWorkflowFrictionBody,
   classifyWorkflowFriction,
@@ -1068,6 +1069,44 @@ test("release candidate resolver generates npm package-set required artifacts fr
         role: "platform",
       },
     ]);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("release candidate resolver seals the exact normal-path npm candidate bytes", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rc-sealed-normal-"));
+  try {
+    const payloadRoot = path.join(workspace, "payloads");
+    fs.mkdirSync(payloadRoot, { recursive: true });
+    const packedTarball = createNpmTarball(
+      workspace,
+      { name: "@kungfu-tech/buildchain", version: "3.0.6-alpha.4" },
+      "buildchain.tgz",
+    );
+    const tarball = path.join(payloadRoot, "buildchain.tgz");
+    fs.renameSync(packedTarball, tarball);
+    fs.writeFileSync(path.join(payloadRoot, "product-payload-manifest.json"), "{}\n");
+    const sealed = createResolvedPublicationSealedBundle({
+      bundleRoot: payloadRoot,
+      repository: "kungfu-systems/buildchain",
+      sourceSha: SOURCE_SHA,
+      sourceTreeSha: "2".repeat(40),
+      runtimeSha: "4".repeat(40),
+      releaseCandidateRoot: root("3"),
+      npmArtifacts: [{
+        path: tarball,
+        ...readNpmPackageArtifact({ tarballPath: tarball, mainPackage: "@kungfu-tech/buildchain" }),
+      }],
+    });
+    const expectedIntegrity = `sha512-${crypto.createHash("sha512").update(fs.readFileSync(tarball)).digest("base64")}`;
+    assert.equal(sealed.manifest.npm.integrity, expectedIntegrity);
+    assert.equal(sealed.manifest.npm.path, "buildchain.tgz");
+    assert.deepEqual(sealed.manifest.releaseAssets.map((asset) => asset.path), ["buildchain.tgz"]);
+    assert.deepEqual(
+      sealed.manifest.files.map((file) => file.path),
+      ["buildchain.tgz", "product-payload-manifest.json"],
+    );
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

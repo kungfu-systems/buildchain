@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { createResolvedPublicationSealedBundle } from "./publication-candidate-sealer.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 const DEFAULT_WORKFLOW_FILE = "build-surface-fixture.yml";
@@ -421,6 +422,7 @@ export async function resolveReleaseCandidateArtifacts({
   requiredArtifactCount = 0,
   publishArtifactKind = "npm",
   publishPackageMain = "",
+  runtimeSha = "",
   outputDir = ".buildchain/release-candidate",
   fetchImpl = globalThis.fetch,
   download = true,
@@ -668,6 +670,27 @@ export async function resolveReleaseCandidateArtifacts({
   });
   const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
   fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
+  const sealedBundle = publishArtifactKind === "npm"
+    ? createResolvedPublicationSealedBundle({
+        bundleRoot: payloadDir,
+        repository: repoInfo.fullName,
+        sourceSha: passport.source?.headSha,
+        sourceTreeSha: passport.source?.treeHash,
+        runtimeSha: runtimeSha || sha,
+        releaseCandidateRoot: passport.candidateHash,
+        npmArtifacts: npmTarballPaths.map((tarballPath) => ({
+          path: tarballPath,
+          ...readNpmPackageArtifact({ tarballPath, mainPackage: publishPackageMain }),
+        })),
+        releaseAssetPaths,
+      })
+    : undefined;
+  const sealedBundleManifestPath = sealedBundle
+    ? path.join(resolvedOutput, "sealed-bundle.json")
+    : "";
+  if (sealedBundleManifestPath) {
+    fs.writeFileSync(sealedBundleManifestPath, `${JSON.stringify(sealedBundle.manifest, null, 2)}\n`);
+  }
   return {
     ...result,
     paths: {
@@ -679,6 +702,8 @@ export async function resolveReleaseCandidateArtifacts({
       npmTarballs: npmTarballPaths.map(outputPath),
       releaseAssets: releaseAssetPaths.map(outputPath),
       publishRequiredArtifacts: outputPath(requiredArtifactsPath),
+      sealedBundleRoot: sealedBundle ? outputPath(sealedBundle.root) : "",
+      sealedBundleManifest: sealedBundleManifestPath ? outputPath(sealedBundleManifestPath) : "",
     },
     version: passport.target?.version || "",
     candidateHash: passport.candidateHash || "",
@@ -705,6 +730,7 @@ export async function resolveReleaseCandidateArtifactsCli() {
     requiredArtifactCount: env("BUILDCHAIN_REQUIRED_ARTIFACT_COUNT", "0"),
     publishArtifactKind: env("BUILDCHAIN_PUBLISH_ARTIFACT_KIND", "npm"),
     publishPackageMain: env("BUILDCHAIN_PUBLISH_PACKAGE_MAIN"),
+    runtimeSha: env("BUILDCHAIN_CURRENT_RUNTIME_SHA", env("BUILDCHAIN_RUNTIME_SHA", env("BUILDCHAIN_TARGET_SHA"))),
     outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate"),
     download: releaseCandidateDownloadEnabled(env("BUILDCHAIN_RC_DOWNLOAD", "true")),
     waitSeconds: env("BUILDCHAIN_RC_WAIT_SECONDS", "600"),
@@ -735,6 +761,8 @@ export async function resolveReleaseCandidateArtifactsCli() {
     ).join("\n"),
     "publish-required-artifacts-json": JSON.stringify(result.publishRequiredArtifacts || []),
     "publish-required-artifacts-path": result.paths?.publishRequiredArtifacts || "",
+    "publish-sealed-bundle-root": result.paths?.sealedBundleRoot || "",
+    "publish-sealed-bundle-manifest": result.paths?.sealedBundleManifest || "",
     "release-candidate-run-id": result.run?.id || "",
     "release-candidate-run-url": result.run?.url || "",
     "release-candidate-pr": result.pullRequest?.number ? String(result.pullRequest.number) : "",

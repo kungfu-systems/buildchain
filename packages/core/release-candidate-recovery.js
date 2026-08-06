@@ -93,6 +93,51 @@ function normalizedRef(value) {
   return String(value || "").replace(/^refs\/heads\//, "").trim();
 }
 
+export function validateReleaseCandidateRecoveryReceipt({
+  receipt,
+  passport,
+  repository = "",
+  targetChannel = "",
+  targetRef = "",
+  targetSha = "",
+  targetTree = "",
+  version = "",
+} = {}) {
+  const receiptObject = Boolean(receipt && typeof receipt === "object" && !Array.isArray(receipt));
+  const passportObject = Boolean(passport && typeof passport === "object" && !Array.isArray(passport));
+  const rootedReceipt = Object.assign({}, receipt);
+  delete rootedReceipt.root;
+  const candidateHash = String(passport?.candidateHash || "");
+  const candidateRoot = `sha256:${candidateHash}`;
+  const checks = [
+    [receiptObject, "receipt must be an object"],
+    [passportObject, "passport must be an object"],
+    [receipt?.contract === RELEASE_CANDIDATE_RECOVERY_CONTRACT, `contract must be ${RELEASE_CANDIDATE_RECOVERY_CONTRACT}`],
+    [Number(receipt?.schemaVersion) === 1, "schemaVersion must be 1"],
+    [receipt?.action === "reused", "action must be reused"],
+    [receipt?.payloadBytes === "unchanged", "payloadBytes must be unchanged"],
+    [JSON.stringify(receipt?.skippedBuildStages) === JSON.stringify(["install", "build", "verify", "platform-matrix"]), "skippedBuildStages must record the complete skipped product build matrix"],
+    [receipt?.root === `sha256:${sha256Json(rootedReceipt)}`, "receipt root mismatch"],
+    [!repository || receipt?.repository === repository, `repository mismatch: expected ${repository}, got ${receipt?.repository || "<empty>"}`],
+    [!targetChannel || receipt?.target?.channel === targetChannel, `target channel mismatch: expected ${targetChannel}, got ${receipt?.target?.channel || "<empty>"}`],
+    [!targetRef || normalizedRef(receipt?.target?.ref) === normalizedRef(targetRef), `target ref mismatch: expected ${normalizedRef(targetRef)}, got ${normalizedRef(receipt?.target?.ref) || "<empty>"}`],
+    [!targetSha || receipt?.target?.sha === targetSha, `target SHA mismatch: expected ${targetSha}, got ${receipt?.target?.sha || "<empty>"}`],
+    [!targetTree || receipt?.target?.tree === targetTree, `target tree mismatch: expected ${targetTree}, got ${receipt?.target?.tree || "<empty>"}`],
+    [!version || receipt?.target?.version === version, `publication version mismatch: expected ${version}, got ${receipt?.target?.version || "<empty>"}`],
+    [passportObject && /^[0-9a-f]{64}$/.test(candidateHash), "passport candidateHash must be a sha256 digest"],
+    [passportObject && receipt?.recovered?.candidateRoot === candidateRoot, `candidate root mismatch: expected ${candidateRoot}, got ${receipt?.recovered?.candidateRoot || "<empty>"}`],
+    [passportObject && receipt?.originalCandidate?.sourceSha === passport?.source?.headSha, "original candidate source SHA mismatch"],
+    [passportObject && receipt?.originalCandidate?.tree === passport?.source?.treeHash, "original candidate tree mismatch"],
+  ];
+  const errors = checks.filter(([ok]) => !ok).map(([, message]) => message);
+  return {
+    ok: errors.length === 0,
+    errors,
+    publicationVersion: String(receipt?.target?.version || ""),
+    candidateRoot: String(receipt?.recovered?.candidateRoot || ""),
+  };
+}
+
 function sameArtifactFile(left, right) {
   return Boolean(left && right && left.size === right.size && left.sha256 === right.sha256);
 }

@@ -82,6 +82,7 @@ import {
   verifyReleasePassport,
 } from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
+import { validateReleaseCandidateRecoveryReceipt } from "../../packages/core/release-candidate-recovery.js";
 import { verifyPublicationQualificationReceipt } from "../../packages/core/publication-authority.js";
 import {
   createBuildchainKfd1Witness,
@@ -518,7 +519,9 @@ function validatePromotionReleaseCandidate({
   buildSummaryPath = ".buildchain/artifacts/build-summary.json",
   repository,
   targetChannel,
+  targetRef = "",
   version = "",
+  recoveryReceiptPath = "",
   sourceHeadSha,
   sourceTreeSha = "",
   requirePlatforms = true,
@@ -542,7 +545,7 @@ function validatePromotionReleaseCandidate({
     passport,
     repository,
     targetChannel: releaseCandidateEvidenceChannel(targetChannel),
-    version,
+    version: recoveryReceiptPath ? "" : version,
     buildSummary,
     requirePlatforms,
     requireFamilyEvidence,
@@ -550,6 +553,26 @@ function validatePromotionReleaseCandidate({
     familyInitiativeId,
     familyAssignmentId,
   });
+  let recoveryReceiptValidation;
+  if (recoveryReceiptPath) {
+    const resolvedRecoveryReceiptPath = resolveMaybeRelative(cwd, recoveryReceiptPath);
+    if (!fs.existsSync(resolvedRecoveryReceiptPath)) {
+      validation.errors.push(`recovery receipt is missing: ${recoveryReceiptPath}`);
+    } else {
+      const recoveryReceipt = JSON.parse(fs.readFileSync(resolvedRecoveryReceiptPath, "utf8"));
+      recoveryReceiptValidation = validateReleaseCandidateRecoveryReceipt({
+        receipt: recoveryReceipt,
+        passport,
+        repository,
+        targetChannel: releaseCandidateEvidenceChannel(targetChannel),
+        targetRef,
+        targetSha: sourceHeadSha,
+        targetTree: sourceTreeSha,
+        version,
+      });
+      validation.errors.push(...recoveryReceiptValidation.errors.map((error) => `recovery receipt: ${error}`));
+    }
+  }
   const acceptedSourceShas = [
     passport.source?.headSha,
     passport.source?.mergeRefSha,
@@ -582,6 +605,7 @@ function validatePromotionReleaseCandidate({
     promotionChannelTreeSha: sourceTreeSha || "",
     treeEquivalent: Boolean(sourceTreeSha && sourceTreeHash && sourceTreeSha === sourceTreeHash,
     ),
+    publicationVersionBinding: recoveryReceiptValidation?.ok ? "recovery-receipt" : "candidate-passport",
   };
 }
 
@@ -4538,6 +4562,7 @@ async function promoteBuildchainRefs({
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releaseCandidateVersion = "",
+  releaseCandidateRecoveryReceiptPath = "",
   releaseCandidateFamilyEvidenceRequired = false,
   releaseCandidateFamilyEvidenceRoot = "",
   releaseCandidateFamilyInitiativeId = "",
@@ -4658,6 +4683,8 @@ async function promoteBuildchainRefs({
       repository: `${owner}/${repo}`,
       targetChannel: rule.channel,
       version: releaseCandidateVersion,
+      recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
+      targetRef,
       sourceHeadSha: sha,
       sourceTreeSha: targetCommitInfo.treeSha,
       requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
@@ -4671,6 +4698,7 @@ async function promoteBuildchainRefs({
       candidateHash: releaseCandidateValidation.candidateHash,
       platformCount: releaseCandidateValidation.platformCount,
       passportPath: path.relative(cwd, releaseCandidateValidation.passportPath).split(path.sep).join("/"),
+      publicationVersionBinding: releaseCandidateValidation.publicationVersionBinding,
     });
   }
 
@@ -4745,6 +4773,7 @@ async function promoteBuildchainRefs({
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,
     releaseCandidateVersion,
+    releaseCandidateRecoveryReceiptPath,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,
