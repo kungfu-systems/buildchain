@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104621,
+    "maxHandMaintainedSourceFiles": 275,
+    "maxHandMaintainedSourceLines": 104819,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
-    "latestTransition": "Every candidate resolver preserves the original Passport runtime identity across newer recovery tooling.",
-    "rationale": "One bounded runtime selector keeps normal promotion and durable recovery on the same sealed candidate root while preserving exact Passport validation. The exact ceiling adds no product install, build, repackaging, workflow, or publication path."
+    "latestTransition": "Complete candidate recovery verifies and preserves the already-published Release Passport generation while reconciling only sealed payload bytes.",
+    "rationale": "One bounded public-release verifier separates complete-transaction readback from ordinary same-name evidence upload. The exact ceiling adds no product install, build, repackaging, workflow, or package publication path."
   },
   "sourceBudgets": {
     "newFileLines": 600,
