@@ -159,7 +159,7 @@ async function main() {
     sourceSha,
     runtimeSha,
     contractDigest: controllerReceipt.runtime?.contractDigest,
-    policyDigest: gateAggregate.policyDigest,
+    policyDigest: gateBindings.policyDigest,
     gateRegistryDigest: gateBindings.registryDigest,
     controllerReceiptDigest: controllerReceipt.digest,
     runnerProvenanceDigest: runnerProvenance.receiptDigest,

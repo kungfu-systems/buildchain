@@ -1378,8 +1378,19 @@ test("self-publication admission assembly binds downloaded evidence without publ
   assert.match(script, /admitted source tree does not match release candidate/);
   assert.match(script, /BUILDCHAIN_ALLOW_NO_GATE/);
   assert.match(script, /managed-release-candidate-no-gate/);
+  assert.match(script, /policyDigest: gateBindings\.policyDigest/);
+  assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
   assert.match(script, /github-hosted-single-job/);
   assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
+});
+
+test("publication artifact admission uses validated Gate policy bindings", () => {
+  const script = fs.readFileSync(
+    path.join(root, "scripts/assemble-publication-artifact-admission.mjs"),
+    "utf8",
+  );
+  assert.match(script, /policyDigest: gateBindings\.policyDigest/);
+  assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
 });
 
 test("publication control-plane audit defers npm OIDC authorization to the publish transaction", () => {
