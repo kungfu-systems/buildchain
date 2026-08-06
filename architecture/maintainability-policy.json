@@ -10,7 +10,7 @@
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22241,
     "latestTransition": "The v4 planning boundary gains one read-only v3 core-mechanism inventory validator after the candidate-recovery and publication-audit integration, without changing a runtime, workflow, state machine, artifact format, or provider effect.",
-    "rationale": "The exact 171-line and one-file increase over 9cc135335cd4966b47fb95081dad4e281789bd0d validates ten source- and test-grounded v3 mechanism families, including the integrated recovery-wrapper and publication-candidate-sealer coordinates, their public surfaces, durable stores, recovery semantics, provider readback, compatibility callers, and unresolved v4 disposition. The exact observed cut remains recorded in architecture/v3-core-mechanism-inventory.json. This tooling-only ceiling cannot grow implicitly; any runtime or broader inventory change requires another reviewed policy transition."
+    "rationale": "The exact 171-line and one-file increase over e6d6ecd6204518298898962f01aba5d73ed70b60 validates ten source- and test-grounded v3 mechanism families, including the integrated recovery-wrapper and publication-candidate-sealer coordinates, their public surfaces, durable stores, recovery semantics, provider readback, compatibility callers, and unresolved v4 disposition. The exact observed cut remains recorded in architecture/v3-core-mechanism-inventory.json. This tooling-only ceiling cannot grow implicitly; any runtime or broader inventory change requires another reviewed policy transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

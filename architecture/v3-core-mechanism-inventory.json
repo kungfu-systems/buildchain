@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-v3-core-mechanism-inventory",
   "baseline": {
     "branch": "dev/v3/v3.0",
-    "commit": "9cc135335cd4966b47fb95081dad4e281789bd0d",
-    "tree": "2fbcc21ebf525eb665fcab4f1d839f0cca103f15"
+    "commit": "e6d6ecd6204518298898962f01aba5d73ed70b60",
+    "tree": "26c8476dcc63d1b8cf9b32fe12ffbf3ee52246cf"
   },
   "maintainability": {
     "handMaintainedSourceFiles": 275,
