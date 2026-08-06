@@ -45,6 +45,7 @@ jobs:
   buildchain-package-candidate:
     name: Seal Buildchain npm product payload
     needs: [libnode-shaped]
+    if: ${{ needs.libnode-shaped.outputs.release-candidate-artifact != '' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read

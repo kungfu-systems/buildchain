@@ -8,7 +8,7 @@
     "maxHandMaintainedSourceFiles": 272,
     "maxHandMaintainedSourceLines": 104171,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22140,
+    "maxWorkflowLines": 22141,
     "latestTransition": "Candidate-run recovery adds one fail-closed verifier, one exact-run resolver, and one deterministic startup-failure dogfood workflow without adding a second publication state machine or product rebuild path.",
     "rationale": "The responsibility-owned candidate recovery verifier and exact-run resolver add two bounded modules, while one workflow_dispatch-only fixture proves startup/router failure can be recovered by a fresh event. The exact ceilings include repository, workflow, Passport, summary, controller, manifest, archive, product-payload, Git-tree, runtime, permission, and durable-transaction validation; sealed payload bytes are reused without product install, build, verify, or platform-matrix execution. Existing publication state and repair_required behavior remain authoritative, and any wider ceiling requires another reviewed policy change."
   },
