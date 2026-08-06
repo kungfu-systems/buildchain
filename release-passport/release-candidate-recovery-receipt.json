@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-release-candidate-recovery/v1",
   "action": "reused",
-  "createdAt": "2026-08-06T09:44:11.149Z",
+  "createdAt": "2026-08-06T10:24:03.818Z",
   "repository": "kungfu-systems/buildchain",
-  "recoveryRunId": "31090210057",
+  "recoveryRunId": "31092972846",
   "originalCandidate": {
     "runId": "31078343118",
     "workflowFile": "build-surface-fixture.yml",
@@ -103,11 +103,11 @@
     "platform-matrix"
   ],
   "payloadBytes": "unchanged",
-  "buildchainToolingSha": "f1cd18a24075e203f59c4d7e6466e5279e7e6f6a",
+  "buildchainToolingSha": "c8957d9e83b39f477073cea9c47c6e316a3f5a1d",
   "transaction": {
     "identity": "7b75822039d66339783a49e506c6ed6f4a7f1d6cb91134023767012441bf52d5",
     "state": "complete",
     "publicationState": "alpha-complete"
   },
-  "root": "sha256:16ccde0e81158b25a4a21ee18c397545e6a99360b104deb0781cd16ee63d886c"
+  "root": "sha256:6c7d64334f3168a2dca2d5b52869b3cf3625065ec46fe6d6f7050b43fd90dc38"
 }
