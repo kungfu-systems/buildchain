@@ -46,6 +46,9 @@ const {
   loadBuildchainConfig,
 } = await import("../packages/core/buildchain-config.js");
 const { sha256Json } = await import("../packages/core/release-candidate.js");
+const { resolveExistingVersionState } = await import(
+  "../actions/promote-buildchain-ref/internal/existing-version-state.js"
+);
 
 const {
   explainReleaseLineDryRun,
@@ -544,6 +547,7 @@ test("promote-only recovery binds publication version through the immutable reco
       sourceTreeSha: `tree-${SHA}`,
     });
     assert.equal(result.publicationVersionBinding, "recovery-receipt");
+    assert.equal(result.recoveredCandidate, true);
     assert.throws(
       () => validatePromotionReleaseCandidate({
         cwd,
@@ -578,6 +582,35 @@ test("promote-only recovery binds publication version through the immutable reco
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }
+});
+
+
+test("recovered no-op version state skips lifecycle verification", async () => {
+  const updates = [];
+  const result = await resolveExistingVersionState({
+    changedFiles: [],
+    recoveredCandidate: true,
+    version: "3.0.6-alpha.5",
+    dryRun: false,
+    workspaceCwd: "/unused",
+    verificationCommand: "",
+    discovered: { config: {}, packageManager: { name: "pnpm" } },
+    discoveredPaths: ["package.json"],
+    versionStateAllowedPaths: ["package.json"],
+    strategyEnv: {},
+    baseSha: SHA,
+    publishVersion: "3.0.6-alpha.5",
+    hasVersionVerification: true,
+    versionStrategy: { strategy: "semver", next: "auto" },
+    anchorManifest: undefined,
+    updates,
+    runVersionVerification: () =>
+      assert.fail("recovery must not execute lifecycle verification"),
+    createVerifiedVersionStateCommit: () =>
+      assert.fail("recovery must not rematerialize version state"),
+  });
+  assert.equal(result.action, "existing");
+  assert.equal(updates[0].action, "existing-recovered-version-state");
 });
 
 test("major promotion requires a release passport with the matching source tree", () => {

@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 273,
-    "maxHandMaintainedSourceLines": 104434,
+    "maxHandMaintainedSourceFiles": 274,
+    "maxHandMaintainedSourceLines": 104509,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22141,
-    "latestTransition": "Normal PR-stage npm promotion now seals and publishes the exact qualified candidate tarball instead of rematerializing package bytes from source.",
-    "rationale": "The bounded resolver addition inventories the already-downloaded payload artifact, binds its package integrity and release assets into the existing publication sealed-bundle contract, and passes that exact bundle to the existing durable publish transaction. This closes a live fail-closed digest mismatch while preserving the recovery receipt version binding already on dev, without adding a workflow, publication state, or alternate product build path. The exact ceiling includes both reviewed transitions plus the normal-path regression and manifest wiring; any wider ceiling requires another reviewed policy change."
+    "latestTransition": "Recovered candidates with unchanged version state skip consumer lifecycle verification, while any attempted version-state rematerialization fails closed.",
+    "rationale": "The bounded existing-version-state resolver extracts inherited no-op handling from the already capped promotion transaction and adds one recovery-specific decision: a validated immutable recovery receipt may reuse exact existing version state without running product lifecycle commands, while non-empty version changes remain rejected before publication. The exact ceiling includes the isolated resolver and its regression proof; it adds no workflow, product build path, or publication state."
   },
   "sourceBudgets": {
     "newFileLines": 600,
