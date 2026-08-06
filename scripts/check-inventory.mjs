@@ -74,6 +74,7 @@ const requiredPaths = [
   "docs/shifu-gate-profiles.md",
   "docs/auditable-demo.md",
   "contracts/auditable-demo-scenario-v1.schema.json",
+  "contracts/release-candidate-recovery-v1.schema.json",
   "contracts/auditable-demo-media-profiles-v1.json",
   "contracts/evidence/auditable-demo-web-delivery-v1.json",
   "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json",
@@ -117,6 +118,7 @@ const requiredPaths = [
   "scripts/publication-commit-evidence.mjs",
   "scripts/publication-reproducibility.mjs",
   "scripts/release-candidate-resolver.mjs",
+  "scripts/resume-from-candidate-run.mjs",
   "scripts/buildchain-patrol.mjs",
   "scripts/observed-evidence.mjs",
   "scripts/workflow-friction-report.mjs",
@@ -134,6 +136,7 @@ const requiredPaths = [
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
+  ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
   ".github/workflows/release-line-bootstrap.yml",
   ".github/workflows/release-governance-reconcile.yml",
   ".github/workflows/dev-pr-auto-merge.yml",
@@ -984,10 +987,12 @@ for (const requiredSnippet of [
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
-  "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
+  "resume-candidate-run-id:",
+  "resume-expected-source-tree:",
+  "resume-buildchain-runtime-sha:",
   "github-release: true",
   "release-passport-buildchain-self-kfd: true",
-  "publish-required-artifacts-json: \"[]\"",
+  "artifact-patterns: ${{ inputs['resume-candidate-run-id'] != '' && 'buildchain-package-*' || '' }}",
   "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
@@ -1041,6 +1046,11 @@ for (const requiredSnippet of [
   "BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json",
   "Consumer has no binary-distribution.yml; standalone binary dispatch is not applicable.",
   "gh workflow view binary-distribution.yml",
+  "resume-candidate-run-id:",
+  "node .buildchain/runtime/scripts/resume-from-candidate-run.mjs",
+  "publish-sealed-bundle-root: ${{ steps.rc.outputs.publish-sealed-bundle-root }}",
+  "BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}",
+  "if: ${{ inputs.resume-candidate-run-id == '' }}",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
     throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);

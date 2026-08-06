@@ -1079,6 +1079,7 @@ function preparePublishTransactionContext({
   publishCommand = "",
   publishEvidencePath = "",
   transactionStatePath = "",
+  expectedTransactionId = "",
   publishSealedBundleRoot = "",
   publishSealedBundleManifest = "",
   publishRequiredArtifactsJson = "",
@@ -1173,6 +1174,7 @@ function preparePublishTransactionContext({
     actor, runId, explicitOverride, allowVersionStateFinalization, promotionGeneratedAt,
     repository, resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
     existingNpmPromotion, expected, durableStateRef, requestedBundleRoot, requestedBundleManifest,
+    expectedTransactionId: String(expectedTransactionId || "").trim(),
   };
 }
 
@@ -1180,7 +1182,7 @@ async function restorePublishTransactionContext(context) {
   const {
     octokit, owner, repo, cwd, version, channel, sourceSha, releaseSha, targetRef,
     requiredArtifacts, expected, durableStateRef, resolvedStatePath, resolvedEvidencePath,
-    requestedBundleRoot, requestedBundleManifest,
+    requestedBundleRoot, requestedBundleManifest, expectedTransactionId,
   } = context;
   const durableExisting = await restoreDurableReleaseTransaction({
     octokit,
@@ -1198,6 +1200,12 @@ async function restorePublishTransactionContext(context) {
     );
   }
   let existing = durableExisting || localExisting;
+  if (expectedTransactionId && !existing) {
+    throw new Error(`expected release transaction ${expectedTransactionId} does not exist`);
+  }
+  if (expectedTransactionId && existing.id !== expectedTransactionId) {
+    throw new Error(`release transaction identity mismatch: expected ${expectedTransactionId}, got ${existing.id}`);
+  }
   const durableBundleVerification = durableExisting?.sealed_bundle?.root
     ? readAndVerifySealedBundle({
         cwd,
@@ -4487,6 +4495,7 @@ async function promoteBuildchainRefs({
   publishCommand = "",
   publishEvidencePath = "",
   transactionStatePath = "",
+  expectedTransactionId = "",
   publishSealedBundleRoot = "",
   publishSealedBundleManifest = "",
   publishRequiredArtifactsJson = "",
@@ -4693,6 +4702,7 @@ async function promoteBuildchainRefs({
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
+    expectedTransactionId,
     publishSealedBundleRoot,
     publishSealedBundleManifest,
     publishRequiredArtifactsJson,

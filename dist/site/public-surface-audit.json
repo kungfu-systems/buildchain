@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 112,
-    "workflowCount": 63,
+    "workflowCount": 64,
     "actionCount": 6,
     "sitePageCount": 65,
     "docCommandRefCount": 881,
@@ -1045,13 +1045,22 @@
           "release-propagation-config-path",
           "required-artifact-count",
           "required-status-check",
+          "resume-buildchain-runtime-sha",
+          "resume-candidate-repository",
+          "resume-candidate-run-id",
+          "resume-expected-candidate-root",
+          "resume-expected-candidate-runtime-sha",
+          "resume-expected-source-tree",
+          "resume-expected-workflow-file",
+          "resume-expected-workflow-name",
+          "resume-transaction-id",
           "runner-preset",
           "standalone-binary-distribution",
           "target-ref",
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 97,
+        "inputCount": 106,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1084,10 +1093,13 @@
           "publication-commit-evidence-path",
           "publication-commit-payload-root",
           "publication-commit-url",
+          "release-candidate-action",
           "release-candidate-artifact",
+          "release-candidate-recovery-receipt-artifact",
+          "release-candidate-recovery-root",
           "release-propagation-work-artifact"
         ],
-        "outputCount": 20
+        "outputCount": 23
       },
       {
         "id": ".release-docker",
@@ -1667,6 +1679,17 @@
       {
         "id": "buildchain-alpha-self-dogfood",
         "path": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "buildchain-candidate-recovery-dogfood-failure",
+        "path": ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -2444,13 +2467,22 @@
           "release-propagation-config-path",
           "required-artifact-count",
           "required-status-check",
+          "resume-buildchain-runtime-sha",
+          "resume-candidate-repository",
+          "resume-candidate-run-id",
+          "resume-expected-candidate-root",
+          "resume-expected-candidate-runtime-sha",
+          "resume-expected-source-tree",
+          "resume-expected-workflow-file",
+          "resume-expected-workflow-name",
+          "resume-transaction-id",
           "runner-preset",
           "standalone-binary-distribution",
           "target-ref",
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 89,
+        "inputCount": 98,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2495,10 +2527,13 @@
           "publication-commit-evidence-path",
           "publication-commit-payload-root",
           "publication-commit-url",
+          "release-candidate-action",
           "release-candidate-artifact",
+          "release-candidate-recovery-receipt-artifact",
+          "release-candidate-recovery-root",
           "release-propagation-work-artifact"
         ],
-        "outputCount": 32
+        "outputCount": 35
       },
       {
         "id": "release-governance-reconcile",
@@ -7568,8 +7603,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2e7804e1fa8ef08bbe59fcf58908e47daef4dc145675fc9a989862671e40f993",
-    "workflowRegistryDigest": "2428307ff1f281124af8f2af4af51c9137f9e12b735cca0460ccff1123c007b1",
-    "pageRegistryDigest": "b4fba27597b91c0c372f33d6eccc4659c463b0e170f536727121869f022edb02"
+    "workflowRegistryDigest": "1ab8b8d32f2ceb8dffad69d1f877f6ad6b37355dbe62c6ef5c0e6b9f4f197acb",
+    "pageRegistryDigest": "d7ea6c9bb1c2d85ad10207d92a5c1147a65a99f148f136628058b617c636522c"
   },
   "comparison": {
     "missingCliRegistry": [],
