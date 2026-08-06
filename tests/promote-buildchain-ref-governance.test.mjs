@@ -45,6 +45,7 @@ const {
 const {
   loadBuildchainConfig,
 } = await import("../packages/core/buildchain-config.js");
+const { sha256Json } = await import("../packages/core/release-candidate.js");
 
 const {
   explainReleaseLineDryRun,
@@ -498,6 +499,82 @@ test("promote-only RC passport accepts channel merge commit with matching source
     });
     assert.equal(result.platformCount, 1);
     assert.equal(result.gateProfileEvidence.profile, "alpha-pr");
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("promote-only recovery binds publication version through the immutable recovery receipt", () => {
+  const candidateHash = "a".repeat(64);
+  const passportPath = ".buildchain/artifacts/release-candidate-passport.json";
+  const receiptPath = ".buildchain/artifacts/recovery-receipt.json";
+  const passport = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-passport",
+    repository: "kungfu-systems/buildchain",
+    target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "22.22.3-kf.0" },
+    source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
+    platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+    diagnostics: {},
+    candidateHash,
+  };
+  const receipt = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-recovery/v1",
+    action: "reused",
+    repository: "kungfu-systems/buildchain",
+    originalCandidate: { sourceSha: OTHER_SHA, tree: `tree-${SHA}` },
+    target: { channel: "alpha", ref: "alpha/v1/v1.0", sha: SHA, tree: `tree-${SHA}`, version: "3.0.6-alpha.4" },
+    recovered: { candidateRoot: `sha256:${candidateHash}` },
+    skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
+    payloadBytes: "unchanged",
+  };
+  receipt.root = `sha256:${sha256Json(receipt)}`;
+  const cwd = makeTempWorkspace({ [passportPath]: passport, [receiptPath]: receipt });
+  try {
+    const result = validatePromotionReleaseCandidate({
+      cwd,
+      passportPath,
+      recoveryReceiptPath: receiptPath,
+      repository: "kungfu-systems/buildchain",
+      targetChannel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+      version: "3.0.6-alpha.4",
+      sourceHeadSha: SHA,
+      sourceTreeSha: `tree-${SHA}`,
+    });
+    assert.equal(result.publicationVersionBinding, "recovery-receipt");
+    assert.throws(
+      () => validatePromotionReleaseCandidate({
+        cwd,
+        passportPath,
+        repository: "kungfu-systems/buildchain",
+        targetChannel: "alpha",
+        targetRef: "alpha/v1/v1.0",
+        version: "3.0.6-alpha.4",
+        sourceHeadSha: SHA,
+        sourceTreeSha: `tree-${SHA}`,
+      }),
+      /version mismatch: expected 3\.0\.6-alpha\.4, got 22\.22\.3-kf\.0/,
+    );
+    const drifted = { ...receipt, recovered: { candidateRoot: `sha256:${"b".repeat(64)}` } };
+    delete drifted.root;
+    drifted.root = `sha256:${sha256Json(drifted)}`;
+    fs.writeFileSync(path.join(cwd, receiptPath), `${JSON.stringify(drifted)}\n`);
+    assert.throws(
+      () => validatePromotionReleaseCandidate({
+        cwd,
+        passportPath,
+        recoveryReceiptPath: receiptPath,
+        repository: "kungfu-systems/buildchain",
+        targetChannel: "alpha",
+        targetRef: "alpha/v1/v1.0",
+        version: "3.0.6-alpha.4",
+        sourceHeadSha: SHA,
+        sourceTreeSha: `tree-${SHA}`,
+      }),
+      /recovery receipt: candidate root mismatch/,
+    );
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }

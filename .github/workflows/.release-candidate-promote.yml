@@ -1701,6 +1701,7 @@ jobs:
         id: promote
         env:
           BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
+          BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
           token: ${{ github.token }}

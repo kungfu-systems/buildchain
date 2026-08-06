@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 272,
-    "maxHandMaintainedSourceLines": 104244,
+    "maxHandMaintainedSourceLines": 104302,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22141,
-    "latestTransition": "Candidate-run recovery binds embedded Buildchain evidence byte-for-byte to independently uploaded manifest and diagnostics artifacts without admitting undeclared product payload files.",
-    "rationale": "The bounded recovery verifier distinguishes Buildchain-owned evidence from product bytes only under the exact platform evidence prefix and only when size and sha256 match an independently uploaded manifest or diagnostics artifact from the same successful candidate run. This covers post-manifest diagnostics finalization while every product byte must still match the platform manifest exactly. It also binds transaction identity to the sealed npm payload version when Buildchain dogfood uses a fixture Passport with a different product version. Missing cross-artifact binding, byte drift, undeclared product files, or transaction-version conflict still fails closed; archive digest validation and the no-rebuild publication path remain unchanged. The exact ceiling adds live-dogfood regressions and no new workflow, state machine, or product build path; any wider ceiling requires another reviewed policy change."
+    "latestTransition": "Candidate-run recovery binds a sealed payload publication version through the immutable recovery receipt while preserving the original candidate Passport and product bytes.",
+    "rationale": "The bounded recovery verifier continues to require byte-identical candidate archives, manifests, controller evidence, source tree, and product payloads. Promotion now accepts a fixture or consumer Passport whose product version differs from the sealed npm package only when the immutable recovery receipt root binds the original candidate root, source/tree, repository, channel, target ref/SHA, skipped build matrix, unchanged payload bytes, and exact sealed publication version. Ordinary promotion still requires direct Passport version equality, and missing or drifted recovery evidence fails before provider mutation. The exact 58-line increase adds one validator and wiring inside the existing recovery and promotion surfaces, with no new workflow, state machine, artifact format, or product build path; any wider ceiling requires another reviewed policy change."
   },
   "sourceBudgets": {
     "newFileLines": 600,
