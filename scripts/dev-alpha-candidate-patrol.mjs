@@ -5,6 +5,10 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { decideChannelCandidate } from "../packages/core/channel-candidate.js";
+import {
+  resolveManagedPromotionBaseline,
+  resolvePatrolSourceInputs,
+} from "../packages/core/channel-promotion-baseline.js";
 
 export const DEV_ALPHA_CANDIDATE_STATE_SCHEMA =
   "kungfu-buildchain-dev-alpha-candidate-state/v1";
@@ -22,6 +26,16 @@ function text(value = "") {
 function bool(value, fallback = false) {
   if (value === undefined || value === null || value === "") return fallback;
   return ["1", "true", "yes", "on"].includes(text(value).toLowerCase());
+}
+
+function autoMergeMethod(value, fallback = "merge") {
+  const normalized = text(value || fallback).toLowerCase();
+  if (!["merge", "squash", "rebase"].includes(normalized)) {
+    throw new Error(
+      `mergeMethod must be merge, squash, or rebase, got ${value || "<empty>"}`,
+    );
+  }
+  return normalized;
 }
 
 function repository(value) {
@@ -169,6 +183,8 @@ export function managedCandidateFromPullRequest(pullRequest, targetBranch) {
     }
     return {
       number: Number(pullRequest.number),
+      nodeId: text(pullRequest.node_id),
+      autoMerge: pullRequest.auto_merge || null,
       url: text(pullRequest.html_url),
       body,
       sourceSha,
@@ -191,6 +207,8 @@ export function managedCandidateFromPullRequest(pullRequest, targetBranch) {
     );
   return {
     number: Number(pullRequest.number),
+    nodeId: text(pullRequest.node_id),
+    autoMerge: pullRequest.auto_merge || null,
     url: text(pullRequest.html_url),
     body,
     sourceSha,
@@ -282,6 +300,13 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
         process.env.BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED,
       createPullRequest,
     ),
+    autoMerge: bool(
+      options.autoMerge ?? process.env.BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE,
+      false,
+    ),
+    mergeMethod: autoMergeMethod(
+      options.mergeMethod ?? process.env.BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD,
+    ),
     dryRun: bool(
       options.dryRun ?? process.env.BUILDCHAIN_CHANNEL_PATROL_DRY_RUN,
       true,
@@ -299,7 +324,10 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
 function latestWorkflowEvidence(runs, workflowPathValue, sourceSha) {
   const matching = runs
     .filter(
-      (run) => run.path === workflowPathValue && run.head_sha === sourceSha,
+      (run) =>
+        run.conclusion !== "cancelled" &&
+        run.path === workflowPathValue &&
+        run.head_sha === sourceSha,
     )
     .sort((left, right) => Number(right.id) - Number(left.id));
   if (matching.length === 0)
@@ -334,7 +362,9 @@ function workflowEvidenceIsFreshAndSuccessful(run, { now, maxAgeSeconds }) {
 
 function latestRunsBySha(runs, workflowPathValue) {
   const latest = new Map();
-  for (const run of runs.filter((row) => row.path === workflowPathValue)) {
+  for (const run of runs.filter(
+    (row) => row.path === workflowPathValue && row.conclusion !== "cancelled",
+  )) {
     const current = latest.get(run.head_sha);
     if (!current || Number(run.id) > Number(current.id))
       latest.set(run.head_sha, run);
@@ -541,10 +571,48 @@ function pullRequestBody({
         `- ${row.workflowName}: [run ${row.runId} attempt ${row.runAttempt}](${row.url})`,
     ),
     "",
-    "The source-lock branch must continue to point at the exact source SHA. This patrol never merges the PR, publishes a package, creates a tag, or creates a release.",
+    "The source-lock branch must continue to point at the exact source SHA. This patrol never directly merges the PR, publishes a package, creates a tag, or creates a release. Repository policy may arm GitHub auto-merge while every protected branch gate remains authoritative.",
     "",
     candidateStateMarker(state),
   ].join("\n");
+}
+
+async function armCandidateAutoMerge(
+  options,
+  controllerState,
+  pullRequest,
+  client,
+) {
+  if (
+    !options.autoMerge ||
+    !options.settlementAuthorized ||
+    options.dryRun ||
+    controllerState !== "active" ||
+    !pullRequest
+  ) {
+    return {
+      requested: options.autoMerge,
+      enabled: false,
+      mergeMethod: options.mergeMethod,
+    };
+  }
+  if (!pullRequest.auto_merge) {
+    await client.enableAutoMerge(pullRequest, options.mergeMethod);
+  }
+  return {
+    requested: true,
+    enabled: true,
+    mergeMethod: options.mergeMethod,
+  };
+}
+
+function activePullRequest(candidate) {
+  return {
+    number: candidate.number,
+    node_id: candidate.nodeId,
+    auto_merge: candidate.autoMerge,
+    html_url: candidate.url,
+  };
 }
 
 export async function runDevAlphaCandidatePatrol(
@@ -560,52 +628,26 @@ export async function runDevAlphaCandidatePatrol(
       repository: options.repository,
       token: process.env.GITHUB_TOKEN,
     });
-  const [observedSourceHeadSha, targetSha] = await Promise.all([
-    client.resolveBranch(options.sourceBranch),
-    client.resolveBranch(options.targetBranch),
-  ]);
-  const headComparison = await client.compare(targetSha, observedSourceHeadSha);
   const requiredWorkflowPaths = [
     options.devWorkflowPath,
     options.alphaWorkflowPath,
   ];
-  let sourceSha = observedSourceHeadSha;
-  let comparison = headComparison;
-  let workflowEvidence = [];
-  let skippedNewerCommitCount = 0;
-  let qualificationError;
-  if (
-    headComparison.status === "ahead" &&
-    Number(headComparison.ahead_by) > 0
-  ) {
-    const [sourceHistory, ...workflowRunSets] = await Promise.all([
-      client.listBranchHistory(options.sourceBranch, targetSha),
-      ...requiredWorkflowPaths.map((workflow) =>
-        client.listCompletedWorkflowRuns(workflow, options.sourceBranch),
-      ),
-    ]);
-    try {
-      const selected = selectLatestQualifiedSource({
-        sourceHistory,
-        workflowRunsByPath: new Map(
-          requiredWorkflowPaths.map((workflow, index) => [
-            workflow,
-            workflowRunSets[index],
-          ]),
-        ),
-        requiredWorkflowPaths,
-        now: options.now,
-        maxAgeSeconds: options.maxAgeSeconds,
-      });
-      sourceSha = selected.sourceSha;
-      skippedNewerCommitCount = selected.skippedNewerCommitCount;
-      workflowEvidence = selected.workflowEvidence;
-      if (sourceSha !== observedSourceHeadSha)
-        comparison = await client.compare(targetSha, sourceSha);
-    } catch (error) {
-      qualificationError = error;
-    }
-  }
+  const {
+    observedSourceHeadSha,
+    targetSha,
+    headComparison,
+    targetBaseline,
+    sourceSha,
+    comparison,
+    workflowEvidence,
+    skippedNewerCommitCount,
+    qualificationError,
+  } = await resolvePatrolSourceInputs({
+    client,
+    options,
+    requiredWorkflowPaths,
+    selectQualifiedSource: selectLatestQualifiedSource,
+  });
   const decision = qualificationError
     ? blockedCandidateDecision({
         options,
@@ -622,9 +664,12 @@ export async function runDevAlphaCandidatePatrol(
         targetSha,
         comparison: { status: comparison.status, aheadBy: comparison.ahead_by },
         selection: {
-          mode: "latest-qualified-source-ancestor",
+          mode: targetBaseline
+            ? "latest-qualified-source-after-managed-promotion"
+            : "latest-qualified-source-ancestor",
           observedSourceHeadSha,
           skippedNewerCommitCount,
+          ...(targetBaseline ? { targetBaseline } : {}),
         },
         workflowEvidence,
         requiredWorkflowPaths,
@@ -793,10 +838,7 @@ export async function runDevAlphaCandidatePatrol(
             : "retain-next-candidate"
           : "reconcile-active-candidate";
       }
-      pullRequest = {
-        number: activeCandidate.number,
-        html_url: activeCandidate.url,
-      };
+      pullRequest = activePullRequest(activeCandidate);
     } else if (decision.eligible) {
       await client.ensureImmutableBranch(decision.sourceLockRef, sourceSha);
       state = candidateStateBody({
@@ -870,11 +912,18 @@ export async function runDevAlphaCandidatePatrol(
       }
     }
   }
+  const autoMerge = await armCandidateAutoMerge(
+    options,
+    controllerState,
+    pullRequest,
+    client,
+  );
   return {
     schema: "kungfu-buildchain-dev-alpha-candidate-patrol/v1",
     dryRun: options.dryRun,
     createPullRequest: options.createPullRequest,
     settlementAuthorized: options.settlementAuthorized,
+    autoMerge,
     decision,
     controller: {
       schema: DEV_ALPHA_CANDIDATE_STATE_SCHEMA,
@@ -956,6 +1005,13 @@ export function createGitHubChannelCandidateClient({
     async compare(baseSha, headSha) {
       return api(`/repos/${owner}/${repo}/compare/${baseSha}...${headSha}`);
     },
+    resolveManagedPromotionBaseline: (targetSha, targetBranch) =>
+      resolveManagedPromotionBaseline({
+        api: (requestPath) => api(`/repos/${owner}/${repo}${requestPath}`),
+        targetSha,
+        targetBranch,
+        parseCandidate: managedCandidateFromPullRequest,
+      }),
     async listCompletedWorkflowRuns(workflowPathValue, sourceBranch) {
       const runs = [];
       for (let page = 1; page <= 10; page += 1) {
@@ -1029,6 +1085,22 @@ export function createGitHubChannelCandidateClient({
       return api(`/repos/${owner}/${repo}/pulls`, {
         method: "POST",
         body: { head, base, title, body },
+      });
+    },
+    async enableAutoMerge(pullRequest, mergeMethod) {
+      if (!text(pullRequest.node_id)) {
+        throw new Error("candidate pull request has no GraphQL node id");
+      }
+      const query = `mutation($id:ID!,$mergeMethod:PullRequestMergeMethod!){enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:$mergeMethod}){pullRequest{url}}}`;
+      return api("/graphql", {
+        method: "POST",
+        body: {
+          query,
+          variables: {
+            id: pullRequest.node_id,
+            mergeMethod: autoMergeMethod(mergeMethod).toUpperCase(),
+          },
+        },
       });
     },
     async updatePullRequestBody(

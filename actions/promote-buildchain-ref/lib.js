@@ -82,6 +82,7 @@ import {
   verifyReleasePassport,
 } from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
+import { validateReleaseCandidateRecoveryReceipt } from "../../packages/core/release-candidate-recovery.js";
 import { verifyPublicationQualificationReceipt } from "../../packages/core/publication-authority.js";
 import {
   createBuildchainKfd1Witness,
@@ -518,7 +519,9 @@ function validatePromotionReleaseCandidate({
   buildSummaryPath = ".buildchain/artifacts/build-summary.json",
   repository,
   targetChannel,
+  targetRef = "",
   version = "",
+  recoveryReceiptPath = "",
   sourceHeadSha,
   sourceTreeSha = "",
   requirePlatforms = true,
@@ -542,7 +545,7 @@ function validatePromotionReleaseCandidate({
     passport,
     repository,
     targetChannel: releaseCandidateEvidenceChannel(targetChannel),
-    version,
+    version: recoveryReceiptPath ? "" : version,
     buildSummary,
     requirePlatforms,
     requireFamilyEvidence,
@@ -550,6 +553,26 @@ function validatePromotionReleaseCandidate({
     familyInitiativeId,
     familyAssignmentId,
   });
+  let recoveryReceiptValidation;
+  if (recoveryReceiptPath) {
+    const resolvedRecoveryReceiptPath = resolveMaybeRelative(cwd, recoveryReceiptPath);
+    if (!fs.existsSync(resolvedRecoveryReceiptPath)) {
+      validation.errors.push(`recovery receipt is missing: ${recoveryReceiptPath}`);
+    } else {
+      const recoveryReceipt = JSON.parse(fs.readFileSync(resolvedRecoveryReceiptPath, "utf8"));
+      recoveryReceiptValidation = validateReleaseCandidateRecoveryReceipt({
+        receipt: recoveryReceipt,
+        passport,
+        repository,
+        targetChannel: releaseCandidateEvidenceChannel(targetChannel),
+        targetRef,
+        targetSha: sourceHeadSha,
+        targetTree: sourceTreeSha,
+        version,
+      });
+      validation.errors.push(...recoveryReceiptValidation.errors.map((error) => `recovery receipt: ${error}`));
+    }
+  }
   const acceptedSourceShas = [
     passport.source?.headSha,
     passport.source?.mergeRefSha,
@@ -582,6 +605,8 @@ function validatePromotionReleaseCandidate({
     promotionChannelTreeSha: sourceTreeSha || "",
     treeEquivalent: Boolean(sourceTreeSha && sourceTreeHash && sourceTreeSha === sourceTreeHash,
     ),
+    recoveredCandidate: recoveryReceiptValidation?.ok === true,
+    publicationVersionBinding: recoveryReceiptValidation?.ok ? "recovery-receipt" : "candidate-passport",
   };
 }
 
@@ -956,6 +981,7 @@ function uniqueShas(values) {
 function transactionAcceptedExactTagShas(transaction, publicSha) {
   return uniqueShas([
     publicSha,
+    transaction?.source_sha,
     transaction?.release_sha,
     transaction?.release_material_sha,
   ]);
@@ -1078,6 +1104,7 @@ function preparePublishTransactionContext({
   publishCommand = "",
   publishEvidencePath = "",
   transactionStatePath = "",
+  expectedTransactionId = "",
   publishSealedBundleRoot = "",
   publishSealedBundleManifest = "",
   publishRequiredArtifactsJson = "",
@@ -1172,6 +1199,7 @@ function preparePublishTransactionContext({
     actor, runId, explicitOverride, allowVersionStateFinalization, promotionGeneratedAt,
     repository, resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
     existingNpmPromotion, expected, durableStateRef, requestedBundleRoot, requestedBundleManifest,
+    expectedTransactionId: String(expectedTransactionId || "").trim(),
   };
 }
 
@@ -1179,7 +1207,7 @@ async function restorePublishTransactionContext(context) {
   const {
     octokit, owner, repo, cwd, version, channel, sourceSha, releaseSha, targetRef,
     requiredArtifacts, expected, durableStateRef, resolvedStatePath, resolvedEvidencePath,
-    requestedBundleRoot, requestedBundleManifest,
+    requestedBundleRoot, requestedBundleManifest, expectedTransactionId,
   } = context;
   const durableExisting = await restoreDurableReleaseTransaction({
     octokit,
@@ -1197,6 +1225,12 @@ async function restorePublishTransactionContext(context) {
     );
   }
   let existing = durableExisting || localExisting;
+  if (expectedTransactionId && !existing) {
+    throw new Error(`expected release transaction ${expectedTransactionId} does not exist`);
+  }
+  if (expectedTransactionId && existing.id !== expectedTransactionId) {
+    throw new Error(`release transaction identity mismatch: expected ${expectedTransactionId}, got ${existing.id}`);
+  }
   const durableBundleVerification = durableExisting?.sealed_bundle?.root
     ? readAndVerifySealedBundle({
         cwd,
@@ -4486,6 +4520,7 @@ async function promoteBuildchainRefs({
   publishCommand = "",
   publishEvidencePath = "",
   transactionStatePath = "",
+  expectedTransactionId = "",
   publishSealedBundleRoot = "",
   publishSealedBundleManifest = "",
   publishRequiredArtifactsJson = "",
@@ -4528,6 +4563,7 @@ async function promoteBuildchainRefs({
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releaseCandidateVersion = "",
+  releaseCandidateRecoveryReceiptPath = "",
   releaseCandidateFamilyEvidenceRequired = false,
   releaseCandidateFamilyEvidenceRoot = "",
   releaseCandidateFamilyInitiativeId = "",
@@ -4648,6 +4684,8 @@ async function promoteBuildchainRefs({
       repository: `${owner}/${repo}`,
       targetChannel: rule.channel,
       version: releaseCandidateVersion,
+      recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
+      targetRef,
       sourceHeadSha: sha,
       sourceTreeSha: targetCommitInfo.treeSha,
       requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
@@ -4661,6 +4699,7 @@ async function promoteBuildchainRefs({
       candidateHash: releaseCandidateValidation.candidateHash,
       platformCount: releaseCandidateValidation.platformCount,
       passportPath: path.relative(cwd, releaseCandidateValidation.passportPath).split(path.sep).join("/"),
+      publicationVersionBinding: releaseCandidateValidation.publicationVersionBinding,
     });
   }
 
@@ -4692,6 +4731,7 @@ async function promoteBuildchainRefs({
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
+    expectedTransactionId,
     publishSealedBundleRoot,
     publishSealedBundleManifest,
     publishRequiredArtifactsJson,
@@ -4734,6 +4774,7 @@ async function promoteBuildchainRefs({
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,
     releaseCandidateVersion,
+    releaseCandidateRecoveryReceiptPath,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,

@@ -68,7 +68,7 @@ on:
         type: string
         required: false
       platforms-json:
-        description: "Optional custom JSON array of platform objects: id, name, runner JSON string"
+        description: "Optional custom JSON array of platform objects: id, name, runner JSON string, and optional githubHosted boolean"
         default: ""
         type: string
         required: false
@@ -176,6 +176,11 @@ on:
         default: ""
         type: string
         required: false
+      verify-substage-evidence-path:
+        description: "Optional lifecycle verify substage evidence path produced by the consumer command"
+        default: ""
+        type: string
+        required: false
       kfd-agent-hub:
         description: "Agent Hub conformance mode: off or auto. Auto reads .buildchain/kfd/agent-hub.json and runs the fixed KFD suite."
         default: "off"
@@ -211,6 +216,16 @@ on:
         default: |
           dist
           build/stage
+        type: string
+        required: false
+      pre-upload-transport-smoke-scenario-path:
+        description: "Optional declarative demo scenario, relative to working-directory, whose transport smoke must pass before Linux artifact upload"
+        default: ""
+        type: string
+        required: false
+      pre-upload-transport-smoke-artifact-root:
+        description: "Artifact root, relative to working-directory, used by the pre-upload transport simulation"
+        default: "."
         type: string
         required: false
       credential-island-macos-app-path:
@@ -293,7 +308,7 @@ on:
         type: string
         required: false
       artifact-transfer-mode:
-        description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
+        description: "Artifact transfer policy: GitHub-hosted platforms always upload natively; other platforms use github-artifacts or s3-to-github-artifacts"
         default: "github-artifacts"
         type: string
         required: false
@@ -366,6 +381,11 @@ on:
         description: "Maximum bounded attempts for retryable GitHub fallback fetch failures"
         default: 3
         type: number
+        required: false
+      checkout-history-mode:
+        description: "Locked consumer source history: shallow or full. Full retains ancestry required by source-history gates."
+        default: "shallow"
+        type: string
         required: false
       shifu-cache-profile-ref:
         description: "Opaque trusted Shifu cache profile reference passed to lifecycle commands without interpretation"
@@ -778,6 +798,7 @@ jobs:
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}
+      verify-substage-evidence-path: ${{ inputs.verify-substage-evidence-path }}
       kfd-agent-hub: ${{ inputs.kfd-agent-hub }}
       lifecycle-timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
       require-install: ${{ inputs.require-install }}
@@ -786,6 +807,8 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       artifact-name-template: ${{ inputs.artifact-name-template }}
       artifact-paths: ${{ inputs.artifact-paths }}
+      pre-upload-transport-smoke-scenario-path: ${{ inputs.pre-upload-transport-smoke-scenario-path }}
+      pre-upload-transport-smoke-artifact-root: ${{ inputs.pre-upload-transport-smoke-artifact-root }}
       credential-island-macos-app-path: ${{ inputs.credential-island-macos-app-path }}
       credential-island-environment: ${{ inputs.credential-island-environment }}
       credential-island-caller-owned: ${{ inputs.credential-island-caller-owned }}
@@ -817,6 +840,7 @@ jobs:
       checkout-cache-timeout-seconds: ${{ inputs.checkout-cache-timeout-seconds }}
       checkout-cache-github-timeout-seconds: ${{ inputs.checkout-cache-github-timeout-seconds }}
       checkout-cache-fetch-attempts: ${{ inputs.checkout-cache-fetch-attempts }}
+      checkout-history-mode: ${{ inputs.checkout-history-mode }}
       shifu-cache-profile-ref: ${{ inputs.shifu-cache-profile-ref }}
       shifu-cache-profile-digest: ${{ inputs.shifu-cache-profile-digest }}
       cache-dependency-lock-root: ${{ inputs.cache-dependency-lock-root }}

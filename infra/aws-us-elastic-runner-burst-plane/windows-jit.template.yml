@@ -21,16 +21,45 @@ Parameters:
     Type: AWS::EC2::Subnet::Id
   BudgetLimitUsd:
     Type: Number
-    Default: 40
+    Default: 110
     MinValue: 1
-    MaxValue: 40
+    MaxValue: 110
   MaximumInstanceLifetimeMinutes:
     Type: Number
     Default: 180
     MinValue: 30
     MaxValue: 180
+  ProviderBudgetKillParameterName:
+    Type: String
+    Default: /kungfu/burst/windows/provider-budget-killed
+    AllowedPattern: "^/kungfu/burst/windows/[A-Za-z0-9._/-]+$"
 
 Resources:
+  CampaignState:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+      Tags:
+        - Key: kungfu:owner
+          Value: buildchain
+        - Key: kungfu:plane
+          Value: aws-us-elastic-runner-burst
+        - Key: kungfu:provider
+          Value: windows-ec2-jit
+
   RunnerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -189,6 +218,29 @@ Resources:
                   - ssm:DeleteParameter
                 Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kungfu/burst/windows/*"
               - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ProviderBudgetKillParameterName}"
+              - Effect: Allow
+                Action:
+                  - budgets:ViewBudget
+                Resource: !Sub "arn:${AWS::Partition}:budgets::${AWS::AccountId}:budget/kungfu-buildchain-windows-jit-actual-spend"
+              - Effect: Allow
+                Action:
+                  - aws-portal:ViewBilling
+                  - billing:GetBillingViewData
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudformation:DescribeStacks
+                Resource: !Sub "arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/kungfu-buildchain-windows-jit-budget-guard/*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:TransactWriteItems
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt CampaignState.Arn
+              - Effect: Allow
                 Action: iam:PassRole
                 Resource: !GetAtt RunnerInstanceRole.Arn
                 Condition:
@@ -234,11 +286,16 @@ Resources:
               - Effect: Allow
                 Action: ssm:DeleteParameter
                 Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kungfu/burst/windows/*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt CampaignState.Arn
 
   ReaperLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /kungfu/buildchain/aws-us-windows-jit/reaper
+      LogGroupName: !Sub "/kungfu/buildchain/aws-us-windows-jit/reaper/${AWS::StackName}"
       RetentionInDays: 30
 
   Reaper:
@@ -254,6 +311,7 @@ Resources:
         Variables:
           MAXIMUM_LIFETIME_MINUTES: !Ref MaximumInstanceLifetimeMinutes
           PARAMETER_PREFIX: /kungfu/burst/windows/
+          STATE_TABLE: !Ref CampaignState
       Code:
         ZipFile: |
           import datetime
@@ -262,18 +320,60 @@ Resources:
 
           ec2 = boto3.client("ec2")
           ssm = boto3.client("ssm")
+          dynamodb = boto3.client("dynamodb")
           MAX_AGE = int(os.environ["MAXIMUM_LIFETIME_MINUTES"]) * 60
           PREFIX = os.environ["PARAMETER_PREFIX"]
+          STATE_TABLE = os.environ["STATE_TABLE"]
+
+          def kill_campaign(reason, now):
+              dynamodb.update_item(
+                  TableName=STATE_TABLE,
+                  Key={"pk": {"S": "CONTROL"}},
+                  UpdateExpression="SET #state = :killed, reason = :reason, killed_at = :now",
+                  ExpressionAttributeNames={"#state": "state"},
+                  ExpressionAttributeValues={
+                      ":killed": {"S": "KILLED"},
+                      ":reason": {"S": reason},
+                      ":now": {"N": str(int(now.timestamp()))},
+                  },
+              )
+
+          def campaign_control():
+              control = dynamodb.get_item(
+                  TableName=STATE_TABLE,
+                  Key={"pk": {"S": "CONTROL"}},
+                  ConsistentRead=True,
+                  ProjectionExpression="#state, campaign_id",
+                  ExpressionAttributeNames={"#state": "state"},
+              ).get("Item", {})
+              return {
+                  "killed": control.get("state", {}).get("S") == "KILLED",
+                  "campaign_id": control.get("campaign_id", {}).get("S", ""),
+              }
 
           def tags(instance):
               return {row["Key"]: row["Value"] for row in instance.get("Tags", [])}
 
           def handler(event, context):
               now = datetime.datetime.now(datetime.timezone.utc)
-              kill_all = bool(event.get("Records"))
+              sns_kill = bool(event.get("Records"))
+              control = campaign_control()
+              control_killed = control["killed"]
+              campaign_id = control["campaign_id"]
+              kill_all = sns_kill or control_killed
+              if not campaign_id:
+                  print({
+                      "killAll": kill_all,
+                      "observedInstances": 0,
+                      "terminatedInstances": [],
+                      "deletedJitParameters": 0,
+                      "reason": "campaign-control-missing-id",
+                  })
+                  return {"terminatedInstances": []}
               response = ec2.describe_instances(Filters=[
                   {"Name": "tag:kungfu:plane", "Values": ["aws-us-elastic-runner-burst"]},
                   {"Name": "tag:kungfu:provider", "Values": ["windows-ec2-jit"]},
+                  {"Name": "tag:kungfu:campaign-id", "Values": [campaign_id]},
                   {"Name": "instance-state-name", "Values": ["pending", "running", "stopping", "stopped"]},
               ])
               instances = [
@@ -291,6 +391,13 @@ Resources:
                       parameter = instance_tags.get("kungfu:jit-parameter", "")
                       if parameter.startswith(PREFIX):
                           parameters.append(parameter)
+              if sns_kill and not control_killed:
+                  kill_campaign(
+                      "aws-budget-notification",
+                      now,
+                  )
+              elif victims and not control_killed:
+                  kill_campaign("runner-lifetime-violation", now)
               if victims:
                   ec2.terminate_instances(InstanceIds=victims)
               for parameter in sorted(set(parameters)):
@@ -356,55 +463,6 @@ Resources:
       Principal: sns.amazonaws.com
       SourceArn: !Ref KillSwitchTopic
 
-  KillSwitchTopicPolicy:
-    Type: AWS::SNS::TopicPolicy
-    Properties:
-      Topics:
-        - !Ref KillSwitchTopic
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowBudgets
-            Effect: Allow
-            Principal:
-              Service: budgets.amazonaws.com
-            Action: sns:Publish
-            Resource: !Ref KillSwitchTopic
-            Condition:
-              StringEquals:
-                aws:SourceAccount: !Ref AWS::AccountId
-
-  BurstBudget:
-    Type: AWS::Budgets::Budget
-    Properties:
-      Budget:
-        BudgetName: kungfu-buildchain-windows-jit-actual-spend
-        BudgetLimit:
-          Amount: !Ref BudgetLimitUsd
-          Unit: USD
-        BudgetType: COST
-        TimeUnit: MONTHLY
-        CostFilters:
-          TagKeyValue:
-            - user:kungfu:provider$windows-ec2-jit
-      NotificationsWithSubscribers:
-        - Notification:
-            ComparisonOperator: GREATER_THAN
-            NotificationType: ACTUAL
-            Threshold: 80
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - SubscriptionType: SNS
-              Address: !Ref KillSwitchTopic
-        - Notification:
-            ComparisonOperator: GREATER_THAN
-            NotificationType: ACTUAL
-            Threshold: 95
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - SubscriptionType: SNS
-              Address: !Ref KillSwitchTopic
-
 Outputs:
   SubnetId:
     Value: !Ref SubnetId
@@ -420,7 +478,11 @@ Outputs:
     Value: !GetAtt GitHubProvisionerRole.Arn
   EvidenceBucket:
     Value: !Ref EvidenceBucket
+  CampaignStateTable:
+    Value: !Ref CampaignState
   ReaperFunction:
     Value: !Ref Reaper
   KillSwitchTopic:
     Value: !Ref KillSwitchTopic
+  ProviderBudgetKillParameterName:
+    Value: !Ref ProviderBudgetKillParameterName

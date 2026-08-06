@@ -252,7 +252,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
   assert.equal(result.publishTransaction.releaseSha, OTHER_SHA);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), OTHER_SHA);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), OTHER_SHA);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
   assert.equal(
     fs.existsSync(path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.1.json")),
@@ -331,7 +331,7 @@ test("publish transaction finalizes current alpha version-state merge commits", 
   assert.equal(result.sha, mergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), mergeSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), oldAlphaSha);
   assert.equal(refs.get("tags/v1.0-alpha"), mergeSha);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
   assert.equal(
@@ -595,7 +595,7 @@ test("published alpha finalization stays bound to its exact transaction after th
   assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), channelMergeSha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), channelMergeSha);
-  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionSourceSha);
   assert.equal(refs.get("tags/v1.0-alpha"), transactionReleaseSha);
   assert.equal(refs.get("tags/v1-alpha"), transactionReleaseSha);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
@@ -828,7 +828,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.notEqual(result.sha, mergeSha);
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.1");
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), previousFinalizedSha);
-  assert.equal(refs.get("tags/v1.0.0-alpha.1"), result.sha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.1"), mergeSha);
   assert.equal(refs.get("tags/v1.0-alpha"), result.sha);
 });
 
@@ -966,7 +966,7 @@ test("publish transaction finalizes current release version-state merge commits"
   assert.equal(result.sha, toolingMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.equal(refs.get("tags/v1.0.0"), toolingMergeSha);
+  assert.equal(refs.get("tags/v1.0.0"), oldReleaseSha);
   assert.equal(refs.get("tags/v1.0"), toolingMergeSha);
   assert.equal(refs.get("tags/v1"), toolingMergeSha);
   assert.equal(refs.has("tags/v1.0.1"), false);
@@ -1165,7 +1165,7 @@ test("release finalization uses the transaction alpha source after next-alpha ad
 
   assert.equal(result.sha, finalMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
-  assert.equal(refs.get("tags/v1.0.0"), finalMergeSha);
+  assert.equal(refs.get("tags/v1.0.0"), releaseSourceSha);
 });
 
 test("release finalization merges generated next-alpha state into diverged dev", async () => {
@@ -1868,7 +1868,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   });
 
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.equal(refs.get("tags/v1.0.0"), result.sha);
+  assert.equal(refs.get("tags/v1.0.0"), releaseMergeSha);
 });
 
 test("complete release transaction converges after its protected version-state merge", async () => {
@@ -3562,7 +3562,7 @@ process.exitCode = 9;
   assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
   assert.equal(refs.get("heads/publish-gate/major"), channelMergeSha);
   assert.equal(refs.get("heads/release/v2/v2.0"), transactionReleaseSha);
-  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionSourceSha);
   assert.equal(refs.get("tags/v2.0"), transactionReleaseSha);
   assert.equal(refs.get("tags/v2"), transactionReleaseSha);
   assert.equal(refs.get("heads/dev/v2/v2.0"), nextAlphaSha);
@@ -4016,7 +4016,7 @@ test("release promotion rerun resumes durable stable transaction after alpha adv
     cwd,
   });
 
-  assert.equal(result.sha, refs.get("tags/v1.0.6"));
+  assert.equal(refs.get("tags/v1.0.6"), sourceSha);
   assert.equal(refs.get("heads/release/v1/v1.0"), result.sha);
   assert.equal(refs.get("tags/v1"), result.sha);
   assert.equal(refs.get("tags/v1.0"), result.sha);

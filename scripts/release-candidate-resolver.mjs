@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { createResolvedPublicationSealedBundle } from "./publication-candidate-sealer.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 const DEFAULT_WORKFLOW_FILE = "build-surface-fixture.yml";
@@ -49,7 +50,7 @@ function githubHeaders(token) {
   return headers;
 }
 
-async function githubJson({ apiUrl, token, method = "GET", path: requestPath, fetchImpl = globalThis.fetch }) {
+export async function githubJson({ apiUrl, token, method = "GET", path: requestPath, fetchImpl = globalThis.fetch, allowNotFound = false }) {
   if (typeof fetchImpl !== "function") {
     throw new Error("fetch is required to resolve release candidate artifacts");
   }
@@ -57,13 +58,14 @@ async function githubJson({ apiUrl, token, method = "GET", path: requestPath, fe
   const response = await fetchImpl(url, { method, headers: githubHeaders(token) });
   const text = await response.text();
   const body = text ? JSON.parse(text) : {};
+  if (allowNotFound && response.status === 404) return undefined;
   if (!response.ok) {
     throw new Error(`GitHub API ${method} ${requestPath} failed with ${response.status}: ${body.message || text}`);
   }
   return body;
 }
 
-async function githubDownload({ apiUrl, token, path: requestPath, outputPath, fetchImpl = globalThis.fetch }) {
+export async function githubDownload({ apiUrl, token, path: requestPath, outputPath, fetchImpl = globalThis.fetch }) {
   const url = `${String(apiUrl || "https://api.github.com").replace(/\/+$/, "")}${requestPath}`;
   const response = await fetchImpl(url, { headers: githubHeaders(token) });
   if (!response.ok) {
@@ -357,7 +359,35 @@ export function selectReleaseCandidateArtifacts({ artifacts = [], artifactName =
   return { passport, summary: summaries[0], prefix, sourceSha: sha };
 }
 
-function unzip(zipPath, outputDir) {
+export function verifyArtifactArchive({ artifact, archivePath } = {}) {
+  const bytes = fs.readFileSync(archivePath);
+  const size = bytes.length;
+  const digest = `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
+  if (!artifact || artifact.expired === true) {
+    throw new Error(`candidate artifact is missing or expired: ${artifact?.name || "<unknown>"}`);
+  }
+  if (Number(artifact.size_in_bytes) !== size) {
+    throw new Error(`candidate artifact size mismatch for ${artifact.name}: expected ${artifact.size_in_bytes}, got ${size}`);
+  }
+  if (!/^sha256:[0-9a-f]{64}$/i.test(String(artifact.digest || ""))) {
+    throw new Error(`candidate artifact ${artifact.name} has no trusted sha256 digest metadata`);
+  }
+  if (String(artifact.digest).toLowerCase() !== digest) {
+    throw new Error(`candidate artifact digest mismatch for ${artifact.name}: expected ${artifact.digest}, got ${digest}`);
+  }
+  return { size, digest };
+}
+
+export function unzip(zipPath, outputDir) {
+  const entries = execFileSync("unzip", ["-Z1", zipPath], { encoding: "utf8" })
+    .split(/\r?\n/)
+    .filter(Boolean);
+  for (const entry of entries) {
+    const normalized = entry.replaceAll("\\", "/");
+    if (normalized.startsWith("/") || normalized.split("/").some((part) => part === "..")) {
+      throw new Error(`candidate artifact contains an unsafe zip entry: ${entry}`);
+    }
+  }
   fs.mkdirSync(outputDir, { recursive: true });
   execFileSync("unzip", ["-q", "-o", zipPath, "-d", outputDir], { stdio: "inherit" });
 }
@@ -392,6 +422,7 @@ export async function resolveReleaseCandidateArtifacts({
   requiredArtifactCount = 0,
   publishArtifactKind = "npm",
   publishPackageMain = "",
+  runtimeSha = "",
   outputDir = ".buildchain/release-candidate",
   fetchImpl = globalThis.fetch,
   download = true,
@@ -579,6 +610,7 @@ export async function resolveReleaseCandidateArtifacts({
     outputPath: passportZip,
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${selected.passport.id}/zip`,
   });
+  verifyArtifactArchive({ artifact: selected.passport, archivePath: passportZip });
   await githubDownload({
     apiUrl,
     token,
@@ -586,6 +618,7 @@ export async function resolveReleaseCandidateArtifacts({
     outputPath: summaryZip,
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${selected.summary.id}/zip`,
   });
+  verifyArtifactArchive({ artifact: selected.summary, archivePath: summaryZip });
   for (const artifact of payloadArtifacts) {
     const safeName = String(artifact.name || `artifact-${artifact.id}`).replace(/[^A-Za-z0-9._-]/g, "_");
     const payloadZip = path.join(tempDir, `${safeName}.zip`);
@@ -596,6 +629,7 @@ export async function resolveReleaseCandidateArtifacts({
       outputPath: payloadZip,
       path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${artifact.id}/zip`,
     });
+    verifyArtifactArchive({ artifact, archivePath: payloadZip });
     unzip(payloadZip, path.join(payloadDir, safeName));
   }
   unzip(passportZip, passportDir);
@@ -636,6 +670,27 @@ export async function resolveReleaseCandidateArtifacts({
   });
   const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
   fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
+  const sealedBundle = publishArtifactKind === "npm"
+    ? createResolvedPublicationSealedBundle({
+        bundleRoot: payloadDir,
+        repository: repoInfo.fullName,
+        sourceSha: passport.source?.headSha,
+        sourceTreeSha: passport.source?.treeHash,
+        runtimeSha: runtimeSha || sha,
+        releaseCandidateRoot: passport.candidateHash,
+        npmArtifacts: npmTarballPaths.map((tarballPath) => ({
+          path: tarballPath,
+          ...readNpmPackageArtifact({ tarballPath, mainPackage: publishPackageMain }),
+        })),
+        releaseAssetPaths,
+      })
+    : undefined;
+  const sealedBundleManifestPath = sealedBundle
+    ? path.join(resolvedOutput, "sealed-bundle.json")
+    : "";
+  if (sealedBundleManifestPath) {
+    fs.writeFileSync(sealedBundleManifestPath, `${JSON.stringify(sealedBundle.manifest, null, 2)}\n`);
+  }
   return {
     ...result,
     paths: {
@@ -647,6 +702,8 @@ export async function resolveReleaseCandidateArtifacts({
       npmTarballs: npmTarballPaths.map(outputPath),
       releaseAssets: releaseAssetPaths.map(outputPath),
       publishRequiredArtifacts: outputPath(requiredArtifactsPath),
+      sealedBundleRoot: sealedBundle ? outputPath(sealedBundle.root) : "",
+      sealedBundleManifest: sealedBundleManifestPath ? outputPath(sealedBundleManifestPath) : "",
     },
     version: passport.target?.version || "",
     candidateHash: passport.candidateHash || "",
@@ -673,6 +730,7 @@ export async function resolveReleaseCandidateArtifactsCli() {
     requiredArtifactCount: env("BUILDCHAIN_REQUIRED_ARTIFACT_COUNT", "0"),
     publishArtifactKind: env("BUILDCHAIN_PUBLISH_ARTIFACT_KIND", "npm"),
     publishPackageMain: env("BUILDCHAIN_PUBLISH_PACKAGE_MAIN"),
+    runtimeSha: env("BUILDCHAIN_CURRENT_RUNTIME_SHA", env("BUILDCHAIN_RUNTIME_SHA", env("BUILDCHAIN_TARGET_SHA"))),
     outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate"),
     download: releaseCandidateDownloadEnabled(env("BUILDCHAIN_RC_DOWNLOAD", "true")),
     waitSeconds: env("BUILDCHAIN_RC_WAIT_SECONDS", "600"),
@@ -703,6 +761,8 @@ export async function resolveReleaseCandidateArtifactsCli() {
     ).join("\n"),
     "publish-required-artifacts-json": JSON.stringify(result.publishRequiredArtifacts || []),
     "publish-required-artifacts-path": result.paths?.publishRequiredArtifacts || "",
+    "publish-sealed-bundle-root": result.paths?.sealedBundleRoot || "",
+    "publish-sealed-bundle-manifest": result.paths?.sealedBundleManifest || "",
     "release-candidate-run-id": result.run?.id || "",
     "release-candidate-run-url": result.run?.url || "",
     "release-candidate-pr": result.pullRequest?.number ? String(result.pullRequest.number) : "",

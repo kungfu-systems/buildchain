@@ -1,0 +1,191 @@
+name: Buildchain Dev Qualification Patrol
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        description: Buildchain runtime repository
+        default: kungfu-systems/buildchain
+        required: false
+        type: string
+      buildchain-ref:
+        description: Buildchain runtime ref
+        default: v3-alpha
+        required: false
+        type: string
+      source-branch:
+        description: Development branch whose latest head is qualified
+        required: true
+        type: string
+      dev-workflow-path:
+        description: Heavy Dev qualification workflow path
+        default: .github/workflows/dev-verify-patrol.yml
+        required: false
+        type: string
+      preflight-workflow-path:
+        description: Lightweight exact-source preflight workflow path
+        default: .github/workflows/alpha-promotion-preflight.yml
+        required: false
+        type: string
+      priority-workflows-json:
+        description: JSON array of Alpha and release workflows that retain runner priority
+        default: "[]"
+        required: false
+        type: string
+      dispatch-inputs-json:
+        description: Scalar workflow_dispatch inputs; source-sha is controller-owned
+        default: "{}"
+        required: false
+        type: string
+      max-attempts:
+        description: Maximum total attempts for an exact Dev qualification run
+        default: 2
+        required: false
+        type: number
+      mutation-authorized:
+        description: Permit the separately permissioned mutation job
+        default: false
+        required: false
+        type: boolean
+      dry-run:
+        description: Observe without dispatching or rerunning a workflow
+        default: true
+        required: false
+        type: boolean
+    secrets:
+      qualification-token:
+        description: Repository-owned token with Actions write permission
+        required: false
+    outputs:
+      state:
+        value: ${{ jobs.mutate.outputs.state || jobs.observe.outputs.state }}
+      action:
+        value: ${{ jobs.mutate.outputs.action || jobs.observe.outputs.action }}
+      reason:
+        value: ${{ jobs.mutate.outputs.reason || jobs.observe.outputs.reason }}
+      source-sha:
+        value: ${{ jobs.mutate.outputs.source-sha || jobs.observe.outputs.source-sha }}
+      pending-sha:
+        value: ${{ jobs.mutate.outputs.pending-sha || jobs.observe.outputs.pending-sha }}
+      active-run-id:
+        value: ${{ jobs.mutate.outputs.active-run-id || jobs.observe.outputs.active-run-id }}
+      decision-root:
+        value: ${{ jobs.mutate.outputs.decision-root || jobs.observe.outputs.decision-root }}
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: buildchain-dev-qualification-${{ github.repository }}-${{ inputs.source-branch }}
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      result-path: ${{ steps.observe.outputs.result-path }}
+      state: ${{ steps.observe.outputs.state }}
+      action: ${{ steps.observe.outputs.action }}
+      reason: ${{ steps.observe.outputs.reason }}
+      source-sha: ${{ steps.observe.outputs.source-sha }}
+      pending-sha: ${{ steps.observe.outputs.pending-sha }}
+      active-run-id: ${{ steps.observe.outputs.active-run-id }}
+      decision-root: ${{ steps.observe.outputs.decision-root }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Observe latest Dev qualification
+        id: observe
+        run: node .buildchain/runtime/scripts/dev-qualification-patrol.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_DEV_QUALIFICATION_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_DEV_QUALIFICATION_SOURCE_BRANCH: ${{ inputs.source-branch }}
+          BUILDCHAIN_DEV_QUALIFICATION_WORKFLOW: ${{ inputs.dev-workflow-path }}
+          BUILDCHAIN_DEV_QUALIFICATION_PREFLIGHT_WORKFLOW: ${{ inputs.preflight-workflow-path }}
+          BUILDCHAIN_DEV_QUALIFICATION_PRIORITY_WORKFLOWS: ${{ inputs.priority-workflows-json }}
+          BUILDCHAIN_DEV_QUALIFICATION_DISPATCH_INPUTS: ${{ inputs.dispatch-inputs-json }}
+          BUILDCHAIN_DEV_QUALIFICATION_MAX_ATTEMPTS: ${{ inputs.max-attempts }}
+          BUILDCHAIN_DEV_QUALIFICATION_MUTATION_AUTHORIZED: "false"
+          BUILDCHAIN_DEV_QUALIFICATION_OUTPUT_PATH: .buildchain/patrol/dev-qualification.json
+
+      - name: Upload exact-source observation
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-dev-qualification-observation-${{ steps.observe.outputs.source-sha }}
+          path: ${{ steps.observe.outputs.result-path }}
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+
+  mutate:
+    needs: observe
+    if: >-
+      inputs.mutation-authorized &&
+      !inputs.dry-run &&
+      (needs.observe.outputs.action == 'dispatch' ||
+       needs.observe.outputs.action == 'rerun-failed-jobs')
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+    outputs:
+      state: ${{ steps.mutate.outputs.state }}
+      action: ${{ steps.mutate.outputs.action }}
+      reason: ${{ steps.mutate.outputs.reason }}
+      source-sha: ${{ steps.mutate.outputs.source-sha }}
+      pending-sha: ${{ steps.mutate.outputs.pending-sha }}
+      active-run-id: ${{ steps.mutate.outputs.active-run-id }}
+      decision-root: ${{ steps.mutate.outputs.decision-root }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Reconcile and mutate latest Dev qualification
+        id: mutate
+        run: node .buildchain/runtime/scripts/dev-qualification-patrol.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.qualification-token || github.token }}
+          BUILDCHAIN_DEV_QUALIFICATION_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_DEV_QUALIFICATION_SOURCE_BRANCH: ${{ inputs.source-branch }}
+          BUILDCHAIN_DEV_QUALIFICATION_WORKFLOW: ${{ inputs.dev-workflow-path }}
+          BUILDCHAIN_DEV_QUALIFICATION_PREFLIGHT_WORKFLOW: ${{ inputs.preflight-workflow-path }}
+          BUILDCHAIN_DEV_QUALIFICATION_PRIORITY_WORKFLOWS: ${{ inputs.priority-workflows-json }}
+          BUILDCHAIN_DEV_QUALIFICATION_DISPATCH_INPUTS: ${{ inputs.dispatch-inputs-json }}
+          BUILDCHAIN_DEV_QUALIFICATION_MAX_ATTEMPTS: ${{ inputs.max-attempts }}
+          BUILDCHAIN_DEV_QUALIFICATION_EXPECTED_ACTION: ${{ needs.observe.outputs.action }}
+          BUILDCHAIN_DEV_QUALIFICATION_EXPECTED_SOURCE_SHA: ${{ needs.observe.outputs.source-sha }}
+          BUILDCHAIN_DEV_QUALIFICATION_MUTATION_AUTHORIZED: "true"
+          BUILDCHAIN_DEV_QUALIFICATION_OUTPUT_PATH: .buildchain/patrol/dev-qualification-mutation.json
+
+      - name: Upload protected mutation decision
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-dev-qualification-mutation-${{ steps.mutate.outputs.source-sha }}
+          path: ${{ steps.mutate.outputs.result-path }}
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true

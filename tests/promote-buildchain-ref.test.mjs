@@ -1911,6 +1911,83 @@ key = "publication.version"
   ]);
 });
 
+test("no-op dry-run version planning does not require product build artifacts", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.verify]
+command = "node scripts/verify-built-product.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-systems/artifactless-planning-fixture",
+      version: "1.0.1-alpha.0",
+    },
+    "scripts/verify-built-product.mjs": `
+import fs from "node:fs";
+if (!fs.existsSync("dist/product")) {
+  throw new Error("product build artifacts are unavailable");
+}
+`,
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run([
+    "git",
+    "-c",
+    "user.name=Test",
+    "-c",
+    "user.email=test@example.com",
+    "commit",
+    "-m",
+    "init",
+  ], cwd);
+
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async () => ({ data: [] }),
+        createRef: async () => assert.fail("dry-run must not create a ref"),
+        updateRef: async () => assert.fail("dry-run must not update a ref"),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "artifactless-planning-fixture",
+    allowRepository: "kungfu-systems/artifactless-planning-fixture",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    tags: ["v1.0.1-alpha.0"],
+    cwd,
+    dryRun: true,
+    requireVersionState: true,
+  });
+
+  assert.deepEqual(
+    result.updates
+      .filter((update) => update.version)
+      .map((update) => [update.version, update.action, update.sha]),
+    [["1.0.1-alpha.0", "existing-version-state", SHA]],
+  );
+});
+
 test("rerunning the same release SHA reuses exact tags", async () => {
   const octokit = {
     rest: {
@@ -2402,7 +2479,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     }],
   );
   assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-0"), true);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), alphaSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
   assert.equal(refs.get("tags/v1.0-alpha"), alphaSha);
   assert.equal(refs.get("tags/v1-alpha"), alphaSha);
   const order = fs.readFileSync(path.join(cwd, "order.log"), "utf8").trim().split("\n");
@@ -3825,7 +3902,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.1-alpha.2");
   assert.equal(refs.get("heads/alpha/v1/v1.0"), result.sha);
-  assert.equal(refs.get("tags/v1.0.1-alpha.2"), result.sha);
+  assert.equal(refs.get("tags/v1.0.1-alpha.2"), SHA);
   assert.equal(refs.get("tags/v1.0-alpha"), result.sha);
   assert.equal(refs.has("tags/v1.0.1-alpha.1"), false);
   assert.equal(refs.has("heads/buildchain/release-state/1-0-1-alpha-2"), true);

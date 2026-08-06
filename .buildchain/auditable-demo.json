@@ -1,0 +1,90 @@
+{
+  "schema": "buildchain.declarative-binary-demo/v1",
+  "compositionMode": "presentation-framed",
+  "playback": {
+    "schema": "buildchain.declarative-demo-playback/v1",
+    "mode": "deterministic-readable",
+    "activeDurationMs": 2800,
+    "finalHoldMs": 1000
+  },
+  "product": {
+    "id": "buildchain",
+    "displayName": "Buildchain",
+    "binaryName": "buildchain"
+  },
+  "artifact": {
+    "platformId": "linux-x64",
+    "binaryPath": "buildchain",
+    "metadataPath": "buildchain-x86_64-unknown-linux-gnu.json",
+    "metadataContract": "kungfu-buildchain-standalone-binary",
+    "runtimeDependencies": []
+  },
+  "execution": {
+    "deterministic": true,
+    "network": "none",
+    "secrets": "none",
+    "totalTimeoutSeconds": 60,
+    "environment": {}
+  },
+  "transportSmoke": {
+    "argv": ["version"],
+    "timeoutSeconds": 20,
+    "expectedExitCodes": [0],
+    "stdoutIncludes": ["3.0."]
+  },
+  "renditions": [
+    {"id": "1080p", "role": "primary", "columns": 150, "rows": 36, "width": 1920, "height": 1080},
+    {"id": "720p", "role": "responsive", "columns": 100, "rows": 28, "width": 1280, "height": 720}
+  ],
+  "demos": [
+    {
+      "id": "beginner-bootstrap",
+      "title": "Buildchain beginner bootstrap",
+      "claimBoundary": "This exact standalone-binary scenario proves deterministic local bootstrap behavior only; it does not grant release, repository, network, or production authority.",
+      "steps": [
+        {
+          "id": "initialize",
+          "argv": ["init", "--cwd", "./starter", "--type", "package", "--package-manager", "npm"],
+          "timeoutSeconds": 20,
+          "expectedExitCodes": [0],
+          "stdoutIncludes": ["buildchain.toml", ".github/workflows/build.yml"],
+          "fileAssertions": []
+        },
+        {
+          "id": "inspect-layout",
+          "argv": ["layout", "--cwd", "./starter", "--json"],
+          "timeoutSeconds": 20,
+          "expectedExitCodes": [0],
+          "stdoutIncludes": ["kungfu-buildchain-layout-discovery"],
+          "fileAssertions": []
+        },
+        {
+          "id": "verify-version",
+          "argv": ["version"],
+          "timeoutSeconds": 20,
+          "expectedExitCodes": [0],
+          "stdoutIncludes": ["3.0."],
+          "fileAssertions": []
+        }
+      ]
+    }
+  ],
+  "publication": {
+    "evidencePath": "docs/evidence/auditable-demo",
+    "readmePath": "README.md",
+    "marker": "buildchain-auditable-demo"
+  },
+  "authority": {
+    "grants": [],
+    "nonAuthorities": [
+      "first-party-identity",
+      "system-identity",
+      "kfd-compliance",
+      "product-system-metadata",
+      "package-metadata",
+      "registry-history",
+      "scan-output",
+      "standalone-generation"
+    ]
+  }
+}

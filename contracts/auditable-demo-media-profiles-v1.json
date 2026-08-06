@@ -246,6 +246,67 @@
         "responsive-alternate-video"
       ]
     },
+    "responsive-long-form-web-delivery-v1": {
+      "extends": "responsive-web-delivery-v1",
+      "mode": "web-delivery",
+      "renditions": [
+        {
+          "path": "demo.gif",
+          "maximumBytes": 8388608,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "demo.gif",
+            "observedBytes": 40826,
+            "multiplier": 128,
+            "rounding": "next-power-of-two"
+          }
+        },
+        {
+          "path": "demo.mp4",
+          "maximumBytes": 4194304,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "demo.mp4",
+            "observedBytes": 27038,
+            "multiplier": 128,
+            "rounding": "next-power-of-two"
+          }
+        },
+        {
+          "path": "demo.webm",
+          "maximumBytes": 4194304,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "demo.webm",
+            "observedBytes": 23383,
+            "multiplier": 128,
+            "rounding": "next-power-of-two"
+          }
+        },
+        {
+          "path": "demo-720p.mp4",
+          "maximumBytes": 4194304,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "demo.mp4",
+            "observedBytes": 27038,
+            "multiplier": 128,
+            "rounding": "next-power-of-two"
+          }
+        },
+        {
+          "path": "demo-720p.webm",
+          "maximumBytes": 4194304,
+          "budgetBasis": {
+            "evidence": "contracts/evidence/auditable-demo-web-delivery-v1.json",
+            "observedPath": "demo.webm",
+            "observedBytes": 23383,
+            "multiplier": 128,
+            "rounding": "next-power-of-two"
+          }
+        }
+      ]
+    },
     "site-hero-v1": {
       "extends": "web-delivery-v1",
       "mode": "web-delivery",

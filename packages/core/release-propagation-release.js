@@ -31,12 +31,65 @@ function normalizePackageFact(pkg = {}) {
     name: assertString(pkg.name, "upstreamRelease.package.name"),
     version: assertString(pkg.version, "upstreamRelease.package.version"),
     integrity: assertString(pkg.integrity, "upstreamRelease.package.integrity"),
-    gitHead: assertCommitSha(pkg.gitHead || pkg.git_head, "upstreamRelease.package.gitHead"),
+    gitHead: pkg.gitHead || pkg.git_head
+      ? assertCommitSha(pkg.gitHead || pkg.git_head, "upstreamRelease.package.gitHead")
+      : "",
   };
   if (!/^sha512-[A-Za-z0-9+/]+={0,2}$/.test(normalized.integrity)) {
     throw new Error("upstreamRelease.package.integrity must be an exact sha512 SRI value");
   }
   return normalized;
+}
+
+function normalizeRegistryProvenance(value, packageFact, repository, sourceSha) {
+  if (!value) return undefined;
+  if (!packageFact) throw new Error("upstreamRelease.registryProvenance requires package");
+  const input = assertPlainObject(value, "upstreamRelease.registryProvenance");
+  const normalized = {
+    registry: assertString(input.registry, "upstreamRelease.registryProvenance.registry"),
+    attestationUrl: assertString(input.attestationUrl || input.attestation_url, "upstreamRelease.registryProvenance.attestationUrl"),
+    predicateType: assertString(input.predicateType || input.predicate_type, "upstreamRelease.registryProvenance.predicateType"),
+    subjectSha512: assertString(input.subjectSha512 || input.subject_sha512, "upstreamRelease.registryProvenance.subjectSha512"),
+    repository: assertString(input.repository, "upstreamRelease.registryProvenance.repository"),
+    sourceSha: assertCommitSha(input.sourceSha || input.source_sha, "upstreamRelease.registryProvenance.sourceSha"),
+    workflowPath: assertString(input.workflowPath || input.workflow_path, "upstreamRelease.registryProvenance.workflowPath"),
+    workflowRef: assertString(input.workflowRef || input.workflow_ref, "upstreamRelease.registryProvenance.workflowRef"),
+    runUrl: assertString(input.runUrl || input.run_url, "upstreamRelease.registryProvenance.runUrl"),
+  };
+  if (normalized.registry !== "https://registry.npmjs.org") throw new Error("upstreamRelease.registryProvenance.registry must be the public npm registry");
+  if (!normalized.attestationUrl.startsWith("https://registry.npmjs.org/-/npm/v1/attestations/")) throw new Error("upstreamRelease.registryProvenance.attestationUrl must use the npm attestation API");
+  if (normalized.predicateType !== "https://slsa.dev/provenance/v1") throw new Error("upstreamRelease.registryProvenance must use SLSA provenance v1");
+  if (!/^[0-9a-f]{128}$/.test(normalized.subjectSha512)) throw new Error("upstreamRelease.registryProvenance.subjectSha512 must be an exact SHA-512 digest");
+  const sriDigest = Buffer.from(packageFact.integrity.slice("sha512-".length), "base64").toString("hex");
+  if (normalized.subjectSha512 !== sriDigest) throw new Error("upstreamRelease registry provenance subject must match package integrity");
+  if (normalized.repository !== repository || normalized.sourceSha !== sourceSha) throw new Error("upstreamRelease registry provenance source must match the release envelope");
+  return normalized;
+}
+
+function normalizeReleaseEvidence(release, packageFact, repository, sourceSha, version) {
+  const registryProvenance = normalizeRegistryProvenance(
+    release.registryProvenance || release.registry_provenance,
+    packageFact,
+    repository,
+    sourceSha,
+  );
+  const tag = optionalString(release.tag);
+  const target = release.tagTargetSha || release.tag_target_sha;
+  const tagTargetSha = target ? assertCommitSha(target, "upstreamRelease.tagTargetSha") : "";
+  if (!registryProvenance) {
+    if (tag !== `v${version}`) throw new Error("upstreamRelease.tag must exactly match the published version");
+    if (tagTargetSha !== sourceSha) throw new Error("upstreamRelease tag target must match sourceSha");
+    if (packageFact && packageFact.gitHead !== sourceSha) throw new Error("upstreamRelease package gitHead must match sourceSha");
+  } else if ((tag && tag !== `v${version}`) || (tagTargetSha && tagTargetSha !== sourceSha)) {
+    throw new Error("upstreamRelease optional tag evidence must match the provenance source");
+  }
+  const passportInput = release.releasePassport || release.release_passport;
+  return {
+    tag,
+    tagTargetSha,
+    registryProvenance,
+    releasePassport: passportInput ? normalizeReleasePassport(passportInput) : undefined,
+  };
 }
 
 function normalizeDigestUrlFact(value = {}, label) {
@@ -117,33 +170,22 @@ export function normalizeUpstreamRelease(input) {
     throw new Error("upstreamRelease.repository must be owner/repo");
   }
   const sourceSha = assertCommitSha(release.sourceSha || release.source_sha, "upstreamRelease.sourceSha");
-  const tagTargetSha = assertCommitSha(
-    release.tagTargetSha || release.tag_target_sha,
-    "upstreamRelease.tagTargetSha",
-  );
   const version = packageFact?.version || publicationArtifact?.version || "";
-  const tag = assertString(release.tag, "upstreamRelease.tag");
-  if (tag !== `v${version}`) {
-    throw new Error("upstreamRelease.tag must exactly match the published version");
-  }
-  if (tagTargetSha !== sourceSha) {
-    throw new Error("upstreamRelease tag target must match sourceSha");
-  }
-  if (packageFact && packageFact.gitHead !== sourceSha) {
-    throw new Error("upstreamRelease package gitHead must match sourceSha");
-  }
+  const evidence = normalizeReleaseEvidence(release, packageFact, repository, sourceSha, version);
+  if (!evidence.registryProvenance && !evidence.releasePassport) normalizeReleasePassport();
   if (packageFact && publicationArtifact && packageFact.version !== publicationArtifact.version) {
     throw new Error("upstreamRelease package and publication artifact versions must match");
   }
   return {
     repository,
     channel: normalizeChannel(release.channel, "upstreamRelease.channel"),
-    tag,
-    tagTargetSha,
+    tag: evidence.tag,
+    tagTargetSha: evidence.tagTargetSha,
     sourceSha,
     package: packageFact,
     publicationArtifact,
-    releasePassport: normalizeReleasePassport(release.releasePassport || release.release_passport),
+    releasePassport: evidence.releasePassport,
+    registryProvenance: evidence.registryProvenance,
     siteBundle: release.siteBundle || release.site_bundle
       ? {
         manifestSha256: assertString(
@@ -166,6 +208,7 @@ export function verifyReleaseLockBinding({ release, lock, downstream, propagatio
     package: lock.upstream?.package,
     publicationArtifact: lock.upstream?.publicationArtifact,
     releasePassport: lock.upstream?.releasePassport,
+    registryProvenance: lock.upstream?.registryProvenance,
     siteBundle: lock.upstream?.siteBundle,
   });
   if (JSON.stringify(lockRelease) !== JSON.stringify(normalizedRelease)) {

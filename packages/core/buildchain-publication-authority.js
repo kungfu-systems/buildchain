@@ -5,6 +5,7 @@ import { createPublicationAuthorityRegistry } from "./publication-authority.js";
 
 const DESCRIPTORS = Object.freeze([
   [".github/workflows/.auditable-demo.yml", "non-publication-oidc"],
+  [".github/workflows/.declarative-auditable-demo.yml", "governance-write"],
   [".github/workflows/.build.yml", "non-publication-oidc"],
   [".github/workflows/.release-candidate-promote.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/.publication-authority.yml", "evidence-publication"],
@@ -19,16 +20,21 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/binary-distribution.yml", "evidence-publication"],
   [".github/workflows/binary-release-assets.yml", "governance-write"],
   [".github/workflows/artifact-signing-authority.yml", "evidence-publication"],
+  [".github/workflows/auditable-demo.yml", "governance-write"],
   [".github/workflows/build-surface-fixture.yml", "non-publication-oidc"],
   [".github/workflows/build.yml", "non-publication-oidc"],
   [".github/workflows/buildchain-alpha-self-dogfood.yml", "non-publication-oidc"],
+  [".github/workflows/buildchain-dev-delivery.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-daily.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-monthly.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-weekly.yml", "governance-write"],
   [".github/workflows/buildchain-patrol.yml", "governance-write"],
   [".github/workflows/buildchain-ref-promotion.yml", "governance-write"],
   [".github/workflows/buildchain-stable-candidate-patrol.yml", "governance-write"],
+  [".github/workflows/dev-qualification-patrol.yml", "governance-write"],
   [".github/workflows/dev-alpha-candidate-patrol.yml", "governance-write"],
+  [".github/workflows/dev-delivery-warrant-close.yml", "governance-write"],
+  [".github/workflows/dev-delivery-warrant-cancel.yml", "governance-write"],
   [".github/workflows/dev-merge-queue-governance.yml", "governance-write"],
   [".github/workflows/dev-pr-auto-merge.yml", "governance-write"],
   [".github/workflows/github-governance-audit.yml", "governance-write"],
@@ -72,7 +78,6 @@ export function buildchainPublicationAuthorityDescriptors() {
     runnerPolicy: publicationCapable ? "qualified-measured" : "unqualified",
   }));
 }
-
 export function createBuildchainPublicationAuthorityRegistry({ root = process.cwd() } = {}) {
   const workflowsDir = path.join(root, ".github", "workflows");
   const workflows = fs.readdirSync(workflowsDir)

@@ -1,0 +1,173 @@
+{
+  "$schema": "https://xinfa.dev/schema/project-v1.schema.json",
+  "schema": "xinfa.project/v1",
+  "project": {
+    "id": "buildchain-dev-pr-delivery",
+    "title": "Buildchain dev pull request delivery control"
+  },
+  "cut": {
+    "id": "buildchain-dev-pr-delivery.v1",
+    "revision": "sha256:8dce3177048b5669e02096ef0224f80f7abb5a5037b2d59812d81b3f07ef1ee0"
+  },
+  "roots": [
+    {
+      "id": "repository",
+      "path": ".",
+      "visibility": "public"
+    }
+  ],
+  "providers": [
+    {
+      "id": "buildchain.files",
+      "kind": "exact-file-manifest",
+      "authority": "buildchain",
+      "visibility": "public",
+      "root": "repository",
+      "paths": [
+        ".github/workflows/buildchain-patrol.yml",
+        ".github/workflows/dev-pr-auto-merge.yml",
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "docs/release-governance.md",
+        "scripts/buildchain-patrol.mjs",
+        "scripts/dev-pr-auto-merge.mjs",
+        "tests/dev-pr-auto-merge.test.mjs"
+      ],
+      "revision": "sha256:fba3292e278f119228c5a93431744b8854ec75c21a81c00376afc0639a716ce0"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "buildchain.source.agents",
+      "kind": "document",
+      "visibility": "public",
+      "revision": "sha256:05dfe4749544c086dd9b9104ea51ddccd478f2f1dfdd2b0fdd2daeb27f93e258",
+      "provenance": {"kind": "project-source", "authority": "buildchain"},
+      "source": {"provider": "buildchain.files", "path": "AGENTS.md"},
+      "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
+    },
+    {
+      "id": "buildchain.source.contributing",
+      "kind": "document",
+      "visibility": "public",
+      "revision": "sha256:d7443ac030b50ee85229de85e27ca761480be01e504835b6daa8c5c2b2cd26d8",
+      "provenance": {"kind": "project-source", "authority": "buildchain"},
+      "source": {"provider": "buildchain.files", "path": "CONTRIBUTING.md"},
+      "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
+    },
+    {
+      "id": "buildchain.source.dev-pr-controller",
+      "kind": "implementation",
+      "visibility": "public",
+      "revision": "sha256:210c2016d7c10b07db5c86230ebe1d3d0d2f4d7207bdae0853ff86493308ec37",
+      "provenance": {"kind": "project-source", "authority": "buildchain"},
+      "source": {"provider": "buildchain.files", "path": "scripts/dev-pr-auto-merge.mjs"},
+      "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
+    },
+    {
+      "id": "buildchain.source.dev-pr-tests",
+      "kind": "probe",
+      "visibility": "public",
+      "revision": "sha256:639c5830efff3ce7980feda66388fac7f7f76187f0fbd4311ea8cc7dfdbddd8d",
+      "provenance": {"kind": "project-source", "authority": "buildchain"},
+      "source": {"provider": "buildchain.files", "path": "tests/dev-pr-auto-merge.test.mjs"},
+      "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
+    },
+    {
+      "id": "buildchain.source.patrol-controller",
+      "kind": "implementation",
+      "visibility": "public",
+      "revision": "sha256:2b5fdd5f68b3639394484b8d1d04dd6ba2e37741c0e12f7c82d2047bda275407",
+      "provenance": {"kind": "project-source", "authority": "buildchain"},
+      "source": {"provider": "buildchain.files", "path": "scripts/buildchain-patrol.mjs"},
+      "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
+    },
+    {
+      "id": "buildchain.source.dev-pr-workflow",
+      "kind": "implementation",
+      "visibility": "public",
+      "revision": "sha256:6852f5d8b4663521d80031637e9dd5fe090e596254bebe8e5e56f35c6c83d41c",
+      "provenance": {"kind": "project-source", "authority": "buildchain"},
+      "source": {"provider": "buildchain.files", "path": ".github/workflows/dev-pr-auto-merge.yml"},
+      "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
+    },
+    {
+      "id": "buildchain.source.patrol-workflow",
+      "kind": "implementation",
+      "visibility": "public",
+      "revision": "sha256:42fbb71bd47bbf3f4b37946ed1b628d5fcffe9f2c6a414e04a4868ff4aa3eecd",
+      "provenance": {"kind": "project-source", "authority": "buildchain"},
+      "source": {"provider": "buildchain.files", "path": ".github/workflows/buildchain-patrol.yml"},
+      "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
+    },
+    {
+      "id": "buildchain.source.release-governance",
+      "kind": "document",
+      "visibility": "public",
+      "revision": "sha256:617fb47c9dc8af860e3bc747553b3b48fafa058f012e414692ac1548e0fe0066",
+      "provenance": {"kind": "project-source", "authority": "buildchain"},
+      "source": {"provider": "buildchain.files", "path": "docs/release-governance.md"},
+      "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
+    }
+  ],
+  "edges": [],
+  "routes": [
+    {
+      "id": "buildchain-dev-pr-delivery-agent",
+      "audience": "agent",
+      "parityGroup": "buildchain-dev-pr-delivery",
+      "visibility": "public",
+      "nodes": [
+        "buildchain.source.agents",
+        "buildchain.source.contributing",
+        "buildchain.source.dev-pr-controller",
+        "buildchain.source.dev-pr-tests",
+        "buildchain.source.patrol-controller",
+        "buildchain.source.dev-pr-workflow",
+        "buildchain.source.patrol-workflow",
+        "buildchain.source.release-governance"
+      ],
+      "entrypoints": ["AGENTS.md", "scripts/dev-pr-auto-merge.mjs"],
+      "resolution": {
+        "subjects": ["buildchain", "dev-pr", "delivery-intent", "merge-queue"],
+        "capabilities": ["authority", "evidence", "known-limits", "next-action", "use"],
+        "owners": ["buildchain-dev-pr-delivery"],
+        "roles": ["delivery-control-engineer"],
+        "mission_tracks": ["continuous-delivery-control-plane"],
+        "terms": ["admission", "exact-head", "ready"]
+      }
+    },
+    {
+      "id": "buildchain-dev-pr-delivery-human",
+      "audience": "human",
+      "parityGroup": "buildchain-dev-pr-delivery",
+      "visibility": "public",
+      "nodes": [
+        "buildchain.source.agents",
+        "buildchain.source.contributing",
+        "buildchain.source.dev-pr-controller",
+        "buildchain.source.dev-pr-tests",
+        "buildchain.source.patrol-controller",
+        "buildchain.source.dev-pr-workflow",
+        "buildchain.source.patrol-workflow",
+        "buildchain.source.release-governance"
+      ],
+      "entrypoints": ["CONTRIBUTING.md", "docs/release-governance.md"],
+      "resolution": {
+        "subjects": ["buildchain", "dev-pr", "delivery-intent", "merge-queue"],
+        "capabilities": ["authority", "evidence", "known-limits", "next-action", "use"],
+        "owners": ["buildchain-dev-pr-delivery"],
+        "roles": ["delivery-control-engineer"],
+        "mission_tracks": ["continuous-delivery-control-plane"],
+        "terms": ["admission", "exact-head", "ready"]
+      }
+    }
+  ],
+  "policies": {
+    "unknownFields": "reject",
+    "pathSemantics": "repository-relative-posix",
+    "visibility": "fail-closed",
+    "dualFirstParity": "required",
+    "verification": "declared-dependencies"
+  }
+}

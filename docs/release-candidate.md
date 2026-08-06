@@ -117,19 +117,105 @@ and resolves each remaining floating shell/runtime ref exactly once. Every
 later checkout and delegated promotion receives those immutable SHAs, so a
 channel tag moving during the run cannot mix two Buildchain revisions.
 
-If a promote-only run failed after its consumer commit was already merged and
-its PR-stage artifacts were built, rerun the complete failed workflow after the
-fixed Buildchain channel is published:
+## Resume from an existing candidate run
 
-```bash
-gh run rerun <run-id> --repo <owner>/<consumer>
+Do not rely on `gh run rerun` after a reusable-workflow startup or router
+failure. GitHub documents two different rerun behaviors: a full rerun may use a
+called workflow from the currently specified ref, while a failed-job rerun uses
+the same called-workflow commit as the original attempt. Neither operation is a
+supported way to create a job graph that GitHub failed to resolve at startup.
+See GitHub's [reusable workflow rerun behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations#behavior-of-reusable-workflows-when-re-running-jobs)
+and [workflow rerun identity rules](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs).
+
+The supported recovery boundary is a new `workflow_dispatch` (or another new
+caller event) that invokes `release-candidate-promote.yml` and supplies the old
+candidate run explicitly:
+
+```yaml
+name: Resume release candidate
+on:
+  workflow_dispatch:
+    inputs:
+      candidate-run-id: { required: true, type: string }
+      target-sha: { required: true, type: string }
+      expected-tree: { required: true, type: string }
+      candidate-runtime-sha: { required: true, type: string }
+      buildchain-runtime-sha: { required: true, type: string }
+
+jobs:
+  resume:
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@<exact-current-buildchain-sha>
+    permissions:
+      actions: write
+      checks: write
+      contents: write
+      id-token: write
+      pull-requests: write
+    secrets: inherit
+    with:
+      buildchain-ref: ${{ inputs.buildchain-runtime-sha }}
+      channel: alpha
+      target-ref: alpha/v3/v3.0
+      target-sha: ${{ inputs.target-sha }}
+      artifact-name: product
+      artifact-patterns: product-package-*
+      release-candidate-workflow-file: build.yml
+      release-candidate-workflow-name: Build
+      resume-candidate-repository: ${{ github.repository }}
+      resume-candidate-run-id: ${{ inputs.candidate-run-id }}
+      resume-expected-workflow-file: build.yml
+      resume-expected-workflow-name: Build
+      resume-expected-source-tree: ${{ inputs.expected-tree }}
+      resume-expected-candidate-runtime-sha: ${{ inputs.candidate-runtime-sha }}
+      resume-buildchain-runtime-sha: ${{ inputs.buildchain-runtime-sha }}
+      publish-transaction-override: true
 ```
 
-Use a complete rerun, not `--failed`, so GitHub resolves the reusable workflow
-again. The release-candidate resolver reuses the existing candidate artifacts,
-and the durable publication transaction makes the recovery idempotent; do not
-open a replacement consumer PR or rebuild the native matrix solely for this
-router failure.
+`resume-expected-candidate-root` may replace `resume-expected-source-tree`, or
+callers may provide both. `resume-transaction-id` is optional; when supplied it
+must identify an already durable transaction before any provider mutation.
+
+Recovery downloads and checks the successful `pull_request` run, active
+workflow file and name, same-repository merged PR, trusted repository
+association, target ancestry, promotion tree, Passport candidate root,
+build-summary root, controller receipts, platform matrix, artifact archive
+size/digest, every manifest file, and every product payload byte. Tree equality
+alone is never admission. A different promotion commit is allowed only when all
+of those identities still agree.
+
+The recovery path conditionally skips consumer dependency installation and all
+product `install`, `build`, `verify`, and platform-matrix jobs. It restores the
+downloaded bytes as a content-addressed sealed bundle, so npm publication uses
+the original `.tgz`; it may regenerate only Buildchain-owned receipts,
+attestations, signatures, Release Passport data, publication, and readback.
+
+Success emits `kungfu-buildchain-release-candidate-recovery/v1` with
+`action: reused`, the original run/source/tree, candidate and artifact roots,
+the skipped stages, current tooling SHA, transaction identity/state, and an
+exact receipt root. The receipt is uploaded as an Actions artifact and staged
+with immutable GitHub Release Passport assets.
+
+The original candidate Passport is never rewritten when a reusable fixture or
+consumer build records a product version different from the sealed publication
+package. In that case the promote action validates the Passport without
+discarding its original target, then requires the immutable recovery receipt to
+bind the original candidate root and source/tree to the exact version read from
+the sealed payload. Without that receipt, the existing direct Passport version
+check remains mandatory; receipt, candidate-root, target, or version drift fails
+before publication side effects.
+
+Missing or expired artifacts, archive or payload digest drift, tree/root,
+repository/workflow/channel/target mismatch, untrusted run/PR provenance,
+incomplete controller evidence, and transaction conflict fail closed with an
+error code and next action. Buildchain never converts recovery failure into a
+hidden full rebuild. A repository owner must choose a new candidate build
+explicitly.
+
+When a durable transaction is absent, recovery seals one from the verified
+candidate. Existing `sealed`, `publishing`, `package-published`, `finalizing`,
+and `complete` transactions use the normal idempotent state machine. Matching
+registry and GitHub bytes are preserved, only missing publication work is
+performed, and conflicting public digests enter `repair_required`.
 
 By default, the wrapper forwards GitHub Release publication to the underlying
 `promote-buildchain-ref` semver model. Once the release transaction is complete,
@@ -192,11 +278,28 @@ short-lived admission JSON in repository-specific workflow code:
 ```
 
 `publication-auto-no-gate` is an explicit consumer decision, not a default. A
-consumer with a Shifu Gate registry supplies `publication-gate-aggregate-json`
-instead. Buildchain still requires caller-owned RC evidence, an exact authority
+consumer with a Shifu Gate registry either supplies
+`publication-gate-aggregate-json`, or supplies a source-controlled
+`publication-gate-command` that writes the aggregate to
+`BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH`. The command runs from the exact
+consumer source in the credential-free sealed-authority job, after Buildchain
+has downloaded the exact RC passport, summary, controller receipt, manifests,
+and payload bytes. It can read those inputs through
+`BUILDCHAIN_PUBLICATION_EVIDENCE_ROOT`; it receives no publication token, OIDC
+permission, or provider write permission. Buildchain validates the aggregate
+digest and exact source binding before it seals a capability. Exactly one of
+the supplied aggregate, consumer command, or explicit no-Gate decision is
+allowed. Buildchain still requires caller-owned RC evidence, an exact authority
 runtime and source SHA, a repository-local publisher workflow, matching npm
 target/package identity or exact caller-bound GitHub Release target, and a
 qualifying control-plane audit.
+
+Promotion resolves the complete PR-stage workflow, not only the first required
+status job that becomes green. `release-candidate-wait-seconds` bounds that
+wait and defaults to three hours so long native builds can finish controller,
+publication-tail, and retained-evidence jobs without racing a merged promotion.
+An incomplete or failed workflow still fails closed; the longer bound does not
+turn a partial required-check result into candidate evidence.
 
 GitHub-Release-only consumers use the same managed admission without inventing
 an npm package identity:

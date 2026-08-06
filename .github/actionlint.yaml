@@ -36,6 +36,10 @@ paths:
     # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
     ignore:
       - 'property "workflow_sha" is not defined in object type'
+  .github/workflows/.declarative-auditable-demo.yml:
+    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'
   .github/workflows/.gate-profile.yml:
     # GitHub.com exposes job.workflow_ref for called-workflow identity. Keep
     # this exact false-positive scoped until actionlint's context schema ships it.

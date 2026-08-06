@@ -1,0 +1,265 @@
+name: Dev Delivery Warrant Close
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        {
+          description: "Buildchain runtime repository",
+          default: "kungfu-systems/buildchain",
+          type: string,
+          required: false,
+        }
+      buildchain-ref:
+        {
+          description: "Buildchain runtime ref",
+          default: "v3",
+          type: string,
+          required: false,
+        }
+      target-branch:
+        { description: "Protected dev branch", type: string, required: true }
+      expected-pr-number:
+        {
+          description: "Exact PR holding the active Warrant",
+          type: number,
+          required: true,
+        }
+      expected-head-sha:
+        { description: "Exact immutable PR head", type: string, required: true }
+      outcome:
+        {
+          description: "merged, terminal-failure, dequeued, or cancelled",
+          type: string,
+          required: true,
+        }
+      current-base-sha:
+        {
+          description: "Exact latest dev base used by integration",
+          default: "",
+          type: string,
+          required: false,
+        }
+      replay-tree-sha:
+        {
+          description: "Exact replayed Project Cut tree",
+          default: "",
+          type: string,
+          required: false,
+        }
+      merge-group-head-sha:
+        {
+          description: "Exact GitHub merge_group candidate head",
+          default: "",
+          type: string,
+          required: false,
+        }
+      merge-group-tree-sha:
+        {
+          description: "Exact GitHub merge_group candidate tree",
+          default: "",
+          type: string,
+          required: false,
+        }
+      required-context-roots-json:
+        {
+          description: "Non-empty JSON array of exact final check roots",
+          default: "[]",
+          type: string,
+          required: false,
+        }
+      terminal-evidence-root:
+        {
+          description: "Required evidence root for non-merged terminal outcomes",
+          default: "",
+          type: string,
+          required: false,
+        }
+      reason:
+        {
+          description: "Visible terminal reason",
+          default: "",
+          type: string,
+          required: false,
+        }
+    secrets:
+      github-token:
+        description: "Token permitted to advance the Buildchain Warrant state ref"
+        required: false
+    outputs:
+      integration-proof-root:
+        value: ${{ jobs.close.outputs.integration-proof-root }}
+      close-receipt-root:
+        value: ${{ jobs.close.outputs.close-receipt-root }}
+      final-state-root:
+        value: ${{ jobs.close.outputs.final-state-root }}
+
+permissions:
+  contents: write
+
+jobs:
+  close:
+    name: Close exact fenced delivery attempt
+    runs-on: ubuntu-24.04
+    outputs:
+      integration-proof-root: ${{ steps.evidence.outputs.integration-proof-root }}
+      close-receipt-root: ${{ steps.close.outputs.close-receipt-root }}
+      final-state-root: ${{ steps.close.outputs.final-state-root }}
+    steps:
+      - name: Validate terminal intent
+        shell: bash
+        run: |
+          case "${OUTCOME}" in
+            merged|terminal-failure|dequeued|cancelled) ;;
+            *)
+              echo "::error::unsupported terminal Warrant outcome: ${OUTCOME}"
+              exit 1
+              ;;
+          esac
+          case "${TARGET_BRANCH}" in
+            dev/v*/v*) ;;
+            *)
+              echo "::error::target-branch must be a semver dev branch"
+              exit 1
+              ;;
+          esac
+          if ! [[ "${EXPECTED_HEAD}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::expected-head-sha must be an exact lowercase Git SHA"
+            exit 1
+          fi
+        env:
+          OUTCOME: ${{ inputs.outcome }}
+          TARGET_BRANCH: ${{ inputs.target-branch }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v3' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Observe active Warrant authority
+        run: >-
+          node .buildchain/runtime/scripts/dev-delivery-warrant.mjs observe
+          --repository "${GITHUB_REPOSITORY}"
+          --branch "${TARGET_BRANCH}"
+          --output .buildchain/dev-delivery/observation.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ inputs.target-branch }}
+
+      - name: Resolve terminal settlement mode
+        id: settlement
+        shell: bash
+        run: |
+          set -euo pipefail
+          if jq -e '.observation.activeWarrant != null' .buildchain/dev-delivery/observation.json >/dev/null; then
+            jq -e \
+              --argjson pr "${EXPECTED_PR}" \
+              --arg head "${EXPECTED_HEAD}" \
+              '.observation.activeWarrant.pullRequestNumber == $pr
+               and .observation.activeWarrant.sourceHead == $head
+               and .observation.activeCandidate.pullRequestNumber == $pr
+               and .observation.activeCandidate.sourceHead == $head
+               and .observation.activeCandidate.candidateId == .observation.activeWarrant.candidateId' \
+              .buildchain/dev-delivery/observation.json >/dev/null
+            echo "mode=active" >> "${GITHUB_OUTPUT}"
+          else
+            echo "mode=inactive" >> "${GITHUB_OUTPUT}"
+          fi
+        env:
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+
+      - name: Seal exact terminal evidence
+        id: evidence
+        if: steps.settlement.outputs.mode == 'active' || inputs.outcome != 'merged'
+        shell: bash
+        run: |
+          if [ "${OUTCOME}" = "merged" ]; then
+            source_proof_root="$(jq -er '.observation.activeCandidate.sourceProofRoot' .buildchain/dev-delivery/observation.json)"
+            node .buildchain/runtime/scripts/dev-delivery-proof.mjs integration \
+              --repository "${GITHUB_REPOSITORY}" \
+              --branch "${TARGET_BRANCH}" \
+              --source-proof-root "${source_proof_root}" \
+              --warrant-result .buildchain/dev-delivery/observation.json \
+              --current-base "${CURRENT_BASE}" \
+              --replay-tree "${REPLAY_TREE}" \
+              --merge-group-head "${MERGE_GROUP_HEAD}" \
+              --merge-group-tree "${MERGE_GROUP_TREE}" \
+              --required-context-roots-json "${CONTEXT_ROOTS}" \
+              --verified-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              --output .buildchain/dev-delivery/integration-proof.json
+            evidence_root="$(jq -er '.proofRoot' .buildchain/dev-delivery/integration-proof.json)"
+            echo "integration-proof-root=${evidence_root}" >> "${GITHUB_OUTPUT}"
+          else
+            evidence_root="${TERMINAL_EVIDENCE_ROOT}"
+            if ! [[ "${evidence_root}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "::error::non-merged terminal closeout requires an exact evidence root"
+              exit 1
+            fi
+          fi
+          echo "evidence-root=${evidence_root}" >> "${GITHUB_OUTPUT}"
+        env:
+          OUTCOME: ${{ inputs.outcome }}
+          TARGET_BRANCH: ${{ inputs.target-branch }}
+          CURRENT_BASE: ${{ inputs.current-base-sha }}
+          REPLAY_TREE: ${{ inputs.replay-tree-sha }}
+          MERGE_GROUP_HEAD: ${{ inputs.merge-group-head-sha }}
+          MERGE_GROUP_TREE: ${{ inputs.merge-group-tree-sha }}
+          CONTEXT_ROOTS: ${{ inputs.required-context-roots-json }}
+          TERMINAL_EVIDENCE_ROOT: ${{ inputs.terminal-evidence-root }}
+
+      - name: Settle terminal delivery event
+        id: close
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            settle
+            --repository "${GITHUB_REPOSITORY}"
+            --branch "${TARGET_BRANCH}"
+            --pull-request "${EXPECTED_PR}"
+            --expected-source-head "${EXPECTED_HEAD}"
+            --outcome "${OUTCOME}"
+            --reason "${REASON}"
+            --execute
+            --output .buildchain/dev-delivery/close.json
+          )
+          if [ "${SETTLEMENT_MODE}" = "active" ]; then
+            args+=(
+              --fencing-token "$(jq -er '.observation.activeWarrant.fencingToken' .buildchain/dev-delivery/observation.json)"
+              --lease-generation "$(jq -er '.observation.activeWarrant.generation' .buildchain/dev-delivery/observation.json)"
+            )
+          fi
+          if [ -n "${EVIDENCE_ROOT}" ]; then
+            args+=(--evidence-root "${EVIDENCE_ROOT}")
+          fi
+          node .buildchain/runtime/scripts/dev-delivery-warrant.mjs "${args[@]}"
+          echo "close-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/close.json)" >> "${GITHUB_OUTPUT}"
+          echo "final-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/close.json)" >> "${GITHUB_OUTPUT}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ inputs.target-branch }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          OUTCOME: ${{ inputs.outcome }}
+          EVIDENCE_ROOT: ${{ steps.evidence.outputs.evidence-root }}
+          REASON: ${{ inputs.reason }}
+          SETTLEMENT_MODE: ${{ steps.settlement.outputs.mode }}
+
+      - name: Upload terminal Warrant evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-dev-delivery-close-${{ inputs.expected-pr-number }}-${{ inputs.outcome }}
+          path: .buildchain/dev-delivery/
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true

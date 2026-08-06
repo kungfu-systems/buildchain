@@ -56,7 +56,6 @@ const requireFromHere = createRequire(import.meta.url);
 function readText(rel) {
   return fs.readFileSync(path.join(root, rel), "utf8");
 }
-
 function readJson(rel) {
   return JSON.parse(readText(rel));
 }
@@ -364,6 +363,7 @@ const manualMetaById = new Map(Object.entries({
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
+  "dev-qualification-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 136 },
   "dev-alpha-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 137 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
@@ -517,7 +517,7 @@ function workflowCapabilityGroup(entry) {
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
   if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
-  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge")) return capabilityGroup("governance-versioning");
+  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge") || entry.id.includes("dev-delivery-warrant") || entry.id.includes("buildchain-dev-delivery")) return capabilityGroup("governance-versioning");
   if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
   return capabilityGroup("api-cli-reference");
 }
@@ -724,6 +724,7 @@ function buildSiteBundle() {
       "docs/reusable-build-surface.md",
       "docs/release-candidate.md",
       "docs/stable-candidate-patrol.md",
+      "docs/dev-qualification-patrol.md",
       "docs/dev-alpha-candidate-patrol.md",
       "docs/observed-evidence-patrol.md",
       "docs/release-governance.md",
@@ -767,6 +768,7 @@ function buildSiteBundle() {
         ["build", "channel-build-router"],
         [".build", "reusable-build"],
         [".auditable-demo", "auditable-demo"],
+        [".declarative-auditable-demo", "declarative-auditable-demo"],
         ["web-surface", "site-app-deployment"],
         ["buildchain-ref-promotion", "release-governance"],
         ["release-line-bootstrap", "release-governance"],
@@ -775,6 +777,7 @@ function buildSiteBundle() {
         ["paper-release", "reusable-build"],
         ["release-propagation", "release-propagation"],
         ["dev-pr-auto-merge", "dev-governance"],
+        ["buildchain-dev-delivery", "dev-governance"],
         ["github-governance-audit", "dev-governance"],
         ["binary-distribution", "release-passport"],
         ["github-artifact-attestation", "release-passport"],
@@ -783,6 +786,7 @@ function buildSiteBundle() {
         ["buildchain-patrol-weekly", "repository-patrol"],
         ["buildchain-patrol-monthly", "repository-patrol"],
         ["stable-candidate-patrol", "repository-patrol"],
+        ["dev-qualification-patrol", "repository-patrol"],
         ["dev-alpha-candidate-patrol", "repository-patrol"],
         ["buildchain-stable-candidate-patrol", "repository-patrol"],
         ["buildchain-stable-candidate-qualification", "repository-patrol"],
@@ -793,6 +797,7 @@ function buildSiteBundle() {
       ]);
       const statusById = new Map([
         [".auditable-demo", "preview"],
+        [".declarative-auditable-demo", "preview"],
         ["release-propagation", "preview"],
         ["candidate-lab", "repository-internal"],
         ["build-surface-fixture", "repository-internal"],

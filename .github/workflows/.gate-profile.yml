@@ -65,7 +65,7 @@ on:
         type: string
         required: false
       platforms-json:
-        description: "Optional runner objects: id, name, platform, runner JSON string, capabilities, and optional required=false"
+        description: "Optional runner objects: id, name, platform, runner JSON string, capabilities, non-sensitive scalar environment, and optional required=false"
         default: ""
         type: string
         required: false
@@ -250,7 +250,12 @@ jobs:
             const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const train = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const runtimeRef = requested || shellRef;
-            if (requested && !official.test(requested)) {
+            const pinnedSelfRuntime =
+              sameRepositoryWorkflow &&
+              exactSha.test(requested) &&
+              exactSha.test(shellRef) &&
+              requested.toLowerCase() === shellRef.toLowerCase();
+            if (requested && !official.test(requested) && !pinnedSelfRuntime) {
               if (context.eventName !== "workflow_dispatch") {
                 throw new Error("Buildchain Gate runtime override is only allowed for trusted workflow_dispatch runs");
               }
@@ -317,7 +322,9 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ steps.runtime.outputs.runtime-sha }}
-          path: .buildchain/runtime/scripts/locked-source-checkout.mjs
+          path: |
+            .buildchain/runtime/scripts/locked-source-checkout.mjs
+            .buildchain/runtime/scripts/git-fetch-process-tree.mjs
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -492,6 +499,7 @@ jobs:
           path: .buildchain/diagnostics/*-checkout.json
           if-no-files-found: warn
           retention-days: ${{ inputs.artifact-retention-days }}
+          overwrite: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6.4.0
@@ -572,6 +580,7 @@ jobs:
           path: .buildchain/gates/executions/${{ matrix.gate.id }}
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+          overwrite: true
 
       - name: Enforce Shifu Gate qualification
         if: ${{ steps.gate.outcome != 'success' }}
@@ -653,6 +662,7 @@ jobs:
           path: .buildchain/gates/gate-aggregate.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+          overwrite: true
 
       - name: Create Shifu profile envelope controller receipt
         id: controller-receipt
@@ -684,6 +694,7 @@ jobs:
           path: .buildchain/controller/receipt.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+          overwrite: true
 
       - name: Enforce aggregate qualification
         if: ${{ steps.aggregate.outcome != 'success' || steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}

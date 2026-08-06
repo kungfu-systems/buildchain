@@ -205,12 +205,30 @@ test("stable route calls the hidden advanced workflow through the current major 
       "github-artifact-attestation-environment",
       "github-artifact-attestation-policy-json",
       "github-artifact-attestation-retention-days",
+      "publication-gate-command",
       "release-activation-command",
       "release-activation-receipt-set-path",
+      "release-candidate-wait-seconds",
+      "release-candidate-family-assignment-id",
+      "release-candidate-family-evidence-required",
+      "release-candidate-family-evidence-root",
+      "release-candidate-family-initiative-id",
+      "release-passport-attachment-command",
       "release-passport-evidence-command",
+      "release-passport-evidence-jsons",
       "release-passport-evidence-path",
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
+      "release-propagation-config-path",
+      "resume-buildchain-runtime-sha",
+      "resume-candidate-repository",
+      "resume-candidate-run-id",
+      "resume-expected-candidate-root",
+      "resume-expected-candidate-runtime-sha",
+      "resume-expected-source-tree",
+      "resume-expected-workflow-file",
+      "resume-expected-workflow-name",
+      "resume-transaction-id",
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v3/);
@@ -240,6 +258,14 @@ test("stable route forwards only inputs supported by the current workflow shell"
   assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-policy-json:/m);
   assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-environment:/m);
   assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-retention-days:/m);
+  assert.doesNotMatch(stableBlock, /^      release-candidate-family-assignment-id:/m);
+  assert.doesNotMatch(stableBlock, /^      release-candidate-family-evidence-required:/m);
+  assert.doesNotMatch(stableBlock, /^      release-candidate-family-evidence-root:/m);
+  assert.doesNotMatch(stableBlock, /^      release-candidate-family-initiative-id:/m);
+  assert.doesNotMatch(stableBlock, /^      release-passport-attachment-command:/m);
+  assert.doesNotMatch(stableBlock, /^      release-passport-evidence-jsons:/m);
+  assert.doesNotMatch(stableBlock, /^      publication-gate-command:/m);
+  assert.doesNotMatch(stableBlock, /^      release-candidate-wait-seconds:/m);
   assert.match(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(stableBlock, /^      publish-rematerialize-on-resume:/m);
   assert.match(
