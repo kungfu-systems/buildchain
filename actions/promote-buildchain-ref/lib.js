@@ -605,6 +605,7 @@ function validatePromotionReleaseCandidate({
     promotionChannelTreeSha: sourceTreeSha || "",
     treeEquivalent: Boolean(sourceTreeSha && sourceTreeHash && sourceTreeSha === sourceTreeHash,
     ),
+    recoveredCandidate: recoveryReceiptValidation?.ok === true,
     publicationVersionBinding: recoveryReceiptValidation?.ok ? "recovery-receipt" : "candidate-passport",
   };
 }
