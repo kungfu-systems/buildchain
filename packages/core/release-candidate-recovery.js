@@ -7,9 +7,39 @@ import {
   validateReleaseCandidatePassport,
 } from "./release-candidate.js";
 import { releaseTransactionId } from "./publish-transaction.js";
+import {
+  publicationAuthorityDigest,
+  publicationGateAggregateBindings,
+} from "./publication-authority.js";
 
 export const RELEASE_CANDIDATE_RECOVERY_CONTRACT =
   "kungfu-buildchain-release-candidate-recovery/v1";
+
+export function rebindPublicationGateAggregateForEquivalentTree(
+  gateAggregate,
+  { evidenceSourceSha = "", targetSourceSha = "", targetSourceTreeSha = "", expectedSourceTreeSha = "" } = {},
+) {
+  const bindings = publicationGateAggregateBindings(gateAggregate);
+  const evidenceSource = exactSha(evidenceSourceSha, "evidenceSourceSha");
+  const targetSource = exactSha(targetSourceSha, "targetSourceSha");
+  if (bindings.sourceSha !== evidenceSource) {
+    throw new Error("consumer Gate aggregate evidence source SHA mismatch");
+  }
+  if (evidenceSource === targetSource) return gateAggregate;
+  const targetTree = exactSha(targetSourceTreeSha, "targetSourceTreeSha");
+  const expectedTree = exactSha(expectedSourceTreeSha, "expectedSourceTreeSha");
+  if (targetTree !== expectedTree) throw new Error("consumer Gate aggregate source tree mismatch");
+  if (gateAggregate.candidateReuse !== undefined) {
+    throw new Error("consumer Gate aggregate already declares candidate reuse");
+  }
+  const { digest: _digest, ...payload } = gateAggregate;
+  const rebound = {
+    ...payload,
+    sourceSha: targetSource,
+    candidateReuse: { action: "reused", evidenceSourceSha: evidenceSource, sourceTreeSha: expectedTree },
+  };
+  return { ...rebound, digest: `sha256:${publicationAuthorityDigest(rebound)}` };
+}
 
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;

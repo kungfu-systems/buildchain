@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104653,
+    "maxHandMaintainedSourceLines": 104683,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22158,
-    "latestTransition": "Every candidate resolver preserves custom-product semantics, durable finalization material, and the original Passport runtime identity.",
-    "rationale": "Normal promotion and contained recovery stay on the same sealed candidate root, restore already-built bytes, and derive non-npm product version and required artifacts from the Passport and platform manifests. The combined exact ceiling preserves ancestry, transaction, artifact, original-runtime, and fail-closed conflict gates without adding a product install, build, repackaging, workflow, or publication path."
+    "maxWorkflowLines": 22177,
+    "latestTransition": "Candidate recovery distinguishes the original evidence source from an equivalent-tree publication target.",
+    "rationale": "The recovery controller passes the original candidate source only to the consumer Gate, verifies the exact shared tree, and seals an explicit reused evidence binding to the current publication source. The bounded source and workflow increase adds no product install, build, repackaging, workflow, or publication path."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -694,6 +694,8 @@
           "buildchain-ref",
           "buildchain-repository",
           "consumer-gate-command",
+          "consumer-gate-evidence-source-sha",
+          "consumer-gate-evidence-source-tree",
           "consumer-predicate-digest",
           "consumer-predicate-id",
           "consumer-qualification-required",
@@ -730,7 +732,7 @@
           "gate-aggregate-json"
         ]
       },
-      "rationale": "The sealed read-only authority adds one optional consumer Gate command that runs from exact source only after exact candidate evidence download. The command receives no publication credential, OIDC permission, or provider write permission; Buildchain revalidates its complete aggregate and exact source binding before capability sealing."
+      "rationale": "The sealed read-only authority accepts an optional original candidate source and shared tree for recovery. The consumer Gate receives no publication credential, OIDC permission, or provider write permission; Buildchain verifies the candidate source, exact equivalent target tree, complete aggregate, and explicit reuse binding before capability sealing."
     },
     "workflow:.release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

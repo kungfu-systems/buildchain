@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "a79751abc4f1b53635e3cb044d5a8d53afc36e53da500232a037e270f61fd064",
+    "sha256": "57c01bdb4f57e47cdbd20be798eceae8e7577c22e12bdb20e87c5245327b1eb6",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 64,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "a79751abc4f1b53635e3cb044d5a8d53afc36e53da500232a037e270f61fd064",
+      "sha256": "57c01bdb4f57e47cdbd20be798eceae8e7577c22e12bdb20e87c5245327b1eb6",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 64,
@@ -3545,7 +3545,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 34,
+          "inputCount": 36,
           "inputs": [
             "admission-json",
             "authority-workflow-path",
@@ -3555,6 +3555,8 @@
             "buildchain-ref",
             "buildchain-repository",
             "consumer-gate-command",
+            "consumer-gate-evidence-source-sha",
+            "consumer-gate-evidence-source-tree",
             "consumer-predicate-digest",
             "consumer-predicate-id",
             "consumer-qualification-required",
