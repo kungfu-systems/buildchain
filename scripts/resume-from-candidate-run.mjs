@@ -58,7 +58,16 @@ function safeName(value) {
 }
 
 function sha256File(filePath) {
-  return `sha256:${crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex")}`;
+  const hash = crypto.createHash("sha256");
+  const descriptor = fs.openSync(filePath, "r");
+  const chunk = Buffer.allocUnsafe(8 * 1024 * 1024);
+  try {
+    let bytesRead = 0;
+    while ((bytesRead = fs.readSync(descriptor, chunk, 0, chunk.length, null)) > 0) hash.update(chunk.subarray(0, bytesRead));
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return `sha256:${hash.digest("hex")}`;
 }
 
 function collectFiles(root) {
@@ -123,7 +132,11 @@ async function downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir,
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${artifact.id}/zip`,
   });
   const archive = verifyArtifactArchive({ artifact, archivePath });
-  unzip(archivePath, artifactRoot);
+  try {
+    unzip(archivePath, artifactRoot);
+  } finally {
+    fs.rmSync(archivePath, { force: true });
+  }
   const files = collectFiles(artifactRoot);
   return {
     artifact,

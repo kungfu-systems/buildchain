@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104550,
+    "maxHandMaintainedSourceLines": 104601,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22158,
-    "latestTransition": "Candidate recovery combines the bounded train router with contained Alpha version-state finalization and normalizes GitHub's collaborator-permission response.",
-    "rationale": "The train retains the exact candidate-run recovery inputs and outputs while incorporating the latest durable finalization path. The authorization change accepts GitHub's documented string permission before its nested boolean permission map and still requires write, maintain, or admin. The exact combined ceiling adds no workflow, publication path, product build, or payload mutation."
+    "latestTransition": "Candidate recovery streams multi-gigabyte GitHub artifacts and hashes them in bounded chunks without changing sealed payload bytes.",
+    "rationale": "The train retains the exact candidate-run recovery inputs and outputs while incorporating the latest durable finalization path. GitHub collaborator authorization still requires write, maintain, or admin, and recovery now avoids Node's 2 GiB Buffer ceiling by streaming downloads and bounded hashing. The exact combined ceiling adds no workflow, publication path, product build, or payload mutation."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -49,10 +49,10 @@
       "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator; this combined train ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 784,
+      "maxLines": 809,
       "maxFunctionLines": 306,
       "maxFunctionComplexity": 63,
-      "rationale": "The shared candidate resolver now seals the exact downloaded normal-path npm payload under the existing publication bundle contract while retaining GitHub archive size and sha256 verification; the bounded terminal growth only connects resolved evidence to that fail-closed contract and cannot grow implicitly."
+      "rationale": "The shared candidate resolver seals exact payloads under the existing publication bundle contract and streams GitHub archives to disk, then verifies size and sha256 with bounded-memory reads; the exact ceiling cannot grow implicitly."
     },
     "scripts/auditable-demo.mjs": {
       "maxLines": 1330,
