@@ -19,6 +19,7 @@ import {
 } from "./release-candidate-resolver.mjs";
 import {
   recoveryFailure,
+  validateRecoveryTargetRef,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
 import {
@@ -365,7 +366,7 @@ export async function resumeFromCandidateRun({
     const pullRequest = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/pulls/${prNumber}` });
     const targetCommit = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/commits/${targetSha}` });
     const targetRefState = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/heads/${targetRef.replace(/^refs\/heads\//, "")}` });
-    if (targetRefState.object?.sha !== targetSha) throw new Error(`target ref ${targetRef} no longer points at ${targetSha}`);
+    const observedTargetSha = String(targetRefState.object?.sha || "");
     const compare = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${pullRequest.merge_commit_sha}...${targetSha}` });
     const platformManifestEvidence = normalizePlatformManifests(downloads, passport);
     const controllerReceipts = normalizeControllerReceipts(downloads, passport);
@@ -381,6 +382,26 @@ export async function resumeFromCandidateRun({
     });
     const candidateVersion = sealed.manifest.npm.version;
     const existingTransaction = await readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version: candidateVersion });
+    let targetAdvance;
+    if (observedTargetSha !== targetSha && transactionId && existingTransaction?.id === transactionId) {
+      const targetAdvanceCompare = await githubJson({
+        apiUrl,
+        token,
+        fetchImpl,
+        path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${targetSha}...${observedTargetSha}`,
+      });
+      targetAdvance = {
+        status: targetAdvanceCompare.status,
+        mergeIsAncestor: ["ahead", "identical"].includes(targetAdvanceCompare.status),
+      };
+    }
+    validateRecoveryTargetRef({
+      targetSha,
+      observedTargetSha,
+      expectedTransactionId: transactionId,
+      existingTransaction,
+      ancestry: targetAdvance,
+    });
     const recovery = verifyReleaseCandidateRecovery({
       candidateRepository: repoInfo.fullName,
       targetRepository,
@@ -390,6 +411,7 @@ export async function resumeFromCandidateRun({
       channel,
       targetRef,
       targetSha,
+      targetRefSha: observedTargetSha,
       targetTree: targetCommit.tree?.sha,
       expectedSourceTree,
       expectedCandidateRoot,

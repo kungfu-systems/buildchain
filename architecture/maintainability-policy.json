@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104541,
+    "maxHandMaintainedSourceLines": 104621,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22142,
     "latestTransition": "Every candidate resolver preserves the original Passport runtime identity across newer recovery tooling.",
