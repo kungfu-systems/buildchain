@@ -8,6 +8,8 @@ import { parseTags, promoteBuildchainRefs, recordGitHubReleaseTransactionComplet
 import { explainReleaseLineDryRun, formatReleaseLineDryRun } from "../../packages/core/release-line-dry-run.js";
 import { ensureGitHubRelease } from "../../scripts/ensure-github-release.mjs";
 
+const releaseCandidateRecoveryReceiptPath = process.env.BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH || "";
+
 export function plannedPublicationExactTag(plannedPublication = {}) {
   return plannedPublication.publicTag || plannedPublication.tag || "";
 }
@@ -428,8 +430,8 @@ async function main() {
     releasePassportGitHubArtifactAttestationPolicyJsons,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
-    releaseCandidateBuildSummaryPath,
-    releaseCandidateVersion,
+    releaseCandidateBuildSummaryPath, releaseCandidateVersion,
+    releaseCandidateRecoveryReceiptPath,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,
