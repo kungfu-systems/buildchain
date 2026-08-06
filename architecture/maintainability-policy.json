@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 274,
-    "maxHandMaintainedSourceLines": 104769,
+    "maxHandMaintainedSourceFiles": 275,
+    "maxHandMaintainedSourceLines": 104945,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22177,
-    "latestTransition": "Candidate recovery distinguishes the original evidence source from an equivalent-tree publication target.",
-    "rationale": "The recovery controller passes the original candidate source only to the consumer Gate, verifies the exact shared tree, and seals an explicit reused evidence binding to the current publication source. The bounded source and workflow increase adds no product install, build, repackaging, workflow, or publication path."
+    "latestTransition": "Candidate recovery preserves complete public evidence while rebinding the original evidence source to an equivalent-tree publication target.",
+    "rationale": "The bounded recovery path verifies and preserves an existing complete Release Passport, reconciles only sealed payload bytes, and rebinds publication only after exact source-tree equivalence. It adds no product install, build, repackaging, workflow, or package publication path."
   },
   "sourceBudgets": {
     "newFileLines": 600,

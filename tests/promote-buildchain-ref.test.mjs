@@ -222,6 +222,7 @@ const {
   plannedPublicationExactTag,
   collectGitHubReleaseEvidenceAssets,
   publishGitHubReleaseEvidence,
+  reuseCompleteGitHubReleaseEvidence,
 } = await import("../actions/promote-buildchain-ref/index.js");
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -898,6 +899,118 @@ test("promote action preserves byte-identical GitHub Release assets on duplicate
   assert.equal(result.uploadedAssetCount, 0);
   assert.equal(result.preservedAssetCount, 3);
   assert.deepEqual(uploaded, []);
+});
+
+test("complete candidate recovery reuses verified public evidence and preserves product payload bytes", async () => {
+  const cwd = makeTempWorkspace({
+    "dist/package.tgz": "sealed product bytes",
+  });
+  const passport = {
+    release: {
+      tag: "v1.0.1-alpha.0",
+      publicTag: "v1.0.1-alpha.0",
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+      releaseSha: SHA,
+    },
+    product: { repository: "kungfu-systems/buildchain" },
+  };
+  const payloadPath = path.join(cwd, "dist/package.tgz");
+  const payload = fs.readFileSync(payloadPath);
+  const assets = [
+    {
+      id: 1,
+      name: "buildchain.release.json",
+      digest: `sha256:${crypto.createHash("sha256").update(JSON.stringify(passport)).digest("hex")}`,
+    },
+    {
+      id: 2,
+      name: "artifact-evidence.json",
+      digest: `sha256:${"a".repeat(64)}`,
+    },
+    {
+      id: 3,
+      name: "package.tgz",
+      digest: `sha256:${crypto.createHash("sha256").update(payload).digest("hex")}`,
+    },
+  ];
+  const downloaded = new Map([
+    [1, Buffer.from(JSON.stringify(passport))],
+    [2, Buffer.from("{}")],
+  ]);
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({ data: assets }),
+        getReleaseAsset: async ({ asset_id }) => ({ data: downloaded.get(asset_id) }),
+        uploadReleaseAsset: async ({ name }) => uploaded.push(name),
+      },
+    },
+  };
+
+  const result = await reuseCompleteGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    release: { id: 123, html_url: "https://github.test/release" },
+    tag: "v1.0.1-alpha.0",
+    target: SHA,
+    channel: "alpha",
+    targetRef: "alpha/v1/v1.0",
+    additionalAssetPaths: [payloadPath],
+    verifyPassport: async () => ({ ok: true, issues: [] }),
+  });
+
+  assert.equal(result.action, "reused");
+  assert.equal(result.passportVerified, true);
+  assert.equal(result.uploadedAssetCount, 0);
+  assert.deepEqual(uploaded, []);
+});
+
+test("complete candidate recovery rejects a conflicting public product payload", async () => {
+  const cwd = makeTempWorkspace({
+    "dist/package.tgz": "sealed product bytes",
+  });
+  const passport = {
+    release: {
+      tag: "v1.0.1-alpha.0",
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+      releaseSha: SHA,
+    },
+    product: { repository: "kungfu-systems/buildchain" },
+  };
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({ data: [
+          { id: 1, name: "buildchain.release.json", digest: `sha256:${"a".repeat(64)}` },
+          { id: 2, name: "package.tgz", digest: `sha256:${"0".repeat(64)}` },
+        ] }),
+        getReleaseAsset: async () => ({ data: Buffer.from(JSON.stringify(passport)) }),
+        uploadReleaseAsset: async () => {
+          throw new Error("must not replace an immutable product payload");
+        },
+      },
+    },
+  };
+
+  await assert.rejects(
+    () => reuseCompleteGitHubReleaseEvidence({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      release: { id: 123 },
+      tag: "v1.0.1-alpha.0",
+      target: SHA,
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+      additionalAssetPaths: [path.join(cwd, "dist/package.tgz")],
+      verifyPassport: async () => ({ ok: true, issues: [] }),
+    }),
+    /immutable GitHub Release product payload collision/,
+  );
 });
 
 test("promote action rejects time-drifted evidence on duplicate delivery", async (t) => {

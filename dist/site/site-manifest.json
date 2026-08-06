@@ -125,7 +125,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:cae33072f382c25d44e84a5bc9c1c78eafc508c94af67536f10978f32933bd57"
+      "digest": "sha256:d76bbd75aab3c4dd94756c1c64562a125e74369c7c8b97342dbcacc5d7561602"
     },
     {
       "id": "release-propagation",
@@ -293,7 +293,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:481640f398d966dca4f1f2e29a8100f0f479315ee19e65b0e259720f2b61213f"
+      "digest": "sha256:34fb81d1dd9f913cbed6ee76ac9f0bdb095669e55c1bee67389601fd494470cf"
     },
     {
       "id": "release-flow",
