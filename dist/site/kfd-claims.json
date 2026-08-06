@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e37f94305762bde4ecad076297dedd212f015f12ffc5c0a524f1350969ad00d1",
+    "sha256": "8a25fba64426fd39fa5a7727e6a13ce10cf7d44aeb1d5ad09e91ab7400cf7f8e",
     "summary": {
       "cliCommandCount": 112,
       "workflowCount": 64,
       "actionCount": 6,
-      "sitePageCount": 65,
+      "sitePageCount": 66,
       "docCommandRefCount": 881,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e37f94305762bde4ecad076297dedd212f015f12ffc5c0a524f1350969ad00d1",
+      "sha256": "8a25fba64426fd39fa5a7727e6a13ce10cf7d44aeb1d5ad09e91ab7400cf7f8e",
       "summary": {
         "cliCommandCount": 112,
         "workflowCount": 64,
         "actionCount": 6,
-        "sitePageCount": 65,
+        "sitePageCount": 66,
         "docCommandRefCount": 881,
         "failureCount": 0
       },
@@ -715,6 +715,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/release-tail-contract.md",
+          "name": "Declarative release-tail contract",
+          "kind": "documentation",
+          "sourcePath": "docs/release-tail-contract.md",
+          "evidencePath": "docs/release-tail-contract.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/reusable-build-surface.md",
@@ -6074,6 +6086,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:release-tail-contract",
+          "name": "site-page:manual:release-tail-contract",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:reusable-build-surface",
           "name": "site-page:manual:reusable-build-surface",
           "kind": "site-page",
@@ -6352,6 +6376,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 401
+    "publicSurfaceCount": 403
   }
 }

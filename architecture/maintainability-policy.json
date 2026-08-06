@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 276,
-    "maxHandMaintainedSourceLines": 105300,
+    "maxHandMaintainedSourceFiles": 277,
+    "maxHandMaintainedSourceLines": 105737,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22241,
-    "latestTransition": "The v4 planning boundary gains one read-only v3 core-mechanism inventory validator after the candidate-recovery and publication-audit integration, without changing a runtime, workflow, state machine, artifact format, or provider effect.",
-    "rationale": "The exact 171-line and one-file increase over e6d6ecd6204518298898962f01aba5d73ed70b60 validates ten source- and test-grounded v3 mechanism families, including the integrated recovery-wrapper and publication-candidate-sealer coordinates, their public surfaces, durable stores, recovery semantics, provider readback, compatibility callers, and unresolved v4 disposition. The exact observed cut remains recorded in architecture/v3-core-mechanism-inventory.json. This tooling-only ceiling cannot grow implicitly; any runtime or broader inventory change requires another reviewed policy transition."
+    "latestTransition": "The release-tail contract inventory adds one read-only validator plus its schema, inventory, fixtures, tests, and migration documentation without changing production release behavior.",
+    "rationale": "The exact 437-line and one-source-file increase over the prior ceiling freezes 27 reverse-discovered coordinates across seven public surface groups, four declarative capabilities, and seven managed callers, with negative gates for orphaned or ambiguous hooks, embedded commands, missing operation identity or readback, unbounded retry, and permanent compatibility escapes. This contract-only ceiling cannot grow implicitly; any runtime, provider-adapter, or broader inventory change requires another reviewed policy transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

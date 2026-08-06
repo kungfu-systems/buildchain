@@ -48,8 +48,8 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 5,
-        "pageCount": 5,
+        "manualCount": 6,
+        "pageCount": 6,
         "cliCommandCount": 25,
         "nodeApiCount": 12,
         "workflowCount": 3,
@@ -60,7 +60,8 @@
         "docs/github-artifact-attestation.md",
         "docs/publication-authority.md",
         "docs/binary-distribution.md",
-        "docs/publish-transaction.md"
+        "docs/publish-transaction.md",
+        "docs/release-tail-contract.md"
       ],
       "factSources": [
         "page-registry.json",
