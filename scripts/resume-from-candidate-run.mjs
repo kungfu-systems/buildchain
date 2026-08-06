@@ -236,7 +236,31 @@ function normalizeProductPayloadManifests(downloads) {
     .map((file) => JSON.parse(fs.readFileSync(file.absolutePath, "utf8"))));
 }
 
-export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, runtimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests }) {
+export function createRecoveredPublicationCandidate({
+  allFiles,
+  repository,
+  passport,
+  candidateRuntimeSha,
+}) {
+  if (passport.buildchain?.sha !== candidateRuntimeSha) {
+    throw new Error(
+      `recovered publication candidate runtime mismatch: passport=${passport.buildchain?.sha || "<empty>"} expected=${candidateRuntimeSha || "<empty>"}`,
+    );
+  }
+  const payload = {
+    schemaVersion: 1,
+    contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+    repository,
+    sourceSha: passport.source.headSha,
+    sourceTreeSha: passport.source.treeHash,
+    runtimeSha: candidateRuntimeSha,
+    releaseCandidateRoot: `sha256:${passport.candidateHash}`,
+    files: allFiles.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })),
+  };
+  return { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
+}
+
+export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests }) {
   const allFiles = downloads.flatMap((download) => download.files.map((file) => ({
     path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
     size: file.size,
@@ -247,6 +271,7 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
   const releaseMatchers = splitPatterns(releasePatterns).map(patternMatcher);
   const releaseAssets = allFiles.filter((file) => releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
   if (kind !== "npm") {
+    createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
     const version = String(passport.target?.version || "").trim();
     if (!version) throw new Error("candidate recovery requires a passport publication version");
     return {
@@ -266,17 +291,12 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
   const npmReleaseAssets = allFiles.filter((file) => releaseMatchers.length
     ? releaseMatchers.some((matcher) => matcher.test(path.basename(file.path)))
     : file.path.toLowerCase().endsWith(".tgz"));
-  const payload = {
-    schemaVersion: 1,
-    contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+  const candidate = createRecoveredPublicationCandidate({
+    allFiles,
     repository,
-    sourceSha: passport.source.headSha,
-    sourceTreeSha: passport.source.treeHash,
-    runtimeSha,
-    releaseCandidateRoot: `sha256:${passport.candidateHash}`,
-    files: allFiles.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })),
-  };
-  const candidate = { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
+    passport,
+    candidateRuntimeSha,
+  });
   const manifest = createPublicationSealedBundle({
     candidate,
     packageName: main.metadata.name,
@@ -395,7 +415,7 @@ export async function resumeFromCandidateRun({
       bundleRoot,
       repository: repoInfo.fullName,
       passport,
-      runtimeSha,
+      candidateRuntimeSha,
       publishArtifactKind,
       publishPackageMain,
       releasePatterns,

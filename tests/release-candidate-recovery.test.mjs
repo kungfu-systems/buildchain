@@ -12,7 +12,10 @@ import {
   validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
-import { createRecoveredPublication } from "../scripts/resume-from-candidate-run.mjs";
+import {
+  createRecoveredPublication,
+  createRecoveredPublicationCandidate,
+} from "../scripts/resume-from-candidate-run.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -180,8 +183,13 @@ test("custom-product recovery uses Passport version and manifests without treati
       downloads: [{ files }],
       bundleRoot: workspace,
       repository: "kungfu-systems/kungfu",
-      passport: { target: { version: "4.0.0-alpha.1" } },
-      runtimeSha: RUNTIME_SHA,
+      passport: {
+        buildchain: { sha: RUNTIME_SHA },
+        candidateHash: "a".repeat(64),
+        source: { headSha: SOURCE_SHA, treeHash: TREE },
+        target: { version: "4.0.0-alpha.1" },
+      },
+      candidateRuntimeSha: RUNTIME_SHA,
       publishArtifactKind: "kungfu-product",
       releasePatterns: "kungfu-episodes-cli-*.tar.gz",
       platformManifests: [manifest],
@@ -195,6 +203,43 @@ test("custom-product recovery uses Passport version and manifests without treati
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("recovered sealed publication identity stays bound to the original candidate runtime", () => {
+  const firstInput = fixture({ currentToolingSha: "a".repeat(40) });
+  const secondInput = fixture({ currentToolingSha: "b".repeat(40) });
+  const allFiles = firstInput.artifacts[0].files.map((file) => ({
+    path: `artifacts/buildchain-package/${file.path}`,
+    size: file.size,
+    sha256: file.sha256,
+  }));
+  const first = createRecoveredPublicationCandidate({
+    allFiles,
+    repository: firstInput.candidateRepository,
+    passport: firstInput.passport,
+    candidateRuntimeSha: RUNTIME_SHA,
+  });
+  const second = createRecoveredPublicationCandidate({
+    allFiles,
+    repository: secondInput.candidateRepository,
+    passport: secondInput.passport,
+    candidateRuntimeSha: RUNTIME_SHA,
+  });
+  assert.notEqual(
+    verifyReleaseCandidateRecovery(firstInput).receipt.buildchainToolingSha,
+    verifyReleaseCandidateRecovery(secondInput).receipt.buildchainToolingSha,
+  );
+  assert.deepEqual(second, first);
+  assert.equal(first.runtimeSha, RUNTIME_SHA);
+  assert.throws(
+    () => createRecoveredPublicationCandidate({
+      allFiles,
+      repository: firstInput.candidateRepository,
+      passport: firstInput.passport,
+      candidateRuntimeSha: "9".repeat(40),
+    }),
+    /recovered publication candidate runtime mismatch/,
+  );
 });
 
 test("recovery binds transaction identity to the sealed product publication version", () => {
