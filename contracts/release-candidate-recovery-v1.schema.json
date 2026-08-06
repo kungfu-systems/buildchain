@@ -44,12 +44,13 @@
     "target": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["channel", "ref", "sha", "tree"],
+      "required": ["channel", "ref", "sha", "tree", "version"],
       "properties": {
         "channel": { "enum": ["alpha", "release", "major"] },
         "ref": { "type": "string" },
         "sha": { "$ref": "#/$defs/gitSha" },
-        "tree": { "$ref": "#/$defs/gitSha" }
+        "tree": { "$ref": "#/$defs/gitSha" },
+        "version": { "type": "string", "minLength": 1 }
       }
     },
     "recovered": {
