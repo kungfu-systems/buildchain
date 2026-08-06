@@ -916,7 +916,6 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       release-candidate-workflow-file: ${{ inputs.release-candidate-workflow-file }}
       release-candidate-workflow-name: ${{ inputs.release-candidate-workflow-name }}
-      release-candidate-wait-seconds: ${{ inputs.release-candidate-wait-seconds }}
       artifact-patterns: ${{ inputs.artifact-patterns }}
       required-status-check: ${{ inputs.required-status-check }}
       branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
@@ -960,7 +959,6 @@ jobs:
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
-      publication-gate-command: ${{ inputs.publication-gate-command }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       publication-consumer-qualification-command: ${{ inputs.publication-consumer-qualification-command }}
