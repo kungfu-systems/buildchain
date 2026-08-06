@@ -14,17 +14,17 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:76c3dd58a02887ecd6af33d63e749fef0a988a820fea99bdf4cb078cc48caa83",
+    "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "000be65d0102e56b08a7c98e12836af0b137603e1c438b248f017ac338394271",
+    "sha256": "7449a2591ed23889ad125dd0f701e6062948e88d04a81a145247d467d50cdf24",
     "summary": {
       "cliCommandCount": 112,
-      "workflowCount": 63,
+      "workflowCount": 64,
       "actionCount": 6,
       "sitePageCount": 65,
       "docCommandRefCount": 881,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "000be65d0102e56b08a7c98e12836af0b137603e1c438b248f017ac338394271",
+      "sha256": "7449a2591ed23889ad125dd0f701e6062948e88d04a81a145247d467d50cdf24",
       "summary": {
         "cliCommandCount": 112,
-        "workflowCount": 63,
+        "workflowCount": 64,
         "actionCount": 6,
         "sitePageCount": 65,
         "docCommandRefCount": 881,
@@ -1627,6 +1627,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-candidate"
+        },
+        {
+          "id": "export:./release-candidate-recovery",
+          "name": "@kungfu-tech/buildchain/release-candidate-recovery",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-candidate-recovery.js",
+          "evidencePath": "packages/core/release-candidate-recovery.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-candidate-recovery"
         },
         {
           "id": "export:./stable-candidate-ledger",
@@ -3582,7 +3594,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 97,
+          "inputCount": 106,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3676,6 +3688,15 @@
             "release-propagation-config-path",
             "required-artifact-count",
             "required-status-check",
+            "resume-buildchain-runtime-sha",
+            "resume-candidate-repository",
+            "resume-candidate-run-id",
+            "resume-expected-candidate-root",
+            "resume-expected-candidate-runtime-sha",
+            "resume-expected-source-tree",
+            "resume-expected-workflow-file",
+            "resume-expected-workflow-name",
+            "resume-transaction-id",
             "runner-preset",
             "standalone-binary-distribution",
             "target-ref",
@@ -4189,6 +4210,20 @@
           "kind": "workflow",
           "sourcePath": ".github/workflows/buildchain-alpha-self-dogfood.yml",
           "evidencePath": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:buildchain-candidate-recovery-dogfood-failure",
+          "name": "workflow:buildchain-candidate-recovery-dogfood-failure",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
+          "evidencePath": ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -4822,7 +4857,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 89,
+          "inputCount": 98,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4908,6 +4943,15 @@
             "release-propagation-config-path",
             "required-artifact-count",
             "required-status-check",
+            "resume-buildchain-runtime-sha",
+            "resume-candidate-repository",
+            "resume-candidate-run-id",
+            "resume-expected-candidate-root",
+            "resume-expected-candidate-runtime-sha",
+            "resume-expected-source-tree",
+            "resume-expected-workflow-file",
+            "resume-expected-workflow-name",
+            "resume-transaction-id",
             "runner-preset",
             "standalone-binary-distribution",
             "target-ref",
@@ -6303,6 +6347,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 399
+    "publicSurfaceCount": 401
   }
 }

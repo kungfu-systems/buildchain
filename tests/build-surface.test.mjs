@@ -2612,7 +2612,10 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     promotion,
     /if: \$\{\{ inputs\.standalone-binary-distribution && !inputs\.dry-run && steps\.promote\.outcome == 'success'/,
   );
-  assert.match(selfPromotion, /standalone-binary-distribution: true/);
+  assert.match(
+    selfPromotion,
+    /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/,
+  );
   assert.match(
     selfPromotion,
     /recover-durable-transaction:[\s\S]*?type: boolean/,
@@ -2623,7 +2626,7 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
   );
   assert.match(
     selfPromotion,
-    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
   );
   assert.match(
     selfPromotion,

@@ -193,6 +193,7 @@ export function nodeApiMeta(exportName) {
     "./kfd-agent-hub": { group: "kfd-trust", summary: "Declarative Agent Hub adapter inspection, fixed-suite execution, exact KFD cut locking, and agent explanation APIs." },
     "./release-passport-contract": { group: "release-passport-trust", summary: "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs." },
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
+    "./release-candidate-recovery": { group: "release-passport-trust", summary: "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads." },
     "./stable-candidate-ledger": { group: "governance-versioning", summary: "Immutable alpha candidate ledger, qualification, revocation, selection, and exact stable source-lock APIs." },
     "./release-propagation": { group: "site-and-propagation", summary: "Release propagation graph, plan, and exact upstream lock APIs." },
     "./release-activation-transaction": { group: "release-passport-trust", summary: "Ordered cross-repository activation, exact receipt-set binding, retry, abort, rollback, and shadow-rehearsal APIs." },
