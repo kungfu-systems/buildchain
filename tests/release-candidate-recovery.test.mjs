@@ -239,6 +239,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   const fs = await import("node:fs");
   const advanced = fs.readFileSync(new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url), "utf8");
   const publicWorkflow = fs.readFileSync(new URL("../.github/workflows/release-candidate-promote.yml", import.meta.url), "utf8");
+  const refPromotion = fs.readFileSync(new URL("../.github/workflows/buildchain-ref-promotion.yml", import.meta.url), "utf8");
   const dogfoodFailure = fs.readFileSync(new URL("../.github/workflows/buildchain-candidate-recovery-dogfood-failure.yml", import.meta.url), "utf8");
   for (const input of [
     "resume-candidate-repository",
@@ -260,6 +261,11 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   assert.match(advanced, /name: Reuse sealed candidate publication version/);
   assert.match(advanced, /publish-sealed-bundle-root: \$\{\{ steps\.rc\.outputs\.publish-sealed-bundle-root \}\}/);
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
+  assert.match(
+    refPromotion,
+    /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/,
+  );
+  assert.doesNotMatch(refPromotion, /^\s+github-release-payload-patterns: "\*\.tgz"$/m);
   assert.match(dogfoodFailure, /workflow_dispatch:/);
   assert.match(dogfoodFailure, /__candidate-recovery-dogfood-missing\.yml@v3-alpha/);
   assert.doesNotMatch(advanced, /gh run rerun/);
