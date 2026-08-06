@@ -81,6 +81,14 @@ function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCom
       commit_id: historicalSource ? SOURCE_SHA : HEAD_SHA,
     }],
     [`repos/kungfu-systems/buildchain/commits/${historicalSource ? SOURCE_SHA : HEAD_SHA}/check-runs?per_page=100`]: {
+      total_count: 139,
+      check_runs: Array.from({ length: 100 }, (_, index) => ({
+        name: `decoy-${index}`,
+        conclusion: "success",
+        app: { id: 15368 },
+      })),
+    },
+    [`repos/kungfu-systems/buildchain/commits/${historicalSource ? SOURCE_SHA : HEAD_SHA}/check-runs?check_name=check&filter=latest&per_page=100`]: {
       check_runs: [{
         name: "check",
         conclusion: requiredCheckConclusion,
@@ -142,6 +150,13 @@ test("non-strict managed rulesets accept an exact historical pull-request head s
 
 test("publication control-plane audit accepts source commit JSON beyond the default spawn buffer", () => {
   const result = runAudit({ largeSourceCommit: true });
+  assert.equal(result.status, 0, result.stderr);
+  const receipt = JSON.parse(result.stdout);
+  assert.equal(receipt.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+});
+
+test("publication control-plane audit queries the exact required check instead of truncating crowded check history", () => {
+  const result = runAudit();
   assert.equal(result.status, 0, result.stderr);
   const receipt = JSON.parse(result.stdout);
   assert.equal(receipt.facts.find((entry) => entry.id === "branch-policy").status, "pass");
