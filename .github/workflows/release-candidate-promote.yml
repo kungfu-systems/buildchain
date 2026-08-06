@@ -88,6 +88,51 @@ on:
         default: 10800
         type: number
         required: false
+      resume-candidate-repository:
+        description: "Repository that owns the sealed candidate run; empty selects normal candidate discovery"
+        default: ""
+        type: string
+        required: false
+      resume-candidate-run-id:
+        description: "Exact successful candidate workflow run ID to recover through this fresh workflow event"
+        default: ""
+        type: string
+        required: false
+      resume-expected-workflow-file:
+        description: "Exact trusted Build workflow file that produced the candidate"
+        default: ""
+        type: string
+        required: false
+      resume-expected-workflow-name:
+        description: "Exact trusted Build workflow display name that produced the candidate"
+        default: ""
+        type: string
+        required: false
+      resume-expected-source-tree:
+        description: "Optional exact candidate Git tree; required when expected candidate root is empty"
+        default: ""
+        type: string
+        required: false
+      resume-expected-candidate-root:
+        description: "Optional exact sha256 Release Candidate root; required when expected source tree is empty"
+        default: ""
+        type: string
+        required: false
+      resume-expected-candidate-runtime-sha:
+        description: "Exact Buildchain runtime SHA recorded by the original candidate"
+        default: ""
+        type: string
+        required: false
+      resume-buildchain-runtime-sha:
+        description: "Exact current Buildchain tooling SHA authorized to perform recovery"
+        default: ""
+        type: string
+        required: false
+      resume-transaction-id:
+        description: "Optional exact durable publication transaction identity to resume"
+        default: ""
+        type: string
+        required: false
       release-candidate-family-evidence-required:
         description: "Require exact Initiative-family evidence before protected promotion"
         default: false
@@ -522,6 +567,15 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.alpha.outputs.release-candidate-artifact || jobs.stable.outputs.release-candidate-artifact }}
+      release-candidate-action:
+        description: "Candidate admission action: discovered or reused"
+        value: ${{ jobs.alpha.outputs.release-candidate-action || jobs.stable.outputs.release-candidate-action }}
+      release-candidate-recovery-root:
+        description: "Exact sha256 recovery receipt root"
+        value: ${{ jobs.alpha.outputs.release-candidate-recovery-root || jobs.stable.outputs.release-candidate-recovery-root }}
+      release-candidate-recovery-receipt-artifact:
+        description: "Immutable recovery receipt Actions artifact name"
+        value: ${{ jobs.alpha.outputs.release-candidate-recovery-receipt-artifact || jobs.stable.outputs.release-candidate-recovery-receipt-artifact }}
       release-propagation-work-artifact:
         description: "Captured package release propagation Work artifact"
         value: ${{ jobs.alpha.outputs.release-propagation-work-artifact || jobs.stable.outputs.release-propagation-work-artifact }}
@@ -803,6 +857,15 @@ jobs:
       release-candidate-workflow-file: ${{ inputs.release-candidate-workflow-file }}
       release-candidate-workflow-name: ${{ inputs.release-candidate-workflow-name }}
       release-candidate-wait-seconds: ${{ inputs.release-candidate-wait-seconds }}
+      resume-candidate-repository: ${{ inputs.resume-candidate-repository }}
+      resume-candidate-run-id: ${{ inputs.resume-candidate-run-id }}
+      resume-expected-workflow-file: ${{ inputs.resume-expected-workflow-file }}
+      resume-expected-workflow-name: ${{ inputs.resume-expected-workflow-name }}
+      resume-expected-source-tree: ${{ inputs.resume-expected-source-tree }}
+      resume-expected-candidate-root: ${{ inputs.resume-expected-candidate-root }}
+      resume-expected-candidate-runtime-sha: ${{ inputs.resume-expected-candidate-runtime-sha }}
+      resume-buildchain-runtime-sha: ${{ inputs.resume-buildchain-runtime-sha }}
+      resume-transaction-id: ${{ inputs.resume-transaction-id }}
       release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
       release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
       release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}

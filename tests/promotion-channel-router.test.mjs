@@ -220,6 +220,15 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
       "release-propagation-config-path",
+      "resume-buildchain-runtime-sha",
+      "resume-candidate-repository",
+      "resume-candidate-run-id",
+      "resume-expected-candidate-root",
+      "resume-expected-candidate-runtime-sha",
+      "resume-expected-source-tree",
+      "resume-expected-workflow-file",
+      "resume-expected-workflow-name",
+      "resume-transaction-id",
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v3/);

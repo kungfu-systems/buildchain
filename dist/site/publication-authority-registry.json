@@ -835,6 +835,11 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/buildchain-dev-delivery.yml",
       "signals": [
         "write-permission"
@@ -1079,5 +1084,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "4e7a00cc78732dcd87198140be624545f6f5d93a691b4065db67577046f0ccb8"
+  "registryDigest": "fd4b5def78f58e64badfd6d9d4cce801cab3c15ae81aa89357ef02d15f7ad99d"
 }

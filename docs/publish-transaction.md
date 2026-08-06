@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-06
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -96,6 +96,15 @@ tag was never created. If a later machine run sees a failed or repair-required
 state for `vX.Y.Z-alpha.N` and cannot resume it with the same transaction
 identity, alpha version selection must advance to the next prerelease instead
 of reusing or overwriting that failed transaction slot.
+
+`release-candidate-promote.yml` can establish or restore this state from an
+older successful candidate run through the documented fresh-event recovery
+inputs. The recovery receipt and sealed bundle are verified before the action
+reads or creates transaction state. If `resume-transaction-id` is supplied,
+the restored durable/local transaction must already exist with that exact id;
+a missing or different id fails before provider mutation. An absent transaction
+is created only when no expected existing identity was requested. See
+[Release Candidate: Resume from an existing candidate run](release-candidate.md#resume-from-an-existing-candidate-run).
 
 ## Lifecycle
 
