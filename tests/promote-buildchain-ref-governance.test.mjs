@@ -857,6 +857,88 @@ test("strict alpha promotion uses provider transaction evidence when protection 
   );
 });
 
+test("provider-hidden protection accepts only an exact receipt-bound alpha recovery", async () => {
+  const checkedRefs = [];
+  const octokit = {
+    rest: {
+      repos: {
+        getBranchProtection: async () => {
+          const error = new Error("Resource not accessible by integration");
+          error.status = 403;
+          throw error;
+        },
+        getBranch: async () => ({
+          data: {
+            protected: true,
+            commit: { sha: SHA },
+            protection: {
+              required_status_checks: {
+                enforcement_level: "everyone",
+                contexts: ["check"],
+                checks: [{ context: "check", app_id: 15368 }],
+              },
+            },
+          },
+        }),
+        listPullRequestsAssociatedWithCommit: async () => {
+          assert.fail("an exact recovery receipt must not invent PR lineage");
+        },
+      },
+      pulls: {
+        listReviews: async () => {
+          assert.fail("an exact recovery receipt must not invent PR review");
+        },
+      },
+      checks: {
+        listForRef: async ({ ref }) => {
+          checkedRefs.push(ref);
+          return {
+            data: {
+              check_runs: [
+                { name: "check", conclusion: "success", app: { id: 15368 } },
+              ],
+            },
+          };
+        },
+      },
+    },
+  };
+  const exactRecovery = {
+    recoveredCandidate: true,
+    treeEquivalent: true,
+    publicationVersionBinding: "recovery-receipt",
+    promotionChannelSha: SHA,
+  };
+
+  const resolvedStatusCheck = await assertProtectedChannel({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sourceSha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    requiredStatusCheck: "check",
+    exactReleaseCandidateSource: exactRecovery,
+  });
+  assert.equal(resolvedStatusCheck, "check");
+  assert.deepEqual(checkedRefs, [SHA]);
+
+  await assert.rejects(
+    assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+      exactReleaseCandidateSource: {
+        ...exactRecovery,
+        promotionChannelSha: OTHER_SHA,
+      },
+    }),
+    /must not invent PR lineage/,
+  );
+});
+
 test("managed channels reuse provider-enforced policy when protection details are unreadable", async () => {
   let requiredContexts = ["check"];
   let protectionReadStatus = 403;

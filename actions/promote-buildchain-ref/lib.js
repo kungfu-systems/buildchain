@@ -2223,6 +2223,7 @@ async function assertProviderEnforcedChannelTransaction({
   sourceSha,
   expectedChannelSha = sourceSha,
   requiredStatusCheck,
+  exactReleaseCandidateSource,
 }) {
   const { data: branch } = await octokit.rest.repos.getBranch({
     owner,
@@ -2237,28 +2238,41 @@ async function assertProviderEnforcedChannelTransaction({
   const requiredCheck = (protection.required_status_checks?.checks || []).find(
     (entry) => entry.context === resolvedStatusCheck,
   );
-  const pullRequest = await assertChannelPromotionPr({
-    octokit,
-    owner,
-    repo,
-    sha: sourceSha,
-    targetRef,
-  });
-  const { data: reviews } = await octokit.rest.pulls.listReviews({
-    owner,
-    repo,
-    pull_number: pullRequest.number,
-    per_page: 100,
-  });
+  const exactRecoveredSource =
+    exactReleaseCandidateSource?.recoveredCandidate === true &&
+    exactReleaseCandidateSource.treeEquivalent === true &&
+    exactReleaseCandidateSource.publicationVersionBinding ===
+      "recovery-receipt" &&
+    exactReleaseCandidateSource.promotionChannelSha === sourceSha;
+  const pullRequest = exactRecoveredSource
+    ? undefined
+    : await assertChannelPromotionPr({
+        octokit,
+        owner,
+        repo,
+        sha: sourceSha,
+        targetRef,
+      });
+  const { data: reviews } = pullRequest
+    ? await octokit.rest.pulls.listReviews({
+        owner,
+        repo,
+        pull_number: pullRequest.number,
+        per_page: 100,
+      })
+    : { data: [] };
   const latestReviews = new Map();
   for (const review of reviews || []) {
     const login = String(review?.user?.login || "");
     if (login) latestReviews.set(login, review);
   }
-  const independentApproval = [...latestReviews.values()].some((review) =>
-    review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login,
-  );
-  const pullRequestHeadSha = String(pullRequest.head?.sha || "").trim();
+  const independentApproval = exactRecoveredSource ||
+    [...latestReviews.values()].some((review) =>
+      review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login,
+    );
+  const pullRequestHeadSha = exactRecoveredSource
+    ? sourceSha
+    : String(pullRequest.head?.sha || "").trim();
   const validPullRequestHeadSha = /^[0-9a-f]{40}$/i.test(pullRequestHeadSha);
   const { data: checkRuns } = validPullRequestHeadSha
     ? await octokit.rest.checks.listForRef({
@@ -2283,7 +2297,7 @@ async function assertProviderEnforcedChannelTransaction({
     missing.push(`must require a ${requiredStatusCheck} status check using the exact context`,
     );
   }
-  if (!validPullRequestHeadSha) {
+  if (!validPullRequestHeadSha && !exactRecoveredSource) {
     missing.push("merged source PR must expose an immutable head SHA");
   }
   if (!requiredCheckPassed) missing.push(`required status check ${resolvedStatusCheck} must pass from its configured app`,
@@ -2306,6 +2320,7 @@ async function assertProtectedChannel({
   sourceSha,
   expectedChannelSha = sourceSha,
   requiredStatusCheck = "check",
+  exactReleaseCandidateSource,
 }) {
   let protection;
   try {
@@ -2324,6 +2339,7 @@ async function assertProtectedChannel({
         sourceSha,
         expectedChannelSha,
         requiredStatusCheck,
+        exactReleaseCandidateSource,
       });
     }
     throw error;
@@ -4904,6 +4920,7 @@ async function promoteBuildchainRefs({
       sourceSha: sha,
       expectedChannelSha: advancedPublicationTransaction ? branchSha : sha,
       requiredStatusCheck,
+      exactReleaseCandidateSource: releaseCandidateValidation,
     });
   }
 

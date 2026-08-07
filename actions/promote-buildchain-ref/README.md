@@ -496,7 +496,9 @@ governance semantics:
   `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;
   an immutable recovery receipt may instead admit the exact current alpha
   channel SHA only when its sealed candidate tree is byte-equivalent and its
-  publication version is bound by that receipt;
+  publication version is bound by that receipt; when administrative protection
+  details are hidden, the provider-visible protected head and required check
+  must still match that exact recovered SHA;
 - release promotion must come from a merged same-repository PR
   `alpha/vN/vN.M -> release/vN/vN.M`, or from a strict same-line
   `publish-gate/release/vN/vN.M/<version> -> release/vN/vN.M` source-lock PR;
