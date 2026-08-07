@@ -118,7 +118,7 @@ function forwardedInputs(inputNames, { includeInternal = true, unsupportedInputs
         return `      ${name}: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}`;
       }
       if (name === "publication-authority-workflow-path") {
-        return "      publication-authority-workflow-path: .github/workflows/release-candidate-promote.yml";
+        return "      publication-authority-workflow-path: .github/workflows/.release-candidate-promote.yml";
       }
       return routed
         ? `      ${name}: \${{ needs.resolve-promotion.outputs.${routed} }}`

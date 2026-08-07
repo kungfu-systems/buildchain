@@ -1980,6 +1980,17 @@ buildchain release-tail init --declaration <json-or-path> [--state <path>]
 buildchain release-tail plan --declaration <json-or-path> [--output <path>]
 ```
 
+### `buildchain release-tail rehearse`
+
+- Help: `buildchain release-tail rehearse --help`
+- Canonical id: `release-tail`
+- Options: `--capsule`, `--capsule-root`, `--environment-json`, `--evidence`, `--mode`, `--state`
+- Syntax:
+
+```text
+buildchain release-tail rehearse --capsule <path> --capsule-root <absolute-path> --mode <simulate|replay> --state <path> --evidence <path> [--environment-json <json-or-path>]
+```
+
 ### `buildchain release-tail status`
 
 - Help: `buildchain release-tail status --help`

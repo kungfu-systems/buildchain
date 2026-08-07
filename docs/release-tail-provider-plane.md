@@ -28,15 +28,15 @@ The frozen boundary and migration inventory remain in
 ## Public entry points
 
 - Node: `@kungfu-tech/buildchain/release-tail-provider-plane`,
-  `release-tail-provider-adapters`, and `release-tail-compatibility`.
-- CLI: `buildchain release-tail plan|init|status|verify|compat`.
+  `release-tail-provider-adapters`, `release-tail-compatibility`, and
+  `publication-rehearsal-runtime`.
+- CLI: `buildchain release-tail plan|init|status|verify|compat|rehearse`.
 - Action: `kungfu-systems/buildchain/actions/release-tail@<exact-ref>`.
 - reusable workflow: `kungfu-systems/buildchain/.github/workflows/release-tail.yml@<exact-ref>`.
 
-The Action is the provider-executing entry point. The CLI compiles, initializes,
-inspects, verifies, and diagnoses bounded v3 compatibility using the same core
-transaction format. The reusable workflow checks out an exact Buildchain ref
-and invokes the packaged Action; callers cannot inject an execution command.
+The CLI and Action both invoke the public publication rehearsal runtime over
+the same core transaction implementation. The Action is a thin provider
+transport wrapper; callers cannot inject an execution command or runner state.
 
 ## Inputs and secrets
 
@@ -82,9 +82,12 @@ buildchain release-tail init --declaration release-tail.json --state .buildchain
 buildchain release-tail verify --state .buildchain/release-tail/state.json
 ```
 
-Provider execution belongs in the Action or reusable workflow so token handling
-and provider permissions remain explicit. Retain the state artifact: it is the
-resume boundary and evidence source, not a disposable log.
+For complete local release semantics, use the exact capsule command in
+[`publication-rehearsal.md`](publication-rehearsal.md). Simulation and replay
+exercise planning, validation, transaction, retry, and evidence without
+claiming external provider truth. Provider execution belongs in the Action or
+reusable workflow so token handling and transport capabilities remain explicit.
+Retain the state and rehearsal evidence artifacts.
 
 ## Buildchain self-dogfood route
 
@@ -92,7 +95,7 @@ Buildchain self-release calls the same public reusable workflow coordinate as a
 consumer:
 
 ```text
-kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82
+kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@f28ce21efd8d05b25969ef708edc678d17619b6e
 ```
 
 The caller pins the public router and runtime to the same exact implementation

@@ -607,7 +607,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@f28ce21efd8d05b25969ef708edc678d17619b6e\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
@@ -617,7 +617,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: 4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82/,
+    /buildchain-ref: f28ce21efd8d05b25969ef708edc678d17619b6e/,
   );
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
@@ -1706,9 +1706,9 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@f28ce21efd8d05b25969ef708edc678d17619b6e/,
   );
-  assert.match(promotion, /buildchain-ref: 4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82/);
+  assert.match(promotion, /buildchain-ref: f28ce21efd8d05b25969ef708edc678d17619b6e/);
   assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
 });
 

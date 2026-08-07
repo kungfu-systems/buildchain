@@ -992,7 +992,7 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
-  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82\n",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@f28ce21efd8d05b25969ef708edc678d17619b6e\n",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
@@ -1284,7 +1284,7 @@ if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-rele
   throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "release-passport-check-manifest.json", "schemas/release-passport-v1.schema.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "release-passport-check-manifest.json", "schemas/release-passport-v1.schema.json", "schemas/publication-rehearsal-capsule-v1.schema.json", "schemas/release-tail-capabilities-v1.schema.json", "schemas/release-tail-provider-bindings-v1.schema.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }
