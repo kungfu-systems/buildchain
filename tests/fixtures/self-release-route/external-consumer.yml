@@ -5,7 +5,7 @@ on:
 
 jobs:
   promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@93963e1f711c39189fbf019fa0e07d063e384aad
     permissions:
       actions: write
       contents: write
@@ -13,7 +13,7 @@ jobs:
     secrets: inherit
     with:
       buildchain-channel: auto
-      buildchain-ref: train/v3/v3.0/consumer-equivalent-self-dogfood
+      buildchain-ref: 93963e1f711c39189fbf019fa0e07d063e384aad
       target-ref: alpha/v1/v1.0
       target-sha: ${{ github.sha }}
       declarative-release-tail: true

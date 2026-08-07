@@ -197,7 +197,7 @@
     "productionCutover": false,
     "selfDogfoodCutover": {
       "status": "alpha-train",
-      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood",
+      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@93963e1f711c39189fbf019fa0e07d063e384aad",
       "providerCapability": "artifact.publish",
       "stableCutover": false
     }
