@@ -3443,6 +3443,7 @@
         "release-tail compat",
         "release-tail init",
         "release-tail plan",
+        "release-tail rehearse",
         "release-tail status",
         "release-tail verify"
       ],
@@ -3451,11 +3452,17 @@
         "buildchain release-tail <status|verify> [--state <path>] [--output <path>]",
         "buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]",
         "buildchain release-tail init --declaration <json-or-path> [--state <path>]",
-        "buildchain release-tail plan --declaration <json-or-path> [--output <path>]"
+        "buildchain release-tail plan --declaration <json-or-path> [--output <path>]",
+        "buildchain release-tail rehearse --capsule <path> --capsule-root <absolute-path> --mode <simulate|replay> --state <path> --evidence <path> [--environment-json <json-or-path>]"
       ],
       "options": [
+        "--capsule",
+        "--capsule-root",
         "--declaration",
+        "--environment-json",
+        "--evidence",
         "--hooks-json",
+        "--mode",
         "--output",
         "--state"
       ],
@@ -3465,10 +3472,11 @@
         "buildchain release-tail compat --help",
         "buildchain release-tail init --help",
         "buildchain release-tail plan --help",
+        "buildchain release-tail rehearse --help",
         "buildchain release-tail status --help",
         "buildchain release-tail verify --help"
       ],
-      "purpose": "Plan, initialize, resume, and verify one declarative provider-owned release-tail transaction.",
+      "purpose": "Plan, initialize, rehearse, resume, and verify one declarative provider-owned release-tail transaction.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "agent",

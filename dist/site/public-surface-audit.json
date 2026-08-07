@@ -6,8 +6,8 @@
     "cliCommandCount": 114,
     "workflowCount": 65,
     "actionCount": 7,
-    "sitePageCount": 68,
-    "docCommandRefCount": 918,
+    "sitePageCount": 69,
+    "docCommandRefCount": 922,
     "failureCount": 0
   },
   "enumerated": {
@@ -2659,22 +2659,25 @@
         "reusable": true,
         "inputs": [
           "buildchain-ref",
-          "declaration-path",
-          "execute",
-          "provider-bindings-path",
+          "capsule-contract",
+          "capsule-path",
+          "capsule-root",
+          "evidence-path",
           "state-path"
         ],
-        "inputCount": 5,
+        "inputCount": 6,
         "secrets": [
           "http-token"
         ],
         "secretCount": 1,
         "outputs": [
+          "binding-root",
+          "evidence-root",
           "state-root",
           "transaction-root",
           "transaction-state"
         ],
-        "outputCount": 3
+        "outputCount": 5
       },
       {
         "id": "release-verify",
@@ -2897,14 +2900,15 @@
         "id": "release-tail",
         "path": "actions/release-tail/action.yml",
         "inputs": [
-          "declaration",
-          "execute",
+          "capsule",
+          "capsule-contract",
+          "capsule-root",
+          "evidence-path",
           "github-token",
           "http-token",
-          "provider-bindings",
           "state-path"
         ],
-        "inputCount": 6
+        "inputCount": 7
       },
       {
         "id": "report-buildchain-issue",
@@ -3191,6 +3195,10 @@
       },
       {
         "id": "manual:publication-authority",
+        "category": "manual"
+      },
+      {
+        "id": "manual:publication-rehearsal",
         "category": "manual"
       },
       {
@@ -7139,6 +7147,11 @@
       {
         "id": "release-tail",
         "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail rehearse --capsule"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
         "command": "buildchain release-tail"
       },
       {
@@ -7189,6 +7202,16 @@
       {
         "id": "release-tail",
         "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail rehearse"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail rehearse --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
         "command": "buildchain release-tail status"
       },
       {
@@ -7205,6 +7228,11 @@
         "id": "release-tail",
         "path": "docs/cli-reference.md",
         "command": "buildchain release-tail verify --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/publication-rehearsal.md",
+        "command": "buildchain release-tail rehearse"
       },
       {
         "id": "release-tail",
@@ -7867,9 +7895,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "3e6991dcd242031cfc80d7b9bd815d17c8afbeb8a504b6d49ce649787890612a",
-    "workflowRegistryDigest": "287fe2b7a0625e485830215ab0820598f32713a723adae76a8fdb00c76b343a7",
-    "pageRegistryDigest": "ab3bd2c41f583d8997f3b0e088f2ea03869a1e6fafde9a03dc13e7f2cb349eb3"
+    "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
+    "workflowRegistryDigest": "aed467504961e2b3361e9aab7149a7464a4f90733a7eaa6ec7638cbc1f0f8d71",
+    "pageRegistryDigest": "17258897e0e13ca85fee57a82ce32dd6c0b5cc65fd22033cf09c8e6f0d06a17d"
   },
   "comparison": {
     "missingCliRegistry": [],

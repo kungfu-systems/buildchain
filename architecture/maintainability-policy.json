@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 284,
-    "maxHandMaintainedSourceLines": 109183,
+    "maxHandMaintainedSourceFiles": 286,
+    "maxHandMaintainedSourceLines": 110440,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22459,
-    "latestTransition": "Buildchain self-release now enters the public consumer workflow train and publishes GitHub Release assets through the declarative provider plane with retained route, transaction, receipt, and readback evidence.",
-    "rationale": "The exact transition adds one responsibility-owned GitHub Release adapter coordinator, consumer-equivalent route verification, hosted evidence forwarding, and retry-without-rebuild tests. The authoritative self caller no longer uses checkout-relative workflow reuse, stable routing remains compatible, and these ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22474,
+    "latestTransition": "Publication rehearsal and consumer-equivalent self-release now share the declarative provider plane while retaining explicit local construction, hosted transport, route, transaction, receipt, and readback evidence.",
+    "rationale": "The combined transition adds the capsule runtime and projection module, rooted diagnostics and evidence, thin CLI and Action wrappers, generated init and Paper surfaces, normative ADR, schema, parity tests, one GitHub Release adapter coordinator, and consumer-equivalent self-release routing. It introduces no second transaction writer or executable consumer hook, and these exact ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/publication-rehearsal-runtime.js": {
+      "maxLines": 909,
+      "rationale": "The public audit surface keeps strict capsule normalization, path and file verification, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."
+    },
     "packages/core/release-tail-provider-plane.js": {
       "maxLines": 1228,
       "rationale": "The one versioned transaction authority keeps strict declaration normalization, deterministic effect planning, atomic checkpoints, rooted observations and receipts, and bounded recovery in one independently tested audit surface; this exact preview ceiling cannot grow implicitly."

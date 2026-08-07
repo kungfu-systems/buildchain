@@ -7,12 +7,16 @@ on:
         description: "Exact Buildchain SHA or qualified train ref"
         type: string
         required: true
-      declaration-path:
-        description: "Versioned release-tail declaration in the caller checkout"
+      capsule-contract:
+        description: "Exact publication rehearsal capsule contract"
         type: string
         required: true
-      provider-bindings-path:
-        description: "Data-only provider bindings in the caller checkout"
+      capsule-path:
+        description: "Content-addressed publication rehearsal capsule in the caller checkout"
+        type: string
+        required: true
+      capsule-root:
+        description: "Explicit repository-relative root containing capsule-bound files"
         type: string
         required: true
       state-path:
@@ -20,10 +24,10 @@ on:
         type: string
         default: ".buildchain/release-tail/state.json"
         required: false
-      execute:
-        description: "Execute provider effects; false only seals the plan"
-        type: boolean
-        default: true
+      evidence-path:
+        description: "Provider-recording rehearsal evidence path"
+        type: string
+        default: ".buildchain/publication/rehearsal-evidence.json"
         required: false
     secrets:
       http-token:
@@ -39,6 +43,12 @@ on:
       state-root:
         description: "Root of the final durable state"
         value: ${{ jobs.release-tail.outputs.state-root }}
+      binding-root:
+        description: "Stable capsule and release-tail binding root"
+        value: ${{ jobs.release-tail.outputs.binding-root }}
+      evidence-root:
+        description: "Stable provider-recording evidence root"
+        value: ${{ jobs.release-tail.outputs.evidence-root }}
 
 permissions:
   contents: write
@@ -51,6 +61,8 @@ jobs:
       transaction-state: ${{ steps.release-tail.outputs.transaction-state }}
       transaction-root: ${{ steps.release-tail.outputs.transaction-root }}
       state-root: ${{ steps.release-tail.outputs.state-root }}
+      binding-root: ${{ steps.release-tail.outputs.binding-root }}
+      evidence-root: ${{ steps.release-tail.outputs.evidence-root }}
     steps:
       - name: Check out caller source
         uses: actions/checkout@v7.0.0
@@ -67,12 +79,13 @@ jobs:
         id: release-tail
         uses: ./.buildchain/release-tail-runtime/actions/release-tail
         with:
-          declaration: ${{ inputs.declaration-path }}
-          provider-bindings: ${{ inputs.provider-bindings-path }}
-          state-path: ${{ inputs.state-path }}
+          capsule-contract: ${{ inputs.capsule-contract }}
+          capsule: ${{ github.workspace }}/${{ inputs.capsule-path }}
+          capsule-root: ${{ github.workspace }}/${{ inputs.capsule-root }}
+          state-path: ${{ github.workspace }}/${{ inputs.state-path }}
+          evidence-path: ${{ github.workspace }}/${{ inputs.evidence-path }}
           github-token: ${{ github.token }}
           http-token: ${{ secrets.http-token }}
-          execute: ${{ inputs.execute }}
 
       - name: Retain the rooted transaction and receipts
         uses: actions/upload-artifact@v7.0.1
@@ -80,4 +93,6 @@ jobs:
           name: buildchain-release-tail-${{ github.sha }}
           retention-days: 30
           if-no-files-found: error
-          path: ${{ inputs.state-path }}
+          path: |
+            ${{ inputs.state-path }}
+            ${{ inputs.evidence-path }}

@@ -10838,7 +10838,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 248
+        "line": 254
       },
       "example": "import { collectPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -10867,7 +10867,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 93
+        "line": 94
       },
       "example": "import { createPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -10900,7 +10900,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 61
+        "line": 62
       },
       "example": "import { mergePaperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -10924,7 +10924,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 16
+        "line": 17
       },
       "example": "import { PAPER_AGENT_ENTRY_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -10948,7 +10948,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 17
+        "line": 18
       },
       "example": "import { PAPER_AGENT_ENTRY_SCHEMA_VERSION } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -10972,7 +10972,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 20
+        "line": 21
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_END } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -10996,7 +10996,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 18
+        "line": 19
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_START } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11025,7 +11025,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 150
+        "line": 151
       },
       "example": "import { paperAgentEntryFiles } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11054,7 +11054,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 36
+        "line": 37
       },
       "example": "import { paperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11087,7 +11087,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 177
+        "line": 180
       },
       "example": "import { resolvePaperBuildchainSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11337,7 +11337,7 @@
       ],
       "source": {
         "path": "packages/core/paper-repository.js",
-        "line": 133
+        "line": 134
       },
       "example": "import { resolvePaperRepository } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11530,7 +11530,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2413
+        "line": 2439
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11559,7 +11559,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1471
+        "line": 1496
       },
       "example": "import { collectPaperStatus } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11588,7 +11588,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2655
+        "line": 2681
       },
       "example": "import { createPaperAlphaPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11617,7 +11617,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2592
+        "line": 2618
       },
       "example": "import { createPaperBuildPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11630,11 +11630,11 @@
       "id": "packages/core/paper.js#createPaperProvisioningAuthority",
       "name": "createPaperProvisioningAuthority",
       "kind": "function",
-      "signature": "function createPaperProvisioningAuthority({ repository, packageName, buildchainVersion, buildchainSha, contractLock, buildWorkflow, verifyWorkflow, releaseWorkflow, agentEntry, agentInstructions, environment = \"\", })",
+      "signature": "function createPaperProvisioningAuthority({ repository, packageName, buildchainVersion, buildchainSha, contractLock, buildWorkflow, verifyWorkflow, releaseWorkflow, rehearsalWorkflow, agentEntry, agentInstructions, environment = \"\", })",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ repository, packageName, buildchainVersion, buildchainSha, contractLock, buildWorkflow, verifyWorkflow, releaseWorkflow, agentEntry, agentInstructions, environment = \"\", }"
+          "signature": "{ repository, packageName, buildchainVersion, buildchainSha, contractLock, buildWorkflow, verifyWorkflow, releaseWorkflow, rehearsalWorkflow, agentEntry, agentInstructions, environment = \"\", }"
         }
       ],
       "returns": "unknown",
@@ -11646,7 +11646,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 519
+        "line": 525
       },
       "example": "import { createPaperProvisioningAuthority } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11675,7 +11675,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2713
+        "line": 2739
       },
       "example": "import { createPaperResumePlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11704,7 +11704,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2840
+        "line": 2866
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11728,7 +11728,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 90
+        "line": 95
       },
       "example": "import { PAPER_ALPHA_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11752,7 +11752,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 89
+        "line": 94
       },
       "example": "import { PAPER_BUILD_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11776,7 +11776,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 82
+        "line": 87
       },
       "example": "import { PAPER_MIGRATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11800,7 +11800,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 85
+        "line": 90
       },
       "example": "import { PAPER_NPM_BOOTSTRAP_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11824,7 +11824,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 83
+        "line": 88
       },
       "example": "import { PAPER_PREFLIGHT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11848,7 +11848,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 87
+        "line": 92
       },
       "example": "import { PAPER_PROVISIONING_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11872,7 +11872,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 91
+        "line": 96
       },
       "example": "import { PAPER_RESUME_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11896,7 +11896,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 81
+        "line": 86
       },
       "example": "import { PAPER_SCAFFOLD_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11920,7 +11920,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 94
+        "line": 99
       },
       "example": "import { PAPER_STATE_ORDER } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11944,7 +11944,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 84
+        "line": 89
       },
       "example": "import { PAPER_STATUS_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11968,7 +11968,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 92
+        "line": 97
       },
       "example": "import { PAPER_VISIBILITY_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11997,7 +11997,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1013
+        "line": 1038
       },
       "example": "import { planPaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12026,7 +12026,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 702
+        "line": 718
       },
       "example": "import { planPaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12059,7 +12059,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 245
+        "line": 251
       },
       "example": "import { resolvePaperRuntimeGitSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -12088,7 +12088,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1129
+        "line": 1154
       },
       "example": "import { writePaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12117,7 +12117,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 847
+        "line": 863
       },
       "example": "import { writePaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13571,6 +13571,654 @@
         "line": 6
       },
       "example": "import { PUBLICATION_NPM_PACKAGE_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#appendPublicationRehearsalToml",
+      "name": "appendPublicationRehearsalToml",
+      "kind": "function",
+      "signature": "function appendPublicationRehearsalToml(source)",
+      "parameters": [
+        {
+          "name": "source",
+          "signature": "source"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 62
+      },
+      "example": "import { appendPublicationRehearsalToml } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#assertPublicationRehearsalConfig",
+      "name": "assertPublicationRehearsalConfig",
+      "kind": "function",
+      "signature": "function assertPublicationRehearsalConfig(config)",
+      "parameters": [
+        {
+          "name": "config",
+          "signature": "config"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 32
+      },
+      "example": "import { assertPublicationRehearsalConfig } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#mergePublicationRehearsalAgentInstructions",
+      "name": "mergePublicationRehearsalAgentInstructions",
+      "kind": "function",
+      "signature": "function mergePublicationRehearsalAgentInstructions(current = \"\")",
+      "parameters": [
+        {
+          "name": "current",
+          "signature": "current = \"\""
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 109
+      },
+      "example": "import { mergePublicationRehearsalAgentInstructions } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#projectPublicationRehearsalToml",
+      "name": "projectPublicationRehearsalToml",
+      "kind": "function",
+      "signature": "function projectPublicationRehearsalToml(source)",
+      "parameters": [
+        {
+          "name": "source",
+          "signature": "source"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 72
+      },
+      "example": "import { projectPublicationRehearsalToml } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+      "name": "PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 10
+      },
+      "example": "import { PUBLICATION_REHEARSAL_AGENT_SECTION_END } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+      "name": "PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 8
+      },
+      "example": "import { PUBLICATION_REHEARSAL_AGENT_SECTION_START } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+      "name": "PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 12
+      },
+      "example": "import { PUBLICATION_REHEARSAL_WORKFLOW_PATH } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#publicationRehearsalAgentInstructions",
+      "name": "publicationRehearsalAgentInstructions",
+      "kind": "function",
+      "signature": "function publicationRehearsalAgentInstructions()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 89
+      },
+      "example": "import { publicationRehearsalAgentInstructions } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#publicationRehearsalToml",
+      "name": "publicationRehearsalToml",
+      "kind": "function",
+      "signature": "function publicationRehearsalToml()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 19
+      },
+      "example": "import { publicationRehearsalToml } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#publicationRehearsalWorkflow",
+      "name": "publicationRehearsalWorkflow",
+      "kind": "function",
+      "signature": "function publicationRehearsalWorkflow(buildchainRef)",
+      "parameters": [
+        {
+          "name": "buildchainRef",
+          "signature": "buildchainRef"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 139
+      },
+      "example": "import { publicationRehearsalWorkflow } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#createPublicationRehearsalCapsule",
+      "name": "createPublicationRehearsalCapsule",
+      "kind": "function",
+      "signature": "function createPublicationRehearsalCapsule(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 380
+      },
+      "example": "import { createPublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#executePublicationRehearsal",
+      "name": "executePublicationRehearsal",
+      "kind": "function",
+      "signature": "async function executePublicationRehearsal({ capsule, capsuleRoot, mode = \"simulate\", environment = {}, adapters = {}, transaction, checkpoint, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ capsule, capsuleRoot, mode = \"simulate\", environment = {}, adapters = {}, transaction, checkpoint, } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 821
+      },
+      "example": "import { executePublicationRehearsal } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#normalizePublicationRehearsalCapsule",
+      "name": "normalizePublicationRehearsalCapsule",
+      "kind": "function",
+      "signature": "function normalizePublicationRehearsalCapsule(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 410
+      },
+      "example": "import { normalizePublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+      "name": "PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 14
+      },
+      "example": "import { PUBLICATION_REHEARSAL_CAPSULE_CONTRACT } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_COMMAND",
+      "name": "PUBLICATION_REHEARSAL_COMMAND",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_COMMAND",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 24
+      },
+      "example": "import { PUBLICATION_REHEARSAL_COMMAND } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+      "name": "PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 18
+      },
+      "example": "import { PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+      "name": "PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 16
+      },
+      "example": "import { PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#publicationRehearsalBindingRoot",
+      "name": "publicationRehearsalBindingRoot",
+      "kind": "function",
+      "signature": "function publicationRehearsalBindingRoot(capsule)",
+      "parameters": [
+        {
+          "name": "capsule",
+          "signature": "capsule"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 787
+      },
+      "example": "import { publicationRehearsalBindingRoot } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#publicationRehearsalDiagnostic",
+      "name": "publicationRehearsalDiagnostic",
+      "kind": "function",
+      "signature": "function publicationRehearsalDiagnostic(error, { capsule } = {})",
+      "parameters": [
+        {
+          "name": "error",
+          "signature": "error"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ capsule } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 801
+      },
+      "example": "import { publicationRehearsalDiagnostic } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PublicationRehearsalError",
+      "name": "PublicationRehearsalError",
+      "kind": "class",
+      "signature": "class PublicationRehearsalError",
+      "parameters": [],
+      "returns": "PublicationRehearsalError",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 35
+      },
+      "example": "import { PublicationRehearsalError } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+      "name": "RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+      "kind": "constant",
+      "signature": "const RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 20
+      },
+      "example": "import { RELEASE_LOCAL_CONSTRUCTIBILITY_ADR } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+      "name": "RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+      "kind": "constant",
+      "signature": "const RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 22
+      },
+      "example": "import { RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#resolvePublicationRehearsalFile",
+      "name": "resolvePublicationRehearsalFile",
+      "kind": "function",
+      "signature": "function resolvePublicationRehearsalFile(capsuleRoot, relativePath, options)",
+      "parameters": [
+        {
+          "name": "capsuleRoot",
+          "signature": "capsuleRoot"
+        },
+        {
+          "name": "relativePath",
+          "signature": "relativePath"
+        },
+        {
+          "name": "options",
+          "signature": "options"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 898
+      },
+      "example": "import { resolvePublicationRehearsalFile } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#verifyPublicationRehearsalCapsule",
+      "name": "verifyPublicationRehearsalCapsule",
+      "kind": "function",
+      "signature": "function verifyPublicationRehearsalCapsule({ capsule, capsuleRoot, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ capsule, capsuleRoot, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 571
+      },
+      "example": "import { verifyPublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -20804,7 +21452,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:bb962839fa925be390ed5a2ae20245999a5b8bea6e03c143a916f2bd0141f94b",
+      "digest": "sha256:a82e7875e0bdaa1be06ad22396522fd284a30db99e2ec712ed4f2190a2d3ec2b",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -21406,6 +22054,74 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/publication-rehearsal-runtime",
+      "export": "./publication-rehearsal-runtime",
+      "target": "./packages/core/publication-rehearsal-runtime.js",
+      "digest": "sha256:9aa75e69b7635dddd5ce9ac89fa36fb6518f6a5cf336590eaca4ce6be472adbc",
+      "summary": "Content-addressed local, replay, and provider-recording publication rehearsal over the shared release-tail core.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 14,
+      "symbolIds": [
+        "packages/core/publication-rehearsal-runtime.js#createPublicationRehearsalCapsule",
+        "packages/core/publication-rehearsal-runtime.js#executePublicationRehearsal",
+        "packages/core/publication-rehearsal-runtime.js#normalizePublicationRehearsalCapsule",
+        "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+        "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_COMMAND",
+        "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+        "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+        "packages/core/publication-rehearsal-runtime.js#publicationRehearsalBindingRoot",
+        "packages/core/publication-rehearsal-runtime.js#publicationRehearsalDiagnostic",
+        "packages/core/publication-rehearsal-runtime.js#PublicationRehearsalError",
+        "packages/core/publication-rehearsal-runtime.js#RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+        "packages/core/publication-rehearsal-runtime.js#RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+        "packages/core/publication-rehearsal-runtime.js#resolvePublicationRehearsalFile",
+        "packages/core/publication-rehearsal-runtime.js#verifyPublicationRehearsalCapsule"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-rehearsal-projection",
+      "export": "./publication-rehearsal-projection",
+      "target": "./packages/core/publication-rehearsal-projection.js",
+      "digest": "sha256:fae21cdef8f0c700c06cbfac5371d7924aeb398273298b4ca2e1920472834855",
+      "summary": "Canonical generated config, workflow, and Agent projections for release local constructibility.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 10,
+      "symbolIds": [
+        "packages/core/publication-rehearsal-projection.js#appendPublicationRehearsalToml",
+        "packages/core/publication-rehearsal-projection.js#assertPublicationRehearsalConfig",
+        "packages/core/publication-rehearsal-projection.js#mergePublicationRehearsalAgentInstructions",
+        "packages/core/publication-rehearsal-projection.js#projectPublicationRehearsalToml",
+        "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+        "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+        "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+        "packages/core/publication-rehearsal-projection.js#publicationRehearsalAgentInstructions",
+        "packages/core/publication-rehearsal-projection.js#publicationRehearsalToml",
+        "packages/core/publication-rehearsal-projection.js#publicationRehearsalWorkflow"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/surface-manifest",
       "export": "./surface-manifest",
       "target": "./packages/core/surface-manifest.js",
@@ -21472,7 +22188,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:ae82d909420c42814773e22df13202844c889a41d98e471ad1ac185273974805"
+      "digest": "sha256:6dd79b998f63cf996e5c76b4fe0c654d12ca603cd5db1277ef3347f489b96ef0"
     },
     {
       "id": "build-facts",

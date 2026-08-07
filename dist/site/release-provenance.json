@@ -57,6 +57,8 @@
       "./release-tail-provider-plane": "./packages/core/release-tail-provider-plane.js",
       "./release-tail-provider-adapters": "./packages/core/release-tail-provider-adapters.js",
       "./release-tail-compatibility": "./packages/core/release-tail-compatibility.js",
+      "./publication-rehearsal-runtime": "./packages/core/publication-rehearsal-runtime.js",
+      "./publication-rehearsal-projection": "./packages/core/publication-rehearsal-projection.js",
       "./surface-manifest": "./packages/core/surface-manifest.js",
       "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
       "./site/buildchain-site.json": "./dist/site/buildchain-site.json",

@@ -1284,7 +1284,7 @@ if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-rele
   throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "release-passport-check-manifest.json", "schemas/release-passport-v1.schema.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "release-passport-check-manifest.json", "schemas/release-passport-v1.schema.json", "schemas/publication-rehearsal-capsule-v1.schema.json", "schemas/release-tail-capabilities-v1.schema.json", "schemas/release-tail-provider-bindings-v1.schema.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

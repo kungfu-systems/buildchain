@@ -11,6 +11,10 @@ import {
   writeReleaseTailTransaction,
 } from "../packages/core/release-tail-provider-plane.js";
 import { diagnoseLegacyReleaseTailHooks } from "../packages/core/release-tail-compatibility.js";
+import {
+  executePublicationRehearsal,
+  publicationRehearsalDiagnostic,
+} from "../packages/core/publication-rehearsal-runtime.js";
 
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);
@@ -34,8 +38,50 @@ function output(value, filePath = "") {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
-export function runReleaseTailCli(args = process.argv.slice(2)) {
+export async function runReleaseTailCli(args = process.argv.slice(2)) {
   const [mode = "status", ...options] = args;
+  if (mode === "rehearse") {
+    const capsulePath = flag(options, "capsule");
+    const capsuleRoot = flag(options, "capsule-root");
+    const statePath = flag(options, "state");
+    const evidencePath = flag(options, "evidence");
+    for (const [name, value] of Object.entries({
+      "--capsule": capsulePath,
+      "--capsule-root": capsuleRoot,
+      "--state": statePath,
+      "--evidence": evidencePath,
+    })) {
+      if (!value || !path.isAbsolute(value)) {
+        throw new Error(`${name} must be an explicit absolute path`);
+      }
+    }
+    const capsule = readJson(capsulePath, "--capsule");
+    const rehearsalMode = flag(options, "mode", "simulate");
+    if (!new Set(["simulate", "replay"]).has(rehearsalMode)) {
+      throw new Error("local rehearsal --mode must be simulate or replay");
+    }
+    const environment = flag(options, "environment-json")
+      ? readJson(flag(options, "environment-json"), "--environment-json")
+      : {};
+    let result;
+    try {
+      result = await executePublicationRehearsal({
+        capsule,
+        capsuleRoot,
+        mode: rehearsalMode,
+        environment,
+        checkpoint: (transaction) =>
+          writeReleaseTailTransaction(statePath, transaction),
+      });
+    } catch (error) {
+      const diagnostic = publicationRehearsalDiagnostic(error, { capsule });
+      output(diagnostic, evidencePath);
+      throw error;
+    }
+    writeReleaseTailTransaction(statePath, result.transaction);
+    output(result.evidence, evidencePath);
+    return result;
+  }
   if (mode === "plan") {
     const plan = compileReleaseTailDeclaration(
       readJson(flag(options, "declaration"), "--declaration"),
@@ -95,7 +141,7 @@ export function runReleaseTailCli(args = process.argv.slice(2)) {
     return report;
   }
   throw new Error(
-    "usage: buildchain release-tail <plan|init|status|verify|compat> [--declaration <json-or-path>] [--state <path>] [--hooks-json <json-or-path>] [--output <path>]",
+    "usage: buildchain release-tail <plan|init|status|verify|compat|rehearse> [--declaration <json-or-path>] [--capsule <path>] [--capsule-root <absolute-path>] [--mode <simulate|replay>] [--state <path>] [--evidence <path>] [--hooks-json <json-or-path>] [--output <path>]",
   );
 }
 
@@ -105,7 +151,7 @@ if (
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
   try {
-    runReleaseTailCli();
+    await runReleaseTailCli();
   } catch (error) {
     console.error(`release-tail: ${error.message}`);
     process.exitCode = 1;
