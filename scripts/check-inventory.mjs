@@ -992,7 +992,7 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
-  "uses: ./.github/workflows/.release-candidate-promote.yml",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood\n",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
@@ -1114,7 +1114,7 @@ for (const retiredWorkflow of [
   }
 }
 const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/action.yml"), "utf8");
-const promoteBuildchainRefIndex = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/index.js"), "utf8");
+const promoteBuildchainRefIndex = ["actions/promote-buildchain-ref/index.js", "actions/promote-buildchain-ref/github-release.js"].map((entry) => fs.readFileSync(path.join(root, entry), "utf8")).join("\n");
 for (const requiredSnippet of [
   "github-release:",
   "github-release-title:",
@@ -1140,8 +1140,8 @@ for (const requiredSnippet of [
   }
 }
 for (const forbiddenSnippet of [
-  "run: node scripts/release-candidate-resolver.mjs",
-  "uses: ./actions/promote-buildchain-ref",
+  "uses: ./.github/workflows/.release-candidate-promote.yml",
+  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@",
 ]) {
   if (buildchainRefPromotionWorkflow.includes(forbiddenSnippet)) {
     throw new Error(`buildchain ref promotion workflow must use the declarative wrapper, found manual snippet: ${forbiddenSnippet}`);

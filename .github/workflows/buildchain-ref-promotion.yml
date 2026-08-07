@@ -145,10 +145,10 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    # Bootstrap self-publication from the exact repository commit. The public
-    # router delegates to floating channel shells and therefore cannot publish
-    # the first alpha that introduces a new advanced shell path.
-    uses: ./.github/workflows/.release-candidate-promote.yml
+    # Buildchain is a consumer of the same hosted public router as every other
+    # repository. The train resolves to exact router, shell, and runtime SHAs
+    # before any promotion effect is admitted.
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood
     permissions:
       actions: write
       artifact-metadata: write
@@ -161,11 +161,8 @@ jobs:
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
-      # Durable recovery keeps the exact protected channel SHA as product
-      # source while executing the reviewed workflow runtime that owns the
-      # recovery dispatch. This prevents a source-tree defect from making its
-      # own governed recovery path permanently unreachable.
-      buildchain-ref: ${{ github.event.workflow_run.head_sha || ((inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') && github.sha) || inputs.sha || github.sha }}
+      buildchain-channel: auto
+      buildchain-ref: train/v3/v3.0/consumer-equivalent-self-dogfood
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       package-manager: pnpm
@@ -184,6 +181,7 @@ jobs:
       # Alpha consumes sealed candidate npm bytes; stable materializes final bytes and cannot reuse alpha ref/digest.
       artifact-patterns: "buildchain-package-*"
       github-release: true
+      declarative-release-tail: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
       standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
       required-status-check: check
@@ -210,3 +208,56 @@ jobs:
       publication-target: npm:@kungfu-tech/buildchain
       publication-package-name: "@kungfu-tech/buildchain"
       dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true' }}
+
+  route-parity:
+    name: Prove consumer-equivalent self-release route
+    needs: promote
+    if: ${{ needs.promote.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out promoted source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Require hosted provider-plane evidence
+        if: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && (github.event_name != 'workflow_dispatch' || inputs['dry-run'] != 'true') }}
+        env:
+          RELEASE_TAIL_STATE: ${{ needs.promote.outputs.release-tail-transaction-state }}
+          RUNTIME_SHA: ${{ needs.promote.outputs.promotion-runtime-sha }}
+          CONTRACT_ROOT: ${{ needs.promote.outputs.promotion-contract-lock-digest }}
+          DECLARATION_ROOT: ${{ needs.promote.outputs.release-tail-declaration-root }}
+          TRANSACTION_ROOT: ${{ needs.promote.outputs.release-tail-transaction-root }}
+          STATE_ROOT: ${{ needs.promote.outputs.release-tail-state-root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RELEASE_TAIL_STATE" = complete
+          [[ "$RUNTIME_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$CONTRACT_ROOT" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$DECLARATION_ROOT" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$TRANSACTION_ROOT" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$STATE_ROOT" =~ ^sha256:[0-9a-f]{64}$ ]]
+
+      - name: Record route parity evidence
+        shell: bash
+        run: >-
+          node scripts/workflow-call-contract.mjs self-release-parity
+          --root .
+          --runtime-sha "${{ needs.promote.outputs.promotion-runtime-sha }}"
+          --contract-root "${{ needs.promote.outputs.promotion-contract-lock-digest }}"
+          --release-tail-declaration-root "${{ needs.promote.outputs.release-tail-declaration-root }}"
+          --release-tail-transaction-root "${{ needs.promote.outputs.release-tail-transaction-root }}"
+          --release-tail-state-root "${{ needs.promote.outputs.release-tail-state-root }}"
+          --output .buildchain/self-release-route-parity/evidence.json
+
+      - name: Retain route parity evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-self-release-route-parity-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: .buildchain/self-release-route-parity/evidence.json

@@ -978,6 +978,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "channel",
+          "declarative-release-tail",
           "dry-run",
           "github-artifact-attestation-environment",
           "github-artifact-attestation-policy-json",
@@ -1076,7 +1077,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 109,
+        "inputCount": 110,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1113,9 +1114,14 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
-          "release-propagation-work-artifact"
+          "release-propagation-work-artifact",
+          "release-tail-declaration-root",
+          "release-tail-receipt-roots-json",
+          "release-tail-state-root",
+          "release-tail-transaction-root",
+          "release-tail-transaction-state"
         ],
-        "outputCount": 23
+        "outputCount": 28
       },
       {
         "id": ".release-docker",
@@ -2414,6 +2420,7 @@
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
           "channel",
+          "declarative-release-tail",
           "dry-run",
           "github-artifact-attestation-environment",
           "github-artifact-attestation-policy-json",
@@ -2500,7 +2507,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 100,
+        "inputCount": 101,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2549,9 +2556,14 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
-          "release-propagation-work-artifact"
+          "release-propagation-work-artifact",
+          "release-tail-declaration-root",
+          "release-tail-receipt-roots-json",
+          "release-tail-state-root",
+          "release-tail-transaction-root",
+          "release-tail-transaction-state"
         ],
-        "outputCount": 35
+        "outputCount": 40
       },
       {
         "id": "release-governance-reconcile",
@@ -2804,6 +2816,7 @@
           "branch-protection-bypass-apps",
           "branch-protection-bypass-teams",
           "branch-protection-bypass-users",
+          "declarative-release-tail",
           "dry-run",
           "expected-publication-version",
           "generated-pull-request-token",
@@ -2865,6 +2878,7 @@
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
           "release-passport-promotion-routing-json",
+          "release-tail-state-path",
           "require-governance",
           "require-publication-qualification",
           "require-publish-source-lock",
@@ -2877,7 +2891,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 76
+        "inputCount": 78
       },
       {
         "id": "release-tail",
@@ -7854,8 +7868,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "3e6991dcd242031cfc80d7b9bd815d17c8afbeb8a504b6d49ce649787890612a",
-    "workflowRegistryDigest": "f134e75a9e934b090d6c4572a2cc3eb03798e117b1f8a32b07281e1412fcbd69",
-    "pageRegistryDigest": "e5689af761736178e311b5dfdb46ffd258baaa1b57d31fc76d4fa3b0508514b1"
+    "workflowRegistryDigest": "287fe2b7a0625e485830215ab0820598f32713a723adae76a8fdb00c76b343a7",
+    "pageRegistryDigest": "f5bc6cd20d9b4866cbb7d5cfd837214ceedebecf29149b99c546c50bcbcde6f6"
   },
   "comparison": {
     "missingCliRegistry": [],
