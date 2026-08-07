@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "a626f16555ffc7430f908820df91498eaa4f0bd6c0baf88322c199dd0f70051f",
+    "sha256": "5f7c953b2c903e24f69de55e50f33e431654c2e693acb30079be63880e6ebee2",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 65,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "a626f16555ffc7430f908820df91498eaa4f0bd6c0baf88322c199dd0f70051f",
+      "sha256": "5f7c953b2c903e24f69de55e50f33e431654c2e693acb30079be63880e6ebee2",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 65,
@@ -5365,7 +5365,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 78,
+          "inputCount": 79,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -5381,6 +5381,7 @@
             "github-release-artifact-paths",
             "github-release-notes",
             "github-release-title",
+            "plan-before-target-advance",
             "promote-only-release-candidate",
             "publication-capability-json",
             "publication-gate-aggregate-json",

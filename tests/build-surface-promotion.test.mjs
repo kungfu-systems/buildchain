@@ -113,9 +113,11 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(action, /publish-source-sha:/);
   assert.match(action, /publish-source-locked:/);
   assert.match(action, /expected-publication-version:/);
+  assert.match(action, /plan-before-target-advance:/);
   assert.match(action, /planned-publication-version:/);
   assert.match(action, /planned-release-candidate-version:/);
   assert.match(implementation, /expectedPublicationVersion/);
+  assert.match(implementation, /planBeforeTargetAdvance/);
   assert.match(implementation, /planned-publication-version/);
   assert.match(implementation, /planned-release-candidate-version/);
   assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
@@ -458,6 +460,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /merge-multiple: true/);
   assert.match(workflow, /name: Plan the exact self-publication version before sealing product bytes/);
   assert.match(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
+  assert.match(workflow, /plan-before-target-advance: "true"/);
   assert.match(workflow, /publish-transaction: "true"/);
   assert.match(workflow, /name: Materialize the planned version in the candidate workspace/);
   assert.match(workflow, /node scripts\/materialize-self-release-candidate-version\.mjs/);
