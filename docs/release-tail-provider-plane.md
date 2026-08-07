@@ -89,6 +89,29 @@ claiming external provider truth. Provider execution belongs in the Action or
 reusable workflow so token handling and transport capabilities remain explicit.
 Retain the state and rehearsal evidence artifacts.
 
+## Buildchain self-dogfood route
+
+Buildchain self-release calls the same public reusable workflow coordinate as a
+consumer:
+
+```text
+kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@93963e1f711c39189fbf019fa0e07d063e384aad
+```
+
+The caller pins the public router and runtime to the same exact implementation
+SHA. Its internal alpha shell remains on the named train, so automatic
+`workflow_run` publication uses the immutable-router path without a manual
+runtime override. For alpha self-release, the promotion Action materializes the
+sealed GitHub Release asset declaration, executes it through this provider
+plane, and retains the
+declaration root, transaction root, state root, receipt roots, controller
+receipt, and route-parity evidence. The legacy GitHub Release helper is not a
+fallback when `declarative-release-tail` is enabled; a provider or readback
+failure fails the authoritative run.
+
+Stable routing remains on the existing `v3` shell and does not receive the new
+alpha-train input. Stable cutover is a separate gate after prerelease dogfood.
+
 ## v3 compatibility boundary
 
 `release-tail compat --hooks-json <json-or-path>` recognizes only the frozen v3

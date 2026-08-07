@@ -1,0 +1,20 @@
+name: Representative external Buildchain release consumer
+
+on:
+  workflow_dispatch:
+
+jobs:
+  promote:
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@93963e1f711c39189fbf019fa0e07d063e384aad
+    permissions:
+      actions: write
+      contents: write
+      id-token: write
+    secrets: inherit
+    with:
+      buildchain-channel: auto
+      buildchain-ref: 93963e1f711c39189fbf019fa0e07d063e384aad
+      target-ref: alpha/v1/v1.0
+      target-sha: ${{ github.sha }}
+      declarative-release-tail: true
+      dry-run: false

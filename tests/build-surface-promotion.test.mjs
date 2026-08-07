@@ -607,9 +607,9 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@93963e1f711c39189fbf019fa0e07d063e384aad\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
+  assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
@@ -617,8 +617,9 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(\(inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != ''\) && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+    /buildchain-ref: 93963e1f711c39189fbf019fa0e07d063e384aad/,
   );
+  assert.match(workflow, /declarative-release-tail: true/);
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /package-manager: pnpm/);
@@ -681,6 +682,11 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
     path.join(root, "actions/promote-buildchain-ref/index.js"),
     "utf8",
   );
+  const githubReleaseSource = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/github-release.js"),
+    "utf8",
+  );
+  const implementation = `${source}\n${githubReleaseSource}`;
 
   assert.match(action, /github-release:/);
   assert.match(action, /github-release-artifact-paths:/);
@@ -689,12 +695,13 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(action, /public-release-tag:/);
   assert.match(action, /github-release-url:/);
   assert.match(action, /github-release-action:/);
-  assert.match(source, /ensureGitHubRelease/);
-  assert.match(source, /publishGitHubReleaseEvidence/);
-  assert.match(source, /collectGitHubReleaseEvidenceAssets/);
-  assert.match(source, /duplicate asset basename/);
-  assert.match(source, /uploadReleaseAsset/);
-  assert.match(source, /transaction-state.*complete/s);
+  assert.match(implementation, /ensureGitHubRelease/);
+  assert.match(implementation, /publishGitHubReleaseEvidence/);
+  assert.match(implementation, /collectGitHubReleaseEvidenceAssets/);
+  assert.match(implementation, /duplicate asset basename/);
+  assert.match(implementation, /uploadReleaseAsset/);
+  assert.match(source, /publishTransaction\?\.state === "complete"/);
+  assert.match(source, /transaction-state=/);
   assert.match(source, /finalizationNeeded !== true/);
 });
 
@@ -1599,7 +1606,7 @@ test("generated release model publishes the generic major alpha channel contract
   assert.match(releaseModel.floatingTags, /highest minor in major X with a published alpha/);
 });
 
-test("Buildchain self-dogfoods the current major alpha without replacing exact-SHA promotion", () => {
+test("Buildchain self-dogfoods through the public alpha train without weakening exact runtime resolution", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-alpha-self-dogfood.yml"),
     "utf8",
@@ -1699,9 +1706,10 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
 
   assert.match(
     promotion,
-    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(\(inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != ''\) && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@93963e1f711c39189fbf019fa0e07d063e384aad/,
   );
-  assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
+  assert.match(promotion, /buildchain-ref: 93963e1f711c39189fbf019fa0e07d063e384aad/);
+  assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
 });
 
 test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transition", () => {

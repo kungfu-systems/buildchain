@@ -1771,6 +1771,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "declarative-release-tail": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "dry-run": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -2201,7 +2205,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:6c08b8c5065a0fd90f11213f8438e3eaad6f166408d197e9e860269c530cd6e6"
+      "digest": "sha256:83bc2f7d57ad3500e0b2983314aa5fdaa0dff1f78ef011af94cde760b86a010f"
     },
     {
       "schemaVersion": 1,
@@ -2394,5 +2398,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:23f3228a41412e7064d8ceaf18426300d7773a0abdf0ba788d19a5e1dffcbfd7"
+  "digest": "sha256:4610d5ecdd42984fef782af010ed6978f4a40438134b3d962698854978fd0095"
 }

@@ -186,9 +186,10 @@ test("generated router delegates alpha and stable lanes to their configured shel
   );
   const generated = generateChannelPromotionWorkflow(fixture, { major: 3, shellRouting });
 
-  assert.match(
-    generated,
-    /\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
+  assert.ok(
+    generated.includes(
+      `${shellRouting.alpha.workflowPath}@${shellRouting.alpha.callRef}`,
+    ),
   );
   assert.match(generated, /\.release-candidate-promote\.yml@v3(?:\n|$)/);
   assert.notEqual(fixture, advanced);
@@ -211,6 +212,7 @@ test("stable route calls the hidden advanced workflow through the current major 
       "publication-gate-command",
       "publication-gate-controller-sha",
       "publication-authority-workflow-path",
+      "declarative-release-tail",
       "publication-consumer-qualification-controller-sha",
       "release-activation-command",
       "release-activation-receipt-set-path",
@@ -256,15 +258,16 @@ test("stable route calls the hidden advanced workflow through the current major 
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
 });
 
-test("candidate recovery train calls the matching advanced alpha shell", () => {
+test("configured alpha train calls the matching advanced shell", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
 
   assert.match(generated, /ALPHA_SHELL_REF: v3-alpha/);
-  assert.match(generated, /ALPHA_SHELL_CALL_REF: train\/v3\/v3\.0\/resume-candidate-run/);
-  assert.match(
-    generated,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
+  assert.ok(generated.includes(`ALPHA_SHELL_CALL_REF: ${shellRouting.alpha.callRef}`));
+  assert.ok(
+    generated.includes(
+      `uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@${shellRouting.alpha.callRef}`,
+    ),
   );
 });
 
@@ -329,7 +332,7 @@ test("promotion router contains no native build job and delegates candidate reus
     path.join(root, "scripts/verify-promotion-router-binding.sh"),
     "utf8",
   );
-  assert.doesNotMatch(router, /matrix:|Build native|pnpm run build/);
+  assert.ok(!/matrix:|Build native|pnpm run build/.test(router) && /if \[\[ "\$\{ref\}" =~ \^\[0-9A-Fa-f\]\{40\}\$ \]\]; then sha="\$\{ref,,\}"/.test(router));
   assert.match(advanced, /Resolve PR-stage release candidate/);
   assert.match(advanced, /release-candidate-resolver\.mjs/);
   assert.match(advanced, /CALLED_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
