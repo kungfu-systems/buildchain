@@ -25,6 +25,43 @@ function parseAlphaRef(ref) {
   return Number(match[1]);
 }
 
+function isExactSha(value) {
+  return /^[0-9a-f]{40}$/u.test(String(value || ""));
+}
+
+export function hasQualifiedSelfDogfoodBootstrapAuthority({
+  packageVersion,
+  alphaRef,
+  authority,
+} = {}) {
+  const version = parsePackageVersion(packageVersion);
+  const acceptedMajor = parseAlphaRef(alphaRef);
+  const releaseLine = authority?.releaseLine;
+  const qualification = authority?.qualification;
+  return (
+    acceptedMajor + 1 === version.major &&
+    authority?.contract ===
+      `kungfu-buildchain-v${version.major}-bootstrap-authority` &&
+    releaseLine?.candidateBranch ===
+      `dev/v${version.major}/v${version.major}.0` &&
+    String(releaseLine?.sourceBranch || "").startsWith(
+      `dev/v${acceptedMajor}/v${acceptedMajor}.`,
+    ) &&
+    releaseLine?.status === `qualified-protected-v${version.major}-bootstrap` &&
+    isExactSha(releaseLine?.sourceCommit) &&
+    isExactSha(releaseLine?.bootstrapCommit) &&
+    qualification?.contract ===
+      `kungfu-buildchain-v${version.major}-n-minus-one-qualification` &&
+    qualification?.authorityRevision === releaseLine.sourceCommit &&
+    qualification?.candidateRevision === releaseLine.bootstrapCommit &&
+    qualification?.candidateSelfQualified === false &&
+    qualification?.activeExceptions === 0 &&
+    /^sha256:[0-9a-f]{64}$/u.test(
+      String(qualification?.qualificationRoot || ""),
+    )
+  );
+}
+
 export function resolveSelfDogfoodMajor({
   packageVersion,
   alphaRef,
@@ -42,12 +79,14 @@ export function resolveSelfDogfoodMajor({
 
   const stableBootstrap =
     version.minor === 0 && version.patch === 0 && version.alpha === undefined;
+  const initialAlphaBootstrap =
+    version.minor === 0 && version.patch === 0 && version.alpha !== undefined;
   const nextAlphaBootstrap =
     version.minor === 0 && version.patch === 1 && version.alpha !== undefined;
   if (
     majorBootstrap === true &&
     acceptedMajor + 1 === version.major &&
-    (stableBootstrap || nextAlphaBootstrap)
+    (stableBootstrap || initialAlphaBootstrap || nextAlphaBootstrap)
   ) {
     return {
       packageMajor: version.major,

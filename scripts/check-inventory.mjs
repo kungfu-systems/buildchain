@@ -8,6 +8,7 @@ import { evaluateBuildchainContractLock } from "../packages/core/buildchain-cont
 import {
   canAdmitSelfDogfoodLockEvaluation,
   contractForSelfDogfoodEvaluation,
+  hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
 import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
@@ -195,10 +196,19 @@ const selfDogfoodAlphaLock = JSON.parse(
 const currentBuildchainContract = JSON.parse(
   fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
 );
+const selfDogfoodBootstrapAuthority = JSON.parse(
+  fs.readFileSync(path.join(root, "architecture/v4-bootstrap-authority.json"), "utf8"),
+);
 const selfDogfoodMajorResolution = resolveSelfDogfoodMajor({
   packageVersion: rootPackage.version,
   alphaRef: selfDogfoodAlphaLock.buildchain?.ref,
-  majorBootstrap: process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true",
+  majorBootstrap:
+    process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true" ||
+    hasQualifiedSelfDogfoodBootstrapAuthority({
+      packageVersion: rootPackage.version,
+      alphaRef: selfDogfoodAlphaLock.buildchain?.ref,
+      authority: selfDogfoodBootstrapAuthority,
+    }),
 });
 const selfDogfoodMajor = String(selfDogfoodMajorResolution.workflowMajor);
 if (!/^[0-9a-f]{40}$/.test(selfDogfoodAlphaLock.buildchain?.resolvedSha || "")) {

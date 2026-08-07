@@ -15132,7 +15132,7 @@
       ],
       "source": {
         "path": "packages/core/release-line-bootstrap.js",
-        "line": 140
+        "line": 153
       },
       "example": "import { planReleaseLineBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -15161,7 +15161,7 @@
       ],
       "source": {
         "path": "packages/core/release-line-bootstrap.js",
-        "line": 237
+        "line": 250
       },
       "example": "import { writeReleaseLineBootstrapVersionState } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19661,7 +19661,7 @@
       "specifier": "@kungfu-tech/buildchain/release-line-bootstrap",
       "export": "./release-line-bootstrap",
       "target": "./packages/core/release-line-bootstrap.js",
-      "digest": "sha256:6e6ae3d5cd545cc0f435f5a52ddefd1da8fa7394b64936e0ef840ee78a1d9da3",
+      "digest": "sha256:18fcfef1cfe2766ba3345c41e84cc98bc3e30be37aa8f8e60d4cd98c2ef77b36",
       "summary": "Semver release-line bootstrap planning and version-state APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -19917,7 +19917,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:bb962839fa925be390ed5a2ae20245999a5b8bea6e03c143a916f2bd0141f94b",
+      "digest": "sha256:cff26683b1bedf42023a25c96d1fea905b085ac75458f6c080fea54ac2df472b",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -20489,7 +20489,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:f5592359584e98ab4283d56b0262fdcf9c5da61f48033cecad1b0404aa95bd2e"
+      "digest": "sha256:adee59b8a52eb3f2782191caec1fa0253b4c0a98097ace8403f882f087ccbccb"
     },
     {
       "id": "build-facts",

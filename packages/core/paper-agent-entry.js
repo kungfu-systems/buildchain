@@ -97,9 +97,9 @@ export function createPaperAgentEntry({
 }) {
   const version = String(buildchainVersion || "").trim();
   const sourceSha = String(buildchainSha || "").trim();
-  if (!/^3\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
     throw new Error(
-      "paper agent entry requires an exact Buildchain v3 version",
+      "paper agent entry requires an exact Buildchain semantic version",
     );
   }
   if (!GIT_SHA_PATTERN.test(sourceSha)) {

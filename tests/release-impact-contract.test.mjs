@@ -28,7 +28,11 @@ test("self release impact binds version, line, and summary semantics", () => {
 test("self release impact rejects a stale summary line", () => {
   const result = checkImpact({ summary: "Buildchain v2.14 stabilizes the release control plane." });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /summary must describe the current v3\.0 line/);
+  assert.ok(
+    result.stderr.includes(
+      `summary must describe the current ${currentImpact.release.line} line`,
+    ),
+  );
 });
 
 test("self release impact rejects a release line that disagrees with its version", () => {
@@ -36,5 +40,5 @@ test("self release impact rejects a release line that disagrees with its version
     release: { version: currentImpact.release.version, line: "v2.14" },
   });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /line must be v3\.0/);
+  assert.ok(result.stderr.includes(`line must be ${currentImpact.release.line}`));
 });
