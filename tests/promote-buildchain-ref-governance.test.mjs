@@ -395,6 +395,14 @@ test("governed release finalization reuses contained durable material after the 
     result.updates.find((update) => update.action === "finalized-contained-published-transaction")?.currentChannelSha,
     advancedSha,
   );
+
+  const plan = await promoteBuildchainRefs({
+    octokit, owner: "kungfu-systems", repo: "buildchain", sha: SHA,
+    targetRef: "release/v1/v1.0", cwd, dryRun: true, publishTransaction: true,
+    publishTransactionOverride: true, expectedPublicationVersion: version, releasePassport: false,
+  });
+  assert.equal(plan.updates[0].action, "resumed-advanced-publication");
+  assert.equal(plan.updates.find((update) => update.action === "dry-run-publish-transaction")?.version, version);
 });
 
 test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {

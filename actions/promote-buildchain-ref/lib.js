@@ -2915,9 +2915,9 @@ async function resumableReleaseTransactionState({
       (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state,
-      ) &&
-      (exactTransactionSource || transactionInSourceHistory)
+      !["abandoned", "failed_permanently"].includes(transaction.state) &&
+      (transaction.state === "complete" ? exactTransactionSource
+        : exactTransactionSource || transactionInSourceHistory)
     ) {
       return {
         ...candidate,
