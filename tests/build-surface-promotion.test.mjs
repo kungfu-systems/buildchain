@@ -461,6 +461,10 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /name: Plan the exact self-publication version before sealing product bytes/);
   assert.match(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
   assert.match(workflow, /plan-before-target-advance: "true"/);
+  assert.match(
+    workflow,
+    /corepack pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts[\s\S]*node scripts\/materialize-self-release-candidate-version\.mjs/,
+  );
   assert.match(workflow, /publish-transaction: "true"/);
   assert.match(workflow, /name: Materialize the planned version in the candidate workspace/);
   assert.match(workflow, /node scripts\/materialize-self-release-candidate-version\.mjs/);
