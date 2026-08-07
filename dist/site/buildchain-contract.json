@@ -4,10 +4,10 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "3.0.6-alpha.10",
+    "version": "4.0.0-alpha.0",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
-  "majorLine": "v3",
+  "majorLine": "v4",
   "compatibilityPolicy": "major-compatible",
   "surfaces": [
     {
@@ -17,7 +17,7 @@
       "id": "reusable-build",
       "kind": "workflow",
       "path": ".github/workflows/.build.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build.yml@v3",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build.yml@v4",
       "requiredInputs": [],
       "requiredOutputs": [
         "buildchain-runtime-sha",
@@ -61,7 +61,7 @@
       "id": "channel-build-router",
       "kind": "workflow",
       "path": ".github/workflows/build.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/build.yml@v3",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/build.yml@v4",
       "requiredInputs": [],
       "requiredOutputs": [
         "buildchain-channel",
@@ -100,7 +100,7 @@
       "id": "release-candidate-promote",
       "kind": "workflow",
       "path": ".github/workflows/release-candidate-promote.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
       "requiredInputs": [
         "channel"
       ],
@@ -112,8 +112,8 @@
       ],
       "breakingDefaults": {
         "channelDefault": "auto",
-        "alphaShellDefault": "v3-alpha",
-        "stableShellDefault": "v3",
+        "alphaShellDefault": "v4-alpha",
+        "stableShellDefault": "v4",
         "promoteOnlyReleaseCandidate": true,
         "requiredStatusCheck": "check / check"
       },
@@ -192,7 +192,7 @@
       "compatibleBreakingDigests": [
         "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf"
       ],
-      "breakingDigest": "sha256:e60642aa298933d2c103284794921a6c340a50aa91ee528b06e58892a2a006bf",
+      "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
       "auditDigest": "sha256:96bfe24461b16651e47091fee9f98700d5769bc9befa32b741367b2dc6c52264"
     },
     {
@@ -202,7 +202,7 @@
       "id": "advanced-release-candidate-promote",
       "kind": "workflow",
       "path": ".github/workflows/.release-candidate-promote.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4",
       "requiredInputs": [
         "channel"
       ],
@@ -258,7 +258,7 @@
       "id": "web-surface",
       "kind": "workflow",
       "path": ".github/workflows/.web-surface.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v4",
       "requiredInputs": [],
       "requiredOutputs": [
         "buildchain-runtime-sha",
@@ -302,7 +302,7 @@
       "id": "auditable-demo",
       "kind": "workflow",
       "path": ".github/workflows/.auditable-demo.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.auditable-demo.yml@v3",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.auditable-demo.yml@v4",
       "requiredInputs": [
         "source-artifact-name",
         "source-artifact-digest",
@@ -360,7 +360,7 @@
       "id": "declarative-auditable-demo",
       "kind": "workflow",
       "path": ".github/workflows/.declarative-auditable-demo.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.declarative-auditable-demo.yml@v3",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.declarative-auditable-demo.yml@v4",
       "requiredInputs": [
         "binary-artifact-name",
         "binary-artifact-digest",
@@ -411,7 +411,7 @@
       "id": "promote-buildchain-ref-action",
       "kind": "action",
       "path": "actions/promote-buildchain-ref/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/promote-buildchain-ref@v3",
+      "publicRef": "kungfu-systems/buildchain/actions/promote-buildchain-ref@v4",
       "requiredInputs": [
         "token",
         "sha",
@@ -485,7 +485,7 @@
       "id": "macos-credential-island-action",
       "kind": "action",
       "path": "actions/macos-credential-island/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/macos-credential-island@v3",
+      "publicRef": "kungfu-systems/buildchain/actions/macos-credential-island@v4",
       "requiredInputs": [
         "input-root",
         "output-root",
@@ -541,7 +541,7 @@
       "id": "report-buildchain-issue-action",
       "kind": "action",
       "path": "actions/report-buildchain-issue/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/report-buildchain-issue@v3",
+      "publicRef": "kungfu-systems/buildchain/actions/report-buildchain-issue@v4",
       "requiredInputs": [
         "token"
       ],
@@ -3728,6 +3728,6 @@
       "auditDigest": "sha256:d07482cd66413a2fb3781a3b76f960b8151b6231841799647fe237820de2fde6"
     }
   ],
-  "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe",
-  "contractDigest": "sha256:5b190e3b88c2621fd9ceccd819c186c238ed8824e3d5e6f1a2b93426de12e6d5"
+  "compatibilityDigest": "sha256:4adb7db6f5feac551e07ab77873724816c2127b43ad34923c4d69abc3fbde12e",
+  "contractDigest": "sha256:44f9b66f8ed8dc6b7a491a89587248691aa30ab38ef47263f1b1ee77f7b77e9f"
 }
