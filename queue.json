@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 94,
+  "generation": 95,
   "fencingCounter": 29,
   "policy": {
     "agingSeconds": 900,
@@ -917,8 +917,32 @@
         "eventAction": "dequeued",
         "closedAt": "2026-08-07T00:19:27.280Z"
       }
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2408,
+      "assignmentRoot": "sha256:6a27e1265020491a1b610d92638f029f4facadd5d6b4e65f536bf98212c4f47e",
+      "initiativeRoot": "sha256:89336994334938d7f2f7eb6f2774449ec5603972479ebf2e4b99b761bd35d9be",
+      "sourceIdentityRoot": "sha256:7bfac55af7f5ea7e0e1b330c217098fa3263215ad10d99caa49fd050a16d9041",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:b1ecc5ea5193b9117ef68080ed6a57eaaced17c8906240f3d7b26082efa1b24f",
+      "sourceHead": "e9cf4636906e7cad241b258e3c544ad04a93e35d",
+      "sourcePatchRoot": "sha256:f44cee6670b4bda7259d32ae015ec65976c481266f016ac98519429b7622e8d3",
+      "sourceProofRoot": "sha256:d4f33e06db6d6932c1652377f2d1e228a57ffc36212048d81d2eca790a2f9490",
+      "planRoot": "sha256:2818ea3bbc7f1ea0c7db965034b180cc9e04b673f48ee6a16c2aef982d871396",
+      "closureRoot": "sha256:ede54daf8583c0188d6f609b20cf0465beb470dc324fae0117a7bbb14dd6e2f4",
+      "dependencyRoot": "sha256:a282d8a66f4cac9b44113695bdce531e8e72930e14876876f1cb9f5dae42523b",
+      "toolchainRoot": "sha256:e79aa1bc051a75dde882e8b31421b0baf2c9a67b0e45b21786921870407e95d4",
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-07T00:22:26.999Z",
+      "updatedAt": "2026-08-07T00:22:26.999Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null
     }
   ],
-  "updatedAt": "2026-08-07T00:19:27.280Z",
-  "stateRoot": "sha256:04bd8a564b90ffa8ed5ad4d7a46097ce0a8749b4021e9195938c4059c0f94bc5"
+  "updatedAt": "2026-08-07T00:22:26.999Z",
+  "stateRoot": "sha256:85bd9b97f176b94d8cdaff971cfa74d5d0b2e9f8676fa6c2f07a620c5d6657a7"
 }
