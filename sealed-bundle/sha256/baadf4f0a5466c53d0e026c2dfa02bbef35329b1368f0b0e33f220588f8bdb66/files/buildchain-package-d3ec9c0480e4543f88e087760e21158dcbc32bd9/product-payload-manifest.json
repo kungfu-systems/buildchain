@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-product-payload-manifest/v1",
+  "artifactName": "buildchain-package-d3ec9c0480e4543f88e087760e21158dcbc32bd9",
+  "manifestPath": "product-payload-manifest.json",
+  "candidateRoot": "sha256:61f03a7d9d3a0344334aae3d16a4aefb4774b03af4707ef3a0cd850cd56d59ea",
+  "buildSummaryRoot": "sha256:43b739fabb04070b443e44fa380d07207ec0e71fbe3af81fe84ed8f40b053a65",
+  "source": {
+    "sha": "d3ec9c0480e4543f88e087760e21158dcbc32bd9",
+    "tree": "0396266404b280eb64366ff7fe9f042fc8298d73"
+  },
+  "runtimeSha": "f1f1ef71bc3aa1488876dbb98533fa98cecc4d9a",
+  "files": [
+    {
+      "path": "kungfu-tech-buildchain-3.0.7-alpha.0.tgz",
+      "size": 1954861,
+      "sha256": "sha256:ce2d1fa6597a8b9b3505cdfbda64ba4ddebae5a6cc75de9cc5ed6706d3f9b293"
+    }
+  ],
+  "root": "sha256:090be04cac1ac1ae174bbefc78b62f90d38ff6ddd7e24b588944aa34ac8edaa2"
+}
