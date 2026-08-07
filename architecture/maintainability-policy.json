@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 283,
-    "maxHandMaintainedSourceLines": 108627,
+    "maxHandMaintainedSourceFiles": 285,
+    "maxHandMaintainedSourceLines": 109884,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22350,
-    "latestTransition": "The frozen release-tail contract now has a Buildchain-owned declarative provider plane, four fixed adapters, one durable transaction path, and Action/workflow/CLI surfaces without consumer executable inputs.",
-    "rationale": "The exact transition adds the provider implementation, bounded v3 compatibility diagnostics, packaged Action, reusable workflow, and tests required to execute the four frozen capabilities. Provider effects remain closed-world, root-bound, read back before and after mutation, locally bounded, and incapable of selecting transaction success; these ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22365,
+    "latestTransition": "Publication rehearsal now restores one explicit content-addressed candidate capsule and runs local simulation, recorded replay, and hosted provider transport through the same release-tail core.",
+    "rationale": "The exact transition adds the capsule runtime and projection module, rooted diagnostics and evidence, thin CLI and Action wrappers, generated init and Paper surfaces, normative ADR, schema, and parity tests. It introduces no second transaction writer or executable consumer hook, and these exact ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/publication-rehearsal-runtime.js": {
+      "maxLines": 909,
+      "rationale": "The public audit surface keeps strict capsule normalization, path and file verification, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."
+    },
     "packages/core/release-tail-provider-plane.js": {
       "maxLines": 1228,
       "rationale": "The one versioned transaction authority keeps strict declaration normalization, deterministic effect planning, atomic checkpoints, rooted observations and receipts, and bounded recovery in one independently tested audit surface; this exact preview ceiling cannot grow implicitly."

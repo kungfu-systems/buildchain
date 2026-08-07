@@ -2656,22 +2656,25 @@
       "reusable": true,
       "inputs": [
         "buildchain-ref",
-        "declaration-path",
-        "execute",
-        "provider-bindings-path",
+        "capsule-contract",
+        "capsule-path",
+        "capsule-root",
+        "evidence-path",
         "state-path"
       ],
-      "inputCount": 5,
+      "inputCount": 6,
       "secrets": [
         "http-token"
       ],
       "secretCount": 1,
       "outputs": [
+        "binding-root",
+        "evidence-root",
         "state-root",
         "transaction-root",
         "transaction-state"
       ],
-      "outputCount": 3,
+      "outputCount": 5,
       "surface": "release-tail-provider-plane",
       "capabilityGroup": "release-passport-trust",
       "status": "active",
@@ -2980,14 +2983,15 @@
       "id": "release-tail",
       "path": "actions/release-tail/action.yml",
       "inputs": [
-        "declaration",
-        "execute",
+        "capsule",
+        "capsule-contract",
+        "capsule-root",
+        "evidence-path",
         "github-token",
         "http-token",
-        "provider-bindings",
         "state-path"
       ],
-      "inputCount": 6,
+      "inputCount": 7,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

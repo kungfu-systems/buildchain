@@ -196,6 +196,20 @@
     "consumerCommandPolicy": "deny",
     "productionCutover": false
   },
+  "publicationRehearsal": {
+    "status": "implemented",
+    "capsuleContract": "kungfu.buildchain.publication-rehearsal-capsule/v1",
+    "schemaPath": "contracts/publication-rehearsal-capsule-v1.schema.json",
+    "runtimeSource": "packages/core/publication-rehearsal-runtime.js",
+    "projectionSource": "packages/core/publication-rehearsal-projection.js",
+    "entrySurfaces": [
+      "cli:release-tail rehearse",
+      "action:release-tail",
+      "workflow:publication-rehearsal"
+    ],
+    "executionRule": "Local simulation, recorded replay, and hosted execution consume one explicit rooted capsule and execute the canonical release-tail transaction without a second state machine.",
+    "ambientAuthorityPolicy": "deny"
+  },
   "legacyExecutableSurfaces": [
     {
       "id": "publication-admission-commands",

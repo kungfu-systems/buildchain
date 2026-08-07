@@ -48,10 +48,10 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 7,
-        "pageCount": 7,
+        "manualCount": 8,
+        "pageCount": 8,
         "cliCommandCount": 26,
-        "nodeApiCount": 15,
+        "nodeApiCount": 17,
         "workflowCount": 4,
         "actionCount": 3
       },
@@ -62,7 +62,8 @@
         "docs/binary-distribution.md",
         "docs/publish-transaction.md",
         "docs/release-tail-contract.md",
-        "docs/release-tail-provider-plane.md"
+        "docs/release-tail-provider-plane.md",
+        "docs/publication-rehearsal.md"
       ],
       "factSources": [
         "page-registry.json",

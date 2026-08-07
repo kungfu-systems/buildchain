@@ -2,24 +2,27 @@ name: "Execute a declarative Buildchain release tail"
 author: "Keren Dong"
 description: "Execute rooted release provider effects through one Buildchain-owned transaction, readback, retry, and receipt path"
 inputs:
-  declaration:
-    description: "Versioned release-tail declaration JSON or path"
+  capsule-contract:
+    description: "Exact publication rehearsal capsule contract"
     required: true
-  provider-bindings:
-    description: "Data-only artifact and provider document bindings JSON or path"
+  capsule:
+    description: "Explicit absolute path to the content-addressed publication rehearsal capsule"
+    required: true
+  capsule-root:
+    description: "Explicit absolute root containing every capsule-bound input file"
     required: true
   state-path:
-    description: "Durable transaction checkpoint path"
-    default: ".buildchain/release-tail/state.json"
+    description: "Explicit absolute durable transaction checkpoint path"
+    required: true
   github-token:
     description: "GitHub token used only by the built-in GitHub Release adapter"
     required: false
   http-token:
     description: "Bearer token used only by built-in HTTP mutation adapters"
     required: false
-  execute:
-    description: "Execute effects; false only creates or validates the durable plan"
-    default: "true"
+  evidence-path:
+    description: "Explicit absolute rooted provider-recording evidence output path"
+    required: true
 outputs:
   transaction-state:
     description: "Final Buildchain release-tail transaction state"
@@ -31,6 +34,12 @@ outputs:
     description: "Durable transaction checkpoint path"
   receipt-roots-json:
     description: "JSON array of standardized receipt roots"
+  binding-root:
+    description: "Stable capsule and release-tail binding root"
+  evidence-root:
+    description: "Stable publication rehearsal evidence root"
+  evidence-path:
+    description: "Publication rehearsal evidence output path"
 runs:
   using: "node24"
   main: "dist/index.js"

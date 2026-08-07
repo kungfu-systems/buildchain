@@ -4,10 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
-  compileReleaseTailDeclaration,
   createReleaseTailAdapterSet,
-  createReleaseTailTransaction,
-  executeReleaseTailTransaction,
   readReleaseTailTransaction,
   releaseTailRoot,
   writeReleaseTailTransaction,
@@ -20,8 +17,12 @@ import {
   createSignedStaticChannelAdapter,
   createSiteReleaseActivationAdapter,
 } from "../../packages/core/release-tail-provider-adapters.js";
-
-const BINDINGS_SCHEMA = "kungfu.buildchain.release-tail.provider-bindings/v1";
+import {
+  PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
+  executePublicationRehearsal,
+  publicationRehearsalDiagnostic,
+  resolvePublicationRehearsalFile,
+} from "../../packages/core/publication-rehearsal-runtime.js";
 
 function input(name, required = false) {
   return core.getInput(name, { required }).trim();
@@ -38,68 +39,31 @@ function readJson(value, label) {
   }
 }
 
-function exactFields(value, fields, label) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${label} must be an object`);
-  }
-  const actual = Object.keys(value).sort().join("\n");
-  const expected = [...fields].sort().join("\n");
-  if (actual !== expected) {
-    throw new Error(`${label} fields must be exactly: ${fields.join(", ")}`);
-  }
+function resolveFile(filePath, label, capsuleRoot) {
+  return resolvePublicationRehearsalFile(capsuleRoot, filePath);
 }
 
-function normalizeBindings(value) {
-  exactFields(
-    value,
-    ["schema", "artifacts", "documents", "evidence"],
-    "provider bindings",
+function readJsonFile(filePath, label, capsuleRoot) {
+  return JSON.parse(
+    fs.readFileSync(resolveFile(filePath, label, capsuleRoot), "utf8"),
   );
-  if (value.schema !== BINDINGS_SCHEMA) {
-    throw new Error(`provider bindings schema must be ${BINDINGS_SCHEMA}`);
-  }
-  for (const [role, binding] of Object.entries(value.artifacts || {})) {
-    exactFields(binding, ["path", "name"], `artifact binding ${role}`);
-    if (!binding.path || !binding.name) {
-      throw new Error(`artifact binding ${role} requires path and name`);
-    }
-  }
-  for (const [capabilityId, binding] of Object.entries(value.documents || {})) {
-    exactFields(
-      binding,
-      ["path", "method"],
-      `document binding ${capabilityId}`,
-    );
-    if (!binding.path || !["PUT", "POST"].includes(binding.method)) {
-      throw new Error(
-        `document binding ${capabilityId} requires path and PUT or POST method`,
-      );
-    }
-  }
-  exactFields(value.evidence, ["inputs", "output"], "evidence binding");
-  if (!Array.isArray(value.evidence.inputs) || !value.evidence.output) {
-    throw new Error("evidence binding requires inputs and output");
-  }
-  return structuredClone(value);
 }
 
-function resolveFile(filePath, label) {
-  const resolved = path.resolve(filePath);
-  if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
-    throw new Error(`${label} is not a file: ${filePath}`);
-  }
-  return resolved;
-}
-
-function readJsonFile(filePath, label) {
-  return JSON.parse(fs.readFileSync(resolveFile(filePath, label), "utf8"));
-}
-
-function httpCallbacks({ capabilityId, binding, httpToken, readDocument }) {
+function httpCallbacks({
+  capabilityId,
+  binding,
+  httpToken,
+  readDocument,
+  capsuleRoot,
+}) {
   return {
     readDocument,
     resolveDocument() {
-      return readJsonFile(binding.path, `${capabilityId} document`);
+      return readJsonFile(
+        binding.path,
+        `${capabilityId} document`,
+        capsuleRoot,
+      );
     },
     async commitDocument({
       locator,
@@ -163,10 +127,14 @@ function httpCallbacks({ capabilityId, binding, httpToken, readDocument }) {
   };
 }
 
-function evidenceCallbacks(binding) {
+function evidenceCallbacks(binding, capsuleRoot) {
   return {
     readEvidence(locator) {
-      const resolved = path.resolve(locator);
+      const resolved = resolvePublicationRehearsalFile(
+        capsuleRoot,
+        locator || binding.output,
+        { mustExist: false },
+      );
       return fs.existsSync(resolved)
         ? JSON.parse(fs.readFileSync(resolved, "utf8"))
         : null;
@@ -174,7 +142,11 @@ function evidenceCallbacks(binding) {
     synthesizeEvidence(effect) {
       const evidence = binding.inputs
         .map((filePath) => {
-          const value = readJsonFile(filePath, "released evidence input");
+          const value = readJsonFile(
+            filePath,
+            "released evidence input",
+            capsuleRoot,
+          );
           return {
             schema: String(value.schema || value.contract || "unknown"),
             root: releaseTailRoot(value),
@@ -190,8 +162,17 @@ function evidenceCallbacks(binding) {
       };
     },
     writeEvidence({ locator, document }) {
-      const resolved = path.resolve(locator || binding.output);
-      if (resolved !== path.resolve(binding.output)) {
+      const resolved = resolvePublicationRehearsalFile(
+        capsuleRoot,
+        locator || binding.output,
+        { mustExist: false },
+      );
+      const expected = resolvePublicationRehearsalFile(
+        capsuleRoot,
+        binding.output,
+        { mustExist: false },
+      );
+      if (resolved !== expected) {
         throw new ReleaseTailProviderError(
           "evidence output does not match the declared locator",
           {
@@ -210,7 +191,11 @@ function evidenceCallbacks(binding) {
   };
 }
 
-function createAdapters(declaration, bindings, { githubToken, httpToken }) {
+function createAdapters(
+  declaration,
+  bindings,
+  { githubToken, httpToken, capsuleRoot },
+) {
   const adapters = {};
   const capabilityIds = new Set(
     declaration.capabilities.map((entry) => entry.id),
@@ -225,7 +210,7 @@ function createAdapters(declaration, bindings, { githubToken, httpToken }) {
           throw new Error(`missing artifact binding for role ${role}`);
         return {
           ...binding,
-          path: resolveFile(binding.path, `artifact ${role}`),
+          path: resolveFile(binding.path, `artifact ${role}`, capsuleRoot),
         };
       },
     });
@@ -240,6 +225,7 @@ function createAdapters(declaration, bindings, { githubToken, httpToken }) {
       binding,
       httpToken,
       readDocument,
+      capsuleRoot,
     });
     adapters["signed-static-channel"] = createSignedStaticChannelAdapter({
       ...callbacks,
@@ -254,6 +240,7 @@ function createAdapters(declaration, bindings, { githubToken, httpToken }) {
       binding,
       httpToken,
       readDocument,
+      capsuleRoot,
     });
     adapters["site-release-activation"] = createSiteReleaseActivationAdapter({
       ...callbacks,
@@ -263,71 +250,99 @@ function createAdapters(declaration, bindings, { githubToken, httpToken }) {
   if (capabilityIds.has("released-evidence.synthesize")) {
     adapters["activation-receipt-projector"] =
       createActivationReceiptProjectorAdapter(
-        evidenceCallbacks(bindings.evidence),
+        evidenceCallbacks(bindings.evidence, capsuleRoot),
       );
   }
   return createReleaseTailAdapterSet(declaration, adapters);
 }
 
 export async function executeAction({
-  declaration,
-  bindings,
+  capsule,
+  capsuleRoot,
   statePath,
+  evidencePath,
   githubToken,
   httpToken,
-  execute,
 }) {
-  const plan = compileReleaseTailDeclaration(declaration);
-  let transaction = fs.existsSync(statePath)
+  const transaction = fs.existsSync(statePath)
     ? readReleaseTailTransaction(statePath)
-    : createReleaseTailTransaction(plan);
-  if (
-    transaction.declarationRoot !== plan.declarationRoot ||
-    transaction.planRoot !== plan.planRoot
-  ) {
-    throw new Error(
-      "existing release-tail state does not belong to the declaration",
-    );
-  }
-  writeReleaseTailTransaction(statePath, transaction);
-  if (execute) {
-    transaction = await executeReleaseTailTransaction(transaction, {
-      adapters: createAdapters(declaration, bindings, {
+    : undefined;
+  let result;
+  try {
+    result = await executePublicationRehearsal({
+      capsule,
+      capsuleRoot,
+      mode: "provider",
+      environment: {},
+      transaction,
+      adapters: createAdapters(capsule.declaration, capsule.providerBindings, {
         githubToken,
         httpToken,
+        capsuleRoot,
       }),
       checkpoint: (checkpoint) =>
         writeReleaseTailTransaction(statePath, checkpoint),
     });
+  } catch (error) {
+    const diagnostic = publicationRehearsalDiagnostic(error, { capsule });
+    outputJson(evidencePath, diagnostic);
+    throw error;
   }
-  return transaction;
+  writeReleaseTailTransaction(statePath, result.transaction);
+  outputJson(evidencePath, result.evidence);
+  return result;
+}
+
+function outputJson(filePath, value) {
+  const resolved = path.resolve(filePath);
+  fs.mkdirSync(path.dirname(resolved), { recursive: true });
+  fs.writeFileSync(resolved, `${JSON.stringify(value, null, 2)}\n`);
 }
 
 async function main() {
-  const declaration = readJson(input("declaration", true), "declaration");
-  const bindings = normalizeBindings(
-    readJson(input("provider-bindings", true), "provider-bindings"),
-  );
-  const statePath = path.resolve(
-    input("state-path") || ".buildchain/release-tail/state.json",
-  );
-  const transaction = await executeAction({
-    declaration,
-    bindings,
+  const capsulePath = input("capsule", true);
+  if (!path.isAbsolute(capsulePath)) {
+    throw new Error("capsule input must be an explicit absolute path");
+  }
+  const capsule = readJson(capsulePath, "capsule");
+  if (
+    input("capsule-contract", true) !== PUBLICATION_REHEARSAL_CAPSULE_CONTRACT
+  ) {
+    throw new Error("capsule-contract input is stale or unsupported");
+  }
+  const capsuleRoot = input("capsule-root", true);
+  const statePath = input("state-path", true);
+  const evidencePath = input("evidence-path", true);
+  for (const [name, value] of Object.entries({
+    "capsule-root": capsuleRoot,
+    "state-path": statePath,
+    "evidence-path": evidencePath,
+  })) {
+    if (!path.isAbsolute(value)) {
+      throw new Error(`${name} input must be an explicit absolute path`);
+    }
+  }
+  const result = await executeAction({
+    capsule,
+    capsuleRoot,
     statePath,
+    evidencePath,
     githubToken: input("github-token"),
     httpToken: input("http-token"),
-    execute: core.getBooleanInput("execute"),
   });
+  const transaction = result.transaction;
   core.setOutput("transaction-state", transaction.state);
   core.setOutput("transaction-root", transaction.transactionRoot);
   core.setOutput("state-root", transaction.stateRoot);
   core.setOutput("state-path", statePath);
+  core.setOutput("evidence-path", evidencePath);
+  core.setOutput("binding-root", result.evidence.bindingRoot);
+  core.setOutput("evidence-root", result.evidence.evidenceRoot);
   core.setOutput(
     "receipt-roots-json",
     JSON.stringify(transaction.receipts.map((receipt) => receipt.receiptRoot)),
   );
-  if (!["complete", "prepared"].includes(transaction.state)) {
+  if (transaction.state !== "complete") {
     throw new Error(
       `release-tail transaction stopped in ${transaction.state}: ${transaction.failure?.code || "unknown"}`,
     );
