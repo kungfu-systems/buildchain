@@ -148,7 +148,7 @@ jobs:
     # Buildchain is a consumer of the same hosted public router as every other
     # repository. The train resolves to exact router, shell, and runtime SHAs
     # before any promotion effect is admitted.
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@93963e1f711c39189fbf019fa0e07d063e384aad
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82
     permissions:
       actions: write
       artifact-metadata: write
@@ -162,7 +162,7 @@ jobs:
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-channel: auto
-      buildchain-ref: 93963e1f711c39189fbf019fa0e07d063e384aad
+      buildchain-ref: 4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       package-manager: pnpm
