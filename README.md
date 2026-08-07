@@ -457,4 +457,5 @@ npm pack --dry-run --json --registry=https://registry.npmjs.org/
 - [Release candidate passport](docs/release-candidate.md)
 - [Consumer issue reporting](docs/consumer-issue-reporting.md)
 - [Publish transaction](docs/publish-transaction.md)
+- [Declarative release-tail contract](docs/release-tail-contract.md)
 - [Release governance](docs/release-governance.md)
