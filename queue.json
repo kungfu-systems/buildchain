@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 93,
+  "generation": 94,
   "fencingCounter": 29,
   "policy": {
     "agingSeconds": 900,
@@ -903,13 +903,22 @@
       "toolchainRoot": "sha256:a7e3e517763ce8508875442da1c1c0964f60fdce17510e96a9672afd02813914",
       "priority": "ordinary",
       "enqueuedAt": "2026-08-06T16:07:16.728Z",
-      "updatedAt": "2026-08-07T00:18:45.379Z",
+      "updatedAt": "2026-08-07T00:19:27.280Z",
       "attempts": 2,
       "recoveries": 1,
-      "status": "queued",
-      "terminal": null
+      "status": "dequeued",
+      "terminal": {
+        "outcome": "dequeued",
+        "reason": "GitHub merged exact PR after its Warrant lease expired; retire stale Warrant scheduling state without inventing an integration proof.",
+        "evidenceRoot": "sha256:9a6600c71e49dddedef439cab96cdbf358957a47ba8007edc1f072c348faa0d2",
+        "authority": "queued-candidate-cancellation",
+        "expectedSourceHead": "6fa50a1419dcb3698c72ebbbdff3ce972123060d",
+        "observedSourceHead": "6fa50a1419dcb3698c72ebbbdff3ce972123060d",
+        "eventAction": "dequeued",
+        "closedAt": "2026-08-07T00:19:27.280Z"
+      }
     }
   ],
-  "updatedAt": "2026-08-07T00:18:45.379Z",
-  "stateRoot": "sha256:df74410224264a239820a265d54b5025dd78a59bec46ee2fdaac5783bc9fffe9"
+  "updatedAt": "2026-08-07T00:19:27.280Z",
+  "stateRoot": "sha256:04bd8a564b90ffa8ed5ad4d7a46097ce0a8749b4021e9195938c4059c0f94bc5"
 }
