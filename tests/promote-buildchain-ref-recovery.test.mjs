@@ -2344,6 +2344,84 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
   assert.equal(JSON.parse(fs.readFileSync(freshEvidencePath, "utf8")).artifacts[0].digest, "sha256:ok");
 });
 
+test("explicit override rematerializes malformed evidence for an unpublished failed transaction", async () => {
+  const cwd = makeTempWorkspace({
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+import path from "node:path";
+
+const required = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH, "utf8"));
+const repaired = fs.existsSync(path.join(process.cwd(), "repair.flag"));
+const artifacts = repaired
+  ? required
+  : required.map((artifact) => ({ ...artifact, group: "", name: "index.json" }));
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts,
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit } = createGitMock();
+  const requiredArtifacts = [
+    {
+      group: "linux-x64",
+      kind: "kungfu-product",
+      name: "agent/index.json",
+      ref: "4.0.0-alpha.1",
+      digest: `sha256:${"1".repeat(64)}`,
+    },
+    {
+      group: "linux-x64",
+      kind: "kungfu-product",
+      name: "context/index.json",
+      ref: "4.0.0-alpha.1",
+      digest: `sha256:${"2".repeat(64)}`,
+    },
+  ];
+  const options = {
+    octokit,
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    cwd,
+    loadedConfig: { config: {} },
+    targetRef: "alpha/v4/v4.0",
+    sourceSha: SHA,
+    releaseSha: OTHER_SHA,
+    version: "4.0.0-alpha.1",
+    exactTag: "v4.0.0-alpha.1",
+    channel: "alpha",
+    line: "v4.0",
+    publishTransaction: true,
+    publishCommand: "node scripts/publish.mjs",
+    publishRequiredArtifactsJson: JSON.stringify(requiredArtifacts),
+    releaseMaterialSha: OTHER_SHA,
+    publishToolingSha: OTHER_SHA,
+    actor: "codex",
+    runId: "malformed-evidence-recovery",
+  };
+
+  await assert.rejects(runPublishTransaction(options), /duplicate publish artifact/);
+  const statePath = path.join(cwd, ".buildchain/release-state/v4.0.0-alpha.1.json");
+  assert.equal(JSON.parse(fs.readFileSync(statePath, "utf8")).state, "repair_required");
+
+  fs.writeFileSync(path.join(cwd, "repair.flag"), "repair\n");
+  const recovered = await runPublishTransaction({ ...options, explicitOverride: true });
+
+  assert.equal(recovered.validation.valid, true);
+  assert.deepEqual(
+    recovered.validation.evidence.artifacts.map(({ group, name }) => ({ group, name })),
+    requiredArtifacts.map(({ group, name }) => ({ group, name })),
+  );
+});
+
 test("publish transaction can opt in to rematerialize ephemeral Passport inputs on resume", async () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `

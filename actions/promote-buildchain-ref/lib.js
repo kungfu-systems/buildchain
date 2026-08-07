@@ -1227,7 +1227,7 @@ async function restorePublishTransactionContext(context) {
   const {
     octokit, owner, repo, cwd, version, channel, sourceSha, releaseSha, targetRef,
     requiredArtifacts, expected, durableStateRef, resolvedStatePath, resolvedEvidencePath,
-    requestedBundleRoot, requestedBundleManifest, expectedTransactionId,
+    requestedBundleRoot, requestedBundleManifest, expectedTransactionId, explicitOverride,
   } = context;
   const durableExisting = await restoreDurableReleaseTransaction({
     octokit,
@@ -1283,7 +1283,21 @@ async function restorePublishTransactionContext(context) {
     );
   }
   let sealedBundleVerification = durableBundleVerification || requestedBundleVerification || localBundleVerification;
-  let existingEvidence = readPublishEvidence(resolvedEvidencePath);
+  let existingEvidence;
+  let existingEvidenceInvalid = false;
+  try {
+    existingEvidence = readPublishEvidence(resolvedEvidencePath);
+  } catch (error) {
+    if (
+      !explicitOverride ||
+      !existing ||
+      transactionHasPublishedMaterial(existing) ||
+      !["publishing", "publish_failed", "repair_required"].includes(existing.state || "")
+    ) {
+      throw error;
+    }
+    existingEvidenceInvalid = true;
+  }
   let existingValidation;
   if (existingEvidence) {
     existingValidation = validatePublishEvidence({
@@ -1298,7 +1312,16 @@ async function restorePublishTransactionContext(context) {
       requiredArtifacts,
     });
   }
-  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, existingEvidence, existingValidation };
+  return {
+    ...context,
+    durableExisting,
+    localExisting,
+    existing,
+    sealedBundleVerification,
+    existingEvidence,
+    existingEvidenceInvalid,
+    existingValidation,
+  };
 }
 
 async function canFinalizePublishVersionState({ context, error, existing }) {
@@ -1449,7 +1472,8 @@ async function runPublishTransaction(options) {
     actor, runId, explicitOverride, promotionGeneratedAt, repository,
     resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
     existingNpmPromotion, expected, durableExisting, existing, existingEvidence,
-    existingValidation, sealedBundleVerification, versionStateFinalization,
+    existingEvidenceInvalid, existingValidation, sealedBundleVerification,
+    versionStateFinalization,
   } = context;
   let transaction =
     existing ||
@@ -1522,7 +1546,9 @@ async function runPublishTransaction(options) {
   let distTagEvidencePath = "";
   const publishEnvironment = publishTransactionEnvironment(context);
   try {
-    const evidence = existingEvidence || readPublishEvidence(resolvedEvidencePath);
+    const evidence = existingEvidence || (
+      existingEvidenceInvalid ? undefined : readPublishEvidence(resolvedEvidencePath)
+    );
     if (evidence) {
       validation = existingValidation;
     }
