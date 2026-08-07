@@ -1568,6 +1568,11 @@ export function collectGitHubReleasePassport({
     .filter(Boolean)
     .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined, { cwd, label: "kfd3ArtifactWitnessJsons entry" }))
     .filter((meta) => meta.value);
+  const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
+    command: kfd3ArtifactVerifyCommand,
+    cwd,
+    label: "KFD-3 artifact verify command",
+  });
   const kfdSupportMatrixMeta = parseJsonInputWithMeta(
     kfdSupportMatrixJson,
     undefined,
@@ -1578,11 +1583,6 @@ export function collectGitHubReleasePassport({
     .map((gateJson) => parseJsonInputWithMeta(gateJson, undefined, { cwd, label: "kfdProductGateJsons entry" }))
     .filter((meta) => meta.value);
   const basePassportMeta = parseJsonInputWithMeta(basePassportJson, undefined, { cwd, label: "basePassportJson" });
-  const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
-    command: kfd3ArtifactVerifyCommand,
-    cwd,
-    label: "KFD-3 artifact verify command",
-  });
   const invariantPassportMetas = (invariantPassportJsons || [])
     .filter(Boolean)
     .map((passportJson) => parseJsonInputWithMeta(passportJson, undefined, { cwd, label: "invariantPassportJsons entry" }))

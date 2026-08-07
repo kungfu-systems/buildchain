@@ -2632,6 +2632,42 @@ test("release passport can collect KFD-3 artifact witness from product verify co
   assert.equal(passport[metadata.key].collaborationInterfaces[0].artifactWitness.id, "kungfu-agent-bridge");
 });
 
+test("KFD-3 artifact command can materialize transient product gate inputs before collection", () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitness } = createKfd3WitnessFixture();
+  const gatePath = path.join(cwd, "transient-product-gate.json");
+  const commandFixturePath = path.join(cwd, "emit-artifact-witness-and-gate.mjs");
+  fs.writeFileSync(
+    commandFixturePath,
+    [
+      'import fs from "node:fs";',
+      `fs.writeFileSync(${JSON.stringify(gatePath)}, ${JSON.stringify(`${JSON.stringify({ contract: "transient-gate" })}\n`)});`,
+      `process.stdout.write(${JSON.stringify(JSON.stringify(artifactWitness))});`,
+      "",
+    ].join("\n"),
+  );
+
+  assert.throws(
+    () => collectGitHubReleasePassport({
+      cwd,
+      tag: "v4.0.0-alpha.0",
+      repository: "kungfu-systems/kungfu",
+      productName: "Kungfu",
+      sourceSha: "d".repeat(40),
+      assetsDir: path.relative(cwd, assetsDir),
+      outputDir: "release-passport",
+      releaseJsonExtra: JSON.stringify({
+        channel: "alpha",
+        targetRef: "alpha/v4/v4.0",
+      }),
+      kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+      kfd3ArtifactVerifyCommand: `${process.execPath} ${commandFixturePath}`,
+      kfdProductGateJsons: [gatePath],
+    }),
+    /KFD product gate inputs require --kfd-support-matrix-json/,
+  );
+  assert.equal(fs.existsSync(gatePath), true);
+});
+
 test("release passport fails closed when KFD-3 declared shipped surface is absent from artifact", async () => {
   const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath, metadata } = createKfd3WitnessFixture({
     reachableEntrypoints: [],
