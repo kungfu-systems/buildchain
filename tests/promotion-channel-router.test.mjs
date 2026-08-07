@@ -332,7 +332,7 @@ test("promotion router contains no native build job and delegates candidate reus
     path.join(root, "scripts/verify-promotion-router-binding.sh"),
     "utf8",
   );
-  assert.doesNotMatch(router, /matrix:|Build native|pnpm run build/);
+  assert.ok(!/matrix:|Build native|pnpm run build/.test(router) && /if \[\[ "\$\{ref\}" =~ \^\[0-9A-Fa-f\]\{40\}\$ \]\]; then sha="\$\{ref,,\}"/.test(router));
   assert.match(advanced, /Resolve PR-stage release candidate/);
   assert.match(advanced, /release-candidate-resolver\.mjs/);
   assert.match(advanced, /CALLED_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
