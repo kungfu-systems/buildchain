@@ -3,7 +3,7 @@
   "major": 3,
   "alpha": {
     "logicalRef": "v3-alpha",
-    "callRef": "train/v3/v3.0/resume-candidate-run",
+    "callRef": "train/v3/v3.0/consumer-equivalent-self-dogfood",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true
   },
@@ -19,6 +19,7 @@
       "publication-gate-command",
       "publication-gate-controller-sha",
       "publication-authority-workflow-path",
+      "declarative-release-tail",
       "publication-consumer-qualification-controller-sha",
       "release-activation-command",
       "release-activation-receipt-set-path",

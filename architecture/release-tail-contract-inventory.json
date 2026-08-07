@@ -194,7 +194,13 @@
     ],
     "executionRule": "All four fixed capabilities use the same durable transaction, rooted observation, receipt, and bounded local-retry implementation.",
     "consumerCommandPolicy": "deny",
-    "productionCutover": false
+    "productionCutover": false,
+    "selfDogfoodCutover": {
+      "status": "alpha-train",
+      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood",
+      "providerCapability": "artifact.publish",
+      "stableCutover": false
+    }
   },
   "legacyExecutableSurfaces": [
     {

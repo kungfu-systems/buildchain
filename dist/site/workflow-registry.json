@@ -467,6 +467,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "channel",
+        "declarative-release-tail",
         "dry-run",
         "github-artifact-attestation-environment",
         "github-artifact-attestation-policy-json",
@@ -565,7 +566,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 109,
+      "inputCount": 110,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -602,9 +603,14 @@
         "release-candidate-artifact",
         "release-candidate-recovery-receipt-artifact",
         "release-candidate-recovery-root",
-        "release-propagation-work-artifact"
+        "release-propagation-work-artifact",
+        "release-tail-declaration-root",
+        "release-tail-receipt-roots-json",
+        "release-tail-state-root",
+        "release-tail-transaction-root",
+        "release-tail-transaction-state"
       ],
-      "outputCount": 23,
+      "outputCount": 28,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active",
@@ -2373,6 +2379,7 @@
         "buildchain-repository",
         "buildchain-stable-contract-lock-path",
         "channel",
+        "declarative-release-tail",
         "dry-run",
         "github-artifact-attestation-environment",
         "github-artifact-attestation-policy-json",
@@ -2459,7 +2466,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 100,
+      "inputCount": 101,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2508,9 +2515,14 @@
         "release-candidate-artifact",
         "release-candidate-recovery-receipt-artifact",
         "release-candidate-recovery-root",
-        "release-propagation-work-artifact"
+        "release-propagation-work-artifact",
+        "release-tail-declaration-root",
+        "release-tail-receipt-roots-json",
+        "release-tail-state-root",
+        "release-tail-transaction-root",
+        "release-tail-transaction-state"
       ],
-      "outputCount": 35,
+      "outputCount": 40,
       "surface": "release-governance",
       "capabilityGroup": "reusable-build",
       "status": "active",
@@ -2892,6 +2904,7 @@
         "branch-protection-bypass-apps",
         "branch-protection-bypass-teams",
         "branch-protection-bypass-users",
+        "declarative-release-tail",
         "dry-run",
         "expected-publication-version",
         "generated-pull-request-token",
@@ -2953,6 +2966,7 @@
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
         "release-passport-promotion-routing-json",
+        "release-tail-state-path",
         "require-governance",
         "require-publication-qualification",
         "require-publish-source-lock",
@@ -2965,7 +2979,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 76,
+      "inputCount": 78,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
