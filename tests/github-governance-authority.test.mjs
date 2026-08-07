@@ -122,7 +122,7 @@ test("authority descriptor freezes the TCB, baseline, plan boundary, and non-cla
   assert.deepEqual(descriptor.repositoryAdmission.managedVisibilities, ["public"]);
   assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 16);
   assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 0);
-  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 46);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 47);
   assert.deepEqual(descriptor.planCapability.privateRepositories, []);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
@@ -394,6 +394,7 @@ test("authoritative target registry detects default drift and constrains private
     },
   });
   assert.ok(publicTargets.includes("dev/v3/v3.0"));
+  assert.ok(publicTargets.includes("dev/v4/v4.0"));
   assert.ok(publicTargets.includes("alpha/v3/v3.0"));
   assert.ok(publicTargets.includes("release/v3/v3.0"));
   assert.ok(publicTargets.includes("authority/v3/v3.0/artifact-signing"));
