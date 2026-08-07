@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-delivery-warrant-shadow-fixtures",
+  "canonicalization": "buildchain-canonical-json/v1",
+  "clock": "explicit-input-only",
+  "projection": [
+    "action-or-typed-error",
+    "expected-old-and-next-state-roots",
+    "receipt-root",
+    "generation-and-fencing-counter",
+    "active-pull-request",
+    "ordered-candidate-statuses"
+  ],
+  "traces": [
+    {
+      "id": "submission-selection-heartbeat-close",
+      "create": {
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v4/v4.0",
+        "policy": { "agingSeconds": 300, "leaseSeconds": 600 },
+        "now": "2026-08-07T00:00:00Z"
+      },
+      "steps": [
+        {
+          "id": "submit-101",
+          "operation": "submit",
+          "pullRequestNumber": 101,
+          "now": "2026-08-07T00:00:01Z"
+        },
+        {
+          "id": "submit-102",
+          "operation": "submit",
+          "pullRequestNumber": 102,
+          "overrides": { "priority": "expedited" },
+          "now": "2026-08-07T00:00:02Z"
+        },
+        {
+          "id": "duplicate-101",
+          "operation": "submit",
+          "pullRequestNumber": 101,
+          "now": "2026-08-07T00:00:03Z"
+        },
+        {
+          "id": "select",
+          "operation": "select",
+          "saveWarrant": "selected",
+          "now": "2026-08-07T00:00:04Z"
+        },
+        {
+          "id": "renew",
+          "operation": "heartbeat",
+          "useWarrant": "selected",
+          "now": "2026-08-07T00:01:00Z"
+        },
+        {
+          "id": "close",
+          "operation": "close",
+          "useWarrant": "selected",
+          "outcome": "merged",
+          "reason": "exact merge group passed",
+          "now": "2026-08-07T00:02:00Z"
+        }
+      ],
+      "expectedLegacyProjectionRoot": "sha256:e01018e4797e98813454328aba2c0a04932885fcd6da7d216697c7961bc26f56"
+    },
+    {
+      "id": "lease-expiry-and-stale-fence",
+      "create": {
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v4/v4.0",
+        "policy": { "agingSeconds": 300, "leaseSeconds": 60 },
+        "now": "2026-08-07T01:00:00Z"
+      },
+      "steps": [
+        {
+          "id": "submit",
+          "operation": "submit",
+          "pullRequestNumber": 120,
+          "now": "2026-08-07T01:00:01Z"
+        },
+        {
+          "id": "select-old",
+          "operation": "select",
+          "saveWarrant": "old",
+          "leaseSeconds": 60,
+          "now": "2026-08-07T01:00:02Z"
+        },
+        {
+          "id": "recover",
+          "operation": "recover-expired",
+          "now": "2026-08-07T01:02:00Z"
+        },
+        {
+          "id": "select-new",
+          "operation": "select",
+          "saveWarrant": "new",
+          "leaseSeconds": 60,
+          "now": "2026-08-07T01:02:01Z"
+        },
+        {
+          "id": "reject-old",
+          "operation": "heartbeat",
+          "useWarrant": "old",
+          "expectError": "stale-fencing-token",
+          "now": "2026-08-07T01:02:02Z"
+        }
+      ],
+      "expectedLegacyProjectionRoot": "sha256:3c39ba66a2329a22f3834c4212bda001b6d5c527dcb9fa8a1b3ca88a199a7d16"
+    },
+    {
+      "id": "settlement-idempotence",
+      "create": {
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v4/v4.0",
+        "policy": { "agingSeconds": 300, "leaseSeconds": 600 },
+        "now": "2026-08-07T02:00:00Z"
+      },
+      "steps": [
+        {
+          "id": "not-applicable",
+          "operation": "settle-not-applicable",
+          "pullRequestNumber": 149,
+          "sourceHead": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "outcome": "merged",
+          "reason": "terminal before Warrant admission",
+          "now": "2026-08-07T02:00:01Z"
+        },
+        {
+          "id": "submit",
+          "operation": "submit",
+          "pullRequestNumber": 150,
+          "now": "2026-08-07T02:00:02Z"
+        },
+        {
+          "id": "select",
+          "operation": "select",
+          "saveWarrant": "active",
+          "now": "2026-08-07T02:00:03Z"
+        },
+        {
+          "id": "settle",
+          "operation": "settle-active",
+          "useWarrant": "active",
+          "saveSettlement": "terminal",
+          "outcome": "merged",
+          "reason": "exact merge group passed",
+          "now": "2026-08-07T02:01:00Z"
+        },
+        {
+          "id": "duplicate",
+          "operation": "settle-duplicate",
+          "useSettlement": "terminal",
+          "now": "2026-08-07T02:02:00Z"
+        }
+      ],
+      "expectedLegacyProjectionRoot": "sha256:b67669b2093105f3b4539ca5e4ba3d366bd7005a8781b5352377ae724d310d26"
+    },
+    {
+      "id": "queued-cancellation-idempotence",
+      "create": {
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v4/v4.0",
+        "policy": { "agingSeconds": 300, "leaseSeconds": 600 },
+        "now": "2026-08-07T03:00:00Z"
+      },
+      "steps": [
+        {
+          "id": "submit",
+          "operation": "submit",
+          "pullRequestNumber": 151,
+          "now": "2026-08-07T03:00:01Z"
+        },
+        {
+          "id": "cancel",
+          "operation": "cancel-queued",
+          "pullRequestNumber": 151,
+          "observedSourceHead": "ffffffffffffffffffffffffffffffffffffffff",
+          "reason": "pull request closed",
+          "now": "2026-08-07T03:00:02Z"
+        },
+        {
+          "id": "duplicate",
+          "operation": "cancel-queued",
+          "pullRequestNumber": 151,
+          "observedSourceHead": "ffffffffffffffffffffffffffffffffffffffff",
+          "reason": "pull request closed",
+          "now": "2026-08-07T03:00:03Z"
+        }
+      ],
+      "expectedLegacyProjectionRoot": "sha256:128104385600c72af175a3ff6a58a4266ca7dcd59a5019adbd87ca7fd9bc65c9"
+    },
+    {
+      "id": "cas-response-loss-provider-conflict",
+      "create": {
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v4/v4.0",
+        "policy": { "agingSeconds": 300, "leaseSeconds": 600 },
+        "now": "2026-08-07T04:00:00Z"
+      },
+      "steps": [
+        {
+          "id": "submit",
+          "operation": "submit",
+          "pullRequestNumber": 160,
+          "now": "2026-08-07T04:00:01Z"
+        },
+        {
+          "id": "accept-current",
+          "operation": "expected-old",
+          "expectedRoot": "submit"
+        },
+        {
+          "id": "reject-stale",
+          "operation": "expected-old",
+          "expectedRoot": "initial"
+        },
+        {
+          "id": "readback",
+          "operation": "response-loss-readback",
+          "committedRoot": "submit"
+        },
+        { "id": "provider-stop", "operation": "provider-conflict" }
+      ],
+      "expectedLegacyProjectionRoot": "sha256:e5082eab6504bab8ee382d43429594d0bbe1ee0353f78eb21b0ead03a4740887"
+    }
+  ]
+}
