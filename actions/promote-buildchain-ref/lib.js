@@ -554,12 +554,13 @@ function validatePromotionReleaseCandidate({
     familyAssignmentId,
   });
   let recoveryReceiptValidation;
+  let recoveryReceipt;
   if (recoveryReceiptPath) {
     const resolvedRecoveryReceiptPath = resolveMaybeRelative(cwd, recoveryReceiptPath);
     if (!fs.existsSync(resolvedRecoveryReceiptPath)) {
       validation.errors.push(`recovery receipt is missing: ${recoveryReceiptPath}`);
     } else {
-      const recoveryReceipt = JSON.parse(fs.readFileSync(resolvedRecoveryReceiptPath, "utf8"));
+      recoveryReceipt = JSON.parse(fs.readFileSync(resolvedRecoveryReceiptPath, "utf8"));
       recoveryReceiptValidation = validateReleaseCandidateRecoveryReceipt({
         receipt: recoveryReceipt,
         passport,
@@ -607,6 +608,11 @@ function validatePromotionReleaseCandidate({
     ),
     recoveredCandidate: recoveryReceiptValidation?.ok === true,
     publicationVersionBinding: recoveryReceiptValidation?.ok ? "recovery-receipt" : "candidate-passport",
+    recoveryProviderPullRequest: recoveryReceiptValidation?.ok === true &&
+      Number.isSafeInteger(Number(recoveryReceipt?.originalCandidate?.pullRequest)) &&
+      Number(recoveryReceipt?.originalCandidate?.pullRequest) > 0
+      ? Number(recoveryReceipt.originalCandidate.pullRequest)
+      : 0,
   };
 }
 
@@ -2244,8 +2250,34 @@ async function assertProviderEnforcedChannelTransaction({
     exactReleaseCandidateSource.publicationVersionBinding ===
       "recovery-receipt" &&
     exactReleaseCandidateSource.promotionChannelSha === sourceSha;
+  let recoveryPullRequest;
+  if (exactRecoveredSource) {
+    const recoveryPullRequestNumber = Number(
+      exactReleaseCandidateSource.recoveryProviderPullRequest,
+    );
+    if (!Number.isSafeInteger(recoveryPullRequestNumber) || recoveryPullRequestNumber <= 0) {
+      throw new Error(
+        `Protected channel ${targetRef} exact recovery is missing its original provider pull request`,
+      );
+    }
+    ({ data: recoveryPullRequest } = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: recoveryPullRequestNumber,
+    }));
+    const recoveryTopologyValid =
+      Boolean(recoveryPullRequest?.merged_at) &&
+      recoveryPullRequest.base?.ref === targetRef &&
+      recoveryPullRequest.head?.repo?.full_name === `${owner}/${repo}` &&
+      recoveryPullRequest.merge_commit_sha === sourceSha;
+    if (!recoveryTopologyValid) {
+      throw new Error(
+        `Protected channel ${targetRef} exact recovery provider pull request is not bound to ${sourceSha}`,
+      );
+    }
+  }
   const pullRequest = exactRecoveredSource
-    ? undefined
+    ? recoveryPullRequest
     : await assertChannelPromotionPr({
         octokit,
         owner,
@@ -2253,7 +2285,7 @@ async function assertProviderEnforcedChannelTransaction({
         sha: sourceSha,
         targetRef,
       });
-  const { data: reviews } = pullRequest
+  const { data: reviews } = pullRequest && !exactRecoveredSource
     ? await octokit.rest.pulls.listReviews({
         owner,
         repo,
@@ -2270,9 +2302,7 @@ async function assertProviderEnforcedChannelTransaction({
     [...latestReviews.values()].some((review) =>
       review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login,
     );
-  const pullRequestHeadSha = exactRecoveredSource
-    ? sourceSha
-    : String(pullRequest.head?.sha || "").trim();
+  const pullRequestHeadSha = String(pullRequest?.head?.sha || "").trim();
   const validPullRequestHeadSha = /^[0-9a-f]{40}$/i.test(pullRequestHeadSha);
   const { data: checkRuns } = validPullRequestHeadSha
     ? await octokit.rest.checks.listForRef({

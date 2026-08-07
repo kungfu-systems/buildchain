@@ -536,7 +536,7 @@ test("promote-only recovery binds publication version through the immutable reco
     contract: "kungfu-buildchain-release-candidate-recovery/v1",
     action: "reused",
     repository: "kungfu-systems/buildchain",
-    originalCandidate: { sourceSha: OTHER_SHA, tree: `tree-${SHA}` },
+    originalCandidate: { pullRequest: 42, sourceSha: OTHER_SHA, tree: `tree-${SHA}` },
     target: { channel: "alpha", ref: "alpha/v1/v1.0", sha: SHA, tree: `tree-${SHA}`, version: "3.0.6-alpha.4" },
     recovered: { candidateRoot: `sha256:${candidateHash}` },
     skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
@@ -558,6 +558,7 @@ test("promote-only recovery binds publication version through the immutable reco
     });
     assert.equal(result.publicationVersionBinding, "recovery-receipt");
     assert.equal(result.recoveredCandidate, true);
+    assert.equal(result.recoveryProviderPullRequest, 42);
     assert.throws(
       () => validatePromotionReleaseCandidate({
         cwd,
@@ -859,6 +860,8 @@ test("strict alpha promotion uses provider transaction evidence when protection 
 
 test("provider-hidden protection accepts only an exact receipt-bound alpha recovery", async () => {
   const checkedRefs = [];
+  const recoveryPullRequestHeadSha = "c".repeat(40);
+  let recoveryMergeSha = SHA;
   const octokit = {
     rest: {
       repos: {
@@ -885,6 +888,21 @@ test("provider-hidden protection accepts only an exact receipt-bound alpha recov
         },
       },
       pulls: {
+        get: async ({ pull_number }) => {
+          assert.equal(pull_number, 42);
+          return {
+            data: {
+              number: 42,
+              merged_at: "2026-08-06T00:23:05Z",
+              merge_commit_sha: recoveryMergeSha,
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                sha: recoveryPullRequestHeadSha,
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          };
+        },
         listReviews: async () => {
           assert.fail("an exact recovery receipt must not invent PR review");
         },
@@ -908,6 +926,7 @@ test("provider-hidden protection accepts only an exact receipt-bound alpha recov
     treeEquivalent: true,
     publicationVersionBinding: "recovery-receipt",
     promotionChannelSha: SHA,
+    recoveryProviderPullRequest: 42,
   };
 
   const resolvedStatusCheck = await assertProtectedChannel({
@@ -920,7 +939,38 @@ test("provider-hidden protection accepts only an exact receipt-bound alpha recov
     exactReleaseCandidateSource: exactRecovery,
   });
   assert.equal(resolvedStatusCheck, "check");
-  assert.deepEqual(checkedRefs, [SHA]);
+  assert.deepEqual(checkedRefs, [recoveryPullRequestHeadSha]);
+
+  await assert.rejects(
+    assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+      exactReleaseCandidateSource: {
+        ...exactRecovery,
+        recoveryProviderPullRequest: 0,
+      },
+    }),
+    /missing its original provider pull request/,
+  );
+
+  recoveryMergeSha = OTHER_SHA;
+  await assert.rejects(
+    assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+      exactReleaseCandidateSource: exactRecovery,
+    }),
+    /provider pull request is not bound/,
+  );
+  recoveryMergeSha = SHA;
 
   await assert.rejects(
     assertProtectedChannel({
