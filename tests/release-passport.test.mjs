@@ -24,7 +24,10 @@ import {
   resolveKfd3Metadata,
   sha256File as sha256KfdFile,
 } from "../packages/core/kfd-gate.js";
-import { createBuildchainKfdClaimRegistry } from "../packages/core/buildchain-kfd-claims.js";
+import {
+  createBuildchainKfdClaimRegistry,
+  createBuildchainKfdSurfaceRegistry,
+} from "../packages/core/buildchain-kfd-claims.js";
 import { generateBuildchainKfdWitnesses } from "../scripts/generate-buildchain-kfd-witnesses.mjs";
 
 function tempDir(name) {
@@ -1968,6 +1971,33 @@ test("Buildchain self KFD claims generate enforceable release passport evidence"
   assert.equal(kfd2.claims.every((claim) => claim.missingBindings.length === 0), true);
   assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "site:dist/site/kfd-claims.json"));
   assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "export:./buildchain-kfd-claims"));
+});
+
+test("Buildchain self KFD manuals remain bound to the historical source registry", () => {
+  const root = tempDir("buildchain-self-kfd-historical-manuals");
+  writeJson(path.join(root, "package.json"), {
+    name: "@kungfu-tech/buildchain",
+    exports: {},
+  });
+  writeJson(path.join(root, "dist/site/manual-registry.json"), {
+    schemaVersion: 1,
+    manuals: [
+      { id: "historical", title: "Historical manual", path: "docs/historical.md" },
+    ],
+  });
+  fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(root, "docs/historical.md"), "# Historical\n");
+
+  const registry = createBuildchainKfdSurfaceRegistry({ root });
+
+  assert.deepEqual(
+    registry.groups.docs.map((surface) => surface.sourcePath),
+    ["docs/historical.md", "packages/core/README.md", "README.md"].sort(),
+  );
+  assert.equal(
+    registry.groups.docs.some((surface) => surface.sourcePath === "docs/release-tail-contract.md"),
+    false,
+  );
 });
 
 test("binary release passport can merge authoritative Buildchain KFD release-state passport", async () => {

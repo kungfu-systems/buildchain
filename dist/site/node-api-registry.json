@@ -20451,7 +20451,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:8bfde25d056cfdce1e84ceb71d75f5790b41d61db6f60e73d8f33fc2077e9331",
+      "digest": "sha256:ff47a9b41415ab3c0cf9df3519d05d944ad12137ed8d70661631328e5f512191",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
