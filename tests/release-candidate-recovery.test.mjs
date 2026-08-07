@@ -21,6 +21,7 @@ import {
   normalizePlatformManifests,
   recoveredArtifactPathsByBasename,
 } from "../scripts/resume-from-candidate-run.mjs";
+import { generatePublishRequiredArtifacts } from "../scripts/release-candidate-resolver.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -254,6 +255,37 @@ test("custom-product recovery uses Passport version and manifests without treati
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("custom-product publication identities preserve platform and relative path", () => {
+  const artifacts = generatePublishRequiredArtifacts({
+    kind: "kungfu-product",
+    version: "4.0.0-alpha.1",
+    manifests: [
+      {
+        platform: { id: "linux-x64" },
+        files: [
+          { path: "agent/index.json", sha256: `sha256:${"a".repeat(64)}` },
+          { path: "context/index.json", sha256: `sha256:${"b".repeat(64)}` },
+        ],
+      },
+      {
+        platform: { id: "windows-x64" },
+        files: [
+          { path: "agent\\index.json", sha256: `sha256:${"c".repeat(64)}` },
+        ],
+      },
+    ],
+  });
+
+  assert.deepEqual(
+    artifacts.map(({ group, name, platform }) => ({ group, name, platform })),
+    [
+      { group: "linux-x64", name: "agent/index.json", platform: "linux-x64" },
+      { group: "linux-x64", name: "context/index.json", platform: "linux-x64" },
+      { group: "windows-x64", name: "agent/index.json", platform: "windows-x64" },
+    ],
+  );
 });
 
 test("candidate recovery excludes credential-island manifests outside the Passport platform matrix", () => {

@@ -351,16 +351,22 @@ export function generatePublishRequiredArtifacts({
     const files = Array.isArray(manifest.files) ? manifest.files : [];
     return files
       .filter((file) => file?.sha256)
-      .map((file) => ({
-        kind,
-        name: packageNameFromArtifactPath(file.path || file.name || manifest.artifactName || platform),
-        ref,
-        digest: String(file.sha256).startsWith("sha256:")
-          ? String(file.sha256)
-          : `sha256:${file.sha256}`,
-        role: "platform",
-        platform,
-      }));
+      .map((file) => {
+        const name = String(file.path || file.name || manifest.artifactName || platform)
+          .replaceAll("\\", "/")
+          .replace(/^\.\//, "");
+        return {
+          ...(platform ? { group: platform } : {}),
+          kind,
+          name,
+          ref,
+          digest: String(file.sha256).startsWith("sha256:")
+            ? String(file.sha256)
+            : `sha256:${file.sha256}`,
+          role: "platform",
+          platform,
+        };
+      });
   });
 }
 
