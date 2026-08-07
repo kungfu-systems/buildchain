@@ -283,7 +283,7 @@ for (const requiredSnippet of [
   "authorize-promotion-runtime-override.cjs",
   "BUILDCHAIN_ROUTER_REPOSITORY: ${{ inputs.buildchain-repository }}",
   "BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}",
-  "git ls-remote",
+  "if [[ \"${ref}\" =~ ^[0-9A-Fa-f]{40}$ ]]; then", "sha=\"${ref,,}\"", "git ls-remote",
   "Recovery router ref does not match resume-buildchain-runtime-sha",
 ]) {
   if (!channelPromotionWorkflow.includes(requiredSnippet)) {
