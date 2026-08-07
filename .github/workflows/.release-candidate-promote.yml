@@ -1444,7 +1444,9 @@ jobs:
           test ! -e node_modules
           mkdir -p .buildchain/runtime/node_modules/@kungfu-tech
           test ! -e .buildchain/runtime/node_modules/@kungfu-tech/buildchain-alpha
+          test ! -e .buildchain/runtime/node_modules/@kungfu-tech/buildchain
           ln -s ../.. .buildchain/runtime/node_modules/@kungfu-tech/buildchain-alpha
+          ln -s ../.. .buildchain/runtime/node_modules/@kungfu-tech/buildchain
           ln -s .buildchain/runtime/node_modules node_modules
 
       - name: Check Buildchain contract lock
