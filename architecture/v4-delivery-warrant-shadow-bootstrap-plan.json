@@ -543,8 +543,81 @@
       "cutoverRule": "supported contract keys are ASCII and fixtures freeze code-point order before Rust qualification"
     }
   ],
+  "wave0Reconciliation": {
+    "sourceRevision": "dcd9a92618e21dd76ee3fee8d915c4b24f482845",
+    "productionAuthority": "typescript-v3",
+    "children": [
+      {
+        "id": "v3-core-mechanism-inventory",
+        "status": "proved",
+        "base": "dev/v3/v3.0",
+        "pullRequest": 2400,
+        "sourceRevision": "abaef5152f284ca6569d26471a5e9ab024c2ff76",
+        "mergeRevision": "7c8956e8b3eb8f5cc494762048000837f6f783b1",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "required-checks-passed; five non-required Build Surface fixture jobs failed"
+      },
+      {
+        "id": "architecture-constitution",
+        "status": "proved",
+        "base": "dev/v4/v4.0",
+        "pullRequest": 2416,
+        "sourceRevision": "7a2060075d646cf8ccf95fb85a607269e91b700a",
+        "mergeRevision": "95e7c1060cae94a38b72c5ac3d7b79cce0ad662b",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "rust-libnode-bridge-spike",
+        "status": "proved",
+        "base": "dev/v4/v4.0",
+        "pullRequest": 2421,
+        "sourceRevision": "684ac6848258724335f35409ef540b21f8a9bc58",
+        "mergeRevision": "aa58ef0576f0ec1ba7c5db7a881337a3717b3dc8",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "delivery-warrant-shadow-bootstrap-plan",
+        "status": "proved",
+        "base": "dev/v4/v4.0",
+        "pullRequest": 2422,
+        "sourceRevision": "ed47f0f3a22970c1a26f1b4ef99ef22f90539c44",
+        "mergeRevision": "dcd9a92618e21dd76ee3fee8d915c4b24f482845",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      }
+    ],
+    "initiativeMatrix": [
+      { "id": "v3-mechanism-inventory", "status": "proved" },
+      { "id": "v4-release-line-bootstrap", "status": "proved" },
+      { "id": "authority-and-dependency-constitution", "status": "proved" },
+      { "id": "semantic-and-complexity-budgets", "status": "proved" },
+      { "id": "agent-state-explain-plan-interface", "status": "partial" },
+      { "id": "rust-node-bridge-portability", "status": "partial" },
+      { "id": "delivery-warrant-shadow-design", "status": "proved" },
+      { "id": "resumable-release-v4", "status": "missing" },
+      { "id": "v4-self-dogfood", "status": "missing" },
+      { "id": "consumer-migration-and-legacy-removal", "status": "missing" },
+      { "id": "final-v4-qualification", "status": "missing" }
+    ],
+    "conflicts": [
+      {
+        "id": "wave1-entry-zero-diff-cycle",
+        "priorState": "invalidated",
+        "disposition": "implementation entry is Wave 0 reconciliation; zero-diff remains the v4-read candidate gate"
+      }
+    ],
+    "entryDecision": "wave1-implementation-open",
+    "residualResponsibility": [
+      "state explain and plan remain unimplemented",
+      "Linux and Windows bridge parity remain unproved",
+      "no v4 production writer, read cutover, consumer migration, or legacy removal is qualified"
+    ]
+  },
   "wave1": {
-    "entryGate": "all-shadow-zero-diff-gates-pass",
+    "entryGate": "wave0-reconciliation-proved",
+    "readCandidateEntryGate": "all-shadow-zero-diff-gates-pass",
     "nodes": [
       {
         "id": "canonical-contracts",

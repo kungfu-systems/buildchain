@@ -138,11 +138,27 @@ protected line. It never creates permanent dual authority.
 
 ## Wave 1 entry
 
-Wave 1 may start only after all shadow zero-diff gates pass. Its dependency
-order is canonical contracts, shared fixture runner, Rust pure domain and
-TypeScript shadow adapter, semantic-diff gate, then a reversible v4-read
-candidate. Rust writer effects, Release Transaction, Candidate Capsule, resume
-planning, consumer migration, and actual provider effects remain out of scope.
+Wave 0 reconciliation proves the four protected child deliveries and opens the
+implementation entry for Wave 1. The earlier wording made the whole wave depend
+on the zero-diff gate even though that gate is produced by the wave itself; that
+circular gate is invalidated. Zero-diff remains mandatory specifically before
+the reversible v4-read candidate.
+
+The dependency order is canonical contracts, shared fixture runner, Rust pure
+domain and TypeScript shadow adapter, semantic-diff gate, then the read
+candidate. The first five nodes do not move authority. Rust writer effects,
+Release Transaction, Candidate Capsule, resume planning, consumer migration,
+and actual provider effects remain out of scope.
+
+## Wave 0 reconciliation
+
+The machine-readable plan records exact protected PR, source, merge, review,
+and check evidence for the inventory, constitution, bridge spike, and Warrant
+plan. All four deliveries are proved. The Initiative matrix is deliberately
+stricter than child completion: the Agent state/explain/plan interface and
+cross-platform bridge evidence are partial, while resumable release, self
+dogfood, migration, legacy removal, and final v4 qualification are missing.
+TypeScript v3 remains the sole production authority throughout.
 
 ## Verification
 
