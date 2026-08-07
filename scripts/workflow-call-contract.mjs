@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { evaluateWorkflowCallContract } from "../packages/core/workflow-call-contract.js";
 import { parseWorkflowDocument } from "../packages/core/workflow-yaml-contract.js";
 
-export const SELF_RELEASE_REF = "93963e1f711c39189fbf019fa0e07d063e384aad";
+export const SELF_RELEASE_REF = "4524c40e97dd7f7f89a6fd2020b9aa89c1cc7f82";
 export const SELF_RELEASE_PUBLIC_WORKFLOW = `kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@${SELF_RELEASE_REF}`;
 
 function parityFailure(message) {
