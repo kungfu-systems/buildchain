@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 113,
-    "workflowCount": 64,
-    "actionCount": 6,
-    "sitePageCount": 66,
-    "docCommandRefCount": 896,
+    "cliCommandCount": 114,
+    "workflowCount": 65,
+    "actionCount": 7,
+    "sitePageCount": 68,
+    "docCommandRefCount": 918,
     "failureCount": 0
   },
   "enumerated": {
@@ -496,6 +496,11 @@
         "id": "release-propagation",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain release-propagation <plan|write-lock|work|entry|pickup> ..."
+      },
+      {
+        "id": "release-tail",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain release-tail plan --declaration <json-or-path> [--output <path>]"
       },
       {
         "id": "release-transaction",
@@ -2637,6 +2642,29 @@
         "outputCount": 13
       },
       {
+        "id": "release-tail",
+        "path": ".github/workflows/release-tail.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "declaration-path",
+          "execute",
+          "provider-bindings-path",
+          "state-path"
+        ],
+        "inputCount": 5,
+        "secrets": [
+          "http-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "state-root",
+          "transaction-root",
+          "transaction-state"
+        ],
+        "outputCount": 3
+      },
+      {
         "id": "release-verify",
         "path": ".github/workflows/release-verify.yml",
         "reusable": false,
@@ -2852,6 +2880,19 @@
         "inputCount": 76
       },
       {
+        "id": "release-tail",
+        "path": "actions/release-tail/action.yml",
+        "inputs": [
+          "declaration",
+          "execute",
+          "github-token",
+          "http-token",
+          "provider-bindings",
+          "state-path"
+        ],
+        "inputCount": 6
+      },
+      {
         "id": "report-buildchain-issue",
         "path": "actions/report-buildchain-issue/action.yml",
         "inputs": [
@@ -2952,6 +2993,10 @@
       },
       {
         "id": "action:promote-buildchain-ref",
+        "category": "action"
+      },
+      {
+        "id": "action:release-tail",
         "category": "action"
       },
       {
@@ -3168,6 +3213,10 @@
       },
       {
         "id": "manual:release-tail-contract",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-tail-provider-plane",
         "category": "manual"
       },
       {
@@ -7054,6 +7103,116 @@
         "command": "buildchain release-propagation work push-branch"
       },
       {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail compat --hooks-json"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail init --declaration"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail plan --declaration"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail compat"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail compat --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail init"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail init --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail plan"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail plan --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail status"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail status --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail verify"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail verify --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/release-tail-provider-plane.md",
+        "command": "buildchain release-tail plan --declaration"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/release-tail-provider-plane.md",
+        "command": "buildchain release-tail init --declaration"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/release-tail-provider-plane.md",
+        "command": "buildchain release-tail verify --state"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/release-tail-provider-plane.md",
+        "command": "buildchain release-tail plan"
+      },
+      {
         "id": "release-transaction",
         "path": "docs/cli-reference.md",
         "command": "buildchain release"
@@ -7694,9 +7853,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
-    "workflowRegistryDigest": "b8d8226430132d16f40865603ff710197bb3ab9cea12d79082a3e4ad0f82a22b",
-    "pageRegistryDigest": "5b093612c6d2a70025f10bc6fe8c95ba16b4f273a2fac6fe3a1af46f739a123f"
+    "cliRegistryDigest": "3e6991dcd242031cfc80d7b9bd815d17c8afbeb8a504b6d49ce649787890612a",
+    "workflowRegistryDigest": "f134e75a9e934b090d6c4572a2cc3eb03798e117b1f8a32b07281e1412fcbd69",
+    "pageRegistryDigest": "e5689af761736178e311b5dfdb46ffd258baaa1b57d31fc76d4fa3b0508514b1"
   },
   "comparison": {
     "missingCliRegistry": [],

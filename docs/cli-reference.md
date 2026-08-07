@@ -1934,6 +1934,74 @@ buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
 buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
 ```
 
+## `release-tail`
+
+### `buildchain release-tail`
+
+- Help: `buildchain release-tail --help`
+- Canonical id: `release-tail`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain release-tail
+```
+
+### `buildchain release-tail compat`
+
+- Help: `buildchain release-tail compat --help`
+- Canonical id: `release-tail`
+- Options: `--hooks-json`, `--output`
+- Syntax:
+
+```text
+buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
+```
+
+### `buildchain release-tail init`
+
+- Help: `buildchain release-tail init --help`
+- Canonical id: `release-tail`
+- Options: `--declaration`, `--state`
+- Syntax:
+
+```text
+buildchain release-tail init --declaration <json-or-path> [--state <path>]
+```
+
+### `buildchain release-tail plan`
+
+- Help: `buildchain release-tail plan --help`
+- Canonical id: `release-tail`
+- Options: `--declaration`, `--output`
+- Syntax:
+
+```text
+buildchain release-tail plan --declaration <json-or-path> [--output <path>]
+```
+
+### `buildchain release-tail status`
+
+- Help: `buildchain release-tail status --help`
+- Canonical id: `release-tail`
+- Options: `--output`, `--state`
+- Syntax:
+
+```text
+buildchain release-tail <status|verify> [--state <path>] [--output <path>]
+```
+
+### `buildchain release-tail verify`
+
+- Help: `buildchain release-tail verify --help`
+- Canonical id: `release-tail`
+- Options: `--output`, `--state`
+- Syntax:
+
+```text
+buildchain release-tail <status|verify> [--state <path>] [--output <path>]
+```
+
 ## `sample`
 
 ### `buildchain sample`

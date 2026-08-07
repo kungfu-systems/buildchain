@@ -5,18 +5,24 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 278,
-    "maxHandMaintainedSourceLines": 106361,
-    "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22268,
-    "latestTransition": "The v4 Wave 0 architecture validator and release-tail contract inventory coexist as read-only governance layers without migrating a production writer or changing provider effects.",
-    "rationale": "The exact combined ceiling retains the protected candidate-recovery transition, the v4 Constitution validator and generated discovery surface, and the release-tail validator that freezes 27 reverse-discovered coordinates across seven surface groups, four declarative capabilities, and seven managed callers. Both additions remain fail-closed, tooling-only checks; runtime migration, provider adapters, or broader inventory changes require another reviewed transition."
+    "maxHandMaintainedSourceFiles": 283,
+    "maxHandMaintainedSourceLines": 108627,
+    "maxWorkflowFiles": 65,
+    "maxWorkflowLines": 22350,
+    "latestTransition": "The frozen release-tail contract now has a Buildchain-owned declarative provider plane, four fixed adapters, one durable transaction path, and Action/workflow/CLI surfaces without consumer executable inputs.",
+    "rationale": "The exact transition adds the provider implementation, bounded v3 compatibility diagnostics, packaged Action, reusable workflow, and tests required to execute the four frozen capabilities. Provider effects remain closed-world, root-bound, read back before and after mutation, locally bounded, and incapable of selecting transaction success; these ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
     "newFunctionLines": 180,
     "newFunctionComplexity": 25,
     "existingDebtPolicy": "no-widening"
+  },
+  "approvedNewFileTransitions": {
+    "packages/core/release-tail-provider-plane.js": {
+      "maxLines": 1228,
+      "rationale": "The one versioned transaction authority keeps strict declaration normalization, deterministic effect planning, atomic checkpoints, rooted observations and receipts, and bounded recovery in one independently tested audit surface; this exact preview ceiling cannot grow implicitly."
+    }
   },
   "approvedExistingDebtTransitions": {
     "actions/promote-buildchain-ref/lib.js": {
@@ -36,9 +42,17 @@
       "maxFunctionLines": 679,
       "rationale": "The contract world records the additive candidate-run recovery inputs, reuse guarantees, and reviewed predecessor digests for both public promotion surfaces; this exact public-contract wiring ceiling cannot grow implicitly."
     },
+    "packages/core/index.js": {
+      "maxLines": 695,
+      "rationale": "The root package index exposes the three provider-plane modules while preserving every existing export; this exact additive public wiring ceiling cannot grow implicitly."
+    },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
+    },
+    "scripts/check-maintainability.mjs": {
+      "maxFunctionComplexity": 29,
+      "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and all existing no-widening checks remain unchanged."
     },
     "scripts/check-inventory.mjs": {
       "maxLines": 1468,
@@ -1062,6 +1076,26 @@
     }
   },
   "approvedExtractedDebt": {
+    "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan": {
+      "maxLines": 94,
+      "maxComplexity": 30,
+      "rationale": "The sealed-plan verifier revalidates the full closed-world envelope, rejects executable or excess fields, and binds every effect, operation identity, subject, and root before durable execution; its exact preview ceiling cannot grow implicitly."
+    },
+    "packages/core/release-tail-provider-plane.js#normalizeCapability": {
+      "maxLines": 255,
+      "maxComplexity": 25,
+      "rationale": "The strict closed-world normalizer audits every field of one capability declaration in a single sequential validation path; its exact preview ceiling cannot grow implicitly."
+    },
+    "packages/core/release-tail-provider-plane.js#validateReleaseTailTransaction": {
+      "maxLines": 180,
+      "maxComplexity": 33,
+      "rationale": "Transaction validation checks the complete durable envelope, operation counters, observation roots, receipt roots, and state root in one fail-closed pass; its exact preview complexity ceiling cannot grow implicitly."
+    },
+    "packages/core/release-tail-provider-plane.js#executeReleaseTailTransaction": {
+      "maxLines": 190,
+      "maxComplexity": 27,
+      "rationale": "The executor keeps readback, bounded local retry, mutation, post-readback, and terminal classification together so adapters cannot gain state-transition authority; its exact preview ceiling cannot grow implicitly."
+    },
     "actions/promote-buildchain-ref/lib.js#createRefMutationOperations": {
       "maxLines": 627,
       "maxComplexity": 1,

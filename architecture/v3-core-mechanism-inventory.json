@@ -93,6 +93,11 @@
         "mechanismId": "release-propagation-work-control",
         "root": "packages/core",
         "pattern": "^release-propagation(?:-[a-z-]+)?\\.js$"
+      },
+      {
+        "mechanismId": "release-tail-provider-plane",
+        "root": "packages/core",
+        "pattern": "^release-tail-(?:provider-plane|provider-adapters|compatibility)\\.js$"
       }
     ],
     "gitRefStores": [
@@ -806,6 +811,94 @@
       "migrationDisposition": "reuse-work-control-contract-as-v4-orchestration-boundary",
       "unresolved": [
         "v4 Work persistence and external executor protocol are not yet selected"
+      ]
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "owner": "Buildchain declarative release provider plane",
+      "writers": [
+        "Buildchain release-tail transaction executor",
+        "release-tail Action and reusable workflow"
+      ],
+      "schemas": [
+        "kungfu-buildchain-release-tail-capabilities",
+        "kungfu.buildchain.release-tail.provider-bindings/v1",
+        "kungfu.buildchain.release-tail.transaction/v1",
+        "kungfu.buildchain.release-tail.effect/v1",
+        "kungfu.buildchain.release-tail.observation/v1",
+        "kungfu.buildchain.release-tail.receipt/v1"
+      ],
+      "stores": [
+        "atomic local transaction checkpoint",
+        "rooted provider observations",
+        "ordered immutable receipts"
+      ],
+      "states": [
+        "preparing",
+        "prepared",
+        "publishing",
+        "committing",
+        "activating",
+        "reading-back",
+        "settling",
+        "complete",
+        "blocked",
+        "repair-required",
+        "terminal-failure"
+      ],
+      "events": ["plan", "readback", "apply", "retry", "settle"],
+      "transitions": [
+        "four fixed capability effects execute in registry order through one transaction"
+      ],
+      "recovery": [
+        "atomic checkpoint resume with readback before every local retry",
+        "lost responses resolve only from rooted provider observation"
+      ],
+      "effects": [
+        "GitHub Release artifact publication",
+        "signed channel commit",
+        "site release activation",
+        "released-evidence synthesis"
+      ],
+      "retry": [
+        "never, readback, or provider-transient with at most three local retries"
+      ],
+      "invalidation": [
+        "declaration or plan root drift",
+        "subject or target identity drift",
+        "stale provider state",
+        "immutable provider conflict"
+      ],
+      "providerReadback": [
+        "GitHub Release asset digests",
+        "HTTPS rooted JSON documents",
+        "local rooted released-evidence document"
+      ],
+      "publicSurfaces": [
+        "export:./release-tail-provider-plane",
+        "export:./release-tail-provider-adapters",
+        "export:./release-tail-compatibility",
+        "cli:release-tail",
+        "workflow:release-tail",
+        "action:release-tail"
+      ],
+      "compatibilityCallers": [
+        "frozen v3 managed release-tail callers through bounded diagnostics only"
+      ],
+      "sourcePaths": [
+        "packages/core/release-tail-provider-plane.js",
+        "packages/core/release-tail-provider-adapters.js",
+        "packages/core/release-tail-compatibility.js",
+        "scripts/release-tail.mjs",
+        "actions/release-tail/index.js"
+      ],
+      "testPaths": [
+        "tests/release-tail-provider-plane.test.mjs",
+        "tests/release-tail-contract.test.mjs"
+      ],
+      "migrationDisposition": "preserve-closed-world-provider-contract-as-v4-capability-boundary",
+      "unresolved": [
+        "consumer cutovers and production provider credentials remain separate reviewed changes"
       ]
     }
   ]
