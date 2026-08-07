@@ -12,6 +12,7 @@ import {
   sha256Json,
   validateReleaseCandidatePassport,
 } from "../packages/core/release-candidate.js";
+import { writeGitHubOutputs } from "../scripts/build-contract-core.mjs";
 import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
 import {
   generatePublishRequiredArtifacts,
@@ -1320,5 +1321,27 @@ test("generateReleaseCandidatePassportCli writes GitHub outputs for workflow reu
     process.chdir(previousCwd);
     process.env = previousEnv;
     fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("GitHub outputs preserve multiline release asset paths", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-output-"));
+  const previousOutput = process.env.GITHUB_OUTPUT;
+  try {
+    process.env.GITHUB_OUTPUT = path.join(workspace, "outputs.txt");
+    writeGitHubOutputs({
+      "release-candidate-version": "4.0.0-alpha.1",
+      "release-candidate-github-release-artifact-paths": "linux.tar.gz\nwindows.zip",
+    });
+    assert.equal(
+      fs.readFileSync(process.env.GITHUB_OUTPUT, "utf8"),
+      "release-candidate-version=4.0.0-alpha.1\n" +
+        "release-candidate-github-release-artifact-paths<<BUILDCHAIN_OUTPUT\n" +
+        "linux.tar.gz\nwindows.zip\nBUILDCHAIN_OUTPUT\n",
+    );
+  } finally {
+    if (previousOutput === undefined) delete process.env.GITHUB_OUTPUT;
+    else process.env.GITHUB_OUTPUT = previousOutput;
+    fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
