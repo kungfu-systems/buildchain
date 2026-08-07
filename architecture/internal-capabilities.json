@@ -2,9 +2,13 @@
   "schemaVersion": 1,
   "coverageRoots": [
     "actions/promote-buildchain-ref/internal",
+    "actions/release-tail/index.js",
     "bin/buildchain.mjs",
     "bin/internal",
     "packages/core/release-passport.js",
+    "packages/core/release-tail-provider-plane.js",
+    "packages/core/release-tail-provider-adapters.js",
+    "packages/core/release-tail-compatibility.js",
     "packages/core/buildchain-contract.js",
     "packages/core/workflow-call-contract.js",
     "packages/core/workflow-yaml-contract.js",
@@ -29,11 +33,13 @@
     "scripts/run-lifecycle-core.mjs",
     "scripts/resolve-artifact-transfer-mode.mjs",
     "scripts/release-propagation.mjs",
+    "scripts/release-tail.mjs",
     "scripts/web-surface-core.mjs",
     "scripts/web-surface-routing.mjs",
     "scripts/web-surface.mjs",
     "scripts/workflow-call-contract.mjs",
-    "scripts/verify-promotion-router-binding.sh"
+    "scripts/verify-promotion-router-binding.sh",
+    "scripts/v4-architecture.mjs"
   ],
   "ownershipRules": [
     {
@@ -328,6 +334,40 @@
         "docs/release-propagation.md",
         "dist/site/cli-registry.json",
         "dist/site/node-api-registry.json"
+      ]
+    },
+    {
+      "id": "declarative-release-provider-plane",
+      "owner": "Buildchain release provider maintainers",
+      "implementation": [
+        "packages/core/release-tail-provider-plane.js",
+        "packages/core/release-tail-provider-adapters.js",
+        "packages/core/release-tail-compatibility.js",
+        "scripts/release-tail.mjs",
+        "actions/release-tail/index.js"
+      ],
+      "tests": [
+        "tests/release-tail-provider-plane.test.mjs",
+        "tests/release-tail-contract.test.mjs"
+      ],
+      "contracts": [
+        "contracts/release-tail-capabilities-v1.schema.json",
+        "contracts/release-tail-provider-bindings-v1.schema.json",
+        ".github/workflows/release-tail.yml",
+        "actions/release-tail/action.yml",
+        "docs/release-tail-provider-plane.md"
+      ]
+    },
+    {
+      "id": "v4-architecture-governance",
+      "owner": "Buildchain architecture maintainers",
+      "implementation": ["scripts/v4-architecture.mjs"],
+      "tests": ["tests/v4-architecture.test.mjs"],
+      "contracts": [
+        "architecture/v4-architecture-constitution.md",
+        "architecture/v4-capability-state-machine-manifest.json",
+        "architecture/v4-bootstrap-authority.json",
+        "architecture/v4-exception-ledger.json"
       ]
     }
   ]

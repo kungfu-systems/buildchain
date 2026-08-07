@@ -188,6 +188,11 @@ on:
         default: true
         type: boolean
         required: false
+      declarative-release-tail:
+        description: "Publish and read back GitHub Release assets through the Buildchain declarative release-tail provider plane"
+        default: false
+        type: boolean
+        required: false
       github-release-title:
         description: "Optional GitHub Release title. Empty defaults to the public release tag."
         default: ""
@@ -453,6 +458,11 @@ on:
         default: ""
         type: string
         required: false
+      publication-consumer-qualification-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer qualification command; empty uses the Gate controller SHA, then the publication source SHA"
+        default: ""
+        type: string
+        required: false
       publication-consumer-predicate-id:
         description: "Stable identifier for the opt-in consumer-owned publication predicate"
         default: ""
@@ -620,6 +630,21 @@ on:
       github-artifact-attestation-publication-receipt-digest:
         description: "Read-back verified GitHub Release evidence publication receipt digest"
         value: ${{ jobs.alpha.outputs.github-artifact-attestation-publication-receipt-digest || jobs.stable.outputs.github-artifact-attestation-publication-receipt-digest }}
+      release-tail-declaration-root:
+        description: "Root of the declarative release-tail contract"
+        value: ${{ jobs.alpha.outputs.release-tail-declaration-root || jobs.stable.outputs.release-tail-declaration-root }}
+      release-tail-transaction-state:
+        description: "Final declarative release-tail transaction state"
+        value: ${{ jobs.alpha.outputs.release-tail-transaction-state || jobs.stable.outputs.release-tail-transaction-state }}
+      release-tail-transaction-root:
+        description: "Stable declarative release-tail transaction root"
+        value: ${{ jobs.alpha.outputs.release-tail-transaction-root || jobs.stable.outputs.release-tail-transaction-root }}
+      release-tail-state-root:
+        description: "Root of the final declarative release-tail transaction state"
+        value: ${{ jobs.alpha.outputs.release-tail-state-root || jobs.stable.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json:
+        description: "JSON array of standardized declarative release-tail receipt roots"
+        value: ${{ jobs.alpha.outputs.release-tail-receipt-roots-json || jobs.stable.outputs.release-tail-receipt-roots-json }}
       controller-receipt-artifact:
         description: "Controller receipt artifact name"
         value: ${{ jobs.alpha.outputs.controller-receipt-artifact || jobs.stable.outputs.controller-receipt-artifact }}
@@ -748,7 +773,7 @@ jobs:
           CHANNEL: ${{ steps.route.outputs.channel }}
           SELECTED_SHELL_REF: ${{ steps.route.outputs.shell-ref }}
           ALPHA_SHELL_REF: v3-alpha
-          ALPHA_SHELL_CALL_REF: train/v3/v3.0/resume-candidate-run
+          ALPHA_SHELL_CALL_REF: train/v3/v3.0/consumer-equivalent-self-dogfood
           STABLE_SHELL_REF: v3
           STABLE_SHELL_CALL_REF: v3
         run: |
@@ -842,7 +867,7 @@ jobs:
     name: Promote with alpha workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@train/v3/v3.0/resume-candidate-run
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood
     permissions:
       actions: write
       artifact-metadata: write
@@ -898,6 +923,7 @@ jobs:
       branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
       publish-target: ${{ inputs.publish-target }}
       github-release: ${{ inputs.github-release }}
+      declarative-release-tail: ${{ inputs.declarative-release-tail }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
       github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
@@ -951,11 +977,13 @@ jobs:
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       publication-consumer-qualification-command: ${{ inputs.publication-consumer-qualification-command }}
+      publication-consumer-qualification-controller-sha: ${{ inputs.publication-consumer-qualification-controller-sha }}
       publication-consumer-predicate-id: ${{ inputs.publication-consumer-predicate-id }}
       publication-used-qualification-nonces-json: ${{ inputs.publication-used-qualification-nonces-json }}
       publication-auto-admission: ${{ inputs.publication-auto-admission }}
       publication-auto-no-gate: ${{ inputs.publication-auto-no-gate }}
       publication-publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
+      publication-authority-workflow-path: .github/workflows/release-candidate-promote.yml
       publication-product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-package-name: ${{ inputs.publication-package-name }}
@@ -1044,7 +1072,6 @@ jobs:
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
-      publication-gate-controller-sha: ${{ inputs.publication-gate-controller-sha }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       publication-consumer-qualification-command: ${{ inputs.publication-consumer-qualification-command }}

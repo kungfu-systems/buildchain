@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:d76416d8cd04dcdb560b7d06fef287fa22d6b186a729cb92cd4cf71cebbac1e9"
+      "digest": "sha256:d25f6fa1cda07a719d700d65ac399585157620518765a3847002e8e7c6041908"
     },
     {
       "id": "getting-started",
@@ -229,7 +229,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2365e125d38e43b68a4af277a91be7aca708a8bf785954ed4589dbd9a5d8db97"
+      "digest": "sha256:defb3b669555c1e99ff46618673021af3a82b9f162646efc34a6334e75fcf8fe"
     },
     {
       "id": "node-api-reference",
@@ -237,7 +237,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f5592359584e98ab4283d56b0262fdcf9c5da61f48033cecad1b0404aa95bd2e"
+      "digest": "sha256:ae82d909420c42814773e22df13202844c889a41d98e471ad1ac185273974805"
     },
     {
       "id": "build-facts",
@@ -286,6 +286,22 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:72466943bb459f6857f23ac6f92bcf4714dcd2f535c38a9f0e34864b36404e06"
+    },
+    {
+      "id": "release-tail-contract",
+      "title": "Declarative release-tail contract",
+      "path": "docs/release-tail-contract.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:1cfd927f30d71a359397a7177048b298269a8e665e67237187eb817e5d196b41"
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "title": "Declarative release-tail provider plane",
+      "path": "docs/release-tail-provider-plane.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:80b39ba4f0a8ed723e2a03e7efff0fee1e891245f7d1bf343edc75011aded801"
     },
     {
       "id": "release-governance",

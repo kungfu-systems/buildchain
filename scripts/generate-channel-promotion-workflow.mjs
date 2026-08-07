@@ -20,6 +20,7 @@ const internalInputs = new Set([
   "promotion-publication-channel",
   "promotion-target-ref",
   "promotion-override-used",
+  "publication-authority-workflow-path",
 ]);
 
 function blockBetween(source, start, end) {
@@ -115,6 +116,9 @@ function forwardedInputs(inputNames, { includeInternal = true, unsupportedInputs
       }[name];
       if (name === "promotion-override-used") {
         return `      ${name}: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}`;
+      }
+      if (name === "publication-authority-workflow-path") {
+        return "      publication-authority-workflow-path: .github/workflows/release-candidate-promote.yml";
       }
       return routed
         ? `      ${name}: \${{ needs.resolve-promotion.outputs.${routed} }}`

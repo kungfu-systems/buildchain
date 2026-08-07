@@ -310,6 +310,101 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(repeated.updates[0].action, "resumed-advanced-publication");
 });
 
+test("governed release finalization reuses contained durable material after the protected target advanced", async () => {
+  const releaseSha = "e".repeat(40);
+  const advancedSha = "f".repeat(40);
+  const version = "1.0.0";
+  const cwd = makeTempWorkspace({
+    "package.json": { name: "@kungfu-tech/buildchain", version: "1.0.0-alpha.0", packageManager: "pnpm@11.7.0" },
+  });
+  const { octokit, refs, commits, commitLog } = createGitMock({
+    refs: new Map([["heads/release/v1/v1.0", advancedSha], ["tags/v1.0.0-alpha.0", SHA]]),
+  });
+  for (const [sha, parents] of [[SHA, []], [releaseSha, [SHA]], [advancedSha, [releaseSha]]]) {
+    commits.set(sha, { sha, tree: { sha: `tree-${sha}` }, parents: parents.map((parent) => ({ sha: parent })) });
+  }
+  octokit.rest.repos = {
+    compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
+    getBranchProtection: async () => ({ data: protectedChannel() }),
+    listPullRequestsAssociatedWithCommit: async () => ({ data: [{
+        merged_at: "2026-08-07T00:00:00Z",
+        base: { ref: "release/v1/v1.0" },
+        head: { ref: "alpha/v1/v1.0", repo: { full_name: "kungfu-systems/buildchain" } },
+      }] }),
+  };
+  const evidencePath = path.join(cwd, "durable-release-evidence.json");
+  const evidence = {
+    schema: 1,
+    version,
+    channel: "release",
+    source_sha: SHA,
+    release_sha: releaseSha,
+    target_ref: "release/v1/v1.0",
+    release_material_sha: releaseSha,
+    publish_tooling_sha: releaseSha,
+    artifacts: [],
+  };
+  fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2) + "\n");
+  await persistDurableReleaseTransaction({
+    octokit, owner: "kungfu-systems", repo: "buildchain", cwd,
+    transaction: {
+      ...evidence,
+      id: "tx-advanced-release",
+      repository: "kungfu-systems/buildchain",
+      exact_tag: `v${version}`,
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0",
+      state_path: "",
+      evidence_path: "",
+      state: "finalizing",
+      previous_state: "published",
+      actor: "codex", run_id: "1", superseded_by: "", failure: "",
+      evidence: ["durable-release-evidence.json"],
+      created_at: "2026-08-07T00:00:00.000Z",
+      updated_at: "2026-08-07T00:00:00.000Z",
+    },
+    evidencePath,
+  });
+  fs.unlinkSync(evidencePath);
+
+  const result = await promoteBuildchainRefs({
+    octokit, owner: "kungfu-systems", repo: "buildchain", sha: SHA,
+    targetRef: "release/v1/v1.0", cwd,
+    versionState: false,
+    requireGovernance: true,
+    publishTransaction: true,
+    publishTransactionOverride: true,
+    expectedPublicationVersion: version,
+    releasePassport: false,
+  });
+
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.id, "tx-advanced-release");
+  assert.equal(refs.get("heads/release/v1/v1.0"), advancedSha);
+  assert.equal(refs.get("tags/v1.0.0"), SHA);
+  assert.equal(refs.get("tags/v1.0"), releaseSha);
+  assert.equal(refs.get("tags/v1"), releaseSha);
+  assert.equal(commitLog.some(({ message }) => message.startsWith("chore(release): release v1.0.0")), false);
+  assert.deepEqual(
+    result.updates.find((update) => update.action === "existing-contained-version-state"),
+    { version, action: "existing-contained-version-state", sha: releaseSha },
+  );
+  assert.equal(
+    result.updates.find((update) => update.action === "finalized-contained-published-transaction")?.currentChannelSha,
+    advancedSha,
+  );
+
+  const plan = await promoteBuildchainRefs({
+    octokit, owner: "kungfu-systems", repo: "buildchain", sha: SHA,
+    targetRef: "release/v1/v1.0", cwd, dryRun: true, publishTransaction: true,
+    publishTransactionOverride: true, expectedPublicationVersion: version, releasePassport: false,
+  });
+  assert.equal(plan.updates[0].action, "resumed-advanced-publication");
+  assert.equal(plan.updates.find((update) => update.action === "dry-run-publish-transaction")?.version, version);
+});
+
 test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {
   const refs = new Map([["heads/alpha/v1/v1.0", SHA]]);
   const mutationCalls = [];
@@ -3684,6 +3779,7 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
 
 test("release recovery bootstrap scope stays exact outside the promotion action directory", () => {
   for (const file of [
+    ".github/workflows/buildchain-ref-promotion.yml",
     "packages/core/self-dogfood-version.js",
     "scripts/check-inventory.mjs",
     "tests/build-surface.test.mjs",
@@ -3697,10 +3793,7 @@ test("release recovery bootstrap scope stays exact outside the promotion action 
   ]) {
     assert.equal(isAllowedReleaseLineRecoveryPath(file), false);
   }
-  assert.equal(
-    isAllowedReleaseLineRecoveryPath("package.json", ["package.json"]),
-    true,
-  );
+  assert.equal(isAllowedReleaseLineRecoveryPath("package.json", ["package.json"]), true);
 });
 
 test("strict release promotion binds a generated version commit to the exact recovery RC parent", async () => {

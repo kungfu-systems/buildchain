@@ -1253,16 +1253,18 @@ async function restorePublishTransactionContext(context) {
           manifest: localExisting.sealed_bundle,
         })
       : undefined;
-  if (
+  const sealedBundleRootMismatch =
     durableBundleVerification &&
     requestedBundleVerification &&
     durableBundleVerification.root !== requestedBundleVerification.root
-  ) {
-    throw new Error(
-      `sealed bundle root mismatch: durable=${durableBundleVerification.root} requested=${requestedBundleVerification.root}`,
-    );
-  }
+      ? `sealed bundle root mismatch: durable=${durableBundleVerification.root} requested=${requestedBundleVerification.root}`
+      : "";
   let sealedBundleVerification = durableBundleVerification || requestedBundleVerification || localBundleVerification;
+  const sealedVersion = String(sealedBundleVerification?.npm?.version || "").trim();
+  const publishSealedNpmTarball = sealedVersion === version;
+  if (sealedVersion && !publishSealedNpmTarball && !(channel === "release" && sealedVersion.startsWith(`${version}-alpha.`))) {
+    throw new Error(`publication sealed bundle npm version ${sealedVersion} does not match ${version}`);
+  }
   let existingEvidence = readPublishEvidence(resolvedEvidencePath);
   let existingValidation;
   if (existingEvidence) {
@@ -1278,8 +1280,10 @@ async function restorePublishTransactionContext(context) {
       requiredArtifacts,
     });
   }
-  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, existingEvidence, existingValidation };
+  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, sealedBundleRootMismatch, publishSealedNpmTarball, existingEvidence, existingValidation };
 }
+
+function assertSealedBundleRootCompatibility(mismatch, versionStateFinalization) { if (mismatch && !versionStateFinalization) throw new Error(mismatch); }
 
 async function canFinalizePublishVersionState({ context, error, existing }) {
   const {
@@ -1376,7 +1380,7 @@ async function resolvePublishTransactionResume(context) {
 function publishTransactionEnvironment({
   version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
-  requiredArtifacts, publishContract,
+  publishSealedNpmTarball, requiredArtifacts, publishContract,
 }) {
   return {
     BUILDCHAIN_VERSION: version,
@@ -1396,11 +1400,9 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
     BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
     BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundleVerification?.root || "",
-    BUILDCHAIN_SEALED_NPM_TARBALL:
-      sealedBundleVerification?.npm.absolutePath || "",
-    BUILDCHAIN_SEALED_NPM_INTEGRITY:
-      sealedBundleVerification?.npm.integrity || "",
-    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundleVerification?.npm.sha256 || "",
+    BUILDCHAIN_SEALED_NPM_TARBALL: (publishSealedNpmTarball && sealedBundleVerification?.npm.absolutePath) || "",
+    BUILDCHAIN_SEALED_NPM_INTEGRITY: (publishSealedNpmTarball && sealedBundleVerification?.npm.integrity) || "",
+    BUILDCHAIN_SEALED_NPM_SHA256: (publishSealedNpmTarball && sealedBundleVerification?.npm.sha256) || "",
     BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
@@ -1421,8 +1423,8 @@ async function runPublishTransaction(options) {
     actor, runId, explicitOverride, promotionGeneratedAt, repository,
     resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
     existingNpmPromotion, expected, durableExisting, existing, existingEvidence,
-    existingValidation, sealedBundleVerification, versionStateFinalization,
-  } = context;
+    existingValidation, sealedBundleVerification, sealedBundleRootMismatch, versionStateFinalization,
+  } = context; assertSealedBundleRootCompatibility(sealedBundleRootMismatch, versionStateFinalization);
   let transaction =
     existing ||
     createReleaseTransaction({
@@ -2913,9 +2915,9 @@ async function resumableReleaseTransactionState({
       (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state,
-      ) &&
-      (exactTransactionSource || transactionInSourceHistory)
+      !["abandoned", "failed_permanently"].includes(transaction.state) &&
+      (transaction.state === "complete" ? exactTransactionSource
+        : exactTransactionSource || transactionInSourceHistory)
     ) {
       return {
         ...candidate,

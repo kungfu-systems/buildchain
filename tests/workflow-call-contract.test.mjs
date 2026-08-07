@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -6,7 +7,19 @@ import { execFileSync } from "node:child_process";
 import test from "node:test";
 import { evaluateWorkflowCallContract } from "../packages/core/workflow-call-contract.js";
 import { parseReusableWorkflowInterface } from "../packages/core/workflow-yaml-contract.js";
-import { checkWorkflowCall } from "../scripts/workflow-call-contract.mjs";
+import {
+  assertSelfReleaseRouteParity,
+  checkSelfReleaseRouteParity,
+  checkWorkflowCall,
+  SELF_RELEASE_PUBLIC_WORKFLOW,
+} from "../scripts/workflow-call-contract.mjs";
+import { createDeclarativeGitHubReleasePlan } from "../actions/promote-buildchain-ref/github-release.js";
+import {
+  createReleaseTailAdapterSet,
+  createReleaseTailTransaction,
+  executeReleaseTailTransaction,
+} from "../packages/core/release-tail-provider-plane.js";
+import { ReleaseTailProviderError } from "../packages/core/release-tail-provider-adapters.js";
 
 const SHA = "a".repeat(40);
 
@@ -254,4 +267,131 @@ test("consumer command verifies clean exact checkouts and marks dirty runs diagn
     () => checkWorkflowCall({ ...options, allowDirty: true }),
     /callee checkout is dirty/,
   );
+});
+
+test("self-release and external consumers share one public provider-plane route", () => {
+  const report = checkSelfReleaseRouteParity({ root: process.cwd() });
+  assert.equal(report.ok, true);
+  assert.equal(report.self.publicWorkflow, SELF_RELEASE_PUBLIC_WORKFLOW);
+  assert.deepEqual(report.self, report.consumer);
+});
+
+test("checkout-relative and internal-only self-release routes fail closed", () => {
+  const read = (relative) => fs.readFileSync(relative, "utf8");
+  const common = {
+    consumerWorkflowText: read(
+      "tests/fixtures/self-release-route/external-consumer.yml",
+    ),
+    routing: JSON.parse(read(".buildchain/promotion-shell-routing.json")),
+    publicWorkflowText: read(".github/workflows/release-candidate-promote.yml"),
+    advancedWorkflowText: read(
+      ".github/workflows/.release-candidate-promote.yml",
+    ),
+    actionText: `${read("actions/promote-buildchain-ref/index.js")}\n${read("actions/promote-buildchain-ref/github-release.js")}`,
+    providerPlanText: read("actions/promote-buildchain-ref/github-release.js"),
+  };
+  const self = read(".github/workflows/buildchain-ref-promotion.yml");
+  assert.throws(
+    () =>
+      assertSelfReleaseRouteParity({
+        ...common,
+        selfWorkflowText: self.replace(
+          SELF_RELEASE_PUBLIC_WORKFLOW,
+          "./.github/workflows/.release-candidate-promote.yml",
+        ),
+      }),
+    /checkout-relative/u,
+  );
+  assert.throws(
+    () =>
+      assertSelfReleaseRouteParity({
+        ...common,
+        selfWorkflowText: self.replace(
+          SELF_RELEASE_PUBLIC_WORKFLOW,
+          "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3-alpha",
+        ),
+      }),
+    /internal/u,
+  );
+});
+
+test("GitHub Release declaration is rooted only in sealed artifacts and source identity", (t) => {
+  const directory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-self-tail-"),
+  );
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const artifact = path.join(directory, "buildchain-linux-x64.tar.gz");
+  fs.writeFileSync(artifact, "qualified artifact bytes\n");
+  const options = {
+    repository: "kungfu-systems/buildchain",
+    sourceSha: "a".repeat(40),
+    version: "3.0.6-alpha.11",
+    tag: "v3.0.6-alpha.11",
+    channel: "alpha",
+    assetPaths: [artifact],
+  };
+  const first = createDeclarativeGitHubReleasePlan(options);
+  const second = createDeclarativeGitHubReleasePlan(options);
+  assert.equal(first.plan.planRoot, second.plan.planRoot);
+  assert.equal(first.plan.transactionRoot, second.plan.transactionRoot);
+  assert.equal(
+    first.artifacts[0].root,
+    `sha256:${crypto.createHash("sha256").update(fs.readFileSync(artifact)).digest("hex")}`,
+  );
+  assert.equal(first.declaration.capabilities[0].retry.localAttempts, 2);
+});
+
+test("provider transient retries the sealed tail without rebuilding qualified artifacts", async (t) => {
+  const directory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-self-retry-"),
+  );
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  let artifactFormationCount = 0;
+  const artifact = path.join(directory, "buildchain-darwin-arm64.tar.gz");
+  artifactFormationCount += 1;
+  fs.writeFileSync(artifact, "expensive qualified artifact\n");
+  const materialized = createDeclarativeGitHubReleasePlan({
+    repository: "kungfu-systems/buildchain",
+    sourceSha: "b".repeat(40),
+    version: "3.0.6-alpha.11",
+    tag: "v3.0.6-alpha.11",
+    channel: "alpha",
+    assetPaths: [artifact],
+  });
+  const effect = materialized.plan.effects[0];
+  let remoteRoot = "";
+  let applyAttempts = 0;
+  const adapters = createReleaseTailAdapterSet(materialized.declaration, {
+    "github-release-assets": {
+      id: "github-release-assets",
+      async readback() {
+        return remoteRoot
+          ? {
+              outcome: "observed",
+              subjectRoot: effect.subjectRoot,
+              targetRoot: remoteRoot,
+              providerCode: "github-release-assets-observed",
+            }
+          : { outcome: "absent", providerCode: "github-release-absent" };
+      },
+      async apply() {
+        applyAttempts += 1;
+        if (applyAttempts === 1) {
+          throw new ReleaseTailProviderError("temporary provider outage", {
+            code: "github-release-create-transient",
+            classification: "transient",
+          });
+        }
+        remoteRoot = effect.targetRoot;
+      },
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(materialized.plan),
+    { adapters },
+  );
+  assert.equal(result.state, "complete");
+  assert.equal(applyAttempts, 2);
+  assert.equal(artifactFormationCount, 1);
+  assert.equal(result.operations[0].effectAttempts, 2);
 });

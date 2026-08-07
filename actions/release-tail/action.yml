@@ -1,0 +1,36 @@
+name: "Execute a declarative Buildchain release tail"
+author: "Keren Dong"
+description: "Execute rooted release provider effects through one Buildchain-owned transaction, readback, retry, and receipt path"
+inputs:
+  declaration:
+    description: "Versioned release-tail declaration JSON or path"
+    required: true
+  provider-bindings:
+    description: "Data-only artifact and provider document bindings JSON or path"
+    required: true
+  state-path:
+    description: "Durable transaction checkpoint path"
+    default: ".buildchain/release-tail/state.json"
+  github-token:
+    description: "GitHub token used only by the built-in GitHub Release adapter"
+    required: false
+  http-token:
+    description: "Bearer token used only by built-in HTTP mutation adapters"
+    required: false
+  execute:
+    description: "Execute effects; false only creates or validates the durable plan"
+    default: "true"
+outputs:
+  transaction-state:
+    description: "Final Buildchain release-tail transaction state"
+  transaction-root:
+    description: "Stable declared transaction root"
+  state-root:
+    description: "Root of the final durable transaction state"
+  state-path:
+    description: "Durable transaction checkpoint path"
+  receipt-roots-json:
+    description: "JSON array of standardized receipt roots"
+runs:
+  using: "node24"
+  main: "dist/index.js"

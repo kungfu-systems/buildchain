@@ -48,19 +48,21 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 5,
-        "pageCount": 5,
-        "cliCommandCount": 25,
-        "nodeApiCount": 12,
-        "workflowCount": 3,
-        "actionCount": 2
+        "manualCount": 7,
+        "pageCount": 7,
+        "cliCommandCount": 26,
+        "nodeApiCount": 15,
+        "workflowCount": 4,
+        "actionCount": 3
       },
       "manuals": [
         "docs/release-passport.md",
         "docs/github-artifact-attestation.md",
         "docs/publication-authority.md",
         "docs/binary-distribution.md",
-        "docs/publish-transaction.md"
+        "docs/publish-transaction.md",
+        "docs/release-tail-contract.md",
+        "docs/release-tail-provider-plane.md"
       ],
       "factSources": [
         "page-registry.json",
@@ -252,7 +254,7 @@
       "counts": {
         "manualCount": 8,
         "pageCount": 8,
-        "cliCommandCount": 11,
+        "cliCommandCount": 12,
         "nodeApiCount": 6,
         "workflowCount": 16,
         "actionCount": 0
@@ -289,7 +291,7 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 3,
-        "pageCount": 10,
+        "pageCount": 11,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
         "workflowCount": 40,

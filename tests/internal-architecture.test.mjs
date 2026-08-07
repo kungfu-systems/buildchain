@@ -20,12 +20,12 @@ const index = JSON.parse(
 test("internal architecture index covers implementations, tests, and dependency direction", () => {
   assert.deepEqual(checkInternalArchitecture({ root, index }), {
     schemaVersion: 1,
-    capabilities: 15,
-    implementations: 48,
-    repositorySources: 275,
-    ownedSources: 275,
+    capabilities: 17,
+    implementations: 54,
+    repositorySources: 284,
+    ownedSources: 284,
     excludedSources: 0,
-    dependencyEdges: 225,
+    dependencyEdges: 230,
     dependencyRules: 4,
     dependencyCycles: 0,
   });

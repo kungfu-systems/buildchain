@@ -2,6 +2,12 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain --help
   buildchain version
   buildchain layout [--cwd <dir>] [--json]
+  buildchain architecture validate [--cwd <dir>] [--json]
+  buildchain architecture list [--cwd <dir>] [--json]
+  buildchain architecture show <capability-id> [--cwd <dir>] [--json]
+  buildchain architecture qualify --authority-revision <git-revision>
+                                      [--candidate-revision <git-revision>]
+                                      [--cwd <dir>] [--json]
   buildchain portable-cache plan --manifest <file-or-json> [--output <file>]
                                  [--github-output <file>] [--json]
   buildchain portable-cache receipt --plan <file-or-json> [--matched-key <key>]
@@ -33,6 +39,10 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-governance reconcile --repository <owner/repo>
                                --branch <dev|alpha|release/vN/vN.N>
                                --candidate-sha <sha> [--apply] [--json]
+  buildchain release-tail plan --declaration <json-or-path> [--output <path>]
+  buildchain release-tail init --declaration <json-or-path> [--state <path>]
+  buildchain release-tail <status|verify> [--state <path>] [--output <path>]
+  buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
   buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...

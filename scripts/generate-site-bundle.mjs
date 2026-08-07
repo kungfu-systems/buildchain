@@ -360,6 +360,8 @@ const manualMetaById = new Map(Object.entries({
   "auditable-demo": { capabilityGroup: "reusable-build", audience: ["consumer", "agent"], maturity: "preview", order: 207 },
   "binary-distribution": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 110 },
   "publish-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator"], maturity: "stable", order: 120 },
+  "release-tail-contract": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent", "maintainer"], maturity: "draft", order: 122 },
+  "release-tail-provider-plane": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent", "maintainer"], maturity: "preview", order: 123 },
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
@@ -514,6 +516,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
 
 function workflowCapabilityGroup(entry) {
   if (entry.id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
+  if (entry.id === "release-tail") return capabilityGroup("release-passport-trust");
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
   if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
@@ -524,6 +527,7 @@ function workflowCapabilityGroup(entry) {
 
 function actionCapabilityGroup(id) {
   if (id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
+  if (id === "release-tail") return capabilityGroup("release-passport-trust");
   if (id === "promote-buildchain-ref") return capabilityGroup("release-passport-trust");
   if (id === "run-lifecycle" || id === "validate-config") return capabilityGroup("reusable-build");
   if (id === "report-buildchain-issue") return capabilityGroup("observability-diagnostics");
@@ -776,6 +780,7 @@ function buildSiteBundle() {
         ["release-candidate-promote", "release-governance"],
         ["paper-release", "reusable-build"],
         ["release-propagation", "release-propagation"],
+        ["release-tail", "release-tail-provider-plane"],
         ["dev-pr-auto-merge", "dev-governance"],
         ["buildchain-dev-delivery", "dev-governance"],
         ["github-governance-audit", "dev-governance"],

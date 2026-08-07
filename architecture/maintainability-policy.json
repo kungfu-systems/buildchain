@@ -5,18 +5,24 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 275,
-    "maxHandMaintainedSourceLines": 104953,
-    "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22241,
-    "latestTransition": "Candidate recovery can bind an exact consumer Gate controller independently from the immutable product subject after the publication audit gained a bounded large-commit response ceiling.",
-    "rationale": "The additive controller SHA keeps the recovered product tree and payload immutable while allowing a separately reviewed read-only Gate implementation to evolve. The Gate aggregate binds the exact controller repository, commit, and command digest; no product install, build, repackaging, or alternate publication path is added. The integrated 16 MiB GitHub commit response ceiling remains fail-closed and changes no publication authority."
+    "maxHandMaintainedSourceFiles": 284,
+    "maxHandMaintainedSourceLines": 109183,
+    "maxWorkflowFiles": 65,
+    "maxWorkflowLines": 22459,
+    "latestTransition": "Buildchain self-release now enters the public consumer workflow train and publishes GitHub Release assets through the declarative provider plane with retained route, transaction, receipt, and readback evidence.",
+    "rationale": "The exact transition adds one responsibility-owned GitHub Release adapter coordinator, consumer-equivalent route verification, hosted evidence forwarding, and retry-without-rebuild tests. The authoritative self caller no longer uses checkout-relative workflow reuse, stable routing remains compatible, and these ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
     "newFunctionLines": 180,
     "newFunctionComplexity": 25,
     "existingDebtPolicy": "no-widening"
+  },
+  "approvedNewFileTransitions": {
+    "packages/core/release-tail-provider-plane.js": {
+      "maxLines": 1228,
+      "rationale": "The one versioned transaction authority keeps strict declaration normalization, deterministic effect planning, atomic checkpoints, rooted observations and receipts, and bounded recovery in one independently tested audit surface; this exact preview ceiling cannot grow implicitly."
+    }
   },
   "approvedExistingDebtTransitions": {
     "actions/promote-buildchain-ref/lib.js": {
@@ -36,9 +42,17 @@
       "maxFunctionLines": 679,
       "rationale": "The contract world records the additive candidate-run recovery inputs, reuse guarantees, and reviewed predecessor digests for both public promotion surfaces; this exact public-contract wiring ceiling cannot grow implicitly."
     },
+    "packages/core/index.js": {
+      "maxLines": 695,
+      "rationale": "The root package index exposes the three provider-plane modules while preserving every existing export; this exact additive public wiring ceiling cannot grow implicitly."
+    },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
+    },
+    "scripts/check-maintainability.mjs": {
+      "maxFunctionComplexity": 29,
+      "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and all existing no-widening checks remain unchanged."
     },
     "scripts/check-inventory.mjs": {
       "maxLines": 1468,
@@ -83,6 +97,14 @@
     }
   },
   "approvedPublicSurfaceTransitions": {
+    "cli:architecture": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "architecture",
+        "usage": "buildchain architecture validate [--cwd <dir>] [--json]"
+      },
+      "rationale": "Add a read-only generated list/show/validate surface plus exact Git N-1 qualification; the manifest remains the single authority and the commands do not migrate or write production state."
+    },
     "cli:dev": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
@@ -90,6 +112,96 @@
         "usage": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>"
       },
       "rationale": "The existing Dev command family adds one targeted exact-head admission entry that emits a typed receipt and PR-visible diagnostic status while preserving the merge-queue command and keeping approval and merge authority external."
+    },
+    "action:promote-buildchain-ref": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "promote-buildchain-ref",
+        "path": "actions/promote-buildchain-ref/action.yml",
+        "inputs": [
+          "allow-repository",
+          "branch-protection-bypass-apps",
+          "branch-protection-bypass-teams",
+          "branch-protection-bypass-users",
+          "declarative-release-tail",
+          "dry-run",
+          "expected-publication-version",
+          "generated-pull-request-token",
+          "generated-ref-update-token",
+          "generated-status-check-token",
+          "github-release",
+          "github-release-artifact-paths",
+          "github-release-notes",
+          "github-release-title",
+          "promote-only-release-candidate",
+          "publication-capability-json",
+          "publication-gate-aggregate-json",
+          "publication-qualification-receipt-json",
+          "publication-used-qualification-nonces-json",
+          "publish-auth",
+          "publish-command",
+          "publish-dist-tag",
+          "publish-evidence-path",
+          "publish-mode",
+          "publish-package-main",
+          "publish-package-set-order",
+          "publish-rematerialize-on-resume",
+          "publish-required-artifacts-json",
+          "publish-sealed-bundle-manifest",
+          "publish-sealed-bundle-root",
+          "publish-source-locked",
+          "publish-source-ref",
+          "publish-source-sha",
+          "publish-tooling-sha",
+          "publish-transaction",
+          "publish-transaction-override",
+          "reconciliation-workspace",
+          "release-candidate-build-summary-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
+          "release-candidate-passport-path",
+          "release-candidate-version",
+          "release-material-sha",
+          "release-passport",
+          "release-passport-attachment-command",
+          "release-passport-build-summary-path",
+          "release-passport-buildchain-self-kfd",
+          "release-passport-evidence-command",
+          "release-passport-evidence-jsons",
+          "release-passport-github-artifact-attestation-policy-jsons",
+          "release-passport-impact-json",
+          "release-passport-invariant-passport-command",
+          "release-passport-invariant-passport-jsons",
+          "release-passport-kfd-1-witness-jsons",
+          "release-passport-kfd-2-claim-jsons",
+          "release-passport-kfd-3-artifact-verify-command",
+          "release-passport-kfd-3-artifact-witness-jsons",
+          "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-product-gate-jsons",
+          "release-passport-kfd-support-matrix-json",
+          "release-passport-output-dir",
+          "release-passport-platform-manifest-paths",
+          "release-passport-product-name",
+          "release-passport-promotion-routing-json",
+          "release-tail-state-path",
+          "require-governance",
+          "require-publication-qualification",
+          "require-publish-source-lock",
+          "require-version-state",
+          "required-status-check",
+          "sha",
+          "tags",
+          "target-ref",
+          "token",
+          "transaction-state-path",
+          "verification-command"
+        ],
+        "secrets": [],
+        "outputs": []
+      },
+      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording."
     },
     "action:run-lifecycle": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -754,6 +866,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "channel",
+          "declarative-release-tail",
           "dry-run",
           "github-artifact-attestation-environment",
           "github-artifact-attestation-policy-json",
@@ -776,12 +889,14 @@
           "promotion-shell-sha",
           "promotion-target-ref",
           "publication-admission-json",
+          "publication-authority-workflow-path",
           "publication-auto-admission",
           "publication-auto-no-gate",
           "publication-commit-command",
           "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
+          "publication-consumer-qualification-controller-sha",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -885,10 +1000,15 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
-          "release-propagation-work-artifact"
+          "release-propagation-work-artifact",
+          "release-tail-declaration-root",
+          "release-tail-receipt-roots-json",
+          "release-tail-state-root",
+          "release-tail-transaction-root",
+          "release-tail-transaction-state"
         ]
       },
-      "rationale": "The advanced promotion workflow forwards one optional exact consumer Gate controller SHA into the credential-free authority. Candidate, target tree, controller, and command identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
+      "rationale": "Add the opt-in declarative release-tail input and rooted transaction outputs required for consumer-equivalent Buildchain alpha self-dogfood. Existing callers retain defaults, stable routing does not receive the alpha-only input, and provider failure remains fail-closed."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -912,6 +1032,7 @@
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
           "channel",
+          "declarative-release-tail",
           "dry-run",
           "github-artifact-attestation-environment",
           "github-artifact-attestation-policy-json",
@@ -929,6 +1050,7 @@
           "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
+          "publication-consumer-qualification-controller-sha",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -1044,13 +1166,38 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
-          "release-propagation-work-artifact"
+          "release-propagation-work-artifact",
+          "release-tail-declaration-root",
+          "release-tail-receipt-roots-json",
+          "release-tail-state-root",
+          "release-tail-transaction-root",
+          "release-tail-transaction-state"
         ]
       },
-      "rationale": "The generated v3 promotion router forwards the additive exact consumer Gate controller SHA together with the existing candidate recovery identity, without changing channel selection, contract-lock routing, payload handling, or publication authority."
+      "rationale": "Add the opt-in declarative release-tail input and rooted transaction outputs required for consumer-equivalent Buildchain alpha self-dogfood. Existing callers retain defaults, stable routing does not receive the alpha-only input, and provider failure remains fail-closed."
     }
   },
   "approvedExtractedDebt": {
+    "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan": {
+      "maxLines": 94,
+      "maxComplexity": 30,
+      "rationale": "The sealed-plan verifier revalidates the full closed-world envelope, rejects executable or excess fields, and binds every effect, operation identity, subject, and root before durable execution; its exact preview ceiling cannot grow implicitly."
+    },
+    "packages/core/release-tail-provider-plane.js#normalizeCapability": {
+      "maxLines": 255,
+      "maxComplexity": 25,
+      "rationale": "The strict closed-world normalizer audits every field of one capability declaration in a single sequential validation path; its exact preview ceiling cannot grow implicitly."
+    },
+    "packages/core/release-tail-provider-plane.js#validateReleaseTailTransaction": {
+      "maxLines": 180,
+      "maxComplexity": 33,
+      "rationale": "Transaction validation checks the complete durable envelope, operation counters, observation roots, receipt roots, and state root in one fail-closed pass; its exact preview complexity ceiling cannot grow implicitly."
+    },
+    "packages/core/release-tail-provider-plane.js#executeReleaseTailTransaction": {
+      "maxLines": 190,
+      "maxComplexity": 27,
+      "rationale": "The executor keeps readback, bounded local retry, mutation, post-readback, and terminal classification together so adapters cannot gain state-transition authority; its exact preview ceiling cannot grow implicitly."
+    },
     "actions/promote-buildchain-ref/lib.js#createRefMutationOperations": {
       "maxLines": 627,
       "maxComplexity": 1,

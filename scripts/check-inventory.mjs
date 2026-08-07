@@ -730,8 +730,8 @@ const registeredActionIds = (workflowRegistry.actions || []).map((entry) => entr
 const readmeActionIndex = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
-if (registeredActionIds.length !== 6) {
-  throw new Error(`workflow-registry.json must expose the six current action entries, got ${registeredActionIds.length}`);
+if (registeredActionIds.length !== 7) {
+  throw new Error(`workflow-registry.json must expose the seven current action entries, got ${registeredActionIds.length}`);
 }
 for (const actionId of registeredActionIds) {
   if (!readmeActionIndex.includes(`actions/${actionId}`) || !mapActionIndex.includes(`actions/${actionId}`)) {
@@ -992,7 +992,7 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
-  "uses: ./.github/workflows/.release-candidate-promote.yml",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood\n",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
@@ -1114,7 +1114,7 @@ for (const retiredWorkflow of [
   }
 }
 const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/action.yml"), "utf8");
-const promoteBuildchainRefIndex = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/index.js"), "utf8");
+const promoteBuildchainRefIndex = ["actions/promote-buildchain-ref/index.js", "actions/promote-buildchain-ref/github-release.js"].map((entry) => fs.readFileSync(path.join(root, entry), "utf8")).join("\n");
 for (const requiredSnippet of [
   "github-release:",
   "github-release-title:",
@@ -1140,8 +1140,8 @@ for (const requiredSnippet of [
   }
 }
 for (const forbiddenSnippet of [
-  "run: node scripts/release-candidate-resolver.mjs",
-  "uses: ./actions/promote-buildchain-ref",
+  "uses: ./.github/workflows/.release-candidate-promote.yml",
+  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@",
 ]) {
   if (buildchainRefPromotionWorkflow.includes(forbiddenSnippet)) {
     throw new Error(`buildchain ref promotion workflow must use the declarative wrapper, found manual snippet: ${forbiddenSnippet}`);

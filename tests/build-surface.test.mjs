@@ -1064,7 +1064,20 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
+  const publicWorkflow = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
   assert.match(workflow, /workflow_call:/);
+  assert.match(publicWorkflow, /publication-consumer-qualification-controller-sha:/);
+  assert.match(
+    publicWorkflow,
+    /publication-consumer-qualification-controller-sha: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/,
+  );
+  assert.match(
+    publicWorkflow,
+    /publication-authority-workflow-path: \.github\/workflows\/release-candidate-promote\.yml/,
+  );
   assert.match(workflow, /release-candidate-resolver\.mjs/);
   assert.match(workflow, /release-candidate-workflow-file:/);
   assert.match(workflow, /default: "build\.yml"/);
@@ -1191,6 +1204,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publication-gate-aggregate-json:/);
   assert.match(workflow, /publication-gate-command:/);
   assert.match(workflow, /publication-gate-controller-sha:/);
+  assert.match(workflow, /publication-consumer-qualification-controller-sha:/);
+  assert.match(workflow, /publication-authority-workflow-path:/);
   assert.match(workflow, /release-candidate-wait-seconds:/);
   assert.match(workflow, /publication-auto-admission:/);
   assert.match(workflow, /auto-admission: \$\{\{ inputs\.publication-auto-admission \}\}/);
@@ -1201,7 +1216,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /BUILDCHAIN_RC_WAIT_SECONDS: \$\{\{ inputs\.release-candidate-wait-seconds \}\}/);
   assert.match(workflow, /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/);
-  assert.match(workflow, /authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/);
+  assert.match(workflow, /authority-workflow-path: \$\{\{ inputs\.publication-authority-workflow-path \}\}/);
   assert.match(workflow, /evidence-run-id:/);
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
@@ -1210,6 +1225,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
   assert.match(workflow, /name: Bind consumer publication predicate/);
   assert.match(workflow, /name: Run consumer publication predicate/);
+  assert.match(workflow, /BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/);
+  assert.match(workflow, /const controllerSha = explicitControllerSha \|\| gateControllerSha \|\| sourceSha/);
+  assert.match(workflow, /update\(`\$\{command\}\\0\$\{controllerSha\}`\)/);
+  assert.match(workflow, /controller-sha=\$\{command \? controllerSha : ""\}/);
+  assert.match(workflow, /ref: \$\{\{ needs\.qualification-plan\.outputs\.controller-sha \}\}/);
   assert.match(workflow, /permissions: \{\}/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_PATH/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH/);
@@ -1378,8 +1398,19 @@ test("self-publication admission assembly binds downloaded evidence without publ
   assert.match(script, /admitted source tree does not match release candidate/);
   assert.match(script, /BUILDCHAIN_ALLOW_NO_GATE/);
   assert.match(script, /managed-release-candidate-no-gate/);
+  assert.match(script, /policyDigest: gateBindings\.policyDigest/);
+  assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
   assert.match(script, /github-hosted-single-job/);
   assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
+});
+
+test("publication artifact admission uses validated Gate policy bindings", () => {
+  const script = fs.readFileSync(
+    path.join(root, "scripts/assemble-publication-artifact-admission.mjs"),
+    "utf8",
+  );
+  assert.match(script, /policyDigest: gateBindings\.policyDigest/);
+  assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
 });
 
 test("publication control-plane audit defers npm OIDC authorization to the publish transaction", () => {
