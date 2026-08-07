@@ -445,7 +445,7 @@
       "title": "Declarative release-tail provider plane",
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
-      "digest": "sha256:785422ee63ddc92509751551ebea8bf3ebbda0841d5913fab97c67a197286dbd",
+      "digest": "sha256:0d9aaadf81a6977ec19c41c1bfa7631f717f3456f912a6adbccf785d18dc40c5",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
