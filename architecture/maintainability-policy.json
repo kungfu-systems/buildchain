@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 277,
-    "maxHandMaintainedSourceLines": 105983,
+    "maxHandMaintainedSourceFiles": 281,
+    "maxHandMaintainedSourceLines": 106949,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22269,
-    "latestTransition": "The qualified v4 bootstrap adds exact N-1 self-dogfood authority recognition, governance admission, release-impact relining, and an explicit protected delivery target while repairing slash-safe protection paths, without migrating a production writer or changing provider effects.",
-    "rationale": "The prior exact Wave 0 ceiling remains intact and adds exactly 59 hand-maintained source lines for qualification-bound adjacent-major self-dogfood bootstrap, fail-closed authority drift checks, and deterministic release-impact relining. One workflow line exposes the already reusable target-branch contract so required Delivery Warrants can bind protected v4 without changing the v3 default. The existing check-inventory file grows only by the authority lookup and bounded predicate call; its new exact ceiling is recorded separately. These ceilings cannot grow implicitly; additional bootstrap or runtime migration machinery requires another reviewed transition."
+    "latestTransition": "The bounded v4 Rust/libnode spike adds a closed byte-oriented host contract, one Rust transport trunk, a replaceable Node subprocess adapter, and reproducible comparison evidence while retaining every TypeScript v3 production writer.",
+    "rationale": "The prior exact Wave 0 ceiling adds four hand-maintained source files and exactly 966 lines: a 495-line Rust transport with bounded lifecycle and failure handling, three focused MJS bootstrap, host, and evidence adapters, plus the small verifier change that brings Rust into source and ownership budgets. The package excludes Cargo target output, the retained fixtures cover success and failure semantics, and no workflow or public CLI surface grows. These exact ceilings cannot grow implicitly; a new host, ABI, consumer migration, or writer migration requires another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

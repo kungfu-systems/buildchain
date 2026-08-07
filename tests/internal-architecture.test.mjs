@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import test from "node:test";
 import {
   checkInternalArchitecture,
-  repositoryJavaScriptFiles,
+  repositorySourceFiles,
 } from "../scripts/check-internal-architecture.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -21,11 +21,11 @@ test("internal architecture index covers implementations, tests, and dependency 
   assert.deepEqual(checkInternalArchitecture({ root, index }), {
     schemaVersion: 1,
     capabilities: 16,
-    implementations: 49,
-    repositorySources: 277,
-    ownedSources: 277,
+    implementations: 53,
+    repositorySources: 281,
+    ownedSources: 281,
     excludedSources: 0,
-    dependencyEdges: 225,
+    dependencyEdges: 226,
     dependencyRules: 4,
     dependencyCycles: 0,
   });
@@ -41,7 +41,7 @@ test("repository source inventory includes untracked files before commit", (t) =
   execFileSync("git", ["add", "tracked.mjs"], { cwd: temporaryRoot });
   fs.writeFileSync(path.join(temporaryRoot, "new.mjs"), "export {};\n");
 
-  assert.deepEqual(repositoryJavaScriptFiles(temporaryRoot), [
+  assert.deepEqual(repositorySourceFiles(temporaryRoot), [
     "new.mjs",
     "tracked.mjs",
   ]);

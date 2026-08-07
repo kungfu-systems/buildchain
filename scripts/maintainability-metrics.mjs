@@ -11,6 +11,7 @@ import {
 } from "./check-internal-architecture.mjs";
 
 const JS_EXTENSIONS = new Set([".js", ".mjs", ".cjs"]);
+const HAND_MAINTAINED_EXTENSIONS = new Set([...JS_EXTENSIONS, ".rs"]);
 const GENERATED_PATTERN = /^actions\/[^/]+\/dist\/.*\.js$/u;
 
 function gitText(root, args, encoding = "utf8") {
@@ -50,7 +51,7 @@ function isGeneratedFile(file) {
 
 function isHandMaintainedSource(file) {
   return (
-    JS_EXTENSIONS.has(path.extname(file)) &&
+    HAND_MAINTAINED_EXTENSIONS.has(path.extname(file)) &&
     !isTestFile(file) &&
     !isGeneratedFile(file)
   );
@@ -260,7 +261,12 @@ function collectMaintainabilityMetrics({
   const sourceMetrics = Object.fromEntries(
     sourceFiles.map((file) => {
       const source = readTrackedFile(root, file, revision);
-      return [file, analyzeJavaScript(file, source)];
+      return [
+        file,
+        JS_EXTENSIONS.has(path.extname(file))
+          ? analyzeJavaScript(file, source)
+          : { lines: lineCount(source), complexity: 0, functions: [] },
+      ];
     }),
   );
   const sumLines = (entries) =>
