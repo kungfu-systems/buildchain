@@ -212,7 +212,9 @@ jobs:
   route-parity:
     name: Prove consumer-equivalent self-release route
     needs: promote
-    if: ${{ needs.promote.result == 'success' }}
+    # Alpha publication may first stop at the protected version-state PR. Only
+    # the durable recovery owns complete provider-plane roots to prove here.
+    if: ${{ needs.promote.result == 'success' && needs.promote.outputs.release-tail-transaction-state == 'complete' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
