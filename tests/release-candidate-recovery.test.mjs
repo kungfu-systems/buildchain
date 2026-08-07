@@ -508,6 +508,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   );
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
   assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
+  assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: \$\{\{ steps\.rc\.outputs\.release-candidate-payload-dir \}\}/);
   assert.match(
     refPromotion,
     /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/,
