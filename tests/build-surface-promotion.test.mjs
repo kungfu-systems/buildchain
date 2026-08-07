@@ -607,7 +607,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@train\/v3\/v3\.0\/consumer-equivalent-self-dogfood\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@93963e1f711c39189fbf019fa0e07d063e384aad\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
@@ -617,7 +617,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: train\/v3\/v3\.0\/consumer-equivalent-self-dogfood/,
+    /buildchain-ref: 93963e1f711c39189fbf019fa0e07d063e384aad/,
   );
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
@@ -1706,9 +1706,9 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@train\/v3\/v3\.0\/consumer-equivalent-self-dogfood/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@93963e1f711c39189fbf019fa0e07d063e384aad/,
   );
-  assert.match(promotion, /buildchain-ref: train\/v3\/v3\.0\/consumer-equivalent-self-dogfood/);
+  assert.match(promotion, /buildchain-ref: 93963e1f711c39189fbf019fa0e07d063e384aad/);
   assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
 });
 

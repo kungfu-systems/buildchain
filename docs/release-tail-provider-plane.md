@@ -92,12 +92,15 @@ Buildchain self-release calls the same public reusable workflow coordinate as a
 consumer:
 
 ```text
-kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood
+kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@93963e1f711c39189fbf019fa0e07d063e384aad
 ```
 
-The public router resolves the workflow shell and runtime to exact SHAs. For
-alpha self-release, the promotion Action materializes the sealed GitHub Release
-asset declaration, executes it through this provider plane, and retains the
+The caller pins the public router and runtime to the same exact implementation
+SHA. Its internal alpha shell remains on the named train, so automatic
+`workflow_run` publication uses the immutable-router path without a manual
+runtime override. For alpha self-release, the promotion Action materializes the
+sealed GitHub Release asset declaration, executes it through this provider
+plane, and retains the
 declaration root, transaction root, state root, receipt roots, controller
 receipt, and route-parity evidence. The legacy GitHub Release helper is not a
 fallback when `declarative-release-tail` is enabled; a provider or readback
