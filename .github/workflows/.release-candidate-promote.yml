@@ -1437,8 +1437,8 @@ jobs:
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
-      - name: Bridge Buildchain self-runtime dependencies
-        if: ${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository }}
+      - name: Bridge recovered Buildchain runtime dependencies
+        if: ${{ inputs.resume-candidate-run-id != '' }}
         shell: bash
         run: |
           test ! -e node_modules

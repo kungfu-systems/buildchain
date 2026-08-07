@@ -542,7 +542,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(
     advanced,
-    /name: Bridge Buildchain self-runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' && github\.repository == inputs\.buildchain-repository \}\}/,
+    /name: Bridge recovered Buildchain runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' \}\}/,
   );
   assert.match(advanced, /ln -s \.buildchain\/runtime\/node_modules node_modules/);
   assert.match(advanced, /name: Install exact publication planning dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
