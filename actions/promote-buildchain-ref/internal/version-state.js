@@ -252,6 +252,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     ".buildchain/release-evidence/",
     ".buildchain/release-passport/",
     ".buildchain/release-state/",
+    ".buildchain/promotion-shell/",
     ".buildchain/runtime/",
   ];
   const isEphemeralBuildchainEvidence = (status, filePath) =>
