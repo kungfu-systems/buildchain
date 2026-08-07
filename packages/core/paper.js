@@ -46,6 +46,11 @@ import {
   scaffoldReadme,
 } from "./paper-scaffold-content.js";
 import { executePaperNpmBootstrap as executePaperNpmBootstrapOperation } from "./paper-npm-bootstrap.js";
+import {
+  appendPublicationRehearsalToml,
+  projectPublicationRehearsalToml,
+  publicationRehearsalWorkflow,
+} from "./publication-rehearsal-projection.js";
 
 export { PAPER_PATHS, resolvePaperRepository } from "./paper-repository.js";
 export {
@@ -114,6 +119,7 @@ const PAPER_SCAFFOLD_PATHS = Object.freeze([
   PAPER_PATHS.buildWorkflow,
   PAPER_PATHS.verifyWorkflow,
   PAPER_PATHS.releaseWorkflow,
+  PAPER_PATHS.rehearsalWorkflow,
   PAPER_PATHS.pnpmWorkspace,
   PAPER_PATHS.provisioningAuthority,
   "Makefile",
@@ -350,7 +356,7 @@ immutable_base_url = ${tomlString(joinUrl(siteBaseUrl, "archive").replace(/\/$/,
 registry_path = ".buildchain/publication/publication-registry.json"
 `
     : "";
-  return `schema = 1
+  return appendPublicationRehearsalToml(`schema = 1
 
 [project]
 type = "publication-artifact"
@@ -384,7 +390,7 @@ command = "make pdf"
 
 [lifecycle.verify]
 command = "make check"
-`;
+`);
 }
 
 function scaffoldBuildWorkflow(
@@ -525,6 +531,7 @@ export function createPaperProvisioningAuthority({
   buildWorkflow,
   verifyWorkflow,
   releaseWorkflow,
+  rehearsalWorkflow,
   agentEntry,
   agentInstructions,
   environment = "",
@@ -562,6 +569,12 @@ export function createPaperProvisioningAuthority({
         path: PAPER_PATHS.releaseWorkflow,
         sourceDigest: sha256Text(releaseWorkflow),
         reusablePath: ".github/workflows/paper-release-sealed.yml",
+        reusableRef: buildchainSha,
+      },
+      rehearsal: {
+        path: PAPER_PATHS.rehearsalWorkflow,
+        sourceDigest: sha256Text(rehearsalWorkflow),
+        reusablePath: ".github/workflows/release-tail.yml",
         reusableRef: buildchainSha,
       },
     },
@@ -630,6 +643,7 @@ function scaffoldFiles({
     releasePassportProductName: title,
   });
   const verifyWorkflow = scaffoldVerifyWorkflow(buildchainSha);
+  const rehearsalWorkflow = publicationRehearsalWorkflow(buildchainSha);
   const agentEntry = paperAgentEntryFiles({
     cwd,
     buildchainVersion,
@@ -647,6 +661,7 @@ function scaffoldFiles({
     buildWorkflow,
     verifyWorkflow,
     releaseWorkflow,
+    rehearsalWorkflow,
     agentEntry: agentEntry.get(PAPER_PATHS.agentEntry),
     agentInstructions: agentEntry.get(PAPER_PATHS.agentInstructions),
   });
@@ -667,6 +682,7 @@ function scaffoldFiles({
     [PAPER_PATHS.buildWorkflow, buildWorkflow],
     [PAPER_PATHS.verifyWorkflow, verifyWorkflow],
     [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
+    [PAPER_PATHS.rehearsalWorkflow, rehearsalWorkflow],
     [PAPER_PATHS.pnpmWorkspace, paperPnpmWorkspace("", buildchainVersion)],
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
     ...agentEntry,
@@ -964,6 +980,7 @@ function migrationFiles({
     releasePassportProductName: config.publication.title,
   });
   const verifyWorkflow = scaffoldVerifyWorkflow(runtimeSha);
+  const rehearsalWorkflow = publicationRehearsalWorkflow(runtimeSha);
   const agentEntry = paperAgentEntryFiles({
     cwd,
     buildchainVersion: runtimeIdentity.version,
@@ -978,6 +995,7 @@ function migrationFiles({
     buildWorkflow,
     verifyWorkflow,
     releaseWorkflow,
+    rehearsalWorkflow,
     agentEntry: agentEntry.get(PAPER_PATHS.agentEntry),
     agentInstructions: agentEntry.get(PAPER_PATHS.agentInstructions),
   });
@@ -997,11 +1015,18 @@ function migrationFiles({
     runtimeIdentity.version,
   );
   const files = new Map([
+    [
+      PAPER_PATHS.config,
+      projectPublicationRehearsalToml(
+        fs.readFileSync(path.resolve(cwd, PAPER_PATHS.config), "utf8"),
+      ),
+    ],
     [PAPER_PATHS.contractLock, contractLockText],
     [PAPER_PATHS.versionPin, `${runtimeIdentity.version}\n`],
     [PAPER_PATHS.buildWorkflow, buildWorkflow],
     [PAPER_PATHS.verifyWorkflow, verifyWorkflow],
     [PAPER_PATHS.releaseWorkflow, releaseWorkflow],
+    [PAPER_PATHS.rehearsalWorkflow, rehearsalWorkflow],
     [PAPER_PATHS.pnpmWorkspace, pnpmWorkspace],
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
     ...agentEntry,
@@ -1755,6 +1780,7 @@ function validatePaperProvisioningAuthority(cwd) {
     value.workflows?.build,
     value.workflows?.verify,
     value.workflows?.release,
+    value.workflows?.rehearsal,
   ]) {
     if (!workflow?.path || !workflow?.sourceDigest) {
       errors.push("paper workflow authority is incomplete");

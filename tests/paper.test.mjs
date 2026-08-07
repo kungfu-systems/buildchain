@@ -185,11 +185,11 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   const cwd = tempDir("scaffold");
   const firstPlan = planPaperScaffold(scaffoldOptions(cwd));
   assert.equal(firstPlan.ok, true);
-  assert.equal(firstPlan.summary.create, 18);
+  assert.equal(firstPlan.summary.create, 19);
   assert.equal(JSON.stringify(firstPlan).includes("_plannedFiles"), false);
   const firstWrite = writePaperScaffold(firstPlan);
   assert.equal(firstWrite.ok, true);
-  assert.equal(firstWrite.written.length, 18);
+  assert.equal(firstWrite.written.length, 19);
   assert.equal(
     fs.readFileSync(path.join(cwd, "pnpm-workspace.yaml"), "utf8"),
     `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${packageVersion}'\n`,

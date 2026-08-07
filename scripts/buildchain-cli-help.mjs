@@ -43,6 +43,9 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-tail init --declaration <json-or-path> [--state <path>]
   buildchain release-tail <status|verify> [--state <path>] [--output <path>]
   buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
+  buildchain release-tail rehearse --capsule <path> --capsule-root <absolute-path>
+                                    --mode <simulate|replay> --state <path>
+                                    --evidence <path> [--environment-json <json-or-path>]
   buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...

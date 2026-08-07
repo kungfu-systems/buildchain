@@ -1648,7 +1648,7 @@ async function handleReleaseGovernanceCommand(args) {
 }
 
 async function handleReleaseTailCommand(args) {
-  runReleaseTailCli(args);
+  await runReleaseTailCli(args);
 }
 
 async function handleGitHubGovernanceCommand(args) {

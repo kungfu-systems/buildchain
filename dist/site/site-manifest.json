@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:d25f6fa1cda07a719d700d65ac399585157620518765a3847002e8e7c6041908"
+      "digest": "sha256:768042c2b38dd261803f49a141898fe80ce3e19b2a948abda2867e47c56c0b5c"
     },
     {
       "id": "getting-started",
@@ -229,7 +229,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:defb3b669555c1e99ff46618673021af3a82b9f162646efc34a6334e75fcf8fe"
+      "digest": "sha256:3b203848db87e68762417e768eb8a09a7e653eb30fb7cc21354e72678706b714"
     },
     {
       "id": "node-api-reference",
@@ -237,7 +237,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ae82d909420c42814773e22df13202844c889a41d98e471ad1ac185273974805"
+      "digest": "sha256:6dd79b998f63cf996e5c76b4fe0c654d12ca603cd5db1277ef3347f489b96ef0"
     },
     {
       "id": "build-facts",
@@ -301,7 +301,15 @@
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:c047e59f26d0bc315bfa1c93fae9bc485e6fc7db3de3c44e68a7ed93b847cffc"
+      "digest": "sha256:2c02447a0087d8b9a0d677357a157f5d095678367a8bfc27e4802a5e1417d5a7"
+    },
+    {
+      "id": "publication-rehearsal",
+      "title": "Publication rehearsal",
+      "path": "docs/publication-rehearsal.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:b71c8be4a73078adae6efa838eeded0bfafef90f1e3873aad65d116f2481ae09"
     },
     {
       "id": "release-governance",

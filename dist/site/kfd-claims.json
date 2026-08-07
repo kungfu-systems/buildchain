@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f9f1815b8628bea79e5f187463e4e568dd2eae67821b17c843334f908bfcde5b",
+    "sha256": "5e94962e8b07445fa04ceeb28ce6c71e0b23a763856436be1d85e65c4d646e15",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 65,
       "actionCount": 7,
-      "sitePageCount": 68,
-      "docCommandRefCount": 918,
+      "sitePageCount": 69,
+      "docCommandRefCount": 922,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f9f1815b8628bea79e5f187463e4e568dd2eae67821b17c843334f908bfcde5b",
+      "sha256": "5e94962e8b07445fa04ceeb28ce6c71e0b23a763856436be1d85e65c4d646e15",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 65,
         "actionCount": 7,
-        "sitePageCount": 68,
-        "docCommandRefCount": 918,
+        "sitePageCount": 69,
+        "docCommandRefCount": 922,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -643,6 +643,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "verify"
+        },
+        {
+          "id": "doc:docs/publication-rehearsal.md",
+          "name": "Publication rehearsal",
+          "kind": "documentation",
+          "sourcePath": "docs/publication-rehearsal.md",
+          "evidencePath": "docs/publication-rehearsal.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
         },
         {
           "id": "doc:docs/publish-transaction.md",
@@ -1771,6 +1783,30 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-tail-compatibility"
+        },
+        {
+          "id": "export:./publication-rehearsal-runtime",
+          "name": "@kungfu-tech/buildchain/publication-rehearsal-runtime",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-rehearsal-runtime.js",
+          "evidencePath": "packages/core/publication-rehearsal-runtime.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-rehearsal-runtime"
+        },
+        {
+          "id": "export:./publication-rehearsal-projection",
+          "name": "@kungfu-tech/buildchain/publication-rehearsal-projection",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-rehearsal-projection.js",
+          "evidencePath": "packages/core/publication-rehearsal-projection.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-rehearsal-projection"
         },
         {
           "id": "export:./surface-manifest",
@@ -5157,12 +5193,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 6,
           "inputs": [
             "buildchain-ref",
-            "declaration-path",
-            "execute",
-            "provider-bindings-path",
+            "capsule-contract",
+            "capsule-path",
+            "capsule-root",
+            "evidence-path",
             "state-path"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -5421,13 +5458,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 6,
+          "inputCount": 7,
           "inputs": [
-            "declaration",
-            "execute",
+            "capsule",
+            "capsule-contract",
+            "capsule-root",
+            "evidence-path",
             "github-token",
             "http-token",
-            "provider-bindings",
             "state-path"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -6134,6 +6172,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:publication-rehearsal",
+          "name": "site-page:manual:publication-rehearsal",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:publish-transaction",
           "name": "site-page:manual:publish-transaction",
           "kind": "site-page",
@@ -6532,6 +6582,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 414
+    "publicSurfaceCount": 418
   }
 }

@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.kungfu.ai/contracts/publication-rehearsal-capsule-v1.schema.json",
+  "title": "Buildchain publication rehearsal capsule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "schemaVersion",
+    "root",
+    "declaration",
+    "policyRoots",
+    "passport",
+    "transaction",
+    "files",
+    "providerBindings",
+    "providerObservations",
+    "runtime"
+  ],
+  "properties": {
+    "contract": {
+      "const": "kungfu.buildchain.publication-rehearsal-capsule/v1"
+    },
+    "schemaVersion": { "const": 1 },
+    "root": { "$ref": "#/$defs/root" },
+    "declaration": {
+      "$ref": "release-tail-capabilities-v1.schema.json"
+    },
+    "policyRoots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/root" }
+    },
+    "passport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "root"],
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "root": { "$ref": "#/$defs/root" }
+      }
+    },
+    "transaction": {
+      "type": "object",
+      "required": [
+        "schema",
+        "transactionPolicy",
+        "transactionRoot",
+        "declarationRoot",
+        "planRoot",
+        "subject",
+        "state",
+        "operationOrder",
+        "operations",
+        "observations",
+        "receipts",
+        "failure",
+        "stateRoot"
+      ]
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "path", "size", "root"],
+        "properties": {
+          "role": { "type": "string", "minLength": 1 },
+          "path": { "$ref": "#/$defs/path" },
+          "size": { "type": "integer", "minimum": 0 },
+          "root": { "$ref": "#/$defs/root" }
+        }
+      }
+    },
+    "providerBindings": {
+      "$ref": "release-tail-provider-bindings-v1.schema.json"
+    },
+    "providerObservations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operationId", "readbacks", "apply"],
+        "properties": {
+          "operationId": { "$ref": "#/$defs/root" },
+          "readbacks": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/observation" }
+          },
+          "apply": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["outcome", "code", "classification"],
+            "properties": {
+              "outcome": {
+                "enum": ["applied", "transient", "conflict"]
+              },
+              "code": { "type": "string", "minLength": 1 },
+              "classification": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "declaredEnvironment", "externalEffects"],
+      "properties": {
+        "platform": { "const": "portable" },
+        "declaredEnvironment": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }
+        },
+        "externalEffects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["capabilityId", "adapter", "kind"],
+            "properties": {
+              "capabilityId": { "type": "string", "minLength": 1 },
+              "adapter": { "type": "string", "minLength": 1 },
+              "kind": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)(?!.*\\\\).+$"
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "subjectRoot",
+        "targetRoot",
+        "evidenceRoots",
+        "providerCode"
+      ],
+      "properties": {
+        "outcome": {
+          "enum": ["observed", "absent", "transient", "conflict"]
+        },
+        "subjectRoot": {
+          "anyOf": [{ "$ref": "#/$defs/root" }, { "const": "" }]
+        },
+        "targetRoot": {
+          "anyOf": [{ "$ref": "#/$defs/root" }, { "const": "" }]
+        },
+        "evidenceRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/root" }
+        },
+        "providerCode": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

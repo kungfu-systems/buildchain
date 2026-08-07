@@ -89,3 +89,12 @@ This Wave 0 constitution does not migrate Delivery Warrant, Release
 Transaction, activation, publication, or any other production writer to Rust.
 It does not select a final Rust/libnode ABI, introduce a daemon or service
 database, move consumers to v4, or publish v4 as stable.
+
+## 7. Release local constructibility
+
+[ADR 0001](decisions/0001-release-local-constructibility.md) is normative for
+all release implementations across the v3-to-v4 boundary. Every deterministic
+release behavior must execute locally from an explicit content-addressed
+candidate capsule through the same core used by hosted wrappers. GitHub runner
+state is never semantic authority, and simulated evidence never claims an
+external provider fact.

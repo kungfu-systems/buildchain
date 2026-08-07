@@ -1,3 +1,10 @@
+import {
+  PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
+  PUBLICATION_REHEARSAL_COMMAND,
+  RELEASE_LOCAL_CONSTRUCTIBILITY_ADR,
+  RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT,
+} from "./publication-rehearsal-runtime.js";
+
 function jsonText(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
@@ -47,6 +54,7 @@ export function paperPackageScripts(current = {}) {
     "paper:work:start": "buildchain paper work start",
     "paper:work:submit": "buildchain paper work submit",
     "paper:status": "buildchain paper status --json",
+    "publication:rehearse": PUBLICATION_REHEARSAL_COMMAND,
   };
 }
 
@@ -106,6 +114,7 @@ pnpm paper:preflight
 pnpm paper:agent:verify
 pnpm paper:work:start -- <topic>
 pnpm paper:work:submit
+pnpm publication:rehearse
 make pdf
 \`\`\`
 
@@ -114,6 +123,11 @@ artifact generation, sealed publication, npm Trusted Publishing, and recovery;
 this repository owns the paper source and review history.
 
 See [docs/MAP.md](docs/MAP.md) for the repository map.
+
+Publication qualification follows the Buildchain
+\`${RELEASE_LOCAL_CONSTRUCTIBILITY_ADR}\` invariant:
+${RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT} The capsule contract is
+\`${PUBLICATION_REHEARSAL_CAPSULE_CONTRACT}\`.
 `;
 }
 
@@ -129,10 +143,17 @@ export function scaffoldMap() {
 - \`.github/workflows/build.yml\`: thin read-only build and reproducibility caller.
 - \`.github/workflows/verify.yml\`: thin required check that enforces the Paper entry and acceptance policy.
 - \`.github/workflows/paper-release.yml\`: thin protected sealed-release caller.
+- \`.github/workflows/publication-rehearsal.yml\`: thin hosted adapter over the same local capsule runtime.
 
 The repository does not own npm transaction logic, publication authority,
 release-state recovery, or site deployment mechanics. Those remain Buildchain,
 npm/GitHub, and downstream site responsibilities respectively.
+
+The exact local pre-publication command is:
+
+\`\`\`sh
+${PUBLICATION_REHEARSAL_COMMAND}
+\`\`\`
 `;
 }
 
