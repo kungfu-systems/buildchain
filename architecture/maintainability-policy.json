@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 277,
-    "maxHandMaintainedSourceLines": 105924,
+    "maxHandMaintainedSourceFiles": 278,
+    "maxHandMaintainedSourceLines": 106361,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22268,
-    "latestTransition": "Wave 0 adds one read-only v4 architecture validator and generated Agent discovery command family on top of the protected candidate-recovery authority binding, without migrating a production writer or changing provider effects.",
-    "rationale": "The exact combined ceiling retains the protected candidate-recovery transition and adds one source file plus 618 source lines for the v4 Constitution validator, capability and state-machine projection, six independent complexity-budget dimensions, owned exception checks, v3 drift checks, exact Git N-1 qualification, and a public-surface regression assertion. The incoming 27 workflow lines and six generator/test source lines remain intact. The new script stays at the 600-line file budget and every new function stays within the existing length and complexity ceilings. Generated references expose list and show without creating a second authority. This ceiling is exact and cannot grow implicitly; runtime migration or additional architecture machinery requires another reviewed transition."
+    "latestTransition": "The v4 Wave 0 architecture validator and release-tail contract inventory coexist as read-only governance layers without migrating a production writer or changing provider effects.",
+    "rationale": "The exact combined ceiling retains the protected candidate-recovery transition, the v4 Constitution validator and generated discovery surface, and the release-tail validator that freezes 27 reverse-discovered coordinates across seven surface groups, four declarative capabilities, and seven managed callers. Both additions remain fail-closed, tooling-only checks; runtime migration, provider adapters, or broader inventory changes require another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:0230f9083023f4c80b567b2d13887dcbc9d31b46ad6cb6f81f95f509669e7cbb",
+      "digest": "sha256:90f7a6037cb6c62c504920c2553da18e3ddc8a4f55f04d89ae6adde8360178a6",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -424,6 +424,21 @@
       ],
       "maturity": "stable",
       "order": 120
+    },
+    {
+      "id": "release-tail-contract",
+      "title": "Declarative release-tail contract",
+      "path": "docs/release-tail-contract.md",
+      "plane": "verify",
+      "digest": "sha256:6d174d5a7063ad70feb0800f7e4a9fcff41672981168e7468035e3fc69f48cd6",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "release-operator",
+        "agent",
+        "maintainer"
+      ],
+      "maturity": "draft",
+      "order": 122
     },
     {
       "id": "release-governance",
