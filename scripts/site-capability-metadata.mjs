@@ -12,6 +12,11 @@ function capabilityGroup(id) {
 export function cliCommandMeta(id) {
   const map = new Map(Object.entries({
     audit: { group: "release-passport-trust", purpose: "Inspect read-only publication authority audit commands." },
+    architecture: { group: "governance-versioning", purpose: "Inspect and qualify the Buildchain v4 capability and state-machine architecture contract." },
+    "architecture-list": { group: "governance-versioning", purpose: "Generate the Agent-readable capability list from the validated v4 architecture manifest." },
+    "architecture-qualify": { group: "governance-versioning", purpose: "Qualify an exact candidate against a distinct N-1 Git authority revision without candidate self-qualification." },
+    "architecture-show": { group: "governance-versioning", purpose: "Generate one capability and its state-machine details from the validated v4 architecture manifest." },
+    "architecture-validate": { group: "governance-versioning", purpose: "Validate v4 dependency direction, ownership, writers, budgets, recovery declarations, and exception policy." },
     "audit-publication-control-plane": { group: "release-passport-trust", purpose: "Read GitHub publication controls, bind provider-enforced npm identity, and emit a sanitized expiring receipt." },
     "audit-github-governance": { group: "governance-versioning", purpose: "Read the managed GitHub zone, aggregate native protection and ownership, and emit sanitized fail-closed governance receipts." },
     badges: { group: "distribution-indexes", purpose: "Inspect README badge command families." },

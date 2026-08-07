@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f0a36b9ff68cc198a0bb2c15e06b1d3ef369d6afe8f035220308c23279222141",
+    "sha256": "e65f7d4b8c55850866fea7fd1b9351cfef222b4bb2c51a8ed110c07fbc95e93e",
     "summary": {
-      "cliCommandCount": 112,
+      "cliCommandCount": 113,
       "workflowCount": 64,
       "actionCount": 6,
       "sitePageCount": 65,
-      "docCommandRefCount": 881,
+      "docCommandRefCount": 896,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f0a36b9ff68cc198a0bb2c15e06b1d3ef369d6afe8f035220308c23279222141",
+      "sha256": "e65f7d4b8c55850866fea7fd1b9351cfef222b4bb2c51a8ed110c07fbc95e93e",
       "summary": {
-        "cliCommandCount": 112,
+        "cliCommandCount": 113,
         "workflowCount": 64,
         "actionCount": 6,
         "sitePageCount": 65,
-        "docCommandRefCount": 881,
+        "docCommandRefCount": 896,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1948,6 +1948,18 @@
         }
       ],
       "reverseEnumeratedSurfaces": [
+        {
+          "id": "cli:architecture",
+          "name": "buildchain architecture validate [--cwd <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
         {
           "id": "cli:audit",
           "name": "buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>",
@@ -6355,6 +6367,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 401
+    "publicSurfaceCount": 402
   }
 }

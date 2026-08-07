@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 276,
-    "maxHandMaintainedSourceLines": 105306,
+    "maxHandMaintainedSourceFiles": 277,
+    "maxHandMaintainedSourceLines": 105924,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22268,
-    "latestTransition": "Candidate recovery binds the public authority workflow path and the exact consumer qualification controller commit through the generated channel router without changing candidate payloads or scheduling a product build.",
-    "rationale": "The exact 27-line workflow and six-line generator/test increase over 7c8956e8babb521d3e743d40108f115a59a40427 adds two immutable recovery coordinates: the authority workflow path exposed by the public router and the caller-repository controller SHA that owns the consumer qualification predicate. Both coordinates are validated and sealed into the publication capability path; the existing promote-only workflow and no-product-build boundary remain unchanged. This exact ceiling cannot grow implicitly."
+    "latestTransition": "Wave 0 adds one read-only v4 architecture validator and generated Agent discovery command family on top of the protected candidate-recovery authority binding, without migrating a production writer or changing provider effects.",
+    "rationale": "The exact combined ceiling retains the protected candidate-recovery transition and adds one source file plus 618 source lines for the v4 Constitution validator, capability and state-machine projection, six independent complexity-budget dimensions, owned exception checks, v3 drift checks, exact Git N-1 qualification, and a public-surface regression assertion. The incoming 27 workflow lines and six generator/test source lines remain intact. The new script stays at the 600-line file budget and every new function stays within the existing length and complexity ceilings. Generated references expose list and show without creating a second authority. This ceiling is exact and cannot grow implicitly; runtime migration or additional architecture machinery requires another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -83,6 +83,14 @@
     }
   },
   "approvedPublicSurfaceTransitions": {
+    "cli:architecture": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "architecture",
+        "usage": "buildchain architecture validate [--cwd <dir>] [--json]"
+      },
+      "rationale": "Add a read-only generated list/show/validate surface plus exact Git N-1 qualification; the manifest remains the single authority and the commands do not migrate or write production state."
+    },
     "cli:dev": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {

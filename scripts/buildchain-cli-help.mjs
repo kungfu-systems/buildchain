@@ -2,6 +2,12 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain --help
   buildchain version
   buildchain layout [--cwd <dir>] [--json]
+  buildchain architecture validate [--cwd <dir>] [--json]
+  buildchain architecture list [--cwd <dir>] [--json]
+  buildchain architecture show <capability-id> [--cwd <dir>] [--json]
+  buildchain architecture qualify --authority-revision <git-revision>
+                                      [--candidate-revision <git-revision>]
+                                      [--cwd <dir>] [--json]
   buildchain portable-cache plan --manifest <file-or-json> [--output <file>]
                                  [--github-output <file>] [--json]
   buildchain portable-cache receipt --plan <file-or-json> [--matched-key <key>]

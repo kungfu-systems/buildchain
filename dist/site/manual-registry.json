@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:d76416d8cd04dcdb560b7d06fef287fa22d6b186a729cb92cd4cf71cebbac1e9",
+      "digest": "sha256:0230f9083023f4c80b567b2d13887dcbc9d31b46ad6cb6f81f95f509669e7cbb",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -317,7 +317,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:2365e125d38e43b68a4af277a91be7aca708a8bf785954ed4589dbd9a5d8db97",
+      "digest": "sha256:1e6e44723d8e668de6d5a4d06f132f817043946e4fa8c7aea18bb6d89f517438",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
