@@ -1253,15 +1253,12 @@ async function restorePublishTransactionContext(context) {
           manifest: localExisting.sealed_bundle,
         })
       : undefined;
-  if (
+  const sealedBundleRootMismatch =
     durableBundleVerification &&
     requestedBundleVerification &&
     durableBundleVerification.root !== requestedBundleVerification.root
-  ) {
-    throw new Error(
-      `sealed bundle root mismatch: durable=${durableBundleVerification.root} requested=${requestedBundleVerification.root}`,
-    );
-  }
+      ? `sealed bundle root mismatch: durable=${durableBundleVerification.root} requested=${requestedBundleVerification.root}`
+      : "";
   let sealedBundleVerification = durableBundleVerification || requestedBundleVerification || localBundleVerification;
   const sealedVersion = String(sealedBundleVerification?.npm?.version || "").trim();
   const publishSealedNpmTarball = sealedVersion === version;
@@ -1283,8 +1280,10 @@ async function restorePublishTransactionContext(context) {
       requiredArtifacts,
     });
   }
-  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, publishSealedNpmTarball, existingEvidence, existingValidation };
+  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, sealedBundleRootMismatch, publishSealedNpmTarball, existingEvidence, existingValidation };
 }
+
+function assertSealedBundleRootCompatibility(mismatch, versionStateFinalization) { if (mismatch && !versionStateFinalization) throw new Error(mismatch); }
 
 async function canFinalizePublishVersionState({ context, error, existing }) {
   const {
@@ -1424,8 +1423,8 @@ async function runPublishTransaction(options) {
     actor, runId, explicitOverride, promotionGeneratedAt, repository,
     resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
     existingNpmPromotion, expected, durableExisting, existing, existingEvidence,
-    existingValidation, sealedBundleVerification, versionStateFinalization,
-  } = context;
+    existingValidation, sealedBundleVerification, sealedBundleRootMismatch, versionStateFinalization,
+  } = context; assertSealedBundleRootCompatibility(sealedBundleRootMismatch, versionStateFinalization);
   let transaction =
     existing ||
     createReleaseTransaction({

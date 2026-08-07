@@ -566,6 +566,29 @@ test("published alpha finalization stays bound to its exact transaction after th
     requestedManifestPath,
     `${JSON.stringify(requestedManifest, null, 2)}\n`,
   );
+  const finalizationManifest = createPublicationSealedBundle({
+    candidate: createCandidate({
+      relativePath: durableTarballPath,
+      bytes: durableTarballBytes,
+      assetPath: durableAssetPath,
+      assetBytes: durableAssetBytes,
+      sourceSha: channelMergeSha,
+    }),
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: version,
+    npmTarballPath: durableTarballPath,
+    npmIntegrity: durableIntegrity,
+    releaseAssetPaths: [durableAssetPath],
+  });
+  assert.notEqual(finalizationManifest.root, durableManifest.root);
+  const finalizationManifestPath = path.join(
+    cwd,
+    ".buildchain/admitted/version-state-finalization-sealed-bundle.json",
+  );
+  fs.writeFileSync(
+    finalizationManifestPath,
+    `${JSON.stringify(finalizationManifest, null, 2)}\n`,
+  );
   const evidencePath = path.join(
     cwd,
     ".buildchain/release-evidence",
@@ -636,6 +659,58 @@ test("published alpha finalization stays bound to its exact transaction after th
       sourcePath: entry.path,
     })),
   });
+  await assert.rejects(
+    runPublishTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      cwd,
+      loadedConfig: loadBuildchainConfig(cwd),
+      targetRef: "alpha/v1/v1.0",
+      sourceSha: transactionSourceSha,
+      releaseSha: transactionReleaseSha,
+      releaseMaterialSha: transactionReleaseSha,
+      publishToolingSha: transactionReleaseSha,
+      version,
+      exactTag,
+      channel: "alpha",
+      line: "v1.0",
+      publishTransaction: true,
+      publishSealedBundleRoot: cwd,
+      publishSealedBundleManifest: finalizationManifestPath,
+      publishRequiredArtifactsJson: JSON.stringify([artifact]),
+      publishAuth: "trusted-publishing",
+      publishDistTag: "alpha",
+      publishPackageMain: "@kungfu-tech/buildchain",
+    }),
+    /sealed bundle root mismatch/,
+  );
+  const finalizationOnly = await runPublishTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    loadedConfig: loadBuildchainConfig(cwd),
+    targetRef: "alpha/v1/v1.0",
+    sourceSha: channelMergeSha,
+    releaseSha: channelMergeSha,
+    releaseMaterialSha: channelMergeSha,
+    publishToolingSha: channelMergeSha,
+    version,
+    exactTag,
+    channel: "alpha",
+    line: "v1.0",
+    publishTransaction: true,
+    publishSealedBundleRoot: cwd,
+    publishSealedBundleManifest: finalizationManifestPath,
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    publishAuth: "trusted-publishing",
+    publishDistTag: "alpha",
+    publishPackageMain: "@kungfu-tech/buildchain",
+    allowVersionStateFinalization: true,
+  });
+  assert.equal(finalizationOnly.transaction.state, "finalizing");
+  assert.equal(finalizationOnly.sealedBundle.root, durableManifest.root);
   fs.rmSync(path.join(cwd, ".buildchain/release-state"), {
     recursive: true,
     force: true,
