@@ -18,7 +18,8 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   assert.equal(report.status, "passed");
   assert.equal(report.summary.failureCount, 0);
   const cliCommands = enumerateCliCommandsFromBin({ root });
-  assert.equal(cliCommands.length, 113);
+  assert.equal(cliCommands.length, 114);
+  assert.ok(cliCommands.some((entry) => entry.id === "release-tail"));
   assert.ok(cliCommands.some((entry) => entry.id === "architecture"));
   assert.ok(cliCommands.some((entry) => entry.id === "release-line-open"));
   assert.ok(cliCommands.some((entry) => entry.id === "collect"));
@@ -44,6 +45,11 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   assert.ok(
     enumerateActionInputs({ root }).some(
       (entry) => entry.id === "promote-buildchain-ref" && entry.inputCount > 0,
+    ),
+  );
+  assert.ok(
+    enumerateActionInputs({ root }).some(
+      (entry) => entry.id === "release-tail" && entry.inputCount > 0,
     ),
   );
 });

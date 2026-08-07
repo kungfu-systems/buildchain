@@ -5,11 +5,11 @@ import { checkCoreMechanismInventory } from "../scripts/check-core-mechanism-inv
 
 test("v3 core mechanism inventory closes every required evidence dimension", () => {
   const report = checkCoreMechanismInventory();
-  assert.equal(report.mechanisms, 10);
+  assert.equal(report.mechanisms, 11);
   assert.equal(report.dependencyCycles, 0);
-  assert(report.sourceCoordinates >= 50);
-  assert(report.authorityCoordinates >= 35);
-  assert(report.publicSurfaces >= 35);
+  assert(report.sourceCoordinates >= 55);
+  assert(report.authorityCoordinates >= 41);
+  assert(report.publicSurfaces >= 45);
   assert.deepEqual(report.surfaceKinds, [
     "action",
     "cli",

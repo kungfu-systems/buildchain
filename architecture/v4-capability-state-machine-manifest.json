@@ -170,6 +170,18 @@
       "sourceInventoryId": "release-propagation-work-control",
       "surfaces": ["export:./release-propagation", "cli:release-propagation"],
       "migrationPhase": "legacy-authoritative"
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "owner": "Buildchain declarative release provider plane",
+      "sourceInventoryId": "release-tail-provider-plane",
+      "surfaces": [
+        "export:./release-tail-provider-plane",
+        "cli:release-tail",
+        "action:release-tail",
+        "workflow:release-tail"
+      ],
+      "migrationPhase": "legacy-authoritative"
     }
   ],
   "stateMachines": [
@@ -382,6 +394,67 @@
         "tests/release-propagation-work.test.mjs"
       ],
       "recovery": ["resume from the last retained stage receipt"],
+      "migrationPhase": "legacy-authoritative",
+      "budgets": {
+        "undeclaredStates": 0,
+        "undeclaredEvents": 0,
+        "unboundedRetries": 0
+      }
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "capabilityId": "release-tail-provider-plane",
+      "owner": "Buildchain declarative release provider plane",
+      "writer": {
+        "runtime": "typescript-v3",
+        "authoritative": true,
+        "secondWriterBudget": 0
+      },
+      "schemas": [
+        "kungfu.buildchain.release-tail.transaction/v1",
+        "kungfu.buildchain.release-tail.effect/v1",
+        "kungfu.buildchain.release-tail.observation/v1",
+        "kungfu.buildchain.release-tail.receipt/v1"
+      ],
+      "store": "atomic rooted transaction checkpoint with observations and receipts",
+      "states": [
+        "preparing",
+        "prepared",
+        "publishing",
+        "committing",
+        "activating",
+        "reading-back",
+        "settling",
+        "complete",
+        "blocked",
+        "repair-required",
+        "terminal-failure"
+      ],
+      "events": ["plan", "readback", "apply", "retry", "settle"],
+      "invariants": [
+        "one transaction owns all four fixed capability effects",
+        "provider adapters cannot select state transitions or success",
+        "every mutation is bounded by pre-effect and post-effect readback"
+      ],
+      "effects": [
+        "publish sealed GitHub Release assets",
+        "commit a signed channel document",
+        "activate and read back a release",
+        "synthesize rooted released evidence"
+      ],
+      "adapters": [
+        "github-release-assets",
+        "signed-static-channel",
+        "site-release-activation",
+        "activation-receipt-projector"
+      ],
+      "tests": [
+        "tests/release-tail-provider-plane.test.mjs",
+        "tests/release-tail-provider-adapters.test.mjs"
+      ],
+      "recovery": [
+        "resume from the last atomic checkpoint and read provider state before retry"
+      ],
       "migrationPhase": "legacy-authoritative",
       "budgets": {
         "undeclaredStates": 0,

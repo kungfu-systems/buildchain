@@ -30,6 +30,7 @@ export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
   { id: "reusable-build-surface", title: "Reusable build surface", path: "docs/reusable-build-surface.md", plane: "use" },
   { id: "publish-transaction", title: "Publish transaction", path: "docs/publish-transaction.md", plane: "verify" },
   { id: "release-tail-contract", title: "Declarative release-tail contract", path: "docs/release-tail-contract.md", plane: "verify" },
+  { id: "release-tail-provider-plane", title: "Declarative release-tail provider plane", path: "docs/release-tail-provider-plane.md", plane: "use" },
   { id: "release-governance", title: "Release governance", path: "docs/release-governance.md", plane: "why" },
   { id: "release-flow", title: "Release flow", path: "docs/release-flow.md", plane: "verify" },
   { id: "runtime-train-validation", title: "Runtime train validation", path: "docs/runtime-train-validation.md", plane: "verify" },

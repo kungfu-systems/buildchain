@@ -3435,6 +3435,54 @@
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
+      "id": "release-tail",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release-tail plan --declaration <json-or-path> [--output <path>]",
+      "paths": [
+        "release-tail",
+        "release-tail compat",
+        "release-tail init",
+        "release-tail plan",
+        "release-tail status",
+        "release-tail verify"
+      ],
+      "syntaxes": [
+        "buildchain release-tail",
+        "buildchain release-tail <status|verify> [--state <path>] [--output <path>]",
+        "buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]",
+        "buildchain release-tail init --declaration <json-or-path> [--state <path>]",
+        "buildchain release-tail plan --declaration <json-or-path> [--output <path>]"
+      ],
+      "options": [
+        "--declaration",
+        "--hooks-json",
+        "--output",
+        "--state"
+      ],
+      "aliases": [],
+      "helpCommands": [
+        "buildchain release-tail --help",
+        "buildchain release-tail compat --help",
+        "buildchain release-tail init --help",
+        "buildchain release-tail plan --help",
+        "buildchain release-tail status --help",
+        "buildchain release-tail verify --help"
+      ],
+      "purpose": "Plan, initialize, resume, and verify one declarative provider-owned release-tail transaction.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
       "id": "release-transaction",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain release <inspect|recover|finalize|abort> ...",
