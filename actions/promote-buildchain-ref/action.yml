@@ -74,6 +74,9 @@ inputs:
   publish-required-artifacts-json:
     description: "JSON array of required artifacts whose post-publish evidence must exist before refs move; digest and ref may be omitted, or ref_template may contain one {version} placeholder"
     default: ""
+  publish-required-artifacts-path:
+    description: "Path to the required-artifacts JSON array; used instead of the inline input when present to keep large recovered candidates out of the action environment"
+    default: ""
   publish-mode:
     description: "Publish mode: publish-final-version or promote-existing-version"
     default: ""

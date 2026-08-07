@@ -1762,7 +1762,8 @@ jobs:
           publish-sealed-bundle-manifest: ${{ steps.rc.outputs.publish-sealed-bundle-manifest }}
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
-          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
+          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
+          publish-required-artifacts-path: ${{ inputs.publish-required-artifacts-json == '' && steps.rc.outputs.publish-required-artifacts-path || '' }}
           publish-mode: ${{ inputs.publish-mode }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           publish-dist-tag: ${{ inputs.publish-dist-tag }}
