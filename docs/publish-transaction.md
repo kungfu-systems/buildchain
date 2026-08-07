@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-06
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -96,15 +96,6 @@ tag was never created. If a later machine run sees a failed or repair-required
 state for `vX.Y.Z-alpha.N` and cannot resume it with the same transaction
 identity, alpha version selection must advance to the next prerelease instead
 of reusing or overwriting that failed transaction slot.
-
-`release-candidate-promote.yml` can establish or restore this state from an
-older successful candidate run through the documented fresh-event recovery
-inputs. The recovery receipt and sealed bundle are verified before the action
-reads or creates transaction state. If `resume-transaction-id` is supplied,
-the restored durable/local transaction must already exist with that exact id;
-a missing or different id fails before provider mutation. An absent transaction
-is created only when no expected existing identity was requested. See
-[Release Candidate: Resume from an existing candidate run](release-candidate.md#resume-from-an-existing-candidate-run).
 
 ## Lifecycle
 
@@ -424,10 +415,9 @@ first run can stop at `finalizing` after registry publication. If the reviewed
 merge commit later contains that exact transaction release material but the
 exact tag is still absent, a retry performs finalization only: it reloads the
 same durable source, release material, tooling, evidence, version, and target
-bindings; creates the exact tag at the transaction source SHA; moves floating
-refs to the transaction release SHA; and completes the passport from the
-transaction source tree. It does not rerun the provider mutation and does not
-authorize the newer composite channel tree
+bindings; creates the exact and floating tags at the transaction release SHA;
+and completes the passport from the transaction source tree. It does not rerun
+the provider mutation and does not authorize the newer composite channel tree
 as published material. A different source tree still requires a new version and
 a fresh release candidate.
 
@@ -546,9 +536,8 @@ inside the mutation boundary.
 
 If finalization fails after an exact Git tag is created, the next run reads the
 durable `finalizing` state, verifies the exact tag points at the recorded
-source SHA (while accepting legacy release/material targets for recovery), and
-retries the remaining floating refs. An exact tag at an unrelated SHA is a
-material conflict and blocks recovery.
+release SHA, and retries the remaining floating refs. An exact tag at a
+different SHA is a material conflict and blocks recovery.
 
 ## CLI Recovery
 

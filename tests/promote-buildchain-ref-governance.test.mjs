@@ -45,10 +45,6 @@ const {
 const {
   loadBuildchainConfig,
 } = await import("../packages/core/buildchain-config.js");
-const { sha256Json } = await import("../packages/core/release-candidate.js");
-const { resolveExistingVersionState } = await import(
-  "../actions/promote-buildchain-ref/internal/existing-version-state.js"
-);
 
 const {
   explainReleaseLineDryRun,
@@ -271,7 +267,7 @@ test("governed promotion resumes its exact durable transaction after the target 
   fs.unlinkSync(evidencePath);
 
   const plan = await promoteBuildchainRefs({ octokit, owner: "kungfu-systems", repo: "buildchain", sha: SHA, targetRef: "alpha/v1/v1.0", cwd, dryRun: true, publishTransaction: true, publishTransactionOverride: true, requireVersionState: false, releasePassport: false }); assert.equal(plan.updates.find((update) => update.action === "dry-run-publish-transaction")?.version, "1.0.0-alpha.0"); assert.equal(plan.updates[0].action, "resumed-advanced-publication");
-  const recovery = {
+  const result = await promoteBuildchainRefs({
     octokit,
     owner: "kungfu-systems",
     repo: "buildchain",
@@ -284,8 +280,7 @@ test("governed promotion resumes its exact durable transaction after the target 
     publishTransactionOverride: true,
     expectedPublicationVersion: "1.0.0-alpha.0",
     releasePassport: false,
-  };
-  const result = await promoteBuildchainRefs(recovery);
+  });
 
   assert.equal(result.superseded, undefined);
   assert.equal(result.publishTransaction.state, "complete");
@@ -293,21 +288,12 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(result.sha, advancedSha);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), advancedSha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), advancedSha);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), releaseSha);
   assert.equal(refs.get("tags/v1.0-alpha"), advancedSha);
   assert.equal(refs.get("tags/v1-alpha"), advancedSha);
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
   assert.equal(result.updates[0].action, "resumed-advanced-publication");
   assert.equal(result.updates.at(-1).action, "finalized-advanced-publication");
-
-  const repeated = await promoteBuildchainRefs(recovery);
-  assert.equal(repeated.publishTransaction.state, "complete");
-  assert.equal(repeated.publishTransaction.id, "tx-advanced-alpha");
-  assert.equal(repeated.publishTransaction.exactTag, "v1.0.0-alpha.0");
-  assert.equal(repeated.sha, advancedSha);
-  assert.equal(refs.get("heads/alpha/v1/v1.0"), advancedSha);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
-  assert.equal(repeated.updates[0].action, "resumed-advanced-publication");
 });
 
 test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {
@@ -515,112 +501,6 @@ test("promote-only RC passport accepts channel merge commit with matching source
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }
-});
-
-test("promote-only recovery binds publication version through the immutable recovery receipt", () => {
-  const candidateHash = "a".repeat(64);
-  const passportPath = ".buildchain/artifacts/release-candidate-passport.json";
-  const receiptPath = ".buildchain/artifacts/recovery-receipt.json";
-  const passport = {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-release-candidate-passport",
-    repository: "kungfu-systems/buildchain",
-    target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "22.22.3-kf.0" },
-    source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
-    platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
-    diagnostics: {},
-    candidateHash,
-  };
-  const receipt = {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-release-candidate-recovery/v1",
-    action: "reused",
-    repository: "kungfu-systems/buildchain",
-    originalCandidate: { sourceSha: OTHER_SHA, tree: `tree-${SHA}` },
-    target: { channel: "alpha", ref: "alpha/v1/v1.0", sha: SHA, tree: `tree-${SHA}`, version: "3.0.6-alpha.4" },
-    recovered: { candidateRoot: `sha256:${candidateHash}` },
-    skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
-    payloadBytes: "unchanged",
-  };
-  receipt.root = `sha256:${sha256Json(receipt)}`;
-  const cwd = makeTempWorkspace({ [passportPath]: passport, [receiptPath]: receipt });
-  try {
-    const result = validatePromotionReleaseCandidate({
-      cwd,
-      passportPath,
-      recoveryReceiptPath: receiptPath,
-      repository: "kungfu-systems/buildchain",
-      targetChannel: "alpha",
-      targetRef: "alpha/v1/v1.0",
-      version: "3.0.6-alpha.4",
-      sourceHeadSha: SHA,
-      sourceTreeSha: `tree-${SHA}`,
-    });
-    assert.equal(result.publicationVersionBinding, "recovery-receipt");
-    assert.equal(result.recoveredCandidate, true);
-    assert.throws(
-      () => validatePromotionReleaseCandidate({
-        cwd,
-        passportPath,
-        repository: "kungfu-systems/buildchain",
-        targetChannel: "alpha",
-        targetRef: "alpha/v1/v1.0",
-        version: "3.0.6-alpha.4",
-        sourceHeadSha: SHA,
-        sourceTreeSha: `tree-${SHA}`,
-      }),
-      /version mismatch: expected 3\.0\.6-alpha\.4, got 22\.22\.3-kf\.0/,
-    );
-    const drifted = { ...receipt, recovered: { candidateRoot: `sha256:${"b".repeat(64)}` } };
-    delete drifted.root;
-    drifted.root = `sha256:${sha256Json(drifted)}`;
-    fs.writeFileSync(path.join(cwd, receiptPath), `${JSON.stringify(drifted)}\n`);
-    assert.throws(
-      () => validatePromotionReleaseCandidate({
-        cwd,
-        passportPath,
-        recoveryReceiptPath: receiptPath,
-        repository: "kungfu-systems/buildchain",
-        targetChannel: "alpha",
-        targetRef: "alpha/v1/v1.0",
-        version: "3.0.6-alpha.4",
-        sourceHeadSha: SHA,
-        sourceTreeSha: `tree-${SHA}`,
-      }),
-      /recovery receipt: candidate root mismatch/,
-    );
-  } finally {
-    fs.rmSync(cwd, { recursive: true, force: true });
-  }
-});
-
-
-test("recovered no-op version state skips lifecycle verification", async () => {
-  const updates = [];
-  const result = await resolveExistingVersionState({
-    changedFiles: [],
-    recoveredCandidate: true,
-    version: "3.0.6-alpha.5",
-    dryRun: false,
-    workspaceCwd: "/unused",
-    verificationCommand: "",
-    discovered: { config: {}, packageManager: { name: "pnpm" } },
-    discoveredPaths: ["package.json"],
-    versionStateAllowedPaths: ["package.json"],
-    strategyEnv: {},
-    baseSha: SHA,
-    publishVersion: "3.0.6-alpha.5",
-    hasVersionVerification: true,
-    versionStrategy: { strategy: "semver", next: "auto" },
-    anchorManifest: undefined,
-    updates,
-    runVersionVerification: () =>
-      assert.fail("recovery must not execute lifecycle verification"),
-    createVerifiedVersionStateCommit: () =>
-      assert.fail("recovery must not rematerialize version state"),
-  });
-  assert.equal(result.action, "existing");
-  assert.equal(updates[0].action, "existing-recovered-version-state");
 });
 
 test("major promotion requires a release passport with the matching source tree", () => {

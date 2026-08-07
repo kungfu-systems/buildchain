@@ -102,18 +102,20 @@ test("macOS JIT evidence binds exact source, host, AMI, runner, and lifecycle", 
 });
 
 test("macOS phase requires three jobs, a full job, 24 hours, and zero residue", () => {
-  const jobs = [{ kind: "smoke" }, { kind: "smoke" }, { kind: "full" }].map(
-    (job, index) => ({
-      ...job,
-      trusted: true,
-      exactSource: true,
-      status: "succeeded",
-      oneJobJit: true,
-      hostId: "h-0123456789abcdef0",
-      instanceId: "i-0123456789abcdef0",
-      runnerLabel: `aws-us-ec2-macos-jit-job-${index + 1}`,
-    }),
-  );
+  const jobs = [
+    { kind: "smoke" },
+    { kind: "smoke" },
+    { kind: "full" },
+  ].map((job, index) => ({
+    ...job,
+    trusted: true,
+    exactSource: true,
+    status: "succeeded",
+    oneJobJit: true,
+    hostId: "h-0123456789abcdef0",
+    instanceId: "i-0123456789abcdef0",
+    runnerLabel: `aws-us-ec2-macos-jit-job-${index + 1}`,
+  }));
   const result = verifyMacosEc2JitQualification({
     jobs,
     hostLifecycle: {
@@ -179,11 +181,8 @@ test("macOS stack and bootstrap enforce one-host JIT cleanup and no ingress", ()
   assert.match(stack, /MaximumHostAllocationHours/);
   assert.match(stack, /ec2:AllocateHosts/);
   assert.match(stack, /ec2:ReleaseHosts/);
-  assert.match(stack, /ec2:DescribeSubnets/);
   assert.match(stack, /rate\(10 minutes\)/);
   assert.match(stack, /ssm:GetParameter/);
-  assert.match(stack, /ssm:DescribeParameters/);
-  assert.match(stack, /ssm:DescribeInstanceInformation/);
   assert.match(bootstrap, /latest\/api\/token/);
   assert.match(bootstrap, /aws ssm get-parameter/);
   assert.match(bootstrap, /aws ssm delete-parameter/);

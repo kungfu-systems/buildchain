@@ -409,65 +409,29 @@
     {
       "id": "dev",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>",
+      "usage": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>",
       "paths": [
         "dev",
-        "dev merge-queue",
-        "dev pr-admit",
-        "dev proof classify",
-        "dev proof integration",
-        "dev proof replay",
-        "dev proof source",
-        "dev proof verify-integration",
-        "dev proof verify-source",
-        "dev warrant cancel-queued",
-        "dev warrant close",
-        "dev warrant heartbeat",
-        "dev warrant observe",
-        "dev warrant recover",
-        "dev warrant select",
-        "dev warrant submit"
+        "dev merge-queue"
       ],
       "syntaxes": [
         "buildchain dev",
-        "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]",
-        "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]",
-        "buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]",
-        "buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]"
+        "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]"
       ],
       "options": [
         "--apply",
         "--branch",
         "--check-response-timeout-minutes",
         "--cwd",
-        "--execute",
-        "--expected-head",
         "--from-config",
-        "--json",
         "--max-entries-to-build",
-        "--output",
-        "--pull-request",
         "--repository",
         "--workflow"
       ],
       "aliases": [],
       "helpCommands": [
         "buildchain dev --help",
-        "buildchain dev merge-queue --help",
-        "buildchain dev pr-admit --help",
-        "buildchain dev proof classify --help",
-        "buildchain dev proof integration --help",
-        "buildchain dev proof replay --help",
-        "buildchain dev proof source --help",
-        "buildchain dev proof verify-integration --help",
-        "buildchain dev proof verify-source --help",
-        "buildchain dev warrant cancel-queued --help",
-        "buildchain dev warrant close --help",
-        "buildchain dev warrant heartbeat --help",
-        "buildchain dev warrant observe --help",
-        "buildchain dev warrant recover --help",
-        "buildchain dev warrant select --help",
-        "buildchain dev warrant submit --help"
+        "buildchain dev merge-queue --help"
       ],
       "purpose": "Inspect protected development-channel governance command families.",
       "capabilityGroup": "governance-versioning",
@@ -3351,30 +3315,24 @@
     {
       "id": "release-propagation",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain release-propagation <plan|write-lock|work|entry|pickup> ...",
+      "usage": "buildchain release-propagation <plan|write-lock> ...",
       "paths": [
         "release-propagation",
-        "release-propagation entry",
-        "release-propagation pickup",
         "release-propagation plan",
-        "release-propagation work",
         "release-propagation write-lock"
       ],
       "syntaxes": [
         "buildchain release-propagation",
-        "buildchain release-propagation <plan|write-lock|work|entry|pickup> ..."
+        "buildchain release-propagation <plan|write-lock> ..."
       ],
       "options": [],
       "aliases": [],
       "helpCommands": [
         "buildchain release-propagation --help",
-        "buildchain release-propagation entry --help",
-        "buildchain release-propagation pickup --help",
         "buildchain release-propagation plan --help",
-        "buildchain release-propagation work --help",
         "buildchain release-propagation write-lock --help"
       ],
-      "purpose": "Route exact Paper, KFD, Buildchain, or Core Site updates through one resumable propagation Work.",
+      "purpose": "Plan channel-preserving downstream release PRs and write exact upstream release locks.",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "agent",

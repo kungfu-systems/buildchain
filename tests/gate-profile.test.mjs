@@ -7,12 +7,10 @@ import test from "node:test";
 import {
   createGateAggregate,
   createGateExecutionMatrix,
-  normalizeGateEnvironment,
   sha256,
 } from "../scripts/gate-profile-core.mjs";
 import {
   commandSpawnOptions,
-  gateEnvironment,
   prepareGateExecutionFiles,
   windowsBatchInvocation,
 } from "../scripts/shifu-gate-profile.mjs";
@@ -218,7 +216,6 @@ const platforms = [
     platform: "linux",
     runner: '["ubuntu-24.04"]',
     capabilities: ["node", "native-toolchain"],
-    environment: { CC: "gcc-14", CXX: "g++-14" },
   },
   {
     id: "windows",
@@ -325,42 +322,7 @@ test("same Shifu plans resolve to a deterministic generic runner matrix", () => 
     ],
   );
   assert.equal(first.entries[0].timeoutMinutes, 41);
-  assert.deepEqual(first.entries[0].environment, {
-    CC: "gcc-14",
-    CXX: "g++-14",
-  });
   assert.equal(JSON.stringify(first).includes("kungfu"), false);
-});
-
-test("Gate platform environment is scalar, deterministic, and platform scoped", () => {
-  assert.deepEqual(
-    normalizeGateEnvironment({ CXX: "g++-14", JOBS: 4, TRACE: false }),
-    { CXX: "g++-14", JOBS: "4", TRACE: "false" },
-  );
-  assert.throws(
-    () => normalizeGateEnvironment({ "invalid-name": "value" }),
-    /invalid environment name/,
-  );
-  assert.throws(
-    () => normalizeGateEnvironment({ VALID: ["not", "scalar"] }),
-    /must be a string, number, or boolean/,
-  );
-
-  const original = process.env.BUILDCHAIN_GATE_ENVIRONMENT_JSON;
-  process.env.BUILDCHAIN_GATE_ENVIRONMENT_JSON = JSON.stringify({
-    SHARED: "yes",
-    CC: "shared-cc",
-  });
-  try {
-    const environment = gateEnvironment({ CC: "gcc-14", CXX: "g++-14" });
-    assert.equal(environment.SHARED, "yes");
-    assert.equal(environment.CC, "gcc-14");
-    assert.equal(environment.CXX, "g++-14");
-  } finally {
-    if (original === undefined)
-      delete process.env.BUILDCHAIN_GATE_ENVIRONMENT_JSON;
-    else process.env.BUILDCHAIN_GATE_ENVIRONMENT_JSON = original;
-  }
 });
 
 test("runner timeout preserves Gate budgets plus bounded control-plane overhead", () => {

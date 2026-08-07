@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-03
+last_reviewed: 2026-07-31
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-03
+  generated_at: 2026-07-30
   invisible_context: not asserted
 ---
 
@@ -105,8 +105,6 @@ jobs:
       artifact-paths: |
         dist
         build/stage
-      pre-upload-transport-smoke-scenario-path: .buildchain/auditable-demo.json
-      pre-upload-transport-smoke-artifact-root: .
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["dist/libnode.tar.gz","dist/checksums.txt"]}
       process-summary-path: .buildchain/diagnostics/process-summary.json
@@ -114,15 +112,6 @@ jobs:
       publish-channel: release
       publish-source-ref: publish-gate/release/v22/v22.22/22.22.3-kf.0
 ```
-
-For a standalone Linux binary demo, the optional pre-upload transport smoke
-uses the same declarative scenario as the later capture workflow. Buildchain
-copies the distribution containing the scenario metadata, strips file execute
-bits to model GitHub Artifact transport, restores only the declared
-digest-bound executable closure, and runs `transportSmoke` before either the
-GitHub Artifact or S3 relay upload step. The smoke must be non-interactive and
-is hard-capped at 60 seconds. Omitting the input preserves the ordinary build
-surface; enabling it requires a scenario with `transportSmoke`.
 
 `runner-preset` is the stable first-class surface for known runner fleets:
 
@@ -450,7 +439,6 @@ jobs:
       checkout-cache-timeout-seconds: 60
       checkout-cache-github-timeout-seconds: 600
       checkout-cache-fetch-attempts: 3
-      checkout-history-mode: shallow
 ```
 
 `checkout-cache-mode` accepts:
@@ -460,14 +448,6 @@ jobs:
 | `off`     | Default. Buildchain fetches the locked commit from GitHub.                                                  |
 | `auto`    | Try the trusted cache first; on miss, record the miss and fall back according to `checkout-cache-fallback`. |
 | `require` | Require the cache to provide the locked commit and fail before lifecycle work if unavailable.               |
-
-`checkout-history-mode` defaults to `shallow`, preserving the bounded single-
-commit transport used by ordinary builds. Set it to `full` only when a
-consumer gate must inspect source ancestry, for example when an Alpha pull
-request qualifies GitHub's synthetic merge ref while retained evidence is
-bound to an ancestor of the source-lock head. Full mode still verifies the
-resolved immutable `HEAD` and tree; it changes only whether the advertised
-source ref is fetched with depth one or with its reachable history.
 
 The cache can be a local/LAN mirror URL template or a runner-local bare
 reference repository template. Templates support `{owner}`, `{repo}`,
@@ -531,14 +511,7 @@ the preparation step. Buildchain probes its version, runs `sccache
 `compiler-cache-preparation.json`. The receipt binds the source commit/tree,
 Buildchain runtime, platform, cache profile, and any declared dependency,
 toolchain, or policy roots. It resets counters only; it does not delete cached
-compiler outputs. The same preparation exports `RUSTC_WRAPPER`,
-`CMAKE_C_COMPILER_LAUNCHER`, and `CMAKE_CXX_COMPILER_LAUNCHER` so Cargo and
-CMake/Ninja compilation actually passes through the audited tool.
-
-After the build lifecycle, Buildchain probes the reset counter set again. When
-`compiler-cache-required` is true, the build fails closed if sccache observed
-zero compiler requests or zero cacheable requests. This prevents an installed
-but unbound sccache binary from being reported as an active compiler cache.
+compiler outputs.
 
 Final diagnostics admit sccache hit/miss outcomes as current-run evidence only
 when that preparation receipt is present and valid. A bare `sccache
@@ -642,8 +615,7 @@ Every native and container build lane reads this declaration after the build
 lifecycle and before verification. Buildchain binds the exact artifact bytes or directory tree to
 the caller repository, source commit, source tree, immutable runtime, platform,
 and requested signature semantics, then publishes a deterministic
-`<artifact>-signing-request-<platform>-<source-sha>-<run-id>-<run-attempt>`
-request. No consumer
+`<artifact>-signing-request-<platform>-<source-sha>` request. No consumer
 workflow step is required. The lifecycle runner automatically adds declarations
 selected for the current platform to the `build` manifest scan, including
 subjects outside the caller's ordinary `artifact-paths`; this extends the
@@ -696,27 +668,14 @@ Buildchain-owned signing authority is responsible for credential selection,
 native signing, notarization where applicable, immutable result delivery, and a
 receipt bound to the request digest, runtime SHA, output digest, and signature
 evidence. Consumer repositories neither receive nor duplicate credential-island
-material. Each platform lane seals and uploads the unsigned request plus a
-run-attempt-bound control request, completes functional verification, and exits.
-It does not dispatch or poll the authority. A separate `ubuntu-24.04` controller
-starts only after the build matrices complete, validates the exact source,
-tree, runtime, request-set root, platform, run attempt, and correlation, then
-dispatches and awaits the protected authority workflow. Its retained receipt
-records two independent immutable identities: the consumer Buildchain runtime
-SHA carried by the control request and the exact authority-ref commit resolved
-immediately before dispatch. The former validates the request-producing
-runtime; the latter must equal the authority workflow run's `head_sha` and is
-retained with the exact authority run and result artifact. If the protected ref
-moves between resolution and dispatch, settlement fails closed. Failure, timeout, or
-cancellation produces a non-qualifying receipt and no finalization delegation.
-
-A second GitHub-hosted finalization lane downloads the original control request,
-controller receipt, and delegation, verifies their roots and coordinates agree,
-then verifies the authority result against the sealed request, imports the exact
-signed bytes, and recomputes the final manifest before replacing the
-deterministic artifact. The signing result is never downloaded back to a
-self-hosted native runner, so a macOS caller is released before credential-island
-signing and notarization complete.
+material. The reusable workflow dispatches the sealed request to the
+Buildchain repository, waits for its protected authority workflow, verifies the
+immutable result, replaces only the declared artifact with the returned final
+bytes. The ordinary platform lane completes the consumer's functional
+verification before delegation. A GitHub-hosted finalization lane then verifies
+the authority result against the sealed request, imports the exact signed bytes,
+and recomputes the final manifest before replacing the deterministic artifact.
+The signing result is never downloaded back to a self-hosted native runner.
 Platform manifests, KFD evidence, checksums, and Release Passport inputs
 therefore observe the final signed artifact rather than the pre-signing build
 output.
@@ -774,9 +733,6 @@ Direct GitHub Artifact payloads default to compression level `0`. Buildchain
 artifacts are commonly already-compressed archives; storing them without a
 second compression pass shortens the upload window while preserving the same
 artifact name, run/id/digest binding, retention, and no-overwrite behavior.
-Direct build and signed-finalization payload uploads include hidden files under
-the caller-declared artifact paths, matching the relay path so manifest-bound
-dotfiles are not silently removed in transit.
 Callers may select `1` through `9` for payloads that materially benefit from
 compression. Manifests and diagnostics retain their existing small-artifact
 behavior.
@@ -795,14 +751,7 @@ jobs:
       artifact-relay-s3-prefix: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX }}
 ```
 
-The mode is a policy for platforms that run outside GitHub. GitHub-hosted
-platforms always upload directly with `actions/upload-artifact`, even when a
-mixed matrix requests `s3-to-github-artifacts`; they never send their payloads
-through S3 or the replay job. Buildchain recognizes its hosted presets and the
-standard hosted runner labels. Custom matrices with non-standard hosted labels
-must declare `"githubHosted": true` on those platform rows.
-
-For remaining relay-mode platforms, each job uploads the heavy payload files to
+In relay mode, each self-hosted platform job uploads the heavy payload files to
 S3 and uploads only a small `relay-manifest.json` to GitHub. A GitHub-hosted
 `relay-artifacts` job then assumes the configured download role, downloads the
 payloads from S3, verifies every file by SHA256, and re-uploads the normal

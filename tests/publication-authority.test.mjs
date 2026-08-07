@@ -19,11 +19,9 @@ import {
   createRunnerProvenance,
   detectPublicationAuthoritySignals,
   publicationAuthorityDigest,
-  publicationGateAggregateBindings,
   verifyPublicationAdmission,
   verifyPublicationQualificationReceipt,
 } from "../packages/core/publication-authority.js";
-import { rebindPublicationGateAggregateForEquivalentTree } from "../packages/core/release-candidate-recovery.js";
 import {
   evaluateBuildchainReleaseReconciliation,
   evaluatePublicationControlPlaneSnapshot,
@@ -42,53 +40,6 @@ const DIGESTS = Object.freeze({
   imageDigest: "7".repeat(64),
   measurementDigest: "8".repeat(64),
   sourceTreeSha: "a".repeat(40),
-});
-
-test("candidate reuse rebinds a qualifying Gate to an equivalent target tree", () => {
-  const evidenceSourceSha = "d".repeat(40);
-  const targetSourceSha = "e".repeat(40);
-  const sourceTreeSha = "f".repeat(40);
-  const aggregate = createPublicationGateDecision({
-    sourceSha: evidenceSourceSha,
-    profile: "candidate-reuse",
-    rationale: "The recovered candidate and publication target share one exact tree.",
-    policy: { requiredGateCount: 0 },
-  });
-
-  const rebound = rebindPublicationGateAggregateForEquivalentTree(aggregate, {
-    evidenceSourceSha,
-    targetSourceSha,
-    targetSourceTreeSha: sourceTreeSha,
-    expectedSourceTreeSha: sourceTreeSha,
-  });
-
-  assert.equal(publicationGateAggregateBindings(rebound).sourceSha, targetSourceSha);
-  assert.deepEqual(rebound.candidateReuse, {
-    action: "reused",
-    evidenceSourceSha,
-    sourceTreeSha,
-  });
-});
-
-test("candidate reuse fails closed when the publication target tree differs", () => {
-  const evidenceSourceSha = "d".repeat(40);
-  const aggregate = createPublicationGateDecision({
-    sourceSha: evidenceSourceSha,
-    profile: "candidate-reuse",
-    rationale: "The recovered candidate must remain byte-equivalent.",
-    policy: { requiredGateCount: 0 },
-  });
-
-  assert.throws(
-    () =>
-      rebindPublicationGateAggregateForEquivalentTree(aggregate, {
-        evidenceSourceSha,
-        targetSourceSha: "e".repeat(40),
-        targetSourceTreeSha: "f".repeat(40),
-        expectedSourceTreeSha: "a".repeat(40),
-      }),
-    /source tree mismatch/,
-  );
 });
 
 function fixture({ runnerClass = "ephemeral", factStatus = "pass", qualificationRequired = false } = {}) {

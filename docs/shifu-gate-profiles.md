@@ -135,18 +135,7 @@ a shell string.
 
 Projects may also pass non-sensitive scalar environment through
 `gate-environment-json`; Buildchain validates the JSON shape and forwards it
-without interpreting names or values. A custom `platforms-json` entry may add
-an `environment` object when a value is platform-specific; those scalars
-override the shared environment only for that matrix job. For example, a
-GitHub-hosted Linux lane can select an installed compiler without leaking the
-same setting into macOS or Windows:
-
-```yaml
-platforms-json: >-
-  [{"id":"linux-x64","name":"Linux x64","platform":"linux","runner":"[\"ubuntu-24.04\"]","capabilities":["node","native-toolchain"],"environment":{"CC":"gcc-14","CXX":"g++-14"}}]
-```
-
-Cache profile references use the same
+without interpreting names or values. Cache profile references use the same
 opaque `shifu-cache-profile-ref` and `shifu-cache-profile-digest` inputs as the
 reusable build. Do not place tokens, credentials, or other secrets in workflow
 inputs or Gate receipts.

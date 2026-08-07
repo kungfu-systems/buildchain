@@ -71,7 +71,6 @@ export function routeOfflineRunners({
     return {
       ...platform,
       runner: fallbackRunner,
-      githubHosted: true,
     };
   });
   return {

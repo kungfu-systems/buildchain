@@ -49,30 +49,7 @@ function assertSourcePath(value) {
   return sourcePath;
 }
 
-function hasCommit(sourceSha, cwd) {
-  try {
-    execFileSync("git", ["cat-file", "-e", `${sourceSha}^{commit}`], {
-      cwd,
-      stdio: "ignore",
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function readConfigAtSource(sourceSha, configPath, cwd) {
-  if (!hasCommit(sourceSha, cwd)) {
-    try {
-      execFileSync("git", ["fetch", "--no-tags", "--depth=1", "origin", sourceSha], {
-        cwd,
-        stdio: ["ignore", "pipe", "pipe"],
-      });
-    } catch (error) {
-      const detail = String(error.stderr || error.message || "unknown git fetch failure").trim();
-      throw new Error(`exact release source ${sourceSha} is unavailable from origin: ${detail}`);
-    }
-  }
+function readConfigAtSource(sourceSha, configPath, cwd) {
   const bytes = execFileSync("git", ["show", `${sourceSha}:${configPath}`], {
     cwd,
     encoding: "utf8",

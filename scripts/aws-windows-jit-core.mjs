@@ -10,9 +10,9 @@ export const WINDOWS_EC2_JIT = Object.freeze({
   instanceType: "c7i.4xlarge",
   pricePerHourUsd: 1.45,
   maximumInstanceLifetimeMinutes: 180,
-  maxConcurrentInstances: 1,
-  maxAcceptedInstances: 5,
-  budgetLimitUsd: 110,
+  maxConcurrentInstances: 2,
+  maxAcceptedInstances: 6,
+  budgetLimitUsd: 40,
   minimumSmokeJobs: 1,
   minimumFullJobs: 3,
   maximumCleanupLatencySeconds: 900,
@@ -75,14 +75,6 @@ export function windowsJitRunnerLabels(value) {
   return ["self-hosted", "Windows", "X64", windowsJitRunnerLabel(value)];
 }
 
-export function windowsJitCampaignId(value) {
-  const campaign = String(value || "").trim();
-  if (!/^win-[a-z0-9][a-z0-9-]{2,15}$/.test(campaign)) {
-    throw new Error("campaignId must be a bounded Windows campaign id");
-  }
-  return campaign;
-}
-
 export function renderWindowsJitBootstrap(template, values = {}) {
   const runnerLabel = windowsJitRunnerLabel(values.runnerLabel);
   const jitParameterName = String(values.jitParameterName || "").trim();
@@ -94,7 +86,6 @@ export function renderWindowsJitBootstrap(template, values = {}) {
   }
   const bounded = {
     REGION: String(values.region || WINDOWS_EC2_JIT.region),
-    CAMPAIGN_ID: String(values.campaignId || ""),
     JIT_PARAMETER_NAME: jitParameterName,
     EVIDENCE_BUCKET: String(values.evidenceBucket || ""),
     RUNNER_LABEL: runnerLabel,
@@ -108,7 +99,6 @@ export function renderWindowsJitBootstrap(template, values = {}) {
   };
   const patterns = {
     REGION: /^us-[a-z]+-\d$/,
-    CAMPAIGN_ID: /^win-[a-z0-9][a-z0-9-]{2,43}$/,
     EVIDENCE_BUCKET: /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/,
     GITHUB_RUN_ID: /^\d+$/,
     GITHUB_RUN_ATTEMPT: /^\d+$/,
@@ -194,7 +184,6 @@ export function windowsEc2JitPlan(overrides = {}) {
 
 export function createWindowsJitEvidence({
   repository,
-  campaignId,
   sourceSha,
   sourceRef,
   githubRunId,
@@ -246,7 +235,6 @@ export function createWindowsJitEvidence({
     phase: WINDOWS_EC2_JIT.phase,
     provider: "aws-ec2",
     repository,
-    campaign: { id: windowsJitCampaignId(campaignId) },
     source: {
       sha: exactSha(sourceSha, "sourceSha"),
       ref: String(sourceRef || "").trim(),
@@ -298,7 +286,6 @@ export function createWindowsJitEvidence({
 }
 
 export function verifyWindowsEc2JitQualification({
-  campaignId,
   jobs = [],
   cancellationCleanup = {},
   timeoutCleanup = {},
@@ -312,7 +299,6 @@ export function verifyWindowsEc2JitQualification({
 } = {}) {
   const plan = windowsEc2JitPlan();
   const issues = [];
-  const campaign = windowsJitCampaignId(campaignId);
   const accepted = jobs.filter(
     (job) =>
       job?.trusted === true &&
@@ -322,9 +308,6 @@ export function verifyWindowsEc2JitQualification({
   );
   const smokeJobs = accepted.filter((job) => job.kind === "smoke");
   const fullJobs = accepted.filter((job) => job.kind === "full");
-  if (accepted.some((job) => job.campaignId !== campaign)) {
-    issues.push("accepted-jobs-not-bound-to-campaign");
-  }
   if (smokeJobs.length < plan.config.minimumSmokeJobs) {
     issues.push("runner-profile-smoke-missing");
   }
@@ -366,7 +349,6 @@ export function verifyWindowsEc2JitQualification({
     contract: AWS_WINDOWS_JIT_CONTRACT,
     kind: "phase-verification",
     phase: plan.config.phase,
-    campaign: { id: campaign },
     status: issues.length ? "failed" : "passed",
     qualifying: issues.length === 0,
     metrics: {

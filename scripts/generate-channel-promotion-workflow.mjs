@@ -130,8 +130,8 @@ function validateWorkflowRoute(name, route, expectedLogicalRef) {
   if (!/^\.github\/workflows\/[.a-z0-9-]+\.ya?ml$/.test(route.workflowPath || "")) {
     throw new Error(`promotion shell ${name} workflowPath must name a reusable workflow`);
   }
-  if (!/^(?:v[0-9]+(?:-alpha)?|train\/[A-Za-z0-9._+\/-]+|[0-9a-f]{40})$/.test(route.callRef || "")) {
-    throw new Error(`promotion shell ${name} callRef must be an official channel ref, trusted train, or exact SHA`);
+  if (!/^(?:v[0-9]+(?:-alpha)?|[0-9a-f]{40})$/.test(route.callRef || "")) {
+    throw new Error(`promotion shell ${name} callRef must be an official channel ref or exact SHA`);
   }
   if (typeof route.forwardInternalInputs !== "boolean") {
     throw new Error(`promotion shell ${name} forwardInternalInputs must be boolean`);
@@ -240,45 +240,29 @@ jobs:
         id: router
         shell: bash
         env:
-          BUILDCHAIN_ROUTER_REPOSITORY: \${{ inputs.buildchain-repository }}
-          BUILDCHAIN_ROUTER_REF: \${{ inputs.buildchain-ref }}
-          BUILDCHAIN_RESUME_RUN_ID: \${{ inputs.resume-candidate-run-id }}
-          BUILDCHAIN_RESUME_RUNTIME_SHA: \${{ inputs.resume-buildchain-runtime-sha }}
+          BUILDCHAIN_ROUTER_WORKFLOW_REF: \${{ job.workflow_ref }}
+          BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY: \${{ job.workflow_repository }}
+          BUILDCHAIN_ROUTER_WORKFLOW_SHA: \${{ job.workflow_sha }}
         run: |
           set -euo pipefail
-          repository="\${BUILDCHAIN_ROUTER_REPOSITORY}"
-          ref="\${BUILDCHAIN_ROUTER_REF}"
+          workflow_ref="\${BUILDCHAIN_ROUTER_WORKFLOW_REF}"
+          repository="\${BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY}"
+          ref="\${workflow_ref##*@}"
           ref="\${ref#refs/heads/}"
           ref="\${ref#refs/tags/}"
-          if [[ ! "\${repository}" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ || -z "\${ref}" || "\${ref}" = /* || "\${ref}" = *..* ]]; then
-            echo "::error::Unable to resolve promotion router source from repository/ref inputs"
+          parsed_repository="\${workflow_ref%%/.github/workflows/*}"
+          if [[ -z "\${repository}" || "\${repository}" != "\${parsed_repository}" || -z "\${ref}" ]]; then
+            echo "::error::Unable to resolve promotion router source from job.workflow_ref=\${workflow_ref}"
             exit 1
           fi
-
-          remote_url="https://github.com/\${repository}.git"
-          refs="$(git ls-remote "\${remote_url}" "refs/heads/\${ref}" "refs/tags/\${ref}" "refs/tags/\${ref}^{}")"
-          head_sha="$(printf '%s\\n' "\${refs}" | awk -v name="refs/heads/\${ref}" '$2 == name { print tolower($1) }')"
-          tag_sha="$(printf '%s\\n' "\${refs}" | awk -v peeled="refs/tags/\${ref}^{}" -v name="refs/tags/\${ref}" '$2 == peeled { print tolower($1); found=1 } $2 == name && !found { fallback=tolower($1) } END { if (!found && fallback != "") print fallback }')"
-          if [[ -n "\${head_sha}" && -n "\${tag_sha}" && "\${head_sha}" != "\${tag_sha}" ]]; then
-            echo "::error::Promotion router ref is ambiguous between branch and tag"
+          if [[ ! "\${BUILDCHAIN_ROUTER_WORKFLOW_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::job.workflow_sha is not an exact commit SHA"
             exit 1
-          fi
-          sha="\${head_sha:-\${tag_sha}}"
-          if [[ ! "\${sha}" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::Promotion router ref did not resolve to one exact commit SHA"
-            exit 1
-          fi
-          if [[ -n "\${BUILDCHAIN_RESUME_RUN_ID}" ]]; then
-            expected_sha="\${BUILDCHAIN_RESUME_RUNTIME_SHA,,}"
-            if [[ ! "\${expected_sha}" =~ ^[0-9a-f]{40}$ || "\${sha}" != "\${expected_sha}" ]]; then
-              echo "::error::Recovery router ref does not match resume-buildchain-runtime-sha"
-              exit 1
-            fi
           fi
           {
             echo "repository=\${repository}"
             echo "ref=\${ref}"
-            echo "sha=\${sha}"
+            echo "sha=\${BUILDCHAIN_ROUTER_WORKFLOW_SHA,,}"
           } >> "\${GITHUB_OUTPUT}"
 
       - name: Checkout promotion router

@@ -35,7 +35,6 @@ export function main() {
   if (mode === "evidence") {
     const result = createWindowsJitEvidence({
       repository: process.env.GITHUB_REPOSITORY,
-      campaignId: process.env.AWS_EC2_CAMPAIGN_ID,
       sourceSha:
         process.env.BUILDCHAIN_EXPECTED_SOURCE_SHA || process.env.GITHUB_SHA,
       sourceRef:
@@ -78,7 +77,6 @@ export function main() {
       fs.readFileSync(path.resolve(template), "utf8"),
       {
         region: arg("region", "us-east-1"),
-        campaignId: arg("campaign-id"),
         jitParameterName: arg("jit-parameter"),
         evidenceBucket: arg("evidence-bucket"),
         runnerLabel: arg("runner-label"),

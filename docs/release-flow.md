@@ -96,10 +96,6 @@ published artifacts are already durable.
 The intended governance split is:
 
 - exact tags such as `v3.0.2` and `v3.0.3-alpha.0` are immutable audit refs;
-- for publish transactions, the exact tag points to the transaction
-  `source_sha`, matching package-registry source metadata such as npm
-  `gitHead`; generated version-state commits remain on protected branches and
-  floating channel refs;
 - floating tags such as `v3`, `v3.0`, `v3.0-alpha`, and `v3-alpha` are mutable channel refs
   owned by the Buildchain promotion token;
 - protected branches still require reviewed channel PRs before Buildchain can

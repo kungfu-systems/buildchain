@@ -4,7 +4,6 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { runGitFetchSync } from "./git-fetch-process-tree.mjs";
 
 export const LOCKED_SOURCE_CHECKOUT_CONTRACT = "kungfu-buildchain-locked-source-checkout-cache";
 export const ISOLATED_GIT_GLOBAL_CONFIG = process.platform === "win32" ? "NUL" : "/dev/null";
@@ -45,14 +44,6 @@ function normalizeFallback(value = "github") {
     throw new Error(`checkout-cache-fallback must be github or fail; got ${value}`);
   }
   return fallback;
-}
-
-function normalizeHistoryMode(value = "shallow") {
-  const mode = String(value || "shallow").trim().toLowerCase() || "shallow";
-  if (!["shallow", "full"].includes(mode)) {
-    throw new Error(`checkout-history-mode must be shallow or full; got ${value}`);
-  }
-  return mode;
 }
 
 function splitRepository(repository) {
@@ -112,10 +103,9 @@ function ensureCheckoutTarget(targetPath, workspace) {
 
 function git(args, { cwd, env = {}, timeoutMs = 60000, stdio = ["ignore", "pipe", "pipe"] } = {}) {
   try {
-    const commandEnv = { ...process.env, ...env };
-    const output = args[0] === "fetch" ? runGitFetchSync({ args, cwd, env: commandEnv, timeoutMs, stdio }) : execFileSync("git", args, {
+    const output = execFileSync("git", args, {
       cwd,
-      env: commandEnv,
+      env: { ...process.env, ...env },
       encoding: "utf8",
       stdio,
       timeout: timeoutMs,
@@ -235,8 +225,7 @@ function checkoutFetchedCommit(targetPath, sha, timeoutMs) {
 function retryableGitFetchError(error) {
   const code = String(error?.code || "").toUpperCase();
   if (["ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN", "ENETUNREACH", "EPIPE"].includes(code)) return true;
-  const commandOutput = [error?.stderr, error?.stdout].filter(Boolean).map(String).join("\n").trim();
-  return /timed?\s*out|timeout|connection (?:reset|refused)|remote end hung up|early eof|rpc failed|http (?:429|5\d\d)|temporary failure|network is unreachable/i.test(commandOutput || String(error?.message || error || ""));
+  return /timed?\s*out|timeout|connection (?:reset|refused)|remote end hung up|early eof|rpc failed|http (?:429|5\d\d)|temporary failure|network is unreachable/i.test(String(error?.message || error || ""));
 }
 
 export function fetchSourceCommit({
@@ -248,25 +237,19 @@ export function fetchSourceCommit({
   sourceTreeSha = "",
   timeoutMs,
   env = {},
-  historyMode = readEnv("BUILDCHAIN_CHECKOUT_HISTORY_MODE", "shallow"),
   allowFullFetchRetry = false,
   runGit = git,
   containsCommit = hasCommit,
 }) {
-  const normalizedHistoryMode = normalizeHistoryMode(historyMode);
   const fetchEnv = isolatedGitFetchEnv(env, targetPath);
   const fetch = (refspec) => {
     const options = { cwd: targetPath, timeoutMs, env: fetchEnv };
-    const fetchArgs = ["fetch", "--no-tags"];
-    if (normalizedHistoryMode === "shallow") fetchArgs.push("--depth=1");
-    fetchArgs.push(remoteName, refspec);
     try {
-      runGit(fetchArgs, options);
-      return normalizedHistoryMode;
+      runGit(["fetch", "--no-tags", "--depth=1", remoteName, refspec], options);
+      return "shallow";
     } catch (error) {
       if (
-        normalizedHistoryMode !== "shallow"
-        || !allowFullFetchRetry
+        !allowFullFetchRetry
         || !/dumb http transport does not support shallow capabilities/i.test(
           String(error?.message || error || ""),
         )

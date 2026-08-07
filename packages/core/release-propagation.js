@@ -219,7 +219,6 @@ export function createReleasePropagationLock({
       package: upstreamRelease.package,
       publicationArtifact: upstreamRelease.publicationArtifact,
       releasePassport: upstreamRelease.releasePassport,
-      registryProvenance: upstreamRelease.registryProvenance,
       siteBundle: upstreamRelease.siteBundle,
     },
     downstream: {
@@ -407,7 +406,7 @@ export function createReleasePropagationReceipt({
             name: upstreamRelease.package.name,
             version: upstreamRelease.package.version,
             integrity: upstreamRelease.package.integrity,
-            gitHead: upstreamRelease.package.gitHead || null,
+            gitHead: upstreamRelease.package.gitHead,
           }
         : null,
     },
@@ -415,8 +414,7 @@ export function createReleasePropagationReceipt({
       state: release.channel === "alpha" ? "complete" : "not-applicable",
       evidence: release.channel === "alpha"
         ? {
-            releasePassportSha256: upstreamRelease.releasePassport?.sha256 || null,
-            registryProvenance: upstreamRelease.registryProvenance || null,
+            releasePassportSha256: upstreamRelease.releasePassport.sha256,
             tag: upstreamRelease.tag,
           }
         : null,
@@ -478,26 +476,3 @@ export {
   createPackageReleasePropagationCapture,
   normalizePackageReleasePropagationConfig,
 } from "./release-propagation-capture.js";
-export {
-  MANUAL_UPSTREAM_PICKUP_CONFIG_CONTRACT,
-  MANUAL_UPSTREAM_PICKUP_PLAN_CONTRACT,
-  createManualUpstreamPickupCapture,
-  createManualUpstreamPickupPlan,
-  normalizeManualUpstreamPickupConfig,
-  resolveNpmRegistryRelease,
-} from "./release-propagation-pickup.js";
-export {
-  RELEASE_PROPAGATION_FAILURE_MATRIX,
-  RELEASE_PROPAGATION_FAILURE_MATRIX_CONTRACT,
-  SITE_UPSTREAM_AGENT_ENTRY_CONTRACT,
-  classifyReleasePropagationCondition,
-  normalizeSiteUpstreamIntent,
-  planSiteUpstreamAgentEntry,
-} from "./release-propagation-agent-entry.js";
-export {
-  RELEASE_PROPAGATION_PUSH_PLAN_CONTRACT,
-  RELEASE_PROPAGATION_PUSH_RESULT_CONTRACT,
-  createReleasePropagationPushPlan,
-  executeReleasePropagationPush,
-  inspectReleasePropagationPushState,
-} from "./release-propagation-push.js";

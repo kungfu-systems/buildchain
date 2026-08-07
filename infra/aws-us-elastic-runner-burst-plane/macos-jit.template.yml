@@ -192,7 +192,6 @@ Resources:
                   - ec2:DescribeImages
                   - ec2:DescribeInstances
                   - ec2:DescribeInstanceStatus
-                  - ec2:DescribeSubnets
                   - ec2:DescribeVolumes
                   - ec2:DescribeTags
                 Resource: "*"
@@ -200,8 +199,6 @@ Resources:
                 Action:
                   - ssm:PutParameter
                   - ssm:DeleteParameter
-                  - ssm:DescribeParameters
-                  - ssm:DescribeInstanceInformation
                   - ssm:SendCommand
                   - ssm:GetCommandInvocation
                 Resource: "*"

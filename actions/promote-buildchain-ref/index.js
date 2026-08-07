@@ -5,13 +5,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseTags, promoteBuildchainRefs, recordGitHubReleaseTransactionCompletion } from "./lib.js";
-import { reuseCompleteGitHubReleaseEvidence } from "./reuse-complete-release.js";
 import { explainReleaseLineDryRun, formatReleaseLineDryRun } from "../../packages/core/release-line-dry-run.js";
 import { ensureGitHubRelease } from "../../scripts/ensure-github-release.mjs";
-
-export { reuseCompleteGitHubReleaseEvidence } from "./reuse-complete-release.js";
-
-const releaseCandidateRecoveryReceiptPath = process.env.BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH || "";
 
 export function plannedPublicationExactTag(plannedPublication = {}) {
   return plannedPublication.publicTag || plannedPublication.tag || "";
@@ -204,12 +199,6 @@ async function uploadReleaseAssetImmutable({ octokit, owner, repo, releaseId, as
   return { action: "uploaded", name, digest: `sha256:${digest}` };
 }
 
-function recoveryCompletedBeforeThisRun(receiptPath = "") {
-  if (!receiptPath) return false;
-  const receipt = JSON.parse(fs.readFileSync(path.resolve(receiptPath), "utf8"));
-  return receipt.action === "reused" && receipt.transaction?.state === "complete";
-}
-
 export async function publishGitHubReleaseEvidence({
   octokit,
   owner,
@@ -225,8 +214,6 @@ export async function publishGitHubReleaseEvidence({
   releasePassportPath = "",
   releasePassportOutputDir = "",
   additionalAssetPaths = [],
-  reuseExistingCompleteEvidence = false,
-  targetRef = "",
 } = {}) {
   if (!tag) {
     throw new Error("github-release=true requires promote-buildchain-ref to resolve a public release tag");
@@ -247,19 +234,6 @@ export async function publishGitHubReleaseEvidence({
     target,
     channel,
   });
-  if (reuseExistingCompleteEvidence) {
-    return reuseCompleteGitHubReleaseEvidence({
-      octokit,
-      owner,
-      repo,
-      release: release.release,
-      tag,
-      target,
-      channel,
-      targetRef,
-      additionalAssetPaths,
-    });
-  }
   const assetResults = [];
   for (const assetPath of assets) {
     assetResults.push(await uploadReleaseAssetImmutable({
@@ -414,7 +388,6 @@ async function main() {
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
-    expectedTransactionId: process.env.BUILDCHAIN_EXPECTED_TRANSACTION_ID,
     publishSealedBundleRoot,
     publishSealedBundleManifest,
     publishRequiredArtifactsJson,
@@ -454,8 +427,8 @@ async function main() {
     releasePassportGitHubArtifactAttestationPolicyJsons,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
-    releaseCandidateBuildSummaryPath, releaseCandidateVersion,
-    releaseCandidateRecoveryReceiptPath,
+    releaseCandidateBuildSummaryPath,
+    releaseCandidateVersion,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,
@@ -464,6 +437,7 @@ async function main() {
     runId: String(github.context.runId || ""),
     publishTransactionOverride,
   });
+
   for (const update of result.updates) {
     const target =
       update.tag ||
@@ -514,14 +488,14 @@ async function main() {
         tag: result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "",
         target: result.publishTransaction?.releaseSha || sha,
         channel: result.publishTransaction?.channel || "",
-        title: githubReleaseTitle, notes: githubReleaseNotes,
+        title: githubReleaseTitle,
+        notes: githubReleaseNotes,
         publishEvidencePath: result.publishTransaction?.evidencePath || "",
         releasePassportPath: result.publishTransaction?.releasePassportPath || "",
         releasePassportOutputDir: result.publishTransaction?.releasePassportOutputDir || "",
         additionalAssetPaths: result.publishTransaction?.sealedReleaseAssetPaths?.length
           ? result.publishTransaction.sealedReleaseAssetPaths
           : githubReleaseArtifactPaths,
-        reuseExistingCompleteEvidence: recoveryCompletedBeforeThisRun(releaseCandidateRecoveryReceiptPath), targetRef,
       });
       const completion = await recordGitHubReleaseTransactionCompletion({
         octokit,

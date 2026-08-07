@@ -8,12 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-03
-ai_provenance:
-  model_family: GPT-5
-  product: Codex
-  generated_at: 2026-08-03
-  invisible_information: No hidden model checkpoint, parameters, or private training data were available.
+last_reviewed: 2026-07-30
 ---
 
 # AWS US elastic runner burst plane
@@ -143,16 +138,14 @@ The source-bound evidence and deterministic phase receipt are:
 
 The Windows phase uses the explicit `aws-us-ec2-windows-jit` runner preset.
 Its caller supplies one bounded label under
-`aws-us-ec2-windows-jit-<campaign-id>-<qualification-id>`, and Buildchain
-resolves exactly one Windows x64 native lane. The reusable trust gate still
-runs on a GitHub-hosted runner before the JIT label can select EC2.
+`aws-us-ec2-windows-jit-<qualification-id>`, and Buildchain resolves exactly
+one Windows x64 native lane. The reusable trust gate still runs on a
+GitHub-hosted runner before the JIT label can select EC2.
 
 The provider creates repository-level GitHub JIT configuration for
 `kungfu-systems/kungfu`. Its `labels` request must contain all four scheduling
 labels: `self-hosted`, `Windows`, `X64`, and the card-scoped
-`aws-us-ec2-windows-jit-<campaign-id>-<qualification-id>` label. The workflow
-display title also carries both identities, allowing the launch controller to
-verify the queued run against its campaign plan. GitHub's JIT endpoint does
+`aws-us-ec2-windows-jit-<qualification-id>` label. GitHub's JIT endpoint does
 not infer the default OS and architecture labels when they are omitted. The
 encoded configuration is never placed in EC2 user data, a tag, a command log,
 or an artifact. The operator writes it to a card-scoped SSM SecureString under
@@ -175,157 +168,21 @@ Each runner uses:
   security-group rule, no key pair, and no warm Auto Scaling capacity.
 
 Runner diagnostics and a redacted lifecycle record are uploaded to the
-provider's encrypted, private evidence bucket under the exact campaign, run,
-attempt, and instance identity. The runner process exits after one job, Windows
-shuts down, and EC2's instance-initiated shutdown behavior is set to
-`terminate`. A five-minute reaper terminates card-owned stopped or
+provider's encrypted, private evidence bucket. The runner process exits after
+one job, Windows shuts down, and EC2's instance-initiated shutdown behavior is
+set to `terminate`. A five-minute reaper terminates card-owned stopped or
 three-hour-old instances and deletes only their dedicated JIT parameter.
 
 At the 2026-07-29 AWS Price List rate of USD 1.45 per Windows
-`c7i.4xlarge` hour, each accepted instance reserves its complete three-hour
-USD 4.35 fail-closed lifetime before `RunInstances`. A DynamoDB transaction
-binds the exact campaign and source, creates an idempotent run ledger entry,
-and atomically refuses a sixth accepted instance. Five accepted instances
-therefore reserve at most USD 21.75. The campaign also persists the
-operator-observed spend from earlier Windows work, and refuses to arm unless
-that baseline, all five reservations, and one USD 4.35 fail-closed race
-allowance remain below the USD 110 phase cap.
+`c7i.4xlarge` hour, six accepted three-hour instances reserve USD 26.10. The
+two-instance race envelope reserves another USD 8.70, producing a USD 34.80
+worst case below the dedicated USD 40 budget. Budget notifications at 80% and
+95% invoke the same card-scoped global kill switch.
 
-The campaign starts unarmed and expires within 24 hours. Its `CONTROL` record
-can be created only once: a killed or expired campaign cannot be re-armed by
-the campaign tool. A budget notification or any instance lifetime violation
-persists `KILLED` before cleanup, so later workflow dispatches fail before a
-paid launch. Reservations are never refunded: a controller crash, ambiguous
-launch, or successful launch all remain charged to the campaign, favoring a
-false stop over an accidental budget overrun.
-
-The 2026-08-03 timeout-only campaign decision narrows the campaign to two
-accepted instances with one active instance at a time. The second reservation
-is an operator-gated repair retry: it may be used only after the first attempt
-is classified as non-counting and runner, EC2, EBS, SSM, and workflow residue
-have returned to zero. The two-slot ledger is a maximum spend boundary, not an
-authorization to consume both reservations.
-
-Each stack owns a stack-scoped reaper log group, so an independent retained
-one-shot campaign stack can be created without colliding with another
-campaign's audit log resource.
-
-The account-native AWS Budget is defense in depth, not the authoritative launch
-gate. It is owned by the singleton
-`kungfu-buildchain-windows-jit-budget-guard` stack rather than any retained
-campaign stack. This prevents Budget-name collisions and prevents a stale
-campaign reaper from becoming the provider-wide cost authority. The Budget
-filters exactly `USAGE_TYPE=BoxUsage:c7i.4xlarge`,
-`OPERATION=RunInstances:0002` (Windows), and `REGION=us-east-1`; its 80% and
-95% actual notifications persist the provider kill sentinel, terminate every
-tagged Windows JIT instance, and delete scoped JIT parameters. Every launch
-controller refuses to proceed when the sentinel exists or when the Budget
-identity or dimension filter does not match.
-
-Budget installation is intentionally deployable by the workload account without
-AWS Organizations management-account access. It fails closed unless Cost
-Explorer exposes all three AWS-owned billing dimensions in the requested phase
-window. The `kungfu:provider=windows-ec2-jit` resource tag remains mandatory for
-ownership, cleanup, and IAM scoping, but it is not a billing filter. Do not
-create an unfiltered fallback Budget or treat an incomplete dimension readback
-as evidence.
-The DynamoDB campaign reservation remains the atomic launch authority because
-Cost Explorer and AWS Budgets can lag provider activity.
-
-Qualification requires one runner-profile smoke and three trusted exact-source
-full Windows jobs all bound to the same campaign, independent cancellation and
-timeout cleanup exercises, and zero repository runner, EC2 instance,
-disposable volume, min capacity, and desired capacity within 15 minutes of the
-final job.
-
-### Phase 2 operator workflow
-
-`pnpm operator:windows-jit` is the reusable lifecycle entrypoint. Its default
-mode is `plan`, which performs no AWS or GitHub call. A plan binds the account,
-region, unique campaign and stack names, source SHA/ref, Cost Explorer window,
-workflow id, network, OIDC provider, expiry, slot ceiling, singleton Budget
-identity, and exact confirmation digest.
-
-The modes are deliberately separated:
-
-- `plan` emits the deterministic mutation boundary and digest.
-- `audit` reads AWS and GitHub only. It verifies the account, disabled workflow,
-  singleton guard stack, exact Budget filter, SNS thresholds/subscribers,
-  provider kill sentinel, campaign stack, and zero EC2/EBS/SSM/JIT/runner
-  residue.
-- `install-budget --execute` deploys or updates only the singleton Budget guard.
-  It refuses to mutate unless all exact Windows billing dimensions are visible,
-  the Windows workflow is disabled, and the account, campaign, source, Budget,
-  and plan digest confirmations match.
-- `prepare --execute` requires the installed Budget guard, absent kill
-  sentinel, fresh Cost Explorer readback filtered by `BoxUsage:c7i.4xlarge`,
-  `RunInstances:0002`, and `us-east-1`, zero residue, a
-  never-used campaign stack name, and the disabled workflow. The receipt binds
-  the query timestamp and exact filter identity. Preparation deploys the
-  campaign stack and atomically arms the ledger with that provider-spend
-  baseline. It never enables or dispatches the workflow and never creates EC2
-  capacity.
-- `close --execute` disables the workflow first, persists `KILLED`, publishes
-  the campaign kill switch, and reports terminal success only after EC2, EBS,
-  SSM, JIT parameter, and GitHub runner residue is zero. It is safe to rerun
-  while the reaper settles.
-
-All mutating modes require `--execute`, `--confirm-plan-digest`,
-`--confirm-account-id`, `--confirm-campaign-id`, and
-`--confirm-source-sha`. Budget installation and preparation additionally
-require `--confirm-budget-name`. A future paid workload still requires a
-separate exact workflow/run authorization and uses
-`scripts/aws-windows-jit-controller.mjs`; preparation is not paid-launch
-authority.
-
-Start by recording one reproducible plan:
-
-```bash
-pnpm operator:windows-jit plan \
-  --aws-profile us \
-  --account-id 727884401362 \
-  --campaign-id win-REPLACE \
-  --source-sha REPLACE_WITH_EXACT_40_CHARACTER_SHA \
-  --source-ref refs/heads/dev/v4/v4.0 \
-  --observed-at REPLACE_WITH_ISO_TIMESTAMP \
-  --expires-at REPLACE_WITH_ISO_TIMESTAMP_WITHIN_24_HOURS \
-  --cost-start REPLACE_WITH_PHASE_START_DATE \
-  --cost-end REPLACE_WITH_EXCLUSIVE_END_DATE \
-  --max-accepted-instances 1 \
-  --workflow-id 322620360 \
-  --vpc-id REPLACE_WITH_VPC_ID \
-  --subnet-id REPLACE_WITH_SUBNET_ID \
-  --oidc-provider-arn REPLACE_WITH_GITHUB_OIDC_PROVIDER_ARN
-```
-
-Reuse those exact arguments for `audit`, `install-budget`, `prepare`, or
-`close`; never regenerate `--observed-at` between the plan and its confirmed
-mutation. Capture stdout as the operator receipt. Do not put credentials,
-tokens, JIT configuration, or signed URLs in arguments or receipts.
-
-### Lower-level campaign and launch controllers
-
-`scripts/aws-windows-jit-campaign-core.mjs` owns the pure one-shot ledger
-contract used by the operator and launch controller. Arming creates `CONTROL`
-and `CAMPAIGN#<id>` with `attribute_not_exists` conditions, so DynamoDB refuses
-a second campaign in the same retained state table. There is deliberately no
-clear or re-arm operation.
-
-Every `scripts/aws-windows-jit-controller.mjs --execute` call must provide the
-same `--account-id`, `--campaign-id`, `--confirm-campaign-id`, `--state-table`,
-and `--confirm-state-table`. Before GitHub JIT material is created, the
-controller verifies the exact provider Budget/dimension filter and proves the
-global Budget kill sentinel absent. After the GitHub, AMI, active-instance,
-SSM, and EC2 DryRun checks pass, the controller
-atomically reserves one run. Duplicate run-attempt-qualification identities,
-source mismatch, expiry, `KILLED`, the sixth accepted instance, or a
-reservation that would exceed the USD 110 ceiling after combining the persisted
-fresh Cost Explorer baseline with all in-flight campaign reservations all fail
-closed in one DynamoDB transaction before `RunInstances`. AWS Budget alarms are
-defense in depth for delayed billing telemetry; the atomic ledger is the
-authoritative launch-time guard. The operator is the only supported mutation
-surface for campaign preparation and closeout; direct imports of the core are
-not operator authority.
+Qualification requires one runner-profile smoke, three trusted exact-source
+full Windows jobs, independent cancellation and timeout cleanup exercises, and
+zero repository runner, EC2 instance, disposable volume, min capacity, and
+desired capacity within 15 minutes of the final job.
 
 ## Phase 3 contract
 
@@ -368,32 +225,6 @@ host, including at least one full run, plus proof that:
 - the repository has no registered campaign runner;
 - AWS has no active campaign instance or allocated campaign host;
 - actual incremental spend remained below USD 25.
-
-### Phase 3 lifecycle controller
-
-`scripts/aws-macos-jit-controller.mjs` is the operator boundary for the paid
-campaign. It has three explicit mutation modes:
-
-- `launch-campaign` binds the exact repository source, AMI, availability zone,
-  tagged Dedicated Host, and reusable instance. It rejects pre-existing Mac
-  capacity and requires successful `AllocateHosts` and `RunInstances` DryRuns
-  before either real call.
-- `run-job` binds one queued exact-source GitHub job to the existing campaign
-  host and instance. It writes the repository JIT configuration through a
-  mode-0600 temporary file into a distinct SSM SecureString, sends only the
-  credential-free bootstrap through SSM, and removes the parameter plus runner
-  registration if command delivery fails.
-- `close-campaign` refuses execution before the provider's 24-hour minimum,
-  verifies the encrypted delete-on-termination root volume, removes scoped JIT
-  residue, terminates the exact instance, and requires a `ReleaseHosts` DryRun
-  before release. If Apple host scrubbing is still in progress, it reports
-  `release-pending`; the ten-minute card-scoped reaper remains the bounded
-  retry path.
-
-Every execute mode requires the exact source SHA and campaign id to be repeated
-through `--confirm-source-sha` and `--confirm-campaign-id`. `run-job` also
-requires `--confirm-run-id`. Omitting `--execute` emits a deterministic plan
-without changing AWS or GitHub state.
 
 ## Provider lifecycle
 

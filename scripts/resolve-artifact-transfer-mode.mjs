@@ -26,15 +26,6 @@ function resolveArtifactTransferMode(env = process.env) {
       oidcAudience: "",
     };
   }
-  if (env.INPUT_RELAY_REQUIRED === "false") {
-    return {
-      mode: "github-artifacts",
-      s3Bucket: "",
-      s3Region: "",
-      s3Prefix: "",
-      oidcAudience: "",
-    };
-  }
   const s3Bucket = firstValue(env.INPUT_S3_BUCKET, env.VAR_S3_BUCKET);
   const s3Region = firstValue(env.INPUT_S3_REGION, env.VAR_S3_REGION);
   const s3Prefix = firstValue(

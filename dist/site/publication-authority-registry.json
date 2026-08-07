@@ -45,19 +45,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/.declarative-auditable-demo.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.declarative-auditable-demo.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/.publication-authority.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -194,19 +181,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/auditable-demo.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/auditable-demo.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/binary-distribution.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -266,19 +240,6 @@
       "credentialMode": "none",
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/buildchain-alpha-self-dogfood.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/buildchain-dev-delivery.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/buildchain-dev-delivery.yml",
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
@@ -376,32 +337,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/dev-delivery-warrant-cancel.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/dev-delivery-warrant-cancel.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/dev-delivery-warrant-close.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/dev-delivery-warrant-close.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/dev-merge-queue-governance.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -422,19 +357,6 @@
       "credentialMode": "none",
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/dev-pr-auto-merge.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/dev-qualification-patrol.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/dev-qualification-patrol.yml",
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
@@ -681,14 +603,6 @@
       "classified": false
     },
     {
-      "path": ".github/workflows/.declarative-auditable-demo.yml",
-      "signals": [
-        "write-permission",
-        "git-push"
-      ],
-      "classified": true
-    },
-    {
       "path": ".github/workflows/.gate-profile.yml",
       "signals": [],
       "classified": false
@@ -789,13 +703,6 @@
       "classified": false
     },
     {
-      "path": ".github/workflows/auditable-demo.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
       "path": ".github/workflows/binary-distribution.yml",
       "signals": [
         "write-permission"
@@ -831,18 +738,6 @@
       "signals": [
         "write-permission",
         "oidc"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/buildchain-dev-delivery.yml",
-      "signals": [
-        "write-permission"
       ],
       "classified": true
     },
@@ -912,33 +807,12 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/dev-delivery-warrant-cancel.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/dev-delivery-warrant-close.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
       "path": ".github/workflows/dev-merge-queue-governance.yml",
       "signals": [],
       "classified": true
     },
     {
       "path": ".github/workflows/dev-pr-auto-merge.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/dev-qualification-patrol.yml",
       "signals": [
         "write-permission"
       ],
@@ -1084,5 +958,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "fd4b5def78f58e64badfd6d9d4cce801cab3c15ae81aa89357ef02d15f7ad99d"
+  "registryDigest": "0f4705fb7b2afcb72e9136dac44eac7fc47d9440330aa3c72a8ae8bd8f3339c3"
 }

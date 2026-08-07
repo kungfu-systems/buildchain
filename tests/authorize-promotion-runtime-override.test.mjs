@@ -55,30 +55,3 @@ test("promotion runtime override rejects read-only actors", async () => {
     /requires write, maintain, or admin permission; actor has read/,
   );
 });
-
-test("promotion runtime override normalizes GitHub's collaborator permission object", async () => {
-  const github = {
-    rest: {
-      repos: {
-        getCollaboratorPermissionLevel: async () => ({
-          data: {
-            permission: "write",
-            user: {
-              permissions: {
-                admin: false,
-                maintain: false,
-                pull: true,
-                push: true,
-                triage: true,
-              },
-            },
-          },
-        }),
-      },
-    },
-  };
-  assert.deepEqual(
-    await authorization.authorizePromotionRuntimeOverride({ github, context }),
-    { actor: "maintainer", permission: "write" },
-  );
-});

@@ -1868,9 +1868,6 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     stdio: "ignore",
   });
   const executable = path.join(outputDir, process.platform === "win32" ? "buildchain.exe" : "buildchain");
-  const metadataPath = fs.readdirSync(outputDir).map((name) => path.join(outputDir, name)).find((file) => /buildchain-[^.]+\.json$/u.test(path.basename(file)));
-  const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
-  assert.deepEqual(metadata.executableFiles, [{ path: path.basename(executable), sha256: metadata.sha256 }]);
 
   assert.equal(execFileSync(executable, ["version"], { encoding: "utf8" }).trim(), version);
   const layout = JSON.parse(execFileSync(executable, ["layout", "--cwd", root, "--json"], {

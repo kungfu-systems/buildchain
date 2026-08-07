@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@kungfu-tech/kfd':
-        specifier: 1.0.0-alpha.53
-        version: 1.0.0-alpha.53
+        specifier: 1.0.0-alpha.47
+        version: 1.0.0-alpha.47
       smol-toml:
         specifier: 1.7.0
         version: 1.7.0
@@ -269,8 +269,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kungfu-tech/kfd@1.0.0-alpha.53':
-    resolution: {integrity: sha512-t7ZyBXhhfYKNYo+KgBan/SBsBK1UygTf8RaTxQ+toTStwuq4wR5Z85sSAO/kmC2F/oqHeYVaan6nU28e1sVERw==}
+  '@kungfu-tech/kfd@1.0.0-alpha.47':
+    resolution: {integrity: sha512-tFyFev5UKm2snujWB0FXwHkwLpKhWxmE16MPjn1zSyl0X/y7QTERG7oCL0TIBuMpKC20QnNi6r0oVKRawyQ7fA==}
     hasBin: true
 
   '@octokit/auth-token@4.0.0':
@@ -867,7 +867,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@kungfu-tech/kfd@1.0.0-alpha.53': {}
+  '@kungfu-tech/kfd@1.0.0-alpha.47': {}
 
   '@octokit/auth-token@4.0.0': {}
 

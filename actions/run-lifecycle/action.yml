@@ -87,10 +87,6 @@ inputs:
     description: "Fail when process-summary-path is configured but missing"
     required: false
     default: "true"
-  substage-evidence-path:
-    description: "Optional consumer-produced lifecycle substage evidence JSON to verify and embed"
-    required: false
-    default: ""
 outputs:
   manifest-path:
     description: "Path to the generated artifact manifest"

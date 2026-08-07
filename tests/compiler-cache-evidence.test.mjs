@@ -7,7 +7,6 @@ import test from "node:test";
 import {
   BUILDCHAIN_COMPILER_CACHE_PREPARATION_CONTRACT,
   prepareCompilerCacheEvidence,
-  verifyCompilerCacheActivity,
 } from "../scripts/compiler-cache-evidence.mjs";
 import { createStructuredCacheEvidence } from "../packages/core/diagnostics.js";
 
@@ -86,64 +85,9 @@ test("sccache preparation resets only current-run stats and writes a source-boun
     const exported = fs.readFileSync(githubEnv, "utf8");
     assert.match(exported, /BUILDCHAIN_COMPILER_CACHE_ACTIVE_PROVIDER=sccache/);
     assert.match(exported, new RegExp(`BUILDCHAIN_COMPILER_CACHE_PREPARATION_ROOT=${receipt.root}`));
-    assert.match(exported, /RUSTC_WRAPPER=sccache/);
-    assert.match(exported, /CMAKE_C_COMPILER_LAUNCHER=sccache/);
-    assert.match(exported, /CMAKE_CXX_COMPILER_LAUNCHER=sccache/);
-    assert.deepEqual(receipt.action.compilerBindings, {
-      RUSTC_WRAPPER: "sccache",
-      CMAKE_C_COMPILER_LAUNCHER: "sccache",
-      CMAKE_CXX_COMPILER_LAUNCHER: "sccache",
-    });
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
-});
-
-test("required sccache activity admits nonzero cacheable compile requests", () => {
-  const activity = verifyCompilerCacheActivity({
-    env: {
-      BUILDCHAIN_COMPILER_CACHE_ACTIVE_PROVIDER: "sccache",
-      BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true",
-    },
-    runCommand(command, args) {
-      assert.equal(command, "sccache");
-      assert.deepEqual(args, ["--show-stats", "--stats-format", "json"]);
-      return commandResult(JSON.stringify({
-        stats: {
-          compile_requests: 12,
-          cache_hits: { counts: { Cxx: 4 } },
-          cache_misses: { counts: { Cxx: 8 } },
-        },
-      }));
-    },
-  });
-  assert.deepEqual(activity, {
-    compileRequests: 12,
-    cacheHits: 4,
-    cacheMisses: 8,
-    cacheableRequests: 12,
-  });
-});
-
-test("required sccache activity fails closed when compiler bindings are ineffective", () => {
-  assert.throws(
-    () => verifyCompilerCacheActivity({
-      env: {
-        BUILDCHAIN_COMPILER_CACHE_ACTIVE_PROVIDER: "sccache",
-        BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true",
-      },
-      runCommand() {
-        return commandResult(JSON.stringify({
-          stats: {
-            compile_requests: 0,
-            cache_hits: { counts: {} },
-            cache_misses: { counts: {} },
-          },
-        }));
-      },
-    }),
-    /zero compile requests/,
-  );
 });
 
 test("required preparation fails closed when sccache is unavailable", () => {

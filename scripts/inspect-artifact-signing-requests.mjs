@@ -4,7 +4,6 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { validateArtifactSigningRequest } from "../packages/core/artifact-signing.js";
-import { artifactSigningRequestRoot } from "./artifact-signing-controller-core.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 function required(value, label) {
@@ -36,14 +35,12 @@ export function inspectArtifactSigningRequests({
   inputRoot = process.env.BUILDCHAIN_SIGNING_REQUEST_ROOT,
   expectedRepository = process.env.BUILDCHAIN_SIGNING_SOURCE_REPOSITORY,
   expectedRuntimeSha = process.env.BUILDCHAIN_RUNTIME_SHA,
-  expectedRequestRoot = process.env.BUILDCHAIN_SIGNING_EXPECTED_REQUEST_ROOT,
 } = {}) {
   const root = path.resolve(required(inputRoot, "signing request root"));
   const indexes = walk(root, "index.json");
   if (indexes.length === 0)
     throw new Error("no artifact signing request indexes found");
   const seen = new Set();
-  const observedRoots = [];
   const matrices = {
     detached: [],
     macos: [],
@@ -55,7 +52,6 @@ export function inspectArtifactSigningRequests({
       index.contract !== "kungfu-buildchain-artifact-signing-request-index/v1"
     )
       continue;
-    observedRoots.push(artifactSigningRequestRoot(index));
     for (const entry of index.requests || []) {
       const requestPath = path.resolve(path.dirname(indexPath), entry.path);
       const relative = path.relative(root, requestPath);
@@ -115,14 +111,6 @@ export function inspectArtifactSigningRequests({
         throw new Error(
           `unsupported signing authority profile: ${request.signature.profile}`,
         );
-    }
-  }
-  if (expectedRequestRoot) {
-    if (observedRoots.length !== 1) {
-      throw new Error("signing authority expected exactly one request root");
-    }
-    if (observedRoots[0] !== expectedRequestRoot) {
-      throw new Error("signing authority request root mismatch");
     }
   }
   for (const entries of Object.values(matrices))

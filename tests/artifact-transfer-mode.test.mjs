@@ -37,22 +37,6 @@ test("artifact transfer resolver validates S3 roles and China audience", () => {
   );
 });
 
-test("artifact transfer resolver bypasses S3 when every platform is GitHub-hosted", () => {
-  assert.deepEqual(
-    resolveArtifactTransferMode({
-      INPUT_TRANSFER_MODE: "s3-to-github-artifacts",
-      INPUT_RELAY_REQUIRED: "false",
-    }),
-    {
-      mode: "github-artifacts",
-      s3Bucket: "",
-      s3Region: "",
-      s3Prefix: "",
-      oidcAudience: "",
-    },
-  );
-});
-
 test("artifact transfer resolver writes the stable workflow output contract", (t) => {
   const temporaryRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-artifact-transfer-"),

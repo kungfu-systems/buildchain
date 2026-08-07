@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "3.0.6",
+  "version": "3.0.5-alpha.0",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -28,7 +28,6 @@
     "./cache-evidence": "./packages/core/cache-evidence.js",
     "./controller-evidence": "./packages/core/controller-evidence.js",
     "./diagnostics": "./packages/core/diagnostics.js",
-    "./dev-delivery-warrant": "./packages/core/dev-delivery-warrant.js",
     "./homebrew": "./packages/core/homebrew.js",
     "./issue-reporting": "./packages/core/issue-reporting.js",
     "./kfd": "./packages/core/kfd.js",
@@ -51,7 +50,6 @@
     "./github-governance-authority": "./packages/core/github-governance-authority.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",
-    "./release-candidate-recovery": "./packages/core/release-candidate-recovery.js",
     "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",
     "./release-passport": "./packages/core/release-passport.js",
     "./release-passport-contract": "./packages/core/release-passport-contract.js",
@@ -110,7 +108,6 @@
   },
   "packageManager": "pnpm@11.7.0",
   "scripts": {
-    "operator:windows-jit": "bash scripts/aws-windows-jit-operator.sh",
     "check": "pnpm run check:static && node scripts/check-maintainability.mjs && node scripts/check-internal-architecture.mjs && node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && pnpm run check:golden-path && node scripts/check-action-bundles.mjs",
     "check:static": "node scripts/check-javascript-syntax.mjs && prettier --check architecture/*.json bin/internal/command-registry.mjs scripts/authorize-promotion-runtime-override.cjs scripts/check-javascript-syntax.mjs scripts/check-maintainability.mjs scripts/maintainability-metrics.mjs scripts/public-reference.mjs scripts/site-reference-registry.mjs scripts/generate-public-reference.mjs scripts/verify-golden-path.mjs tests/authorize-promotion-runtime-override.test.mjs tests/command-registry.test.mjs tests/maintainability.test.mjs tests/promotion-responsibilities.test.mjs tests/public-reference.test.mjs",
     "check:workflows": "bash scripts/check-workflows.sh",
@@ -131,7 +128,7 @@
     "typescript": "^5.9.0"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.53",
+    "@kungfu-tech/kfd": "1.0.0-alpha.47",
     "smol-toml": "1.7.0"
   }
 }

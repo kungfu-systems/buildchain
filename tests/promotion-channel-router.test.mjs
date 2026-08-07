@@ -178,7 +178,7 @@ test("generated promotion router preserves every public input and output exactly
   assert.equal(new Set(actualOutputs).size, actualOutputs.length);
 });
 
-test("generated router delegates alpha and stable lanes to their configured shell refs", () => {
+test("generated router delegates alpha and stable lanes to the current major refs", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const fixture = advanced.replace(
     "name: Release Candidate Promote Advanced",
@@ -186,10 +186,7 @@ test("generated router delegates alpha and stable lanes to their configured shel
   );
   const generated = generateChannelPromotionWorkflow(fixture, { major: 3, shellRouting });
 
-  assert.match(
-    generated,
-    /\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
-  );
+  assert.match(generated, /\.release-candidate-promote\.yml@v3-alpha/);
   assert.match(generated, /\.release-candidate-promote\.yml@v3(?:\n|$)/);
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
@@ -208,61 +205,22 @@ test("stable route calls the hidden advanced workflow through the current major 
       "github-artifact-attestation-environment",
       "github-artifact-attestation-policy-json",
       "github-artifact-attestation-retention-days",
-      "publication-gate-command",
       "release-activation-command",
       "release-activation-receipt-set-path",
-      "release-candidate-wait-seconds",
-      "release-candidate-family-assignment-id",
-      "release-candidate-family-evidence-required",
-      "release-candidate-family-evidence-root",
-      "release-candidate-family-initiative-id",
-      "release-passport-attachment-command",
       "release-passport-evidence-command",
-      "release-passport-evidence-jsons",
       "release-passport-evidence-path",
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
-      "release-propagation-config-path",
-      "resume-buildchain-runtime-sha",
-      "resume-candidate-repository",
-      "resume-candidate-run-id",
-      "resume-expected-candidate-root",
-      "resume-expected-candidate-runtime-sha",
-      "resume-expected-source-tree",
-      "resume-expected-workflow-file",
-      "resume-expected-workflow-name",
-      "resume-transaction-id",
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v3/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: v3/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
-  assert.match(
-    generated,
-    /BUILDCHAIN_ROUTER_REPOSITORY: \$\{\{ inputs\.buildchain-repository \}\}/,
-  );
-  assert.match(
-    generated,
-    /BUILDCHAIN_RESUME_RUNTIME_SHA: \$\{\{ inputs\.resume-buildchain-runtime-sha \}\}/,
-  );
-  assert.match(generated, /Recovery router ref does not match resume-buildchain-runtime-sha/);
-  assert.doesNotMatch(generated, /job\.workflow_(?:repository|sha)/);
+  assert.match(generated, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.router\.outputs\.sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.shell-sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
-});
-
-test("candidate recovery train calls the matching advanced alpha shell", () => {
-  const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
-  const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
-
-  assert.match(generated, /ALPHA_SHELL_REF: v3-alpha/);
-  assert.match(generated, /ALPHA_SHELL_CALL_REF: train\/v3\/v3\.0\/resume-candidate-run/);
-  assert.match(
-    generated,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
-  );
 });
 
 test("stable route forwards only inputs supported by the current workflow shell", () => {
@@ -282,14 +240,6 @@ test("stable route forwards only inputs supported by the current workflow shell"
   assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-policy-json:/m);
   assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-environment:/m);
   assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-retention-days:/m);
-  assert.doesNotMatch(stableBlock, /^      release-candidate-family-assignment-id:/m);
-  assert.doesNotMatch(stableBlock, /^      release-candidate-family-evidence-required:/m);
-  assert.doesNotMatch(stableBlock, /^      release-candidate-family-evidence-root:/m);
-  assert.doesNotMatch(stableBlock, /^      release-candidate-family-initiative-id:/m);
-  assert.doesNotMatch(stableBlock, /^      release-passport-attachment-command:/m);
-  assert.doesNotMatch(stableBlock, /^      release-passport-evidence-jsons:/m);
-  assert.doesNotMatch(stableBlock, /^      publication-gate-command:/m);
-  assert.doesNotMatch(stableBlock, /^      release-candidate-wait-seconds:/m);
   assert.match(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(stableBlock, /^      publish-rematerialize-on-resume:/m);
   assert.match(

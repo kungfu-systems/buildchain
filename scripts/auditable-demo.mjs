@@ -7,7 +7,10 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { readRendererManifest, validateRendererCompositionInputs, validateRenditionSet, validateTerminalCapture } from "./auditable-demo-renditions.mjs";
+import {
+  validateRenditionSet,
+  validateTerminalCapture,
+} from "./auditable-demo-renditions.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
@@ -33,10 +36,6 @@ const OPTIONAL_ADAPTER_FILES = [
 ];
 const MAX_TERMINAL_CAPTURE_BYTES = 4 * 1024 * 1024;
 const MAX_TERMINAL_CAPTURE_EVENTS = 10_000;
-const STANDARD_MAX_DURATION_MS = 60_000;
-const LONG_FORM_MAX_DURATION_MS = 180_000;
-const LONG_FORM_MAX_FPS = 10;
-const MAX_RENDER_FRAMES = 1_800;
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -127,7 +126,7 @@ function writeChecksums(root, checksumName = "checksums.sha256") {
   return sha256(Buffer.from(bytes));
 }
 
-function verifyChecksums(root, checksumName = "checksums.sha256", options = {}) {
+function verifyChecksums(root, checksumName = "checksums.sha256") {
   const bytes = readRegular(path.join(root, checksumName), checksumName);
   const text = decodeUtf8(bytes, checksumName);
   invariant(text.endsWith("\n"), `${checksumName} must end with a newline`);
@@ -140,11 +139,8 @@ function verifyChecksums(root, checksumName = "checksums.sha256", options = {}) 
     const target = resolveInside(root, member, "checksum member");
     invariant(!declared.has(member), `duplicate checksum member: ${member}`);
     declared.add(member);
-    const maximumBytes = options.allowLongFormRendererManifest && member === "manifest.json"
-      ? 32 * 1024 * 1024
-      : MAX_BUNDLE_MEMBER_BYTES;
     invariant(
-      sha256(readRegular(target, member, maximumBytes)).slice(7) === match[1],
+      sha256(readRegular(target, member, MAX_BUNDLE_MEMBER_BYTES)).slice(7) === match[1],
       `checksum mismatch: ${member}`,
     );
   }
@@ -190,25 +186,15 @@ function validateScene(value) {
   exactKeys(
     value,
     ["schema", "id", "width", "height", "fps", "durationMs", "title"],
-    ["durationClass", "compositionMode", "commandLabel", "background", "accent"],
+    ["commandLabel", "background", "accent"],
     "scene",
   );
   invariant(value.schema === "build-images.demo-scene/v1", "unsupported scene schema");
   invariant(/^[a-z0-9][a-z0-9._-]{0,63}$/.test(value.id), "scene.id is invalid");
   integer(value.width, 640, 1920, "scene.width");
   integer(value.height, 360, 1080, "scene.height");
-  const durationClass = value.durationClass ?? "standard";
-  invariant(durationClass === "standard" || durationClass === "long-form", "scene.durationClass is invalid");
-  const compositionMode = value.compositionMode ?? "presentation-framed";
-  invariant(
-    compositionMode === "presentation-framed" || compositionMode === "terminal-fill",
-    "scene.compositionMode is invalid",
-  );
-  const maximumDurationMs = durationClass === "long-form" ? LONG_FORM_MAX_DURATION_MS : STANDARD_MAX_DURATION_MS;
-  const maximumFps = durationClass === "long-form" ? LONG_FORM_MAX_FPS : 30;
-  integer(value.fps, 1, maximumFps, "scene.fps");
-  integer(value.durationMs, 500, maximumDurationMs, "scene.durationMs");
-  invariant(Math.ceil((value.durationMs / 1000) * value.fps) <= MAX_RENDER_FRAMES, "scene exceeds the deterministic source-frame bound");
+  integer(value.fps, 1, 30, "scene.fps");
+  integer(value.durationMs, 500, 60000, "scene.durationMs");
   text(value.title, 1, 120, "scene.title");
   if (value.commandLabel !== undefined) text(value.commandLabel, 0, 160, "scene.commandLabel");
   for (const key of ["background", "accent"]) {
@@ -220,8 +206,6 @@ function validateScene(value) {
     width: value.width,
     height: value.height,
     fps: value.fps,
-    ...(value.durationClass === undefined ? {} : { durationClass }),
-    compositionMode,
     durationMs: value.durationMs,
     title: value.title,
     commandLabel: value.commandLabel ?? "",
@@ -540,7 +524,7 @@ function validateBudgetBasis(entry, label) {
     MAX_BUNDLE_MEMBER_BYTES,
     `${label}.budgetBasis.observedBytes`,
   );
-  const multiplier = integer(entry.budgetBasis.multiplier, 1, 128, `${label}.budgetBasis.multiplier`);
+  const multiplier = integer(entry.budgetBasis.multiplier, 1, 64, `${label}.budgetBasis.multiplier`);
   invariant(entry.budgetBasis.rounding === "next-power-of-two", `${label}.budgetBasis.rounding is unsupported`);
   const expected = 2 ** Math.ceil(Math.log2(observedBytes * multiplier));
   invariant(entry.maximumBytes === expected, `${label}.maximumBytes does not match its measured budget basis`);
@@ -680,7 +664,8 @@ function inspectRendererMedia(values) {
   const rendererImage = required(values, "--renderer-image");
   invariant(IMAGE_PATTERN.test(rendererImage), "renderer image must use an immutable sha256 coordinate");
   invariant(!fs.existsSync(output), "media inspection output must not already exist");
-  const { manifest } = readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS);
+  const manifest = readJson(path.join(renderOutput, "manifest.json"), "renderer manifest");
+  invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
   invariant(manifest.renderer?.image === rendererImage, "renderer manifest image coordinate mismatch");
   const members = Object.keys(manifest.outputs || {})
     .filter((name) => name !== "media-probe.json")
@@ -744,7 +729,7 @@ function qualifyMediaFixture(values) {
         sha256(readRegular(path.join(renderOutput, name), `fixture ${name}`)),
       ]),
     ),
-    rendererManifestRoot: sha256(readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS).bytes),
+    rendererManifestRoot: sha256(readRegular(path.join(renderOutput, "manifest.json"), "renderer manifest")),
     qualification: verified.qualification,
   };
   writeJson(output, { ...body, evidenceRoot: semanticRoot(body) });
@@ -984,8 +969,9 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     "public-projection.json",
     "scene.json",
   ];
-  verifyChecksums(renderOutput, "checksums.sha256", { allowLongFormRendererManifest: true });
-  const { manifest } = readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS);
+  verifyChecksums(renderOutput);
+  const manifest = readJson(path.join(renderOutput, "manifest.json"), "renderer manifest");
+  invariant(manifest.schema === "build-images.auditable-demo-render/v1", "unexpected renderer manifest schema");
   invariant(manifest.renderer?.image === expectedImage, "renderer manifest image coordinate mismatch");
   const outputNames = Object.keys(manifest.outputs || {}).sort();
   invariant(outputNames.includes("media-probe.json"), "renderer manifest must declare media-probe.json");
@@ -1003,11 +989,21 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     const observed = manifest.inputs?.[key]?.root;
     invariant(observed === sha256(readRegular(filePath, `${key} input`)), `renderer ${key} input root mismatch`);
   }
-  const composition = validateRendererCompositionInputs(
-    manifest,
-    expectedInputs,
-    RENDITION_VALIDATION_HELPERS,
-  );
+  if (expectedInputs.renditionSet) {
+    invariant(
+      manifest.derivation?.policy === "independent-native-frame-sets/v1",
+      "renderer did not use independent native frame sets",
+    );
+    invariant(
+      Array.isArray(manifest.inputs?.renditions)
+        && manifest.inputs.renditions.length === 2
+        && manifest.inputs.renditions[0]?.role === "primary"
+        && manifest.inputs.renditions[1]?.role === "responsive"
+        && manifest.inputs.renditions[0]?.terminalCapture?.root
+          !== manifest.inputs.renditions[1]?.terminalCapture?.root,
+      "renderer native rendition inputs are not independently bound",
+    );
+  }
   const probe = readJson(path.join(renderOutput, "media-probe.json"), "media probe");
   invariant(probe.schema === "build-images.demo-media-probe/v1" && probe.passed === true, "renderer media probe failed");
   const qualification = qualifyRendererOutput(
@@ -1018,16 +1014,7 @@ function verifyRendererOutput(renderOutput, expectedImage, expectedInputs, optio
     options.inspectMedia || inspectMediaFile,
     options.inspectionRoot || "",
   );
-  return { manifest, probe, qualification, composition };
-}
-
-function renditionInputRoots(root, renditions) {
-  return renditions.map((rendition) => ({
-    id: rendition.id, role: rendition.role, captureRoot: rendition.captureRoot,
-    sceneRoot: sha256(readRegular(path.join(root, rendition.files.scene), `${rendition.id} scene`)),
-    transcriptRoot: sha256(readRegular(path.join(root, rendition.files.transcript), `${rendition.id} transcript`)),
-    projectionRoot: sha256(readRegular(path.join(root, rendition.files.projection), `${rendition.id} projection`)),
-  }));
+  return { manifest, probe, qualification };
 }
 
 function finalizeGate(values) {
@@ -1122,7 +1109,14 @@ function finalizeGate(values) {
           renditionSet: {
             schema: normalized.renditionSet.schema,
             root: sha256(readRegular(path.join(output, "rendition-set.json"), "rendition set")),
-            renditions: renditionInputRoots(output, normalized.renditionSet.renditions),
+            renditions: normalized.renditionSet.renditions.map((rendition) => ({
+              id: rendition.id,
+              role: rendition.role,
+              captureRoot: rendition.captureRoot,
+              sceneRoot: sha256(readRegular(path.join(output, rendition.scene), `${rendition.id} scene`)),
+              transcriptRoot: sha256(readRegular(path.join(output, rendition.transcript), `${rendition.id} transcript`)),
+              projectionRoot: sha256(readRegular(path.join(output, rendition.projection), `${rendition.id} projection`)),
+            })),
           },
         }
         : {}),
@@ -1185,8 +1179,15 @@ function verifyGate(values) {
     invariant(
       qualifiedRenditionSet.schema === normalized.renditionSet.schema
         && qualifiedRenditionSet.root === sha256(readRegular(path.join(bundle, "rendition-set.json"), "rendition set"))
-        && stableJson(qualifiedRenditionSet.renditions)
-          === stableJson(renditionInputRoots(bundle, normalized.renditionSet.renditions)),
+        && JSON.stringify(qualifiedRenditionSet.renditions)
+          === JSON.stringify(normalized.renditionSet.renditions.map((rendition) => ({
+            id: rendition.id,
+            role: rendition.role,
+            captureRoot: rendition.captureRoot,
+            sceneRoot: sha256(readRegular(path.join(bundle, rendition.scene), `${rendition.id} scene`)),
+            transcriptRoot: sha256(readRegular(path.join(bundle, rendition.transcript), `${rendition.id} transcript`)),
+            projectionRoot: sha256(readRegular(path.join(bundle, rendition.projection), `${rendition.id} projection`)),
+          }))),
       "gate native rendition roots mismatch",
     );
   }
@@ -1248,7 +1249,7 @@ function finalizeMedia(values) {
     sourceSha,
     qualifiedGateRoot: gateRoot,
     rendererImage,
-    rendererManifestRoot: sha256(readRendererManifest(path.join(renderOutput, "manifest.json"), RENDITION_VALIDATION_HELPERS).bytes),
+    rendererManifestRoot: sha256(readRegular(path.join(renderOutput, "manifest.json"), "renderer manifest")),
   };
   const mediaReceipt = selectedProfile.mode === "archive"
     ? { schema: "buildchain.auditable-demo-media/v1", ...commonReceipt }
@@ -1310,7 +1311,6 @@ export {
   inspectRendererMedia,
   parseAdapterArguments,
   qualifyMediaFixture,
-  renditionInputRoots,
   prepareSmoke,
   runAdapter,
   sha256,

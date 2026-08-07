@@ -22,14 +22,6 @@ function optional(value, label) {
   return normalized;
 }
 
-function sha256Root(value, label) {
-  const normalized = optional(value, label);
-  if (normalized && !/^sha256:[0-9a-f]{64}$/u.test(normalized)) {
-    throw new Error(`${label} must be a canonical sha256 root`);
-  }
-  return normalized;
-}
-
 function exactSha(value, label) {
   const normalized = required(value, label);
   if (!/^[0-9a-f]{40}$/u.test(normalized))
@@ -105,13 +97,8 @@ export function validateArtifactSigningDelegation(value) {
         requestCount > 0
           ? required(value.request?.artifact, "request.artifact")
           : optional(value.request?.artifact, "request.artifact"),
-      root: sha256Root(value.request?.root, "request.root"),
     },
     authority: {
-      runtimeSha:
-        requestCount > 0
-          ? exactSha(value.authority?.runtimeSha, "authority.runtimeSha")
-          : optional(value.authority?.runtimeSha, "authority.runtimeSha"),
       runId:
         requestCount > 0
           ? required(value.authority?.runId, "authority.runId")
@@ -142,30 +129,13 @@ export function validateArtifactSigningDelegation(value) {
       value.workingDirectory || ".",
       "workingDirectory",
     ),
-    controller: {
-      mode: optional(value.controller?.mode, "controller.mode"),
-      receiptDigest: sha256Root(
-        value.controller?.receiptDigest,
-        "controller.receiptDigest",
-      ),
-    },
   };
   if (
     requestCount === 0 &&
-    (delegation.authority.runtimeSha ||
-      delegation.authority.runId ||
-      delegation.authority.resultArtifact)
+    (delegation.authority.runId || delegation.authority.resultArtifact)
   ) {
     throw new Error(
       "unsigned delegation must not contain authority result coordinates",
-    );
-  }
-  if (
-    Boolean(delegation.controller.mode) !==
-    Boolean(delegation.controller.receiptDigest)
-  ) {
-    throw new Error(
-      "delegation controller mode and receipt digest must be provided together",
     );
   }
   return delegation;
@@ -183,17 +153,12 @@ export function createArtifactSigningDelegation({
   platformName = process.env.BUILDCHAIN_PLATFORM_NAME,
   requestCount = process.env.BUILDCHAIN_SIGNING_REQUEST_COUNT || "0",
   requestArtifact = process.env.BUILDCHAIN_SIGNING_REQUEST_ARTIFACT || "",
-  requestRoot = process.env.BUILDCHAIN_SIGNING_REQUEST_ROOT_DIGEST || "",
   authorityRunId = process.env.BUILDCHAIN_AUTHORITY_RUN_ID || "",
-  authorityRuntimeSha = process.env.BUILDCHAIN_AUTHORITY_RUNTIME_SHA || "",
   resultArtifact = process.env.BUILDCHAIN_SIGNING_RESULT_ARTIFACT || "",
   artifactName = process.env.BUILDCHAIN_ARTIFACT_NAME,
   manifestArtifact = process.env.BUILDCHAIN_MANIFEST_ARTIFACT_NAME,
   diagnosticsArtifact = process.env.BUILDCHAIN_DIAGNOSTICS_ARTIFACT_NAME,
   workingDirectory = process.env.BUILDCHAIN_SIGNING_CWD || ".",
-  controllerMode = process.env.BUILDCHAIN_SIGNING_CONTROLLER_MODE || "",
-  controllerReceiptDigest = process.env
-    .BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_DIGEST || "",
 } = {}) {
   return validateArtifactSigningDelegation({
     schemaVersion: 1,
@@ -207,22 +172,10 @@ export function createArtifactSigningDelegation({
     },
     runtime: { repository: runtimeRepository, sha: runtimeSha },
     platform: { id: platformId, name: platformName },
-    request: {
-      count: Number(requestCount),
-      artifact: requestArtifact,
-      root: requestRoot,
-    },
-    authority: {
-      runtimeSha: authorityRuntimeSha,
-      runId: authorityRunId,
-      resultArtifact,
-    },
+    request: { count: Number(requestCount), artifact: requestArtifact },
+    authority: { runId: authorityRunId, resultArtifact },
     artifact: { name: artifactName, manifestArtifact, diagnosticsArtifact },
     workingDirectory,
-    controller: {
-      mode: controllerMode,
-      receiptDigest: controllerReceiptDigest,
-    },
   });
 }
 
@@ -252,7 +205,6 @@ export function artifactSigningDelegationOutputs(delegation) {
     "request-count": String(value.request.count),
     "request-artifact": value.request.artifact,
     "authority-run-id": value.authority.runId,
-    "authority-runtime-sha": value.authority.runtimeSha,
     "result-artifact": value.authority.resultArtifact,
     "artifact-name": value.artifact.name,
     "manifest-artifact-name": value.artifact.manifestArtifact,

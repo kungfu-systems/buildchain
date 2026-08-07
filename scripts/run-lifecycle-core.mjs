@@ -28,8 +28,6 @@ import {
   parseExpectedArtifactsJson,
   validateExpectedArtifacts,
 } from "./build-contract-core.mjs";
-import { verifyCompilerCacheActivity } from "./compiler-cache-evidence.mjs";
-import { lifecycleSubstageEvidenceContext } from "./lifecycle-substage-evidence.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const buildchainCliCandidates = [
@@ -393,22 +391,6 @@ function writeDiagnosticsSidecarManifest(filePath, {
   return manifest;
 }
 
-export function verifyBuildLifecycleCompilerCacheActivity({
-  stageName = "",
-  executed = false,
-  cwd = process.cwd(),
-  env = process.env,
-  verifier = verifyCompilerCacheActivity,
-  frameworkLog,
-} = {}) {
-  if (stageName !== "build" || !executed) return undefined;
-  const activity = verifier({ cwd, env });
-  if (activity) {
-    frameworkLog?.info("compiler-cache.activity", { attributes: activity });
-  }
-  return activity;
-}
-
 export function runLifecycle({
   cwd = process.cwd(),
   stageName = "",
@@ -433,7 +415,6 @@ export function runLifecycle({
   processSampleIntervalMs = 15000,
   requestedParallelism = 0,
   processSummaryRequired = true,
-  substageEvidencePath = "",
 } = {}) {
   if (timeoutMinutes !== undefined && (!Number.isFinite(timeoutMinutes) || timeoutMinutes <= 0)) {
     throw new Error("lifecycle timeoutMinutes must be a positive number");
@@ -654,6 +635,7 @@ export function runLifecycle({
       throw lifecycleError;
     }
   }
+
   if (required && !executed) {
     frameworkLog.error("lifecycle.required-missing", {
       attributes: {
@@ -664,8 +646,6 @@ export function runLifecycle({
     throw new Error(`required lifecycle stage did not run: ${stageName || "command"}`);
   }
 
-  const compilerCacheActivity = verifyBuildLifecycleCompilerCacheActivity({ stageName, executed, cwd: resolvedCwd, frameworkLog });
-  const substages = lifecycleSubstageEvidenceContext({ substageEvidencePath, cwd: resolvedCwd, workspace: resolvedWorkspace, diagnosticsDir, lifecycleStage: stageName, platformId });
   const shouldReadProcessSummary = Boolean(
     resolvedProcessSummaryPath
       && (fs.existsSync(resolvedProcessSummaryPath) || processSummaryRequired),
@@ -759,7 +739,6 @@ export function runLifecycle({
     fileCount: summary.fileCount,
   });
   observability.lifecycle = lifecycleObservability;
-  Object.assign(observability, { compilerCacheActivity }, substages.observability);
   observability.diagnostics = {
     contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
     path: relativeDiagnosticsPath,
@@ -792,7 +771,6 @@ export function runLifecycle({
       stage: stageName,
       commandSource,
       executed,
-      ...substages.lifecycle,
     },
     observability,
     summary: summaryWithObservability,
@@ -826,7 +804,6 @@ export function runLifecycle({
         ...(relativeProcessSummaryPath ? { processSummary: relativeProcessSummaryPath } : {}),
         ...(processSummaryArtifact ? { diagnosticsProcessSummary: relativeDiagnosticsProcessSummaryPath } : {}),
         ...(processSummaryArtifact?.samplesPath ? { diagnosticsProcessSamples: relativeDiagnosticsProcessSamplesPath } : {}),
-        ...substages.links,
         ...(sourceCheckoutArtifact ? { sourceCheckout: relativeDiagnosticsSourceCheckoutPath } : {}),
         ...(compilerCachePreparationArtifact
           ? { compilerCachePreparation: relativeDiagnosticsCompilerCachePreparationPath }
@@ -849,7 +826,6 @@ export function runLifecycle({
     });
     copyIfExists(resolvedSamplesPath, resolvedDiagnosticsProcessSamplesPath);
   }
-  copyIfExists(substages.sourcePath, substages.targetPath);
   if (sourceCheckoutArtifact) {
     copyIfExists(resolvedSourceCheckoutPath, resolvedDiagnosticsSourceCheckoutPath);
   }
@@ -869,7 +845,6 @@ export function runLifecycle({
       { kind: "events", filePath: resolvedDiagnosticsEventsPath, required: true },
       { kind: "process-summary", filePath: resolvedDiagnosticsProcessSummaryPath },
       { kind: "process-samples", filePath: resolvedDiagnosticsProcessSamplesPath },
-      substages.sidecar,
       { kind: "source-checkout", filePath: resolvedDiagnosticsSourceCheckoutPath },
       {
         kind: "compiler-cache-preparation",

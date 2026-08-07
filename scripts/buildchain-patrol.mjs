@@ -194,15 +194,6 @@ export async function runBuildchainPatrol(optionsInput = {}, clientInput) {
   }
 
   result.summary.plannedCount = result.planned.length;
-  const admissionActions = result.actions.flatMap((action) => action.result?.actions || []);
-  result.runKind = "cadence-patrol";
-  result.outcome = result.summary.evaluatedCount === 0
-    ? "no-op-no-candidates"
-    : admissionActions.length === 0
-      ? "no-op-all-skipped"
-      : "actions-present";
-  result.noOp = admissionActions.length === 0;
-  result.qualification = false;
   result.ok = result.inspections.every((inspection) => inspection.ok !== false);
   return result;
 }

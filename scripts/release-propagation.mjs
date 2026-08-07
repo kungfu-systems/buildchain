@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import {
   claimReleasePropagationWork,
@@ -16,15 +15,6 @@ import {
   resumeReleasePropagationWork,
   verifyReleasePropagationWork,
   writeReleasePropagationLock,
-  createManualUpstreamPickupCapture,
-  createManualUpstreamPickupPlan,
-  createReleasePropagationPushPlan,
-  executeReleasePropagationPush,
-  inspectReleasePropagationPushState,
-  normalizeManualUpstreamPickupConfig,
-  planSiteUpstreamAgentEntry,
-  RELEASE_PROPAGATION_FAILURE_MATRIX,
-  resolveNpmRegistryRelease,
 } from "../packages/core/release-propagation.js";
 
 function usage() {
@@ -70,28 +60,6 @@ function usage() {
                                               --receipt <json-or-path>
                                               --completion-decision <json-or-path>
                                               --expected-work-root <sha256:...>
-                                              [--output <file>] [--json]
-  buildchain release-propagation work push-plan --work <json-or-path>
-                                             --expected-work-root <sha256:...>
-                                             [--cwd <dir>] [--remote <name>]
-                                             [--output <file>] [--json]
-  buildchain release-propagation work push-branch --work <json-or-path>
-                                               --expected-work-root <sha256:...>
-                                               [--cwd <dir>] [--remote <name>]
-                                               --execute [--output <file>] [--json]
-  buildchain release-propagation entry plan --source-id <paper|kfd|buildchain|kungfu-core>
-                                            [--channel <alpha|release>]
-                                            [--handoff-work <json-or-path>]
-                                            [--output <file>] [--json]
-  buildchain release-propagation entry fault-matrix [--json]
-  buildchain release-propagation pickup plan --config <json-or-path>
-                                            --source-id <id> --channel <alpha|release>
-                                            --current-version <version>
-                                            [--output <file>] [--json]
-  buildchain release-propagation pickup create --config <json-or-path>
-                                              --source-id <id> --channel <alpha|release>
-                                              --current-version <version>
-                                              --expected-downstream-base-sha <git-sha>
                                               [--output <file>] [--json]
 `;
 }
@@ -200,115 +168,10 @@ function runWorkCli(args) {
     emitWorkResult(workArgs, result, `release propagation work complete: ${result.contentRoot}`);
     return;
   }
-  if (mode === "push-plan" || mode === "push-branch") {
-    const work = readJsonFlag(workArgs, "work");
-    const cwd = readFlag(workArgs, "cwd", process.cwd());
-    const remote = readFlag(workArgs, "remote", "origin");
-    let result;
-    if (mode === "push-plan") {
-      const repositoryState = inspectReleasePropagationPushState({ work, cwd, remote });
-      result = createReleasePropagationPushPlan({
-        work,
-        expectedWorkRoot: readFlag(workArgs, "expected-work-root"),
-        repositoryState,
-      });
-    } else {
-      if (!hasFlag(workArgs, "execute")) throw new Error("work push-branch requires --execute");
-      result = executeReleasePropagationPush({
-        work,
-        expectedWorkRoot: readFlag(workArgs, "expected-work-root"),
-        cwd,
-        remote,
-      });
-    }
-    emitWorkResult(workArgs, result, mode === "push-plan"
-      ? `release propagation push plan: ${result.planRoot}`
-      : `release propagation push result: ${result.resultRoot}`);
-    return;
-  }
   throw new Error(`unsupported release-propagation work command: ${mode}`);
 }
 
-function runEntryCli(args) {
-  const [mode = "", ...entryArgs] = args;
-  if (!mode || mode === "--help" || mode === "-h") {
-    process.stdout.write(usage());
-    return;
-  }
-  let result;
-  if (mode === "fault-matrix") {
-    result = RELEASE_PROPAGATION_FAILURE_MATRIX;
-  } else if (mode === "plan") {
-    result = planSiteUpstreamAgentEntry({
-      sourceId: readFlag(entryArgs, "source-id"),
-      channel: readFlag(entryArgs, "channel"),
-      handoffWork: entryArgs.includes("--handoff-work")
-        ? readJsonFlag(entryArgs, "handoff-work")
-        : null,
-    });
-  } else {
-    throw new Error(`unsupported release-propagation entry command: ${mode}`);
-  }
-  writeOutput(readFlag(entryArgs, "output", ""), result);
-  if (hasFlag(entryArgs, "json")) printJson(result);
-  else process.stdout.write(`${result.contract}\n`);
-}
-
-async function resolvePickupPlan(args) {
-  const config = normalizeManualUpstreamPickupConfig(readJsonFlag(args, "config"));
-  const sourceId = readFlag(args, "source-id");
-  const channel = readFlag(args, "channel");
-  const source = config.sources.find((entry) => entry.id === sourceId);
-  if (!source) throw new Error(`manual pickup source is not configured: ${sourceId}`);
-  const distTag = source.distTags[channel];
-  if (!distTag) throw new Error("manual pickup channel must be alpha or release");
-  const packageMetadata = args.includes("--package-metadata")
-    ? readJsonFlag(args, "package-metadata")
-    : JSON.parse(execFileSync("npm", ["view", `${source.package}@${distTag}`, "--json", "--registry=https://registry.npmjs.org/"], {
-        encoding: "utf8",
-        maxBuffer: 16 * 1024 * 1024,
-      }));
-  const attestationUrl = packageMetadata.dist?.attestations?.url;
-  if (!attestationUrl) throw new Error("published npm package does not expose an attestation URL");
-  let attestations;
-  if (args.includes("--attestations")) {
-    attestations = readJsonFlag(args, "attestations");
-  } else {
-    const response = await fetch(attestationUrl, { headers: { accept: "application/json" } });
-    if (!response.ok) throw new Error(`npm attestation lookup failed: HTTP ${response.status}`);
-    attestations = await response.json();
-  }
-  const upstreamRelease = resolveNpmRegistryRelease({ source, channel, packageMetadata, attestations });
-  return createManualUpstreamPickupPlan({
-    config,
-    sourceId,
-    channel,
-    currentVersion: readFlag(args, "current-version"),
-    upstreamRelease,
-  });
-}
-
-async function runPickupCli(args) {
-  const [mode = "", ...pickupArgs] = args;
-  if (!mode || mode === "--help" || mode === "-h") {
-    process.stdout.write(usage());
-    return;
-  }
-  if (mode !== "plan" && mode !== "create") throw new Error(`unsupported release-propagation pickup command: ${mode}`);
-  const plan = await resolvePickupPlan(pickupArgs);
-  const result = mode === "create"
-    ? createManualUpstreamPickupCapture({
-        plan,
-        expectedDownstreamBaseSha: readFlag(pickupArgs, "expected-downstream-base-sha"),
-      })
-    : plan;
-  writeOutput(readFlag(pickupArgs, "output", ""), result);
-  if (hasFlag(pickupArgs, "json")) printJson(result);
-  else if (mode === "plan") process.stdout.write(`manual upstream pickup: ${plan.source.id} ${plan.currentVersion} -> ${plan.resolvedVersion} (${plan.status})\n`);
-  else process.stdout.write(`manual upstream pickup next action: ${result.nextAction}\n`);
-}
-
-export async function runReleasePropagationCli(argv = process.argv.slice(2)) {
+export function runReleasePropagationCli(argv = process.argv.slice(2)) {
   const [mode = "", ...args] = argv;
   if (!mode || mode === "--help" || mode === "-h") {
     process.stdout.write(usage());
@@ -341,14 +204,6 @@ export async function runReleasePropagationCli(argv = process.argv.slice(2)) {
   }
   if (mode === "work") {
     runWorkCli(args);
-    return;
-  }
-  if (mode === "entry") {
-    runEntryCli(args);
-    return;
-  }
-  if (mode === "pickup") {
-    await runPickupCli(args);
     return;
   }
   if (mode === "write-lock") {
@@ -404,8 +259,5 @@ export async function runReleasePropagationCli(argv = process.argv.slice(2)) {
 }
 
 if (!process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT && process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  runReleasePropagationCli().catch((error) => {
-    console.error(`buildchain release-propagation: ${error.message}`);
-    process.exitCode = 1;
-  });
+  runReleasePropagationCli();
 }

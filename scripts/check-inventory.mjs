@@ -73,8 +73,6 @@ const requiredPaths = [
   "docs/github-artifact-attestation.md",
   "docs/shifu-gate-profiles.md",
   "docs/auditable-demo.md",
-  "contracts/auditable-demo-scenario-v1.schema.json",
-  "contracts/release-candidate-recovery-v1.schema.json",
   "contracts/auditable-demo-media-profiles-v1.json",
   "contracts/evidence/auditable-demo-web-delivery-v1.json",
   "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json",
@@ -105,9 +103,6 @@ const requiredPaths = [
   "scripts/seal-macos-credential-input.mjs",
   "scripts/shifu-gate-profile.mjs",
   "scripts/auditable-demo.mjs",
-  "scripts/auditable-demo-platform.mjs",
-  "scripts/auditable-demo-transport-smoke.mjs",
-  "scripts/auditable-demo-capture.py",
   "scripts/resolve-artifact-coordinates.mjs",
   "scripts/artifact-relay-s3.mjs",
   "scripts/anchored-version-material.mjs",
@@ -118,7 +113,6 @@ const requiredPaths = [
   "scripts/publication-commit-evidence.mjs",
   "scripts/publication-reproducibility.mjs",
   "scripts/release-candidate-resolver.mjs",
-  "scripts/resume-from-candidate-run.mjs",
   "scripts/buildchain-patrol.mjs",
   "scripts/observed-evidence.mjs",
   "scripts/workflow-friction-report.mjs",
@@ -136,11 +130,9 @@ const requiredPaths = [
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
-  ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
   ".github/workflows/release-line-bootstrap.yml",
   ".github/workflows/release-governance-reconcile.yml",
   ".github/workflows/dev-pr-auto-merge.yml",
-  ".github/workflows/buildchain-dev-delivery.yml",
   ".github/workflows/buildchain-patrol.yml",
   ".github/workflows/patrol-daily.yml",
   ".github/workflows/patrol-weekly.yml",
@@ -162,8 +154,6 @@ const requiredPaths = [
   ".github/workflows/.build.yml",
   ".github/workflows/.gate-profile.yml",
   ".github/workflows/.auditable-demo.yml",
-  ".github/workflows/.declarative-auditable-demo.yml",
-  ".github/workflows/auditable-demo.yml",
   ".github/workflows/build.yml",
   ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
@@ -276,23 +266,14 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
-  `/${promotionShellRouting.alpha.workflowPath}@${promotionShellRouting.alpha.callRef}`,
+  `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}-alpha`,
   `/${promotionShellRouting.stable.workflowPath}@${promotionShellRouting.stable.callRef}`,
   `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
   "promotion-contract-lock-digest:",
   "authorize-promotion-runtime-override.cjs",
-  "BUILDCHAIN_ROUTER_REPOSITORY: ${{ inputs.buildchain-repository }}",
-  "BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}",
-  "git ls-remote",
-  "Recovery router ref does not match resume-buildchain-runtime-sha",
 ]) {
   if (!channelPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`channel promotion workflow missing routing contract: ${requiredSnippet}`);
-  }
-}
-for (const forbiddenSnippet of ["job.workflow_repository", "job.workflow_sha"]) {
-  if (channelPromotionWorkflow.includes(forbiddenSnippet)) {
-    throw new Error(`channel promotion workflow uses unsupported GitHub context: ${forbiddenSnippet}`);
   }
 }
 const promotionOverrideAuthorization = fs.readFileSync(
@@ -996,12 +977,10 @@ for (const requiredSnippet of [
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
-  "resume-candidate-run-id:",
-  "resume-expected-source-tree:",
-  "resume-buildchain-runtime-sha:",
+  "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "github-release: true",
   "release-passport-buildchain-self-kfd: true",
-  'artifact-patterns: "buildchain-package-*"',
+  "publish-required-artifacts-json: \"[]\"",
   "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
@@ -1055,13 +1034,6 @@ for (const requiredSnippet of [
   "BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json",
   "Consumer has no binary-distribution.yml; standalone binary dispatch is not applicable.",
   "gh workflow view binary-distribution.yml",
-  "resume-candidate-run-id:",
-  "node .buildchain/runtime/scripts/resume-from-candidate-run.mjs",
-  "publish-sealed-bundle-root: ${{ steps.rc.outputs.publish-sealed-bundle-root }}",
-  "BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}",
-  "if: ${{ inputs.resume-candidate-run-id == '' }}",
-  "Bridge Buildchain self-runtime dependencies",
-  "ln -s .buildchain/runtime/node_modules node_modules",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
     throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);

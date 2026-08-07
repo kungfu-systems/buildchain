@@ -53,7 +53,6 @@ async function main() {
     processSampleIntervalMs: Number(getInput("process-sample-interval-ms") || 15000),
     requestedParallelism: Number(getInput("requested-parallelism") || 0),
     processSummaryRequired: getInput("process-summary-required") !== "false",
-    substageEvidencePath: getInput("substage-evidence-path") || "",
     workspace: process.cwd(),
   });
   setOutput("manifest-path", manifestPath);

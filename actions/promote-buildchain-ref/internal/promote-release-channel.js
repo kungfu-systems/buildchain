@@ -368,14 +368,13 @@ async function finalizeReleasePublication(context, state) {
   const transaction =
     context.getLatestPublishTransaction()?.transaction ||
     state.currentReleaseTransaction;
-  const exactTagSha = transaction?.source_sha || state.releaseSha;
   await context.ensureTag(
     state.selectedReleaseCandidate.tag,
-    exactTagSha,
+    state.releaseSha,
     {
       acceptedExistingShas: context.transactionAcceptedExactTagShas(
         transaction,
-        exactTagSha,
+        state.releaseSha,
       ),
       acceptedExistingMaterialShas: context.transactionAcceptedExactTagShas(
         transaction,

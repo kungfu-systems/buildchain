@@ -4,7 +4,6 @@ import {
   optionalString,
 } from "./release-propagation-common.js";
 import {
-  assertCommitSha,
   assertContentRoot,
   assertExactFields,
   assertIsoTimestamp,
@@ -105,40 +104,6 @@ function verifyIndependentReview(work, receipt) {
   const expectedHead = pullRequest?.evidence.find((entry) => entry.kind === "github-pull-request")?.revision;
   if (!expectedHead || claims.headRevision !== expectedHead || approval.revision !== expectedHead) {
     throw new Error("independent-review must bind the exact propagated pull request head");
-  }
-}
-
-function verifyPushedBranch(work, receipt) {
-  const reconciliation = receipt.evidence.find((entry) => entry.kind === "git-branch-reconciliation");
-  const claims = exactClaims(reconciliation, [
-    "provider", "repository", "remoteName", "sourceRef", "sourceRevision",
-    "destinationRef", "expectedBaseRevision", "expectedOldRevision",
-    "observedRevision", "pushMode", "argv", "mutation",
-  ], "push-branch evidence claims");
-  if (claims.provider !== "git"
-      || claims.repository !== work.downstream.repository
-      || claims.sourceRef !== "HEAD"
-      || claims.destinationRef !== `refs/heads/${work.downstream.branch}`
-      || claims.expectedBaseRevision !== work.downstream.expectedBaseSha
-      || claims.pushMode !== "fast-forward-only-exact-refspec") {
-    throw new Error("push-branch evidence does not bind the exact propagation target");
-  }
-  assertCommitSha(claims.sourceRevision, "push-branch source revision");
-  assertCommitSha(claims.observedRevision, "push-branch observed revision");
-  if (claims.expectedOldRevision !== "") {
-    assertCommitSha(claims.expectedOldRevision, "push-branch expected-old revision");
-  }
-  const expectedArgv = ["push", "--porcelain", claims.remoteName, `HEAD:${claims.destinationRef}`];
-  if (JSON.stringify(claims.argv) !== JSON.stringify(expectedArgv)
-      || claims.argv.some((value) => value === "--force" || value.startsWith("--force-"))) {
-    throw new Error("push-branch evidence must use the exact non-force refspec");
-  }
-  if (claims.sourceRevision !== claims.observedRevision
-      || reconciliation.revision !== claims.observedRevision) {
-    throw new Error("push-branch evidence readback disagrees with the source revision");
-  }
-  if (typeof claims.mutation !== "boolean") {
-    throw new Error("push-branch evidence mutation must be boolean");
   }
 }
 
@@ -272,7 +237,6 @@ export function validateStageEvidence({ work, receipt }) {
   ]).has(receipt.stage)) {
     for (const entry of receipt.evidence) assertHttpsLocator(entry.locator, receipt.stage);
   }
-  if (receipt.stage === "push-branch") verifyPushedBranch(work, receipt);
   if (receipt.stage === "independent-review") verifyIndependentReview(work, receipt);
   if (receipt.stage === "production-deploy") verifyProductionDeployment(work, receipt);
   if (receipt.stage === "online-readback") verifyOnlineReadback(work, receipt.evidence);

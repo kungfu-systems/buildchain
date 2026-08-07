@@ -83,56 +83,6 @@ on:
         default: "Build"
         type: string
         required: false
-      release-candidate-wait-seconds:
-        description: "Bounded wait for the complete PR-stage release-candidate workflow, including post-required-check evidence tails"
-        default: 10800
-        type: number
-        required: false
-      resume-candidate-repository:
-        description: "Repository that owns the sealed candidate run; empty selects normal candidate discovery"
-        default: ""
-        type: string
-        required: false
-      resume-candidate-run-id:
-        description: "Exact successful candidate workflow run ID to recover through this fresh workflow event"
-        default: ""
-        type: string
-        required: false
-      resume-expected-workflow-file:
-        description: "Exact trusted Build workflow file that produced the candidate"
-        default: ""
-        type: string
-        required: false
-      resume-expected-workflow-name:
-        description: "Exact trusted Build workflow display name that produced the candidate"
-        default: ""
-        type: string
-        required: false
-      resume-expected-source-tree:
-        description: "Optional exact candidate Git tree; required when expected candidate root is empty"
-        default: ""
-        type: string
-        required: false
-      resume-expected-candidate-root:
-        description: "Optional exact sha256 Release Candidate root; required when expected source tree is empty"
-        default: ""
-        type: string
-        required: false
-      resume-expected-candidate-runtime-sha:
-        description: "Exact Buildchain runtime SHA recorded by the original candidate"
-        default: ""
-        type: string
-        required: false
-      resume-buildchain-runtime-sha:
-        description: "Exact current Buildchain tooling SHA authorized to perform recovery"
-        default: ""
-        type: string
-        required: false
-      resume-transaction-id:
-        description: "Optional exact durable publication transaction identity to resume"
-        default: ""
-        type: string
-        required: false
       release-candidate-family-evidence-required:
         description: "Require exact Initiative-family evidence before protected promotion"
         default: false
@@ -428,16 +378,6 @@ on:
         default: ""
         type: string
         required: false
-      publication-gate-command:
-        description: "Consumer-owned read-only command that assembles a qualifying Gate aggregate from the exact downloaded release-candidate evidence"
-        default: ""
-        type: string
-        required: false
-      publication-gate-controller-sha:
-        description: "Exact caller-repository commit that owns the consumer Gate command; empty uses the publication source SHA"
-        default: ""
-        type: string
-        required: false
       publication-expected-json:
         description: "Independent exact source/runtime/product/channel/artifact bindings"
         default: ""
@@ -572,15 +512,6 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.alpha.outputs.release-candidate-artifact || jobs.stable.outputs.release-candidate-artifact }}
-      release-candidate-action:
-        description: "Candidate admission action: discovered or reused"
-        value: ${{ jobs.alpha.outputs.release-candidate-action || jobs.stable.outputs.release-candidate-action }}
-      release-candidate-recovery-root:
-        description: "Exact sha256 recovery receipt root"
-        value: ${{ jobs.alpha.outputs.release-candidate-recovery-root || jobs.stable.outputs.release-candidate-recovery-root }}
-      release-candidate-recovery-receipt-artifact:
-        description: "Immutable recovery receipt Actions artifact name"
-        value: ${{ jobs.alpha.outputs.release-candidate-recovery-receipt-artifact || jobs.stable.outputs.release-candidate-recovery-receipt-artifact }}
       release-propagation-work-artifact:
         description: "Captured package release propagation Work artifact"
         value: ${{ jobs.alpha.outputs.release-propagation-work-artifact || jobs.stable.outputs.release-propagation-work-artifact }}
@@ -670,45 +601,29 @@ jobs:
         id: router
         shell: bash
         env:
-          BUILDCHAIN_ROUTER_REPOSITORY: ${{ inputs.buildchain-repository }}
-          BUILDCHAIN_ROUTER_REF: ${{ inputs.buildchain-ref }}
-          BUILDCHAIN_RESUME_RUN_ID: ${{ inputs.resume-candidate-run-id }}
-          BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}
+          BUILDCHAIN_ROUTER_WORKFLOW_REF: ${{ job.workflow_ref }}
+          BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY: ${{ job.workflow_repository }}
+          BUILDCHAIN_ROUTER_WORKFLOW_SHA: ${{ job.workflow_sha }}
         run: |
           set -euo pipefail
-          repository="${BUILDCHAIN_ROUTER_REPOSITORY}"
-          ref="${BUILDCHAIN_ROUTER_REF}"
+          workflow_ref="${BUILDCHAIN_ROUTER_WORKFLOW_REF}"
+          repository="${BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY}"
+          ref="${workflow_ref##*@}"
           ref="${ref#refs/heads/}"
           ref="${ref#refs/tags/}"
-          if [[ ! "${repository}" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ || -z "${ref}" || "${ref}" = /* || "${ref}" = *..* ]]; then
-            echo "::error::Unable to resolve promotion router source from repository/ref inputs"
+          parsed_repository="${workflow_ref%%/.github/workflows/*}"
+          if [[ -z "${repository}" || "${repository}" != "${parsed_repository}" || -z "${ref}" ]]; then
+            echo "::error::Unable to resolve promotion router source from job.workflow_ref=${workflow_ref}"
             exit 1
           fi
-
-          remote_url="https://github.com/${repository}.git"
-          refs="$(git ls-remote "${remote_url}" "refs/heads/${ref}" "refs/tags/${ref}" "refs/tags/${ref}^{}")"
-          head_sha="$(printf '%s\n' "${refs}" | awk -v name="refs/heads/${ref}" '$2 == name { print tolower($1) }')"
-          tag_sha="$(printf '%s\n' "${refs}" | awk -v peeled="refs/tags/${ref}^{}" -v name="refs/tags/${ref}" '$2 == peeled { print tolower($1); found=1 } $2 == name && !found { fallback=tolower($1) } END { if (!found && fallback != "") print fallback }')"
-          if [[ -n "${head_sha}" && -n "${tag_sha}" && "${head_sha}" != "${tag_sha}" ]]; then
-            echo "::error::Promotion router ref is ambiguous between branch and tag"
+          if [[ ! "${BUILDCHAIN_ROUTER_WORKFLOW_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::job.workflow_sha is not an exact commit SHA"
             exit 1
-          fi
-          sha="${head_sha:-${tag_sha}}"
-          if [[ ! "${sha}" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::Promotion router ref did not resolve to one exact commit SHA"
-            exit 1
-          fi
-          if [[ -n "${BUILDCHAIN_RESUME_RUN_ID}" ]]; then
-            expected_sha="${BUILDCHAIN_RESUME_RUNTIME_SHA,,}"
-            if [[ ! "${expected_sha}" =~ ^[0-9a-f]{40}$ || "${sha}" != "${expected_sha}" ]]; then
-              echo "::error::Recovery router ref does not match resume-buildchain-runtime-sha"
-              exit 1
-            fi
           fi
           {
             echo "repository=${repository}"
             echo "ref=${ref}"
-            echo "sha=${sha}"
+            echo "sha=${BUILDCHAIN_ROUTER_WORKFLOW_SHA,,}"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Checkout promotion router
@@ -748,7 +663,7 @@ jobs:
           CHANNEL: ${{ steps.route.outputs.channel }}
           SELECTED_SHELL_REF: ${{ steps.route.outputs.shell-ref }}
           ALPHA_SHELL_REF: v3-alpha
-          ALPHA_SHELL_CALL_REF: train/v3/v3.0/resume-candidate-run
+          ALPHA_SHELL_CALL_REF: v3-alpha
           STABLE_SHELL_REF: v3
           STABLE_SHELL_CALL_REF: v3
         run: |
@@ -842,7 +757,7 @@ jobs:
     name: Promote with alpha workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@train/v3/v3.0/resume-candidate-run
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3-alpha
     permissions:
       actions: write
       artifact-metadata: write
@@ -877,16 +792,6 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       release-candidate-workflow-file: ${{ inputs.release-candidate-workflow-file }}
       release-candidate-workflow-name: ${{ inputs.release-candidate-workflow-name }}
-      release-candidate-wait-seconds: ${{ inputs.release-candidate-wait-seconds }}
-      resume-candidate-repository: ${{ inputs.resume-candidate-repository }}
-      resume-candidate-run-id: ${{ inputs.resume-candidate-run-id }}
-      resume-expected-workflow-file: ${{ inputs.resume-expected-workflow-file }}
-      resume-expected-workflow-name: ${{ inputs.resume-expected-workflow-name }}
-      resume-expected-source-tree: ${{ inputs.resume-expected-source-tree }}
-      resume-expected-candidate-root: ${{ inputs.resume-expected-candidate-root }}
-      resume-expected-candidate-runtime-sha: ${{ inputs.resume-expected-candidate-runtime-sha }}
-      resume-buildchain-runtime-sha: ${{ inputs.resume-buildchain-runtime-sha }}
-      resume-transaction-id: ${{ inputs.resume-transaction-id }}
       release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
       release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
       release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
@@ -946,8 +851,6 @@ jobs:
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
-      publication-gate-command: ${{ inputs.publication-gate-command }}
-      publication-gate-controller-sha: ${{ inputs.publication-gate-controller-sha }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       publication-consumer-qualification-command: ${{ inputs.publication-consumer-qualification-command }}
@@ -1001,6 +904,10 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       release-candidate-workflow-file: ${{ inputs.release-candidate-workflow-file }}
       release-candidate-workflow-name: ${{ inputs.release-candidate-workflow-name }}
+      release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
+      release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
+      release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
+      release-candidate-family-assignment-id: ${{ inputs.release-candidate-family-assignment-id }}
       artifact-patterns: ${{ inputs.artifact-patterns }}
       required-status-check: ${{ inputs.required-status-check }}
       branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
@@ -1026,6 +933,7 @@ jobs:
       publish-package-set-order: ${{ inputs.publish-package-set-order }}
       publish-package-main: ${{ inputs.publish-package-main }}
       release-passport: ${{ inputs.release-passport }}
+      release-propagation-config-path: ${{ inputs.release-propagation-config-path }}
       release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
       release-passport-product-name: ${{ inputs.release-passport-product-name }}
       release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
@@ -1036,6 +944,8 @@ jobs:
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
       release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
       release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
+      release-passport-evidence-jsons: ${{ inputs.release-passport-evidence-jsons }}
+      release-passport-attachment-command: ${{ inputs.release-passport-attachment-command }}
       release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
       release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths }}
       required-artifact-count: ${{ inputs.required-artifact-count }}
@@ -1044,7 +954,6 @@ jobs:
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
-      publication-gate-controller-sha: ${{ inputs.publication-gate-controller-sha }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       publication-consumer-qualification-command: ${{ inputs.publication-consumer-qualification-command }}

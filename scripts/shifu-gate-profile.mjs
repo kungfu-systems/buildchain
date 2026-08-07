@@ -10,7 +10,6 @@ import {
 import {
   createGateAggregate,
   createGateExecutionMatrix,
-  normalizeGateEnvironment,
   normalizeGatePlatform,
 } from "./gate-profile-core.mjs";
 
@@ -55,20 +54,27 @@ function commandForPlatform(commandJson, platform) {
   return argv;
 }
 
-export function gateEnvironment(platformEnvironment = {}) {
+function gateEnvironment() {
   const parsed = parseJson(
     process.env.BUILDCHAIN_GATE_ENVIRONMENT_JSON || "{}",
     "gate-environment-json",
   );
-  const shared = normalizeGateEnvironment(parsed, "gate-environment-json");
-  const platform = normalizeGateEnvironment(
-    platformEnvironment,
-    "gate matrix entry environment",
-  );
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("gate-environment-json must be a JSON object");
+  }
+  const entries = Object.entries(parsed).map(([name, value]) => {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name))
+      throw new Error(`invalid Gate environment name: ${name}`);
+    if (!["string", "number", "boolean"].includes(typeof value)) {
+      throw new Error(
+        `Gate environment ${name} must be a string, number, or boolean`,
+      );
+    }
+    return [name, String(value)];
+  });
   return {
     ...process.env,
-    ...shared,
-    ...platform,
+    ...Object.fromEntries(entries),
     ...(process.env.BUILDCHAIN_SHIFU_CACHE_PROFILE_REF
       ? {
           SHIFU_CACHE_PROFILE_REF:
@@ -231,7 +237,7 @@ function runMode() {
   const receiptPath = path.join(outputRoot, "receipt.json");
   const validationPath = path.join(outputRoot, "validation.json");
   const executionPath = path.join(outputRoot, "execution.json");
-  const env = gateEnvironment(entry.environment || {});
+  const env = gateEnvironment();
   fs.mkdirSync(outputRoot, { recursive: true });
   prepareGateExecutionFiles([receiptPath, validationPath, executionPath]);
   const argv = commandForPlatform(commandJson, entry.platform);

@@ -167,17 +167,6 @@ release-PR or trusted-manual paths.
 
 ## Consumer qualification handoff
 
-For managed release candidates, a consumer whose Gate can only be decided
-after the exact candidate bytes exist may provide `publication-gate-command`.
-The sealed authority downloads and recomputes the RC evidence first, checks out
-the exact admitted consumer source without credentials, and runs that command
-with read-only evidence paths. The command must write one complete qualifying
-Shifu aggregate to `BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH`. Buildchain then
-checks the aggregate digest and source binding before assembling the admission;
-the later consumer predicate and provider action still revalidate the same
-complete aggregate. A precomputed aggregate, the command, and an explicit
-no-Gate decision are mutually exclusive.
-
 Consumers may explicitly opt in to a final, consumer-owned qualification
 predicate. Buildchain then transports the complete Gate aggregate alongside the
 sealed capability instead of reducing it to a summary. The capability binds the

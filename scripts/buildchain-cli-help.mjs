@@ -108,18 +108,10 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain inspect release --passport <file-or-url> [--json]
   buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]
   buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]
-  buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>
-                             --pull-request <n> --expected-head <sha>
-                             [--execute] [--output <file>] [--json]
   buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>
                              [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>]
                              [--check-response-timeout-minutes <n>]
                              [--max-entries-to-build <n>] [--apply]
-  buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe>
-                             --repository <owner/repo> --branch <dev/vN/vN.M>
-                             [--execute] [--output <file>] [--json]
-  buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration>
-                             [--output <file>] [--json]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
                  [--path <jsonl>] [--json]
@@ -216,7 +208,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                           [--execute] [--json]
   buildchain paper status [--cwd <dir>] [--json]
   buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]
-  buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
+  buildchain release-propagation <plan|write-lock> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
   buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]
@@ -254,7 +246,6 @@ Examples:
   buildchain paper preflight --json
   buildchain paper status --json
   buildchain release-propagation plan --graph graph.json --upstream-release release.json --json
-  buildchain release-propagation pickup plan --config manual-upstreams.json --source-id buildchain --channel release --current-version 3.0.3 --json
   buildchain kfd status --json
   buildchain kfd schema list --json
   buildchain kfd 1 witness --json

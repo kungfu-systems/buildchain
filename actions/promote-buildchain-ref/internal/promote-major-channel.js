@@ -325,12 +325,10 @@ async function publishMajorRelease(context, plan) {
       }
     }
     await context.markFinalizing();
-    const transaction = context.getLatestPublishTransaction()?.transaction;
-    const exactTagSha = transaction?.source_sha || releaseSha;
-    await context.ensureTag(plan.selectedRelease.tag, exactTagSha, {
+    await context.ensureTag(plan.selectedRelease.tag, releaseSha, {
       acceptedExistingShas: context.transactionAcceptedExactTagShas(
-        transaction || plan.containedPublishedMajorTransaction,
-        exactTagSha,
+        plan.containedPublishedMajorTransaction,
+        releaseSha,
       ),
     });
     await context.updateTag(plan.majorRule.minorTag, releaseSha);

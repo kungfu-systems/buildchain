@@ -252,7 +252,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
   assert.equal(result.publishTransaction.releaseSha, OTHER_SHA);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), OTHER_SHA);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), OTHER_SHA);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
   assert.equal(
     fs.existsSync(path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.1.json")),
@@ -331,7 +331,7 @@ test("publish transaction finalizes current alpha version-state merge commits", 
   assert.equal(result.sha, mergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), oldAlphaSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), mergeSha);
   assert.equal(refs.get("tags/v1.0-alpha"), mergeSha);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
   assert.equal(
@@ -466,22 +466,11 @@ test("published alpha finalization stays bound to its exact transaction after th
   const channelMergeSha = "3".repeat(40);
   const version = "1.0.0-alpha.0";
   const exactTag = `v${version}`;
-  const durableTarballPath = ".buildchain/sealed/durable-alpha.tgz";
-  const requestedTarballPath = ".buildchain/sealed/version-state-rebuild.tgz";
-  const durableAssetPath = ".buildchain/sealed/durable-passport.json";
-  const requestedAssetPath = ".buildchain/sealed/version-state-passport.json";
-  const durableTarballBytes = Buffer.from("durable published alpha bytes", "utf8");
-  const requestedTarballBytes = Buffer.from("rebuilt version-state alpha bytes", "utf8");
-  const durableAssetBytes = Buffer.from('{"source":"durable"}\n', "utf8");
-  const requestedAssetBytes = Buffer.from('{"source":"version-state"}\n', "utf8");
-  const durableIntegrity =
-    `sha512-${crypto.createHash("sha512").update(durableTarballBytes).digest("base64")}`;
   const artifact = {
     kind: "npm",
     name: "@kungfu-tech/buildchain",
     ref: version,
-    digest: durableIntegrity,
-    integrity: durableIntegrity,
+    digest: "sha512:alpha0",
   };
   const cwd = makeTempWorkspace({
     "package.json": {
@@ -490,82 +479,6 @@ test("published alpha finalization stays bound to its exact transaction after th
       packageManager: "pnpm@11.7.0",
     },
   });
-  for (const [relativePath, bytes] of [
-    [durableTarballPath, durableTarballBytes],
-    [requestedTarballPath, requestedTarballBytes],
-    [durableAssetPath, durableAssetBytes],
-    [requestedAssetPath, requestedAssetBytes],
-  ]) {
-    const target = path.join(cwd, relativePath);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, bytes);
-  }
-  const createCandidate = ({ relativePath, bytes, assetPath, assetBytes, sourceSha }) => {
-    const payload = {
-      schemaVersion: 1,
-      contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
-      repository: "kungfu-systems/buildchain",
-      sourceSha,
-      sourceTreeSha: crypto.createHash("sha1").update(bytes).digest("hex"),
-      runtimeSha: "4".repeat(40),
-      manifestDigest: "5".repeat(64),
-      passportDigest: "6".repeat(64),
-      controllerReceiptDigest: "7".repeat(64),
-      files: [
-        { path: relativePath, bytes },
-        { path: assetPath, bytes: assetBytes },
-      ]
-        .map((entry) => ({
-          path: entry.path,
-          size: entry.bytes.length,
-          sha256: crypto.createHash("sha256").update(entry.bytes).digest("hex"),
-        }))
-        .sort((left, right) => left.path.localeCompare(right.path)),
-    };
-    return {
-      ...payload,
-      candidateDigest: publicationArtifactCandidateDigest(payload),
-    };
-  };
-  const durableManifest = createPublicationSealedBundle({
-    candidate: createCandidate({
-      relativePath: durableTarballPath,
-      bytes: durableTarballBytes,
-      assetPath: durableAssetPath,
-      assetBytes: durableAssetBytes,
-      sourceSha: transactionSourceSha,
-    }),
-    packageName: "@kungfu-tech/buildchain",
-    packageVersion: version,
-    npmTarballPath: durableTarballPath,
-    npmIntegrity: durableIntegrity,
-    releaseAssetPaths: [durableAssetPath],
-  });
-  const requestedIntegrity =
-    `sha512-${crypto.createHash("sha512").update(requestedTarballBytes).digest("base64")}`;
-  const requestedManifest = createPublicationSealedBundle({
-    candidate: createCandidate({
-      relativePath: requestedTarballPath,
-      bytes: requestedTarballBytes,
-      assetPath: requestedAssetPath,
-      assetBytes: requestedAssetBytes,
-      sourceSha: channelMergeSha,
-    }),
-    packageName: "@kungfu-tech/buildchain",
-    packageVersion: version,
-    npmTarballPath: requestedTarballPath,
-    npmIntegrity: requestedIntegrity,
-    releaseAssetPaths: [requestedAssetPath],
-  });
-  const requestedManifestPath = path.join(
-    cwd,
-    ".buildchain/admitted/version-state-sealed-bundle.json",
-  );
-  fs.mkdirSync(path.dirname(requestedManifestPath), { recursive: true });
-  fs.writeFileSync(
-    requestedManifestPath,
-    `${JSON.stringify(requestedManifest, null, 2)}\n`,
-  );
   const evidencePath = path.join(
     cwd,
     ".buildchain/release-evidence",
@@ -626,15 +539,10 @@ test("published alpha finalization stays bound to its exact transaction after th
       failure: "",
       artifacts: [artifact],
       evidence: [".buildchain/release-evidence/v1.0.0-alpha.0/evidence.json"],
-      sealed_bundle: durableManifest,
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
     },
     evidencePath,
-    extraFiles: durableManifest.files.map((entry) => ({
-      path: `${durableManifest.durablePath}/files/${entry.path}`,
-      sourcePath: entry.path,
-    })),
   });
   fs.rmSync(path.join(cwd, ".buildchain/release-state"), {
     recursive: true,
@@ -676,13 +584,7 @@ test("published alpha finalization stays bound to its exact transaction after th
     targetRef: "alpha/v1/v1.0",
     cwd,
     publishTransaction: true,
-    publishSealedBundleRoot: cwd,
-    publishSealedBundleManifest: requestedManifestPath,
-    publishRequiredArtifactsJson: JSON.stringify([{
-      ...artifact,
-      digest: requestedIntegrity,
-      integrity: requestedIntegrity,
-    }]),
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
     requireVersionState: true,
     expectedPublicationVersion: version,
     releasePassport: false,
@@ -691,19 +593,9 @@ test("published alpha finalization stays bound to its exact transaction after th
   assert.equal(result.sha, channelMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
-  assert.equal(
-    result.publishTransaction.sealedBundleRoot,
-    durableManifest.root,
-  );
-  const finalizedTransaction = JSON.parse(
-    fs.readFileSync(path.join(cwd, result.publishTransaction.statePath), "utf8"),
-  );
-  assert.equal(finalizedTransaction.artifacts.length, 1);
-  assert.equal(finalizedTransaction.artifacts[0].digest, durableIntegrity);
-  assert.notEqual(finalizedTransaction.artifacts[0].digest, requestedIntegrity);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), channelMergeSha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), channelMergeSha);
-  assert.equal(refs.get(`tags/${exactTag}`), transactionSourceSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
   assert.equal(refs.get("tags/v1.0-alpha"), transactionReleaseSha);
   assert.equal(refs.get("tags/v1-alpha"), transactionReleaseSha);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
@@ -936,7 +828,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.notEqual(result.sha, mergeSha);
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.1");
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), previousFinalizedSha);
-  assert.equal(refs.get("tags/v1.0.0-alpha.1"), mergeSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.1"), result.sha);
   assert.equal(refs.get("tags/v1.0-alpha"), result.sha);
 });
 
@@ -1074,7 +966,7 @@ test("publish transaction finalizes current release version-state merge commits"
   assert.equal(result.sha, toolingMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.equal(refs.get("tags/v1.0.0"), oldReleaseSha);
+  assert.equal(refs.get("tags/v1.0.0"), toolingMergeSha);
   assert.equal(refs.get("tags/v1.0"), toolingMergeSha);
   assert.equal(refs.get("tags/v1"), toolingMergeSha);
   assert.equal(refs.has("tags/v1.0.1"), false);
@@ -1273,7 +1165,7 @@ test("release finalization uses the transaction alpha source after next-alpha ad
 
   assert.equal(result.sha, finalMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
-  assert.equal(refs.get("tags/v1.0.0"), releaseSourceSha);
+  assert.equal(refs.get("tags/v1.0.0"), finalMergeSha);
 });
 
 test("release finalization merges generated next-alpha state into diverged dev", async () => {
@@ -1976,7 +1868,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   });
 
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.equal(refs.get("tags/v1.0.0"), releaseMergeSha);
+  assert.equal(refs.get("tags/v1.0.0"), result.sha);
 });
 
 test("complete release transaction converges after its protected version-state merge", async () => {
@@ -3670,7 +3562,7 @@ process.exitCode = 9;
   assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
   assert.equal(refs.get("heads/publish-gate/major"), channelMergeSha);
   assert.equal(refs.get("heads/release/v2/v2.0"), transactionReleaseSha);
-  assert.equal(refs.get(`tags/${exactTag}`), transactionSourceSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
   assert.equal(refs.get("tags/v2.0"), transactionReleaseSha);
   assert.equal(refs.get("tags/v2"), transactionReleaseSha);
   assert.equal(refs.get("heads/dev/v2/v2.0"), nextAlphaSha);
@@ -4124,7 +4016,7 @@ test("release promotion rerun resumes durable stable transaction after alpha adv
     cwd,
   });
 
-  assert.equal(refs.get("tags/v1.0.6"), sourceSha);
+  assert.equal(result.sha, refs.get("tags/v1.0.6"));
   assert.equal(refs.get("heads/release/v1/v1.0"), result.sha);
   assert.equal(refs.get("tags/v1"), result.sha);
   assert.equal(refs.get("tags/v1.0"), result.sha);

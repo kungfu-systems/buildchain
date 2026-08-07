@@ -72,10 +72,7 @@ import {
   contractForSelfDogfoodEvaluation,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
-import {
-  runLifecycle,
-  verifyBuildLifecycleCompilerCacheActivity,
-} from "../scripts/run-lifecycle-core.mjs";
+import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import {
@@ -317,10 +314,6 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /needs\.promote\.outputs\.finalization-needed == 'true' && 'partial'/,
   );
-  assert.match(
-    wrapper,
-    /Enforce qualifying release-candidate-promotion controller receipt[\s\S]*?needs\.promote\.outputs\.finalization-needed != 'true'[\s\S]*?controller-receipt-qualifying != 'true'/,
-  );
 });
 
 test("reusable build exposes release-candidate passport outputs", () => {
@@ -449,16 +442,6 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
   assert.match(workflow, /checkout-cache-mode: auto/);
   assert.match(workflow, /checkout-cache-fallback: github/);
-  assert.match(
-    workflow,
-    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.result == 'success' && github\.event_name == 'pull_request' && \(startsWith\(github\.base_ref, 'alpha\/'\) \|\| startsWith\(github\.base_ref, 'release\/'\)\) \}\}/,
-  );
-  assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
-  assert.match(workflow, /merge-multiple: true/);
-  assert.doesNotMatch(
-    workflow,
-    /needs\.libnode-shaped\.outputs\['release-candidate-artifact'\]/,
-  );
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
 
@@ -617,7 +600,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(\(inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != ''\) && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
   );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
@@ -647,20 +630,15 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     bootstrap.indexOf("name: Reconcile dev merge queue governance") <
       bootstrap.indexOf("name: Set default branch"),
   );
-  assert.doesNotMatch(workflow, /publish-required-artifacts-json: "\[\]"/);
-  assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/);
-  assert.doesNotMatch(
-    workflow,
-    /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != ''/,
-  );
+  assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,
-    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
+    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
   );
   assert.match(
     workflow,
-    /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
+    /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
   );
   assert.match(workflow, /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml/);
   assert.doesNotMatch(workflow, /Buildchain v2\.10 patch release/);
@@ -744,13 +722,6 @@ test("runner presets resolve to explicit matrices", () => {
   assert.equal(hosted.nativePlatformCount, 3);
   assert.equal(hosted.containerPlatformCount, 0);
   assert.equal(hosted.platforms[0].id, "linux-x64");
-  assert.equal(hosted.githubHostedPlatformCount, 3);
-  assert.equal(hosted.relayPlatformCount, 0);
-  assert.deepEqual(JSON.parse(hosted.githubHostedPlatformIdsJson), [
-    "linux-x64",
-    "macos",
-    "windows-x64",
-  ]);
 
   const kungfu = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-self-hosted" });
   assert.equal(kungfu.runnerPreset, "kungfu-v4-self-hosted");
@@ -761,8 +732,6 @@ test("runner presets resolve to explicit matrices", () => {
     ["linux-x64", "macos-arm64", "windows-x64"],
   );
   assert.match(kungfu.platforms[0].runner, /kungfu-build-v4-linux-x64/);
-  assert.equal(kungfu.githubHostedPlatformCount, 0);
-  assert.equal(kungfu.relayPlatformCount, 3);
 
   const kungfuNative = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-native" });
   assert.equal(kungfuNative.runnerPreset, "kungfu-v4-native");
@@ -773,9 +742,6 @@ test("runner presets resolve to explicit matrices", () => {
     ["linux-x64", "linux-arm64", "macos-arm64", "windows-x64"],
   );
   assert.equal(kungfuNative.platforms[1].runner, '["ubuntu-24.04-arm"]');
-  assert.equal(kungfuNative.platforms[1].githubHosted, true);
-  assert.equal(kungfuNative.githubHostedPlatformCount, 1);
-  assert.equal(kungfuNative.relayPlatformCount, 3);
 
   const codebuild = resolveRunnerMatrix({
     runnerPreset: "aws-us-codebuild-linux",
@@ -809,40 +775,10 @@ test("runner presets resolve to explicit matrices", () => {
 
   const custom = resolveRunnerMatrix({
     platformsJson:
-      '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]","environment":{"CXX":"g++-14","CC":"gcc-14","JOBS":4}}]',
+      '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',
   });
   assert.equal(custom.runnerPreset, "custom");
   assert.equal(custom.platformCount, 1);
-  assert.deepEqual(custom.platforms[0].environment, {
-    CXX: "g++-14",
-    CC: "gcc-14",
-    JOBS: 4,
-  });
-  assert.deepEqual(JSON.parse(custom.platformsJson)[0].environment, {
-    CXX: "g++-14",
-    CC: "gcc-14",
-    JOBS: 4,
-  });
-  assert.equal(custom.platforms[0].githubHosted, false);
-
-  const customHosted = resolveRunnerMatrix({
-    platformsJson:
-      '[{"id":"hosted","name":"Hosted","runner":"[\\"ubuntu-24.04\\"]"},{"id":"large","name":"Large hosted","runner":"[\\"custom-large-runner\\"]","githubHosted":true}]',
-  });
-  assert.equal(customHosted.githubHostedPlatformCount, 2);
-  assert.equal(customHosted.relayPlatformCount, 0);
-  assert.deepEqual(JSON.parse(customHosted.githubHostedPlatformIdsJson), [
-    "hosted",
-    "large",
-  ]);
-  assert.throws(
-    () =>
-      resolveRunnerMatrix({
-        platformsJson:
-          '[{"id":"invalid","name":"Invalid","runner":"[\\"ubuntu-24.04\\"]","githubHosted":"true"}]',
-      }),
-    /githubHosted must be a boolean/,
-  );
 });
 
 test("AWS CodeBuild runner preset fails closed without an exact project", () => {
@@ -1644,8 +1580,10 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
   assert.equal(stableLock.buildchain.majorLine, "v3");
   assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
-  assert.match(alphaLock.buildchain.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
-  assert.match(currentContract.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
+  assert.equal(
+    alphaLock.buildchain.compatibilityDigest,
+    currentContract.compatibilityDigest,
+  );
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),
   ).version;
@@ -1695,7 +1633,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
 
   assert.match(
     promotion,
-    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(\(inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != ''\) && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
   );
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
 });
@@ -1822,54 +1760,6 @@ test("libnode-shaped fixture declares the build lifecycle contract", () => {
   assert.deepEqual(
     summary.lifecycleStages.map((stage) => stage.name),
     ["install", "build", "verify", "publish"],
-  );
-});
-
-test("runLifecycle binds compiler-cache activity verification to the runtime action", () => {
-  const events = [];
-  let verificationOptions;
-  const activity = verifyBuildLifecycleCompilerCacheActivity({
-    stageName: "build",
-    executed: true,
-    cwd: "/consumer",
-    env: { BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true" },
-    verifier: (options) => {
-      verificationOptions = options;
-      return {
-        compileRequests: 12,
-        cacheHits: 7,
-        cacheMisses: 5,
-        cacheableRequests: 12,
-      };
-    },
-    frameworkLog: {
-      info: (event, payload) => events.push({ event, payload }),
-    },
-  });
-
-  assert.deepEqual(verificationOptions, {
-    cwd: "/consumer",
-    env: { BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true" },
-  });
-  assert.deepEqual(activity, {
-    compileRequests: 12,
-    cacheHits: 7,
-    cacheMisses: 5,
-    cacheableRequests: 12,
-  });
-  assert.deepEqual(events, [
-    {
-      event: "compiler-cache.activity",
-      payload: { attributes: activity },
-    },
-  ]);
-  assert.equal(
-    verifyBuildLifecycleCompilerCacheActivity({
-      stageName: "verify",
-      executed: true,
-      verifier: () => assert.fail("non-build lifecycle must not verify cache activity"),
-    }),
-    undefined,
   );
 });
 

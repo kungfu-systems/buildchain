@@ -39,10 +39,7 @@ function client() {
       pullRequests.push(pull);
       return pull;
     },
-    async enableAutoMerge(pull, mergeMethod) {
-      pull.autoMerge = true;
-      pull.mergeMethod = mergeMethod;
-    },
+    async enableAutoMerge(pull) { pull.autoMerge = true; },
     async setVariable(name, value) { variables.set(name, value); },
     async deleteVariable(name) { variables.delete(name); },
   };
@@ -70,7 +67,6 @@ test("scheduled patrol promotes the previous qualified alpha while the newest so
     dryRun: false,
     autoPromote: true,
     autoMerge: true,
-    mergeMethod: "rebase",
   }, fake);
 
   assert.equal(result.selection.candidate.version, "2.12.0-alpha.4");
@@ -81,7 +77,6 @@ test("scheduled patrol promotes the previous qualified alpha while the newest so
   }]);
   assert.equal(fake.pullRequests[0].base, "release/v2/v2.12");
   assert.equal(fake.pullRequests[0].autoMerge, true);
-  assert.equal(fake.pullRequests[0].mergeMethod, "rebase");
   assert.equal(fake.writes.length, 1);
 });
 
@@ -108,30 +103,8 @@ test("patrol defaults are fail-safe and line-scoped", () => {
   });
   assert.equal(options.dryRun, true);
   assert.equal(options.autoPromote, false);
-  assert.equal(options.autoMerge, false);
-  assert.equal(options.mergeMethod, "merge");
   assert.equal(options.ledgerRef, "buildchain/candidate-ledger/v3/v3.4");
   assert.deepEqual(options.requiredChecks, ["alpha-release"]);
-});
-
-test("stable auto-merge method validation fails closed", () => {
-  assert.equal(
-    normalizeStableCandidatePatrolOptions({
-      repository: "kungfu-systems/example",
-      targetBranch: "release/v3/v3.4",
-      mergeMethod: "REBASE",
-    }).mergeMethod,
-    "rebase",
-  );
-  assert.throws(
-    () =>
-      normalizeStableCandidatePatrolOptions({
-        repository: "kungfu-systems/example",
-        targetBranch: "release/v3/v3.4",
-        mergeMethod: "fast-forward",
-      }),
-    /mergeMethod must be merge, squash, or rebase/u,
-  );
 });
 
 test("release-now automatically projects exact human authority", async () => {

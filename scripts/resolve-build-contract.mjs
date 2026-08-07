@@ -41,13 +41,6 @@ export function resolveBuildContractCli() {
       "native-platform-count": String(resolved.nativePlatformCount),
       "container-platforms-json": resolved.containerPlatformsJson,
       "container-platform-count": String(resolved.containerPlatformCount),
-      "github-hosted-platforms-json": resolved.githubHostedPlatformsJson,
-      "github-hosted-platform-ids-json": resolved.githubHostedPlatformIdsJson,
-      "github-hosted-platform-count": String(
-        resolved.githubHostedPlatformCount,
-      ),
-      "relay-platforms-json": resolved.relayPlatformsJson,
-      "relay-platform-count": String(resolved.relayPlatformCount),
       "linux-container-enabled": String(resolved.linuxContainer.enabled),
       "linux-container-preset": resolved.linuxContainer.preset,
       "linux-container-image": resolved.linuxContainer.image,

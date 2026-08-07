@@ -72,41 +72,6 @@ function majorLineFromPackageVersion(version = "") {
   return match ? `v${match[1]}` : "v3";
 }
 
-function declarativeAuditableDemoSurface(root, pkg, majorLine) {
-  return surface(root, {
-    id: "declarative-auditable-demo",
-    kind: "workflow",
-    path: ".github/workflows/.declarative-auditable-demo.yml",
-    publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.declarative-auditable-demo.yml@${majorLine}`,
-    requiredInputs: ["binary-artifact-name", "binary-artifact-digest", "renderer-image"],
-    requiredOutputs: [
-      "source-sha", "capture-artifact-name", "capture-artifact-digest",
-      "evidence-artifact-name", "evidence-artifact-digest", "publication-pr-url",
-    ],
-    breakingDefaults: {
-      scenarioPathDefault: ".buildchain/auditable-demo.json",
-      renderMediaDefault: false,
-      materializeDefault: false,
-      mediaProfileDefault: "responsive-web-delivery-v1",
-      artifactRetentionDaysDefault: 14,
-      executionBoundary: "exact-binary-network-none-secret-free-60-seconds",
-    },
-    optionalInputs: [
-      "buildchain-repository", "source-ref", "scenario-path", "render-media",
-      "media-profile", "materialize", "materialize-base-ref", "artifact-retention-days",
-    ],
-    guarantees: [
-      "one versioned declaration can contain multiple demos with multiple ordered literal argv steps",
-      "every demo uses the exact same-run standalone binary admitted by producer-owned artifact name and digest",
-      "capture runs without network or inherited secrets and retains independent native 1080p and 720p terminal dimensions",
-      "the generic adapter feeds the required auditable demo Gate and immutable renderer without product-specific glue",
-      "full rendering emits a content-addressed Release Passport and idempotent protected README update pull request",
-      "manual, alpha, and release callers use the same capture, Gate, renderer, passport, and materializer implementation",
-      "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority",
-    ],
-  });
-}
-
 export function createBuildchainContractWorld({
   root = process.cwd(),
   packageJson = undefined,
@@ -210,7 +175,7 @@ export function createBuildchainContractWorld({
       path: ".github/workflows/release-candidate-promote.yml",
       publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/release-candidate-promote.yml@${majorLine}`,
       requiredInputs: ["channel"],
-      requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact", "release-candidate-action"],
+      requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact"],
       breakingDefaults: {
         channelDefault: "auto",
         alphaShellDefault: `${majorLine}-alpha`,
@@ -225,15 +190,6 @@ export function createBuildchainContractWorld({
         "buildchain-stable-contract-lock-path",
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
-        "resume-candidate-repository",
-        "resume-candidate-run-id",
-        "resume-expected-workflow-file",
-        "resume-expected-workflow-name",
-        "resume-expected-source-tree",
-        "resume-expected-candidate-root",
-        "resume-expected-candidate-runtime-sha",
-        "resume-buildchain-runtime-sha",
-        "resume-transaction-id",
         "publish-required-artifacts-json",
         "release-passport-kfd-1-witness-jsons",
         "release-passport-kfd-2-claim-jsons",
@@ -276,16 +232,10 @@ export function createBuildchainContractWorld({
         "train and exact-SHA runtime overrides remain limited to trusted workflow_dispatch actors",
         "promotion reuses PR-stage release-candidate artifacts",
         "promotion does not run the heavy native build matrix",
-        "a fresh workflow event can recover an exact successful candidate run after startup or router failure",
-        "recovery validates repository, workflow, PR, ancestry, tree, candidate roots, controller evidence, manifests, archive digests, and payload bytes before mutation",
-        "recovery emits action reused and never silently falls back to a full build",
         "built source and promotion channel SHA are recorded separately",
         "contract drift is checked before release-candidate resolution and publish",
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes",
-      ],
-      compatibleBreakingDigests: [
-        "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
       ],
     }),
     surface(root, {
@@ -294,7 +244,7 @@ export function createBuildchainContractWorld({
       path: ".github/workflows/.release-candidate-promote.yml",
       publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.release-candidate-promote.yml@${majorLine}`,
       requiredInputs: ["channel"],
-      requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact", "release-candidate-action"],
+      requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact"],
       breakingDefaults: {
         promoteOnlyReleaseCandidate: true,
         requiredStatusCheck: "check / check",
@@ -313,23 +263,10 @@ export function createBuildchainContractWorld({
         "promotion-publication-channel",
         "promotion-target-ref",
         "promotion-override-used",
-        "resume-candidate-repository",
-        "resume-candidate-run-id",
-        "resume-expected-workflow-file",
-        "resume-expected-workflow-name",
-        "resume-expected-source-tree",
-        "resume-expected-candidate-root",
-        "resume-expected-candidate-runtime-sha",
-        "resume-buildchain-runtime-sha",
-        "resume-transaction-id",
       ],
       guarantees: [
         "advanced promotion verifies routed shell, runtime, lock, publication channel, and target bindings before candidate resolution",
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix",
-        "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph",
-      ],
-      compatibleBreakingDigests: [
-        "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
       ],
     }),
     surface(root, {
@@ -423,7 +360,7 @@ export function createBuildchainContractWorld({
         "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment",
       ],
-    }), declarativeAuditableDemoSurface(root, pkg, majorLine),
+    }),
     surface(root, {
       id: "promote-buildchain-ref-action",
       kind: "action",

@@ -165,13 +165,6 @@ export {
 } from "./release-candidate.js";
 
 export {
-  RELEASE_CANDIDATE_RECOVERY_CONTRACT,
-  ReleaseCandidateRecoveryError,
-  recoveryFailure,
-  verifyReleaseCandidateRecovery,
-} from "./release-candidate-recovery.js";
-
-export {
   PUBLICATION_NPM_PACKAGE_CONTRACT,
   collectPublicationPackageFacts,
   preparePublicationNpmPackage,

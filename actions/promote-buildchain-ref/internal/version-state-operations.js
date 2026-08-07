@@ -1,5 +1,3 @@
-import { resolveExistingVersionState } from "./existing-version-state.js";
-
 function createVersionStateOperations(context) {
   const {
     octokit,
@@ -208,13 +206,6 @@ function createVersionStateOperations(context) {
         version,
       });
     }
-    const recoveredCandidate =
-      releaseCandidateValidation?.recoveredCandidate === true;
-    if (recoveredCandidate && changedFiles.length) {
-      throw new Error(
-        `Candidate recovery cannot rewrite version state for ${version}: ${changedFiles.map((file) => file.path).join(", ")}. Create a new candidate explicitly; recovery never rebuilds or rematerializes product state.`,
-      );
-    }
     const changedPaths = changedFiles.map((file) => file.path);
     console.log(
       `> version state manager: ${discovered.packageManager.name} (${discovered.packageManager.reason})`,
@@ -337,27 +328,66 @@ function createVersionStateOperations(context) {
         derivedVersionMaterial: verifiedDerivedVersionMaterial,
       };
     }
-    const existingVersionState = resolveExistingVersionState({
-      changedFiles,
-      recoveredCandidate,
-      version,
-      dryRun,
-      workspaceCwd,
-      verificationCommand,
-      discovered,
-      discoveredPaths,
-      versionStateAllowedPaths,
-      strategyEnv,
-      baseSha,
-      publishVersion,
-      hasVersionVerification,
-      versionStrategy,
-      anchorManifest,
-      updates,
-      runVersionVerification,
-      createVerifiedVersionStateCommit,
-    });
-    if (existingVersionState) return existingVersionState;
+    if (changedFiles.length === 0) {
+      const verifiedChangedFiles = runVersionVerification({
+        cwd: workspaceCwd,
+        command: verificationCommand,
+        loadedConfig: discovered.config,
+        version,
+        changedFiles: [],
+        allowedPaths: versionStateAllowedPaths,
+        env: strategyEnv,
+      });
+      if (verifiedChangedFiles.length > 0) {
+        console.log(
+          `> version state lifecycle changes for ${version}: ${verifiedChangedFiles.map((file) => file.path).join(", ")}`,
+        );
+        if (dryRun) {
+          updates.push({
+            version,
+            action: "dry-run-version-state",
+            packageManager: discovered.packageManager.name,
+            files: verifiedChangedFiles.map((file) => file.path),
+            sha: baseSha,
+          });
+          return {
+            sha: baseSha,
+            version,
+            action: "dry-run",
+            publishVersion,
+            files: verifiedChangedFiles.map((file) => file.path),
+            releaseTreeAllowedPaths: verifiedChangedFiles.map(
+              (file) => file.path,
+            ),
+            hasVersionVerification,
+            packageManager: discovered.packageManager,
+            versionStrategy,
+            anchorManifest,
+          };
+        }
+        return createVerifiedVersionStateCommit(verifiedChangedFiles);
+      }
+      updates.push({
+        version,
+        action: "existing-version-state",
+        packageManager: discovered.packageManager.name,
+        files: discoveredPaths,
+        sha: baseSha,
+        publishVersion,
+      });
+      return {
+        sha: baseSha,
+        version,
+        action: "existing",
+        publishVersion,
+        files: discoveredPaths,
+        releaseTreeAllowedPaths: versionStateAllowedPaths,
+        hasVersionVerification,
+        packageManager: discovered.packageManager,
+        versionStrategy,
+        anchorManifest,
+      };
+    }
 
     if (dryRun) {
       updates.push({

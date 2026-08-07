@@ -38,12 +38,6 @@ import {
   validateWheelEntryListing,
   validateWheelMetadata,
 } from "./lib.js";
-import { createRunBoundDmg } from "./dmg-assembly.js";
-
-const COMPLETE_CLEANUP_EVIDENCE = Object.freeze({
-  status: "complete",
-  ownership: "credential-island-resources-only",
-});
 
 function input(name, required = true) {
   return core.getInput(name, { required }).trim();
@@ -158,6 +152,40 @@ function verifySignedMachO(filePath, expectedTeamId) {
   const teamMatch = detail.match(/TeamIdentifier=([A-Z0-9]{10})/u);
   if (!teamMatch || teamMatch[1] !== expectedTeamId) {
     throw new Error("embedded wheel Mach-O team identifier mismatch");
+  }
+}
+
+function signAndVerifyContainer(
+  filePath,
+  { certificateSha1, keychainPath, expectedTeamId },
+) {
+  runFile("/usr/bin/codesign", [
+    "--force",
+    "--sign",
+    certificateSha1,
+    "--keychain",
+    keychainPath,
+    "--timestamp",
+    filePath,
+  ]);
+  runFile("/usr/bin/codesign", [
+    "--verify",
+    "--strict",
+    "--verbose=2",
+    filePath,
+  ]);
+  const detail = runFile("/usr/bin/codesign", ["-d", "--verbose=4", filePath]);
+  if (!detail.includes("Authority=Developer ID Application:")) {
+    throw new Error(
+      "signed container does not expose a Developer ID Application authority",
+    );
+  }
+  if (!/^Timestamp=.+$/imu.test(detail)) {
+    throw new Error("signed container does not expose a secure timestamp");
+  }
+  const teamMatch = detail.match(/TeamIdentifier=([A-Z0-9]{10})/u);
+  if (!teamMatch || teamMatch[1] !== expectedTeamId) {
+    throw new Error("signed container team identifier mismatch");
   }
 }
 
@@ -297,15 +325,6 @@ function fileEvidence(kind, filePath) {
   };
 }
 
-function completeCredentialCleanup(state, cleanupStatePath) {
-  const errors = cleanupState(state, (args) => runSecurity(args));
-  if (errors.length > 0) {
-    throw new Error(`credential cleanup failed: ${errors.join("; ")}`);
-  }
-  writeCleanupState(cleanupStatePath, { completed: true });
-  return true;
-}
-
 async function main() {
   if (process.platform !== "darwin")
     throw new Error("macOS credential island requires a macOS runner");
@@ -386,7 +405,6 @@ async function main() {
     `buildchain-macos-credential-island-cleanup-${process.env.GITHUB_RUN_ID || "local"}-${crypto.randomUUID()}.json`,
   );
   const state = { temporaryRoot, temporaryKeychain: "", originalKeychains: [] };
-  let cleanupCompleted = false;
   writeCleanupState(cleanupStatePath, state);
   core.saveState("cleanup-state-path", cleanupStatePath);
 
@@ -563,26 +581,37 @@ async function main() {
       appPath,
       path.join(dmgRoot, path.basename(appPath)),
     ]);
-    const { execution, requestDigest, signedDmg } = createRunBoundDmg({
-      temporaryRoot,
-      sourceRoot: dmgRoot,
-      destinationPath: dmgPath,
-      sealed,
-      sourceSha,
-      runtimeSha,
-      certificate: { certificateSha1, keychainPath, expectedTeamId },
-      notaryCredentials: {
-        keyPath: apiKeyPath,
-        keyId: apiKeyId,
-        issuer: apiIssuer,
-      },
-      runFile,
-      submitNotary,
-      staple,
+    runFile("/usr/bin/hdiutil", [
+      "create",
+      "-volname",
+      sealed.manifest.app.productName,
+      "-srcfolder",
+      dmgRoot,
+      "-ov",
+      "-format",
+      "UDZO",
+      dmgPath,
+    ]);
+    signAndVerifyContainer(dmgPath, {
+      certificateSha1,
+      keychainPath,
+      expectedTeamId,
     });
-    cleanupCompleted = completeCredentialCleanup(state, cleanupStatePath);
-    signedDmg.evidence.status = "accepted";
-    signedDmg.evidence.cleanup.finalOwnedRoot = "removed";
+    const dmgNotary = submitNotary(
+      dmgPath,
+      { keyPath: apiKeyPath, keyId: apiKeyId, issuer: apiIssuer },
+      "disk image",
+    );
+    staple(dmgPath);
+    runFile("/usr/sbin/spctl", [
+      "--assess",
+      "--type",
+      "open",
+      "--context",
+      "context:primary-signature",
+      "--verbose=2",
+      dmgPath,
+    ]);
 
     const artifacts = [
       fileEvidence("zip", zipPath),
@@ -600,7 +629,6 @@ async function main() {
       },
       buildchain: { runtimeSha },
       input: {
-        requestDigest,
         manifestSha256: sha256File(sealed.manifestPath),
         archiveSha256: sealed.manifest.archive.sha256,
         archiveBytes: sealed.manifest.archive.bytes,
@@ -620,15 +648,8 @@ async function main() {
       },
       notarization: {
         application: appNotary,
-        diskImage: signedDmg.notarization,
+        diskImage: dmgNotary,
       },
-      execution: {
-        id: signedDmg.executionId,
-        ...execution,
-      },
-      dmgAssembly: signedDmg.evidence,
-      cleanup: COMPLETE_CLEANUP_EVIDENCE,
-      toolchain: signedDmg.toolchain,
       verification: {
         codesignStrict: true,
         hardenedRuntime: true,
@@ -689,15 +710,13 @@ async function main() {
       `macOS credential island accepted ${expectedBundleId} at source ${sourceSha}`,
     );
   } finally {
-    if (!cleanupCompleted) {
-      const errors = cleanupState(state, (args) => runSecurity(args));
-      writeCleanupState(
-        cleanupStatePath,
-        errors.length === 0 ? { completed: true } : state,
-      );
-      if (errors.length > 0)
-        throw new Error(`credential cleanup failed: ${errors.join("; ")}`);
-    }
+    const errors = cleanupState(state, (args) => runSecurity(args));
+    writeCleanupState(
+      cleanupStatePath,
+      errors.length === 0 ? { completed: true } : state,
+    );
+    if (errors.length > 0)
+      throw new Error(`credential cleanup failed: ${errors.join("; ")}`);
   }
 }
 

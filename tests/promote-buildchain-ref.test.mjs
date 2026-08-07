@@ -222,7 +222,6 @@ const {
   plannedPublicationExactTag,
   collectGitHubReleaseEvidenceAssets,
   publishGitHubReleaseEvidence,
-  reuseCompleteGitHubReleaseEvidence,
 } = await import("../actions/promote-buildchain-ref/index.js");
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -899,118 +898,6 @@ test("promote action preserves byte-identical GitHub Release assets on duplicate
   assert.equal(result.uploadedAssetCount, 0);
   assert.equal(result.preservedAssetCount, 3);
   assert.deepEqual(uploaded, []);
-});
-
-test("complete candidate recovery reuses verified public evidence and preserves product payload bytes", async () => {
-  const cwd = makeTempWorkspace({
-    "dist/package.tgz": "sealed product bytes",
-  });
-  const passport = {
-    release: {
-      tag: "v1.0.1-alpha.0",
-      publicTag: "v1.0.1-alpha.0",
-      channel: "alpha",
-      targetRef: "alpha/v1/v1.0",
-      releaseSha: SHA,
-    },
-    product: { repository: "kungfu-systems/buildchain" },
-  };
-  const payloadPath = path.join(cwd, "dist/package.tgz");
-  const payload = fs.readFileSync(payloadPath);
-  const assets = [
-    {
-      id: 1,
-      name: "buildchain.release.json",
-      digest: `sha256:${crypto.createHash("sha256").update(JSON.stringify(passport)).digest("hex")}`,
-    },
-    {
-      id: 2,
-      name: "artifact-evidence.json",
-      digest: `sha256:${"a".repeat(64)}`,
-    },
-    {
-      id: 3,
-      name: "package.tgz",
-      digest: `sha256:${crypto.createHash("sha256").update(payload).digest("hex")}`,
-    },
-  ];
-  const downloaded = new Map([
-    [1, Buffer.from(JSON.stringify(passport))],
-    [2, Buffer.from("{}")],
-  ]);
-  const uploaded = [];
-  const octokit = {
-    rest: {
-      repos: {
-        listReleaseAssets: async () => ({ data: assets }),
-        getReleaseAsset: async ({ asset_id }) => ({ data: downloaded.get(asset_id) }),
-        uploadReleaseAsset: async ({ name }) => uploaded.push(name),
-      },
-    },
-  };
-
-  const result = await reuseCompleteGitHubReleaseEvidence({
-    octokit,
-    owner: "kungfu-systems",
-    repo: "buildchain",
-    release: { id: 123, html_url: "https://github.test/release" },
-    tag: "v1.0.1-alpha.0",
-    target: SHA,
-    channel: "alpha",
-    targetRef: "alpha/v1/v1.0",
-    additionalAssetPaths: [payloadPath],
-    verifyPassport: async () => ({ ok: true, issues: [] }),
-  });
-
-  assert.equal(result.action, "reused");
-  assert.equal(result.passportVerified, true);
-  assert.equal(result.uploadedAssetCount, 0);
-  assert.deepEqual(uploaded, []);
-});
-
-test("complete candidate recovery rejects a conflicting public product payload", async () => {
-  const cwd = makeTempWorkspace({
-    "dist/package.tgz": "sealed product bytes",
-  });
-  const passport = {
-    release: {
-      tag: "v1.0.1-alpha.0",
-      channel: "alpha",
-      targetRef: "alpha/v1/v1.0",
-      releaseSha: SHA,
-    },
-    product: { repository: "kungfu-systems/buildchain" },
-  };
-  const octokit = {
-    rest: {
-      repos: {
-        listReleaseAssets: async () => ({ data: [
-          { id: 1, name: "buildchain.release.json", digest: `sha256:${"a".repeat(64)}` },
-          { id: 2, name: "package.tgz", digest: `sha256:${"0".repeat(64)}` },
-        ] }),
-        getReleaseAsset: async () => ({ data: Buffer.from(JSON.stringify(passport)) }),
-        uploadReleaseAsset: async () => {
-          throw new Error("must not replace an immutable product payload");
-        },
-      },
-    },
-  };
-
-  await assert.rejects(
-    () => reuseCompleteGitHubReleaseEvidence({
-      octokit,
-      owner: "kungfu-systems",
-      repo: "buildchain",
-      release: { id: 123 },
-      tag: "v1.0.1-alpha.0",
-      target: SHA,
-      channel: "alpha",
-      targetRef: "alpha/v1/v1.0",
-      additionalAssetPaths: [path.join(cwd, "dist/package.tgz")],
-      verifyPassport: async () => ({ ok: true, issues: [] }),
-    }),
-    /immutable GitHub Release product payload collision/,
-  );
 });
 
 test("promote action rejects time-drifted evidence on duplicate delivery", async (t) => {
@@ -2024,83 +1911,6 @@ key = "publication.version"
   ]);
 });
 
-test("no-op dry-run version planning does not require product build artifacts", async () => {
-  const cwd = makeTempWorkspace({
-    "buildchain.toml": `
-schema = 1
-
-[version]
-required = true
-
-[[version.files]]
-type = "json"
-path = "package.json"
-key = "version"
-
-[lifecycle.verify]
-command = "node scripts/verify-built-product.mjs"
-`,
-    "package.json": {
-      name: "@kungfu-systems/artifactless-planning-fixture",
-      version: "1.0.1-alpha.0",
-    },
-    "scripts/verify-built-product.mjs": `
-import fs from "node:fs";
-if (!fs.existsSync("dist/product")) {
-  throw new Error("product build artifacts are unavailable");
-}
-`,
-  });
-  run(["git", "init"], cwd);
-  run(["git", "add", "."], cwd);
-  run([
-    "git",
-    "-c",
-    "user.name=Test",
-    "-c",
-    "user.email=test@example.com",
-    "commit",
-    "-m",
-    "init",
-  ], cwd);
-
-  const octokit = {
-    rest: {
-      git: {
-        getRef: async ({ ref }) => {
-          if (ref === "heads/alpha/v1/v1.0") {
-            return { data: { object: { sha: SHA } } };
-          }
-          throw notFound();
-        },
-        listMatchingRefs: async () => ({ data: [] }),
-        createRef: async () => assert.fail("dry-run must not create a ref"),
-        updateRef: async () => assert.fail("dry-run must not update a ref"),
-      },
-    },
-  };
-
-  const result = await promoteBuildchainRefs({
-    octokit,
-    owner: "kungfu-systems",
-    repo: "artifactless-planning-fixture",
-    allowRepository: "kungfu-systems/artifactless-planning-fixture",
-    sha: SHA,
-    targetRef: "alpha/v1/v1.0",
-    tags: ["v1.0.1-alpha.0"],
-    cwd,
-    dryRun: true,
-    requireVersionState: true,
-  });
-
-  assert.deepEqual(
-    result.updates
-      .filter((update) => update.version)
-      .map((update) => [update.version, update.action, update.sha]),
-    [["1.0.1-alpha.0", "existing-version-state", SHA]],
-  );
-});
-
 test("rerunning the same release SHA reuses exact tags", async () => {
   const octokit = {
     rest: {
@@ -2592,7 +2402,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     }],
   );
   assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-0"), true);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), alphaSha);
   assert.equal(refs.get("tags/v1.0-alpha"), alphaSha);
   assert.equal(refs.get("tags/v1-alpha"), alphaSha);
   const order = fs.readFileSync(path.join(cwd, "order.log"), "utf8").trim().split("\n");
@@ -4015,7 +3825,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.1-alpha.2");
   assert.equal(refs.get("heads/alpha/v1/v1.0"), result.sha);
-  assert.equal(refs.get("tags/v1.0.1-alpha.2"), SHA);
+  assert.equal(refs.get("tags/v1.0.1-alpha.2"), result.sha);
   assert.equal(refs.get("tags/v1.0-alpha"), result.sha);
   assert.equal(refs.has("tags/v1.0.1-alpha.1"), false);
   assert.equal(refs.has("heads/buildchain/release-state/1-0-1-alpha-2"), true);
