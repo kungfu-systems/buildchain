@@ -3684,6 +3684,7 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
 
 test("release recovery bootstrap scope stays exact outside the promotion action directory", () => {
   for (const file of [
+    ".github/workflows/buildchain-ref-promotion.yml",
     "packages/core/self-dogfood-version.js",
     "scripts/check-inventory.mjs",
     "tests/build-surface.test.mjs",
@@ -3697,10 +3698,7 @@ test("release recovery bootstrap scope stays exact outside the promotion action 
   ]) {
     assert.equal(isAllowedReleaseLineRecoveryPath(file), false);
   }
-  assert.equal(
-    isAllowedReleaseLineRecoveryPath("package.json", ["package.json"]),
-    true,
-  );
+  assert.equal(isAllowedReleaseLineRecoveryPath("package.json", ["package.json"]), true);
 });
 
 test("strict release promotion binds a generated version commit to the exact recovery RC parent", async () => {

@@ -1706,6 +1706,10 @@ async function handlePublishSourceCommand(args) {
 
 }
 
+async function handleArchitectureCommand(args) {
+  runScript("v4-architecture.mjs", args);
+}
+
 const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "help": handleHelpCommand,
   "version": handleVersionCommand,
@@ -1742,6 +1746,7 @@ const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "homebrew": handleHomebrewCommand,
   "build-contract": handleBuildContractCommand,
   "publish-source": handlePublishSourceCommand,
+  "architecture": handleArchitectureCommand,
 });
 
 async function main(argv = process.argv.slice(2)) {

@@ -6,6 +6,52 @@
   "commandSource": "bin/internal/command-registry.mjs plus bin/buildchain.mjs help enumeration",
   "commands": [
     {
+      "id": "architecture",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain architecture validate [--cwd <dir>] [--json]",
+      "paths": [
+        "architecture",
+        "architecture list",
+        "architecture qualify",
+        "architecture show",
+        "architecture validate"
+      ],
+      "syntaxes": [
+        "buildchain architecture",
+        "buildchain architecture list [--cwd <dir>] [--json]",
+        "buildchain architecture qualify --authority-revision <git-revision> [--candidate-revision <git-revision>] [--cwd <dir>] [--json]",
+        "buildchain architecture show <capability-id> [--cwd <dir>] [--json]",
+        "buildchain architecture validate [--cwd <dir>] [--json]"
+      ],
+      "options": [
+        "--authority-revision",
+        "--candidate-revision",
+        "--cwd",
+        "--json"
+      ],
+      "aliases": [],
+      "helpCommands": [
+        "buildchain architecture --help",
+        "buildchain architecture list --help",
+        "buildchain architecture qualify --help",
+        "buildchain architecture show --help",
+        "buildchain architecture validate --help"
+      ],
+      "purpose": "Inspect and qualify the Buildchain v4 capability and state-machine architecture contract.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
       "id": "audit",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>",

@@ -18,7 +18,8 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   assert.equal(report.status, "passed");
   assert.equal(report.summary.failureCount, 0);
   const cliCommands = enumerateCliCommandsFromBin({ root });
-  assert.equal(cliCommands.length, 112);
+  assert.equal(cliCommands.length, 113);
+  assert.ok(cliCommands.some((entry) => entry.id === "architecture"));
   assert.ok(cliCommands.some((entry) => entry.id === "release-line-open"));
   assert.ok(cliCommands.some((entry) => entry.id === "collect"));
   assert.ok(cliCommands.some((entry) => entry.id === "kfd-4-gate"));
@@ -31,18 +32,28 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   assert.ok(cliCommands.some((entry) => entry.id === "paper-fleet-audit"));
   assert.ok(cliCommands.some((entry) => entry.id === "paper-fleet-update"));
   assert.ok(cliCommands.some((entry) => entry.id === "paper-agent"));
-  const buildWorkflow = enumerateWorkflowInputs({ root }).find((entry) => entry.id === ".build");
+  const buildWorkflow = enumerateWorkflowInputs({ root }).find(
+    (entry) => entry.id === ".build",
+  );
   assert.ok(buildWorkflow?.reusable);
   assert.ok(buildWorkflow.inputCount > 0);
   assert.ok(buildWorkflow.outputCount > 0);
-  assert.ok(buildWorkflow.secrets.includes("BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN"));
-  assert.ok(enumerateActionInputs({ root }).some((entry) => entry.id === "promote-buildchain-ref" && entry.inputCount > 0));
+  assert.ok(
+    buildWorkflow.secrets.includes("BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN"),
+  );
+  assert.ok(
+    enumerateActionInputs({ root }).some(
+      (entry) => entry.id === "promote-buildchain-ref" && entry.inputCount > 0,
+    ),
+  );
 });
 
 test("public surface reverse audit fails closed when a real CLI command is not registered", () => {
   const realReport = collectPublicSurfaceReverseAudit({ root });
   const cliRegistry = {
-    commands: realReport.enumerated.cliCommands.filter((entry) => entry.id !== "release-line-open"),
+    commands: realReport.enumerated.cliCommands.filter(
+      (entry) => entry.id !== "release-line-open",
+    ),
   };
   const report = collectPublicSurfaceReverseAudit({
     root,
@@ -50,6 +61,13 @@ test("public surface reverse audit fails closed when a real CLI command is not r
   });
 
   assert.equal(report.status, "failed");
-  assert.ok(report.comparison.missingCliRegistry.some((entry) => entry.id === "release-line-open"));
-  assert.throws(() => assertPublicSurfaceReverseAudit(report), /missing CLI registry: release-line-open/);
+  assert.ok(
+    report.comparison.missingCliRegistry.some(
+      (entry) => entry.id === "release-line-open",
+    ),
+  );
+  assert.throws(
+    () => assertPublicSurfaceReverseAudit(report),
+    /missing CLI registry: release-line-open/,
+  );
 });

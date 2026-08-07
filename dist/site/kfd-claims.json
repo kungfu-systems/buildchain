@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8a25fba64426fd39fa5a7727e6a13ce10cf7d44aeb1d5ad09e91ab7400cf7f8e",
+    "sha256": "cfa54dca47af9925d06caff1c9cdad6e76c8823126b69f23da3546475b1c96cb",
     "summary": {
-      "cliCommandCount": 112,
+      "cliCommandCount": 113,
       "workflowCount": 64,
       "actionCount": 6,
       "sitePageCount": 66,
-      "docCommandRefCount": 881,
+      "docCommandRefCount": 896,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8a25fba64426fd39fa5a7727e6a13ce10cf7d44aeb1d5ad09e91ab7400cf7f8e",
+      "sha256": "cfa54dca47af9925d06caff1c9cdad6e76c8823126b69f23da3546475b1c96cb",
       "summary": {
-        "cliCommandCount": 112,
+        "cliCommandCount": 113,
         "workflowCount": 64,
         "actionCount": 6,
         "sitePageCount": 66,
-        "docCommandRefCount": 881,
+        "docCommandRefCount": 896,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1961,6 +1961,18 @@
       ],
       "reverseEnumeratedSurfaces": [
         {
+          "id": "cli:architecture",
+          "name": "buildchain architecture validate [--cwd <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:audit",
           "name": "buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>",
           "kind": "cli-command",
@@ -3609,7 +3621,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 107,
+          "inputCount": 109,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3645,12 +3657,14 @@
             "promotion-shell-sha",
             "promotion-target-ref",
             "publication-admission-json",
+            "publication-authority-workflow-path",
             "publication-auto-admission",
             "publication-auto-no-gate",
             "publication-commit-command",
             "publication-commit-evidence-path",
             "publication-consumer-predicate-id",
             "publication-consumer-qualification-command",
+            "publication-consumer-qualification-controller-sha",
             "publication-control-plane-audit-json",
             "publication-expected-json",
             "publication-gate-aggregate-json",
@@ -4873,7 +4887,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 99,
+          "inputCount": 100,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4907,6 +4921,7 @@
             "publication-commit-evidence-path",
             "publication-consumer-predicate-id",
             "publication-consumer-qualification-command",
+            "publication-consumer-qualification-controller-sha",
             "publication-control-plane-audit-json",
             "publication-expected-json",
             "publication-gate-aggregate-json",
@@ -6376,6 +6391,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 403
+    "publicSurfaceCount": 404
   }
 }

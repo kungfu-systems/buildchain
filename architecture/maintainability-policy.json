@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 277,
-    "maxHandMaintainedSourceLines": 105737,
+    "maxHandMaintainedSourceFiles": 278,
+    "maxHandMaintainedSourceLines": 106361,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22241,
-    "latestTransition": "The release-tail contract inventory adds one read-only validator plus its schema, inventory, fixtures, tests, and migration documentation without changing production release behavior.",
-    "rationale": "The exact 437-line and one-source-file increase over the prior ceiling freezes 27 reverse-discovered coordinates across seven public surface groups, four declarative capabilities, and seven managed callers, with negative gates for orphaned or ambiguous hooks, embedded commands, missing operation identity or readback, unbounded retry, and permanent compatibility escapes. This contract-only ceiling cannot grow implicitly; any runtime, provider-adapter, or broader inventory change requires another reviewed policy transition."
+    "maxWorkflowLines": 22268,
+    "latestTransition": "The v4 Wave 0 architecture validator and release-tail contract inventory coexist as read-only governance layers without migrating a production writer or changing provider effects.",
+    "rationale": "The exact combined ceiling retains the protected candidate-recovery transition, the v4 Constitution validator and generated discovery surface, and the release-tail validator that freezes 27 reverse-discovered coordinates across seven surface groups, four declarative capabilities, and seven managed callers. Both additions remain fail-closed, tooling-only checks; runtime migration, provider adapters, or broader inventory changes require another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -83,6 +83,14 @@
     }
   },
   "approvedPublicSurfaceTransitions": {
+    "cli:architecture": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "architecture",
+        "usage": "buildchain architecture validate [--cwd <dir>] [--json]"
+      },
+      "rationale": "Add a read-only generated list/show/validate surface plus exact Git N-1 qualification; the manifest remains the single authority and the commands do not migrate or write production state."
+    },
     "cli:dev": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
@@ -776,12 +784,14 @@
           "promotion-shell-sha",
           "promotion-target-ref",
           "publication-admission-json",
+          "publication-authority-workflow-path",
           "publication-auto-admission",
           "publication-auto-no-gate",
           "publication-commit-command",
           "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
+          "publication-consumer-qualification-controller-sha",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -888,7 +898,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The advanced promotion workflow forwards one optional exact consumer Gate controller SHA into the credential-free authority. Candidate, target tree, controller, and command identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
+      "rationale": "The advanced promotion workflow accepts an explicit public authority path and an optional exact consumer qualification controller SHA. Candidate, target tree, Gate controller, predicate controller, command, and authority workflow identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -929,6 +939,7 @@
           "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
+          "publication-consumer-qualification-controller-sha",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -1047,7 +1058,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The generated v3 promotion router forwards the additive exact consumer Gate controller SHA together with the existing candidate recovery identity, without changing channel selection, contract-lock routing, payload handling, or publication authority."
+      "rationale": "The generated v3 promotion router forwards the optional exact consumer qualification controller SHA and fixes the authority identity to its public workflow path together with the existing candidate recovery identity, without changing channel selection, contract-lock routing, payload handling, or publication effects."
     }
   },
   "approvedExtractedDebt": {

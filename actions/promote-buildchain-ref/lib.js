@@ -1263,6 +1263,11 @@ async function restorePublishTransactionContext(context) {
     );
   }
   let sealedBundleVerification = durableBundleVerification || requestedBundleVerification || localBundleVerification;
+  const sealedVersion = String(sealedBundleVerification?.npm?.version || "").trim();
+  const publishSealedNpmTarball = sealedVersion === version;
+  if (sealedVersion && !publishSealedNpmTarball && !(channel === "release" && sealedVersion.startsWith(`${version}-alpha.`))) {
+    throw new Error(`publication sealed bundle npm version ${sealedVersion} does not match ${version}`);
+  }
   let existingEvidence = readPublishEvidence(resolvedEvidencePath);
   let existingValidation;
   if (existingEvidence) {
@@ -1278,7 +1283,7 @@ async function restorePublishTransactionContext(context) {
       requiredArtifacts,
     });
   }
-  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, existingEvidence, existingValidation };
+  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, publishSealedNpmTarball, existingEvidence, existingValidation };
 }
 
 async function canFinalizePublishVersionState({ context, error, existing }) {
@@ -1376,7 +1381,7 @@ async function resolvePublishTransactionResume(context) {
 function publishTransactionEnvironment({
   version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
-  requiredArtifacts, publishContract,
+  publishSealedNpmTarball, requiredArtifacts, publishContract,
 }) {
   return {
     BUILDCHAIN_VERSION: version,
@@ -1396,11 +1401,9 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
     BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
     BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundleVerification?.root || "",
-    BUILDCHAIN_SEALED_NPM_TARBALL:
-      sealedBundleVerification?.npm.absolutePath || "",
-    BUILDCHAIN_SEALED_NPM_INTEGRITY:
-      sealedBundleVerification?.npm.integrity || "",
-    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundleVerification?.npm.sha256 || "",
+    BUILDCHAIN_SEALED_NPM_TARBALL: (publishSealedNpmTarball && sealedBundleVerification?.npm.absolutePath) || "",
+    BUILDCHAIN_SEALED_NPM_INTEGRITY: (publishSealedNpmTarball && sealedBundleVerification?.npm.integrity) || "",
+    BUILDCHAIN_SEALED_NPM_SHA256: (publishSealedNpmTarball && sealedBundleVerification?.npm.sha256) || "",
     BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,

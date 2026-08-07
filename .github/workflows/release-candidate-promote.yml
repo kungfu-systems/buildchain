@@ -453,6 +453,11 @@ on:
         default: ""
         type: string
         required: false
+      publication-consumer-qualification-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer qualification command; empty uses the Gate controller SHA, then the publication source SHA"
+        default: ""
+        type: string
+        required: false
       publication-consumer-predicate-id:
         description: "Stable identifier for the opt-in consumer-owned publication predicate"
         default: ""
@@ -951,11 +956,13 @@ jobs:
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       publication-consumer-qualification-command: ${{ inputs.publication-consumer-qualification-command }}
+      publication-consumer-qualification-controller-sha: ${{ inputs.publication-consumer-qualification-controller-sha }}
       publication-consumer-predicate-id: ${{ inputs.publication-consumer-predicate-id }}
       publication-used-qualification-nonces-json: ${{ inputs.publication-used-qualification-nonces-json }}
       publication-auto-admission: ${{ inputs.publication-auto-admission }}
       publication-auto-no-gate: ${{ inputs.publication-auto-no-gate }}
       publication-publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
+      publication-authority-workflow-path: .github/workflows/release-candidate-promote.yml
       publication-product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-package-name: ${{ inputs.publication-package-name }}
