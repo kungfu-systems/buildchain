@@ -1758,7 +1758,7 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
   assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.equal(stableLock.buildchain.ref, "v3");
-  assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
+  assert.equal(stableLock.buildchain.resolvedSha, "380b2d8c2a660b07ed785e71276f71dc6a9184f7");
   assert.equal(stableLock.buildchain.majorLine, "v3");
   assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.match(alphaLock.buildchain.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
