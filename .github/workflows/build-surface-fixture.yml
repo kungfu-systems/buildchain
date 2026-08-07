@@ -69,6 +69,7 @@ jobs:
           sha: ${{ github.event.pull_request.head.sha }}
           target-ref: ${{ github.base_ref }}
           dry-run: "true"
+          plan-before-target-advance: "true"
           require-governance: "false"
           require-version-state: "true"
           allow-repository: ${{ github.repository }}
