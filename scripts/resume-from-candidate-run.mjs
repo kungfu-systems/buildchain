@@ -95,6 +95,12 @@ function findFiles(root, predicate) {
   return collectFiles(root).filter((file) => predicate(file.path, file.absolutePath));
 }
 
+export function recoveredArtifactPathsByBasename(downloads, filename) {
+  return downloads.flatMap((download) => download.files
+    .filter((file) => path.basename(file.path) === filename)
+    .map((file) => outputPath(file.absolutePath)));
+}
+
 function readOnlyJson(files, label) {
   if (files.length !== 1) throw new Error(`expected exactly one ${label}, found ${files.length}`);
   return JSON.parse(fs.readFileSync(files[0].absolutePath, "utf8"));
@@ -495,6 +501,10 @@ export async function resumeFromCandidateRun({
     const publishRequiredArtifacts = publication.publishRequiredArtifacts;
     fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(publishRequiredArtifacts, null, 2)}\n`);
     const tarballs = publication.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
+    const githubArtifactAttestationPolicies = recoveredArtifactPathsByBasename(
+      downloads,
+      "github-artifact-attestation-policy.json",
+    );
     return {
       enabled: true,
       action: "reused",
@@ -511,6 +521,7 @@ export async function resumeFromCandidateRun({
         buildSummary: outputPath(initialDownloads[1].files.find((file) => path.basename(file.path) === "build-summary.json").absolutePath),
         payloads: outputPath(path.join(bundleRoot, "artifacts")),
         platformManifests: downloads.flatMap((download) => download.files.filter((file) => path.basename(file.path) === "manifest.json").map((file) => outputPath(file.absolutePath))),
+        githubArtifactAttestationPolicies,
         npmTarballs: tarballs,
         releaseAssets: publication.releaseAssets.map((asset) => outputPath(asset.absolutePath)),
         publishRequiredArtifacts: outputPath(requiredArtifactsPath),
@@ -560,6 +571,8 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-payload-artifacts": result.artifacts.payloads.join(","),
       "release-candidate-payload-dir": result.paths.payloads,
       "release-candidate-platform-manifest-paths": result.paths.platformManifests.join(","),
+      "release-candidate-github-artifact-attestation-policy-paths": result.paths.githubArtifactAttestationPolicies.join(","),
+      "release-candidate-github-artifact-attestation-policy-count": String(result.paths.githubArtifactAttestationPolicies.length),
       "release-candidate-npm-tarball-paths": result.paths.npmTarballs.join(","),
       "release-candidate-github-release-artifact-paths": result.paths.releaseAssets.join("\n"),
       "publish-required-artifacts-json": JSON.stringify(result.publishRequiredArtifacts),

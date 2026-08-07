@@ -17,6 +17,7 @@ import {
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
   normalizePlatformManifests,
+  recoveredArtifactPathsByBasename,
 } from "../scripts/resume-from-candidate-run.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
@@ -228,6 +229,17 @@ test("candidate recovery excludes credential-island manifests outside the Passpo
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("candidate recovery exposes the sealed GitHub artifact attestation policy", () => {
+  const downloads = [{ files: [
+    { path: "github-artifact-attestation-policy.json", absolutePath: "/sealed/policy.json" },
+    { path: "manifest.json", absolutePath: "/sealed/manifest.json" },
+  ] }];
+  assert.deepEqual(
+    recoveredArtifactPathsByBasename(downloads, "github-artifact-attestation-policy.json"),
+    ["/sealed/policy.json"],
+  );
 });
 
 test("recovery accepts a target advanced by the same explicit durable transaction", () => {
