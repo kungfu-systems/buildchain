@@ -709,7 +709,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@9a0cdf8d84aacf8c7daaac82efa43d1b34696a03\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
@@ -719,7 +719,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: 9a0cdf8d84aacf8c7daaac82efa43d1b34696a03/,
+    /buildchain-ref: 5a6a93ca1064a0df58bd2fa59ef8c523f832882b/,
   );
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(
@@ -1812,9 +1812,9 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@9a0cdf8d84aacf8c7daaac82efa43d1b34696a03/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b/,
   );
-  assert.match(promotion, /buildchain-ref: 9a0cdf8d84aacf8c7daaac82efa43d1b34696a03/);
+  assert.match(promotion, /buildchain-ref: 5a6a93ca1064a0df58bd2fa59ef8c523f832882b/);
   assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
 });
 
