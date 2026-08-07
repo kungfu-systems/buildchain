@@ -110,6 +110,47 @@ test("promoteBuildchainRefs rejects stale target SHA", async () => {
   );
 });
 
+test("dry-run publication can plan an exact unmerged source without claiming the target advanced", async () => {
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: OTHER_SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    dryRun: true,
+    planBeforeTargetAdvance: true,
+    versionState: false,
+    publishTransaction: true,
+    releasePassport: false,
+  });
+
+  assert.deepEqual(result.updates[0], {
+    action: "planned-before-target-advance",
+    ref: "alpha/v1/v1.0",
+    observedTargetSha: OTHER_SHA,
+    requestedSourceSha: SHA,
+    sha: SHA,
+  });
+  assert.equal(
+    result.updates.find((update) => update.action === "dry-run-publish-transaction")?.version,
+    "1.0.0-alpha.0",
+  );
+});
+
 test("every direct provider path fails before mutation when opted-in qualification is omitted", async () => {
   const providerCalls = [];
   const octokit = {

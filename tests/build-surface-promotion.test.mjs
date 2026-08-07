@@ -91,6 +91,7 @@ import {
   BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
   BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
 } from "../packages/core/diagnostics.js";
+import { materializeSelfReleaseCandidateVersion } from "../scripts/materialize-self-release-candidate-version.mjs";
 
 const root = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
@@ -112,9 +113,11 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(action, /publish-source-sha:/);
   assert.match(action, /publish-source-locked:/);
   assert.match(action, /expected-publication-version:/);
+  assert.match(action, /plan-before-target-advance:/);
   assert.match(action, /planned-publication-version:/);
   assert.match(action, /planned-release-candidate-version:/);
   assert.match(implementation, /expectedPublicationVersion/);
+  assert.match(implementation, /planBeforeTargetAdvance/);
   assert.match(implementation, /planned-publication-version/);
   assert.match(implementation, /planned-release-candidate-version/);
   assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
@@ -455,11 +458,110 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   );
   assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
   assert.match(workflow, /merge-multiple: true/);
+  assert.match(workflow, /name: Plan the exact self-publication version before sealing product bytes/);
+  assert.match(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
+  assert.match(workflow, /plan-before-target-advance: "true"/);
+  assert.match(
+    workflow,
+    /corepack pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts[\s\S]*node scripts\/materialize-self-release-candidate-version\.mjs/,
+  );
+  assert.match(workflow, /publish-transaction: "true"/);
+  assert.match(workflow, /name: Materialize the planned version in the candidate workspace/);
+  assert.match(workflow, /node scripts\/materialize-self-release-candidate-version\.mjs/);
+  assert.match(workflow, /EXPECTED_VERSION: \$\{\{ steps\.publication-plan\.outputs\.planned-publication-version \}\}/);
+  assert.match(workflow, /sealed package version .* differs from planned publication/);
+  assert.ok(
+    workflow.indexOf("name: Materialize the planned version in the candidate workspace") <
+      workflow.indexOf("name: Download exact Release Candidate Passport"),
+    "version state must be materialized before untracked candidate evidence is downloaded",
+  );
+  assert.ok(
+    workflow.indexOf("name: Materialize the planned version in the candidate workspace") <
+      workflow.indexOf("name: Pack Buildchain product bytes once and bind them to the candidate"),
+    "the exact publication version must exist before product bytes are sealed",
+  );
   assert.doesNotMatch(
     workflow,
     /needs\.libnode-shaped\.outputs\['release-candidate-artifact'\]/,
   );
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
+});
+
+test("self-release candidate materialization applies complete declared version state", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-self-release-version-"));
+  fs.mkdirSync(path.join(cwd, ".buildchain"), { recursive: true });
+  fs.mkdirSync(path.join(cwd, "scripts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/buildchain.toml"),
+    `schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "generated.json"
+key = "product.version"
+
+[lifecycle.version-state]
+command = "node scripts/derive.mjs"
+`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "package.json"),
+    `${JSON.stringify({ name: "self-release-fixture", version: "1.0.0" }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "generated.json"),
+    `${JSON.stringify({ product: { version: "1.0.0" }, source: "" }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "scripts/derive.mjs"),
+    `import fs from "node:fs";
+const generated = JSON.parse(fs.readFileSync("generated.json", "utf8"));
+generated.product.version = process.env.BUILDCHAIN_VERSION;
+generated.source = process.env.BUILDCHAIN_SOURCE_SHA;
+fs.writeFileSync("generated.json", JSON.stringify(generated, null, 2) + "\\n");
+`,
+  );
+  for (const args of [
+    ["init"],
+    ["config", "user.name", "Buildchain Test"],
+    ["config", "user.email", "buildchain-test@example.com"],
+    ["add", "."],
+    ["commit", "-m", "test: initial version"],
+  ]) {
+    const run = spawnSync("git", args, { cwd, encoding: "utf8" });
+    assert.equal(run.status, 0, run.stderr);
+  }
+
+  try {
+    const sourceSha = "a".repeat(40);
+    const result = materializeSelfReleaseCandidateVersion({
+      cwd,
+      version: "1.1.0-alpha.0",
+      channel: "alpha",
+      sourceSha,
+      generatedAt: "2026-08-07T00:00:00.000Z",
+    });
+    assert.equal(result.version, "1.1.0-alpha.0");
+    assert.deepEqual(result.files, ["generated.json", "package.json"]);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.1.0-alpha.0");
+    assert.deepEqual(
+      JSON.parse(fs.readFileSync(path.join(cwd, "generated.json"), "utf8")),
+      { product: { version: "1.1.0-alpha.0" }, source: sourceSha },
+    );
+    const status = spawnSync("git", ["status", "--short"], { cwd, encoding: "utf8" });
+    assert.equal(status.status, 0, status.stderr);
+    assert.deepEqual(status.stdout.trimEnd().split("\n").sort(), [" M generated.json", " M package.json"]);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
 });
 
 test("report issue action exposes workflow-friction feedback mode", () => {

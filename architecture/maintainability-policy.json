@@ -5,10 +5,10 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 286,
-    "maxHandMaintainedSourceLines": 110440,
+    "maxHandMaintainedSourceFiles": 287,
+    "maxHandMaintainedSourceLines": 110579,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22474,
+    "maxWorkflowLines": 22515,
     "latestTransition": "Publication rehearsal and consumer-equivalent self-release now share the declarative provider plane while retaining explicit local construction, hosted transport, route, transaction, receipt, and readback evidence.",
     "rationale": "The combined transition adds the capsule runtime and projection module, rooted diagnostics and evidence, thin CLI and Action wrappers, generated init and Paper surfaces, normative ADR, schema, parity tests, one GitHub Release adapter coordinator, and consumer-equivalent self-release routing. It introduces no second transaction writer or executable consumer hook, and these exact ceilings cannot grow implicitly."
   },
@@ -137,6 +137,7 @@
           "github-release-artifact-paths",
           "github-release-notes",
           "github-release-title",
+          "plan-before-target-advance",
           "promote-only-release-candidate",
           "publication-capability-json",
           "publication-gate-aggregate-json",
@@ -205,7 +206,7 @@
         "secrets": [],
         "outputs": []
       },
-      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording."
+      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording. The dry-run-only pre-target planning input records both the observed target SHA and requested source SHA without weakening normal ref identity checks."
     },
     "action:run-lifecycle": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
