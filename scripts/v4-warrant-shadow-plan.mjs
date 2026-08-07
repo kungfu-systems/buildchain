@@ -58,7 +58,6 @@ function exactSet(left, right) {
     [...left].sort().every((entry, index) => entry === [...right].sort()[index])
   );
 }
-
 function validateSchemaDocument(schema, relativePath, issues) {
   required(
     schema?.$schema === "https://json-schema.org/draft/2020-12/schema",
@@ -244,14 +243,12 @@ function validatePlan({ plan, manifest, bootstrap }) {
       );
     }
   }
-  for (const cycle of dependencyCycles(nodes)) {
+  for (const cycle of dependencyCycles(nodes))
     issues.push(`Wave 1 dependency cycle: ${cycle.join(" -> ")}`);
-  }
-  required(
-    plan.wave1?.entryGate === "all-shadow-zero-diff-gates-pass",
-    "Wave 1 entry must require all shadow zero-diff gates",
-    issues,
-  );
+  // prettier-ignore
+  required(JSON.stringify([plan.wave0Reconciliation?.children?.length, plan.wave0Reconciliation?.productionAuthority]) === '[4,"typescript-v3"]', "Wave 0 reconciliation must retain v3 authority", issues);
+  // prettier-ignore
+  required(JSON.stringify([plan.wave1?.entryGate, plan.wave1?.readCandidateEntryGate]) === '["wave0-reconciliation-proved","all-shadow-zero-diff-gates-pass"]', "Wave 1 entry gates must remain distinct", issues);
   if (issues.length > 0) {
     throw new Error(
       `v4 Warrant plan validation failed:\n- ${issues.join("\n- ")}`,

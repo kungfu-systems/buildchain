@@ -94,6 +94,31 @@ test("validation rejects ambient time, provider SDKs, and self qualification", (
   );
 });
 
+test("validation rejects the former circular Wave 1 entry gate", () => {
+  const { plan } = loadWarrantPlan(root);
+  const manifest = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../architecture/v4-capability-state-machine-manifest.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  const bootstrap = JSON.parse(
+    fs.readFileSync(
+      new URL("../architecture/v4-bootstrap-authority.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const invalid = structuredClone(plan);
+  invalid.wave1.entryGate = invalid.wave1.readCandidateEntryGate;
+  assert.throws(
+    () => validatePlan({ plan: invalid, manifest, bootstrap }),
+    /entry gates must remain distinct/u,
+  );
+});
+
 test("fixture validation fails on a changed legacy projection root", () => {
   const { fixtures } = loadWarrantPlan(root);
   const drifted = structuredClone(fixtures);
