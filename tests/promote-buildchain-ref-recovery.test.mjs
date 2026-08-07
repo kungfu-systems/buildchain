@@ -41,6 +41,7 @@ const {
   selectReleaseTag,
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
+  sanitizedPublishProcessEnvironment,
 } = await import("../actions/promote-buildchain-ref/lib.js");
 const {
   loadBuildchainConfig,
@@ -53,6 +54,23 @@ const {
 const {
   transitionReleaseTransaction,
 } = await import("../packages/core/publish-transaction.js");
+
+test("publish subprocesses omit oversized GitHub Action input variables", () => {
+  const name = "INPUT_RELEASE_PASSPORT_PLATFORM_MANIFEST_PATHS";
+  const previous = process.env[name];
+  process.env[name] = "x".repeat(256 * 1024);
+  try {
+    const env = sanitizedPublishProcessEnvironment({
+      BUILDCHAIN_VERSION: "4.0.0-alpha.1",
+    });
+    assert.equal(env[name], undefined);
+    assert.equal(env.BUILDCHAIN_VERSION, "4.0.0-alpha.1");
+    assert.equal(env.PATH, process.env.PATH);
+  } finally {
+    if (previous === undefined) delete process.env[name];
+    else process.env[name] = previous;
+  }
+});
 const {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   publicationArtifactCandidateDigest,

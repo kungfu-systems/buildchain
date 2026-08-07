@@ -158,12 +158,19 @@ function signedGeneratedCommitMessage(message) {
   return `${normalized}\n\n${COMMIT_SIGN_OFF}`;
 }
 
+function sanitizedPublishProcessEnvironment(overrides = {}) {
+  const inherited = Object.fromEntries(
+    Object.entries(process.env).filter(([name]) => !name.startsWith("INPUT_")),
+  );
+  return { ...inherited, ...overrides };
+}
+
 function runPublishCommand({ cwd, command, loadedConfig, env }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   if (command) {
     execSync(command, {
       cwd,
-      env: { ...process.env, ...env },
+      env: sanitizedPublishProcessEnvironment(env),
       stdio: "inherit",
       shell: true,
     });
@@ -5009,4 +5016,5 @@ export {
   createRefMutationOperations,
   releasePassportArtifactFiles,
   validatePromotionReleaseCandidate,
+  sanitizedPublishProcessEnvironment,
 };
