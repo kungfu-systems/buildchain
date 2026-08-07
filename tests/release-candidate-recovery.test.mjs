@@ -19,6 +19,7 @@ import {
   exposeRecoveredPassportPath,
   exposeRecoveredPayloadRoot,
   normalizePlatformManifests,
+  readExistingTransaction,
   recoveredArtifactPathsByBasename,
 } from "../scripts/resume-from-candidate-run.mjs";
 import { generatePublishRequiredArtifacts } from "../scripts/release-candidate-resolver.mjs";
@@ -158,6 +159,44 @@ function durableTransaction(input, state = "complete") {
     publication_state: state === "published" ? "package-published" : state,
   };
 }
+
+test("recovery reads oversized durable transaction state through its exact Git blob", async () => {
+  const blobSha = "a".repeat(40);
+  const transaction = { schema: 1, version: "4.0.0-alpha.1", state: "finalizing" };
+  const requests = [];
+  const fetchImpl = async (url) => {
+    requests.push(url);
+    const body = url.includes("/git/blobs/")
+      ? { sha: blobSha, encoding: "base64", content: Buffer.from(JSON.stringify(transaction)).toString("base64") }
+      : { type: "file", sha: blobSha, encoding: "none", content: "" };
+    return new Response(JSON.stringify(body), { status: 200 });
+  };
+  assert.deepEqual(await readExistingTransaction({
+    repoInfo: { owner: "kungfu-systems", repo: "kungfu" },
+    apiUrl: "https://api.github.test",
+    token: "test-token",
+    fetchImpl,
+    version: transaction.version,
+  }), transaction);
+  assert.equal(requests.length, 2);
+  assert.match(requests[1], new RegExp(`/git/blobs/${blobSha}$`));
+});
+
+test("recovery rejects durable transaction Git blob identity drift", async () => {
+  const blobSha = "a".repeat(40);
+  const fetchImpl = async (url) => new Response(JSON.stringify(
+    url.includes("/git/blobs/")
+      ? { sha: "b".repeat(40), encoding: "base64", content: "e30=" }
+      : { type: "file", sha: blobSha, encoding: "none", content: "" },
+  ), { status: 200 });
+  await assert.rejects(readExistingTransaction({
+    repoInfo: { owner: "kungfu-systems", repo: "kungfu" },
+    apiUrl: "https://api.github.test",
+    token: "test-token",
+    fetchImpl,
+    version: "4.0.0-alpha.1",
+  }), /blob identity drifted/);
+});
 
 test("recovery accepts the same tree at a different promotion commit and records reuse", () => {
   const { receipt } = verifyReleaseCandidateRecovery(fixture());

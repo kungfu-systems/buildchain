@@ -106,7 +106,7 @@ function readOnlyJson(files, label) {
   return JSON.parse(fs.readFileSync(files[0].absolutePath, "utf8"));
 }
 
-async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version }) {
+export async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version }) {
   const stateRef = releaseTransactionStateRef(version);
   const response = await githubJson({
     apiUrl,
@@ -116,10 +116,31 @@ async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, ver
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/contents/state.json?ref=${encodeURIComponent(stateRef)}`,
   });
   if (!response) return undefined;
-  if (response.type !== "file" || response.encoding !== "base64" || !response.content) {
-    throw new Error(`durable transaction ${stateRef} did not expose a base64 state.json file`);
+  if (response.type !== "file") {
+    throw new Error(`durable transaction ${stateRef} did not expose a state.json file`);
   }
-  return JSON.parse(Buffer.from(String(response.content).replace(/\s/g, ""), "base64").toString("utf8"));
+  let encoded = response.encoding === "base64" && response.content
+    ? response
+    : undefined;
+  if (!encoded) {
+    const blobSha = String(response.sha || "").trim();
+    if (!/^[0-9a-f]{40}$/i.test(blobSha)) {
+      throw new Error(`durable transaction ${stateRef} did not expose inline content or an exact blob identity`);
+    }
+    encoded = await githubJson({
+      apiUrl,
+      token,
+      fetchImpl,
+      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/blobs/${blobSha}`,
+    });
+    if (String(encoded?.sha || "").trim() !== blobSha) {
+      throw new Error(`durable transaction ${stateRef} blob identity drifted from ${blobSha}`);
+    }
+  }
+  if (encoded?.encoding !== "base64" || !encoded.content) {
+    throw new Error(`durable transaction ${stateRef} did not expose base64 state.json content`);
+  }
+  return JSON.parse(Buffer.from(String(encoded.content).replace(/\s/g, ""), "base64").toString("utf8"));
 }
 
 function outputPath(filePath) {
