@@ -722,6 +722,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     /buildchain-ref: 9a0cdf8d84aacf8c7daaac82efa43d1b34696a03/,
   );
   assert.match(workflow, /declarative-release-tail: true/);
+  assert.match(
+    workflow,
+    /route-parity:[\s\S]*if: \$\{\{ needs\.promote\.result == 'success' && needs\.promote\.outputs\.release-tail-transaction-state == 'complete' \}\}/,
+  );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /package-manager: pnpm/);
