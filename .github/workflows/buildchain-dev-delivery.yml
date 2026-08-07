@@ -59,7 +59,7 @@ jobs:
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ github.sha }}
-      target-branch: ${{ inputs.target-branch }}
+      target-branch: ${{ github.event.inputs.target-branch }}
       expected-pr-number: ${{ fromJSON(github.event.inputs.expected-pr-number) }}
       expected-head-sha: ${{ github.event.inputs.expected-head-sha }}
       delivery-warrant-mode: required
