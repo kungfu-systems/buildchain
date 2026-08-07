@@ -16,6 +16,7 @@ import {
 import {
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
+  exposeRecoveredPassportPath,
   exposeRecoveredPayloadRoot,
   normalizePlatformManifests,
   recoveredArtifactPathsByBasename,
@@ -182,6 +183,34 @@ test("recovery exposes sealed payloads at the legacy candidate path without copy
     assert.equal(fs.realpathSync(compatibilityRoot), fs.realpathSync(recoveredPayloadRoot));
     assert.equal(fs.readFileSync(path.join(compatibilityRoot, "sealed.txt"), "utf8"), "sealed-candidate-bytes");
     assert.equal(exposeRecoveredPayloadRoot({ resolvedOutput: workspace, bundleRoot }), compatibilityRoot);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("recovery exposes the sealed Passport at the legacy candidate path without copying bytes", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-recovered-passport-path-"));
+  try {
+    const recoveredPassportPath = path.join(
+      workspace,
+      "sealed-candidate",
+      "artifacts",
+      "release-candidate-passport",
+      "release-candidate-passport.json",
+    );
+    fs.mkdirSync(path.dirname(recoveredPassportPath), { recursive: true });
+    fs.writeFileSync(recoveredPassportPath, '{"candidate":"sealed"}\n');
+    const compatibilityPath = exposeRecoveredPassportPath({
+      resolvedOutput: workspace,
+      recoveredPassportPath,
+    });
+    assert.equal(fs.lstatSync(path.dirname(compatibilityPath)).isSymbolicLink(), true);
+    assert.equal(fs.realpathSync(compatibilityPath), fs.realpathSync(recoveredPassportPath));
+    assert.equal(fs.readFileSync(compatibilityPath, "utf8"), '{"candidate":"sealed"}\n');
+    assert.equal(
+      exposeRecoveredPassportPath({ resolvedOutput: workspace, recoveredPassportPath }),
+      compatibilityPath,
+    );
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

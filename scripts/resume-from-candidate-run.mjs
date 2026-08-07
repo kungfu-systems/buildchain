@@ -391,6 +391,24 @@ export function exposeRecoveredPayloadRoot({ resolvedOutput, bundleRoot }) {
   return compatibilityRoot;
 }
 
+export function exposeRecoveredPassportPath({ resolvedOutput, recoveredPassportPath }) {
+  if (!fs.existsSync(recoveredPassportPath) || !fs.statSync(recoveredPassportPath).isFile()) {
+    throw new Error(`recovered candidate passport is missing: ${recoveredPassportPath}`);
+  }
+  const recoveredPassportRoot = path.dirname(recoveredPassportPath);
+  const compatibilityRoot = path.join(resolvedOutput, "passport");
+  try {
+    fs.lstatSync(compatibilityRoot);
+    if (fs.realpathSync(compatibilityRoot) !== fs.realpathSync(recoveredPassportRoot)) {
+      throw new Error(`recovered candidate passport compatibility path is already occupied: ${compatibilityRoot}`);
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    fs.symlinkSync(path.relative(resolvedOutput, recoveredPassportRoot), compatibilityRoot, "dir");
+  }
+  return path.join(compatibilityRoot, path.basename(recoveredPassportPath));
+}
+
 async function resolveTargetAdvance({ observedTargetSha, targetSha, transactionId, existingTransaction, repoInfo, apiUrl, token, fetchImpl }) {
   if (observedTargetSha === targetSha || !transactionId || existingTransaction?.id !== transactionId) return undefined;
   const comparison = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${targetSha}...${observedTargetSha}` });
@@ -519,6 +537,10 @@ export async function resumeFromCandidateRun({
     const publishRequiredArtifacts = publication.publishRequiredArtifacts;
     fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(publishRequiredArtifacts, null, 2)}\n`);
     const payloadRoot = exposeRecoveredPayloadRoot({ resolvedOutput, bundleRoot });
+    const recoveredPassportPath = initialDownloads[0].files.find(
+      (file) => path.basename(file.path) === "release-candidate-passport.json",
+    ).absolutePath;
+    const passportPath = exposeRecoveredPassportPath({ resolvedOutput, recoveredPassportPath });
     const tarballs = publication.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
     const githubArtifactAttestationPolicies = recoveredArtifactPathsByBasename(
       downloads,
@@ -536,7 +558,7 @@ export async function resumeFromCandidateRun({
       receipt: recovery.receipt,
       publishRequiredArtifacts,
       paths: {
-        passport: outputPath(initialDownloads[0].files.find((file) => path.basename(file.path) === "release-candidate-passport.json").absolutePath),
+        passport: outputPath(passportPath),
         buildSummary: outputPath(initialDownloads[1].files.find((file) => path.basename(file.path) === "build-summary.json").absolutePath),
         payloads: outputPath(payloadRoot),
         platformManifests: downloads.flatMap((download) => download.files.filter((file) => path.basename(file.path) === "manifest.json").map((file) => outputPath(file.absolutePath))),
