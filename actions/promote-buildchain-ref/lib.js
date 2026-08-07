@@ -4052,7 +4052,34 @@ function createReconciliationOperations(context) {
     return undefined;
   };
 
-  const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
+  const assertPromotionPrOrVersionStateParent = async ({
+    commitSha,
+    targetRef,
+    allowedPaths,
+    exactReleaseCandidateSource,
+  }) => {
+    if (
+      exactReleaseCandidateSource?.recoveredCandidate === true &&
+      exactReleaseCandidateSource.treeEquivalent === true &&
+      exactReleaseCandidateSource.promotionChannelSha === commitSha
+    ) {
+      const commit = await getCommitInfo(octokit, owner, repo, commitSha);
+      if (
+        exactReleaseCandidateSource.promotionChannelTreeSha === commit.treeSha
+      ) {
+        updates.push({
+          action: "accepted-exact-alpha-recovery-source",
+          sha: commitSha,
+          treeSha: commit.treeSha,
+          builtSourceSha: exactReleaseCandidateSource.builtSourceSha,
+          builtSourceTreeSha: exactReleaseCandidateSource.builtSourceTreeSha,
+          targetRef,
+          publicationVersionBinding:
+            exactReleaseCandidateSource.publicationVersionBinding,
+        });
+        return;
+      }
+    }
     try {
       await assertChannelPromotionPr({
         octokit,

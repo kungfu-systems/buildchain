@@ -387,6 +387,7 @@ async function prepareAlphaCommit(context, candidate) {
       commitSha: context.sha,
       targetRef: context.targetRef,
       allowedPaths: commit.files,
+      exactReleaseCandidateSource: context.releaseCandidateValidation,
     });
   }
   return {

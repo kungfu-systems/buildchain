@@ -1228,6 +1228,115 @@ test("strict alpha promotion accepts same-line version-state PR lineage", async 
   assert.equal(refs.get("tags/v1.0-alpha"), SHA);
 });
 
+test("strict alpha promotion accepts the exact immutable recovery receipt source", async () => {
+  const candidateHash = "a".repeat(64);
+  const passportPath = ".buildchain/artifacts/release-candidate-passport.json";
+  const receiptPath = ".buildchain/artifacts/recovery-receipt.json";
+  const passport = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-passport",
+    repository: "kungfu-systems/buildchain",
+    target: {
+      channel: "alpha",
+      ref: "alpha/v1/v1.0",
+      version: "1.0.0-alpha.0",
+    },
+    source: {
+      headSha: OTHER_SHA,
+      mergeRefSha: OTHER_SHA,
+      treeHash: `tree-${SHA}`,
+    },
+    platformMatrix: [
+      { platformId: "linux-x64", artifactName: "buildchain-linux-x64" },
+    ],
+    diagnostics: {},
+    candidateHash,
+  };
+  const receipt = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-recovery/v1",
+    action: "reused",
+    repository: "kungfu-systems/buildchain",
+    originalCandidate: { sourceSha: OTHER_SHA, tree: `tree-${SHA}` },
+    target: {
+      channel: "alpha",
+      ref: "alpha/v1/v1.0",
+      sha: SHA,
+      tree: `tree-${SHA}`,
+      version: "1.0.1-alpha.0",
+    },
+    recovered: { candidateRoot: `sha256:${candidateHash}` },
+    skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
+    payloadBytes: "unchanged",
+  };
+  receipt.root = `sha256:${sha256Json(receipt)}`;
+  const cwd = makeTempWorkspace({
+    [passportPath]: passport,
+    [receiptPath]: receipt,
+  });
+  const refs = new Map([["heads/alpha/v1/v1.0", SHA]]);
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) return { data: { object: { sha: refs.get(ref) } } };
+          throw notFound();
+        },
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` }, parents: [] },
+        }),
+        listMatchingRefs: async ({ ref }) =>
+          ref === "tags/v1.0."
+            ? { data: [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }] }
+            : { data: [] },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        listPullRequestsAssociatedWithCommit: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  try {
+    const result = await promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      cwd,
+      versionState: false,
+      requireGovernance: true,
+      promoteOnlyReleaseCandidate: true,
+      releaseCandidatePassportPath: passportPath,
+      releaseCandidateRecoveryReceiptPath: receiptPath,
+      releaseCandidateVersion: "1.0.1-alpha.0",
+    });
+
+    assert.equal(result.sha, SHA);
+    assert.equal(refs.get("tags/v1.0.1-alpha.0"), SHA);
+    assert.equal(
+      result.updates.some(
+        (update) =>
+          update.action === "accepted-exact-alpha-recovery-source" &&
+          update.sha === SHA &&
+          update.publicationVersionBinding === "recovery-receipt",
+      ),
+      true,
+    );
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test("strict alpha promotion accepts same-line publish-gate PR lineage", async () => {
   const pullRequest = await assertChannelPromotionPr({
     octokit: {
