@@ -6,7 +6,7 @@
     "cliCommandCount": 113,
     "workflowCount": 64,
     "actionCount": 6,
-    "sitePageCount": 65,
+    "sitePageCount": 66,
     "docCommandRefCount": 896,
     "failureCount": 0
   },
@@ -3164,6 +3164,10 @@
       },
       {
         "id": "manual:release-propagation",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-tail-contract",
         "category": "manual"
       },
       {
@@ -7692,7 +7696,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
     "workflowRegistryDigest": "b8d8226430132d16f40865603ff710197bb3ab9cea12d79082a3e4ad0f82a22b",
-    "pageRegistryDigest": "be10863b2b83ef44566eb1db00d67b54f5d81ab28c215a6e65f200938e4f75d5"
+    "pageRegistryDigest": "eb7e6bd1e6c763546de575e17f086d32df7f494fdbdc566c7c501627c646ed8e"
   },
   "comparison": {
     "missingCliRegistry": [],

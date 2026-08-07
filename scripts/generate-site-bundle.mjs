@@ -360,6 +360,7 @@ const manualMetaById = new Map(Object.entries({
   "auditable-demo": { capabilityGroup: "reusable-build", audience: ["consumer", "agent"], maturity: "preview", order: 207 },
   "binary-distribution": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 110 },
   "publish-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator"], maturity: "stable", order: 120 },
+  "release-tail-contract": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent", "maintainer"], maturity: "draft", order: 122 },
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
