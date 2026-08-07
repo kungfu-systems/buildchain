@@ -138,7 +138,7 @@ function immediateReadmes(root, dir) {
 
 function publicDocumentationFiles(root) {
   return uniquePaths([
-    ...BUILDCHAIN_AGENT_MANUALS.map((entry) => entry.path),
+    ...(readJson(root, "dist/site/manual-registry.json").manuals || BUILDCHAIN_AGENT_MANUALS).map((entry) => entry.path),
     "README.md",
     "packages/core/README.md",
     ...immediateReadmes(root, "actions"),
