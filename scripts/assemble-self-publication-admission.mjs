@@ -173,7 +173,7 @@ async function main() {
     artifactDigest: artifactSet.manifestSetDigest,
     nonce: `${required("GITHUB_RUN_ID")}:${required("GITHUB_RUN_ATTEMPT")}:${sourceSha}`,
     issuedAt: issuedAt.toISOString(),
-    expiresAt: new Date(issuedAt.getTime() + 10 * 60 * 1000).toISOString(),
+    expiresAt: new Date(issuedAt.getTime() + 15 * 60 * 1000).toISOString(),
     qualification: {
       required: qualificationRequired,
       predicateId: process.env.BUILDCHAIN_CONSUMER_PREDICATE_ID || "",

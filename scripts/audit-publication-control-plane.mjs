@@ -453,7 +453,7 @@ function main() {
   const reviewRules = (environmentState.protection_rules || []).filter((rule) => rule.type === "required_reviewers");
   const runsOn = (block.match(/^\s{4}runs-on:\s*([^\n#]+)/m)?.[1] || "").trim().replace(/["']/g, "");
   const observedAt = new Date();
-  const expiresAt = new Date(observedAt.getTime() + 10 * 60 * 1000);
+  const expiresAt = new Date(observedAt.getTime() + 15 * 60 * 1000);
   const receipt = evaluatePublicationControlPlaneSnapshot({
     repository,
     workflowPath,
