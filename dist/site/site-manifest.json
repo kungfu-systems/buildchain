@@ -301,7 +301,7 @@
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0d9aaadf81a6977ec19c41c1bfa7631f717f3456f912a6adbccf785d18dc40c5"
+      "digest": "sha256:2c02447a0087d8b9a0d677357a157f5d095678367a8bfc27e4802a5e1417d5a7"
     },
     {
       "id": "publication-rehearsal",
