@@ -373,6 +373,24 @@ async function recoverCandidateEvidence({
   };
 }
 
+export function exposeRecoveredPayloadRoot({ resolvedOutput, bundleRoot }) {
+  const recoveredPayloadRoot = path.join(bundleRoot, "artifacts");
+  if (!fs.existsSync(recoveredPayloadRoot) || !fs.statSync(recoveredPayloadRoot).isDirectory()) {
+    throw new Error(`recovered candidate payload root is missing: ${recoveredPayloadRoot}`);
+  }
+  const compatibilityRoot = path.join(resolvedOutput, "payloads");
+  try {
+    fs.lstatSync(compatibilityRoot);
+    if (fs.realpathSync(compatibilityRoot) !== fs.realpathSync(recoveredPayloadRoot)) {
+      throw new Error(`recovered candidate payload compatibility path is already occupied: ${compatibilityRoot}`);
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    fs.symlinkSync(path.relative(resolvedOutput, recoveredPayloadRoot), compatibilityRoot, "dir");
+  }
+  return compatibilityRoot;
+}
+
 async function resolveTargetAdvance({ observedTargetSha, targetSha, transactionId, existingTransaction, repoInfo, apiUrl, token, fetchImpl }) {
   if (observedTargetSha === targetSha || !transactionId || existingTransaction?.id !== transactionId) return undefined;
   const comparison = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${targetSha}...${observedTargetSha}` });
@@ -500,6 +518,7 @@ export async function resumeFromCandidateRun({
     if (publication.manifest) fs.writeFileSync(sealedManifestPath, `${JSON.stringify(publication.manifest, null, 2)}\n`);
     const publishRequiredArtifacts = publication.publishRequiredArtifacts;
     fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(publishRequiredArtifacts, null, 2)}\n`);
+    const payloadRoot = exposeRecoveredPayloadRoot({ resolvedOutput, bundleRoot });
     const tarballs = publication.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
     const githubArtifactAttestationPolicies = recoveredArtifactPathsByBasename(
       downloads,
@@ -519,7 +538,7 @@ export async function resumeFromCandidateRun({
       paths: {
         passport: outputPath(initialDownloads[0].files.find((file) => path.basename(file.path) === "release-candidate-passport.json").absolutePath),
         buildSummary: outputPath(initialDownloads[1].files.find((file) => path.basename(file.path) === "build-summary.json").absolutePath),
-        payloads: outputPath(path.join(bundleRoot, "artifacts")),
+        payloads: outputPath(payloadRoot),
         platformManifests: downloads.flatMap((download) => download.files.filter((file) => path.basename(file.path) === "manifest.json").map((file) => outputPath(file.absolutePath))),
         githubArtifactAttestationPolicies,
         npmTarballs: tarballs,

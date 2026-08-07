@@ -16,6 +16,7 @@ import {
 import {
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
+  exposeRecoveredPayloadRoot,
   normalizePlatformManifests,
   recoveredArtifactPathsByBasename,
 } from "../scripts/resume-from-candidate-run.mjs";
@@ -167,6 +168,23 @@ test("recovery accepts the same tree at a different promotion commit and records
   assert.deepEqual(receipt.skippedBuildStages, ["install", "build", "verify", "platform-matrix"]);
   assert.equal(receipt.payloadBytes, "unchanged");
   assert.match(receipt.root, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("recovery exposes sealed payloads at the legacy candidate path without copying bytes", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-recovered-payload-root-"));
+  try {
+    const bundleRoot = path.join(workspace, "sealed-candidate");
+    const recoveredPayloadRoot = path.join(bundleRoot, "artifacts");
+    fs.mkdirSync(recoveredPayloadRoot, { recursive: true });
+    fs.writeFileSync(path.join(recoveredPayloadRoot, "sealed.txt"), "sealed-candidate-bytes");
+    const compatibilityRoot = exposeRecoveredPayloadRoot({ resolvedOutput: workspace, bundleRoot });
+    assert.equal(fs.lstatSync(compatibilityRoot).isSymbolicLink(), true);
+    assert.equal(fs.realpathSync(compatibilityRoot), fs.realpathSync(recoveredPayloadRoot));
+    assert.equal(fs.readFileSync(path.join(compatibilityRoot, "sealed.txt"), "utf8"), "sealed-candidate-bytes");
+    assert.equal(exposeRecoveredPayloadRoot({ resolvedOutput: workspace, bundleRoot }), compatibilityRoot);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("custom-product recovery uses Passport version and manifests without treating product archives as npm", () => {
