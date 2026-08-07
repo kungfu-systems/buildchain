@@ -1048,7 +1048,17 @@ test("managed channels reuse provider-enforced policy when protection details ar
   assert.equal(hiddenEvidence.action, "branch-protection-policy-observed");
   assert.deepEqual(hiddenEvidence.after.requiredStatusChecks, ["check"]);
 
-  requiredContexts = ["security"];
+  requiredContexts = ["affected-native / linux"];
+  const devEvidence = await ensureManagedChannelBranchProtection({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    branch: "dev/v1/v1.0",
+    requiredStatusCheck: "build / Finalize build controller evidence",
+  });
+  assert.equal(devEvidence.action, "branch-protection-policy-observed");
+  assert.deepEqual(devEvidence.after.requiredStatusChecks, ["affected-native / linux"]);
+
   await assert.rejects(
     ensureManagedChannelBranchProtection({
       octokit,

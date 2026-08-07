@@ -2540,13 +2540,19 @@ async function ensureManagedChannelBranchProtection({
           protection: providerProtection,
           requiredStatusCheck,
         });
+        const providerStatusChecks = protectedStatusCheckNames(providerProtection);
         const missing = [];
         if (branchSummary.protected !== true) missing.push("must be provider-protected");
         if (providerProtection.required_status_checks?.enforcement_level !== "everyone") {
           missing.push("must enforce required status checks for everyone");
         }
-        if (!protectedStatusCheckNames(providerProtection).includes(resolvedStatusCheck,
-          )) {
+        if (providerStatusChecks.length === 0) {
+          missing.push("must require at least one provider status check");
+        }
+        if (
+          /^(alpha|release)\//.test(branch) &&
+          !providerStatusChecks.includes(resolvedStatusCheck)
+        ) {
           missing.push(`must require a ${requiredStatusCheck} status check using the exact context`,
           );
         }
@@ -2556,7 +2562,7 @@ async function ensureManagedChannelBranchProtection({
           );
         }
         const observedPolicy = {
-          requiredStatusChecks: protectedStatusCheckNames(providerProtection),
+          requiredStatusChecks: providerStatusChecks,
           enforcementLevel: providerProtection.required_status_checks.enforcement_level,
         };
         return {
