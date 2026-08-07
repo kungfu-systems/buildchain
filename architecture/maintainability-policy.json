@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 277,
-    "maxHandMaintainedSourceLines": 105924,
+    "maxHandMaintainedSourceLines": 105983,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22268,
-    "latestTransition": "Wave 0 adds one read-only v4 architecture validator and generated Agent discovery command family on top of the protected candidate-recovery authority binding, without migrating a production writer or changing provider effects.",
-    "rationale": "The exact combined ceiling retains the protected candidate-recovery transition and adds one source file plus 618 source lines for the v4 Constitution validator, capability and state-machine projection, six independent complexity-budget dimensions, owned exception checks, v3 drift checks, exact Git N-1 qualification, and a public-surface regression assertion. The incoming 27 workflow lines and six generator/test source lines remain intact. The new script stays at the 600-line file budget and every new function stays within the existing length and complexity ceilings. Generated references expose list and show without creating a second authority. This ceiling is exact and cannot grow implicitly; runtime migration or additional architecture machinery requires another reviewed transition."
+    "maxWorkflowLines": 22269,
+    "latestTransition": "The qualified v4 bootstrap adds exact N-1 self-dogfood authority recognition, governance admission, release-impact relining, and an explicit protected delivery target while repairing slash-safe protection paths, without migrating a production writer or changing provider effects.",
+    "rationale": "The prior exact Wave 0 ceiling remains intact and adds exactly 59 hand-maintained source lines for qualification-bound adjacent-major self-dogfood bootstrap, fail-closed authority drift checks, and deterministic release-impact relining. One workflow line exposes the already reusable target-branch contract so required Delivery Warrants can bind protected v4 without changing the v3 default. The existing check-inventory file grows only by the authority lookup and bounded predicate call; its new exact ceiling is recorded separately. These ceilings cannot grow implicitly; additional bootstrap or runtime migration machinery requires another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -41,8 +41,8 @@
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1468,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, bounded Buildchain self-runtime dependency bridge, and contained durable-finalization helper; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1478,
+      "rationale": "Inventory retains the recovery, sealed-bundle, no-product-install, and durable-finalization checks and now admits the adjacent-major self-runtime bridge only when the checked-in v4 bootstrap authority is exactly qualification-bound. This exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
       "maxFunctionLines": 288,

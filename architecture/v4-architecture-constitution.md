@@ -25,11 +25,12 @@ contract; it cannot override it.
 
 ## 1. Release-line authority
 
-The first v4 line must be created from the exact protected v3 merge that
-contains this constitution and
-[`v4-bootstrap-authority.json`](v4-bootstrap-authority.json). Until that merge
-exists, the bootstrap state is `pending-protected-v3-merge`; a local branch or
-candidate commit is not release-line authority.
+The first v4 line was created from the exact protected v3 merge that contains
+this constitution and
+[`v4-bootstrap-authority.json`](v4-bootstrap-authority.json). The exact source,
+bootstrap revision, N-1 qualification, protection, and merge-queue evidence are
+recorded there under the state `qualified-protected-v4-bootstrap`; a local
+branch or unrecorded candidate commit is not release-line authority.
 
 Later v4 candidates are qualified by an exact N-1 Git revision. The verifier
 loads the authority files with `git show <authority-revision>:<path>` and rejects

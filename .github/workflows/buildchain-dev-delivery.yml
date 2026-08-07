@@ -13,6 +13,7 @@ on:
         description: "Exact 40-character PR head"
         type: string
         required: true
+      target-branch: { description: "Protected development target branch", type: string, required: false, default: "dev/v3/v3.0" }
       native-roots-json:
         description: "JSON object containing exact assignmentRoot and initiativeRoot"
         type: string
@@ -58,7 +59,7 @@ jobs:
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ github.sha }}
-      target-branch: dev/v3/v3.0
+      target-branch: ${{ github.event.inputs.target-branch }}
       expected-pr-number: ${{ fromJSON(github.event.inputs.expected-pr-number) }}
       expected-head-sha: ${{ github.event.inputs.expected-head-sha }}
       delivery-warrant-mode: required

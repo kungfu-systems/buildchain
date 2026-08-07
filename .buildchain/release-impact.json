@@ -8,7 +8,7 @@
   "versionImpact": {
     "final": "minor",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v3.0 converges compatible v2.14 release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
+    "rationale": "Buildchain v4.0 establishes a qualified N-1 architecture bootstrap while preserving the protected v3.0 line as production fallback."
   },
   "surfaceImpacts": [
     {
@@ -464,5 +464,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with fail-closed recovery from an exact prior candidate run, configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, source-bound immutable package tags, aligned propagation receipts, claim-only package propagation Work capture, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
+  "summary": "Buildchain v4.0 establishes the Architecture Constitution, exact N-1 bootstrap qualification, and protected release-line governance while preserving the v3.0 production fallback and existing consumer contracts."
 }

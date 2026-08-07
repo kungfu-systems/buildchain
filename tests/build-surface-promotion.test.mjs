@@ -70,6 +70,7 @@ import { evaluateBuildchainContractLock } from "../packages/core/buildchain-cont
 import {
   canAdmitSelfDogfoodLockEvaluation,
   contractForSelfDogfoodEvaluation,
+  hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
 import {
@@ -638,6 +639,9 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(bootstrap, /apps: \["github-actions"\],\s*users: \[\],\s*teams: \[\]/);
   assert.match(bootstrap, /strict: \$release_channel/);
   assert.match(bootstrap, /map\(\{context: \., app_id: \$github_actions_app_id\}\)/);
+  assert.match(bootstrap, /encoded_branch=.*@uri/);
+  assert.match(bootstrap, /branches\/\$\{encoded_branch\}\/protection/);
+  assert.doesNotMatch(bootstrap, /branches\/\$\{branch\}\/protection/);
   assert.match(bootstrap, /dismiss_stale_reviews: true/);
   assert.match(bootstrap, /require_code_owner_reviews: true/);
   assert.match(bootstrap, /require_last_push_approval: true/);
@@ -1641,6 +1645,9 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   const currentContract = JSON.parse(
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
+  const bootstrapAuthority = JSON.parse(
+    fs.readFileSync(path.join(root, "architecture/v4-bootstrap-authority.json"), "utf8"),
+  );
   assert.equal(alphaLock.buildchain.ref, "v3-alpha");
   assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
@@ -1656,7 +1663,13 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   const majorResolution = resolveSelfDogfoodMajor({
     packageVersion,
     alphaRef: alphaLock.buildchain.ref,
-    majorBootstrap: process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true",
+    majorBootstrap:
+      process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true" ||
+      hasQualifiedSelfDogfoodBootstrapAuthority({
+        packageVersion,
+        alphaRef: alphaLock.buildchain.ref,
+        authority: bootstrapAuthority,
+      }),
   });
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
@@ -1711,6 +1724,14 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
       alphaRef: "v2-alpha",
     }),
     { packageMajor: 2, workflowMajor: 2, bootstrap: false },
+  );
+  assert.deepEqual(
+    resolveSelfDogfoodMajor({
+      packageVersion: "3.0.0-alpha.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    }),
+    { packageMajor: 3, workflowMajor: 2, bootstrap: true },
   );
   assert.deepEqual(
     resolveSelfDogfoodMajor({
@@ -1811,6 +1832,34 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
     }),
     false,
   );
+});
+
+test("major self-dogfood bootstrap authority is exact and qualification-bound", () => {
+  const authority = JSON.parse(
+    fs.readFileSync(path.join(root, "architecture/v4-bootstrap-authority.json"), "utf8"),
+  );
+  assert.equal(
+    hasQualifiedSelfDogfoodBootstrapAuthority({
+      packageVersion: "4.0.0-alpha.0",
+      alphaRef: "v3-alpha",
+      authority,
+    }),
+    true,
+  );
+  for (const drift of [
+    { qualification: { ...authority.qualification, candidateSelfQualified: true } },
+    { qualification: { ...authority.qualification, activeExceptions: 1 } },
+    { releaseLine: { ...authority.releaseLine, bootstrapCommit: "f".repeat(40) } },
+  ]) {
+    assert.equal(
+      hasQualifiedSelfDogfoodBootstrapAuthority({
+        packageVersion: "4.0.0-alpha.0",
+        alphaRef: "v3-alpha",
+        authority: { ...authority, ...drift },
+      }),
+      false,
+    );
+  }
 });
 
 test("libnode-shaped fixture declares the build lifecycle contract", () => {
