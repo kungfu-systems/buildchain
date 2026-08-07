@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain-v4-canonical-contract-fixtures",
+  "canonicalization": "buildchain-canonical-json/v1",
+  "rootConstruction": "sha256(domain + NUL + canonical-bytes)",
+  "validCases": [
+    {
+      "id": "ascii-key-order",
+      "domain": "queue-state",
+      "clock": "2026-08-07T15:00:00.000Z",
+      "value": { "z": 1, "a": 2, "A": [true, null] },
+      "expectedCanonicalUtf8": "{\"A\":[true,null],\"a\":2,\"z\":1}\n",
+      "expectedRoot": "sha256:55693e621e85b454876b11af9842c106ab7eb7ab92c6ca5ea7fa498ea6cf74f4"
+    },
+    {
+      "id": "utf8-string-and-escapes",
+      "domain": "observation",
+      "clock": "2024-02-29T23:59:59.999Z",
+      "value": { "line": "一行\\n二行", "quote": "\\\"", "slash": "/" },
+      "expectedCanonicalUtf8": "{\"line\":\"一行\\\\n二行\",\"quote\":\"\\\\\\\"\",\"slash\":\"/\"}\n",
+      "expectedRoot": "sha256:54a49dcafaac0e3e480c9fb63ff50a976490a5cf467cb2c34fb0ec02e2d16afd"
+    },
+    {
+      "id": "safe-integer-boundaries",
+      "domain": "transition-receipt",
+      "clock": "2000-02-29T00:00:00.000Z",
+      "value": { "maximum": 9007199254740991, "minimum": -9007199254740991 },
+      "expectedCanonicalUtf8": "{\"maximum\":9007199254740991,\"minimum\":-9007199254740991}\n",
+      "expectedRoot": "sha256:52f61241c03d451b7568a704c502eac50e12ef53717ee49f4a89109e65bc6b8c"
+    }
+  ],
+  "invalidCases": [
+    {
+      "id": "fractional-number",
+      "kind": "canonical",
+      "value": 1.5,
+      "fault": "unsupported-number"
+    },
+    {
+      "id": "unsafe-integer",
+      "kind": "canonical",
+      "value": 9007199254740992,
+      "fault": "unsupported-number"
+    },
+    {
+      "id": "non-ascii-key",
+      "kind": "canonical",
+      "value": { "键": 1 },
+      "fault": "unsupported-object-key"
+    },
+    {
+      "id": "bad-clock-offset",
+      "kind": "clock",
+      "value": "2026-08-07T23:00:00.000+08:00",
+      "fault": "invalid-clock"
+    },
+    {
+      "id": "bad-clock-date",
+      "kind": "clock",
+      "value": "2026-02-30T00:00:00.000Z",
+      "fault": "invalid-clock"
+    },
+    {
+      "id": "bad-clock-year-zero",
+      "kind": "clock",
+      "value": "0000-01-01T00:00:00.000Z",
+      "fault": "invalid-clock"
+    },
+    {
+      "id": "unknown-domain",
+      "kind": "root",
+      "value": "provider-state",
+      "fault": "unsupported-root-domain"
+    },
+    {
+      "id": "event-extra-key",
+      "kind": "event",
+      "value": {
+        "schema": "buildchain-v4-event-envelope/v1",
+        "eventId": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "eventType": "candidate-submitted",
+        "occurredAt": "2026-08-07T15:00:00.000Z",
+        "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "payload": {},
+        "sampledNow": "2026-08-07T15:00:00.000Z"
+      },
+      "fault": "invalid-envelope-shape"
+    },
+    {
+      "id": "receipt-fault-outcome-drift",
+      "kind": "receipt",
+      "value": {
+        "schema": "buildchain-v4-receipt-envelope/v1",
+        "receiptType": "candidate-submitted",
+        "recordedAt": "2026-08-07T15:00:00.000Z",
+        "eventRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "priorStateRoot": null,
+        "nextStateRoot": null,
+        "outcome": "rejected",
+        "fault": null
+      },
+      "fault": "invalid-receipt"
+    }
+  ]
+}

@@ -6,7 +6,7 @@
     "cliCommandCount": 113,
     "workflowCount": 64,
     "actionCount": 6,
-    "sitePageCount": 66,
+    "sitePageCount": 67,
     "docCommandRefCount": 896,
     "failureCount": 0
   },
@@ -3192,6 +3192,10 @@
       },
       {
         "id": "manual:toolkit-observability",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-canonical-contracts",
         "category": "manual"
       },
       {
@@ -7696,7 +7700,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
     "workflowRegistryDigest": "b8d8226430132d16f40865603ff710197bb3ab9cea12d79082a3e4ad0f82a22b",
-    "pageRegistryDigest": "ba37ab4f151ae5a80807351ed8a97f010a666772fbf9def7e0e569ebf88dd77e"
+    "pageRegistryDigest": "83787ed18cd990af5667d6f9447b1239c03f48e357d957aaac704729cb14a7fb"
   },
   "comparison": {
     "missingCliRegistry": [],

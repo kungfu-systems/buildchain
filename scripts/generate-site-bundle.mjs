@@ -366,6 +366,7 @@ const manualMetaById = new Map(Object.entries({
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
   "dev-qualification-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 136 },
   "dev-alpha-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 137 },
+  "v4-canonical-contracts": { capabilityGroup: "governance-versioning", audience: ["developer", "maintainer", "agent"], maturity: "preview", order: 138 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
   "lifecycle-protocol": { capabilityGroup: "reusable-build", audience: ["consumer", "developer"], maturity: "stable", order: 210 },
@@ -404,6 +405,10 @@ function pageCapabilityMeta(relPath, category) {
   const manual = BUILDCHAIN_AGENT_MANUALS.find((entry) => entry.path === relPath);
   if (manual) {
     return manualMeta(manual.id);
+  }
+  const docMeta = category === "manual" ? manualMetaById.get(path.basename(relPath, ".md")) : null;
+  if (docMeta) {
+    return docMeta;
   }
   if (category === "action") {
     return { capabilityGroup: capabilityGroup("api-cli-reference"), audience: ["developer", "agent"], maturity: "stable" };

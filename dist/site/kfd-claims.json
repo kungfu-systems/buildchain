@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "4d496f1ee411a3e27db5e550da53de5d81097d0a8dc06f9e8f4c0ce55fb2112a",
+    "sha256": "ea8e827f95e4837b9bd633aab2ac63aed018a9e08178972158437917e4e699b6",
     "summary": {
       "cliCommandCount": 113,
       "workflowCount": 64,
       "actionCount": 6,
-      "sitePageCount": 66,
+      "sitePageCount": 67,
       "docCommandRefCount": 896,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "4d496f1ee411a3e27db5e550da53de5d81097d0a8dc06f9e8f4c0ce55fb2112a",
+      "sha256": "ea8e827f95e4837b9bd633aab2ac63aed018a9e08178972158437917e4e699b6",
       "summary": {
         "cliCommandCount": 113,
         "workflowCount": 64,
         "actionCount": 6,
-        "sitePageCount": 66,
+        "sitePageCount": 67,
         "docCommandRefCount": 896,
         "failureCount": 0
       },
@@ -6185,6 +6185,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-canonical-contracts",
+          "name": "site-page:manual:v4-canonical-contracts",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:versioning",
           "name": "site-page:manual:versioning",
           "kind": "site-page",
@@ -6391,6 +6403,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 404
+    "publicSurfaceCount": 405
   }
 }
