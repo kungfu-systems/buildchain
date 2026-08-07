@@ -59,7 +59,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Capability group | Primary facts | Primary manuals |
 | --- | --- | --- |
 | Getting Started | `capability-registry.json`, `product-mechanism.json` | [`getting-started.md`](getting-started.md), [`install.md`](install.md), [`product-mechanism.md`](product-mechanism.md), [`cli.md`](cli.md) |
-| Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `publication-authority-registry.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`github-artifact-attestation.md`](github-artifact-attestation.md), [`publication-authority.md`](publication-authority.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
+| Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `publication-authority-registry.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`github-artifact-attestation.md`](github-artifact-attestation.md), [`publication-authority.md`](publication-authority.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`release-tail-contract.md`](release-tail-contract.md), [`binary-distribution.md`](binary-distribution.md) |
 | Reusable Build and Lifecycle | `workflow-registry.json`, `controller-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`controller-evidence.md`](controller-evidence.md), [`shifu-gate-profiles.md`](shifu-gate-profiles.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
 | KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
 | Site Bundle, Web Surfaces, and Propagation | `buildchain-site.json`, `site-manifest.json`, `page-registry.json`, `release-model.json` | [`site-bundle-contract.md`](site-bundle-contract.md), [`web-surface-deployments.md`](web-surface-deployments.md), [`release-propagation.md`](release-propagation.md) |
@@ -121,6 +121,7 @@ replace them.
 | What is the active action and workflow source of truth? | [`ownership.md`](ownership.md) | verify | stable |
 | How do I declare version files and custom lifecycle commands? | [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
+| How are consumer-owned release-tail commands inventoried and replaced by declarative capabilities? | [`release-tail-contract.md`](release-tail-contract.md) | verify | draft |
 | How do I collect and verify module/product build facts from Git source, version files, and outputs? | [`build-facts.md`](build-facts.md) + [`cli.md`](cli.md) | use/verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
 | How do I keylessly attest Linux release artifacts with GitHub and bind them to a Release Passport? | [`github-artifact-attestation.md`](github-artifact-attestation.md) | verify/use | preview |

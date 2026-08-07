@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0230f9083023f4c80b567b2d13887dcbc9d31b46ad6cb6f81f95f509669e7cbb"
+      "digest": "sha256:90f7a6037cb6c62c504920c2553da18e3ddc8a4f55f04d89ae6adde8360178a6"
     },
     {
       "id": "getting-started",
@@ -286,6 +286,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:72466943bb459f6857f23ac6f92bcf4714dcd2f535c38a9f0e34864b36404e06"
+    },
+    {
+      "id": "release-tail-contract",
+      "title": "Declarative release-tail contract",
+      "path": "docs/release-tail-contract.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:10e04181efe9a84713fde226e4a4cd9e2b21f27b18add7cd97459c07aa6180b1"
     },
     {
       "id": "release-governance",

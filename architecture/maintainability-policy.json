@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 281,
-    "maxHandMaintainedSourceLines": 106949,
+    "maxHandMaintainedSourceFiles": 282,
+    "maxHandMaintainedSourceLines": 107386,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22269,
-    "latestTransition": "The bounded v4 Rust/libnode spike adds a closed byte-oriented host contract, one Rust transport trunk, a replaceable Node subprocess adapter, and reproducible comparison evidence while retaining every TypeScript v3 production writer.",
-    "rationale": "The prior exact Wave 0 ceiling adds four hand-maintained source files and exactly 966 lines: a 495-line Rust transport with bounded lifecycle and failure handling, three focused MJS bootstrap, host, and evidence adapters, plus the small verifier change that brings Rust into source and ownership budgets. The package excludes Cargo target output, the retained fixtures cover success and failure semantics, and no workflow or public CLI surface grows. These exact ceilings cannot grow implicitly; a new host, ABI, consumer migration, or writer migration requires another reviewed transition."
+    "latestTransition": "The bounded v4 Rust/libnode bridge spike and the declarative release-tail contract coexist as independently checked, non-authoritative migration foundations while TypeScript v3 retains every production writer.",
+    "rationale": "The prior exact Wave 0 ceiling adds the four bridge-spike source files and 966 lines already qualified on the protected v4 line, then adds one release-tail validator file and 437 lines that freeze 27 reverse-discovered coordinates across seven surface groups, four declarative capabilities, and seven managed callers. The Rust host contract remains a byte-oriented spike with a replaceable Node adapter, while the release-tail declaration remains read-only governance; neither migrates a production writer, changes provider effects, or cuts over a consumer. Cargo target output stays excluded and no workflow surface grows. These exact ceilings cannot grow implicitly; a new host, provider adapter, writer cutover, consumer migration, or broader inventory requires another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
