@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-canonical-contracts-v1.schema.json",
+  "title": "Buildchain v4 canonical contract suite",
+  "description": "Closed provider-free contracts for canonical JSON, content roots, explicit clocks, events, receipts, and typed faults.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "canonicalization",
+    "root",
+    "clock",
+    "event",
+    "receipt",
+    "fault"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "canonicalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "keyPattern",
+        "minimumInteger",
+        "maximumInteger",
+        "terminator"
+      ],
+      "properties": {
+        "id": { "const": "buildchain-canonical-json/v1" },
+        "keyPattern": { "const": "^[ -~]+$" },
+        "minimumInteger": { "const": -9007199254740991 },
+        "maximumInteger": { "const": 9007199254740991 },
+        "terminator": { "const": "LF" }
+      }
+    },
+    "root": { "$ref": "#/$defs/root" },
+    "clock": { "$ref": "#/$defs/clock" },
+    "event": { "$ref": "#/$defs/event" },
+    "receipt": { "$ref": "#/$defs/receipt" },
+    "fault": { "$ref": "#/$defs/fault" }
+  },
+  "$defs": {
+    "root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "encoding", "domainSeparator", "domains"],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "encoding": { "const": "sha256:<lowercase-hex>" },
+        "domainSeparator": { "const": "domain + NUL + canonical-bytes" },
+        "domains": {
+          "const": [
+            "queue-state",
+            "candidate-identity",
+            "fencing-token",
+            "transition-receipt",
+            "observation",
+            "semantic-diff",
+            "bootstrap-evidence"
+          ]
+        }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "format", "pattern"],
+      "properties": {
+        "mode": { "const": "explicit-input-only" },
+        "format": { "const": "RFC3339 UTC with millisecond precision" },
+        "pattern": {
+          "const": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+        }
+      }
+    },
+    "sha256Root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "asciiToken": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "eventId",
+        "eventType",
+        "occurredAt",
+        "subjectRoot",
+        "payload"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-event-envelope/v1" },
+        "eventId": { "$ref": "#/$defs/sha256Root" },
+        "eventType": { "$ref": "#/$defs/asciiToken" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+        },
+        "subjectRoot": { "$ref": "#/$defs/sha256Root" },
+        "payload": true
+      }
+    },
+    "fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "code", "class", "path", "message", "retry"],
+      "properties": {
+        "schema": { "const": "buildchain-v4-contract-fault/v1" },
+        "code": { "$ref": "#/$defs/asciiToken" },
+        "class": {
+          "enum": ["validation", "concurrency", "authority", "idempotence"]
+        },
+        "path": { "type": "string", "pattern": "^\\$" },
+        "message": { "type": "string", "minLength": 1 },
+        "retry": { "enum": ["stop", "reread", "redecide", "reselect"] }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "receiptType",
+        "recordedAt",
+        "eventRoot",
+        "priorStateRoot",
+        "nextStateRoot",
+        "outcome",
+        "fault"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-receipt-envelope/v1" },
+        "receiptType": { "$ref": "#/$defs/asciiToken" },
+        "recordedAt": {
+          "type": "string",
+          "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+        },
+        "eventRoot": { "$ref": "#/$defs/sha256Root" },
+        "priorStateRoot": {
+          "oneOf": [{ "$ref": "#/$defs/sha256Root" }, { "type": "null" }]
+        },
+        "nextStateRoot": {
+          "oneOf": [{ "$ref": "#/$defs/sha256Root" }, { "type": "null" }]
+        },
+        "outcome": { "enum": ["accepted", "rejected", "noop"] },
+        "fault": { "oneOf": [{ "$ref": "#/$defs/fault" }, { "type": "null" }] }
+      }
+    }
+  }
+}
