@@ -1,0 +1,591 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-delivery-warrant-shadow-bootstrap-plan",
+  "releaseLine": "dev/v4/v4.0",
+  "sourceCut": {
+    "revision": "3fd14c7a6237c3a1709ce29fc9fcb4ac150a0e5d",
+    "inventory": "architecture/v3-core-mechanism-inventory.json",
+    "manifest": "architecture/v4-capability-state-machine-manifest.json",
+    "legacyCore": "packages/core/dev-delivery-warrant.js",
+    "legacyStore": "scripts/dev-delivery-warrant.mjs",
+    "legacyWorkflows": [
+      ".github/workflows/buildchain-dev-delivery.yml",
+      ".github/workflows/dev-delivery-warrant-close.yml",
+      ".github/workflows/dev-delivery-warrant-cancel.yml"
+    ]
+  },
+  "legacyAuthority": {
+    "writer": "typescript-v3",
+    "store": "rooted queue on the configured Git ref",
+    "states": [
+      "queued",
+      "selected",
+      "proving",
+      "waiting",
+      "blocked",
+      "merged",
+      "terminal-failure",
+      "dequeued",
+      "cancelled"
+    ],
+    "events": [
+      "submit",
+      "select",
+      "lease",
+      "renew",
+      "recover-expired",
+      "settle",
+      "cancel"
+    ],
+    "productionEffects": [
+      "append an immutable queue commit and compare-and-set the configured Git ref",
+      "request GitHub merge-queue admission only after exact queue readback"
+    ]
+  },
+  "canonicalContract": {
+    "json": {
+      "id": "buildchain-canonical-json/v1",
+      "input": "JSON values only; schemas permit ASCII property names and integer numbers",
+      "objectKeys": "ascii-code-point-order",
+      "arrays": "preserve input order",
+      "numbers": "base-10 integers without leading zero",
+      "strings": "JSON escaping followed by UTF-8 encoding",
+      "terminator": "one LF byte"
+    },
+    "roots": {
+      "algorithm": "sha256",
+      "encoding": "sha256:<lowercase-hex>",
+      "domains": [
+        "queue-state",
+        "candidate-identity",
+        "fencing-token",
+        "transition-receipt",
+        "observation",
+        "semantic-diff",
+        "bootstrap-evidence"
+      ],
+      "queueStateExclusion": "stateRoot is absent from the bytes used to compute stateRoot"
+    },
+    "clock": {
+      "mode": "explicit-input-only",
+      "format": "RFC3339 UTC with millisecond precision",
+      "rule": "decide and fold reject a missing clock; adapters sample time once and pass it as data"
+    }
+  },
+  "transitionMatrix": [
+    {
+      "event": "submit",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": [
+        "exact repository and protected base",
+        "complete candidate identity and proof roots",
+        "same semantic attempt may repair only source head",
+        "terminal history is append-only through a chained attempt"
+      ],
+      "generation": "increment for every legacy transition call, including duplicate submission",
+      "fencing": "unchanged",
+      "clock": "explicit submission time",
+      "roots": [
+        "expected-old queue",
+        "candidate identity",
+        "next queue",
+        "receipt"
+      ],
+      "errors": [
+        "identity drift",
+        "proof drift",
+        "invalid chained predecessor"
+      ],
+      "recovery": "safe source-head repair retains enqueue time and increments attempts",
+      "idempotence": "legacy duplicate receipt says duplicate-noop but advances queue time, generation, and root"
+    },
+    {
+      "event": "select",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": [
+        "recover an expired active lease first",
+        "do not preempt a live active Warrant",
+        "rank queued candidates by bounded priority, aging, enqueue time, and candidate id"
+      ],
+      "generation": "increment only when a new selection transition is folded",
+      "fencing": "increment fencingCounter and mint a token over exact Warrant fields",
+      "clock": "explicit selection time and lease duration",
+      "roots": ["expected-old queue", "fencing token", "next queue", "receipt"],
+      "errors": ["invalid queue", "invalid lease duration"],
+      "recovery": "expired active Warrant is recovered before ranking",
+      "idempotence": "live active Warrant returns non-preemptive read-only result"
+    },
+    {
+      "event": "lease",
+      "from": ["queued", "selected", "proving", "waiting", "blocked"],
+      "guards": ["manifest alias for the lease minted by select"],
+      "generation": "same as select",
+      "fencing": "same as select",
+      "clock": "same explicit selection time",
+      "roots": ["same roots as select"],
+      "errors": ["same errors as select"],
+      "recovery": "same recovery as select",
+      "idempotence": "does not define a second writer operation"
+    },
+    {
+      "event": "renew",
+      "from": ["selected", "proving", "waiting", "blocked"],
+      "guards": [
+        "exact candidate id, fencing token, lease generation, and unexpired lease"
+      ],
+      "generation": "increment queue generation",
+      "fencing": "retain fencing token and lease generation",
+      "clock": "explicit heartbeat time and lease duration",
+      "roots": ["expected-old queue", "next queue", "lease receipt"],
+      "errors": [
+        "stale fencing token",
+        "stale lease generation",
+        "expired lease"
+      ],
+      "recovery": "recover-expired then reselect; never revive the old fence",
+      "idempotence": "not idempotent; retry requires expected-old/readback reconciliation"
+    },
+    {
+      "event": "recover-expired",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": ["active lease expiry is less than or equal to explicit now"],
+      "generation": "increment only for an actual recovery",
+      "fencing": "retain counter; reject the old token; next select increments it",
+      "clock": "explicit recovery observation time",
+      "roots": ["expected-old queue", "next queue", "recovery receipt"],
+      "errors": ["invalid queue"],
+      "recovery": "return candidate to queued, retain enqueue time, increment attempts and recoveries",
+      "idempotence": "no active or unexpired active Warrant is a rooted read-only no-op"
+    },
+    {
+      "event": "settle",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": [
+        "active settlement requires exact current fence and evidence root",
+        "queued settlement requires exact candidate, recorded head, observed head, and evidence",
+        "terminal duplicates must match the recorded outcome"
+      ],
+      "generation": "increment for active or queued terminal writes; unchanged for exact no-op",
+      "fencing": "active close binds current token and generation; queued cancellation mints none",
+      "clock": "explicit terminal observation time",
+      "roots": [
+        "expected-old queue",
+        "terminal evidence",
+        "next queue",
+        "settlement receipt"
+      ],
+      "errors": [
+        "stale fence",
+        "identity drift",
+        "outcome drift",
+        "evidence drift"
+      ],
+      "recovery": "response-loss retry reads current queue and accepts only the exact terminal duplicate",
+      "idempotence": "exact terminal duplicate and never-admitted terminal event are rooted no-ops"
+    },
+    {
+      "event": "cancel",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": [
+        "only an exact queued candidate may use cancellation without a Warrant",
+        "active states require settle with the live fence",
+        "terminal duplicate must match all recorded terminal evidence"
+      ],
+      "generation": "increment only for first queued cancellation",
+      "fencing": "never mint a Warrant for queued cancellation",
+      "clock": "explicit cancellation observation time",
+      "roots": [
+        "expected-old queue",
+        "event evidence",
+        "next queue",
+        "cancellation receipt"
+      ],
+      "errors": [
+        "candidate missing",
+        "active candidate",
+        "identity drift",
+        "evidence drift"
+      ],
+      "recovery": "reread and accept only exact duplicate-cancellation-noop",
+      "idempotence": "exact duplicate is a rooted read-only no-op"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "canonical-json",
+      "input": "schema-valid JSON value",
+      "output": "deterministic UTF-8 bytes ending in LF",
+      "effects": "none"
+    },
+    {
+      "id": "content-root",
+      "input": "domain name and canonical bytes",
+      "output": "typed sha256 root",
+      "effects": "none"
+    },
+    {
+      "id": "expected-old",
+      "input": "expected state root and observed state root",
+      "output": "accept or stale-expected-old",
+      "effects": "none"
+    },
+    {
+      "id": "explicit-clock",
+      "input": "adapter-sampled RFC3339 instant",
+      "output": "validated UTC millisecond instant",
+      "effects": "none"
+    },
+    {
+      "id": "decide-fold",
+      "input": "prior state, event, explicit clock, policy",
+      "output": "decision plus successor state",
+      "effects": "none"
+    },
+    {
+      "id": "effects",
+      "input": "accepted decision",
+      "output": "ordered declarative Git/provider intents",
+      "effects": "executed only by TypeScript adapters"
+    },
+    {
+      "id": "observations",
+      "input": "adapter readback",
+      "output": "rooted provider-neutral facts",
+      "effects": "none"
+    },
+    {
+      "id": "typed-retry",
+      "input": "fault class, attempt count, latest observation",
+      "output": "stop, reread, redecide, or reselect",
+      "effects": "bounded by policy"
+    },
+    {
+      "id": "receipts",
+      "input": "decision, prior/successor roots, effect observations",
+      "output": "canonical transition receipt and receipt root",
+      "effects": "retention delegated to adapters"
+    }
+  ],
+  "boundaries": {
+    "rustDomain": {
+      "mayImport": ["canonical contracts", "hashing", "time value types"],
+      "providerSdkImports": "forbidden",
+      "filesystem": "forbidden",
+      "network": "forbidden",
+      "ambientClock": "forbidden"
+    },
+    "typescriptAdapters": {
+      "responsibilities": [
+        "Git ref compare-and-set and immutable commit",
+        "GitHub observations and merge-queue requests",
+        "single clock sample",
+        "effect execution, readback, retry budget, and receipt retention"
+      ]
+    }
+  },
+  "faultModel": [
+    {
+      "id": "stale-expected-old",
+      "class": "concurrency",
+      "decision": "reread once, redecide from the new root, then stop on a second conflict"
+    },
+    {
+      "id": "lease-expired",
+      "class": "authority",
+      "decision": "recover and reselect; the old fencing token is permanently rejected"
+    },
+    {
+      "id": "response-loss",
+      "class": "transport",
+      "decision": "read back the exact state ref and receipt binding; accept only an exact committed successor"
+    },
+    {
+      "id": "provider-conflict",
+      "class": "provider",
+      "decision": "emit a rooted observation and stop without inventing a queue transition"
+    },
+    {
+      "id": "duplicate-event",
+      "class": "idempotence",
+      "decision": "return a rooted no-op only when all identity, outcome, fence, and evidence fields match"
+    }
+  ],
+  "shadow": {
+    "fixtureContract": "architecture/v4-delivery-warrant-shadow-fixtures.json",
+    "inputs": "the same canonical fixture bytes are passed to JavaScript v3 and Rust v4",
+    "comparison": [
+      "decision kind and typed error",
+      "successor queue bytes and root",
+      "generation and fencing values",
+      "ordered effects",
+      "receipt bytes and root"
+    ],
+    "zeroDiffGate": "every required fixture and captured production replay has zero unexplained semantic differences",
+    "faults": [
+      "replay",
+      "duplicate event",
+      "stale compare-and-set",
+      "lease expiry",
+      "response loss",
+      "provider conflict"
+    ],
+    "retention": "retain input, both projections, semantic diff, source revisions, and validator version for 90 days"
+  },
+  "authority": {
+    "permanentDualAuthority": false,
+    "candidateSelfQualification": false,
+    "bootstrap": {
+      "sourceBranch": "dev/v3/v3.0",
+      "sourceCommit": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1",
+      "sourceTree": "20abc99c7fb11f1ad63eb11be7c5bef3172abec1",
+      "bootstrapCommit": "d827bb223e4b78551feed69827f3e67839821171",
+      "bootstrapTree": "6d52d21f25a65b09cb9b344c7dffea192ff5b1d9",
+      "qualificationRoot": "sha256:ea58bf84bd8ba32d0d7931328a2209f937bd3b81d3215b27f2ca67abc704a673"
+    },
+    "nMinusOne": {
+      "qualificationAuthority": "exact prior qualified protected revision",
+      "candidateRevision": "exact proposed protected v4 revision",
+      "requiredRelationship": "candidate descends from authority",
+      "candidateMayWidenCeilings": false,
+      "candidateMayCreateQualificationExceptions": false
+    },
+    "production": "TypeScript v3 remains the sole writer through shadow and v4-read stages",
+    "verification": "Rust produces non-authoritative projections until write cutover is independently approved",
+    "invocation": "TypeScript adapter invokes the replaceable Rust subprocess behind the validated host contract",
+    "retention": "v3 queue commits and receipts remain immutable and readable through legacy removal",
+    "rollback": "restore the last sole writer; never select authority independently per request"
+  },
+  "rollout": [
+    {
+      "id": "legacy-authoritative-shadow",
+      "authority": "TypeScript v3 sole writer",
+      "entry": ["schemas and fixtures validate", "N-1 authority is exact"],
+      "exit": [
+        "fixture zero-diff",
+        "captured replay zero-diff",
+        "fault injection passes"
+      ],
+      "rollback": [
+        "disable Rust invocation",
+        "leave v3 queue and receipts unchanged"
+      ],
+      "evidence": ["paired projections", "semantic diffs", "fault receipts"],
+      "stopConditions": [
+        "any unexplained diff",
+        "missing observation",
+        "unbounded retry"
+      ]
+    },
+    {
+      "id": "legacy-authoritative-v4-read",
+      "authority": "TypeScript v3 sole writer; v4 may serve verified reads only",
+      "entry": ["shadow exit gate passed", "read projection schema is stable"],
+      "exit": [
+        "readback parity over one protected-release window",
+        "rollback drill passes"
+      ],
+      "rollback": [
+        "route all reads to v3",
+        "preserve v4 evidence for diagnosis"
+      ],
+      "evidence": ["read parity receipts", "latency and failure observations"],
+      "stopConditions": [
+        "stale read",
+        "root disagreement",
+        "provider fact leakage into Rust domain"
+      ]
+    },
+    {
+      "id": "v4-authoritative-write",
+      "authority": "Rust v4 sole decision/fold authority with one TypeScript effect adapter",
+      "entry": [
+        "independent review approves exact cutover revision",
+        "v3-to-v4 state projection and rollback snapshot are exact",
+        "N-1 qualification and protected checks pass"
+      ],
+      "exit": [
+        "one protected-release window without fallback write",
+        "response-loss drill passes"
+      ],
+      "rollback": [
+        "stop v4 writes",
+        "restore v3 from the exact pre-cutover root and retained receipts"
+      ],
+      "evidence": [
+        "cutover receipt",
+        "single-writer proof",
+        "exact readback",
+        "rollback drill"
+      ],
+      "stopConditions": [
+        "two possible writers",
+        "unexplained diff",
+        "indeterminate write",
+        "receipt loss"
+      ]
+    },
+    {
+      "id": "legacy-removal",
+      "authority": "Rust v4 sole decision/fold authority",
+      "entry": [
+        "v4 write exit gate passed",
+        "legacy reader inventory is empty"
+      ],
+      "exit": [
+        "legacy writer removed",
+        "historical receipts remain readable",
+        "N-1 fallback is a protected v4 revision"
+      ],
+      "rollback": ["revert to the exact prior qualified protected v4 revision"],
+      "evidence": [
+        "caller inventory",
+        "dead-code proof",
+        "historical replay proof"
+      ],
+      "stopConditions": [
+        "legacy caller remains",
+        "historical receipt unreadable",
+        "fallback requires dual authority"
+      ]
+    }
+  ],
+  "legacyDisagreements": [
+    {
+      "id": "ambient-api-clock",
+      "source": "public v3 functions default now from new Date()",
+      "disposition": "change-in-v4",
+      "cutoverRule": "v4 decide/fold rejects missing time; compatibility adapter supplies one explicit sample"
+    },
+    {
+      "id": "duplicate-submit-mutates-root",
+      "source": "duplicate-noop still runs transition and advances updatedAt and generation",
+      "disposition": "preserve-in-compatibility",
+      "cutoverRule": "shadow compares legacy projection; v4 native contract changes only after a versioned receipt decision"
+    },
+    {
+      "id": "waiting-blocked-have-no-public-transition",
+      "source": "normalizer accepts waiting and blocked but core exports no transition into them",
+      "disposition": "block-cutover",
+      "cutoverRule": "Wave 1 must either define events for these states or remove them through a protected manifest change"
+    },
+    {
+      "id": "manifest-event-aliases",
+      "source": "manifest lease and renew correspond to select and heartbeat APIs",
+      "disposition": "preserve-in-compatibility",
+      "cutoverRule": "fixture adapters name both the manifest event and legacy operation"
+    },
+    {
+      "id": "response-loss-asymmetry",
+      "source": "settle reconciles a lost write by readback while generic mutations surface the write error",
+      "disposition": "change-in-v4",
+      "cutoverRule": "all effects use the same exact-successor readback protocol"
+    },
+    {
+      "id": "receipt-bytes-not-in-queue-store",
+      "source": "Git commit records queue JSON and receipt root; receipt bytes are workflow artifacts",
+      "disposition": "block-cutover",
+      "cutoverRule": "retention owner and exact receipt retrieval proof are required before v4 write"
+    },
+    {
+      "id": "legacy-key-sort-not-portable",
+      "source": "v3 root helper sorts object keys with runtime localeCompare",
+      "disposition": "change-in-v4",
+      "cutoverRule": "supported contract keys are ASCII and fixtures freeze code-point order before Rust qualification"
+    }
+  ],
+  "wave1": {
+    "entryGate": "all-shadow-zero-diff-gates-pass",
+    "nodes": [
+      {
+        "id": "canonical-contracts",
+        "dependsOn": [],
+        "deliverable": "Rust and JavaScript canonical JSON, roots, clock, events, receipts"
+      },
+      {
+        "id": "shared-fixture-runner",
+        "dependsOn": ["canonical-contracts"],
+        "deliverable": "language-neutral trace reader and semantic projection"
+      },
+      {
+        "id": "rust-pure-domain",
+        "dependsOn": ["canonical-contracts", "shared-fixture-runner"],
+        "deliverable": "provider-free decide/fold and typed faults"
+      },
+      {
+        "id": "typescript-shadow-adapter",
+        "dependsOn": ["shared-fixture-runner"],
+        "deliverable": "paired legacy/Rust invocation without Rust effects"
+      },
+      {
+        "id": "semantic-diff-gate",
+        "dependsOn": ["rust-pure-domain", "typescript-shadow-adapter"],
+        "deliverable": "zero-diff report, bounded fault injection, and retained evidence"
+      },
+      {
+        "id": "v4-read-candidate",
+        "dependsOn": ["semantic-diff-gate"],
+        "deliverable": "read-only projection behind a reversible caller switch"
+      }
+    ]
+  },
+  "protectedDelivery": {
+    "required": [
+      "plan and fixture schemas validate",
+      "legacy JavaScript fixture roots are stable",
+      "v4 architecture validation passes",
+      "documentation map resolves",
+      "independent review records no unresolved authority or recovery finding",
+      "exact N-1 qualification uses a prior protected revision"
+    ]
+  }
+}

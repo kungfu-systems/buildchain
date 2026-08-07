@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/v4-delivery-warrant-shadow-fixtures-v1.schema.json",
+  "title": "Buildchain v4 Delivery Warrant Shadow Fixtures",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "contract",
+    "canonicalization",
+    "clock",
+    "projection",
+    "traces"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": {
+      "const": "kungfu-buildchain-v4-delivery-warrant-shadow-fixtures"
+    },
+    "canonicalization": { "const": "buildchain-canonical-json/v1" },
+    "clock": { "const": "explicit-input-only" },
+    "projection": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "traces": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "$ref": "#/$defs/trace" }
+    }
+  },
+  "$defs": {
+    "trace": {
+      "type": "object",
+      "required": ["id", "create", "steps", "expectedLegacyProjectionRoot"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "create": {
+          "type": "object",
+          "required": ["repository", "protectedBase", "policy", "now"],
+          "additionalProperties": false,
+          "properties": {
+            "repository": { "type": "string", "minLength": 3 },
+            "protectedBase": { "const": "dev/v4/v4.0" },
+            "policy": { "type": "object", "minProperties": 1 },
+            "now": { "type": "string", "format": "date-time" }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "operation"],
+            "minProperties": 2
+          }
+        },
+        "expectedLegacyProjectionRoot": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}
