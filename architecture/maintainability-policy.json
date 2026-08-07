@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 277,
-    "maxHandMaintainedSourceLines": 105918,
+    "maxHandMaintainedSourceLines": 105924,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22241,
-    "latestTransition": "Wave 0 adds one read-only v4 architecture validator and generated Agent discovery command family without migrating a production writer, adding a workflow, or changing provider effects.",
-    "rationale": "The exact one-file and 618-line increase over the prior approved ceiling implements the v4 Constitution validator, capability and state-machine projection, six independent complexity-budget dimensions, owned exception checks, v3 drift checks, exact Git N-1 qualification, and a public-surface regression assertion. The new script stays at the 600-line file budget and every new function stays within the existing length and complexity ceilings. Generated references expose list and show without creating a second authority. This ceiling is exact and cannot grow implicitly; runtime migration or additional architecture machinery requires another reviewed transition."
+    "maxWorkflowLines": 22268,
+    "latestTransition": "Wave 0 adds one read-only v4 architecture validator and generated Agent discovery command family on top of the protected candidate-recovery authority binding, without migrating a production writer or changing provider effects.",
+    "rationale": "The exact combined ceiling retains the protected candidate-recovery transition and adds one source file plus 618 source lines for the v4 Constitution validator, capability and state-machine projection, six independent complexity-budget dimensions, owned exception checks, v3 drift checks, exact Git N-1 qualification, and a public-surface regression assertion. The incoming 27 workflow lines and six generator/test source lines remain intact. The new script stays at the 600-line file budget and every new function stays within the existing length and complexity ceilings. Generated references expose list and show without creating a second authority. This ceiling is exact and cannot grow implicitly; runtime migration or additional architecture machinery requires another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -784,12 +784,14 @@
           "promotion-shell-sha",
           "promotion-target-ref",
           "publication-admission-json",
+          "publication-authority-workflow-path",
           "publication-auto-admission",
           "publication-auto-no-gate",
           "publication-commit-command",
           "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
+          "publication-consumer-qualification-controller-sha",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -896,7 +898,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The advanced promotion workflow forwards one optional exact consumer Gate controller SHA into the credential-free authority. Candidate, target tree, controller, and command identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
+      "rationale": "The advanced promotion workflow accepts an explicit public authority path and an optional exact consumer qualification controller SHA. Candidate, target tree, Gate controller, predicate controller, command, and authority workflow identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -937,6 +939,7 @@
           "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
+          "publication-consumer-qualification-controller-sha",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -1055,7 +1058,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The generated v3 promotion router forwards the additive exact consumer Gate controller SHA together with the existing candidate recovery identity, without changing channel selection, contract-lock routing, payload handling, or publication authority."
+      "rationale": "The generated v3 promotion router forwards the optional exact consumer qualification controller SHA and fixes the authority identity to its public workflow path together with the existing candidate recovery identity, without changing channel selection, contract-lock routing, payload handling, or publication effects."
     }
   },
   "approvedExtractedDebt": {
