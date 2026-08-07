@@ -162,7 +162,14 @@ function sanitizedPublishProcessEnvironment(overrides = {}) {
   const inherited = Object.fromEntries(
     Object.entries(process.env).filter(([name]) => !name.startsWith("INPUT_")),
   );
-  return { ...inherited, ...overrides };
+  const environment = { ...inherited, ...overrides };
+  if (
+    Buffer.byteLength(environment.BUILDCHAIN_REQUIRED_ARTIFACTS || "", "utf8") >
+    64 * 1024
+  ) {
+    delete environment.BUILDCHAIN_REQUIRED_ARTIFACTS;
+  }
+  return environment;
 }
 
 function runPublishCommand({ cwd, command, loadedConfig, env }) {
@@ -1387,10 +1394,17 @@ async function resolvePublishTransactionResume(context) {
 }
 
 function publishTransactionEnvironment({
-  version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
+  cwd, version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
   requiredArtifacts, publishContract,
 }) {
+  const requiredArtifactsJson = JSON.stringify(requiredArtifacts);
+  const requiredArtifactsPath = path.resolve(
+    cwd,
+    ".buildchain/release-candidate/publish-required-artifacts.json",
+  );
+  fs.mkdirSync(path.dirname(requiredArtifactsPath), { recursive: true });
+  fs.writeFileSync(requiredArtifactsPath, `${requiredArtifactsJson}\n`);
   return {
     BUILDCHAIN_VERSION: version,
     BUILDCHAIN_CHANNEL: channel,
@@ -1414,7 +1428,8 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SEALED_NPM_INTEGRITY:
       sealedBundleVerification?.npm.integrity || "",
     BUILDCHAIN_SEALED_NPM_SHA256: sealedBundleVerification?.npm.sha256 || "",
-    BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
+    BUILDCHAIN_REQUIRED_ARTIFACTS: requiredArtifactsJson,
+    BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH: requiredArtifactsPath,
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
     BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
