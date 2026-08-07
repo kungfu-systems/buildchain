@@ -1288,6 +1288,15 @@ jobs:
           clean: true
           persist-credentials: false
 
+      - name: Checkout exact consumer publication controller
+        if: ${{ inputs.resume-candidate-run-id != '' && inputs.publication-gate-controller-sha != '' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.publication-gate-controller-sha }}
+          path: .buildchain/publication-controller
+          clean: true
+          persist-credentials: false
+
       - name: Checkout selected promotion workflow shell
         if: ${{ inputs.promotion-shell-ref != '' }}
         uses: actions/checkout@v7.0.0

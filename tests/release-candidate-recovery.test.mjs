@@ -611,3 +611,18 @@ test("recovery receipt binds a sealed payload publication version without rewrit
     /receipt root mismatch.*publication version mismatch/,
   );
 });
+
+test("candidate recovery checks out the exact consumer publication controller", async () => {
+  const fs = await import("node:fs");
+  const workflow = fs.readFileSync(
+    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(workflow, /name: Checkout exact consumer publication controller/);
+  assert.match(
+    workflow,
+    /if: \$\{\{ inputs\.resume-candidate-run-id != '' && inputs\.publication-gate-controller-sha != '' \}\}/,
+  );
+  assert.match(workflow, /ref: \$\{\{ inputs\.publication-gate-controller-sha \}\}/);
+  assert.match(workflow, /path: \.buildchain\/publication-controller/);
+});
