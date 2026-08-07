@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-release-passport",
-  "generatedAt": "2026-08-07T21:05:48.855Z",
+  "generatedAt": "2026-08-07T21:54:34.849Z",
   "surfaceTimestampPolicy": {
-    "generatedAt": "2026-08-07T21:05:48.855Z",
-    "publishedAt": "2026-08-07T21:05:48.855Z",
+    "generatedAt": "2026-08-07T21:54:34.849Z",
+    "publishedAt": "2026-08-07T21:54:34.849Z",
     "reproducible": true,
     "timestampPolicy": "ci-injected",
     "deterministicInputs": [
@@ -60,7 +60,7 @@
     "treeEquivalent": true,
     "publishToolingSha": "dd702f22e6afef137c86c5456e167e6db20e88f2",
     "releaseStateRef": "refs/heads/buildchain/release-state/3-0-7-alpha-0",
-    "releaseStateSha": "deb4a795604699d4718b3dd18e1079c004f4b11e",
+    "releaseStateSha": "",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "3.0.7-alpha.0"
@@ -98,7 +98,7 @@
     "statePath": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v3.0.7-alpha.0.json",
     "stateSha": "",
     "evidencePath": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v3.0.7-alpha.0/evidence.json",
-    "updatedAt": "2026-08-07T21:05:45.553Z",
+    "updatedAt": "2026-08-07T21:54:31.071Z",
     "result": {
       "command": "finalize",
       "validation": {
@@ -111,8 +111,8 @@
     "schemaVersion": 1,
     "contract": "buildchain.promotion-routing/v1",
     "router": {
-      "ref": "9a0cdf8d84aacf8c7daaac82efa43d1b34696a03",
-      "sha": "9a0cdf8d84aacf8c7daaac82efa43d1b34696a03"
+      "ref": "5a6a93ca1064a0df58bd2fa59ef8c523f832882b",
+      "sha": "5a6a93ca1064a0df58bd2fa59ef8c523f832882b"
     },
     "shell": {
       "channel": "alpha",
@@ -120,8 +120,8 @@
       "sha": "93963e1f711c39189fbf019fa0e07d063e384aad"
     },
     "runtime": {
-      "requestedRef": "9a0cdf8d84aacf8c7daaac82efa43d1b34696a03",
-      "resolvedSha": "9a0cdf8d84aacf8c7daaac82efa43d1b34696a03"
+      "requestedRef": "5a6a93ca1064a0df58bd2fa59ef8c523f832882b",
+      "resolvedSha": "5a6a93ca1064a0df58bd2fa59ef8c523f832882b"
     },
     "contractLock": {
       "path": ".buildchain/alpha-contract-lock.json",
@@ -3052,7 +3052,7 @@
         },
         "sourceVerification": {
           "status": "passed",
-          "verifiedAt": "2026-08-07T21:05:48.856Z",
+          "verifiedAt": "2026-08-07T21:54:34.849Z",
           "required": true,
           "surfaces": [
             {
@@ -3947,7 +3947,7 @@
         },
         "artifactVerification": {
           "status": "passed",
-          "verifiedAt": "2026-08-07T21:05:48.856Z",
+          "verifiedAt": "2026-08-07T21:54:34.849Z",
           "surfaces": [
             {
               "name": ".github/workflows/.build.yml",
@@ -5179,7 +5179,7 @@
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-kfd-2-release-trust-passport-audit",
     "status": "passed",
-    "verifiedAt": "2026-08-07T21:05:48.885Z",
+    "verifiedAt": "2026-08-07T21:54:34.887Z",
     "auditBoundary": {
       "scope": "public release claims visible to humans or agents",
       "policy": "public claims must bind declared sources, machine-readable evidence, hashes, artifact coordinates, verification results, audit boundaries, responsibility state, and residual risk"
@@ -16657,7 +16657,7 @@
         },
         "comparison": {
           "status": "passed",
-          "verifiedAt": "2026-08-07T21:05:48.878Z",
+          "verifiedAt": "2026-08-07T21:54:34.880Z",
           "supportLevel": "release",
           "declaredPublicSurfaceCount": 163,
           "declaredShippedPublicSurfaceCount": 163,
