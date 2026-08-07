@@ -191,6 +191,14 @@ test("generated router delegates alpha and stable lanes to their configured shel
     /\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
   );
   assert.match(generated, /\.release-candidate-promote\.yml@v3(?:\n|$)/);
+  assert.match(
+    generated,
+    /publication-authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/,
+  );
+  assert.doesNotMatch(
+    generated,
+    /publication-authority-workflow-path: \.github\/workflows\/release-candidate-promote\.yml/,
+  );
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
 });

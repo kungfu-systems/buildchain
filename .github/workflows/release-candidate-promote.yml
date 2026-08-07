@@ -962,7 +962,7 @@ jobs:
       publication-auto-admission: ${{ inputs.publication-auto-admission }}
       publication-auto-no-gate: ${{ inputs.publication-auto-no-gate }}
       publication-publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
-      publication-authority-workflow-path: .github/workflows/release-candidate-promote.yml
+      publication-authority-workflow-path: .github/workflows/.release-candidate-promote.yml
       publication-product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-package-name: ${{ inputs.publication-package-name }}
