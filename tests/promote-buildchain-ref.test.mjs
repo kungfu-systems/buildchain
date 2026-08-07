@@ -1446,6 +1446,11 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref/action.yml"),
     "name: runtime\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/promotion-shell/.github/workflows"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/promotion-shell/.github/workflows/release-candidate-promote.yml"),
+    "name: promotion shell\n",
+  );
   fs.mkdirSync(path.join(cwd, ".buildchain/contract-drift"), { recursive: true });
   fs.writeFileSync(
     path.join(cwd, ".buildchain/contract-drift/issue-body.md"),
