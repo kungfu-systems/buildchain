@@ -179,6 +179,7 @@ async function publishReleaseTail({
       releasePassportOutputDir: releaseOptions.releasePassportOutputDir,
       additionalAssetPaths: releaseOptions.additionalAssetPaths,
       statePath: releaseTailStatePath,
+      targetRef,
     },
   });
   const completion = await recordGitHubReleaseTransactionCompletion({

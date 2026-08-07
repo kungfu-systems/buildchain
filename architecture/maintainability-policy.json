@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 110579,
+    "maxHandMaintainedSourceLines": 110692,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22517,
-    "latestTransition": "Publication rehearsal and consumer-equivalent self-release now share the declarative provider plane while retaining explicit local construction, hosted transport, route, transaction, receipt, and readback evidence.",
-    "rationale": "The combined transition adds the capsule runtime and projection module, rooted diagnostics and evidence, thin CLI and Action wrappers, generated init and Paper surfaces, normative ADR, schema, parity tests, one GitHub Release adapter coordinator, and consumer-equivalent self-release routing. It introduces no second transaction writer or executable consumer hook, and these exact ceilings cannot grow implicitly."
+    "latestTransition": "Declarative GitHub Release recovery now verifies and observes existing public evidence while adding only missing Passport companions.",
+    "rationale": "The recovery transition adds identical-name evidence deduplication, combined local and public Passport verification, immutable preservation of existing public bytes, missing-companion upload, and provider-transaction readback coverage. It introduces no overwrite or second transaction writer, and these exact ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
