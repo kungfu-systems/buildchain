@@ -6,9 +6,8 @@ import { pathToFileURL } from "node:url";
 import { evaluateWorkflowCallContract } from "../packages/core/workflow-call-contract.js";
 import { parseWorkflowDocument } from "../packages/core/workflow-yaml-contract.js";
 
-export const SELF_RELEASE_PUBLIC_REF =
-  "train/v3/v3.0/consumer-equivalent-self-dogfood";
-export const SELF_RELEASE_PUBLIC_WORKFLOW = `kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@${SELF_RELEASE_PUBLIC_REF}`;
+export const SELF_RELEASE_REF = "93963e1f711c39189fbf019fa0e07d063e384aad";
+export const SELF_RELEASE_PUBLIC_WORKFLOW = `kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@${SELF_RELEASE_REF}`;
 
 function parityFailure(message) {
   throw new Error(`self-release route parity: ${message}`);
@@ -40,7 +39,7 @@ export function selfReleaseRouteIdentity(workflowText, jobId = "promote") {
       `caller uses ${job.uses}, expected ${SELF_RELEASE_PUBLIC_WORKFLOW}`,
     );
   }
-  if (literal(job, "buildchain-ref") !== SELF_RELEASE_PUBLIC_REF) {
+  if (literal(job, "buildchain-ref") !== SELF_RELEASE_REF) {
     parityFailure("caller runtime ref differs from the public workflow ref");
   }
   if (literal(job, "declarative-release-tail") !== true) {
@@ -50,7 +49,7 @@ export function selfReleaseRouteIdentity(workflowText, jobId = "promote") {
   }
   return {
     publicWorkflow: job.uses,
-    runtimeRef: SELF_RELEASE_PUBLIC_REF,
+    runtimeRef: SELF_RELEASE_REF,
     declarationContract: "kungfu-buildchain-release-tail-capabilities/v1",
     declarationCompiler:
       "packages/core/release-tail-provider-plane.js#compileReleaseTailDeclaration",
@@ -79,13 +78,14 @@ export function assertSelfReleaseRouteParity({
       "Buildchain self-release and representative consumer identities differ",
     );
   }
-  if (routing?.alpha?.callRef !== SELF_RELEASE_PUBLIC_REF) {
+  const alphaShellRef = routing?.alpha?.callRef;
+  if (alphaShellRef !== "train/v3/v3.0/consumer-equivalent-self-dogfood") {
     parityFailure(
       "alpha workflow shell does not resolve through the self-dogfood train",
     );
   }
   for (const required of [
-    `uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@${SELF_RELEASE_PUBLIC_REF}`,
+    "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood",
     "declarative-release-tail: ${{ inputs.declarative-release-tail }}",
   ]) {
     if (!publicWorkflowText.includes(required)) {
