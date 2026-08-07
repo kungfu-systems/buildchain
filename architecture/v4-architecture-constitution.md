@@ -90,3 +90,12 @@ This Wave 0 constitution does not migrate Delivery Warrant, Release
 Transaction, activation, publication, or any other production writer to Rust.
 It does not select a final Rust/libnode ABI, introduce a daemon or service
 database, move consumers to v4, or publish v4 as stable.
+
+## 7. Wave 0 host boundary
+
+The bounded Rust/libnode bridge spike is recorded in
+[`v4-rust-libnode-bridge-spike.md`](v4-rust-libnode-bridge-spike.md). Wave 0
+uses a replaceable subprocess host behind a closed byte-oriented contract; the
+Rust trunk owns process lifecycle and transport, while existing TypeScript
+remains the only production writer. This selection is evidence for later
+qualification, not a final ABI or consumer migration.

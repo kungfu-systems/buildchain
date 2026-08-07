@@ -34,7 +34,11 @@
     "scripts/web-surface.mjs",
     "scripts/workflow-call-contract.mjs",
     "scripts/verify-promotion-router-binding.sh",
-    "scripts/v4-architecture.mjs"
+    "scripts/v4-architecture.mjs",
+    "scripts/v4-bridge-bootstrap.mjs",
+    "scripts/v4-bridge-evidence.mjs",
+    "scripts/v4-host-adapter.mjs",
+    "crates/buildchain-v4-bridge/src/main.rs"
   ],
   "ownershipRules": [
     {
@@ -61,6 +65,11 @@
       "id": "workflow-runtime-sources",
       "owner": "Buildchain workflow maintainers",
       "paths": ["scripts"]
+    },
+    {
+      "id": "v4-rust-domain-sources",
+      "owner": "Buildchain architecture maintainers",
+      "paths": ["crates"]
     }
   ],
   "ownershipExclusions": [],
@@ -334,13 +343,22 @@
     {
       "id": "v4-architecture-governance",
       "owner": "Buildchain architecture maintainers",
-      "implementation": ["scripts/v4-architecture.mjs"],
-      "tests": ["tests/v4-architecture.test.mjs"],
+      "implementation": [
+        "scripts/v4-architecture.mjs",
+        "scripts/v4-bridge-bootstrap.mjs",
+        "scripts/v4-bridge-evidence.mjs",
+        "scripts/v4-host-adapter.mjs",
+        "crates/buildchain-v4-bridge/src/main.rs"
+      ],
+      "tests": ["tests/v4-architecture.test.mjs", "tests/v4-bridge.test.mjs"],
       "contracts": [
         "architecture/v4-architecture-constitution.md",
         "architecture/v4-capability-state-machine-manifest.json",
         "architecture/v4-bootstrap-authority.json",
-        "architecture/v4-exception-ledger.json"
+        "architecture/v4-exception-ledger.json",
+        "architecture/v4-rust-libnode-bridge-evaluation.json",
+        "architecture/v4-rust-libnode-bridge-spike.md",
+        "contracts/v4-host-contract-v1.schema.json"
       ]
     }
   ]

@@ -5,7 +5,8 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
-const implementationExtensions = new Set([".js", ".mjs", ".cjs", ".sh"]);
+const implementationExtensions = new Set([".js", ".mjs", ".cjs", ".rs", ".sh"]);
+const repositorySourceExtensions = new Set([".js", ".mjs", ".cjs", ".rs"]);
 const importPattern =
   /(?:\bimport\s*(?:\([^)]*?\)|[^"'\n]*?\s+from\s+)?|\bexport\s+[^"'\n]*?\s+from\s+)(["'])([^"'\n]+)\1/g;
 
@@ -116,7 +117,7 @@ function assertIndexShape(index) {
   }
 }
 
-function repositoryJavaScriptFiles(root) {
+function repositorySourceFiles(root) {
   return execFileSync(
     "git",
     ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
@@ -128,7 +129,7 @@ function repositoryJavaScriptFiles(root) {
     .split("\0")
     .filter(Boolean)
     .filter((file) => fs.existsSync(path.resolve(root, file)))
-    .filter((file) => [".js", ".mjs", ".cjs"].includes(path.extname(file)))
+    .filter((file) => repositorySourceExtensions.has(path.extname(file)))
     .filter((file) => !file.startsWith("tests/"))
     .filter((file) => !/(?:^|\/)tests?\//u.test(file))
     .filter((file) => !/^actions\/[^/]+\/dist\//u.test(file))
@@ -306,7 +307,7 @@ function checkInternalArchitecture({
 } = {}) {
   assertIndexShape(index);
   const issues = [];
-  const repositorySources = repositoryJavaScriptFiles(root);
+  const repositorySources = repositorySourceFiles(root);
   const ownership = evaluateSourceOwnership(index, repositorySources);
   const capabilities = evaluateCapabilities(root, index);
   issues.push(...ownership.issues, ...capabilities.issues);
@@ -360,5 +361,5 @@ export {
   checkInternalArchitecture,
   dependencyCycles,
   relativeImports,
-  repositoryJavaScriptFiles,
+  repositorySourceFiles,
 };

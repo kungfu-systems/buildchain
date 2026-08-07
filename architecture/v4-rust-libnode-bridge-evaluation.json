@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-rust-libnode-bridge-evaluation",
+  "observedAt": "2026-08-07T05:50:58.385Z",
+  "baseline": {
+    "buildchainRevision": "95e7c1060cae94a38b72c5ac3d7b79cce0ad662b",
+    "libnodeRepository": "kungfu-systems/libnode",
+    "libnodeRevision": "4bef69b88a441f22024fa9f3d7bfd76a89963e8a"
+  },
+  "selection": {
+    "id": "rust-trunk-node-subprocess-host-v1",
+    "status": "selected-for-wave-0",
+    "replaceable": true,
+    "productionWriterAuthority": "typescript-v3",
+    "contract": "contracts/v4-host-contract-v1.schema.json"
+  },
+  "contractBoundary": {
+    "protocolVersion": "1.0",
+    "requestFields": [
+      "command identity",
+      "arguments",
+      "canonical base64 input bytes",
+      "required capabilities",
+      "timeout"
+    ],
+    "responseFields": [
+      "structured result",
+      "byte-exact stdout and stderr",
+      "diagnostics",
+      "exit code and signal",
+      "host capabilities"
+    ],
+    "explicitUnsupportedStatus": "unsupported",
+    "credentialSerialization": "forbidden-by-closed-request",
+    "privateRuntimeLayouts": "absent"
+  },
+  "options": [
+    {
+      "id": "rust-process-direct-libnode-cxx-api",
+      "status": "rejected-for-wave-0",
+      "prototypeDisposition": "source-grounded-infeasibility",
+      "build": "requires a new C++ shim and platform-specific Node/V8 link graph",
+      "runtime": "one process but one Node isolate and event-loop lifecycle inside the Rust host",
+      "packaging": "must ship a 110302336-byte observed dylib plus a Rust/C++ ABI-matched shim on darwin-arm64",
+      "lifecycle": "must bind InitializeOncePerProcess, CommonEnvironmentSetup, SpinEventLoop, Stop, and teardown",
+      "failure": "C++ exceptions, fatal V8 failures, and process-global initialization share the Rust failure domain",
+      "cancellation": "requires cross-thread node::Stop and isolate lifecycle ownership",
+      "portability": "separate linker and loader work is required for dylib, so, and dll targets",
+      "falsifiableReconsideration": "reconsider when libnode publishes a versioned C ABI shim that owns initialization, cancellation, teardown, and byte-oriented request-response semantics",
+      "evidence": [
+        "kungfu-systems/libnode@4bef69b88a441f22024fa9f3d7bfd76a89963e8a:README.md exposes only libpath and include compiler coordinates",
+        "kungfu-systems/libnode@4bef69b88a441f22024fa9f3d7bfd76a89963e8a:src/cpp/link.cc exports an empty N-API module, not an embedder C ABI",
+        "kungfu-systems/libnode@4bef69b88a441f22024fa9f3d7bfd76a89963e8a:node/src/node.h exposes the C++ embedding lifecycle"
+      ]
+    },
+    {
+      "id": "rust-trunk-node-subprocess-host-v1",
+      "status": "selected-for-wave-0",
+      "prototypeDisposition": "implemented-and-tested",
+      "build": "one bounded Rust binary plus an existing Node-compatible MJS host",
+      "runtime": "one child per request; no daemon, shared database, or second authority",
+      "packaging": "Rust source, lockfile, contract, and MJS host are included in the npm dry-run package",
+      "lifecycle": "Rust owns spawn, bounded input-output, timeout, termination, and reap",
+      "failure": "invalid response, host crash, controlled command failure, and unsupported capability are distinct",
+      "cancellation": "timeout and SIGINT terminate and reap the host before returning a structured cancellation",
+      "portability": "uses std::process plus the repository Node runtime; darwin-arm64 is executed and Linux/Windows remain bounded validation targets",
+      "replacementMechanism": "BUILDCHAIN_V4_HOST_COMMAND and BUILDCHAIN_V4_HOST_SCRIPT replace the host without changing the Rust domain contract",
+      "evidence": [
+        "tests/v4-bridge.test.mjs",
+        "crates/buildchain-v4-bridge/src/main.rs",
+        "scripts/v4-host-adapter.mjs"
+      ]
+    }
+  ],
+  "retainedFixtures": [
+    "architecture.list read-only JSON command",
+    "architecture.show structured JSON command",
+    "controlled failure with partial stdout, stderr, and exit 42",
+    "512 KiB canonical byte echo",
+    "unsupported capability",
+    "host crash before response",
+    "timeout cancellation",
+    "SIGINT cancellation and reap",
+    "credential field rejection"
+  ],
+  "observedMeasurements": {
+    "environment": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "node": "v24.16.0",
+      "rustc": "rustc 1.95.0 (59807616e 2026-04-14) (Homebrew)"
+    },
+    "iterations": 7,
+    "directNodeHostColdStartMedianMs": 39.215,
+    "rustSubprocessBridgeColdStartMedianMs": 58.608,
+    "rustSubprocessBridgeColdStartRangeMs": [49.582, 523.831],
+    "rustReleaseBinaryBytes": 768544,
+    "observedLibnodeArtifactBytes": 110302336,
+    "interpretation": "The subprocess boundary adds about 19.4 ms at the median in this bounded local probe; the seven-sample maximum shows cold-start variance and is not a final ABI benchmark."
+  },
+  "nonClaims": [
+    "No production state-machine writer moved from TypeScript v3.",
+    "No daemon, service database, credential broker, or second process authority was introduced.",
+    "The selected Wave 0 host is replaceable and is not the final v4 ABI.",
+    "Linux and Windows runtime parity is not claimed by the darwin-arm64 measurement."
+  ]
+}

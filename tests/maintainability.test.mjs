@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process";
 import {
   analyzeJavaScript,
   collectMaintainabilityMetrics,
+  isHandMaintainedSource,
 } from "../scripts/maintainability-metrics.mjs";
 import {
   ensureMaintainabilityRevisionsAvailable,
@@ -94,6 +95,14 @@ test("repository-wide source and workflow growth require an explicit ceiling", (
     policy: fixturePolicy,
   });
   assert.equal(issues.length, 4);
+});
+
+test("Rust domain sources participate in the repository source budget", () => {
+  assert.equal(
+    isHandMaintainedSource("crates/buildchain-v4-bridge/src/main.rs"),
+    true,
+  );
+  assert.equal(isHandMaintainedSource("tests/fixture.rs"), false);
 });
 
 test("exact-head maintainability baseline is reproducible", () => {
