@@ -1,0 +1,176 @@
+{
+  "schema": "buildchain-v4-stage-capsule-resume-request/v1",
+  "evaluatedAt": "2026-08-10T00:00:00.000Z",
+  "nodes": [
+    {
+      "key": "build",
+      "dependencies": [],
+      "expectedIdentity": {
+        "schema": "buildchain-v4-stage-capsule-identity/v1",
+        "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "platform": "linux-x64-gnu",
+        "platformRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "stage": "build",
+        "toolchainRoots": [
+          {
+            "name": "clang",
+            "root": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          {
+            "name": "node",
+            "root": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ],
+        "runtimeRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "policyRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "declaredInputs": [
+          {
+            "name": "lockfile",
+            "root": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+          },
+          {
+            "name": "source-tree",
+            "root": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        ],
+        "transformationRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "outputManifestRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "observationRoots": [
+          {
+            "name": "supply-chain",
+            "root": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        ]
+      },
+      "expectedRetentionPromise": {
+        "class": "wave-two",
+        "retainUntil": "2026-11-07T00:00:00.000Z"
+      },
+      "candidate": {
+        "capsule": {
+          "schema": "buildchain-v4-stage-capsule/v1",
+          "writerAuthority": "typescript-v3",
+          "rustAuthority": "validation-only",
+          "identity": {
+            "schema": "buildchain-v4-stage-capsule-identity/v1",
+            "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "platform": "linux-x64-gnu",
+            "platformRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "stage": "build",
+            "toolchainRoots": [
+              {
+                "name": "clang",
+                "root": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+              },
+              {
+                "name": "node",
+                "root": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+              }
+            ],
+            "runtimeRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "policyRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "declaredInputs": [
+              {
+                "name": "lockfile",
+                "root": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+              },
+              {
+                "name": "source-tree",
+                "root": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ],
+            "transformationRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "outputManifestRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "observationRoots": [
+              {
+                "name": "supply-chain",
+                "root": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              }
+            ]
+          },
+          "identityRoot": "sha256:48e3ef563193c466785032b512aae986c4ce02c2c94b6749910e711812bcbacf",
+          "retentionPromise": {
+            "class": "wave-two",
+            "retainUntil": "2026-11-07T00:00:00.000Z"
+          },
+          "capsuleRoot": "sha256:d847ce1b9dc5d5c6f888ee5c196e9f17f921429b89c6f10ddcb5b9449e87d998"
+        },
+        "availability": {
+          "schema": "buildchain-v4-stage-capsule-availability/v1",
+          "capsuleRoot": "sha256:d847ce1b9dc5d5c6f888ee5c196e9f17f921429b89c6f10ddcb5b9449e87d998",
+          "observedAt": "2026-08-09T00:00:00.000Z",
+          "status": "available",
+          "contentRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "transports": [
+            {
+              "name": "primary",
+              "root": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            }
+          ],
+          "faultCode": null
+        }
+      }
+    },
+    {
+      "key": "verify",
+      "dependencies": ["build"],
+      "expectedIdentity": {
+        "schema": "buildchain-v4-stage-capsule-identity/v1",
+        "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "platform": "linux-x64-gnu",
+        "platformRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "stage": "verify",
+        "toolchainRoots": [
+          {
+            "name": "clang",
+            "root": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          {
+            "name": "node",
+            "root": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ],
+        "runtimeRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "policyRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "declaredInputs": [
+          {
+            "name": "lockfile",
+            "root": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+          },
+          {
+            "name": "source-tree",
+            "root": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        ],
+        "transformationRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "outputManifestRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "qualificationRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "observationRoots": [
+          {
+            "name": "supply-chain",
+            "root": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        ]
+      },
+      "expectedRetentionPromise": {
+        "class": "wave-two",
+        "retainUntil": "2026-11-07T00:00:00.000Z"
+      },
+      "candidate": null
+    }
+  ],
+  "targets": ["verify"],
+  "effects": [
+    {
+      "id": "publish-release",
+      "kind": "release-tail",
+      "provider": "github",
+      "afterStages": ["verify"],
+      "providerReadback": true,
+      "mutation": false
+    }
+  ]
+}

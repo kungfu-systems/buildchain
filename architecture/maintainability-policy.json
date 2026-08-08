@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 301,
-    "maxHandMaintainedSourceLines": 115311,
+    "maxHandMaintainedSourceFiles": 305,
+    "maxHandMaintainedSourceLines": 116378,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22305,
-    "latestTransition": "The Wave 2 platform checkpoint successor adds one declaration-driven TypeScript adapter and one clean-process rehearsal driver, plus a protected three-platform shadow matrix, without production skip or provider authority.",
-    "rationale": "The exact platform-checkpoint ceiling adds two hand-maintained source files and thirty-six protected-workflow lines. The existing Stage Capsule and local store remain authoritative; this adapter only emits after an explicitly successful declared stage and restores into an empty directory in a separate process. Linux x64, macOS arm64, and Windows x64 share one checked-in declaration for allowed stages, inputs, outputs, environment names, toolchains, and portable paths. Exact roots bind platform identity, output bytes, qualification, retention, receipts, and shadow reports. Failed stages emit nothing and later failures preserve prior capsules. Production bytes, v3 behavior, provider effects, credentials, ambient environment, ambient clocks, signing, publication, production skipping, and second writers remain hard-zero. Existing per-file, per-function, workflow-file, public-surface, and no-widening budgets remain unchanged. Resume planning, qualification reconciliation, production providers, writer cutover, or public reuse authority requires another separately reviewed transition."
+    "maxWorkflowLines": 22309,
+    "latestTransition": "The Wave 2 resume-planner successor adds one pure Rust domain split, one byte-identical TypeScript projection, and one real-platform rehearsal driver, without production skip or provider authority.",
+    "rationale": "The exact resume-planner ceiling adds four hand-maintained source files, 1,067 hand-maintained source lines, and four protected-workflow lines. The Rust request/planner and causal-invalidation modules stay below the 600-line new-file ceiling; the TypeScript projection consumes the same closed request and shared fixture. Explicit topological targets produce only required restores and rebuilds. Source, platform, toolchain, runtime, policy, input, transformation, output-manifest, retention, availability, root, and qualification changes have deterministic reason codes and rooted causes. Provider and release-tail effects remain separate, readback-required, and mutation-disabled. The planner has no filesystem, network, environment, credential, or ambient-clock input and remains shadow-only with v3 production authority unchanged. Existing per-file, per-function, workflow-file, public-surface, and no-widening budgets remain unchanged. Qualification reconciliation, production providers, writer cutover, or public reuse authority requires another separately reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

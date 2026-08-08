@@ -109,3 +109,24 @@ Focused verification:
 ```sh
 pnpm run check:v4-contracts
 ```
+
+## Deterministic resume planning
+
+`architecture/v4-stage-capsule-resume-planner.json` closes the Wave 2 resume
+planner. Its request is an explicit topological stage graph with targets,
+expected Capsule identity and retention, current Capsule/availability
+observations, an evaluation clock, and separately declared provider or
+release-tail effects. The Rust domain core and TypeScript projection consume
+the same request without filesystem, network, environment, or ambient-clock
+access and produce the same ordered decisions and `planRoot`.
+
+An eligible completed dependency becomes an exact-root restore; a missing or
+invalid target becomes a rebuild, and only that target's dependency closure is
+scheduled. Source, platform, toolchain, runtime, policy, declared-input,
+transformation, output-manifest, and retention changes carry rooted causal
+invalidation fields. Cross-platform reuse, corrupt or partial content, root
+mismatch, and insufficient qualification reject reuse fail closed.
+
+Effects never participate in Capsule reuse. They remain ordered declarations
+with required provider readback and planner mutation disabled. This planner is
+shadow-only: it does not skip a v3 production stage or move v3 authority.
