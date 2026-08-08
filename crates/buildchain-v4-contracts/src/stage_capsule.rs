@@ -118,7 +118,7 @@ pub struct RetentionPromise {
 }
 
 impl RetentionPromise {
-    fn validate(&self) -> ContractResult<()> {
+    pub fn validate(&self) -> ContractResult<()> {
         if !ascii_token(&self.retention_class) {
             return Err(fault(
                 "invalid-stage-capsule-token",

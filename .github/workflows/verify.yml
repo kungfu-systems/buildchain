@@ -45,6 +45,10 @@ jobs:
           --platform ${{ matrix.platform }}
           --stage build
           --recorded-at 2026-08-08T00:00:00.000Z
+      - name: Rehearse deterministic Stage Capsule resume planning
+        run: >-
+          node scripts/v4-stage-capsule-resume-rehearsal.mjs
+          --platform ${{ matrix.platform }}
       - name: Upload exact Stage Capsule checkpoint evidence
         uses: actions/upload-artifact@v7.0.1
         with:

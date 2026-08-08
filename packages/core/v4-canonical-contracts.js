@@ -26,6 +26,8 @@ const ROOT_DOMAINS = new Set([
   "stage-capsule-transport",
   "stage-capsule-store-receipt",
   "stage-capsule-quarantine",
+  "stage-capsule-resume-observation",
+  "stage-capsule-resume-plan",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",

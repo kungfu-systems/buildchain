@@ -5,7 +5,7 @@ use std::io::Read;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use buildchain_v4_contracts::{
-    EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root,
+    EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root, plan_stage_capsule_resume_bytes,
     project_delivery_warrant_state_bytes, run_delivery_warrant_trace_fixture,
     run_stage_capsule_fixture, run_stage_capsule_store_fixture, validate_clock,
 };
@@ -274,6 +274,19 @@ fn run_stage_capsule_store_fixtures(fixture_path: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn run_stage_capsule_resume_request(request_path: &str) -> Result<(), String> {
+    let bytes = if request_path == "-" {
+        read_stdin()?
+    } else {
+        fs::read(request_path).map_err(|error| format!("cannot read resume request: {error}"))?
+    };
+    let plan = plan_stage_capsule_resume_bytes(&bytes)
+        .map_err(|fault| format!("{} at {}: {}", fault.code, fault.path, fault.message))?;
+    serde_json::to_writer(std::io::stdout().lock(), &plan).map_err(|error| error.to_string())?;
+    println!();
+    Ok(())
+}
+
 fn read_stdin() -> Result<Vec<u8>, String> {
     let mut bytes = Vec::new();
     std::io::stdin()
@@ -385,7 +398,10 @@ fn run() -> Result<(), String> {
         [command, fixture_path] if command == "stage-capsule-store" => {
             run_stage_capsule_store_fixtures(fixture_path)
         }
-        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store FIXTURES.json|host]".to_owned()),
+        [command, request_path] if command == "resume-plan" => {
+            run_stage_capsule_resume_request(request_path)
+        }
+        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store|resume-plan INPUT.json|host]".to_owned()),
     }
 }
 

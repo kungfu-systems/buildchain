@@ -85,6 +85,11 @@ platform/stage declaration for shadow emission and clean-process restore. Do
 not add undeclared runner-only inputs, outputs, environment, provider effects,
 credentials, or production stage-skipping authority.
 
+Stage Capsule resume planning is governed by
+`architecture/v4-stage-capsule-resume-planner.json`. Keep its Rust core and
+TypeScript projection pure and byte-identical; explicit provider/release-tail
+effects always require readback and never become Capsule reuse.
+
 `pnpm run check` validates inventory data, generated public references and site
 bundle drift, lints root workflows, runs unit tests, and rebuilds every action
 bundle.
