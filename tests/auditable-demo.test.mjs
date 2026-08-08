@@ -67,7 +67,7 @@ function terminalFillEvidence(width, height, columns, rows) {
 
 function terminalFillManifest() {
   const primary = terminalFillEvidence(1920, 1080, 150, 36);
-  const responsive = terminalFillEvidence(1280, 720, 100, 28);
+  const responsive = terminalFillEvidence(1280, 720, 150, 28);
   return {
     renderer: { contractVersion: "1.4.0" },
     policy: { compositionMode: "terminal-fill" },
@@ -83,7 +83,7 @@ function terminalFillManifest() {
 
 const TERMINAL_FILL_RENDITIONS = [
   { id: "1080p", role: "primary", width: 1920, height: 1080, columns: 150, rows: 36, compositionMode: "terminal-fill" },
-  { id: "720p", role: "responsive", width: 1280, height: 720, columns: 100, rows: 28, compositionMode: "terminal-fill" },
+  { id: "720p", role: "responsive", width: 1280, height: 720, columns: 150, rows: 28, compositionMode: "terminal-fill" },
 ];
 
 test("renderer composition admission proves exact terminal-fill viewports and fails closed on drift", () => {
@@ -708,8 +708,8 @@ test("native rendition set binds distinct 1080p and 720p captures", (t) => {
     cues: [{ startMs: 0, endMs: 2500, transcriptLines: [1, 2], annotation: "compact output" }],
   }));
   const responsiveCapture = terminalCapture(2500);
-  responsiveCapture.dimensions = { columns: 100, rows: 28 };
-  responsiveCapture.events[0].data = Buffer.from("compact 100x28\r\n").toString("base64");
+  responsiveCapture.dimensions = { columns: 150, rows: 28 };
+  responsiveCapture.events[0].data = Buffer.from("compact 150x28\r\n").toString("base64");
   responsiveCapture.completion.reportRoot = `sha256:${"f".repeat(64)}`;
   fs.writeFileSync(path.join(root, "terminal-capture-720p.json"), stableJson(responsiveCapture));
 
