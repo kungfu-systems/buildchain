@@ -6,7 +6,7 @@
     "cliCommandCount": 113,
     "workflowCount": 64,
     "actionCount": 6,
-    "sitePageCount": 67,
+    "sitePageCount": 68,
     "docCommandRefCount": 896,
     "failureCount": 0
   },
@@ -3196,6 +3196,10 @@
       },
       {
         "id": "manual:v4-canonical-contracts",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-delivery-warrant-semantic-diff",
         "category": "manual"
       },
       {
@@ -7700,7 +7704,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
     "workflowRegistryDigest": "b8d8226430132d16f40865603ff710197bb3ab9cea12d79082a3e4ad0f82a22b",
-    "pageRegistryDigest": "33b2eeec04c60cc917d5f4494e990dd57c1b9c7852c877965e5f5104441628da"
+    "pageRegistryDigest": "a51ee95ce817cc8b710a1c6bd5ad219943e9d89d92d409cf0981c88e7d896f77"
   },
   "comparison": {
     "missingCliRegistry": [],

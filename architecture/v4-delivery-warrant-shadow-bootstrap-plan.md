@@ -123,6 +123,12 @@ replay has no unexplained semantic difference. Replay inputs, both projections,
 the diff, source revisions, and validator version are retained for 90 days.
 Provider conflict or indeterminate readback stops; it never manufactures state.
 
+The executable gate and its closed report contract are documented in
+[`v4-delivery-warrant-semantic-diff.md`](../docs/v4-delivery-warrant-semantic-diff.md).
+It adds bounded property traces and fault probes around the paired shadow
+observation. A passing report only opens the reversible v4-read candidate; its
+write-authorization field is permanently false.
+
 ## Bootstrap, cutover, and rollback
 
 | Stage                        | Sole authority                                      | Exit evidence                                                             | Rollback                                                         |

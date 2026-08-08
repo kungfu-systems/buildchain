@@ -11,6 +11,11 @@ import {
   V4_DELIVERY_WARRANT_SHADOW_OBSERVATION_CONTRACT,
   runV4DeliveryWarrantShadow,
 } from "../packages/core/v4-delivery-warrant-shadow-adapter.js";
+import {
+  V4_DELIVERY_WARRANT_SEMANTIC_DIFF_REQUIRED_COVERAGE,
+  runV4DeliveryWarrantSemanticDiffGate,
+} from "../packages/core/v4-delivery-warrant-semantic-diff-gate.js";
+import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const fixtureRoot = new URL(
@@ -429,5 +434,132 @@ test("timeout, crash, cancellation, malformed response, unsupported host, and re
   assert.doesNotMatch(
     JSON.stringify(retentionFailure.shadow),
     /private sink detail/u,
+  );
+});
+
+const semanticCases = [
+  {
+    id: "golden",
+    bytes: readFixture("golden.json"),
+    coverage: ["golden", "lease-fence"],
+  },
+  {
+    id: "captured-replay",
+    bytes: readFixture("replay.json"),
+    coverage: ["lease-fence", "replay", "response-loss"],
+    retention: { kind: "captured-replay", publicSafe: true },
+  },
+  {
+    id: "property",
+    bytes: readFixture("property.json"),
+    coverage: [
+      "cancellation",
+      "cas",
+      "conflict",
+      "duplicate",
+      "property",
+      "response-loss",
+    ],
+  },
+];
+const semanticOptions = {
+  recordedAt: "2026-08-08T00:00:00.000Z",
+  sources: { ...sources, validatorVersion: "semantic-diff-gate-v1" },
+  contracts: {
+    traceSchemaRoot: `sha256:${"c".repeat(64)}`,
+    reportSchemaRoot: `sha256:${"d".repeat(64)}`,
+    runnerRoot: `sha256:${"e".repeat(64)}`,
+  },
+  faultProbes: [
+    ["decision", "decision/action", "drifted"],
+    ["successor", "successorRoot", `sha256:${"0".repeat(64)}`],
+    ["generation", "generation", 99],
+    ["fencing", "fencingCounter", 99],
+    ["effects", "effects"],
+    ["observations", "observations"],
+    ["receipt", "receiptRoot", `sha256:${"0".repeat(64)}`],
+  ].map(([id, suffix, value]) => ({
+    id,
+    caseId: "golden",
+    path: `$/projection/steps/0/${suffix}`,
+    operation: value === undefined ? "remove" : "replace",
+    value,
+  })),
+  retainObservation() {},
+  retain(report) {
+    return { receiptRoot: v4ContentRoot("semantic-diff", report) };
+  },
+};
+
+test("semantic diff gate binds complete zero-diff coverage and detects bounded faults", async () => {
+  const reportSchema = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../contracts/v4-delivery-warrant-semantic-diff-report-v1.schema.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  assert.equal(reportSchema.additionalProperties, false);
+  assert.ok(reportSchema.$defs.case.required.includes("observationRoot"));
+  assert.equal(
+    reportSchema.properties.verdict.properties.v4WriteAuthorized.const,
+    false,
+  );
+  const report = await runV4DeliveryWarrantSemanticDiffGate(
+    semanticCases,
+    semanticOptions,
+  );
+  assert.equal(report.verdict.status, "qualified");
+  assert.equal(report.verdict.v4WriteAuthorized, false);
+  assert.deepEqual(
+    report.coverage.required,
+    V4_DELIVERY_WARRANT_SEMANTIC_DIFF_REQUIRED_COVERAGE,
+  );
+  assert.deepEqual(report.coverage.missing, []);
+  assert.ok(
+    report.cases.every((entry) => entry.status === "zero-unexplained-diff"),
+  );
+  assert.ok(report.faultInjection.receipts.every((entry) => entry.detected));
+  assert.ok(
+    report.cases.every((entry) => /^sha256:/.test(entry.observationRoot)),
+  );
+  assert.equal(report.retention.status, "retained");
+  assert.match(report.reportRoot, /^sha256:[0-9a-f]{64}$/u);
+});
+
+test("semantic diff gate retains an explainable blocker for every unexplained change", async () => {
+  const report = await runV4DeliveryWarrantSemanticDiffGate(semanticCases, {
+    ...semanticOptions,
+    runShadow(value, options) {
+      return runV4DeliveryWarrantShadow(value, {
+        ...options,
+        invokeRust(request) {
+          const projection = runV4DeliveryWarrantTraceFixture(
+            Buffer.from(request.input.bytes, "base64"),
+          );
+          if (request.requestId === "semantic-diff-golden")
+            projection.projection.steps[0].generation += 1;
+          return hostResponse(request, projection);
+        },
+      });
+    },
+  });
+  assert.equal(report.verdict.status, "blocked");
+  assert.equal(report.verdict.nextEligibleStage, null);
+  assert.ok(
+    report.blockers.some((entry) => entry.code === "unexplained-difference"),
+  );
+  assert.equal(report.cases[0].differences[0].classification, "unexplained");
+  assert.equal("legacyValue" in report.cases[0].differences[0], false);
+
+  const unretained = await runV4DeliveryWarrantSemanticDiffGate(semanticCases, {
+    ...semanticOptions,
+    retainObservation: undefined,
+  });
+  assert.equal(unretained.verdict.status, "blocked");
+  assert.ok(
+    unretained.blockers.some((entry) => entry.code === "retention-failed"),
   );
 });
