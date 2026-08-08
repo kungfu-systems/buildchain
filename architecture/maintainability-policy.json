@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 110830,
+    "maxHandMaintainedSourceLines": 110842,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22519,
     "latestTransition": "Apple archive signing now seals an exact Buildchain-owned JIT entitlement profile and archive-relative executable targets.",
@@ -20,8 +20,8 @@
   },
   "approvedNewFileTransitions": {
     "packages/core/publication-rehearsal-runtime.js": {
-      "maxLines": 909,
-      "rationale": "The public audit surface keeps strict capsule normalization, path and file verification, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."
+      "maxLines": 921,
+      "rationale": "The public audit surface keeps strict capsule normalization, path and streaming file verification including artifacts larger than the Node Buffer limit, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."
     },
     "packages/core/release-tail-provider-plane.js": {
       "maxLines": 1228,

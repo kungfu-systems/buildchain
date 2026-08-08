@@ -245,6 +245,47 @@ test("capsule file tampering fails closed with a stable rooted diagnostic", asyn
   assert.match(diagnostic.diagnosticRoot, /^sha256:[0-9a-f]{64}$/u);
 });
 
+test(
+  "capsule verification streams regular files larger than the Buffer limit",
+  { timeout: 120_000 },
+  () => {
+    const input = fixture("large-file");
+    const artifactPath = path.join(input.capsuleRoot, "artifacts/product.bin");
+    const size = 2 ** 31 + 1;
+    fs.writeFileSync(artifactPath, "");
+    fs.truncateSync(artifactPath, size);
+    const artifactRoot =
+      "sha256:b8030a8ab89280935633d8d991da3d9907c0f12e8b6fc3bfc515f4d440872b6e";
+    const declaration = structuredClone(input.declaration);
+    const artifactCapability = declaration.capabilities.find(
+      (entry) => entry.id === "artifact.publish",
+    );
+    artifactCapability.artifactRoles.find(
+      (entry) => entry.role === "installable-product",
+    ).root = artifactRoot;
+    const files = structuredClone(input.files);
+    const artifact = files.find(
+      (entry) => entry.role === "installable-product",
+    );
+    artifact.size = size;
+    artifact.root = artifactRoot;
+    const capsule = createPublicationRehearsalCapsule({
+      declaration,
+      policyRoots: input.capsule.policyRoots,
+      passport: input.capsule.passport,
+      files,
+      providerBindings: input.providerBindings,
+    });
+    assert.equal(
+      verifyPublicationRehearsalCapsule({
+        capsule,
+        capsuleRoot: input.capsuleRoot,
+      }).capsule.root,
+      capsule.root,
+    );
+  },
+);
+
 test("undeclared environment and platform assumptions are rejected", async () => {
   const input = fixture("environment");
   await assert.rejects(
