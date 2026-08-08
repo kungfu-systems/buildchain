@@ -1869,7 +1869,7 @@ function generateReleaseEvidenceInputs({
   });
 }
 
-function releasePassportAssetsFromSealedBundle({ result, cwd }) {
+function releasePassportAssetsFromSealedBundle({ result, cwd, releaseCandidateValidation }) {
   const verifiedBundle = result?.sealedBundle;
   const durableManifest = verifiedBundle?.manifest || result?.transaction?.sealed_bundle;
   const releaseAssets = verifiedBundle?.releaseAssets?.length > 0
@@ -1879,12 +1879,32 @@ function releasePassportAssetsFromSealedBundle({ result, cwd }) {
     cwd,
     result?.transaction?.version,
   );
-  return releaseAssets.map((asset) => ({
+  const sealedAssets = releaseAssets.map((asset) => ({
     name: path.basename(asset.path || asset.absolutePath || ""),
     path: asset.absolutePath || resolveMaybeRelative(bundleRoot, asset.path || ""),
     size: asset.size,
     sha256: asset.sha256,
   }));
+  const candidateAssets = (releaseCandidateValidation?.releaseAssets || []).map((assetPath) => {
+    const resolvedPath = resolveMaybeRelative(cwd, assetPath);
+    const bytes = fs.readFileSync(resolvedPath);
+    return {
+      name: path.basename(resolvedPath),
+      path: resolvedPath,
+      size: bytes.length,
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+    };
+  });
+  const selected = sealedAssets.length > 0 ? sealedAssets : candidateAssets;
+  const byName = new Map();
+  for (const asset of selected) {
+    const existing = byName.get(asset.name);
+    if (existing && existing.sha256 !== asset.sha256) {
+      throw new Error(`release candidate asset name has conflicting bytes: ${asset.name}`);
+    }
+    if (!existing) byName.set(asset.name, asset);
+  }
+  return [...byName.values()];
 }
 
 async function collectAndPersistReleasePassport({
@@ -1945,7 +1965,11 @@ async function collectAndPersistReleasePassport({
     const artifactName = normalized.slice(markerIndex + marker.length).split(path.sep)[0];
     return artifactName ? [normalized.slice(0, markerIndex + marker.length) + artifactName] : [];
   }))];
-  const sealedReleaseAssets = releasePassportAssetsFromSealedBundle({ result, cwd });
+  const sealedReleaseAssets = releasePassportAssetsFromSealedBundle({
+    result,
+    cwd,
+    releaseCandidateValidation,
+  });
   const loadedConfig = loadBuildchainConfig(cwd);
   const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
   const anchorManifestPath = anchorManifest?.path ? path.resolve(cwd, anchorManifest.path) : "";

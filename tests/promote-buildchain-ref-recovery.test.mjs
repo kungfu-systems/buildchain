@@ -88,6 +88,34 @@ test("release passport recovers assets from the durable sealed-bundle manifest",
   }]);
 });
 
+test("release passport recovers the live candidate release-asset paths", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-passport-assets-"));
+  const first = path.join(cwd, "candidate", "kungfu-episodes-cli-linux-x64.tar.gz");
+  const duplicate = path.join(cwd, "signing", "kungfu-episodes-cli-linux-x64.tar.gz");
+  fs.mkdirSync(path.dirname(first), { recursive: true });
+  fs.mkdirSync(path.dirname(duplicate), { recursive: true });
+  fs.writeFileSync(first, "sealed-candidate-bytes");
+  fs.copyFileSync(first, duplicate);
+  const assets = releasePassportAssetsFromSealedBundle({
+    cwd,
+    result: { transaction: { version: "4.0.0-alpha.1" } },
+    releaseCandidateValidation: {
+      releaseAssets: [
+        path.relative(cwd, first),
+        path.relative(cwd, duplicate),
+      ],
+    },
+  });
+  assert.equal(assets.length, 1);
+  assert.equal(assets[0].name, "kungfu-episodes-cli-linux-x64.tar.gz");
+  assert.equal(assets[0].path, first);
+  assert.equal(assets[0].size, 22);
+  assert.equal(
+    assets[0].sha256,
+    crypto.createHash("sha256").update("sealed-candidate-bytes").digest("hex"),
+  );
+});
+
 test("publish subprocesses omit oversized inline variables", () => {
   const name = "INPUT_RELEASE_PASSPORT_PLATFORM_MANIFEST_PATHS";
   const previous = process.env[name];
