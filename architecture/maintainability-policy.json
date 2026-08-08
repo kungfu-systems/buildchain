@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 288,
-    "maxHandMaintainedSourceLines": 109671,
+    "maxHandMaintainedSourceFiles": 291,
+    "maxHandMaintainedSourceLines": 110945,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22269,
-    "latestTransition": "The shared-fixture-runner slice adds one provider-free Rust trace reader and one JavaScript peer that consume identical retained Delivery Warrant bytes and emit one semantic projection.",
-    "rationale": "The exact shared-fixture-runner ceiling adds two hand-maintained implementation files: a pure Rust Delivery Warrant trace reader and its pure JavaScript peer. Retained golden and replay fixtures freeze input bytes, state roots, event and receipt bindings, typed faults, ordered effects and observations, generations, fencing counters, and byte-identical semantic projections. Focused checks compare both adapters and fail closed on malformed, incomplete, reordered, stale-root, BOM, missing-LF, and unsupported inputs. No production writer, provider effect, Git ref, workflow, daemon, database, credential owner, or consumer cutover is introduced. Existing per-file, per-function, workflow, provider-boundary, and zero-second-writer budgets remain unchanged. These exact ceilings cannot grow implicitly; a new domain, schema widening, effect, writer, or source file requires another reviewed transition."
+    "latestTransition": "The Rust Delivery Warrant domain adds three bounded provider-free modules for typed state and faults, pure decision logic, and fold plus declarative transition projection.",
+    "rationale": "The exact rust-warrant-domain ceiling adds three hand-maintained Rust modules, each below the unchanged 600-line new-file limit: typed state and bounded retry primitives, the seven-event decide surface, and fold plus canonical receipt and declarative-effect projection. Existing shared golden and replay bytes drive the domain boundary, while focused tests cover all nine states and primitives, retained legacy disagreements, deterministic and property replay, duplicate submission, stale expected-old and fencing, lease expiry and reselection, settlement, cancellation, response loss, provider conflict, and retry exhaustion. Static guards reject provider, filesystem, network, process, ambient-clock, hidden-writer, and unbounded-loop surfaces. TypeScript v3 remains the sole production writer with a zero second-writer budget; no adapter, effect execution, workflow, daemon, database, credential owner, consumer cutover, or architecture ceiling changes. Existing per-file, per-function, workflow, provider-boundary, and zero-second-writer budgets remain unchanged. These exact repository ceilings cannot grow implicitly; another source file, effect, writer, or state-machine scope requires a separately reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

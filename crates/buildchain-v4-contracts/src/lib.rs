@@ -5,10 +5,19 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 mod trace;
+mod warrant;
 
 pub use trace::{
     DELIVERY_WARRANT_PROJECTION_CONTRACT, DELIVERY_WARRANT_RUNNER_CONTRACT,
     DELIVERY_WARRANT_TRACE_CONTRACT, TraceRun, run_delivery_warrant_trace_fixture,
+};
+pub use warrant::{
+    Candidate, CandidateStatus, DELIVERY_WARRANT_EVENTS, DELIVERY_WARRANT_LEGACY_DISAGREEMENTS,
+    DELIVERY_WARRANT_PRIMITIVES, DELIVERY_WARRANT_STATE_CONTRACT, DELIVERY_WARRANT_STATES,
+    DeclarativeEffect, DeliveryWarrantPolicy, DeliveryWarrantState, DomainDecision,
+    DomainTransition, RetryDirective, TerminalRecord, Warrant, WarrantEventKind,
+    decide_delivery_warrant, expected_old, fold_delivery_warrant, provider_conflict,
+    reconcile_response_loss, transition_delivery_warrant, typed_retry,
 };
 
 pub const CANONICAL_JSON_CONTRACT: &str = "buildchain-canonical-json/v1";
