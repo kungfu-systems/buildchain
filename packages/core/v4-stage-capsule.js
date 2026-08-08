@@ -18,7 +18,9 @@ const AVAILABILITY = new Set([
   "available",
   "missing",
   "expired",
+  "partial",
   "corrupt",
+  "quarantined",
   "root-mismatch",
 ]);
 

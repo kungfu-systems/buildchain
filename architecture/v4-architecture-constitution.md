@@ -110,3 +110,12 @@ promise, current availability, qualification, content roots, and rooted
 transport observations remain distinct. Later store, checkpoint, resume, and
 reconciliation work must consume this contract rather than create competing
 identity or writer authority.
+
+The successor storage slice is governed by
+[`v4-stage-capsule-store-contract.json`](v4-stage-capsule-store-contract.json).
+It adds provider-neutral output-manifest, retention-state, transport, and store
+receipt roots plus a deterministic no-network local filesystem reference
+store. GitHub Artifact and S3-compatible adapters remain effect-disabled or
+fixture-backed. Provider locations, retention promises, observed availability,
+and qualification evidence stay separate facts; none becomes Capsule identity,
+qualification authority, or a production writer.

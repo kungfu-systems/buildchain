@@ -3,6 +3,7 @@
   "contract": "kungfu-buildchain-v4-stage-capsule-architecture",
   "schemaAuthority": "contracts/v4-stage-capsule-v1.schema.json",
   "fixtureAuthority": "contracts/fixtures/v4-stage-capsule-v1/shared.json",
+  "storeSuccessor": "architecture/v4-stage-capsule-store-contract.json",
   "authority": {
     "writer": "typescript-v3",
     "writerCount": 1,
@@ -57,7 +58,14 @@
   },
   "reuse": {
     "explicitEvaluationClock": true,
-    "failClosedStatuses": ["missing", "expired", "corrupt", "root-mismatch"],
+    "failClosedStatuses": [
+      "missing",
+      "expired",
+      "partial",
+      "corrupt",
+      "quarantined",
+      "root-mismatch"
+    ],
     "requiresExactRoots": [
       "capsuleRoot",
       "outputManifestRoot",

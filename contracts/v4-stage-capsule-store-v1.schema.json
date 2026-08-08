@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-stage-capsule-store-v1.schema.json",
+  "title": "Buildchain v4 Stage Capsule store contract suite",
+  "description": "Closed provider-neutral contracts for exact content manifests, retention observations, rooted transport facts, and immutable store receipts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "manifest",
+    "retentionState",
+    "transport",
+    "receipt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "manifest": { "$ref": "#/$defs/manifest" },
+    "retentionState": { "$ref": "#/$defs/retentionState" },
+    "transport": { "$ref": "#/$defs/transport" },
+    "receipt": { "$ref": "#/$defs/receipt" }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "clock": {
+      "type": "string",
+      "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "contentEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "root", "size"],
+      "properties": {
+        "name": { "$ref": "#/$defs/token" },
+        "root": { "$ref": "#/$defs/root" },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "entries", "manifestRoot"],
+      "properties": {
+        "schema": {
+          "const": "buildchain-v4-stage-capsule-output-manifest/v1"
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/contentEntry" }
+        },
+        "manifestRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "retentionState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "capsuleRoot",
+        "promiseRoot",
+        "evaluatedAt",
+        "status",
+        "stateRoot"
+      ],
+      "properties": {
+        "schema": {
+          "const": "buildchain-v4-stage-capsule-retention-state/v1"
+        },
+        "capsuleRoot": { "$ref": "#/$defs/root" },
+        "promiseRoot": { "$ref": "#/$defs/root" },
+        "evaluatedAt": { "$ref": "#/$defs/clock" },
+        "status": { "enum": ["retained", "expired"] },
+        "stateRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "provider",
+        "mode",
+        "locatorRoot",
+        "observedAt",
+        "transportRoot"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-stage-capsule-transport/v1" },
+        "provider": {
+          "enum": ["local-filesystem", "github-artifacts", "s3-compatible"]
+        },
+        "mode": {
+          "enum": ["local-reference", "effect-disabled", "fixture-backed"]
+        },
+        "locatorRoot": { "$ref": "#/$defs/root" },
+        "observedAt": { "$ref": "#/$defs/clock" },
+        "transportRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "recordedAt",
+        "capsuleRoot",
+        "manifestRoot",
+        "retentionStateRoot",
+        "availabilityRoot",
+        "transportRoot",
+        "qualificationRoot",
+        "outcome",
+        "faultCode",
+        "receiptRoot"
+      ],
+      "properties": {
+        "schema": {
+          "const": "buildchain-v4-stage-capsule-store-receipt/v1"
+        },
+        "operation": { "enum": ["put", "locate", "restore", "quarantine"] },
+        "recordedAt": { "$ref": "#/$defs/clock" },
+        "capsuleRoot": { "$ref": "#/$defs/root" },
+        "manifestRoot": { "$ref": "#/$defs/root" },
+        "retentionStateRoot": { "$ref": "#/$defs/root" },
+        "availabilityRoot": { "$ref": "#/$defs/root" },
+        "transportRoot": { "$ref": "#/$defs/root" },
+        "qualificationRoot": { "$ref": "#/$defs/root" },
+        "outcome": {
+          "enum": [
+            "stored",
+            "already-stored",
+            "located",
+            "restored",
+            "quarantined"
+          ]
+        },
+        "faultCode": { "type": "null" },
+        "receiptRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}

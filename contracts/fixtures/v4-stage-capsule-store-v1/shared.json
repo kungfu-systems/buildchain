@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain-v4-stage-capsule-store-fixtures/v1",
+  "validCases": [
+    {
+      "id": "linux-build-stage-store",
+      "capsule": {
+        "schema": "buildchain-v4-stage-capsule/v1",
+        "writerAuthority": "typescript-v3",
+        "rustAuthority": "validation-only",
+        "identity": {
+          "schema": "buildchain-v4-stage-capsule-identity/v1",
+          "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "platform": "linux-x64-gnu",
+          "platformRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "stage": "build",
+          "toolchainRoots": [
+            {
+              "name": "clang",
+              "root": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            {
+              "name": "node",
+              "root": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+            }
+          ],
+          "runtimeRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+          "policyRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "declaredInputs": [
+            {
+              "name": "lockfile",
+              "root": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            {
+              "name": "source-tree",
+              "root": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+            }
+          ],
+          "transformationRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+          "outputManifestRoot": "sha256:fa6e4dd512773a9853b2224a466354fb3f1999fd6a6f3caecc8f07faa0a60e39",
+          "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "observationRoots": [
+            {
+              "name": "supply-chain",
+              "root": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            }
+          ]
+        },
+        "identityRoot": "sha256:6c5ff8ab5748d3947ab899704179f2f22e970bb01737f484b8c147673790b084",
+        "retentionPromise": {
+          "class": "wave-two",
+          "retainUntil": "2026-11-07T00:00:00.000Z"
+        },
+        "capsuleRoot": "sha256:761781689e98149ea23992edd2d0662e2655e9bb179d7cf5fcd3ac6920c7a245"
+      },
+      "manifest": {
+        "schema": "buildchain-v4-stage-capsule-output-manifest/v1",
+        "entries": [
+          {
+            "name": "binary",
+            "root": "sha256:8992d9877af6ac31cf0800e3a31b0053ef452c26163892f6c2ac685abc9ab9b3",
+            "size": 7
+          },
+          {
+            "name": "metadata",
+            "root": "sha256:611e85acf03fe345e98db7a0d7a196259b6192dcee2858457b8e17b382fab703",
+            "size": 6
+          }
+        ],
+        "manifestRoot": "sha256:fa6e4dd512773a9853b2224a466354fb3f1999fd6a6f3caecc8f07faa0a60e39"
+      },
+      "blobs": [
+        {
+          "name": "binary",
+          "root": "sha256:8992d9877af6ac31cf0800e3a31b0053ef452c26163892f6c2ac685abc9ab9b3",
+          "bytesBase64": "YWxwaGFcbg=="
+        },
+        {
+          "name": "metadata",
+          "root": "sha256:611e85acf03fe345e98db7a0d7a196259b6192dcee2858457b8e17b382fab703",
+          "bytesBase64": "YmV0YVxu"
+        }
+      ],
+      "evaluatedAt": "2026-08-10T00:00:00.000Z",
+      "retentionState": {
+        "schema": "buildchain-v4-stage-capsule-retention-state/v1",
+        "capsuleRoot": "sha256:761781689e98149ea23992edd2d0662e2655e9bb179d7cf5fcd3ac6920c7a245",
+        "promiseRoot": "sha256:3104d636d57c55f6c30ffbf5a044abc73770470e02174f834b447bcefb950653",
+        "evaluatedAt": "2026-08-10T00:00:00.000Z",
+        "status": "retained",
+        "stateRoot": "sha256:37a2b94c4f06af6401fa41dca7cc5c2b32685a46d83b3a1be6691966aaf01d19"
+      },
+      "transport": {
+        "schema": "buildchain-v4-stage-capsule-transport/v1",
+        "provider": "local-filesystem",
+        "mode": "local-reference",
+        "locatorRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "observedAt": "2026-08-10T00:00:00.000Z",
+        "transportRoot": "sha256:87157fe43486352218600fae35f9d748e96914468886507864a3ad5ce6c17c2f"
+      },
+      "availability": {
+        "schema": "buildchain-v4-stage-capsule-availability/v1",
+        "capsuleRoot": "sha256:761781689e98149ea23992edd2d0662e2655e9bb179d7cf5fcd3ac6920c7a245",
+        "observedAt": "2026-08-10T00:00:00.000Z",
+        "status": "available",
+        "contentRoot": "sha256:fa6e4dd512773a9853b2224a466354fb3f1999fd6a6f3caecc8f07faa0a60e39",
+        "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "transports": [
+          {
+            "name": "local-reference",
+            "root": "sha256:87157fe43486352218600fae35f9d748e96914468886507864a3ad5ce6c17c2f"
+          }
+        ],
+        "faultCode": null
+      },
+      "receipt": {
+        "schema": "buildchain-v4-stage-capsule-store-receipt/v1",
+        "operation": "put",
+        "recordedAt": "2026-08-10T00:00:00.000Z",
+        "capsuleRoot": "sha256:761781689e98149ea23992edd2d0662e2655e9bb179d7cf5fcd3ac6920c7a245",
+        "manifestRoot": "sha256:fa6e4dd512773a9853b2224a466354fb3f1999fd6a6f3caecc8f07faa0a60e39",
+        "retentionStateRoot": "sha256:37a2b94c4f06af6401fa41dca7cc5c2b32685a46d83b3a1be6691966aaf01d19",
+        "availabilityRoot": "sha256:9f638a486f440eafa9acfa0ef75a90752075d74a97432b810caacf6e7e35d2e9",
+        "transportRoot": "sha256:87157fe43486352218600fae35f9d748e96914468886507864a3ad5ce6c17c2f",
+        "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "outcome": "stored",
+        "faultCode": null,
+        "receiptRoot": "sha256:9b391831ab5fcfc5014067dbb2e862a6d6b06a09de2705beddcdf0d5b9523cd2"
+      }
+    }
+  ]
+}

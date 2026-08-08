@@ -131,7 +131,9 @@
             "available",
             "missing",
             "expired",
+            "partial",
             "corrupt",
+            "quarantined",
             "root-mismatch"
           ]
         },
