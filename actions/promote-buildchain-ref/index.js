@@ -231,7 +231,10 @@ async function main() {
   const transactionStatePath = core.getInput("transaction-state-path");
   const publishSealedBundleRoot = core.getInput("publish-sealed-bundle-root");
   const publishSealedBundleManifest = core.getInput("publish-sealed-bundle-manifest");
-  const publishRequiredArtifactsJson = core.getInput("publish-required-artifacts-json");
+  const publishRequiredArtifactsPath = core.getInput("publish-required-artifacts-path");
+  const publishRequiredArtifactsJson = publishRequiredArtifactsPath
+    ? fs.readFileSync(path.resolve(publishRequiredArtifactsPath), "utf8")
+    : core.getInput("publish-required-artifacts-json");
   const publishMode = core.getInput("publish-mode");
   const publishAuth = core.getInput("publish-auth");
   const publishDistTag = core.getInput("publish-dist-tag");
@@ -385,6 +388,7 @@ async function main() {
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath, releaseCandidateVersion,
     releaseCandidateRecoveryReceiptPath,
+    releaseCandidateReleaseAssetPaths: githubReleaseArtifactPaths,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,

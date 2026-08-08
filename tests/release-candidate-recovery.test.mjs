@@ -16,8 +16,37 @@ import {
 import {
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
+  deduplicateReleaseAssets,
+  exposeRecoveredPassportPath,
+  exposeRecoveredPayloadRoot,
   normalizePlatformManifests,
+  readExistingTransaction,
+  recoveredArtifactPathsByBasename,
 } from "../scripts/resume-from-candidate-run.mjs";
+import { generatePublishRequiredArtifacts } from "../scripts/release-candidate-resolver.mjs";
+
+test("recovered Release assets deduplicate identical basenames and reject byte collisions", () => {
+  const identical = [
+    {
+      path: "platform/product/release/Kungfu-Episodes-alpha.zip",
+      size: 12,
+      sha256: `sha256:${"a".repeat(64)}`,
+    },
+    {
+      path: "platform/signing/credential-artifact/product/release/Kungfu-Episodes-alpha.zip",
+      size: 12,
+      sha256: "a".repeat(64),
+    },
+  ];
+  assert.deepEqual(deduplicateReleaseAssets(identical), [identical[0]]);
+  assert.throws(
+    () => deduplicateReleaseAssets([
+      identical[0],
+      { ...identical[1], sha256: "b".repeat(64) },
+    ]),
+    /basename collision.*different sealed bytes/u,
+  );
+});
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -155,6 +184,44 @@ function durableTransaction(input, state = "complete") {
   };
 }
 
+test("recovery reads oversized durable transaction state through its exact Git blob", async () => {
+  const blobSha = "a".repeat(40);
+  const transaction = { schema: 1, version: "4.0.0-alpha.1", state: "finalizing" };
+  const requests = [];
+  const fetchImpl = async (url) => {
+    requests.push(url);
+    const body = url.includes("/git/blobs/")
+      ? { sha: blobSha, encoding: "base64", content: Buffer.from(JSON.stringify(transaction)).toString("base64") }
+      : { type: "file", sha: blobSha, encoding: "none", content: "" };
+    return new Response(JSON.stringify(body), { status: 200 });
+  };
+  assert.deepEqual(await readExistingTransaction({
+    repoInfo: { owner: "kungfu-systems", repo: "kungfu" },
+    apiUrl: "https://api.github.test",
+    token: "test-token",
+    fetchImpl,
+    version: transaction.version,
+  }), transaction);
+  assert.equal(requests.length, 2);
+  assert.match(requests[1], new RegExp(`/git/blobs/${blobSha}$`));
+});
+
+test("recovery rejects durable transaction Git blob identity drift", async () => {
+  const blobSha = "a".repeat(40);
+  const fetchImpl = async (url) => new Response(JSON.stringify(
+    url.includes("/git/blobs/")
+      ? { sha: "b".repeat(40), encoding: "base64", content: "e30=" }
+      : { type: "file", sha: blobSha, encoding: "none", content: "" },
+  ), { status: 200 });
+  await assert.rejects(readExistingTransaction({
+    repoInfo: { owner: "kungfu-systems", repo: "kungfu" },
+    apiUrl: "https://api.github.test",
+    token: "test-token",
+    fetchImpl,
+    version: "4.0.0-alpha.1",
+  }), /blob identity drifted/);
+});
+
 test("recovery accepts the same tree at a different promotion commit and records reuse", () => {
   const { receipt } = verifyReleaseCandidateRecovery(fixture());
   assert.equal(receipt.action, "reused");
@@ -166,6 +233,51 @@ test("recovery accepts the same tree at a different promotion commit and records
   assert.deepEqual(receipt.skippedBuildStages, ["install", "build", "verify", "platform-matrix"]);
   assert.equal(receipt.payloadBytes, "unchanged");
   assert.match(receipt.root, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("recovery exposes sealed payloads at the legacy candidate path without copying bytes", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-recovered-payload-root-"));
+  try {
+    const bundleRoot = path.join(workspace, "sealed-candidate");
+    const recoveredPayloadRoot = path.join(bundleRoot, "artifacts");
+    fs.mkdirSync(recoveredPayloadRoot, { recursive: true });
+    fs.writeFileSync(path.join(recoveredPayloadRoot, "sealed.txt"), "sealed-candidate-bytes");
+    const compatibilityRoot = exposeRecoveredPayloadRoot({ resolvedOutput: workspace, bundleRoot });
+    assert.equal(fs.lstatSync(compatibilityRoot).isSymbolicLink(), true);
+    assert.equal(fs.realpathSync(compatibilityRoot), fs.realpathSync(recoveredPayloadRoot));
+    assert.equal(fs.readFileSync(path.join(compatibilityRoot, "sealed.txt"), "utf8"), "sealed-candidate-bytes");
+    assert.equal(exposeRecoveredPayloadRoot({ resolvedOutput: workspace, bundleRoot }), compatibilityRoot);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("recovery exposes the sealed Passport at the legacy candidate path without copying bytes", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-recovered-passport-path-"));
+  try {
+    const recoveredPassportPath = path.join(
+      workspace,
+      "sealed-candidate",
+      "artifacts",
+      "release-candidate-passport",
+      "release-candidate-passport.json",
+    );
+    fs.mkdirSync(path.dirname(recoveredPassportPath), { recursive: true });
+    fs.writeFileSync(recoveredPassportPath, '{"candidate":"sealed"}\n');
+    const compatibilityPath = exposeRecoveredPassportPath({
+      resolvedOutput: workspace,
+      recoveredPassportPath,
+    });
+    assert.equal(fs.lstatSync(path.dirname(compatibilityPath)).isSymbolicLink(), true);
+    assert.equal(fs.realpathSync(compatibilityPath), fs.realpathSync(recoveredPassportPath));
+    assert.equal(fs.readFileSync(compatibilityPath, "utf8"), '{"candidate":"sealed"}\n');
+    assert.equal(
+      exposeRecoveredPassportPath({ resolvedOutput: workspace, recoveredPassportPath }),
+      compatibilityPath,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("custom-product recovery uses Passport version and manifests without treating product archives as npm", () => {
@@ -208,6 +320,89 @@ test("custom-product recovery uses Passport version and manifests without treati
   }
 });
 
+test("custom-product recovery publishes only Passport platform artifacts, not signing intermediates", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-custom-platform-assets-"));
+  try {
+    const basename = "kungfu-episodes-cli-darwin-arm64.tar.gz";
+    const platformPath = path.join(workspace, "platform", basename);
+    const signingRequestPath = path.join(workspace, "signing-request", basename);
+    fs.mkdirSync(path.dirname(platformPath), { recursive: true });
+    fs.mkdirSync(path.dirname(signingRequestPath), { recursive: true });
+    fs.writeFileSync(platformPath, "sealed-platform-bytes");
+    fs.writeFileSync(signingRequestPath, "unsigned-signing-request-bytes");
+    const file = (absolutePath) => ({
+      path: path.basename(absolutePath),
+      absolutePath,
+      size: fs.statSync(absolutePath).size,
+      sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex")}`,
+    });
+    const platformArtifactName = `kungfu-macos-arm64-${SOURCE_SHA}`;
+    const publication = createRecoveredPublication({
+      downloads: [
+        { artifact: { name: platformArtifactName }, files: [file(platformPath)] },
+        {
+          artifact: { name: `kungfu-signing-request-macos-arm64-${SOURCE_SHA}-100-1` },
+          files: [file(signingRequestPath)],
+        },
+      ],
+      bundleRoot: workspace,
+      repository: "kungfu-systems/kungfu",
+      passport: {
+        buildchain: { sha: RUNTIME_SHA },
+        candidateHash: "a".repeat(64),
+        source: { headSha: SOURCE_SHA, treeHash: TREE },
+        target: { version: "4.0.0-alpha.1" },
+      },
+      candidateRuntimeSha: RUNTIME_SHA,
+      publishArtifactKind: "kungfu-product",
+      releasePatterns: "kungfu-episodes-cli-*.tar.gz",
+      platformManifests: [{
+        artifactName: platformArtifactName,
+        platform: { id: "macos-arm64" },
+        files: [],
+      }],
+    });
+    assert.deepEqual(
+      publication.releaseAssets.map((entry) => entry.absolutePath),
+      [platformPath],
+    );
+    assert.equal(fs.readFileSync(publication.releaseAssets[0].absolutePath, "utf8"), "sealed-platform-bytes");
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("custom-product publication identities preserve platform and relative path", () => {
+  const artifacts = generatePublishRequiredArtifacts({
+    kind: "kungfu-product",
+    version: "4.0.0-alpha.1",
+    manifests: [
+      {
+        platform: { id: "linux-x64" },
+        files: [
+          { path: "agent/index.json", sha256: `sha256:${"a".repeat(64)}` },
+          { path: "context/index.json", sha256: `sha256:${"b".repeat(64)}` },
+        ],
+      },
+      {
+        platform: { id: "windows-x64" },
+        files: [
+          { path: "agent\\index.json", sha256: `sha256:${"c".repeat(64)}` },
+        ],
+      },
+    ],
+  });
+
+  assert.deepEqual(
+    artifacts.map(({ group, name, platform }) => ({ group, name, platform })),
+    [
+      { group: "linux-x64", name: "agent/index.json", platform: "linux-x64" },
+      { group: "linux-x64", name: "context/index.json", platform: "linux-x64" },
+      { group: "windows-x64", name: "agent/index.json", platform: "windows-x64" },
+    ],
+  );
+});
+
 test("candidate recovery excludes credential-island manifests outside the Passport platform matrix", () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-platform-manifests-"));
   try {
@@ -228,6 +423,17 @@ test("candidate recovery excludes credential-island manifests outside the Passpo
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("candidate recovery exposes the sealed GitHub artifact attestation policy", () => {
+  const downloads = [{ files: [
+    { path: "github-artifact-attestation-policy.json", absolutePath: "/sealed/policy.json" },
+    { path: "manifest.json", absolutePath: "/sealed/manifest.json" },
+  ] }];
+  assert.deepEqual(
+    recoveredArtifactPathsByBasename(downloads, "github-artifact-attestation-policy.json"),
+    ["/sealed/policy.json"],
+  );
 });
 
 test("recovery accepts a target advanced by the same explicit durable transaction", () => {
@@ -483,15 +689,32 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(
     advanced,
-    /name: Bridge Buildchain self-runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' && github\.repository == inputs\.buildchain-repository \}\}/,
+    /name: Bridge recovered Buildchain runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' \}\}/,
+  );
+  assert.match(
+    advanced,
+    /ln -s \.\.\/\.\. \.buildchain\/runtime\/node_modules\/@kungfu-tech\/buildchain-alpha/,
+  );
+  assert.match(
+    advanced,
+    /ln -s \.\.\/\.\. \.buildchain\/runtime\/node_modules\/@kungfu-tech\/buildchain/,
+  );
+  assert.match(
+    advanced,
+    /ln -s \.\.\/\.\.\/\.\.\/\.\.\/framework\/kfx \.buildchain\/runtime\/node_modules\/@kungfu-tech\/kfx/,
   );
   assert.match(advanced, /ln -s \.buildchain\/runtime\/node_modules node_modules/);
   assert.match(advanced, /name: Install exact publication planning dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Resolve exact publication transaction version\n\s+id: plan\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Reuse sealed candidate publication version/);
   assert.match(advanced, /publish-sealed-bundle-root: \$\{\{ steps\.rc\.outputs\.publish-sealed-bundle-root \}\}/);
+  assert.match(
+    advanced,
+    /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/,
+  );
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
   assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
+  assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: \$\{\{ steps\.rc\.outputs\.release-candidate-payload-dir \}\}/);
   assert.match(
     refPromotion,
     /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/,
@@ -546,4 +769,19 @@ test("recovery receipt binds a sealed payload publication version without rewrit
     }).errors.join("; "),
     /receipt root mismatch.*publication version mismatch/,
   );
+});
+
+test("candidate recovery checks out the exact consumer publication controller", async () => {
+  const fs = await import("node:fs");
+  const workflow = fs.readFileSync(
+    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(workflow, /name: Checkout exact consumer publication controller/);
+  assert.match(
+    workflow,
+    /if: \$\{\{ inputs\.resume-candidate-run-id != '' && inputs\.publication-gate-controller-sha != '' \}\}/,
+  );
+  assert.match(workflow, /ref: \$\{\{ inputs\.publication-gate-controller-sha \}\}/);
+  assert.match(workflow, /path: \.buildchain\/publication-controller/);
 });

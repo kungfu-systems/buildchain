@@ -1402,6 +1402,7 @@ test("self-publication admission assembly binds downloaded evidence without publ
   assert.match(script, /policyDigest: gateBindings\.policyDigest/);
   assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
   assert.match(script, /github-hosted-single-job/);
+  assert.match(script, /issuedAt\.getTime\(\) \+ 15 \* 60 \* 1000/);
   assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
 });
 
@@ -1430,6 +1431,7 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.match(script, /--allow-release-reconciliation/);
   assert.match(script, /evaluateBuildchainReleaseReconciliation/);
   assert.match(script, /release parent pull-request lineage/);
+  assert.match(script, /observedAt\.getTime\(\) \+ 15 \* 60 \* 1000/);
   assert.match(script, /commits\/\$\{pullRequestHeadSha\}\/check-runs/);
   assert.doesNotMatch(script, /commits\/\$\{sourceSha\}\/check-runs/);
   assert.doesNotMatch(script, /actions\/permissions\/workflow/);

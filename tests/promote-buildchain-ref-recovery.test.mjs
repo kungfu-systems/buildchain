@@ -37,10 +37,12 @@ const {
   generateReleaseEvidenceInputs,
   resolveProtectedStatusCheckContext,
   releasePassportArtifactFiles,
+  releasePassportAssetsFromSealedBundle,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
+  sanitizedPublishProcessEnvironment,
 } = await import("../actions/promote-buildchain-ref/lib.js");
 const {
   loadBuildchainConfig,
@@ -53,6 +55,101 @@ const {
 const {
   transitionReleaseTransaction,
 } = await import("../packages/core/publish-transaction.js");
+
+test("release passport recovers assets from the durable sealed-bundle manifest", () => {
+  const cwd = path.join("/tmp", "buildchain-recovered-passport");
+  const assets = releasePassportAssetsFromSealedBundle({
+    cwd,
+    result: {
+      transaction: {
+        version: "4.0.0-alpha.1",
+        sealed_bundle: {
+          releaseAssets: [{
+            path: "release-assets/kungfu-episodes-cli-linux-x64.tar.gz",
+            size: 42,
+            sha256: "a".repeat(64),
+          }],
+        },
+      },
+    },
+  });
+  assert.deepEqual(assets, [{
+    name: "kungfu-episodes-cli-linux-x64.tar.gz",
+    path: path.join(
+      cwd,
+      ".buildchain",
+      "recovered-publication",
+      "4.0.0-alpha.1",
+      "release-assets",
+      "kungfu-episodes-cli-linux-x64.tar.gz",
+    ),
+    size: 42,
+    sha256: "a".repeat(64),
+  }]);
+});
+
+test("release passport recovers the live candidate release-asset paths", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-passport-assets-"));
+  const first = path.join(cwd, "candidate", "kungfu-episodes-cli-linux-x64.tar.gz");
+  const duplicate = path.join(cwd, "signing", "kungfu-episodes-cli-linux-x64.tar.gz");
+  fs.mkdirSync(path.dirname(first), { recursive: true });
+  fs.mkdirSync(path.dirname(duplicate), { recursive: true });
+  fs.writeFileSync(first, "sealed-candidate-bytes");
+  fs.copyFileSync(first, duplicate);
+  const assets = releasePassportAssetsFromSealedBundle({
+    cwd,
+    result: { transaction: { version: "4.0.0-alpha.1" } },
+    releaseCandidateValidation: {
+      releaseAssets: [
+        path.relative(cwd, first),
+        path.relative(cwd, duplicate),
+      ],
+    },
+  });
+  assert.equal(assets.length, 1);
+  assert.equal(assets[0].name, "kungfu-episodes-cli-linux-x64.tar.gz");
+  assert.equal(assets[0].path, first);
+  assert.equal(assets[0].size, 22);
+  assert.equal(
+    assets[0].sha256,
+    crypto.createHash("sha256").update("sealed-candidate-bytes").digest("hex"),
+  );
+});
+
+test("production action forwards recovered release assets into candidate validation", () => {
+  const source = fs.readFileSync(
+    fileURLToPath(new URL("../actions/promote-buildchain-ref/index.js", import.meta.url)),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /releaseCandidateReleaseAssetPaths:\s*githubReleaseArtifactPaths/,
+  );
+});
+
+test("publish subprocesses omit oversized inline variables", () => {
+  const name = "INPUT_RELEASE_PASSPORT_PLATFORM_MANIFEST_PATHS";
+  const previous = process.env[name];
+  process.env[name] = "x".repeat(256 * 1024);
+  try {
+    const env = sanitizedPublishProcessEnvironment({
+      BUILDCHAIN_VERSION: "4.0.0-alpha.1",
+      BUILDCHAIN_REQUIRED_ARTIFACTS: "y".repeat(256 * 1024),
+      BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH: "/tmp/publish-required-artifacts.json",
+    });
+    assert.equal(env[name], undefined);
+    assert.equal(env.BUILDCHAIN_REQUIRED_ARTIFACTS, undefined);
+    assert.equal(
+      env.BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH,
+      "/tmp/publish-required-artifacts.json",
+    );
+    assert.equal(env.BUILDCHAIN_VERSION, "4.0.0-alpha.1");
+    assert.equal(env.PATH, process.env.PATH);
+  } finally {
+    if (previous === undefined) delete process.env[name];
+    else process.env[name] = previous;
+  }
+});
 const {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   publicationArtifactCandidateDigest,
@@ -2392,6 +2489,84 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
   assert.equal(restored.id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshStatePath, "utf8")).id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshEvidencePath, "utf8")).artifacts[0].digest, "sha256:ok");
+});
+
+test("explicit override rematerializes malformed evidence for an unpublished failed transaction", async () => {
+  const cwd = makeTempWorkspace({
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+import path from "node:path";
+
+const required = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH, "utf8"));
+const repaired = fs.existsSync(path.join(process.cwd(), "repair.flag"));
+const artifacts = repaired
+  ? required
+  : required.map((artifact) => ({ ...artifact, group: "", name: "index.json" }));
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts,
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit } = createGitMock();
+  const requiredArtifacts = [
+    {
+      group: "linux-x64",
+      kind: "kungfu-product",
+      name: "agent/index.json",
+      ref: "4.0.0-alpha.1",
+      digest: `sha256:${"1".repeat(64)}`,
+    },
+    {
+      group: "linux-x64",
+      kind: "kungfu-product",
+      name: "context/index.json",
+      ref: "4.0.0-alpha.1",
+      digest: `sha256:${"2".repeat(64)}`,
+    },
+  ];
+  const options = {
+    octokit,
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    cwd,
+    loadedConfig: { config: {} },
+    targetRef: "alpha/v4/v4.0",
+    sourceSha: SHA,
+    releaseSha: OTHER_SHA,
+    version: "4.0.0-alpha.1",
+    exactTag: "v4.0.0-alpha.1",
+    channel: "alpha",
+    line: "v4.0",
+    publishTransaction: true,
+    publishCommand: "node scripts/publish.mjs",
+    publishRequiredArtifactsJson: JSON.stringify(requiredArtifacts),
+    releaseMaterialSha: OTHER_SHA,
+    publishToolingSha: OTHER_SHA,
+    actor: "codex",
+    runId: "malformed-evidence-recovery",
+  };
+
+  await assert.rejects(runPublishTransaction(options), /duplicate publish artifact/);
+  const statePath = path.join(cwd, ".buildchain/release-state/v4.0.0-alpha.1.json");
+  assert.equal(JSON.parse(fs.readFileSync(statePath, "utf8")).state, "repair_required");
+
+  fs.writeFileSync(path.join(cwd, "repair.flag"), "repair\n");
+  const recovered = await runPublishTransaction({ ...options, explicitOverride: true });
+
+  assert.equal(recovered.validation.valid, true);
+  assert.deepEqual(
+    recovered.validation.evidence.artifacts.map(({ group, name }) => ({ group, name })),
+    requiredArtifacts.map(({ group, name }) => ({ group, name })),
+  );
 });
 
 test("publish transaction can opt in to rematerialize ephemeral Passport inputs on resume", async () => {

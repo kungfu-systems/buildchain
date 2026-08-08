@@ -126,7 +126,16 @@ async function reconcilePayload({ octokit, owner, repo, releaseId, remoteAssets,
   const name = path.basename(assetPath);
   const data = fs.readFileSync(assetPath);
   const localDigest = sha256(data);
-  const existing = remoteAssets.get(name);
+  const candidateNames = [...new Set([name, name.replaceAll(" ", ".")])];
+  const existingCandidates = candidateNames
+    .map((candidateName) => remoteAssets.get(candidateName))
+    .filter(Boolean);
+  if (existingCandidates.length > 1) {
+    throw new Error(
+      `immutable GitHub Release product payload collision: '${name}' matches more than one remote asset after GitHub filename normalization`,
+    );
+  }
+  const existing = existingCandidates[0];
   if (!existing) {
     await octokit.rest.repos.uploadReleaseAsset({ owner, repo, release_id: releaseId, name, data });
     return { action: "uploaded", name, digest: `sha256:${localDigest}` };

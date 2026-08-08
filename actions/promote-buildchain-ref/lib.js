@@ -158,12 +158,26 @@ function signedGeneratedCommitMessage(message) {
   return `${normalized}\n\n${COMMIT_SIGN_OFF}`;
 }
 
+function sanitizedPublishProcessEnvironment(overrides = {}) {
+  const inherited = Object.fromEntries(
+    Object.entries(process.env).filter(([name]) => !name.startsWith("INPUT_")),
+  );
+  const environment = { ...inherited, ...overrides };
+  if (
+    Buffer.byteLength(environment.BUILDCHAIN_REQUIRED_ARTIFACTS || "", "utf8") >
+    64 * 1024
+  ) {
+    delete environment.BUILDCHAIN_REQUIRED_ARTIFACTS;
+  }
+  return environment;
+}
+
 function runPublishCommand({ cwd, command, loadedConfig, env }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   if (command) {
     execSync(command, {
       cwd,
-      env: { ...process.env, ...env },
+      env: sanitizedPublishProcessEnvironment(env),
       stdio: "inherit",
       shell: true,
     });
@@ -554,12 +568,13 @@ function validatePromotionReleaseCandidate({
     familyAssignmentId,
   });
   let recoveryReceiptValidation;
+  let recoveryReceipt;
   if (recoveryReceiptPath) {
     const resolvedRecoveryReceiptPath = resolveMaybeRelative(cwd, recoveryReceiptPath);
     if (!fs.existsSync(resolvedRecoveryReceiptPath)) {
       validation.errors.push(`recovery receipt is missing: ${recoveryReceiptPath}`);
     } else {
-      const recoveryReceipt = JSON.parse(fs.readFileSync(resolvedRecoveryReceiptPath, "utf8"));
+      recoveryReceipt = JSON.parse(fs.readFileSync(resolvedRecoveryReceiptPath, "utf8"));
       recoveryReceiptValidation = validateReleaseCandidateRecoveryReceipt({
         receipt: recoveryReceipt,
         passport,
@@ -607,6 +622,11 @@ function validatePromotionReleaseCandidate({
     ),
     recoveredCandidate: recoveryReceiptValidation?.ok === true,
     publicationVersionBinding: recoveryReceiptValidation?.ok ? "recovery-receipt" : "candidate-passport",
+    recoveryProviderPullRequest: recoveryReceiptValidation?.ok === true &&
+      Number.isSafeInteger(Number(recoveryReceipt?.originalCandidate?.pullRequest)) &&
+      Number(recoveryReceipt?.originalCandidate?.pullRequest) > 0
+      ? Number(recoveryReceipt.originalCandidate.pullRequest)
+      : 0,
   };
 }
 
@@ -1207,7 +1227,7 @@ async function restorePublishTransactionContext(context) {
   const {
     octokit, owner, repo, cwd, version, channel, sourceSha, releaseSha, targetRef,
     requiredArtifacts, expected, durableStateRef, resolvedStatePath, resolvedEvidencePath,
-    requestedBundleRoot, requestedBundleManifest, expectedTransactionId,
+    requestedBundleRoot, requestedBundleManifest, expectedTransactionId, explicitOverride,
   } = context;
   const durableExisting = await restoreDurableReleaseTransaction({
     octokit,
@@ -1265,7 +1285,21 @@ async function restorePublishTransactionContext(context) {
   if (sealedVersion && !publishSealedNpmTarball && !(channel === "release" && sealedVersion.startsWith(`${version}-alpha.`))) {
     throw new Error(`publication sealed bundle npm version ${sealedVersion} does not match ${version}`);
   }
-  let existingEvidence = readPublishEvidence(resolvedEvidencePath);
+  let existingEvidence;
+  let existingEvidenceInvalid = false;
+  try {
+    existingEvidence = readPublishEvidence(resolvedEvidencePath);
+  } catch (error) {
+    if (
+      !explicitOverride ||
+      !existing ||
+      transactionHasPublishedMaterial(existing) ||
+      !["publishing", "publish_failed", "repair_required"].includes(existing.state || "")
+    ) {
+      throw error;
+    }
+    existingEvidenceInvalid = true;
+  }
   let existingValidation;
   if (existingEvidence) {
     existingValidation = validatePublishEvidence({
@@ -1280,7 +1314,18 @@ async function restorePublishTransactionContext(context) {
       requiredArtifacts,
     });
   }
-  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, sealedBundleRootMismatch, publishSealedNpmTarball, existingEvidence, existingValidation };
+  return {
+    ...context,
+    durableExisting,
+    localExisting,
+    existing,
+    sealedBundleVerification,
+    sealedBundleRootMismatch,
+    publishSealedNpmTarball,
+    existingEvidence,
+    existingEvidenceInvalid,
+    existingValidation,
+  };
 }
 
 function assertSealedBundleRootCompatibility(mismatch, versionStateFinalization) { if (mismatch && !versionStateFinalization) throw new Error(mismatch); }
@@ -1378,10 +1423,17 @@ async function resolvePublishTransactionResume(context) {
 }
 
 function publishTransactionEnvironment({
-  version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
+  cwd, version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
   publishSealedNpmTarball, requiredArtifacts, publishContract,
 }) {
+  const requiredArtifactsJson = JSON.stringify(requiredArtifacts);
+  const requiredArtifactsPath = path.resolve(
+    cwd,
+    ".buildchain/release-candidate/publish-required-artifacts.json",
+  );
+  fs.mkdirSync(path.dirname(requiredArtifactsPath), { recursive: true });
+  fs.writeFileSync(requiredArtifactsPath, `${requiredArtifactsJson}\n`);
   return {
     BUILDCHAIN_VERSION: version,
     BUILDCHAIN_CHANNEL: channel,
@@ -1403,7 +1455,8 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SEALED_NPM_TARBALL: (publishSealedNpmTarball && sealedBundleVerification?.npm.absolutePath) || "",
     BUILDCHAIN_SEALED_NPM_INTEGRITY: (publishSealedNpmTarball && sealedBundleVerification?.npm.integrity) || "",
     BUILDCHAIN_SEALED_NPM_SHA256: (publishSealedNpmTarball && sealedBundleVerification?.npm.sha256) || "",
-    BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
+    BUILDCHAIN_REQUIRED_ARTIFACTS: requiredArtifactsJson,
+    BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH: requiredArtifactsPath,
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
     BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
@@ -1423,8 +1476,10 @@ async function runPublishTransaction(options) {
     actor, runId, explicitOverride, promotionGeneratedAt, repository,
     resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
     existingNpmPromotion, expected, durableExisting, existing, existingEvidence,
-    existingValidation, sealedBundleVerification, sealedBundleRootMismatch, versionStateFinalization,
-  } = context; assertSealedBundleRootCompatibility(sealedBundleRootMismatch, versionStateFinalization);
+    existingEvidenceInvalid, existingValidation, sealedBundleVerification,
+    sealedBundleRootMismatch, versionStateFinalization,
+  } = context;
+  assertSealedBundleRootCompatibility(sealedBundleRootMismatch, versionStateFinalization);
   let transaction =
     existing ||
     createReleaseTransaction({
@@ -1496,7 +1551,9 @@ async function runPublishTransaction(options) {
   let distTagEvidencePath = "";
   const publishEnvironment = publishTransactionEnvironment(context);
   try {
-    const evidence = existingEvidence || readPublishEvidence(resolvedEvidencePath);
+    const evidence = existingEvidence || (
+      existingEvidenceInvalid ? undefined : readPublishEvidence(resolvedEvidencePath)
+    );
     if (evidence) {
       validation = existingValidation;
     }
@@ -1817,6 +1874,44 @@ function generateReleaseEvidenceInputs({
   });
 }
 
+function releasePassportAssetsFromSealedBundle({ result, cwd, releaseCandidateValidation }) {
+  const verifiedBundle = result?.sealedBundle;
+  const durableManifest = verifiedBundle?.manifest || result?.transaction?.sealed_bundle;
+  const releaseAssets = verifiedBundle?.releaseAssets?.length > 0
+    ? verifiedBundle.releaseAssets
+    : durableManifest?.releaseAssets || [];
+  const bundleRoot = verifiedBundle?.bundleRoot || sealedBundleRecoveryRoot(
+    cwd,
+    result?.transaction?.version,
+  );
+  const sealedAssets = releaseAssets.map((asset) => ({
+    name: path.basename(asset.path || asset.absolutePath || ""),
+    path: asset.absolutePath || resolveMaybeRelative(bundleRoot, asset.path || ""),
+    size: asset.size,
+    sha256: asset.sha256,
+  }));
+  const candidateAssets = (releaseCandidateValidation?.releaseAssets || []).map((assetPath) => {
+    const resolvedPath = resolveMaybeRelative(cwd, assetPath);
+    const bytes = fs.readFileSync(resolvedPath);
+    return {
+      name: path.basename(resolvedPath),
+      path: resolvedPath,
+      size: bytes.length,
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+    };
+  });
+  const selected = sealedAssets.length > 0 ? sealedAssets : candidateAssets;
+  const byName = new Map();
+  for (const asset of selected) {
+    const existing = byName.get(asset.name);
+    if (existing && existing.sha256 !== asset.sha256) {
+      throw new Error(`release candidate asset name has conflicting bytes: ${asset.name}`);
+    }
+    if (!existing) byName.set(asset.name, asset);
+  }
+  return [...byName.values()];
+}
+
 async function collectAndPersistReleasePassport({
   result,
   owner,
@@ -1867,6 +1962,19 @@ async function collectAndPersistReleasePassport({
     : [];
   const platformManifests = [...new Set([...configuredManifests, ...derivedManifests]),
   ];
+  const sealedCandidateArtifactRoots = [...new Set(platformManifests.flatMap((manifestPath) => {
+    const normalized = path.resolve(manifestPath);
+    const marker = `${path.sep}sealed-candidate${path.sep}artifacts${path.sep}`;
+    const markerIndex = normalized.indexOf(marker);
+    if (markerIndex < 0) return [];
+    const artifactName = normalized.slice(markerIndex + marker.length).split(path.sep)[0];
+    return artifactName ? [normalized.slice(0, markerIndex + marker.length) + artifactName] : [];
+  }))];
+  const sealedReleaseAssets = releasePassportAssetsFromSealedBundle({
+    result,
+    cwd,
+    releaseCandidateValidation,
+  });
   const loadedConfig = loadBuildchainConfig(cwd);
   const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
   const anchorManifestPath = anchorManifest?.path ? path.resolve(cwd, anchorManifest.path) : "";
@@ -1939,6 +2047,8 @@ async function collectAndPersistReleasePassport({
     productName: productName || "Buildchain",
     packageName: packageName || result.packageSet?.main?.name || "@kungfu-tech/buildchain",
     packageVersion: result.transaction.version,
+    assetsJson: sealedReleaseAssets.length > 0 ? JSON.stringify(sealedReleaseAssets) : "",
+    kfdArtifactSearchRoots: sealedCandidateArtifactRoots,
     packageSetJson: result.packageSet ? JSON.stringify(result.packageSet) : "",
     publishEvidenceJson: result.evidencePath,
     trustedPublishingJson: result.publishContract?.auth === "trusted-publishing"
@@ -2225,6 +2335,7 @@ async function assertProviderEnforcedChannelTransaction({
   sourceSha,
   expectedChannelSha = sourceSha,
   requiredStatusCheck,
+  exactReleaseCandidateSource,
 }) {
   const { data: branch } = await octokit.rest.repos.getBranch({
     owner,
@@ -2239,28 +2350,65 @@ async function assertProviderEnforcedChannelTransaction({
   const requiredCheck = (protection.required_status_checks?.checks || []).find(
     (entry) => entry.context === resolvedStatusCheck,
   );
-  const pullRequest = await assertChannelPromotionPr({
-    octokit,
-    owner,
-    repo,
-    sha: sourceSha,
-    targetRef,
-  });
-  const { data: reviews } = await octokit.rest.pulls.listReviews({
-    owner,
-    repo,
-    pull_number: pullRequest.number,
-    per_page: 100,
-  });
+  const exactRecoveredSource =
+    exactReleaseCandidateSource?.recoveredCandidate === true &&
+    exactReleaseCandidateSource.treeEquivalent === true &&
+    exactReleaseCandidateSource.publicationVersionBinding ===
+      "recovery-receipt" &&
+    exactReleaseCandidateSource.promotionChannelSha === sourceSha;
+  let recoveryPullRequest;
+  if (exactRecoveredSource) {
+    const recoveryPullRequestNumber = Number(
+      exactReleaseCandidateSource.recoveryProviderPullRequest,
+    );
+    if (!Number.isSafeInteger(recoveryPullRequestNumber) || recoveryPullRequestNumber <= 0) {
+      throw new Error(
+        `Protected channel ${targetRef} exact recovery is missing its original provider pull request`,
+      );
+    }
+    ({ data: recoveryPullRequest } = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: recoveryPullRequestNumber,
+    }));
+    const recoveryTopologyValid =
+      Boolean(recoveryPullRequest?.merged_at) &&
+      recoveryPullRequest.base?.ref === targetRef &&
+      recoveryPullRequest.head?.repo?.full_name === `${owner}/${repo}` &&
+      recoveryPullRequest.merge_commit_sha === sourceSha;
+    if (!recoveryTopologyValid) {
+      throw new Error(
+        `Protected channel ${targetRef} exact recovery provider pull request is not bound to ${sourceSha}`,
+      );
+    }
+  }
+  const pullRequest = exactRecoveredSource
+    ? recoveryPullRequest
+    : await assertChannelPromotionPr({
+        octokit,
+        owner,
+        repo,
+        sha: sourceSha,
+        targetRef,
+      });
+  const { data: reviews } = pullRequest && !exactRecoveredSource
+    ? await octokit.rest.pulls.listReviews({
+        owner,
+        repo,
+        pull_number: pullRequest.number,
+        per_page: 100,
+      })
+    : { data: [] };
   const latestReviews = new Map();
   for (const review of reviews || []) {
     const login = String(review?.user?.login || "");
     if (login) latestReviews.set(login, review);
   }
-  const independentApproval = [...latestReviews.values()].some((review) =>
-    review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login,
-  );
-  const pullRequestHeadSha = String(pullRequest.head?.sha || "").trim();
+  const independentApproval = exactRecoveredSource ||
+    [...latestReviews.values()].some((review) =>
+      review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login,
+    );
+  const pullRequestHeadSha = String(pullRequest?.head?.sha || "").trim();
   const validPullRequestHeadSha = /^[0-9a-f]{40}$/i.test(pullRequestHeadSha);
   const { data: checkRuns } = validPullRequestHeadSha
     ? await octokit.rest.checks.listForRef({
@@ -2285,7 +2433,7 @@ async function assertProviderEnforcedChannelTransaction({
     missing.push(`must require a ${requiredStatusCheck} status check using the exact context`,
     );
   }
-  if (!validPullRequestHeadSha) {
+  if (!validPullRequestHeadSha && !exactRecoveredSource) {
     missing.push("merged source PR must expose an immutable head SHA");
   }
   if (!requiredCheckPassed) missing.push(`required status check ${resolvedStatusCheck} must pass from its configured app`,
@@ -2308,6 +2456,7 @@ async function assertProtectedChannel({
   sourceSha,
   expectedChannelSha = sourceSha,
   requiredStatusCheck = "check",
+  exactReleaseCandidateSource,
 }) {
   let protection;
   try {
@@ -2326,6 +2475,7 @@ async function assertProtectedChannel({
         sourceSha,
         expectedChannelSha,
         requiredStatusCheck,
+        exactReleaseCandidateSource,
       });
     }
     throw error;
@@ -2448,13 +2598,19 @@ async function ensureManagedChannelBranchProtection({
           protection: providerProtection,
           requiredStatusCheck,
         });
+        const providerStatusChecks = protectedStatusCheckNames(providerProtection);
         const missing = [];
         if (branchSummary.protected !== true) missing.push("must be provider-protected");
         if (providerProtection.required_status_checks?.enforcement_level !== "everyone") {
           missing.push("must enforce required status checks for everyone");
         }
-        if (!protectedStatusCheckNames(providerProtection).includes(resolvedStatusCheck,
-          )) {
+        if (providerStatusChecks.length === 0) {
+          missing.push("must require at least one provider status check");
+        }
+        if (
+          /^(alpha|release)\//.test(branch) &&
+          !providerStatusChecks.includes(resolvedStatusCheck)
+        ) {
           missing.push(`must require a ${requiredStatusCheck} status check using the exact context`,
           );
         }
@@ -2464,7 +2620,7 @@ async function ensureManagedChannelBranchProtection({
           );
         }
         const observedPolicy = {
-          requiredStatusChecks: protectedStatusCheckNames(providerProtection),
+          requiredStatusChecks: providerStatusChecks,
           enforcementLevel: providerProtection.required_status_checks.enforcement_level,
         };
         return {
@@ -4054,7 +4210,34 @@ function createReconciliationOperations(context) {
     return undefined;
   };
 
-  const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
+  const assertPromotionPrOrVersionStateParent = async ({
+    commitSha,
+    targetRef,
+    allowedPaths,
+    exactReleaseCandidateSource,
+  }) => {
+    if (
+      exactReleaseCandidateSource?.recoveredCandidate === true &&
+      exactReleaseCandidateSource.treeEquivalent === true &&
+      exactReleaseCandidateSource.promotionChannelSha === commitSha
+    ) {
+      const commit = await getCommitInfo(octokit, owner, repo, commitSha);
+      if (
+        exactReleaseCandidateSource.promotionChannelTreeSha === commit.treeSha
+      ) {
+        updates.push({
+          action: "accepted-exact-alpha-recovery-source",
+          sha: commitSha,
+          treeSha: commit.treeSha,
+          builtSourceSha: exactReleaseCandidateSource.builtSourceSha,
+          builtSourceTreeSha: exactReleaseCandidateSource.builtSourceTreeSha,
+          targetRef,
+          publicationVersionBinding:
+            exactReleaseCandidateSource.publicationVersionBinding,
+        });
+        return;
+      }
+    }
     try {
       await assertChannelPromotionPr({
         octokit,
@@ -4570,6 +4753,7 @@ async function promoteBuildchainRefs({
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releaseCandidateVersion = "",
   releaseCandidateRecoveryReceiptPath = "",
+  releaseCandidateReleaseAssetPaths = [],
   releaseCandidateFamilyEvidenceRequired = false,
   releaseCandidateFamilyEvidenceRoot = "",
   releaseCandidateFamilyInitiativeId = "",
@@ -4700,22 +4884,25 @@ async function promoteBuildchainRefs({
   let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
     const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
-    releaseCandidateValidation = validatePromotionReleaseCandidate({
-      cwd,
-      passportPath: releaseCandidatePassportPath,
-      buildSummaryPath: releaseCandidateBuildSummaryPath,
-      repository: `${owner}/${repo}`,
-      targetChannel: rule.channel,
-      version: releaseCandidateVersion,
-      recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
-      targetRef,
-      sourceHeadSha: sha,
-      sourceTreeSha: targetCommitInfo.treeSha,
-      requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
-      familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
-      familyInitiativeId: releaseCandidateFamilyInitiativeId,
-      familyAssignmentId: releaseCandidateFamilyAssignmentId,
-    });
+    releaseCandidateValidation = {
+      ...validatePromotionReleaseCandidate({
+        cwd,
+        passportPath: releaseCandidatePassportPath,
+        buildSummaryPath: releaseCandidateBuildSummaryPath,
+        repository: `${owner}/${repo}`,
+        targetChannel: rule.channel,
+        version: releaseCandidateVersion,
+        recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
+        targetRef,
+        sourceHeadSha: sha,
+        sourceTreeSha: targetCommitInfo.treeSha,
+        requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
+        familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
+        familyInitiativeId: releaseCandidateFamilyInitiativeId,
+        familyAssignmentId: releaseCandidateFamilyAssignmentId,
+      }),
+      releaseAssets: uniquePaths(releaseCandidateReleaseAssetPaths),
+    };
     updates.push({
       action: "verified-release-candidate",
       sha,
@@ -4897,6 +5084,7 @@ async function promoteBuildchainRefs({
       sourceSha: sha,
       expectedChannelSha: advancedPublicationTransaction ? branchSha : sha,
       requiredStatusCheck,
+      exactReleaseCandidateSource: releaseCandidateValidation,
     });
   }
 
@@ -4954,5 +5142,7 @@ export {
   createDurableTransactionOperations,
   createRefMutationOperations,
   releasePassportArtifactFiles,
+  releasePassportAssetsFromSealedBundle,
   validatePromotionReleaseCandidate,
+  sanitizedPublishProcessEnvironment,
 };
