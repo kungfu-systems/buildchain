@@ -17,6 +17,9 @@ const ROOT_DOMAINS = new Set([
   "observation",
   "semantic-diff",
   "bootstrap-evidence",
+  "stage-capsule-identity",
+  "stage-capsule",
+  "stage-capsule-availability",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",

@@ -99,3 +99,14 @@ uses a replaceable subprocess host behind a closed byte-oriented contract; the
 Rust trunk owns process lifecycle and transport, while existing TypeScript
 remains the only production writer. This selection is evidence for later
 qualification, not a final ABI or consumer migration.
+
+## 8. Wave 2 Stage Capsule contract
+
+The executable Stage Capsule architecture contract is
+[`v4-stage-capsule-contract.json`](v4-stage-capsule-contract.json). It fixes one
+schema authority, one TypeScript v3 writer, validation-only Rust, and zero
+provider imports or production write-authority changes. Identity, retention
+promise, current availability, qualification, content roots, and rooted
+transport observations remain distinct. Later store, checkpoint, resume, and
+reconciliation work must consume this contract rather than create competing
+identity or writer authority.

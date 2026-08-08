@@ -57,7 +57,10 @@
             "transition-receipt",
             "observation",
             "semantic-diff",
-            "bootstrap-evidence"
+            "bootstrap-evidence",
+            "stage-capsule-identity",
+            "stage-capsule",
+            "stage-capsule-availability"
           ]
         }
       }

@@ -6,7 +6,7 @@
     "cliCommandCount": 113,
     "workflowCount": 64,
     "actionCount": 6,
-    "sitePageCount": 69,
+    "sitePageCount": 70,
     "docCommandRefCount": 897,
     "failureCount": 0
   },
@@ -3204,6 +3204,10 @@
       },
       {
         "id": "manual:v4-delivery-warrant-semantic-diff",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-stage-capsule",
         "category": "manual"
       },
       {
@@ -7713,7 +7717,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
     "workflowRegistryDigest": "b8d8226430132d16f40865603ff710197bb3ab9cea12d79082a3e4ad0f82a22b",
-    "pageRegistryDigest": "5eac2fd1f124b6001dc13a2a4022ca8f3202f4beefbebc5a4ec3a4369b4eefb7"
+    "pageRegistryDigest": "bb30ebec021dd693d85069c4095d6932a5e1c4dd58a5258d967a26e19249d3fb"
   },
   "comparison": {
     "missingCliRegistry": [],

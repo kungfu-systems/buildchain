@@ -4,8 +4,16 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+mod stage_capsule;
 mod trace;
 mod warrant;
+
+pub use stage_capsule::{
+    STAGE_CAPSULE_AVAILABILITY_CONTRACT, STAGE_CAPSULE_CONTRACT, STAGE_CAPSULE_IDENTITY_CONTRACT,
+    STAGE_CAPSULE_REUSE_CONTRACT, StageCapsule, StageCapsuleAvailability,
+    StageCapsuleFixtureProjection, StageCapsuleIdentity, StageCapsuleReuseDecision,
+    StageCapsuleReuseRequest, evaluate_stage_capsule_reuse, run_stage_capsule_fixture,
+};
 
 pub use trace::{
     DELIVERY_WARRANT_PROJECTION_CONTRACT, DELIVERY_WARRANT_RUNNER_CONTRACT,
@@ -38,6 +46,9 @@ const ROOT_DOMAINS: &[&str] = &[
     "observation",
     "semantic-diff",
     "bootstrap-evidence",
+    "stage-capsule-identity",
+    "stage-capsule",
+    "stage-capsule-availability",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
