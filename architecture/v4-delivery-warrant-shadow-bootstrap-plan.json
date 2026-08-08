@@ -429,19 +429,28 @@
     {
       "id": "legacy-authoritative-v4-read",
       "authority": "TypeScript v3 sole writer; v4 may serve verified reads only",
-      "entry": ["shadow exit gate passed", "read projection schema is stable"],
+      "entry": [
+        "shadow exit gate passed",
+        "read projection schema is stable",
+        "caller explicitly binds the retained qualification root and source revisions"
+      ],
       "exit": [
         "readback parity over one protected-release window",
         "rollback drill passes"
       ],
       "rollback": [
-        "route all reads to v3",
+        "route all reads to v3 with the explicit caller switch",
         "preserve v4 evidence for diagnosis"
       ],
-      "evidence": ["read parity receipts", "latency and failure observations"],
+      "evidence": [
+        "read parity receipts",
+        "latency and failure observations",
+        "retained qualification-bound read evidence"
+      ],
       "stopConditions": [
         "stale read",
         "root disagreement",
+        "qualification or evidence retention drift",
         "provider fact leakage into Rust domain"
       ]
     },

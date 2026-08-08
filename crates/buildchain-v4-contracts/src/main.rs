@@ -6,7 +6,7 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use buildchain_v4_contracts::{
     EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root,
-    run_delivery_warrant_trace_fixture, validate_clock,
+    project_delivery_warrant_state_bytes, run_delivery_warrant_trace_fixture, validate_clock,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -15,6 +15,7 @@ const HOST_REQUEST_CONTRACT: &str = "kungfu-buildchain-v4-host-request";
 const HOST_RESPONSE_CONTRACT: &str = "kungfu-buildchain-v4-host-response";
 const HOST_CAPABILITIES: &[&str] = &[
     "canonical-input-v1",
+    "delivery-warrant-state-projection-v1",
     "delivery-warrant-trace-projection-v1",
     "diagnostics-v1",
     "effects-disabled-v1",
@@ -279,47 +280,72 @@ fn run_shadow_host() -> Result<(), String> {
         .filter(|capability| !HOST_CAPABILITIES.contains(&capability.as_str()))
         .cloned()
         .collect::<Vec<_>>();
-    let response = if !unsupported.is_empty()
-        || request.command.id != "delivery-warrant.trace-project"
-        || !request.command.arguments.is_empty()
-    {
-        host_response(
-            request,
-            "unsupported",
-            Value::Null,
-            vec![Diagnostic {
-                code: "unsupported-capability".to_owned(),
-                message: "the requested effect-disabled projection capability is unsupported"
-                    .to_owned(),
-                retryable: false,
-            }],
-            64,
-        )
-    } else {
-        let input = BASE64
-            .decode(&request.input.bytes)
-            .map_err(|_| "host input is not canonical base64".to_owned())?;
-        match run_delivery_warrant_trace_fixture(&input) {
-            Ok(result) => host_response(
+    let supported_command = matches!(
+        request.command.id.as_str(),
+        "delivery-warrant.trace-project" | "delivery-warrant.state-project"
+    );
+    let response =
+        if !unsupported.is_empty() || !supported_command || !request.command.arguments.is_empty() {
+            host_response(
                 request,
-                "ok",
-                serde_json::to_value(result).map_err(|error| error.to_string())?,
-                Vec::new(),
-                0,
-            ),
-            Err(fault) => host_response(
-                request,
-                "failed",
+                "unsupported",
                 Value::Null,
                 vec![Diagnostic {
-                    code: fault.code,
-                    message: "the retained trace failed closed validation".to_owned(),
+                    code: "unsupported-capability".to_owned(),
+                    message: "the requested effect-disabled projection capability is unsupported"
+                        .to_owned(),
                     retryable: false,
                 }],
-                65,
-            ),
-        }
-    };
+                64,
+            )
+        } else {
+            let input = BASE64
+                .decode(&request.input.bytes)
+                .map_err(|_| "host input is not canonical base64".to_owned())?;
+            let projected = match request.command.id.as_str() {
+                "delivery-warrant.trace-project" => run_delivery_warrant_trace_fixture(&input)
+                    .and_then(|value| {
+                        serde_json::to_value(value).map_err(|error| {
+                            Box::new(buildchain_v4_contracts::ContractFault {
+                                schema: buildchain_v4_contracts::CONTRACT_FAULT_CONTRACT.to_owned(),
+                                code: "projection-serialization-failed".to_owned(),
+                                fault_class: "validation".to_owned(),
+                                path: "$/projection".to_owned(),
+                                message: error.to_string(),
+                                retry: "stop".to_owned(),
+                            })
+                        })
+                    }),
+                "delivery-warrant.state-project" => project_delivery_warrant_state_bytes(&input)
+                    .and_then(|value| {
+                        serde_json::to_value(value).map_err(|error| {
+                            Box::new(buildchain_v4_contracts::ContractFault {
+                                schema: buildchain_v4_contracts::CONTRACT_FAULT_CONTRACT.to_owned(),
+                                code: "projection-serialization-failed".to_owned(),
+                                fault_class: "validation".to_owned(),
+                                path: "$/projection".to_owned(),
+                                message: error.to_string(),
+                                retry: "stop".to_owned(),
+                            })
+                        })
+                    }),
+                _ => unreachable!(),
+            };
+            match projected {
+                Ok(result) => host_response(request, "ok", result, Vec::new(), 0),
+                Err(fault) => host_response(
+                    request,
+                    "failed",
+                    Value::Null,
+                    vec![Diagnostic {
+                        code: fault.code,
+                        message: "the retained trace failed closed validation".to_owned(),
+                        retryable: false,
+                    }],
+                    65,
+                ),
+            }
+        };
     serde_json::to_writer(std::io::stdout().lock(), &response)
         .map_err(|error| error.to_string())?;
     println!();

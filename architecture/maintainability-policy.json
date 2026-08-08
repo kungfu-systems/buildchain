@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 293,
-    "maxHandMaintainedSourceLines": 111942,
+    "maxHandMaintainedSourceFiles": 294,
+    "maxHandMaintainedSourceLines": 112321,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22269,
-    "latestTransition": "The Delivery Warrant semantic diff gate adds one fail-closed, source-bound qualification surface over the existing TypeScript-authoritative and effect-disabled Rust shadow projections.",
-    "rationale": "The exact semantic-diff-gate ceiling adds one hand-maintained JavaScript source below the unchanged 600-line new-file limit. It compares retained golden, captured replay, lease-fence, cancellation, duplicate, CAS, response-loss, conflict, and bounded property traces without retaining raw difference values; binds every report to exact TypeScript, Rust, schema, runner, and validator roots; and requires reviewed, root-bound dispositions for exclusions. Bounded fault probes cover decision, successor, generation, fencing, effects, observations, and receipt drift, while failed coverage, observation, source binding, public-safety, retention, or fault detection stops qualification with zero retry budget. The qualified verdict permits only the next legacy-authoritative v4 read stage and always records v4WriteAuthorized=false, so this transition creates no writer, provider, cutover, or production authority. Existing per-file, per-function, workflow, provider-boundary, public-surface, and zero-second-writer budgets remain unchanged. These exact repository ceilings cannot grow implicitly; another source file, effect, writer, verdict policy, or cutover scope requires a separately reviewed transition."
+    "latestTransition": "The Delivery Warrant v4 read candidate adds one explicit, reversible, qualification-bound observation path while TypeScript v3 remains the sole writer and default reader.",
+    "rationale": "The exact v4-read-candidate ceiling adds one hand-maintained JavaScript source below the unchanged 600-line new-file limit. Only observe may select the candidate, and only through an explicit v4 switch bound to the exact retained semantic-diff report root, TypeScript and Rust revisions, validator version, unexpired retention window, effect-disabled host capability, projected state root, parity evidence, and a caller-owned retention receipt. Missing, blocked, expired, drifted, crashed, timed-out, cancelled, malformed, unsupported, non-parity, or unretained reads stop without silent fallback. Every mutation command ignores the switch, TypeScript v3 remains the sole production writer and rollback authority, and rollback is the explicit caller change back to the default v3 read. Existing per-file, per-function, workflow, provider-boundary, public-surface, and zero-second-writer budgets remain unchanged. These exact repository ceilings cannot grow implicitly; another source file, effect, writer, fallback policy, provider boundary, or cutover scope requires a separately reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

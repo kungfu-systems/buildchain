@@ -9,6 +9,8 @@ use crate::{
 };
 
 pub const DELIVERY_WARRANT_STATE_CONTRACT: &str = "buildchain-v4-delivery-warrant-state/v1";
+pub const DELIVERY_WARRANT_READ_PROJECTION_CONTRACT: &str =
+    "buildchain-v4-delivery-warrant-read-projection/v1";
 
 pub const DELIVERY_WARRANT_STATES: [&str; 9] = [
     "queued",
@@ -277,6 +279,32 @@ impl DeliveryWarrantState {
         })?;
         content_root("queue-state", &value)
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeliveryWarrantReadProjection {
+    pub schema: &'static str,
+    pub state: DeliveryWarrantState,
+    pub state_root: String,
+}
+
+pub fn project_delivery_warrant_state_bytes(
+    bytes: &[u8],
+) -> ContractResult<DeliveryWarrantReadProjection> {
+    let state: DeliveryWarrantState = serde_json::from_slice(bytes).map_err(|error| {
+        validation_fault(
+            "invalid-read-state",
+            "$/state",
+            format!("cannot decode Delivery Warrant read state: {error}"),
+        )
+    })?;
+    let state_root = state.root()?;
+    Ok(DeliveryWarrantReadProjection {
+        schema: DELIVERY_WARRANT_READ_PROJECTION_CONTRACT,
+        state,
+        state_root,
+    })
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

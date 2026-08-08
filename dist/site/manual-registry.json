@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:13542441b60dd91d54a853c2d01b15454e47b2e12b04546d39cb66f736430314",
+      "digest": "sha256:f1a5995a989ce0c46d8e440927320ca795f5b3f2208b8eaed9cd300fb1f264a3",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -487,7 +487,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:793db9414d11aeb314ff2d37a52481826ca5f636d08eaf93772d37962a51484f",
+      "digest": "sha256:8e01add2eac4e1376a7644cadc02bd156ad93d8914e687b6e7226d58b5846eba",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"

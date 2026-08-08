@@ -79,3 +79,14 @@ The `warrant` module in [`crates/buildchain-v4-contracts`](../crates/buildchain-
 Duplicate submission deliberately retains the legacy generation/root mutation for shadow comparability. Manifest aliases remain explicit, waiting and blocked remain valid states without invented public transitions, and response-loss reconciliation is symmetric for every declarative effect. Stale expected-old roots and fences, lease expiry, terminal duplicates, cancellation, response loss, provider conflict, and retry exhaustion are closed typed outcomes. The retry policy permits at most one reread/redecision and then stops.
 
 The domain consumes the same retained golden and replay bytes as the shared runner. Focused tests cover deterministic replay, bounded property sequences, duplicate behavior, stale compare-and-set and fencing, lease recovery/reselection, settlement and cancellation idempotence, response loss, provider conflict, and calendar-boundary clock arithmetic. Repository-level architecture tests reject provider and I/O imports, ambient clocks, process execution, hidden writers, and unbounded retry loops. The manifest still names `typescript-v3` as the sole authoritative writer with a zero second-writer budget; this slice adds no shadow routing, effect adapter, read/write cutover, or production authority.
+
+## Read-only state projection
+
+The Rust host also accepts `delivery-warrant.state-project` with the dedicated
+`delivery-warrant-state-projection-v1` capability. It decodes and validates the
+closed v4 state, then returns the same state and its canonical `queue-state`
+root. The command has no effect adapter, provider import, store access, or write
+authority. The TypeScript read-candidate adapter binds this projection to a
+previously qualified semantic-diff report and retains parity evidence before
+returning the unchanged v3 observation schema. See
+[`v4-delivery-warrant-read-candidate.md`](v4-delivery-warrant-read-candidate.md).

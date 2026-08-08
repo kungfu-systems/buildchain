@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
+import { runV4DeliveryWarrantReadCandidate } from "../packages/core/v4-delivery-warrant-read-candidate.js";
 
 const STATE_PATH = "queue.json";
 const STATE_REF_PREFIX = "buildchain/dev-delivery-warrant/";
@@ -251,6 +252,50 @@ function transitionFor(command, queue, options) {
   throw new Error(`unsupported dev delivery command ${command || "<empty>"}`);
 }
 
+async function observeQueue(loaded, options) {
+  const readMode = text(options.readMode || "v3").toLowerCase();
+  if (!["v3", "v4"].includes(readMode)) throw new Error("readMode must be v3 or v4");
+  let observation = observeDevDeliveryQueue(loaded.queue, { now: options.now });
+  let readCandidate;
+  if (readMode === "v4") {
+    const qualification = options.readQualification || JSON.parse(fs.readFileSync(options.readQualificationPath, "utf8"));
+    const retain =
+      options.retainReadEvidence ||
+      (async (evidence) => {
+        if (!options.readEvidenceOutput) throw new Error("readEvidenceOutput is required");
+        fs.mkdirSync(path.dirname(options.readEvidenceOutput), { recursive: true });
+        fs.writeFileSync(options.readEvidenceOutput, `${JSON.stringify(evidence, null, 2)}\n`);
+        return { receiptRoot: evidence.evidenceRoot };
+      });
+    readCandidate = await runV4DeliveryWarrantReadCandidate(loaded.queue, {
+      qualification,
+      expectedQualificationRoot: options.readQualificationRoot,
+      expectedSources: {
+        typescriptRevision: options.readTypescriptRevision,
+        rustRevision: options.readRustRevision,
+        validatorVersion: options.readValidatorVersion,
+      },
+      observedAt: options.now,
+      timeoutMs: positiveInteger(options.readTimeoutMs, "readTimeoutMs", 5_000),
+      signal: options.readSignal,
+      invokeRust: options.invokeV4ReadHost,
+      host: options.readHost,
+      retain,
+    });
+    observation = readCandidate.observation;
+  }
+  return {
+    schema: "kungfu.buildchain.dev-delivery-command-result/v1",
+    ok: true,
+    mode: "observe",
+    readMode,
+    stateRef: options.stateRef,
+    stateCommit: loaded.commitSha,
+    observation,
+    ...(readCandidate ? { readCandidate } : {}),
+  };
+}
+
 export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
   const options = {
     ...optionsInput,
@@ -275,16 +320,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
   if (options.expectedOldStateRoot && loaded.queue.stateRoot !== options.expectedOldStateRoot) {
     throw new Error(`expected-old state drift: ${loaded.queue.stateRoot} != ${options.expectedOldStateRoot}`);
   }
-  if (options.command === "observe") {
-    return {
-      schema: "kungfu.buildchain.dev-delivery-command-result/v1",
-      ok: true,
-      mode: "observe",
-      stateRef: options.stateRef,
-      stateCommit: loaded.commitSha,
-      observation: observeDevDeliveryQueue(loaded.queue, { now: options.now }),
-    };
-  }
+  if (options.command === "observe") return observeQueue(loaded, options);
   const initialLoaded = loaded;
   let changed = transitionFor(options.command, loaded.queue, options);
   let mutates = changed.queue.stateRoot !== loaded.queue.stateRoot;
@@ -385,6 +421,14 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
     eventAction: flag(rest, "event-action", environment.BUILDCHAIN_DEV_DELIVERY_EVENT_ACTION),
     evidenceRoot: flag(rest, "evidence-root", environment.BUILDCHAIN_DEV_DELIVERY_EVIDENCE_ROOT),
     reason: flag(rest, "reason", environment.BUILDCHAIN_DEV_DELIVERY_REASON),
+    readMode: flag(rest, "read-mode", environment.BUILDCHAIN_V4_WARRANT_READ_MODE || "v3"),
+    readQualificationPath: flag(rest, "read-qualification", environment.BUILDCHAIN_V4_WARRANT_READ_QUALIFICATION),
+    readQualificationRoot: flag(rest, "read-qualification-root", environment.BUILDCHAIN_V4_WARRANT_READ_QUALIFICATION_ROOT),
+    readTypescriptRevision: flag(rest, "read-typescript-revision", environment.BUILDCHAIN_V4_WARRANT_TYPESCRIPT_REVISION),
+    readRustRevision: flag(rest, "read-rust-revision", environment.BUILDCHAIN_V4_WARRANT_RUST_REVISION),
+    readValidatorVersion: flag(rest, "read-validator-version", environment.BUILDCHAIN_V4_WARRANT_VALIDATOR_VERSION),
+    readTimeoutMs: flag(rest, "read-timeout-ms", environment.BUILDCHAIN_V4_WARRANT_READ_TIMEOUT_MS || "5000"),
+    readEvidenceOutput: flag(rest, "read-evidence-output", environment.BUILDCHAIN_V4_WARRANT_READ_EVIDENCE || ".buildchain/dev-delivery/v4-read-evidence.json"),
     now: flag(rest, "now", environment.BUILDCHAIN_DEV_DELIVERY_NOW),
     outputPath: flag(rest, "output", environment.BUILDCHAIN_DEV_DELIVERY_OUTPUT || ".buildchain/dev-delivery/result.json"),
     execute: hasFlag(rest, "execute"),
@@ -393,7 +437,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n\nRead candidate:\n  observe --read-mode v4 --read-qualification FILE --read-qualification-root sha256:... --read-typescript-revision SHA --read-rust-revision SHA --read-validator-version TOKEN [--read-evidence-output FILE]\n";
 }
 
 async function main() {
