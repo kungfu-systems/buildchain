@@ -7,7 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { readRendererManifest, validateRendererCompositionInputs, validateRenditionSet, validateTerminalCapture } from "./auditable-demo-renditions.mjs";
+import { MAX_LONG_FORM_RENDERER_MANIFEST_BYTES, readRendererManifest, validateRendererCompositionInputs, validateRenditionSet, validateTerminalCapture } from "./auditable-demo-renditions.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
@@ -141,7 +141,7 @@ function verifyChecksums(root, checksumName = "checksums.sha256", options = {}) 
     invariant(!declared.has(member), `duplicate checksum member: ${member}`);
     declared.add(member);
     const maximumBytes = options.allowLongFormRendererManifest && member === "manifest.json"
-      ? 32 * 1024 * 1024
+      ? MAX_LONG_FORM_RENDERER_MANIFEST_BYTES
       : MAX_BUNDLE_MEMBER_BYTES;
     invariant(
       sha256(readRegular(target, member, maximumBytes)).slice(7) === match[1],

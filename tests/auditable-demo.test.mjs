@@ -24,6 +24,7 @@ import {
   writeChecksums,
 } from "../scripts/auditable-demo.mjs";
 import {
+  MAX_LONG_FORM_RENDERER_MANIFEST_BYTES,
   readRendererManifest,
   validateRendererComposition,
 } from "../scripts/auditable-demo-renditions.mjs";
@@ -182,7 +183,7 @@ function longFormRendererRenditions() {
       durationMs: 119000,
       events: 1000,
       bytes: 1024 * 1024,
-      path: { normalizedReplay: "x".repeat(4 * 1024 * 1024) },
+      path: { normalizedReplay: "x".repeat(17 * 1024 * 1024) },
     },
   }));
 }
@@ -203,7 +204,8 @@ test("oversized renderer manifests remain limited to bounded long-form native re
     outputs: {},
   };
   fs.writeFileSync(manifestPath, stableJson(manifest));
-  assert.ok(fs.statSync(manifestPath).size > 8 * 1024 * 1024);
+  assert.ok(fs.statSync(manifestPath).size > 32 * 1024 * 1024);
+  assert.ok(fs.statSync(manifestPath).size < MAX_LONG_FORM_RENDERER_MANIFEST_BYTES);
   const helpers = {
     decodeUtf8: (bytes) => bytes.toString("utf8"),
     digestPattern: /^sha256:[0-9a-f]{64}$/,
@@ -211,9 +213,9 @@ test("oversized renderer manifests remain limited to bounded long-form native re
     maxBytes: 4 * 1024 * 1024,
     maxEvents: 10_000,
     readRegular: (file, label, maximum) => {
-      const bytes = fs.readFileSync(file);
-      assert.ok(bytes.length <= maximum, `${label} exceeds ${maximum} bytes`);
-      return bytes;
+      const metadata = fs.statSync(file);
+      assert.ok(metadata.size <= maximum, `${label} exceeds ${maximum} bytes`);
+      return fs.readFileSync(file);
     },
   };
   assert.equal(readRendererManifest(manifestPath, helpers).manifest.inputs.renditions.length, 2);
@@ -226,6 +228,12 @@ test("oversized renderer manifests remain limited to bounded long-form native re
   assert.throws(
     () => readRendererManifest(manifestPath, helpers),
     /rendition 1 is not bounded long-form evidence/,
+  );
+
+  fs.truncateSync(manifestPath, MAX_LONG_FORM_RENDERER_MANIFEST_BYTES + 1);
+  assert.throws(
+    () => readRendererManifest(manifestPath, helpers),
+    /renderer manifest exceeds 67108864 bytes/,
   );
 });
 
