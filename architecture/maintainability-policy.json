@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 110692,
+    "maxHandMaintainedSourceLines": 110704,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22517,
-    "latestTransition": "Declarative GitHub Release recovery now verifies and observes existing public evidence while adding only missing Passport companions.",
-    "rationale": "The recovery transition adds identical-name evidence deduplication, combined local and public Passport verification, immutable preservation of existing public bytes, missing-companion upload, and provider-transaction readback coverage. It introduces no overwrite or second transaction writer, and these exact ceilings cannot grow implicitly."
+    "latestTransition": "Publication rehearsal now streams capsule hashes so retained release artifacts larger than the Node Buffer limit remain locally verifiable.",
+    "rationale": "The transition adds exactly twelve hand-maintained runtime lines for bounded synchronous chunk hashing and descriptor closure. It preserves the existing SHA-256 contract, fail-closed file binding and single release-tail authority; these exact ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -20,8 +20,8 @@
   },
   "approvedNewFileTransitions": {
     "packages/core/publication-rehearsal-runtime.js": {
-      "maxLines": 909,
-      "rationale": "The public audit surface keeps strict capsule normalization, path and file verification, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."
+      "maxLines": 921,
+      "rationale": "The public audit surface keeps strict capsule normalization, path and streaming file verification including artifacts larger than the Node Buffer limit, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."
     },
     "packages/core/release-tail-provider-plane.js": {
       "maxLines": 1228,

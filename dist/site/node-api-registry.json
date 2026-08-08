@@ -13862,7 +13862,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 380
+        "line": 392
       },
       "example": "import { createPublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -13891,7 +13891,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 821
+        "line": 833
       },
       "example": "import { executePublicationRehearsal } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -13920,7 +13920,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 410
+        "line": 422
       },
       "example": "import { normalizePublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -14045,7 +14045,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 787
+        "line": 799
       },
       "example": "import { publicationRehearsalBindingRoot } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -14078,7 +14078,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 801
+        "line": 813
       },
       "example": "import { publicationRehearsalDiagnostic } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -14187,7 +14187,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 898
+        "line": 910
       },
       "example": "import { resolvePublicationRehearsalFile } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -14216,7 +14216,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 571
+        "line": 583
       },
       "example": "import { verifyPublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -22057,7 +22057,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-rehearsal-runtime",
       "export": "./publication-rehearsal-runtime",
       "target": "./packages/core/publication-rehearsal-runtime.js",
-      "digest": "sha256:9aa75e69b7635dddd5ce9ac89fa36fb6518f6a5cf336590eaca4ce6be472adbc",
+      "digest": "sha256:e972ed649ab45d079ed598cc94587d35ab608ecb9a39a715eec55ae0d260f0eb",
       "summary": "Content-addressed local, replay, and provider-recording publication rehearsal over the shared release-tail core.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -22188,7 +22188,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:6dd79b998f63cf996e5c76b4fe0c654d12ca603cd5db1277ef3347f489b96ef0"
+      "digest": "sha256:938e2427d5d379996359672730b754fc4e20a08db2be284776c67d331e1a2f2c"
     },
     {
       "id": "build-facts",
