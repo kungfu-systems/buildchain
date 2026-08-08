@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 35,
+  "generation": 36,
   "fencingCounter": 12,
   "policy": {
     "agingSeconds": 900,
@@ -400,8 +400,32 @@
       "recoveries": 0,
       "status": "selected",
       "terminal": null
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 2465,
+      "assignmentRoot": "sha256:0cc0cfa5a221a13137878e1aaca7e92b514854c296741e7b4a3ebe098426c909",
+      "initiativeRoot": "sha256:f8f8d69e23fb20732de5b264f6089396a5719e8cac829078d4ca4ac262803323",
+      "sourceIdentityRoot": "sha256:ec704506ac27d85928fccc50113794ed5ee07faf89a895303001f066aba9297a",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:b6aaba05db839e2f9c7131822938756299dcd08f69a3f3a9eb174e935ad7fe8e",
+      "sourceHead": "046fe1554b5782e0a823e14a7fd136cd21bfecb9",
+      "sourcePatchRoot": "sha256:a6a03c2a43f2901f4994d9fd1989ac132ee66e4a7fe4f4bb618c96f8be0a7bb4",
+      "sourceProofRoot": "sha256:26701167e9a3eabc262ef45ea8b4dbc71e701a0ec1b630856273c17f9def65c2",
+      "planRoot": "sha256:376e4c232266dd63adafdc59f851d6f243e7f61d948f22e576175c6283545746",
+      "closureRoot": "sha256:281271f7045fa3a7329860633993b1e7eee7f6a08a206cf35a3f2b74582bbb62",
+      "dependencyRoot": "sha256:fbe2fd14a58bfe76750ff62401819e802f196b9a181e6b08b2cca998df0ba171",
+      "toolchainRoot": "sha256:0c98fc05e5a167e35e38e7a1abfefb1cd0de5ce33c353dad4c0615e24a6e3c33",
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-08T16:21:48.407Z",
+      "updatedAt": "2026-08-08T16:21:48.407Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null
     }
   ],
-  "updatedAt": "2026-08-08T16:02:36.667Z",
-  "stateRoot": "sha256:97975ef11983e58aef306377448e546d9de8ce424366ce1124f11c9c112e2d79"
+  "updatedAt": "2026-08-08T16:21:48.407Z",
+  "stateRoot": "sha256:3cfd179d7c383e5c3044d9acb212dd34b6d0819aa953dabbab05918185e1786f"
 }
