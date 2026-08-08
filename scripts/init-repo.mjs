@@ -359,7 +359,9 @@ jobs:
 }
 
 function workflowYaml({ type, runnerPreset, artifactName }) {
-  return `name: Build
+  return `# Buildchain v4 Stage Capsule shadow checkpoints are governed by architecture/v4-platform-stage-checkpoints.json.
+# Do not add undeclared runner-only inputs, outputs, environment, or provider effects.
+name: Build
 
 on:
   workflow_dispatch:

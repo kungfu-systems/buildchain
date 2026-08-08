@@ -18,6 +18,27 @@ ai_provenance:
 
 # Buildchain v4 Stage Capsule
 
+## Platform checkpoint projection
+
+`architecture/v4-platform-stage-checkpoints.json` is the single declaration
+for the macOS arm64, Linux x64, and Windows x64 shadow checkpoint lanes. It
+defines the allowed platform/stage pairs and the exact declared inputs,
+outputs, environment names, toolchains, and portable restore paths.
+
+The protected `Verify` workflow runs each platform on its real hosted runner.
+After a declared successful stage, the TypeScript v3 writer emits the canonical
+Capsule and immutable local-store receipt. A separate Node process restores the
+declared output layout into an empty directory and verifies every blob and
+manifest root. A failed stage emits no Capsule; a later failure does not remove
+earlier successful stage Capsules.
+
+This is shadow evidence only. It records per-platform/stage overhead and asserts
+that production bytes did not change. It does not skip production stages, read
+ambient runner state, include provider credentials, perform signing or
+publication, or grant provider/cache presence qualification authority. The
+generated consumer workflow and Agent guidance point back to the same
+declaration; undeclared fields fail closed.
+
 A Stage Capsule is the immutable, per-platform evidence contract for one build
 stage. It does not store artifacts, plan resume, publish provider state, or move
 production write authority. TypeScript v3 remains the sole writer; Rust is a

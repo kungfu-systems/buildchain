@@ -79,6 +79,12 @@ pnpm install --frozen-lockfile
 pnpm run check
 ```
 
+Buildchain v4 Stage Capsule checkpoint work is governed by
+`architecture/v4-platform-stage-checkpoints.json`. Agents must use that single
+platform/stage declaration for shadow emission and clean-process restore. Do
+not add undeclared runner-only inputs, outputs, environment, provider effects,
+credentials, or production stage-skipping authority.
+
 `pnpm run check` validates inventory data, generated public references and site
 bundle drift, lints root workflows, runs unit tests, and rebuilds every action
 bundle.
