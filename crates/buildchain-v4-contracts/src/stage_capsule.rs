@@ -237,7 +237,9 @@ impl StageCapsuleAvailability {
             "available",
             "missing",
             "expired",
+            "partial",
             "corrupt",
+            "quarantined",
             "root-mismatch",
         ]
         .contains(&self.status.as_str())

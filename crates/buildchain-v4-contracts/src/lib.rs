@@ -5,6 +5,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 mod stage_capsule;
+mod stage_capsule_store;
 mod trace;
 mod warrant;
 
@@ -13,6 +14,13 @@ pub use stage_capsule::{
     STAGE_CAPSULE_REUSE_CONTRACT, StageCapsule, StageCapsuleAvailability,
     StageCapsuleFixtureProjection, StageCapsuleIdentity, StageCapsuleReuseDecision,
     StageCapsuleReuseRequest, evaluate_stage_capsule_reuse, run_stage_capsule_fixture,
+};
+pub use stage_capsule_store::{
+    STAGE_CAPSULE_OUTPUT_MANIFEST_CONTRACT, STAGE_CAPSULE_RETENTION_STATE_CONTRACT,
+    STAGE_CAPSULE_STORE_RECEIPT_CONTRACT, STAGE_CAPSULE_TRANSPORT_CONTRACT,
+    StageCapsuleOutputManifest, StageCapsuleRetentionState, StageCapsuleStoreFixtureProjection,
+    StageCapsuleStoreReceipt, StageCapsuleTransport, run_stage_capsule_store_fixture,
+    stage_capsule_blob_root,
 };
 
 pub use trace::{
@@ -49,6 +57,12 @@ const ROOT_DOMAINS: &[&str] = &[
     "stage-capsule-identity",
     "stage-capsule",
     "stage-capsule-availability",
+    "stage-capsule-output-manifest",
+    "stage-capsule-retention-promise",
+    "stage-capsule-retention-state",
+    "stage-capsule-transport",
+    "stage-capsule-store-receipt",
+    "stage-capsule-quarantine",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

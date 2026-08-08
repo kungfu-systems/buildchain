@@ -114,7 +114,13 @@ test("reuse fails closed for missing, expired, corrupt, and root-mismatched cont
     availability.faultCode = `capsule-${status}`;
     return evaluateV4StageCapsuleReuse(requestFor(entry, { availability }));
   };
-  for (const status of ["missing", "corrupt", "root-mismatch"])
+  for (const status of [
+    "missing",
+    "partial",
+    "corrupt",
+    "quarantined",
+    "root-mismatch",
+  ])
     assert.deepEqual(
       [unavailable(status).eligible, unavailable(status).reason],
       [false, status],

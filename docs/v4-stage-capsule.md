@@ -54,8 +54,34 @@ not artifact authority.
 The sole schema authority is
 [`v4-stage-capsule-v1.schema.json`](../contracts/v4-stage-capsule-v1.schema.json).
 The shared fixture is consumed by both implementations. The next Wave 2 cards
-may add storage, checkpoints, resume planning, and reconciliation, but must not
-weaken or duplicate this contract.
+may add checkpoints, resume planning, and reconciliation, but must not weaken
+or duplicate this contract.
+
+## Content-addressed reference store
+
+The storage successor adds one closed output-manifest and store contract suite
+without changing Capsule identity. Raw blob bytes use lowercase SHA-256 roots;
+the canonical output manifest binds byte roots, sizes, and sorted names, and its
+`manifestRoot` must equal the Capsule `outputManifestRoot`. The local reference
+store writes immutable `blobs`, `capsules`, `manifests`, and `records` families
+under exact roots. A fresh process can restore by `capsuleRoot`, then re-verifies
+the Capsule, manifest, every byte root, retention state, availability, transport
+observation, and qualification root before returning bytes.
+
+Repeated put and restore are idempotent. A different physical store directory
+does not change Capsule or manifest identity. `missing`, `expired`, `partial`,
+`corrupt`, `quarantined`, and `root-mismatch` are deterministic fail-closed
+classifications; there is no cache fallback. Retention promise, evaluated
+retention state, current availability, rooted transport locator, qualification,
+and operation receipt are different roots with caller-supplied clocks.
+
+GitHub Artifact and S3-compatible adapters expose only `effect-disabled` and
+`fixture-backed` modes in this slice. They accept rooted locators, never raw
+credentials or signed URLs, and cannot perform a provider upload or restore.
+The executable architecture ceiling is
+[`v4-stage-capsule-store-contract.json`](../architecture/v4-stage-capsule-store-contract.json),
+and the shared Rust/JavaScript fixture is
+[`shared.json`](../contracts/fixtures/v4-stage-capsule-store-v1/shared.json).
 
 Focused verification:
 

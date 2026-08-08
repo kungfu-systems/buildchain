@@ -20,6 +20,12 @@ const ROOT_DOMAINS = new Set([
   "stage-capsule-identity",
   "stage-capsule",
   "stage-capsule-availability",
+  "stage-capsule-output-manifest",
+  "stage-capsule-retention-promise",
+  "stage-capsule-retention-state",
+  "stage-capsule-transport",
+  "stage-capsule-store-receipt",
+  "stage-capsule-quarantine",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",
