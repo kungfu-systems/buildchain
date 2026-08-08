@@ -20,6 +20,8 @@
     "legacyDisagreements",
     "wave0Reconciliation",
     "wave1",
+    "wave1Reconciliation",
+    "wave2",
     "protectedDelivery"
   ],
   "additionalProperties": false,
@@ -56,6 +58,8 @@
     "legacyDisagreements": { "$ref": "#/$defs/nonEmptyObjectArray" },
     "wave0Reconciliation": { "$ref": "#/$defs/reconciliation" },
     "wave1": { "$ref": "#/$defs/wave" },
+    "wave1Reconciliation": { "$ref": "#/$defs/wave1Reconciliation" },
+    "wave2": { "$ref": "#/$defs/wave2" },
     "protectedDelivery": { "$ref": "#/$defs/object" }
   },
   "$defs": {
@@ -224,6 +228,90 @@
           "uniqueItems": true
         },
         "deliverable": { "type": "string", "minLength": 1 }
+      }
+    },
+    "wave1Reconciliation": {
+      "type": "object",
+      "required": [
+        "sourceRevision",
+        "productionAuthority",
+        "parentInitiativeState",
+        "children",
+        "initiativeMatrix",
+        "conflicts",
+        "decision",
+        "residualResponsibility"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "productionAuthority": { "const": "typescript-v3" },
+        "parentInitiativeState": { "const": "inert" },
+        "children": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/wave1ChildEvidence" }
+        },
+        "initiativeMatrix": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": { "$ref": "#/$defs/matrixRow" }
+        },
+        "conflicts": { "$ref": "#/$defs/nonEmptyObjectArray" },
+        "decision": {
+          "const": "capture-wave2-resumable-release-foundation"
+        },
+        "residualResponsibility": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "wave1ChildEvidence": {
+      "type": "object",
+      "required": [
+        "id",
+        "assignmentId",
+        "status",
+        "pullRequest",
+        "sourceRevision",
+        "mergeRevision",
+        "treeRevision",
+        "captureReceiptRoot",
+        "sealRoot",
+        "review",
+        "checks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "assignmentId": { "type": "string", "minLength": 1 },
+        "status": { "const": "proved" },
+        "pullRequest": { "type": "integer", "minimum": 1 },
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "mergeRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "treeRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "captureReceiptRoot": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "sealRoot": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "review": { "const": "exact-head-approved-by-kungfu-origin" },
+        "checks": { "type": "string", "minLength": 1 }
+      }
+    },
+    "wave2": {
+      "type": "object",
+      "required": ["authority", "mode", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "authority": { "const": "typescript-v3" },
+        "mode": { "const": "effect-disabled-shadow-foundation" },
+        "nodes": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/waveNode" }
+        }
       }
     }
   }

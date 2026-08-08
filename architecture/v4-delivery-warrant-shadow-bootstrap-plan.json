@@ -660,6 +660,154 @@
       }
     ]
   },
+  "wave1Reconciliation": {
+    "sourceRevision": "955639299f6b94bdcc8affd91b3361ad1bb42d06",
+    "productionAuthority": "typescript-v3",
+    "parentInitiativeState": "inert",
+    "children": [
+      {
+        "id": "canonical-contracts",
+        "assignmentId": "2026-08-06-buildchain-v4-canonical-contracts",
+        "status": "proved",
+        "pullRequest": 2428,
+        "sourceRevision": "b15011e59614c6316522507498f3f80c2fb7447b",
+        "mergeRevision": "a4e95d763a0bbe9eeda64df7b38afb86592ba97b",
+        "treeRevision": "0d6df0ae9f13372515c618aaf4449f520dbf9ae7",
+        "captureReceiptRoot": "sha256:518c8e0be60921cc05afb0b6c68f6b2bc50b91ff2f64d4e5fd8b0593c4b4ea19",
+        "sealRoot": "sha256:baef130acafa7f9db68701f456c33d1b1ff84bbe8a6c2404f5e3db98f1a48358",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "shared-fixture-runner",
+        "assignmentId": "2026-08-06-buildchain-v4-shared-fixture-runner",
+        "status": "proved",
+        "pullRequest": 2449,
+        "sourceRevision": "3bb081e9adbfa28a1d035eb9418ff227e6a3f71c",
+        "mergeRevision": "5c872d69d288440c6bc150c2926129b918fbd3cc",
+        "treeRevision": "fb1f3e7f69bdadbb6938fdb0d49b9586beae75e2",
+        "captureReceiptRoot": "sha256:0adfdf77ac3245a43ba99ef1ad9e8c7e4d133e8d313407516694e0518af043fd",
+        "sealRoot": "sha256:8008b62fd668d3590494a26c9d84f2c1082934bee41dd8f5af385014552a4195",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "rust-warrant-domain",
+        "assignmentId": "2026-08-07-buildchain-v4-rust-warrant-domain",
+        "status": "proved",
+        "pullRequest": 2451,
+        "sourceRevision": "453d2edf41d40bb3c5f74e979e03e4bb74cf2892",
+        "mergeRevision": "bd9ad2c0a40f63779898a2a3da2e04b25a183269",
+        "treeRevision": "89e6b818285117e027a8f549b7a7a6f5d4f230ef",
+        "captureReceiptRoot": "sha256:c62dc8b623a1e6b184a0f57215ac758afea440aa91c8cfe7328393b74d6032cc",
+        "sealRoot": "sha256:d404f9a41525b496abf64df9fbe67240ddb1fed8b3be009e181d2f00f33821e6",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "typescript-shadow-adapter",
+        "assignmentId": "2026-08-07-buildchain-v4-typescript-shadow-adapter",
+        "status": "proved",
+        "pullRequest": 2456,
+        "sourceRevision": "1ac316434aa7724c49c7e9850dfd12a4412f1fa0",
+        "mergeRevision": "98ffb2c14c701bc886d25c4c681afd47cc57db47",
+        "treeRevision": "f2ea26775395c5c03b159e5134f6b6f9f0c02b40",
+        "captureReceiptRoot": "sha256:7b642ccf97a3fe2c73708db5c5f491d03143a966af934effebc1c7837c95b566",
+        "sealRoot": "sha256:af21c14c4cb6e5184b6f603662456225edd703d481797f8050005cd6649b515f",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "semantic-diff-gate",
+        "assignmentId": "2026-08-07-buildchain-v4-semantic-diff-gate",
+        "status": "proved",
+        "pullRequest": 2458,
+        "sourceRevision": "c11318eb556a2e169a52816a1e83d381585bcca5",
+        "mergeRevision": "62a87bf9f24ba82434a350f2dfb174b1f6377b70",
+        "treeRevision": "84746dfb161f2cb54b2002b7a4f8c72301106af5",
+        "captureReceiptRoot": "sha256:ced3b4bdd1b140702f0c35b9ca0da486ea45dd5e7699d0cfbe4bb1d868cd7a8d",
+        "sealRoot": "sha256:881e49ab5d3814a1ff929fec229a93a439b2c4dd4191fbe8aeb69d290d436c51",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "read-candidate",
+        "assignmentId": "2026-08-07-buildchain-v4-read-candidate",
+        "status": "proved",
+        "pullRequest": 2460,
+        "sourceRevision": "5b71b403792fa6e128f5c6091b80372033921b1c",
+        "mergeRevision": "955639299f6b94bdcc8affd91b3361ad1bb42d06",
+        "treeRevision": "a35051117616c8b32ff58dc9907fe404f1228197",
+        "captureReceiptRoot": "sha256:7cdc14bb66939cc652ee935a476ae9df8e7a8f41071cdaa5a5b93dfeedcd2c46",
+        "sealRoot": "sha256:2b7408c9af2f5bc5930f05b3561fd3a4d66a6a49be2576f2246d4851f29e5582",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      }
+    ],
+    "initiativeMatrix": [
+      { "id": "v3-safety", "status": "proved" },
+      { "id": "protected-v4-line", "status": "proved" },
+      { "id": "authority", "status": "proved" },
+      { "id": "dependency-direction", "status": "proved" },
+      { "id": "semantic-budgets", "status": "proved" },
+      { "id": "agent-maintainability", "status": "partial" },
+      { "id": "bridge-portability", "status": "partial" },
+      { "id": "warrant-pilot", "status": "proved" },
+      { "id": "resumable-release", "status": "missing" },
+      { "id": "self-dogfood", "status": "missing" },
+      { "id": "migration-and-legacy-removal", "status": "missing" },
+      { "id": "final-qualification", "status": "missing" }
+    ],
+    "conflicts": [
+      {
+        "id": "wave1-entry-zero-diff-cycle",
+        "priorState": "invalidated",
+        "status": "resolved",
+        "disposition": "the protected semantic-diff gate and reversible read candidate now prove the formerly circular exit condition"
+      }
+    ],
+    "decision": "capture-wave2-resumable-release-foundation",
+    "residualResponsibility": [
+      "state, explain, and plan remain incomplete",
+      "Linux and Windows bridge parity remain unproved",
+      "Candidate Capsule and resumable Release Transaction are not implemented",
+      "self dogfood, consumer migration, legacy removal, and final qualification remain missing"
+    ]
+  },
+  "wave2": {
+    "authority": "typescript-v3",
+    "mode": "effect-disabled-shadow-foundation",
+    "nodes": [
+      {
+        "id": "candidate-capsule-contracts",
+        "dependsOn": [],
+        "deliverable": "canonical Candidate Capsule contracts without provider effects"
+      },
+      {
+        "id": "release-fixture-runner",
+        "dependsOn": ["candidate-capsule-contracts"],
+        "deliverable": "language-neutral resumable-release traces and projections"
+      },
+      {
+        "id": "rust-release-transaction",
+        "dependsOn": ["candidate-capsule-contracts", "release-fixture-runner"],
+        "deliverable": "provider-free Release Transaction decide and fold domain"
+      },
+      {
+        "id": "typescript-release-shadow-adapter",
+        "dependsOn": ["release-fixture-runner"],
+        "deliverable": "effect-disabled TypeScript and Rust release shadow adapter"
+      },
+      {
+        "id": "resume-semantic-diff-gate",
+        "dependsOn": [
+          "rust-release-transaction",
+          "typescript-release-shadow-adapter"
+        ],
+        "deliverable": "fail-closed resume and semantic-diff qualification evidence"
+      }
+    ]
+  },
   "protectedDelivery": {
     "required": [
       "plan and fixture schemas validate",

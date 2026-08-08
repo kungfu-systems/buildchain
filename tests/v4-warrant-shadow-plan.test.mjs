@@ -11,7 +11,7 @@ import {
 const root = new URL("..", import.meta.url).pathname;
 
 test("v4 Warrant plan validates complete authority and cutover coverage", () => {
-  const { report, fixtureResults } = loadWarrantPlan(root);
+  const { plan, report, fixtureResults } = loadWarrantPlan(root);
   assert.deepEqual(report, {
     schemaVersion: 1,
     contract: "kungfu-buildchain-v4-delivery-warrant-plan-validation",
@@ -27,6 +27,30 @@ test("v4 Warrant plan validates complete authority and cutover coverage", () => 
     candidateSelfQualification: false,
   });
   assert.equal(fixtureResults.length, 5);
+  assert.equal(plan.wave1Reconciliation.productionAuthority, "typescript-v3");
+  assert.equal(plan.wave1Reconciliation.parentInitiativeState, "inert");
+  assert.equal(plan.wave1Reconciliation.children.length, 6);
+  assert.ok(
+    plan.wave1Reconciliation.children.every(
+      (child) =>
+        child.status === "proved" &&
+        child.captureReceiptRoot.startsWith("sha256:") &&
+        child.sealRoot.startsWith("sha256:") &&
+        child.review === "exact-head-approved-by-kungfu-origin",
+    ),
+  );
+  assert.deepEqual(
+    plan.wave2.nodes.map((node) => node.id),
+    [
+      "candidate-capsule-contracts",
+      "release-fixture-runner",
+      "rust-release-transaction",
+      "typescript-release-shadow-adapter",
+      "resume-semantic-diff-gate",
+    ],
+  );
+  assert.equal(plan.wave2.authority, "typescript-v3");
+  assert.equal(plan.wave2.mode, "effect-disabled-shadow-foundation");
   assert.ok(
     fixtureResults.every(
       (result) =>
