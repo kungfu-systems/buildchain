@@ -4,11 +4,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { readRendererManifest } from "./auditable-demo-renditions.mjs";
+import { MAX_LONG_FORM_RENDERER_MANIFEST_BYTES, readRendererManifest } from "./auditable-demo-renditions.mjs";
 
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const MAX_METADATA_MEMBER_BYTES = 8 * 1024 * 1024;
-const MAX_LONG_FORM_MANIFEST_BYTES = 32 * 1024 * 1024;
 const MAX_TERMINAL_CAPTURE_BYTES = 4 * 1024 * 1024;
 const MAX_TERMINAL_CAPTURE_EVENTS = 10_000;
 const DIGEST_BUFFER_BYTES = 64 * 1024;
@@ -113,7 +112,7 @@ export function verifyBundleChecksums(root, label, options = {}) {
     declared.add(match[2]);
     const metadataMember = match[2].endsWith(".json") || match[2].endsWith(".sha256");
     const maximum = options.allowLongFormRendererManifest && match[2] === "manifest.json"
-      ? MAX_LONG_FORM_MANIFEST_BYTES
+      ? MAX_LONG_FORM_RENDERER_MANIFEST_BYTES
       : metadataMember
         ? MAX_METADATA_MEMBER_BYTES
         : (options.maximumMemberBytes || MAX_METADATA_MEMBER_BYTES);
