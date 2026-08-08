@@ -968,6 +968,72 @@ test("complete candidate recovery reuses verified public evidence and preserves 
   assert.deepEqual(uploaded, []);
 });
 
+test("complete candidate recovery fills an existing GitHub Release when its public Passport is absent", async (t) => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json": { state: "complete" },
+    ".buildchain/release-passport/buildchain.release.json": {
+      release: { publicTag: "v1.0.1-alpha.0", channel: "alpha", releaseSha: SHA },
+    },
+    ".buildchain/release-passport/artifact-evidence.json": { ok: true },
+    "dist/package.tgz": "sealed product bytes",
+  });
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).endsWith("/releases/tags/v1.0.1-alpha.0")) {
+      return new Response(JSON.stringify({
+        id: 123,
+        html_url: "https://github.test/release",
+        name: "v1.0.1-alpha.0",
+        body: "Buildchain release passport assets for v1.0.1-alpha.0.",
+        prerelease: true,
+        make_latest: "false",
+        target_commitish: SHA,
+      }), { status: 200 });
+    }
+    if (String(url).endsWith("/releases/123") && options.method === "PATCH") {
+      return new Response(JSON.stringify({ id: 123, html_url: "https://github.test/release" }), { status: 200 });
+    }
+    throw new Error(`unexpected request: ${url}`);
+  };
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({ data: [] }),
+        uploadReleaseAsset: async ({ name }) => uploaded.push(name),
+      },
+    },
+  };
+
+  const result = await publishGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    token: "token",
+    apiUrl: "https://api.github.test",
+    tag: "v1.0.1-alpha.0",
+    target: SHA,
+    channel: "alpha",
+    publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json"),
+    releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+    releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+    additionalAssetPaths: [path.join(cwd, "dist/package.tgz")],
+    reuseExistingCompleteEvidence: true,
+  });
+
+  assert.equal(result.action, "updated");
+  assert.equal(result.uploadedAssetCount, 4);
+  assert.deepEqual(uploaded.sort(), [
+    "artifact-evidence.json",
+    "buildchain.release.json",
+    "evidence.json",
+    "package.tgz",
+  ]);
+});
+
 test("complete candidate recovery rejects a conflicting public product payload", async () => {
   const cwd = makeTempWorkspace({
     "dist/package.tgz": "sealed product bytes",
