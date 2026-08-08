@@ -672,6 +672,9 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(action, /publish-rematerialize-on-resume:/);
   assert.match(action, /release-passport-github-artifact-attestation-policy-jsons:/);
+  assert.match(implementation, /import fs from "node:fs";/);
+  assert.match(implementation, /import path from "node:path";/);
+  assert.match(implementation, /fs\.readFileSync\(path\.resolve\(publishRequiredArtifactsPath\), "utf8"\)/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /releaseCandidateFamilyEvidenceRequired/);
   assert.match(implementation, /releaseCandidateFamilyEvidenceRoot/);

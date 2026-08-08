@@ -1,5 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+import fs from "node:fs";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseTags, promoteBuildchainRefs, recordGitHubReleaseTransactionCompletion } from "./lib.js";
 import { explainReleaseLineDryRun, formatReleaseLineDryRun } from "../../packages/core/release-line-dry-run.js";
