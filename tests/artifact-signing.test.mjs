@@ -135,6 +135,59 @@ test("native profiles fail closed for incompatible artifacts and platforms", () 
   );
 });
 
+test("JIT entitlements are explicit, Apple-archive-only signature intent", () => {
+  const value = request({
+    artifact: {
+      id: "macos-runtime",
+      path: "dist/runtime.tar.gz",
+      kind: "archive",
+      platform: "macos",
+      bytes: 4096,
+      digest: INPUT_DIGEST,
+    },
+    signature: {
+      profile: "apple-developer-id",
+      entitlementsProfile: "jit-executable-v1",
+      entitlementsPaths: ["runtime/python/bin/python3"],
+    },
+  });
+  assert.equal(value.signature.entitlementsProfile, "jit-executable-v1");
+  assert.deepEqual(validateArtifactSigningRequest(value), {
+    ok: true,
+    issues: [],
+  });
+  assert.throws(
+    () =>
+      request({
+        signature: {
+          profile: "apple-developer-id",
+          entitlementsProfile: "jit-executable-v1",
+          entitlementsPaths: ["runtime/python/bin/python3"],
+        },
+      }),
+    /requires an Apple archive/,
+  );
+  assert.throws(
+    () =>
+      request({
+        artifact: {
+          id: "macos-runtime",
+          path: "dist/runtime.tar.gz",
+          kind: "archive",
+          platform: "macos",
+          bytes: 4096,
+          digest: INPUT_DIGEST,
+        },
+        signature: {
+          profile: "apple-developer-id",
+          entitlementsProfile: "consumer.plist",
+          entitlementsPaths: ["runtime/python/bin/python3"],
+        },
+      }),
+    /unsupported signing entitlements profile/,
+  );
+});
+
 test("consumer requests reject credential and environment configuration", () => {
   assert.throws(
     () =>

@@ -567,7 +567,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 60
+        "line": 61
       },
       "example": "import { artifactSigningDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -596,7 +596,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 313
+        "line": 374
       },
       "example": "import { createArtifactSigningReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -625,7 +625,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 167
+        "line": 226
       },
       "example": "import { createArtifactSigningRequest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -649,7 +649,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 103
+        "line": 162
       },
       "example": "import { listArtifactSigningProfiles } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -678,7 +678,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 111
+        "line": 170
       },
       "example": "import { resolveArtifactSigningProfile } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -711,7 +711,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 374
+        "line": 435
       },
       "example": "import { validateArtifactSigningReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -740,7 +740,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 291
+        "line": 352
       },
       "example": "import { validateArtifactSigningRequest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1391,7 +1391,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1467
+        "line": 1532
       },
       "example": "import { discoverConfiguredDerivedVersionMaterial } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1424,7 +1424,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1428
+        "line": 1493
       },
       "example": "import { discoverConfiguredVersionStateFiles } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1457,7 +1457,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1372
+        "line": 1437
       },
       "example": "import { getLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1486,7 +1486,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 520
+        "line": 585
       },
       "example": "import { getNativeDiagnosticsProfile } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1515,7 +1515,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1376
+        "line": 1441
       },
       "example": "import { getPublishContract } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1544,7 +1544,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 328
+        "line": 353
       },
       "example": "import { getStableReleasePolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1573,7 +1573,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1500
+        "line": 1565
       },
       "example": "import { getVersionStrategy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1602,7 +1602,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 158
+        "line": 183
       },
       "example": "import { loadBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1635,7 +1635,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1509
+        "line": 1574
       },
       "example": "import { loadConfiguredAnchorManifest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1664,7 +1664,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 181
+        "line": 206
       },
       "example": "import { normalizeBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1701,7 +1701,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1333
+        "line": 1398
       },
       "example": "import { normalizeLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1730,7 +1730,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1380
+        "line": 1445
       },
       "example": "import { runLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1763,7 +1763,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1680
+        "line": 1745
       },
       "example": "import { updateConfiguredVersionStateContents } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1796,7 +1796,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1547
+        "line": 1612
       },
       "example": "import { validateBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20593,7 +20593,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-signing",
       "export": "./artifact-signing",
       "target": "./packages/core/artifact-signing.js",
-      "digest": "sha256:7b4c88201125f08645092b121eeeab0390b4fdee665f0d6c949217cb6545d590",
+      "digest": "sha256:4b6f1675af2aff8205329421a4e158a0ce5e6d2c07945d2208832fb68ca5b8ad",
       "summary": "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -22188,7 +22188,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:938e2427d5d379996359672730b754fc4e20a08db2be284776c67d331e1a2f2c"
+      "digest": "sha256:5688f0011cd14191ca2fe15dc88970278c51f588bff9d40fc20b2076110db23c"
     },
     {
       "id": "build-facts",

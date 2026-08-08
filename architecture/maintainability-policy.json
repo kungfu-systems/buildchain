@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 110704,
+    "maxHandMaintainedSourceLines": 110842,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22517,
-    "latestTransition": "Publication rehearsal now streams capsule hashes so retained release artifacts larger than the Node Buffer limit remain locally verifiable.",
-    "rationale": "The transition adds exactly twelve hand-maintained runtime lines for bounded synchronous chunk hashing and descriptor closure. It preserves the existing SHA-256 contract, fail-closed file binding and single release-tail authority; these exact ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22519,
+    "latestTransition": "Apple archive signing now seals an exact Buildchain-owned JIT entitlement profile and archive-relative executable targets.",
+    "rationale": "The signing transition adds fail-closed profile and path validation, immutable request propagation, exact executable-only codesign exceptions, post-sign entitlement readback, and provider evidence while rejecting consumer entitlement files, wildcard targets, and unsealed paths. The two workflow lines only pass the sealed intent into the protected authority, and these exact ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -45,6 +45,10 @@
       "maxLines": 1037,
       "maxFunctionLines": 679,
       "rationale": "The contract world records the additive candidate-run recovery inputs, reuse guarantees, and reviewed predecessor digests for both public promotion surfaces; this exact public-contract wiring ceiling cannot grow implicitly."
+    },
+    "packages/core/buildchain-config.js": {
+      "maxLines": 1806,
+      "rationale": "Artifact signing configuration admits only the Buildchain-owned JIT profile with exact safe archive-relative target paths while rejecting credentials, entitlement files, wildcard paths, incompatible artifact kinds, and incomplete declarations; this exact wiring ceiling cannot grow implicitly."
     },
     "packages/core/index.js": {
       "maxLines": 695,
