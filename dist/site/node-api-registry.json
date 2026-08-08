@@ -4794,7 +4794,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 564
+        "line": 568
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4831,7 +4831,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 516
+        "line": 520
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4860,7 +4860,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 95
+        "line": 96
       },
       "example": "import { createDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5113,7 +5113,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 433
+        "line": 437
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5146,7 +5146,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 110
+        "line": 111
       },
       "example": "import { normalizeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5179,7 +5179,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 567
+        "line": 571
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5212,7 +5212,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 274
+        "line": 276
       },
       "example": "import { rankDevDeliveryCandidates } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5245,7 +5245,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 466
+        "line": 470
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5278,7 +5278,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 298
+        "line": 300
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5302,7 +5302,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 565
+        "line": 569
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5339,7 +5339,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 193
+        "line": 195
       },
       "example": "import { submitDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -20904,7 +20904,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:5acf61bf7e7da8e1722fc807988a47a20bc29ebb5f8330f2a579425cbefd3226",
+      "digest": "sha256:354e06c0769a2b53c9cc6a51636d8bd7c1f948034a6d7c7b022101d50f1989e2",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -22188,7 +22188,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:42c79a5459172d7fb26f858067b2f757a32b5581dca68abbc0b2f931e05d61fd"
+      "digest": "sha256:fa13eb3df2470da7eec7736fc3319a784d877524a040d951f8eef5a7a5e16e85"
     },
     {
       "id": "build-facts",

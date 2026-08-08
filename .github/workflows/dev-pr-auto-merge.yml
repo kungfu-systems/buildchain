@@ -28,6 +28,16 @@ on:
         default: ""
         type: string
         required: false
+      source-workflow-run-id:
+        description: "Exact successful source workflow run retained for immediate Warrant handoff"
+        default: 0
+        type: number
+        required: false
+      handoff-workflow-id:
+        description: "Optional consumer workflow file to dispatch when another candidate owns the active Warrant"
+        default: ""
+        type: string
+        required: false
       diagnostic-context:
         description: "Commit-status context used for PR-visible targeted admission state"
         default: "Buildchain delivery intent"
@@ -241,6 +251,7 @@ on:
         value: ${{ jobs.merge-dev-prs.outputs.project-cut-proof-root }}
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
   checks: read
@@ -462,6 +473,9 @@ jobs:
             --priority "${DELIVERY_PRIORITY}"
             --output .buildchain/dev-delivery/submission.json
           )
+          if [ "${SOURCE_WORKFLOW_RUN_ID}" -gt 0 ]; then
+            args+=(--source-workflow-run-id "${SOURCE_WORKFLOW_RUN_ID}")
+          fi
           if [ "${WARRANT_MODE}" = "required" ]; then
             args+=(--execute)
           fi
@@ -476,6 +490,7 @@ jobs:
           SOURCE_IDENTITY_ROOT: ${{ inputs.source-identity-root }}
           SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
           SOURCE_PROOF_ROOT: ${{ steps.proof.outputs.source-proof-root }}
+          SOURCE_WORKFLOW_RUN_ID: ${{ inputs.source-workflow-run-id }}
           PLAN_ROOT: ${{ inputs.plan-root }}
           CLOSURE_ROOT: ${{ inputs.closure-root }}
           DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
@@ -496,6 +511,39 @@ jobs:
             --lease-seconds "${LEASE_SECONDS}" \
             --execute \
             --output .buildchain/dev-delivery/warrant.json
+          selected_pr="$(jq -er '.observation.activeWarrant.pullRequestNumber' .buildchain/dev-delivery/warrant.json)"
+          selected_head="$(jq -er '.observation.activeWarrant.sourceHead' .buildchain/dev-delivery/warrant.json)"
+          if [ "$selected_pr" != "$EXPECTED_PR" ] || [ "$selected_head" != "$EXPECTED_HEAD" ]; then
+            source_run_id="$(jq -er '.observation.activeWarrant.sourceWorkflowRunId | select(. > 0)' .buildchain/dev-delivery/warrant.json)"
+            if [ -z "$HANDOFF_WORKFLOW_ID" ]; then
+              echo "::error::Active Warrant belongs to PR #$selected_pr, but no immediate handoff workflow was configured"
+              exit 1
+            fi
+            gh workflow run "$HANDOFF_WORKFLOW_ID" \
+              --repo "$GITHUB_REPOSITORY" \
+              --ref "$TARGET_BRANCH" \
+              -f expected-pr-number="$selected_pr" \
+              -f expected-head-sha="$selected_head" \
+              -f source-workflow-run-id="$source_run_id" \
+              -f dry-run=false
+            mkdir -p .buildchain/dev-pr-auto-merge
+            jq -n \
+              --argjson requestedPr "$EXPECTED_PR" \
+              --arg requestedHead "$EXPECTED_HEAD" \
+              --argjson activePr "$selected_pr" \
+              --arg activeHead "$selected_head" \
+              --argjson sourceRunId "$source_run_id" \
+              '{schema:"kungfu.buildchain.dev-warrant-handoff/v1",ok:true,outcome:"active-warrant-handoff-dispatched",requested:{pullRequestNumber:$requestedPr,sourceHead:$requestedHead},active:{pullRequestNumber:$activePr,sourceHead:$activeHead,sourceWorkflowRunId:$sourceRunId}}' \
+              > .buildchain/dev-pr-auto-merge/result.json
+            {
+              echo "handoff-required=true"
+              echo "handoff-dispatched=true"
+              echo "active-pr-number=$selected_pr"
+              echo "active-head-sha=$selected_head"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "handoff-required=false" >> "$GITHUB_OUTPUT"
           jq -e \
             --argjson pr "${EXPECTED_PR}" \
             --arg head "${EXPECTED_HEAD}" \
@@ -521,9 +569,11 @@ jobs:
           LEASE_SECONDS: ${{ inputs.warrant-lease-seconds }}
           EXPECTED_PR: ${{ inputs.expected-pr-number }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          HANDOFF_WORKFLOW_ID: ${{ inputs.handoff-workflow-id }}
 
       - name: Run Buildchain dev PR auto-merge
         id: merge
+        if: steps.warrant.outputs.handoff-required != 'true'
         continue-on-error: true
         run: node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs
         env:
@@ -555,7 +605,7 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-dev-pr-auto-merge-${{ steps.target.outputs.branch-artifact }}
-          path: ${{ steps.merge.outputs.result-path }}
+          path: .buildchain/dev-pr-auto-merge/result.json
           if-no-files-found: error
 
       - name: Upload Dev Delivery Warrant evidence
@@ -572,6 +622,14 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ "${HANDOFF_REQUIRED}" = "true" ]; then
+            if [ "${WARRANT_OUTCOME}" != "success" ] || [ "${HANDOFF_DISPATCHED}" != "true" ]; then
+              echo "::error::Active Warrant handoff was not dispatched"
+              exit 1
+            fi
+            echo "Immediate handoff dispatched to the active Warrant candidate."
+            exit 0
+          fi
           if [ "${MERGE_STEP_OUTCOME}" != "success" ]; then
             echo "::error::Buildchain dev PR controller failed; inspect the uploaded receipt"
             exit 1
@@ -600,3 +658,5 @@ jobs:
           QUALIFY_OUTCOME: ${{ steps.qualify.outcome }}
           SUBMIT_OUTCOME: ${{ steps.submit.outcome }}
           WARRANT_OUTCOME: ${{ steps.warrant.outcome }}
+          HANDOFF_REQUIRED: ${{ steps.warrant.outputs.handoff-required }}
+          HANDOFF_DISPATCHED: ${{ steps.warrant.outputs.handoff-dispatched }}

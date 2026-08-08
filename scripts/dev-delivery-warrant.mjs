@@ -189,6 +189,7 @@ function transitionFor(command, queue, options) {
         closureRoot: exactRoot(options.closureRoot, "closureRoot"),
         dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
         toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
+        sourceWorkflowRunId: options.sourceWorkflowRunId ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId") : 0,
         deliveryClass: options.deliveryClass,
         priority: options.priority || "ordinary",
       },

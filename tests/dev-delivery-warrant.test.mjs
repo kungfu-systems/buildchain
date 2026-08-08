@@ -50,6 +50,7 @@ function candidate(number, overrides = {}) {
     toolchainRoot: ROOTS.toolchain,
     deliveryClass: "native-proof-required",
     priority: "ordinary",
+    sourceWorkflowRunId: 31000000000 + number,
     ...overrides,
   };
 }
@@ -71,6 +72,13 @@ test("queue identity and state roots fail closed on drift", () => {
       }),
     /repository mismatch/,
   );
+});
+
+test("selected Warrant retains the exact source workflow run for immediate controller handoff", () => {
+  const submitted = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  assert.equal(selected.warrant.sourceWorkflowRunId, 31000000100);
+  assert.equal(selected.receipt.sourceWorkflowRunId, 31000000100);
 });
 
 test("duplicate submission is idempotent and safe head repair retains queue age", () => {

@@ -159,6 +159,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ "${OUTCOME}" = "dequeued" ]; then
+            # GraphQL variables are expanded by GitHub, not this shell.
+            # shellcheck disable=SC2016
+            query='query($owner:String!,$repo:String!,$branch:String!){repository(owner:$owner,name:$repo){mergeQueue(branch:$branch){entries(first:100){nodes{pullRequest{number headRefOid}}}}}}'
+            queue="$(gh api graphql -f query="$query" -f owner="${GITHUB_REPOSITORY%%/*}" -f repo="${GITHUB_REPOSITORY#*/}" -f branch="${TARGET_BRANCH}")"
+            if jq -e \
+              --argjson pr "${EXPECTED_PR}" \
+              --arg head "${EXPECTED_HEAD}" \
+              'any(.data.repository.mergeQueue.entries.nodes[]?; .pullRequest.number == $pr and .pullRequest.headRefOid == $head)' \
+              <<<"$queue" >/dev/null; then
+              echo "mode=stale-dequeued" >> "${GITHUB_OUTPUT}"
+              echo "The exact PR head is still queued; ignore the stale dequeued event instead of closing the current Warrant generation."
+              exit 0
+            fi
+          fi
           if jq -e '.observation.activeWarrant != null' .buildchain/dev-delivery/observation.json >/dev/null; then
             jq -e \
               --argjson pr "${EXPECTED_PR}" \
@@ -174,12 +189,15 @@ jobs:
             echo "mode=inactive" >> "${GITHUB_OUTPUT}"
           fi
         env:
+          GH_TOKEN: ${{ secrets.github-token || github.token }}
+          OUTCOME: ${{ inputs.outcome }}
+          TARGET_BRANCH: ${{ inputs.target-branch }}
           EXPECTED_PR: ${{ inputs.expected-pr-number }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
 
       - name: Seal exact terminal evidence
         id: evidence
-        if: steps.settlement.outputs.mode == 'active' || inputs.outcome != 'merged'
+        if: steps.settlement.outputs.mode != 'stale-dequeued' && (steps.settlement.outputs.mode == 'active' || inputs.outcome != 'merged')
         shell: bash
         run: |
           if [ "${OUTCOME}" = "merged" ]; then
@@ -218,6 +236,7 @@ jobs:
 
       - name: Settle terminal delivery event
         id: close
+        if: steps.settlement.outputs.mode != 'stale-dequeued'
         shell: bash
         run: |
           set -euo pipefail
