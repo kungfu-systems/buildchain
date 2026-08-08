@@ -202,3 +202,92 @@ test("contract libraries contain no ambient clock or provider effects", () => {
   ])
     assert.equal(rust.includes(forbidden), false, forbidden);
 });
+
+test("Rust Delivery Warrant domain freezes the protected manifest surface", () => {
+  const plan = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../architecture/v4-delivery-warrant-shadow-bootstrap-plan.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  const manifest = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../architecture/v4-capability-state-machine-manifest.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  const domain = ["warrant.rs", "warrant/decision.rs", "warrant/transition.rs"]
+    .map((file) =>
+      fs.readFileSync(
+        new URL(
+          `../crates/buildchain-v4-contracts/src/${file}`,
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    )
+    .join("\n");
+  const warrant = manifest.stateMachines.find(
+    (machine) => machine.id === "dev-delivery-warrant",
+  );
+  assert.equal(warrant.states.length, 9);
+  assert.equal(warrant.events.length, 7);
+  assert.equal(plan.primitives.length, 9);
+  assert.equal(plan.legacyDisagreements.length, 7);
+  for (const value of [
+    ...warrant.states,
+    ...warrant.events,
+    ...plan.primitives.map(({ id }) => id),
+    ...plan.legacyDisagreements.map(({ id }) => id),
+  ])
+    assert.equal(domain.includes(`"${value}"`), true, value);
+  assert.deepEqual(warrant.writer, {
+    runtime: "typescript-v3",
+    authoritative: true,
+    secondWriterBudget: 0,
+  });
+  assert.equal(warrant.migrationPhase, "legacy-authoritative");
+});
+
+test("Rust pure domain cannot hide a provider, writer, ambient clock, or unbounded retry", () => {
+  const domain = ["warrant.rs", "warrant/decision.rs", "warrant/transition.rs"]
+    .map((file) =>
+      fs.readFileSync(
+        new URL(
+          `../crates/buildchain-v4-contracts/src/${file}`,
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    )
+    .join("\n");
+  for (const forbidden of [
+    "std::fs",
+    "std::net",
+    "std::process",
+    "std::env",
+    "SystemTime",
+    "Instant::now",
+    "thread::sleep",
+    "reqwest",
+    "octocrab",
+    "git2",
+    "File::create",
+    "OpenOptions",
+    "loop {",
+    "while true",
+  ])
+    assert.equal(domain.includes(forbidden), false, forbidden);
+  assert.match(
+    domain,
+    /maximum_conflict_retries > 1[\s\S]+unbounded-retry-policy/u,
+  );
+  assert.match(domain, /effect_type: "persist-successor"/u);
+  assert.match(domain, /effect_type: "request-admission"/u);
+});
