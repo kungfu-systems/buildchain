@@ -6,8 +6,8 @@
     "cliCommandCount": 113,
     "workflowCount": 64,
     "actionCount": 6,
-    "sitePageCount": 68,
-    "docCommandRefCount": 896,
+    "sitePageCount": 69,
+    "docCommandRefCount": 897,
     "failureCount": 0
   },
   "enumerated": {
@@ -3199,6 +3199,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:v4-delivery-warrant-read-candidate",
+        "category": "manual"
+      },
+      {
         "id": "manual:v4-delivery-warrant-semantic-diff",
         "category": "manual"
       },
@@ -4120,6 +4124,11 @@
         "id": "dev",
         "path": "docs/release-governance.md",
         "command": "buildchain dev pr-admit"
+      },
+      {
+        "id": "dev",
+        "path": "docs/v4-delivery-warrant-read-candidate.md",
+        "command": "buildchain dev warrant observe"
       },
       {
         "id": "diagnostics-summary",
@@ -7704,7 +7713,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
     "workflowRegistryDigest": "b8d8226430132d16f40865603ff710197bb3ab9cea12d79082a3e4ad0f82a22b",
-    "pageRegistryDigest": "a51ee95ce817cc8b710a1c6bd5ad219943e9d89d92d409cf0981c88e7d896f77"
+    "pageRegistryDigest": "5eac2fd1f124b6001dc13a2a4022ca8f3202f4beefbebc5a4ec3a4369b4eefb7"
   },
   "comparison": {
     "missingCliRegistry": [],

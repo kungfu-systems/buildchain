@@ -64,6 +64,9 @@ node --test tests/v4-delivery-warrant-fixture-runner.test.mjs
 
 A qualified report makes only the next
 read-candidate stage eligible; it never authorizes v4 writes.
+The reversible caller contract and its fail-closed qualification binding are
+documented in
+[`v4-delivery-warrant-read-candidate.md`](v4-delivery-warrant-read-candidate.md).
 
 Focused verification:
 

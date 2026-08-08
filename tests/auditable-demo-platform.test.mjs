@@ -402,8 +402,12 @@ test("declared readable playback normalizes latency without changing terminal pa
   const readCapture = ({ output }) => JSON.parse(fs.readFileSync(path.join(output, "renditions/1080p/terminal-capture.json"), "utf8"));
   const fastCapture = readCapture(fast);
   const slowCapture = readCapture(slow);
-  assert.deepEqual(fastCapture.events.map((event) => event.data), slowCapture.events.map((event) => event.data));
-  assert.deepEqual(fastCapture.events.map((event) => event.atMs), slowCapture.events.map((event) => event.atMs));
+  const payload = (capture) => Buffer.concat(capture.events.map((event) => Buffer.from(event.data, "base64")));
+  assert.deepEqual(payload(fastCapture), payload(slowCapture), "PTY chunk coalescing cannot change ordered terminal bytes");
+  for (const captureValue of [fastCapture, slowCapture]) {
+    assert.equal(captureValue.events[0].atMs, 0);
+    assert.equal(captureValue.events.at(-1).atMs, 1600);
+  }
   assert.equal(fastCapture.durationMs, 2300);
   assert.equal(fastCapture.playback.eventOrder, "preserved");
   assert.ok(slowCapture.playback.observedLastEventMs >= 300, "the slower PTY latency remains recorded as evidence");

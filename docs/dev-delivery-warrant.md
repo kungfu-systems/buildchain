@@ -114,6 +114,13 @@ buildchain dev warrant cancel-queued --repository owner/repository \
 Warrant-scoped mutations require the exact fencing token and lease generation.
 `close` also requires a rooted terminal evidence object.
 
+On the v4 preview line, `observe` alone has an explicit `--read-mode v4`
+candidate. It requires a retained exact semantic-diff qualification and source
+binding, invokes an effect-disabled Rust state projection, retains parity
+evidence, and returns the existing v3 observation shape. The default and
+rollback mode is `v3`; mutation commands ignore the read switch. See
+[`v4-delivery-warrant-read-candidate.md`](v4-delivery-warrant-read-candidate.md).
+
 Proof commands create, verify, classify, and compose the two proof layers:
 
 ```sh

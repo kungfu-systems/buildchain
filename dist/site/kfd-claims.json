@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "668701e0a65d9b4800e67c818957fe7f444001561cc2002e06f3f798c7e755d5",
+    "sha256": "847c108ebde1c8bb3c45e65c92a7373c3d9438a80b6b9615f9ca5dd0661f5c2a",
     "summary": {
       "cliCommandCount": 113,
       "workflowCount": 64,
       "actionCount": 6,
-      "sitePageCount": 68,
-      "docCommandRefCount": 896,
+      "sitePageCount": 69,
+      "docCommandRefCount": 897,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "668701e0a65d9b4800e67c818957fe7f444001561cc2002e06f3f798c7e755d5",
+      "sha256": "847c108ebde1c8bb3c45e65c92a7373c3d9438a80b6b9615f9ca5dd0661f5c2a",
       "summary": {
         "cliCommandCount": 113,
         "workflowCount": 64,
         "actionCount": 6,
-        "sitePageCount": 68,
-        "docCommandRefCount": 896,
+        "sitePageCount": 69,
+        "docCommandRefCount": 897,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -6197,6 +6197,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-delivery-warrant-read-candidate",
+          "name": "site-page:manual:v4-delivery-warrant-read-candidate",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-delivery-warrant-semantic-diff",
           "name": "site-page:manual:v4-delivery-warrant-semantic-diff",
           "kind": "site-page",
@@ -6415,6 +6427,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 406
+    "publicSurfaceCount": 407
   }
 }

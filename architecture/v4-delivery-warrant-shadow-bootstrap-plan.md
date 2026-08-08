@@ -142,6 +142,13 @@ Every stage has explicit entry, exit, evidence, rollback, and stop conditions in
 the JSON plan. A rollback chooses one last-known-qualified writer for the whole
 protected line. It never creates permanent dual authority.
 
+The read candidate implements that boundary only for `observe`: v3 is the
+default, v4 requires an explicit caller switch plus the exact retained
+qualification root and source revisions, and any qualification, projection,
+timeout, cancellation, parity, or retention failure stops. Mutation commands
+never consult the read switch. The rollback drill is the explicit switch back
+to v3 while retaining the v4 evidence for diagnosis.
+
 ## Wave 1 entry
 
 Wave 0 reconciliation proves the four protected child deliveries and opens the
