@@ -667,7 +667,7 @@
     "children": [
       {
         "id": "canonical-contracts",
-        "assignmentId": "2026-08-06-buildchain-v4-canonical-contracts",
+        "assignmentId": "2026-08-07-buildchain-v4-canonical-contracts",
         "status": "proved",
         "pullRequest": 2428,
         "sourceRevision": "b15011e59614c6316522507498f3f80c2fb7447b",
@@ -680,7 +680,7 @@
       },
       {
         "id": "shared-fixture-runner",
-        "assignmentId": "2026-08-06-buildchain-v4-shared-fixture-runner",
+        "assignmentId": "2026-08-07-buildchain-v4-shared-fixture-runner",
         "status": "proved",
         "pullRequest": 2449,
         "sourceRevision": "3bb081e9adbfa28a1d035eb9418ff227e6a3f71c",
@@ -779,32 +779,41 @@
     "mode": "effect-disabled-shadow-foundation",
     "nodes": [
       {
-        "id": "candidate-capsule-contracts",
+        "id": "stage-capsule-contracts",
         "dependsOn": [],
-        "deliverable": "canonical Candidate Capsule contracts without provider effects"
+        "deliverable": "canonical per-platform Stage Capsule identity and validation contracts without provider effects"
       },
       {
-        "id": "release-fixture-runner",
-        "dependsOn": ["candidate-capsule-contracts"],
-        "deliverable": "language-neutral resumable-release traces and projections"
+        "id": "stage-capsule-store-retention",
+        "dependsOn": ["stage-capsule-contracts"],
+        "deliverable": "content-addressed Stage Capsule storage, retention, and restore contracts"
       },
       {
-        "id": "rust-release-transaction",
-        "dependsOn": ["candidate-capsule-contracts", "release-fixture-runner"],
-        "deliverable": "provider-free Release Transaction decide and fold domain"
-      },
-      {
-        "id": "typescript-release-shadow-adapter",
-        "dependsOn": ["release-fixture-runner"],
-        "deliverable": "effect-disabled TypeScript and Rust release shadow adapter"
-      },
-      {
-        "id": "resume-semantic-diff-gate",
+        "id": "platform-stage-checkpoints",
         "dependsOn": [
-          "rust-release-transaction",
-          "typescript-release-shadow-adapter"
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention"
         ],
-        "deliverable": "fail-closed resume and semantic-diff qualification evidence"
+        "deliverable": "effect-disabled macOS, Linux, and Windows checkpoint emission and restore"
+      },
+      {
+        "id": "resume-planner",
+        "dependsOn": [
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention",
+          "platform-stage-checkpoints"
+        ],
+        "deliverable": "deterministic minimal cross-run resume plan over retained exact roots"
+      },
+      {
+        "id": "stage-capsule-qualification-reconciliation",
+        "dependsOn": [
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention",
+          "platform-stage-checkpoints",
+          "resume-planner"
+        ],
+        "deliverable": "fail-closed three-platform recovery qualification and residual reconciliation"
       }
     ]
   },

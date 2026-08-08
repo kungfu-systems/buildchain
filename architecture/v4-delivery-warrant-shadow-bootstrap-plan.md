@@ -198,13 +198,15 @@ cutover, migration, or legacy removal.
 
 ## Wave 2 capture boundary
 
-The exact residual opens five bounded, effect-disabled foundation assignments:
-Candidate Capsule contracts, a release fixture runner, a provider-free Rust
-Release Transaction domain, a TypeScript release shadow adapter, and a resume
-semantic-diff gate. Their dependency graph is recorded in the machine plan.
-Capturing those assignments does not execute them and does not move production
-authority; real provider calls, release publication, read/write cutover,
-consumer migration, and legacy removal remain explicit future gates.
+The exact residual opens five bounded, effect-disabled Stage Capsule and
+cross-run resume assignments: canonical Stage Capsule contracts,
+content-addressed storage and retention, three-platform checkpoints, a
+deterministic minimal resume planner, and a final qualification reconciliation.
+Their dependency graph is recorded in the machine plan. Capturing those
+assignments does not execute them and does not move production authority;
+Candidate Capsule completion, Release Transaction authority, real provider
+calls, release publication, read/write cutover, consumer migration, and legacy
+removal remain explicit future gates.
 
 ## Verification
 
