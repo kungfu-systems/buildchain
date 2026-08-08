@@ -296,6 +296,58 @@ test("custom-product recovery uses Passport version and manifests without treati
   }
 });
 
+test("custom-product recovery publishes only Passport platform artifacts, not signing intermediates", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-custom-platform-assets-"));
+  try {
+    const basename = "kungfu-episodes-cli-darwin-arm64.tar.gz";
+    const platformPath = path.join(workspace, "platform", basename);
+    const signingRequestPath = path.join(workspace, "signing-request", basename);
+    fs.mkdirSync(path.dirname(platformPath), { recursive: true });
+    fs.mkdirSync(path.dirname(signingRequestPath), { recursive: true });
+    fs.writeFileSync(platformPath, "sealed-platform-bytes");
+    fs.writeFileSync(signingRequestPath, "unsigned-signing-request-bytes");
+    const file = (absolutePath) => ({
+      path: path.basename(absolutePath),
+      absolutePath,
+      size: fs.statSync(absolutePath).size,
+      sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex")}`,
+    });
+    const platformArtifactName = `kungfu-macos-arm64-${SOURCE_SHA}`;
+    const publication = createRecoveredPublication({
+      downloads: [
+        { artifact: { name: platformArtifactName }, files: [file(platformPath)] },
+        {
+          artifact: { name: `kungfu-signing-request-macos-arm64-${SOURCE_SHA}-100-1` },
+          files: [file(signingRequestPath)],
+        },
+      ],
+      bundleRoot: workspace,
+      repository: "kungfu-systems/kungfu",
+      passport: {
+        buildchain: { sha: RUNTIME_SHA },
+        candidateHash: "a".repeat(64),
+        source: { headSha: SOURCE_SHA, treeHash: TREE },
+        target: { version: "4.0.0-alpha.1" },
+      },
+      candidateRuntimeSha: RUNTIME_SHA,
+      publishArtifactKind: "kungfu-product",
+      releasePatterns: "kungfu-episodes-cli-*.tar.gz",
+      platformManifests: [{
+        artifactName: platformArtifactName,
+        platform: { id: "macos-arm64" },
+        files: [],
+      }],
+    });
+    assert.deepEqual(
+      publication.releaseAssets.map((entry) => entry.absolutePath),
+      [platformPath],
+    );
+    assert.equal(fs.readFileSync(publication.releaseAssets[0].absolutePath, "utf8"), "sealed-platform-bytes");
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("custom-product publication identities preserve platform and relative path", () => {
   const artifacts = generatePublishRequiredArtifacts({
     kind: "kungfu-product",

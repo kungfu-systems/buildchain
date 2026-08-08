@@ -301,10 +301,18 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
     size: file.size,
     sha256: file.sha256.replace(/^sha256:/, ""),
     absolutePath: file.absolutePath,
+    artifactName: String(download.artifact?.name || ""),
   }))).sort((left, right) => left.path.localeCompare(right.path));
   const kind = String(publishArtifactKind || "npm");
   const releaseMatchers = splitPatterns(releasePatterns).map(patternMatcher);
-  const releaseAssets = allFiles.filter((file) => releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
+  const platformArtifactNames = new Set(
+    platformManifests.map((manifest) => String(manifest.artifactName || "")).filter(Boolean),
+  );
+  const releaseAssetFiles = kind !== "npm" && platformArtifactNames.size > 0
+    ? allFiles.filter((file) => platformArtifactNames.has(file.artifactName))
+    : allFiles;
+  const releaseAssets = releaseAssetFiles.filter((file) =>
+    releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
   if (kind !== "npm") {
     createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
     const version = String(passport.target?.version || "").trim();
