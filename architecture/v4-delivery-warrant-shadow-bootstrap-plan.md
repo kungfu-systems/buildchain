@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-08
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-07
+  generated_at: 2026-08-08
   invisible_context: not asserted
 ---
 
@@ -172,6 +172,39 @@ stricter than child completion: the Agent state/explain/plan interface and
 cross-platform bridge evidence are partial, while resumable release, self
 dogfood, migration, legacy removal, and final v4 qualification are missing.
 TypeScript v3 remains the sole production authority throughout.
+
+## Wave 1 reconciliation
+
+All six Wave 1 child Assignments are terminal and independently delivered to
+the protected `dev/v4/v4.0` line in dependency order: canonical contracts,
+shared fixtures, the provider-free Rust Warrant domain, the effect-disabled
+TypeScript shadow adapter, the fail-closed semantic-diff gate, and the
+reversible read candidate. The machine-readable reconciliation binds every
+child to its native capture receipt and portable terminal seal as well as its
+exact source, merge, tree, review, and check evidence. The final protected
+child revision is `955639299f6b94bdcc8affd91b3361ad1bb42d06`.
+
+The Initiative acceptance matrix is intentionally not inferred from six green
+children. v3 safety, the protected v4 line, authority, dependency direction,
+semantic budgets, and the Warrant pilot are proved. Agent state/explain/plan
+and bridge portability remain partial. Resumable release, self dogfood,
+consumer migration and legacy removal, and final v4 qualification remain
+missing. No responsibility row is invalidated: the former Wave 1 entry-cycle
+conflict is resolved by the protected zero-diff gate and read candidate.
+
+The parent Initiative remains inert and TypeScript v3 remains the sole
+production writer. Wave 1 does not authorize a provider effect, release,
+cutover, migration, or legacy removal.
+
+## Wave 2 capture boundary
+
+The exact residual opens five bounded, effect-disabled foundation assignments:
+Candidate Capsule contracts, a release fixture runner, a provider-free Rust
+Release Transaction domain, a TypeScript release shadow adapter, and a resume
+semantic-diff gate. Their dependency graph is recorded in the machine plan.
+Capturing those assignments does not execute them and does not move production
+authority; real provider calls, release publication, read/write cutover,
+consumer migration, and legacy removal remain explicit future gates.
 
 ## Verification
 
