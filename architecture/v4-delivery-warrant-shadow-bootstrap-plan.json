@@ -779,32 +779,41 @@
     "mode": "effect-disabled-shadow-foundation",
     "nodes": [
       {
-        "id": "candidate-capsule-contracts",
+        "id": "stage-capsule-contracts",
         "dependsOn": [],
-        "deliverable": "canonical Candidate Capsule contracts without provider effects"
+        "deliverable": "canonical per-platform Stage Capsule identity and validation contracts without provider effects"
       },
       {
-        "id": "release-fixture-runner",
-        "dependsOn": ["candidate-capsule-contracts"],
-        "deliverable": "language-neutral resumable-release traces and projections"
+        "id": "stage-capsule-store-retention",
+        "dependsOn": ["stage-capsule-contracts"],
+        "deliverable": "content-addressed Stage Capsule storage, retention, and restore contracts"
       },
       {
-        "id": "rust-release-transaction",
-        "dependsOn": ["candidate-capsule-contracts", "release-fixture-runner"],
-        "deliverable": "provider-free Release Transaction decide and fold domain"
-      },
-      {
-        "id": "typescript-release-shadow-adapter",
-        "dependsOn": ["release-fixture-runner"],
-        "deliverable": "effect-disabled TypeScript and Rust release shadow adapter"
-      },
-      {
-        "id": "resume-semantic-diff-gate",
+        "id": "platform-stage-checkpoints",
         "dependsOn": [
-          "rust-release-transaction",
-          "typescript-release-shadow-adapter"
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention"
         ],
-        "deliverable": "fail-closed resume and semantic-diff qualification evidence"
+        "deliverable": "effect-disabled macOS, Linux, and Windows checkpoint emission and restore"
+      },
+      {
+        "id": "resume-planner",
+        "dependsOn": [
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention",
+          "platform-stage-checkpoints"
+        ],
+        "deliverable": "deterministic minimal cross-run resume plan over retained exact roots"
+      },
+      {
+        "id": "stage-capsule-qualification-reconciliation",
+        "dependsOn": [
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention",
+          "platform-stage-checkpoints",
+          "resume-planner"
+        ],
+        "deliverable": "fail-closed three-platform recovery qualification and residual reconciliation"
       }
     ]
   },

@@ -42,11 +42,11 @@ test("v4 Warrant plan validates complete authority and cutover coverage", () => 
   assert.deepEqual(
     plan.wave2.nodes.map((node) => node.id),
     [
-      "candidate-capsule-contracts",
-      "release-fixture-runner",
-      "rust-release-transaction",
-      "typescript-release-shadow-adapter",
-      "resume-semantic-diff-gate",
+      "stage-capsule-contracts",
+      "stage-capsule-store-retention",
+      "platform-stage-checkpoints",
+      "resume-planner",
+      "stage-capsule-qualification-reconciliation",
     ],
   );
   assert.equal(plan.wave2.authority, "typescript-v3");
