@@ -5,10 +5,10 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 286,
-    "maxHandMaintainedSourceLines": 110452,
+    "maxHandMaintainedSourceFiles": 287,
+    "maxHandMaintainedSourceLines": 110704,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22474,
+    "maxWorkflowLines": 22517,
     "latestTransition": "Publication rehearsal now streams capsule hashes so retained release artifacts larger than the Node Buffer limit remain locally verifiable.",
     "rationale": "The transition adds exactly twelve hand-maintained runtime lines for bounded synchronous chunk hashing and descriptor closure. It preserves the existing SHA-256 contract, fail-closed file binding and single release-tail authority; these exact ceilings cannot grow implicitly."
   },
@@ -137,6 +137,7 @@
           "github-release-artifact-paths",
           "github-release-notes",
           "github-release-title",
+          "plan-before-target-advance",
           "promote-only-release-candidate",
           "publication-capability-json",
           "publication-gate-aggregate-json",
@@ -205,7 +206,7 @@
         "secrets": [],
         "outputs": []
       },
-      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording."
+      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording. The dry-run-only pre-target planning input records both the observed target SHA and requested source SHA without weakening normal ref identity checks."
     },
     "action:run-lifecycle": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

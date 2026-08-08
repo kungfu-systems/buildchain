@@ -197,7 +197,7 @@
     "productionCutover": false,
     "selfDogfoodCutover": {
       "status": "alpha-train",
-      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@f28ce21efd8d05b25969ef708edc678d17619b6e",
+      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b",
       "providerCapability": "artifact.publish",
       "stableCutover": false
     }

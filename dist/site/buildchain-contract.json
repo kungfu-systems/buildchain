@@ -476,7 +476,7 @@
         "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
       ],
       "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-      "auditDigest": "sha256:1ee999cd37653df53bc9f78ee50a5de24ff59a08aab47862f6f748eea7796933"
+      "auditDigest": "sha256:7b1fa951846a7386261e1c52d1191b17421a0dd5a60edee675926dfa9c085126"
     },
     {
       "contractVersion": 1,
@@ -790,7 +790,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:b3427cc325598556d5b504f80af77bc1b78c389a618e14cf9572523c758b331f"
+      "auditDigest": "sha256:1e967f8493e1e9a43aad44acb9b6436e02297be83102d41b8aa92c2cbbbda7dc"
     },
     {
       "contractVersion": 1,
@@ -3734,5 +3734,5 @@
     }
   ],
   "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe",
-  "contractDigest": "sha256:3617c3aad2e577db0e313942f9134fff795493bb39927b9e4d6e3cf929d213aa"
+  "contractDigest": "sha256:cbd0df1cc5b4e0e9769f4e7b1b3f099a667e08e3ef54081cce036ae8c63a6cfa"
 }

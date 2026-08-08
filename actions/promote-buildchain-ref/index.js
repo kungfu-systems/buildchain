@@ -179,6 +179,7 @@ async function publishReleaseTail({
       releasePassportOutputDir: releaseOptions.releasePassportOutputDir,
       additionalAssetPaths: releaseOptions.additionalAssetPaths,
       statePath: releaseTailStatePath,
+      targetRef,
     },
   });
   const completion = await recordGitHubReleaseTransactionCompletion({
@@ -211,6 +212,7 @@ async function main() {
   const tagInput = core.getInput("tags");
   const tags = tagInput ? parseTags(tagInput) : undefined;
   const dryRun = core.getBooleanInput("dry-run");
+  const planBeforeTargetAdvance = core.getBooleanInput("plan-before-target-advance");
   const requireGovernance = core.getBooleanInput("require-governance");
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
@@ -324,6 +326,7 @@ async function main() {
     targetRef,
     tags,
     dryRun,
+    planBeforeTargetAdvance,
     allowRepository,
     requireGovernance,
     requireVersionState,

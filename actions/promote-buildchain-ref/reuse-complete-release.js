@@ -48,11 +48,31 @@ function uniqueAssets(assets = []) {
   return byName;
 }
 
-async function stagePublicPassport({ octokit, owner, repo, remoteAssets, directory }) {
+function uniqueLocalAssets(assetPaths = []) {
+  const byName = new Map();
+  for (const assetPath of assetPaths) {
+    if (!assetPath || !fs.existsSync(assetPath) || !fs.statSync(assetPath).isFile()) {
+      throw new Error(`github-release=true requires a declared GitHub Release artifact, got '${assetPath || ""}'`);
+    }
+    const name = path.basename(assetPath);
+    const existing = byName.get(name);
+    if (existing && sha256(fs.readFileSync(existing)) !== sha256(fs.readFileSync(assetPath))) {
+      throw new Error(`github-release=true found duplicate asset basename '${name}' with conflicting content`);
+    }
+    if (!existing) byName.set(name, assetPath);
+  }
+  return byName;
+}
+
+async function stagePublicPassport({ octokit, owner, repo, remoteAssets, localFallbacks, directory }) {
   for (const asset of remoteAssets.values()) {
     if (!asset.name.endsWith(".json")) continue;
     const data = await downloadAsset({ octokit, owner, repo, asset });
     fs.writeFileSync(path.join(directory, asset.name), data);
+  }
+  for (const [name, assetPath] of localFallbacks) {
+    if (remoteAssets.has(name)) continue;
+    fs.copyFileSync(assetPath, path.join(directory, name));
   }
   return path.join(directory, "buildchain.release.json");
 }
@@ -81,10 +101,10 @@ function assertPassportIdentity({ passport, owner, repo, tag, target, channel, t
   }
 }
 
-async function verifyPublicPassport({ octokit, owner, repo, remoteAssets, expected, verifyPassport }) {
+async function verifyPublicPassport({ octokit, owner, repo, remoteAssets, localFallbacks, expected, verifyPassport }) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-public-release-"));
   try {
-    const passportPath = await stagePublicPassport({ octokit, owner, repo, remoteAssets, directory });
+    const passportPath = await stagePublicPassport({ octokit, owner, repo, remoteAssets, localFallbacks, directory });
     const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
     const report = await verifyPassport({ passportLocation: passportPath });
     if (report?.ok !== true) {
@@ -129,6 +149,7 @@ export async function reuseCompleteGitHubReleaseEvidence({
   target,
   channel = "",
   targetRef = "",
+  evidenceAssetPaths = [],
   additionalAssetPaths = [],
   verifyPassport = verifyReleasePassport,
 } = {}) {
@@ -139,17 +160,37 @@ export async function reuseCompleteGitHubReleaseEvidence({
     per_page: 100,
   });
   const remoteAssets = uniqueAssets(listed.data || []);
+  const initialRemoteAssetCount = remoteAssets.size;
   if (!remoteAssets.has("buildchain.release.json")) {
     throw new Error("complete recovery requires the existing GitHub Release asset 'buildchain.release.json'");
   }
+  const localEvidence = uniqueLocalAssets(evidenceAssetPaths);
   await verifyPublicPassport({
     octokit,
     owner,
     repo,
     remoteAssets,
+    localFallbacks: localEvidence,
     expected: { tag, target, channel, targetRef },
     verifyPassport,
   });
+  const evidenceResults = [];
+  for (const [name, assetPath] of localEvidence) {
+    if (remoteAssets.has(name)) {
+      evidenceResults.push({ action: "preserved", name });
+      continue;
+    }
+    const data = fs.readFileSync(assetPath);
+    const uploaded = await octokit.rest.repos.uploadReleaseAsset({
+      owner,
+      repo,
+      release_id: release.id,
+      name,
+      data,
+    });
+    remoteAssets.set(name, uploaded?.data || { name, digest: `sha256:${sha256(data)}` });
+    evidenceResults.push({ action: "uploaded", name, digest: `sha256:${sha256(data)}` });
+  }
   const payloadResults = [];
   for (const assetPath of additionalAssetPaths) {
     payloadResults.push(await reconcilePayload({
@@ -161,14 +202,15 @@ export async function reuseCompleteGitHubReleaseEvidence({
       assetPath,
     }));
   }
-  const uploadedAssetCount = payloadResults.filter((asset) => asset.action === "uploaded").length;
+  const uploadedAssetCount = [...evidenceResults, ...payloadResults]
+    .filter((asset) => asset.action === "uploaded").length;
   return {
     action: "reused",
     url: release.html_url || "",
     tag,
-    assetCount: remoteAssets.size + uploadedAssetCount,
+    assetCount: initialRemoteAssetCount + uploadedAssetCount,
     uploadedAssetCount,
-    preservedAssetCount: remoteAssets.size,
+    preservedAssetCount: initialRemoteAssetCount,
     passportVerified: true,
   };
 }
