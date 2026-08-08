@@ -560,7 +560,12 @@ function mergeAuthoritativeImpactBase(impact, basePassport = undefined) {
   return merged;
 }
 
-function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "command" } = {}) {
+function parseJsonCommandOutput({
+  command = "",
+  cwd = process.cwd(),
+  label = "command",
+  acceptNonzeroJson = undefined,
+} = {}) {
   const normalized = String(command || "").trim();
   if (!normalized) {
     return { value: undefined, path: "", sha256: "" };
@@ -574,7 +579,7 @@ function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "co
   if (result.error) {
     throw new Error(`${label} failed to start: ${result.error.message}`);
   }
-  if (result.status !== 0) {
+  if (result.status !== 0 && typeof acceptNonzeroJson !== "function") {
     const stderr = String(result.stderr || "").trim();
     throw new Error(`${label} exited with ${result.status}${stderr ? `: ${stderr.slice(-1000)}` : ""}`);
   }
@@ -588,10 +593,15 @@ function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "co
   } catch (error) {
     throw new Error(`${label} output must be valid JSON: ${error.message}`, { cause: error });
   }
+  if (result.status !== 0 && !acceptNonzeroJson({ status: result.status, value: parsed })) {
+    const stderr = String(result.stderr || "").trim();
+    throw new Error(`${label} exited with ${result.status}${stderr ? `: ${stderr.slice(-1000)}` : ""}`);
+  }
   return {
     value: parsed,
     path: "",
     sha256: sha256Text(stableJson(parsed)),
+    status: result.status,
   };
 }
 
@@ -1618,6 +1628,22 @@ export function collectGitHubReleasePassport({
     command: invariantPassportCommand,
     cwd,
     label: "invariant passport command",
+    acceptNonzeroJson: ({ status, value }) => {
+      if (status !== 2) return false;
+      try {
+        const normalized = normalizeInvariantPassport(
+          { value, path: "", sha256: sha256Text(stableJson(value)) },
+          invariantPassportMetas.length,
+        );
+        return normalized.verdict === "unqualified"
+          && normalized.coverage?.complete === false
+          && normalized.releaseClaims?.verdict === "unqualified"
+          && normalized.admission?.scope === "consumer-invariant-coverage"
+          && normalized.admission?.result === "passed";
+      } catch {
+        return false;
+      }
+    },
   });
   if (invariantPassportCommandMeta.value) invariantPassportMetas.push(invariantPassportCommandMeta);
   const invariantPassports = createInvariantPassportGate(invariantPassportMetas);
