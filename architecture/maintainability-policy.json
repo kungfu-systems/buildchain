@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 111405,
+    "maxHandMaintainedSourceLines": 111411,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22567,
+    "maxWorkflowLines": 22646,
     "latestTransition": "Sealed-candidate recovery reuses exact four-platform payload bytes across interrupted publication, with bounded evidence transport and rooted idempotent receipts.",
-    "rationale": "The recovery transition carries the exact candidate, artifact, Passport, controller, transaction, and publication identities needed to finish an interrupted Alpha without rebuilding product payloads. The workflow delta exposes only the explicit recovery inputs and immutable runtime binding, and the source delta includes adversarial replay tests; these exact post-integration ceilings cannot grow implicitly."
+    "rationale": "The recovery transition carries the exact candidate, artifact, Passport, controller, transaction, and publication identities needed to finish an interrupted Alpha without rebuilding product payloads. It composes with the concurrently merged Delivery Warrant source-run and stale-dequeue fencing without duplicating scheduler or publication authority; these exact post-integration ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -322,6 +322,7 @@
           "dry-run",
           "expected-head-sha",
           "expected-pr-number",
+          "handoff-workflow-id",
           "initiative-root",
           "landing-mode",
           "max-merges",
@@ -336,6 +337,7 @@
           "shard-evidence-roots-json",
           "source-identity-root",
           "source-patch-root",
+          "source-workflow-run-id",
           "target-branch",
           "toolchain-root",
           "warrant-lease-seconds"
@@ -357,7 +359,7 @@
           "warrant-state-root"
         ]
       },
-      "rationale": "Extend targeted exact-head admission with an optional rooted Project Cut replay proof for the exact current base and immutable Warrant state-commit readback while independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
+      "rationale": "Extend targeted exact-head admission with the exact source workflow run and one explicitly configured consumer handoff workflow so a controller can immediately resume the active Warrant candidate instead of waiting for patrol cadence. Independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

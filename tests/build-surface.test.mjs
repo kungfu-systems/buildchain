@@ -1474,6 +1474,10 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /target-branch:/);
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
+  assert.match(workflow, /source-workflow-run-id:/);
+  assert.match(workflow, /handoff-workflow-id:/);
+  assert.match(workflow, /active-warrant-handoff-dispatched/);
+  assert.match(workflow, /gh workflow run "\$HANDOFF_WORKFLOW_ID"/);
   assert.match(workflow, /diagnostic-context:/);
   assert.match(workflow, /required-status-checks:/);
   assert.match(workflow, /queue-admission-context:/);
@@ -1496,6 +1500,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /Checkout Buildchain runtime/);
   assert.match(workflow, /dev-pr-auto-merge\.mjs/);
   assert.match(workflow, /contents: write/);
+  assert.match(workflow, /actions: write/);
   assert.match(workflow, /pull-requests: write/);
   assert.match(workflow, /checks: read/);
   assert.match(workflow, /statuses: write/);
@@ -1532,6 +1537,14 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
+test("terminal Warrant close ignores stale dequeue events after exact re-enqueue", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/dev-delivery-warrant-close.yml"), "utf8");
+  assert.match(workflow, /mode=stale-dequeued/);
+  assert.match(workflow, /The exact PR head is still queued/);
+  assert.match(workflow, /mergeQueue\(branch:\$branch\)/);
+  assert.match(workflow, /steps\.settlement\.outputs\.mode != 'stale-dequeued'/);
+});
+
 test("Buildchain self-delivery requires an exact Warrant before Merge Queue admission", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-dev-delivery.yml"),
@@ -1552,6 +1565,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /toolchain-root:/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /permissions:\n  actions: write/);
   assert.match(workflow, /delivery-warrant-mode: required/);
   assert.match(workflow, /delivery-class: native-proof-required/);
   assert.match(workflow, /delivery-priority: ordinary/);

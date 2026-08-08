@@ -1842,6 +1842,7 @@
         "dry-run",
         "expected-head-sha",
         "expected-pr-number",
+        "handoff-workflow-id",
         "initiative-root",
         "landing-mode",
         "max-merges",
@@ -1856,11 +1857,12 @@
         "shard-evidence-roots-json",
         "source-identity-root",
         "source-patch-root",
+        "source-workflow-run-id",
         "target-branch",
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 32,
+      "inputCount": 34,
       "secrets": [
         "github-token"
       ],

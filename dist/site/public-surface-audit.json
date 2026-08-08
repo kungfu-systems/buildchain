@@ -2003,6 +2003,7 @@
           "dry-run",
           "expected-head-sha",
           "expected-pr-number",
+          "handoff-workflow-id",
           "initiative-root",
           "landing-mode",
           "max-merges",
@@ -2017,11 +2018,12 @@
           "shard-evidence-roots-json",
           "source-identity-root",
           "source-patch-root",
+          "source-workflow-run-id",
           "target-branch",
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 32,
+        "inputCount": 34,
         "secrets": [
           "github-token"
         ],
@@ -7898,8 +7900,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "798a8ea9546a25e8bb56756051051e9f2419f695e12aa9feee4bf93742d48da9",
-    "pageRegistryDigest": "69006dff5e790cd79fd38713ec601eb729b2c0dc30f164c170342a27d97135ff"
+    "workflowRegistryDigest": "dcdbc6d9fed29f48a09137cbf125b97758d3990c771f69a52e31a9557ca30acf",
+    "pageRegistryDigest": "7a110de871d2473b2f88c2a0e74616ce34abf6e40611c2be698b2a6d330410bb"
   },
   "comparison": {
     "missingCliRegistry": [],
