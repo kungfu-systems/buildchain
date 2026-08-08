@@ -2932,6 +2932,7 @@
         "publish-package-set-order",
         "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
+        "publish-required-artifacts-path",
         "publish-sealed-bundle-manifest",
         "publish-sealed-bundle-root",
         "publish-source-locked",
@@ -2983,7 +2984,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 79,
+      "inputCount": 80,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

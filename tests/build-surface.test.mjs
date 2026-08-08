@@ -1276,7 +1276,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-family-assignment-id:/);
   assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
   assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
-  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \|\| steps\.rc\.outputs\.publish-required-artifacts-json \}\}/);
+  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \}\}/);
+  assert.match(workflow, /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/);
   assert.match(workflow, /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/);
   assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
   assert.match(workflow, /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/);

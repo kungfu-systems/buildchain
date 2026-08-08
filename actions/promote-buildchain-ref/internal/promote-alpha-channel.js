@@ -596,5 +596,4 @@ async function promoteAlphaChannel(context) {
   );
   return finalizeAlphaPublication(context, state, publication);
 }
-
 export { promoteAlphaChannel };

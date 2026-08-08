@@ -2844,6 +2844,7 @@
           "publish-package-set-order",
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
+          "publish-required-artifacts-path",
           "publish-sealed-bundle-manifest",
           "publish-sealed-bundle-root",
           "publish-source-locked",
@@ -2895,7 +2896,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 79
+        "inputCount": 80
       },
       {
         "id": "release-tail",
@@ -7897,8 +7898,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "47cfb7dbfcdc13f9830c3bc10457cb4c794c4953a584afcf6996b94ed0a6adba",
-    "pageRegistryDigest": "5492532aa410e0300c745955ae051a5eaf0cfb1d71725f396c8a8633342872d2"
+    "workflowRegistryDigest": "798a8ea9546a25e8bb56756051051e9f2419f695e12aa9feee4bf93742d48da9",
+    "pageRegistryDigest": "69006dff5e790cd79fd38713ec601eb729b2c0dc30f164c170342a27d97135ff"
   },
   "comparison": {
     "missingCliRegistry": [],

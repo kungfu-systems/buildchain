@@ -170,6 +170,7 @@
           "publish-package-set-order",
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
+          "publish-required-artifacts-path",
           "publish-sealed-bundle-manifest",
           "publish-sealed-bundle-root",
           "publish-source-locked",
@@ -224,7 +225,7 @@
         "secrets": [],
         "outputs": []
       },
-      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording. The dry-run-only pre-target planning input records both the observed target SHA and requested source SHA without weakening normal ref identity checks."
+      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording. The dry-run-only pre-target planning input records both the observed target SHA and requested source SHA without weakening normal ref identity checks. The bounded required-artifacts path input preserves the same sealed JSON contract while avoiding runner argument-size limits during recovery."
     },
     "action:run-lifecycle": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
