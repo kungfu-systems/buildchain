@@ -3,7 +3,7 @@
 <!-- buildchain-auditable-demo:start -->
 ## Buildchain beginner bootstrap
 
-[![Buildchain beginner bootstrap](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo.gif)](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/public-evidence.json)
+[![Buildchain beginner bootstrap](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo.gif)](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/public-evidence.json)
 
 Animation scenario:
 
@@ -13,16 +13,16 @@ $ buildchain layout --cwd ./starter --json
 $ buildchain version
 ```
 
-Native renditions: [1080p MP4](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo.mp4) · [1080p WebM](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo.webm) · [720p MP4](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo-720p.mp4) · [720p WebM](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/demo-720p.webm)
+Native renditions: [1080p MP4](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo.mp4) · [1080p WebM](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo.webm) · [720p MP4](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo-720p.mp4) · [720p WebM](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo-720p.webm)
 
-[Static poster / reduced-motion fallback](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/poster.png)
+[Static poster / reduced-motion fallback](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/poster.png)
 
 <details>
 <summary>Evidence and claim boundary</summary>
 
 This exact standalone-binary scenario proves deterministic local bootstrap behavior only; it does not grant release, repository, network, or production authority.
 
-[Release Passport](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/release-passport.json) · [auditable evidence](docs/evidence/auditable-demo/f0413dc57e2b658fb75e82c4b7736ef87f4a573f6d6cbc1d690b52b723006492/beginner-bootstrap/public-evidence.json)
+[Release Passport](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/release-passport.json) · [auditable evidence](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/public-evidence.json)
 
 </details>
 <!-- buildchain-auditable-demo:end -->
@@ -278,13 +278,14 @@ plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
 gates preserve product-owned qualification and support decisions; they do not
 turn a schema-valid record into certification or shipped support.
 
-Buildchain's action registry currently contains six active entries. Four are
+Buildchain's action registry currently contains seven active entries. Five are
 direct consumer integration actions:
 
 - `actions/validate-config`
 - `actions/run-lifecycle`
 - `actions/promote-buildchain-ref`
 - `actions/report-buildchain-issue`
+- `actions/release-tail`
 
 Two additional release-authority components are also registered and versioned:
 
@@ -292,7 +293,7 @@ Two additional release-authority components are also registered and versioned:
 - `actions/macos-credential-island`
 
 `dist/site/workflow-registry.json#actions` is the machine-readable inventory;
-this split keeps the older four-action consumer list from being mistaken for
+this split keeps the older four-action consumer snapshot from being mistaken for
 the complete current registry.
 
 The active reusable workflow surfaces are:
@@ -457,4 +458,5 @@ npm pack --dry-run --json --registry=https://registry.npmjs.org/
 - [Release candidate passport](docs/release-candidate.md)
 - [Consumer issue reporting](docs/consumer-issue-reporting.md)
 - [Publish transaction](docs/publish-transaction.md)
+- [Declarative release-tail contract](docs/release-tail-contract.md)
 - [Release governance](docs/release-governance.md)

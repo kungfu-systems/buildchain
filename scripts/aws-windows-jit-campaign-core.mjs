@@ -35,18 +35,15 @@ function tableName(value) {
 }
 
 function number(value) {
-  return { N: String(value) };
+  return { N: String(Math.round(value * 100_000_000) / 100_000_000) };
 }
 
 function money(value, label) {
   const normalized = String(value ?? "").trim();
-  if (!normalized) {
-    throw new Error(`${label} is required`);
-  }
+  if (!normalized) throw new Error(`${label} is required`);
   const parsed = Number(normalized);
-  if (!Number.isFinite(parsed) || parsed < 0) {
+  if (!Number.isFinite(parsed) || parsed < 0)
     throw new Error(`${label} must be a non-negative finite number`);
-  }
   return Math.round(parsed * 100_000_000) / 100_000_000;
 }
 
@@ -90,9 +87,11 @@ export function createWindowsJitCampaignArmPlan(values = {}) {
   );
   const maxAcceptedInstances = acceptedInstances(values.maxAcceptedInstances);
   const campaignReservationCeilingUsd = reservationUsd * maxAcceptedInstances;
-  const campaignSafetyCeilingUsd =
+  const campaignSafetyCeilingUsd = money(
     campaignReservationCeilingUsd +
-    reservationUsd * WINDOWS_EC2_JIT.maxConcurrentInstances;
+      reservationUsd * WINDOWS_EC2_JIT.maxConcurrentInstances,
+    "campaignSafetyCeilingUsd",
+  );
   const remainingPhaseBudgetUsd =
     WINDOWS_EC2_JIT.budgetLimitUsd - phaseSpendBaselineUsd;
   if (campaignSafetyCeilingUsd >= remainingPhaseBudgetUsd) {

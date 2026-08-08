@@ -5,6 +5,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { materializeDemoPresentation, validateDemoPresentation } from "./auditable-demo-presentation.mjs";
+import { copyVerifiedRegular, verifyBundleChecksums } from "./auditable-demo-bundle-verification.mjs";
 
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const SAFE_ID = /^[a-z0-9][a-z0-9._-]{0,63}$/u;
@@ -25,7 +27,13 @@ const RENDITIONS = [
 ];
 const STANDARD_MAX_SECONDS = 60;
 const LONG_FORM_MAX_SECONDS = 180;
+const PRESENTATION_FRAMED = "presentation-framed";
+const TERMINAL_FILL = "terminal-fill";
 const MAX_EXECUTABLE_FILES = 32;
+const MAX_METADATA_MEMBER_BYTES = 8 * 1024 * 1024;
+const MAX_MEDIA_MEMBER_BYTES = 64 * 1024 * 1024;
+const MAX_GATE_BUNDLE_BYTES = 64 * 1024 * 1024;
+const MAX_MEDIA_BUNDLE_BYTES = 128 * 1024 * 1024;
 
 function durationPolicy(value = "standard") {
   requireValue(value === "standard" || value === "long-form", "scenario duration class is invalid");
@@ -78,40 +86,6 @@ function readJson(file, label) {
     if (error instanceof SyntaxError) fail(`${label} is invalid JSON`);
     throw error;
   }
-}
-
-function listBundleFiles(root, prefix = "") {
-  const entries = fs.readdirSync(path.join(root, prefix), { withFileTypes: true })
-    .sort((left, right) => left.name.localeCompare(right.name, "en"));
-  const files = [];
-  for (const entry of entries) {
-    requireValue(!entry.isSymbolicLink(), `bundle member must not be a symbolic link: ${path.join(prefix, entry.name)}`);
-    const relative = path.join(prefix, entry.name);
-    if (entry.isDirectory()) files.push(...listBundleFiles(root, relative));
-    else {
-      requireValue(entry.isFile(), `bundle member must be a regular file: ${relative}`);
-      files.push(relative.split(path.sep).join("/"));
-    }
-  }
-  return files;
-}
-
-function verifyChecksums(root, label) {
-  const resolved = path.resolve(root);
-  const bytes = regular(path.join(resolved, "checksums.sha256"), `${label} checksums`);
-  const rows = bytes.toString("utf8").split("\n").filter(Boolean);
-  const declared = new Set();
-  for (const row of rows) {
-    const match = /^([0-9a-f]{64})  ([^\0\r\n]+)$/u.exec(row);
-    requireValue(match, `${label} checksum row is invalid`);
-    const target = inside(resolved, match[2], `${label} checksum member`);
-    requireValue(!declared.has(match[2]), `${label} checksum member is repeated`);
-    declared.add(match[2]);
-    requireValue(rootBytes(regular(target, `${label} member`)) === `sha256:${match[1]}`, `${label} checksum mismatch: ${match[2]}`);
-  }
-  const actual = listBundleFiles(resolved).filter((name) => name !== "checksums.sha256");
-  requireValue(JSON.stringify([...declared].sort()) === JSON.stringify(actual), `${label} checksum member set is not exact`);
-  return rootBytes(bytes);
 }
 
 function inside(root, relative, label) {
@@ -204,6 +178,16 @@ function validateExecution(execution) {
   return policy;
 }
 
+function validatePlayback(playback, maximumSeconds) {
+  exactKeys(playback, ["schema", "mode", "activeDurationMs", "finalHoldMs"], [], "scenario.playback");
+  requireValue(playback.schema === "buildchain.declarative-demo-playback/v1", "scenario playback schema is unsupported");
+  requireValue(playback.mode === "deterministic-readable", "scenario playback mode is invalid");
+  requireValue(Number.isInteger(playback.activeDurationMs) && playback.activeDurationMs >= 1000, "scenario playback active duration is invalid");
+  requireValue(Number.isInteger(playback.finalHoldMs) && playback.finalHoldMs >= 250 && playback.finalHoldMs <= 5000, "scenario playback final hold is invalid");
+  requireValue(playback.activeDurationMs + playback.finalHoldMs <= maximumSeconds * 1000, "scenario playback exceeds its declared duration class");
+  return playback;
+}
+
 function validateStep(step, stepLabel, stepIds, maximumSeconds) {
   exactKeys(step, ["id", "argv", "timeoutSeconds", "expectedExitCodes", "stdoutIncludes", "fileAssertions"], [], stepLabel);
   requireValue(SAFE_ID.test(step.id) && !stepIds.has(step.id), `${stepLabel}.id is invalid or repeated`);
@@ -234,12 +218,18 @@ function validateDemo(demo, index, demoIds, maximumSeconds) {
 }
 
 export function validateScenario(value) {
-  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["transportSmoke"], "scenario");
+  exactKeys(value, ["schema", "product", "artifact", "execution", "renditions", "demos", "publication", "authority"], ["compositionMode", "playback", "transportSmoke", "presentation"], "scenario");
   requireValue(value.schema === "buildchain.declarative-binary-demo/v1", "unsupported scenario schema");
+  const compositionMode = value.compositionMode ?? PRESENTATION_FRAMED;
+  requireValue(
+    compositionMode === PRESENTATION_FRAMED || compositionMode === TERMINAL_FILL,
+    "scenario composition mode is invalid",
+  );
   validateProduct(value.product);
   validateArtifact(value.artifact);
   const executionPolicy = validateExecution(value.execution);
-  requireValue(JSON.stringify(value.renditions) === JSON.stringify(RENDITIONS), "scenario must declare both native rendition profiles exactly");
+  if (value.playback) validatePlayback(value.playback, executionPolicy.maximumSeconds);
+  requireValue(stableJson(value.renditions) === stableJson(RENDITIONS), "scenario must declare both native rendition profiles exactly");
   requireValue(Array.isArray(value.demos) && value.demos.length >= 1 && value.demos.length <= 8, "scenario requires 1 through 8 demos");
   const demoIds = new Set();
   value.demos.forEach((demo, index) => validateDemo(demo, index, demoIds, executionPolicy.maximumSeconds));
@@ -248,12 +238,13 @@ export function validateScenario(value) {
   inside("/repository", value.publication.evidencePath, "scenario.publication.evidencePath");
   inside("/repository", value.publication.readmePath, "scenario.publication.readmePath");
   requireValue(SAFE_MARKER.test(value.publication.marker), "scenario publication marker is invalid");
+  if (value.presentation) validateDemoPresentation({ presentation: value.presentation, demos: value.demos, publication: value.publication, exactKeys, inside, requireValue, safeMarker: SAFE_MARKER });
   exactKeys(value.authority, ["grants", "nonAuthorities"], [], "scenario.authority");
   requireValue(JSON.stringify(value.authority) === JSON.stringify({ grants: [], nonAuthorities: NON_AUTHORITIES }), "scenario authority boundary is invalid");
   return value;
 }
 
-function validateCapture(capture, rendition, summaryRoot, durationClass) {
+function validateCapture(capture, rendition, summaryRoot, durationClass, declaredPlayback) {
   const policy = durationPolicy(durationClass);
   requireValue(capture.schema === "buildchain.declarative-terminal-capture/v1", "capture schema mismatch");
   requireValue(JSON.stringify(capture.dimensions) === JSON.stringify({ columns: rendition.columns, rows: rendition.rows }), "capture dimensions mismatch");
@@ -268,13 +259,36 @@ function validateCapture(capture, rendition, summaryRoot, durationClass) {
     requireValue(index > 0 || event.atMs === 0, "capture event timeline must start at zero");
     previousAtMs = event.atMs;
   }
+  if (!declaredPlayback) {
+    requireValue(capture.playback === undefined, "legacy capture unexpectedly declares playback evidence");
+    return capture;
+  }
+  exactKeys(capture.playback, [
+    "schema", "mode", "timingSource", "activeDurationMs", "finalHoldMs", "presentedDurationMs",
+    "observedLastEventMs", "eventPayloadRoot", "eventOrder",
+  ], [], "capture.playback");
+  requireValue(capture.playback.schema === "buildchain.declarative-terminal-playback/v1", "capture playback schema mismatch");
+  requireValue(capture.playback.mode === declaredPlayback.mode, "capture playback mode mismatch");
+  requireValue(capture.playback.timingSource === "declared-event-ordinal", "capture playback timing source mismatch");
+  requireValue(capture.playback.activeDurationMs === declaredPlayback.activeDurationMs && capture.playback.finalHoldMs === declaredPlayback.finalHoldMs, "capture playback duration mismatch");
+  requireValue(capture.playback.presentedDurationMs === capture.durationMs && capture.durationMs === declaredPlayback.activeDurationMs + declaredPlayback.finalHoldMs, "capture presented duration mismatch");
+  requireValue(Number.isInteger(capture.playback.observedLastEventMs) && capture.playback.observedLastEventMs >= 0, "capture observed duration is invalid");
+  requireValue(capture.playback.eventOrder === "preserved", "capture playback event order mismatch");
+  requireValue(capture.playback.eventPayloadRoot === rootJson(capture.events.map((event) => event.data)), "capture playback payload root mismatch");
+  const lastIndex = capture.events.length - 1;
+  for (const [index, event] of capture.events.entries()) {
+    const expectedAtMs = lastIndex === 0 ? 0 : Math.round((index * declaredPlayback.activeDurationMs) / lastIndex);
+    requireValue(event.atMs === expectedAtMs, "capture playback timeline is not deterministic");
+  }
   return capture;
 }
 
-function projection(capture, transcript, demo, rendition, durationClass, sharedCaptureDurationMs) {
+function projection(capture, transcript, demo, rendition, durationClass, sharedCaptureDurationMs, compositionMode) {
   const lines = transcript.endsWith("\n") ? transcript.slice(0, -1).split("\n") : transcript.split("\n");
   const policy = durationPolicy(durationClass);
-  const durationMs = Math.min(policy.maximumSeconds * 1000, sharedCaptureDurationMs + 1000);
+  const durationMs = capture.playback
+    ? sharedCaptureDurationMs
+    : Math.min(policy.maximumSeconds * 1000, sharedCaptureDurationMs + 1000);
   const projected = {
     schema: "kungfu.terminal-capture/v1",
     command: capture.command,
@@ -293,6 +307,7 @@ function projection(capture, transcript, demo, rendition, durationClass, sharedC
     height: rendition.height,
     fps: policy.durationClass === "long-form" ? 10 : 15,
     ...(policy.durationClass === "long-form" ? { durationClass: "long-form" } : {}),
+    compositionMode,
     durationMs,
     title: demo.title,
     commandLabel: capture.command,
@@ -322,8 +337,11 @@ export function adaptCapture({ artifactRoot, output }) {
   const { root: _root, ...manifestBody } = manifest;
   requireValue(DIGEST.test(declaredRoot) && rootJson(manifestBody) === declaredRoot, "capture manifest root mismatch");
   requireValue(manifest.authority?.grants?.length === 0 && JSON.stringify(manifest.authority?.nonAuthorities) === JSON.stringify(NON_AUTHORITIES), "capture manifest grants authority");
+  const scenario = validateScenario(readJson(path.join(root, "scenario.json"), "captured scenario"));
+  requireValue(rootJson(scenario) === manifest.scenarioRoot, "captured scenario root mismatch");
   requireValue(Array.isArray(manifest.renditions) && manifest.renditions.length === 2, "capture rendition set is invalid");
   const executionPolicy = durationPolicy(manifest.execution?.durationClass);
+  requireValue(stableJson(manifest.execution?.playback) === stableJson(scenario.playback), "capture manifest playback declaration mismatch");
   prepareOutput(output);
   const set = [];
   const loaded = RENDITIONS.map((expected, index) => {
@@ -335,7 +353,7 @@ export function adaptCapture({ artifactRoot, output }) {
     const summary = readJson(inside(root, descriptor.runSummary, "run summary"), "run summary");
     requireValue(rootJson(summary) === descriptor.runSummaryRoot, "run summary root mismatch");
     const captureBytes = regular(inside(root, descriptor.terminalCapture, "terminal capture"), "terminal capture", 4 * 1024 * 1024);
-    const capture = validateCapture(JSON.parse(captureBytes.toString("utf8")), expected, descriptor.runSummaryRoot, executionPolicy.durationClass);
+    const capture = validateCapture(JSON.parse(captureBytes.toString("utf8")), expected, descriptor.runSummaryRoot, executionPolicy.durationClass, scenario.playback);
     requireValue(rootJson(capture) === descriptor.terminalCaptureRoot, "terminal capture root mismatch");
     return { index, expected, descriptor, transcript, capture };
   });
@@ -349,6 +367,7 @@ export function adaptCapture({ artifactRoot, output }) {
       expected,
       executionPolicy.durationClass,
       sharedCaptureDurationMs,
+      scenario.compositionMode ?? PRESENTATION_FRAMED,
     );
     const suffix = index === 0 ? "" : "-720p";
     fs.writeFileSync(path.join(output, `complete-transcript${suffix}.txt`), transcript);
@@ -367,10 +386,7 @@ export function adaptCapture({ artifactRoot, output }) {
 }
 
 function copyRegular(source, destination, label) {
-  const bytes = regular(source, label, 64 * 1024 * 1024);
-  fs.mkdirSync(path.dirname(destination), { recursive: true });
-  fs.writeFileSync(destination, bytes);
-  return { path: path.basename(destination), bytes: bytes.length, root: rootBytes(bytes) };
+  return copyVerifiedRegular(source, destination, label, MAX_MEDIA_MEMBER_BYTES);
 }
 
 function replaceReadmeBlock(readme, marker, block) {
@@ -412,8 +428,14 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
   requireValue(captureManifest.demo?.id === demoId && captureManifest.scenarioRoot === rootJson(scenario), "capture does not bind the exact scenario demo");
   const gateReceipt = readJson(path.join(path.resolve(gateBundle), "gate-receipt.json"), "gate receipt");
   const mediaReceipt = readJson(path.join(path.resolve(mediaBundle), "media-receipt.json"), "media receipt");
-  const gateRoot = verifyChecksums(gateBundle, "Gate bundle");
-  const mediaRoot = verifyChecksums(mediaBundle, "media bundle");
+  const gateRoot = verifyBundleChecksums(gateBundle, "Gate bundle", { maximumBundleBytes: MAX_GATE_BUNDLE_BYTES });
+  requireValue(DIGEST.test(mediaReceipt.rendererManifestRoot), "media receipt renderer manifest root is invalid");
+  const mediaRoot = verifyBundleChecksums(mediaBundle, "media bundle", {
+    allowLongFormRendererManifest: scenario.execution.durationClass === "long-form",
+    maximumBundleBytes: MAX_MEDIA_BUNDLE_BYTES,
+    maximumMemberBytes: MAX_MEDIA_MEMBER_BYTES,
+    rendererManifestRoot: mediaReceipt.rendererManifestRoot,
+  });
   requireValue(gateReceipt.status === "passed" && mediaReceipt.status === "passed", "Gate and media receipts must pass");
   requireValue(mediaReceipt.qualifiedGateRoot === gateRoot, "media receipt is not bound to the exact qualified Gate");
   const sourceCoordinate = readJson(path.join(path.resolve(captureRoot), "source-coordinate.json"), "source coordinate");
@@ -462,11 +484,12 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
     ? scenario.publication.marker
     : `${scenario.publication.marker}:${demo.id}`;
   const commandLines = demo.steps.map((step) => `$ ${scenario.product.binaryName} ${step.argv.join(" ")}`.trim()).join("\n");
-  const block = [
+  const imageLine = `[![${demo.title}](${relative}/demo.gif)](${relative}/public-evidence.json)`;
+  const legacyBlock = [
     `<!-- ${marker}:start -->`,
     `## ${demo.title}`,
     "",
-    `[![${demo.title}](${relative}/demo.gif)](${relative}/public-evidence.json)`,
+    imageLine,
     "",
     "Animation scenario:",
     "",
@@ -488,10 +511,20 @@ export function materializeDemo({ repositoryRoot, scenarioPath, demoId, captureR
     "</details>",
     `<!-- ${marker}:end -->`,
   ].join("\n");
+  let block = legacyBlock;
+  let technicalSpecPath = "";
+  if (scenario.presentation) {
+    const materialized = materializeDemoPresentation({
+      repository, scenario, demo, evidenceDirectory, imageLine, commandLines,
+      inside, regular, replaceBlock: replaceReadmeBlock, requireValue,
+    });
+    block = [`<!-- ${marker}:start -->`, ...materialized.blockLines, `<!-- ${marker}:end -->`].join("\n");
+    technicalSpecPath = materialized.technicalSpecPath;
+  }
   const readmePath = inside(repository, scenario.publication.readmePath, "README path");
   const readme = regular(readmePath, "README", 4 * 1024 * 1024).toString("utf8");
   fs.writeFileSync(readmePath, replaceReadmeBlock(readme, marker, block));
-  return { ok: true, demoId, evidenceRoot, evidenceDirectory: relative, passportRoot: passport.passportRoot };
+  return { ok: true, demoId, evidenceRoot, evidenceDirectory: relative, passportRoot: passport.passportRoot, technicalSpecPath };
 }
 
 function parseArgs(argv) {
@@ -521,7 +554,10 @@ function main(argv = process.argv.slice(2)) {
   }
   if (command === "publication") {
     const scenario = validateScenario(readJson(path.resolve(args.scenario), "scenario"));
-    process.stdout.write(stableJson(scenario.publication));
+    process.stdout.write(stableJson({
+      ...scenario.publication,
+      ...(scenario.presentation ? { technicalSpecPath: scenario.presentation.materialization.technicalSpecPath } : {}),
+    }));
     return;
   }
   if (command === "prepare-artifact") {

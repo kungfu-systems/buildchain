@@ -21,23 +21,18 @@ Parameters:
     Type: AWS::EC2::Subnet::Id
   BudgetLimitUsd:
     Type: Number
-    Default: 80
+    Default: 110
     MinValue: 1
-    MaxValue: 80
+    MaxValue: 110
   MaximumInstanceLifetimeMinutes:
     Type: Number
     Default: 180
     MinValue: 30
     MaxValue: 180
-  EnableTagFilteredBudget:
+  ProviderBudgetKillParameterName:
     Type: String
-    Default: "false"
-    AllowedValues:
-      - "true"
-      - "false"
-
-Conditions:
-  TagFilteredBudgetConfirmed: !Equals [!Ref EnableTagFilteredBudget, "true"]
+    Default: /kungfu/burst/windows/provider-budget-killed
+    AllowedPattern: "^/kungfu/burst/windows/[A-Za-z0-9._/-]+$"
 
 Resources:
   CampaignState:
@@ -222,6 +217,23 @@ Resources:
                   - ssm:PutParameter
                   - ssm:DeleteParameter
                 Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kungfu/burst/windows/*"
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ProviderBudgetKillParameterName}"
+              - Effect: Allow
+                Action:
+                  - budgets:ViewBudget
+                Resource: !Sub "arn:${AWS::Partition}:budgets::${AWS::AccountId}:budget/kungfu-buildchain-windows-jit-actual-spend"
+              - Effect: Allow
+                Action:
+                  - aws-portal:ViewBilling
+                  - billing:GetBillingViewData
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudformation:DescribeStacks
+                Resource: !Sub "arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/kungfu-buildchain-windows-jit-budget-guard/*"
               - Effect: Allow
                 Action:
                   - dynamodb:GetItem
@@ -451,56 +463,6 @@ Resources:
       Principal: sns.amazonaws.com
       SourceArn: !Ref KillSwitchTopic
 
-  KillSwitchTopicPolicy:
-    Type: AWS::SNS::TopicPolicy
-    Properties:
-      Topics:
-        - !Ref KillSwitchTopic
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowBudgets
-            Effect: Allow
-            Principal:
-              Service: budgets.amazonaws.com
-            Action: sns:Publish
-            Resource: !Ref KillSwitchTopic
-            Condition:
-              StringEquals:
-                aws:SourceAccount: !Ref AWS::AccountId
-
-  BurstBudget:
-    Type: AWS::Budgets::Budget
-    Condition: TagFilteredBudgetConfirmed
-    Properties:
-      Budget:
-        BudgetName: kungfu-buildchain-windows-jit-actual-spend
-        BudgetLimit:
-          Amount: !Ref BudgetLimitUsd
-          Unit: USD
-        BudgetType: COST
-        TimeUnit: MONTHLY
-        CostFilters:
-          TagKeyValue:
-            - user:kungfu:provider$windows-ec2-jit
-      NotificationsWithSubscribers:
-        - Notification:
-            ComparisonOperator: GREATER_THAN
-            NotificationType: ACTUAL
-            Threshold: 80
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - SubscriptionType: SNS
-              Address: !Ref KillSwitchTopic
-        - Notification:
-            ComparisonOperator: GREATER_THAN
-            NotificationType: ACTUAL
-            Threshold: 95
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - SubscriptionType: SNS
-              Address: !Ref KillSwitchTopic
-
 Outputs:
   SubnetId:
     Value: !Ref SubnetId
@@ -522,8 +484,5 @@ Outputs:
     Value: !Ref Reaper
   KillSwitchTopic:
     Value: !Ref KillSwitchTopic
-  TagFilteredBudgetStatus:
-    Value: !If
-      - TagFilteredBudgetConfirmed
-      - enabled-after-management-account-confirmation
-      - disabled-until-cost-allocation-tag-is-active
+  ProviderBudgetKillParameterName:
+    Value: !Ref ProviderBudgetKillParameterName

@@ -86,10 +86,8 @@ export function validateArtifactSigningAuthorityRun(
   ) {
     throw new Error("Buildchain signing authority repository mismatch");
   }
-  if (
-    run.path &&
-    !String(run.path).startsWith(`.github/workflows/${AUTHORITY_WORKFLOW}@`)
-  ) {
+  const runPath = String(run.path || "").split("@", 1)[0];
+  if (run.path && runPath !== `.github/workflows/${AUTHORITY_WORKFLOW}`) {
     throw new Error("Buildchain signing authority workflow path mismatch");
   }
   return run;

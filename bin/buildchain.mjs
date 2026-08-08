@@ -9,6 +9,7 @@ import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
 import { runReleaseGovernanceCli } from "../scripts/reconcile-release-governance.mjs";
+import { runReleaseTailCli } from "../scripts/release-tail.mjs";
 import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
 import { runPublicationReproducibilityCli } from "../scripts/publication-reproducibility.mjs";
@@ -1368,8 +1369,20 @@ async function handleDoctorCommand(args) {
 
 async function handleDevCommand(args) {
     const [subcommand = "", ...devArgs] = args;
+    if (subcommand === "pr-admit") {
+      runScript("dev-pr-auto-merge.mjs", devArgs);
+      return;
+    }
+    if (subcommand === "warrant") {
+      runScript("dev-delivery-warrant.mjs", devArgs);
+      return;
+    }
+    if (subcommand === "proof") {
+      runScript("dev-delivery-proof.mjs", devArgs);
+      return;
+    }
     if (subcommand !== "merge-queue") {
-      throw new Error("usage: buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <path>...]");
+      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant|proof> [options]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;
@@ -1634,6 +1647,10 @@ async function handleReleaseGovernanceCommand(args) {
 
 }
 
+async function handleReleaseTailCommand(args) {
+  await runReleaseTailCli(args);
+}
+
 async function handleGitHubGovernanceCommand(args) {
     runScript("reconcile-github-governance.mjs", args);
     return;
@@ -1694,6 +1711,10 @@ async function handlePublishSourceCommand(args) {
 
 }
 
+async function handleArchitectureCommand(args) {
+  runScript("v4-architecture.mjs", args);
+}
+
 const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "help": handleHelpCommand,
   "version": handleVersionCommand,
@@ -1725,11 +1746,13 @@ const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "paper": handlePaperCommand,
   "release-propagation": handleReleasePropagationCommand,
   "release-governance": handleReleaseGovernanceCommand,
+  "release-tail": handleReleaseTailCommand,
   "github-governance": handleGitHubGovernanceCommand,
   "badges": handleBadgesCommand,
   "homebrew": handleHomebrewCommand,
   "build-contract": handleBuildContractCommand,
   "publish-source": handlePublishSourceCommand,
+  "architecture": handleArchitectureCommand,
 });
 
 async function main(argv = process.argv.slice(2)) {

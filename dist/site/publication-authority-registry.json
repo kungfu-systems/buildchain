@@ -272,6 +272,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/buildchain-dev-delivery.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/buildchain-dev-delivery.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/buildchain-patrol-daily.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -357,6 +370,32 @@
       "credentialMode": "none",
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/dev-alpha-candidate-patrol.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/dev-delivery-warrant-cancel.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/dev-delivery-warrant-cancel.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/dev-delivery-warrant-close.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/dev-delivery-warrant-close.yml",
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
@@ -585,6 +624,24 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/release-tail.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "artifact.publish",
+        "release.activate",
+        "released-evidence.synthesize",
+        "signed-channel.commit"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/release-tail.yml",
+      "environment": "caller-bound",
+      "environmentMode": "caller-bound",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/release-verify.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -796,6 +853,18 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/buildchain-dev-delivery.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/buildchain-patrol-daily.yml",
       "signals": [
         "write-permission"
@@ -855,6 +924,20 @@
     },
     {
       "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/dev-delivery-warrant-cancel.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/dev-delivery-warrant-close.yml",
       "signals": [
         "write-permission"
       ],
@@ -990,6 +1073,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/release-tail.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/release-verify.yml",
       "signals": [
         "write-permission"
@@ -1019,5 +1109,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "bb343f7253b9497e1c9aee3cea170dd5f33fd5e807ea1de805a0fdda5a904bcc"
+  "registryDigest": "1600e39eb978298c3204b3250c479f8451dfe62f552405c7db2ad2142cd93f63"
 }

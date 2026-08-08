@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.kungfu.ai/contracts/release-tail-provider-bindings-v1.schema.json",
+  "title": "Buildchain release-tail provider bindings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "artifacts", "documents", "evidence"],
+  "properties": {
+    "schema": {
+      "const": "kungfu.buildchain.release-tail.provider-bindings/v1"
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "name"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "documents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "signed-channel.commit": { "$ref": "#/$defs/document" },
+        "release.activate": { "$ref": "#/$defs/document" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "output"],
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "output": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "method"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "method": { "enum": ["PUT", "POST"] }
+      }
+    }
+  }
+}

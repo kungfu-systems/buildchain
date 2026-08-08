@@ -12,6 +12,7 @@ import {
   stableJson,
   workCheck,
 } from "./paper-repository.js";
+import { mergePublicationRehearsalAgentInstructions } from "./publication-rehearsal-projection.js";
 
 export const PAPER_AGENT_ENTRY_CONTRACT = "kungfu-buildchain-paper-agent-entry";
 export const PAPER_AGENT_ENTRY_SCHEMA_VERSION = 1;
@@ -167,9 +168,11 @@ export function paperAgentEntryFiles({
     [PAPER_PATHS.agentEntry, jsonText(entry)],
     [
       PAPER_PATHS.agentInstructions,
-      mergePaperAgentEntryInstructions(currentAgents, {
-        developmentRef: resolvedDevelopmentRef,
-      }),
+      mergePublicationRehearsalAgentInstructions(
+        mergePaperAgentEntryInstructions(currentAgents, {
+          developmentRef: resolvedDevelopmentRef,
+        }),
+      ),
     ],
   ]);
 }
@@ -205,8 +208,11 @@ function ciContext({ env, developmentRef }) {
     sourceBranch.startsWith(versionStatePrefix) &&
     /^[0-9a-f]{12}$/i.test(sourceBranch.slice(versionStatePrefix.length));
   const branchOk = pullRequest
-    ? (PAPER_WORK_BRANCH_PATTERN.test(sourceBranch) && targetBranch === developmentRef) ||
-      (channelIndex > 0 && sourceBranch === channelBranches[channelIndex - 1]) || generatedVersionState
+    ? (PAPER_WORK_BRANCH_PATTERN.test(sourceBranch) &&
+        targetBranch === developmentRef) ||
+      (channelIndex > 0 &&
+        sourceBranch === channelBranches[channelIndex - 1]) ||
+      generatedVersionState
     : channelBranches.includes(refName);
   return {
     mode: "ci",

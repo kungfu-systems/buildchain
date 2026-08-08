@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { macosJitRunnerLabel } from "./aws-macos-jit-core.mjs";
 import { windowsJitRunnerLabel } from "./aws-windows-jit-core.mjs";
-
 export const RUNNER_PRESETS = Object.freeze({
   "github-hosted": [
     { id: "linux-x64", name: "Linux x64", platform: "linux", runner: '["ubuntu-24.04"]', capabilities: ["node"] },
@@ -768,6 +767,55 @@ function platformIsLinux(platform) {
   );
 }
 
+function platformUsesGitHubHostedRunner(platform, index) {
+  if (platform?.githubHosted !== undefined) {
+    if (typeof platform.githubHosted !== "boolean") {
+      throw new Error(
+        `platforms-json[${index}].githubHosted must be a boolean`,
+      );
+    }
+    return platform.githubHosted;
+  }
+  if (String(platform?.provider || "").trim()) {
+    return false;
+  }
+  const runnerLabels = parseJsonArray(
+    String(platform?.runner || "[]"),
+    `platforms-json[${index}].runner`,
+  ).map((label) => String(label || "").toLowerCase());
+  if (runnerLabels.includes("self-hosted") || runnerLabels.length !== 1) {
+    return false;
+  }
+  return /^(ubuntu-(latest|20\.04|22\.04|24\.04|24\.04-arm)|windows-(latest|2019|2022|2025|11-arm)|macos-(latest|13|14|15|26)(-intel)?)$/.test(
+    runnerLabels[0],
+  );
+}
+
+function bindRunnerHosting(platforms) {
+  return platforms.map((platform, index) => ({
+    ...platform,
+    githubHosted: platformUsesGitHubHostedRunner(platform, index),
+  }));
+}
+
+function runnerHostingSummary(platforms) {
+  const githubHostedPlatforms = platforms.filter(
+    (platform) => platform.githubHosted,
+  );
+  const relayPlatforms = platforms.filter((platform) => !platform.githubHosted);
+  return {
+    githubHostedPlatforms,
+    githubHostedPlatformsJson: JSON.stringify(githubHostedPlatforms),
+    githubHostedPlatformIdsJson: JSON.stringify(
+      githubHostedPlatforms.map((platform) => platform.id),
+    ),
+    githubHostedPlatformCount: githubHostedPlatforms.length,
+    relayPlatforms,
+    relayPlatformsJson: JSON.stringify(relayPlatforms),
+    relayPlatformCount: relayPlatforms.length,
+  };
+}
+
 function normalizePlatform(platform, index) {
   const id = String(platform?.id || "").trim();
   const name = String(platform?.name || id).trim();
@@ -793,7 +841,9 @@ function normalizePlatform(platform, index) {
   if (platform?.platform !== undefined) normalized.platform = String(platform.platform || "").trim();
   if (platform?.provider !== undefined) normalized.provider = String(platform.provider || "").trim();
   if (platform?.project !== undefined) normalized.project = String(platform.project || "").trim();
+  if (platform?.githubHosted !== undefined) normalized.githubHosted = platform.githubHosted;
   normalized.capabilities = capabilities.sort();
+  if (platform?.environment !== undefined) normalized.environment = platform.environment;
   if (platform?.required === false) normalized.required = false;
   return normalized;
 }
@@ -813,8 +863,10 @@ export function resolveRunnerMatrix({
     linuxContainerImage,
   });
   if (customPlatformsJson) {
-    const platforms = parseJsonArray(customPlatformsJson, "platforms-json").map(
-      normalizePlatform,
+    const platforms = bindRunnerHosting(
+      parseJsonArray(customPlatformsJson, "platforms-json").map(
+        normalizePlatform,
+      ),
     );
     if (platforms.length === 0) {
       throw new Error("platforms-json must include at least one platform");
@@ -838,6 +890,7 @@ export function resolveRunnerMatrix({
       containerPlatformsJson: JSON.stringify(containerPlatforms),
       containerPlatformCount: containerPlatforms.length,
       linuxContainer,
+      ...runnerHostingSummary(platforms),
     };
   }
 
@@ -875,6 +928,7 @@ export function resolveRunnerMatrix({
       runner: JSON.stringify(["self-hosted", "macOS", "ARM64", runnerLabel]),
     }));
   }
+  resolvedPlatforms = bindRunnerHosting(resolvedPlatforms);
   const containerPlatforms = linuxContainer.enabled
     ? resolvedPlatforms.filter(platformIsLinux)
     : [];
@@ -894,6 +948,7 @@ export function resolveRunnerMatrix({
     containerPlatformsJson: JSON.stringify(containerPlatforms),
     containerPlatformCount: containerPlatforms.length,
     linuxContainer,
+    ...runnerHostingSummary(resolvedPlatforms),
   };
 }
 

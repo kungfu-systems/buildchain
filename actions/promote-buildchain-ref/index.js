@@ -1,12 +1,21 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseTags, promoteBuildchainRefs, recordGitHubReleaseTransactionCompletion } from "./lib.js";
 import { explainReleaseLineDryRun, formatReleaseLineDryRun } from "../../packages/core/release-line-dry-run.js";
-import { ensureGitHubRelease } from "../../scripts/ensure-github-release.mjs";
+import {
+  publishSelectedGitHubRelease,
+  recoveryCompletedBeforeThisRun,
+} from "./github-release.js";
+
+export { reuseCompleteGitHubReleaseEvidence } from "./reuse-complete-release.js";
+export {
+  collectGitHubReleaseEvidenceAssets,
+  createDeclarativeGitHubReleasePlan,
+  publishGitHubReleaseEvidence,
+} from "./github-release.js";
+
+const releaseCandidateRecoveryReceiptPath = process.env.BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH || "";
 
 export function plannedPublicationExactTag(plannedPublication = {}) {
   return plannedPublication.publicTag || plannedPublication.tag || "";
@@ -98,160 +107,102 @@ export function validateRequiredPublishSourceLock({
   return sourceLockReport;
 }
 
-function assertFile(pathname, label) {
-  if (!pathname || !fs.existsSync(pathname) || !fs.statSync(pathname).isFile()) {
-    throw new Error(`github-release=true requires ${label}, got '${pathname || ""}'`);
-  }
-}
-
-export function collectGitHubReleaseEvidenceAssets({
-  publishEvidencePath = "",
-  releasePassportPath = "",
-  releasePassportOutputDir = "",
-  additionalAssetPaths = [],
-} = {}) {
-  assertFile(publishEvidencePath, "a publish evidence file");
-  assertFile(releasePassportPath, "buildchain.release.json");
-  if (!releasePassportOutputDir || !fs.existsSync(releasePassportOutputDir) || !fs.statSync(releasePassportOutputDir).isDirectory()) {
-    throw new Error(`github-release=true requires a release passport output directory, got '${releasePassportOutputDir || ""}'`);
-  }
-  const assets = [publishEvidencePath];
-  for (const entry of fs.readdirSync(releasePassportOutputDir).sort()) {
-    const candidate = path.join(releasePassportOutputDir, entry);
-    if (fs.statSync(candidate).isFile()) {
-      assets.push(candidate);
-    }
-  }
-  if (assets.length < 2) {
-    throw new Error(`github-release=true found no release passport assets under ${releasePassportOutputDir}`);
-  }
-  const occupiedBasenames = new Set(assets.map((assetPath) => path.basename(assetPath)));
-  for (const assetPath of additionalAssetPaths) {
-    assertFile(assetPath, "a declared GitHub Release artifact");
-    const basename = path.basename(assetPath);
-    if (occupiedBasenames.has(basename)) {
-      throw new Error(`github-release=true found duplicate asset basename '${basename}'`);
-    }
-    occupiedBasenames.add(basename);
-    assets.push(assetPath);
-  }
-  return assets;
-}
-
-function sha256(data) {
-  return crypto.createHash("sha256").update(data).digest("hex");
-}
-
-function releaseAssetBytes(data) {
-  if (Buffer.isBuffer(data)) return data;
-  if (data instanceof ArrayBuffer) return Buffer.from(data);
-  if (ArrayBuffer.isView(data)) return Buffer.from(data.buffer, data.byteOffset, data.byteLength);
-  return Buffer.from(data || "");
-}
-
-async function existingReleaseAssetDigest({ octokit, owner, repo, asset }) {
-  const declared = String(asset.digest || "").match(/^sha256:([0-9a-f]{64})$/i);
-  if (declared) return declared[1].toLowerCase();
-  if (typeof octokit.rest.repos.getReleaseAsset !== "function") {
-    throw new Error(
-      `GitHub Release asset '${asset.name}' has no sha256 digest and cannot be read for immutable comparison`,
-    );
-  }
-  const response = await octokit.rest.repos.getReleaseAsset({
-    owner,
-    repo,
-    asset_id: asset.id,
-    headers: { accept: "application/octet-stream" },
-  });
-  return sha256(releaseAssetBytes(response.data));
-}
-
-async function uploadReleaseAssetImmutable({ octokit, owner, repo, releaseId, assetPath }) {
-  const name = path.basename(assetPath);
-  const data = fs.readFileSync(assetPath);
-  const digest = sha256(data);
-  const existing = await octokit.rest.repos.listReleaseAssets({
-    owner,
-    repo,
-    release_id: releaseId,
-    per_page: 100,
-  });
-  const matches = (existing.data || []).filter((asset) => asset.name === name);
-  if (matches.length > 1) {
-    throw new Error(`immutable GitHub Release asset collision: '${name}' exists more than once`);
-  }
-  if (matches.length === 1) {
-    const existingDigest = await existingReleaseAssetDigest({ octokit, owner, repo, asset: matches[0] });
-    if (existingDigest !== digest) {
-      throw new Error(
-        `immutable GitHub Release asset collision: '${name}' already exists with sha256:${existingDigest}, refusing sha256:${digest}`,
-      );
-    }
-    return { action: "preserved", name, digest: `sha256:${digest}` };
-  }
-  await octokit.rest.repos.uploadReleaseAsset({
-    owner,
-    repo,
-    release_id: releaseId,
-    name,
-    data,
-  });
-  return { action: "uploaded", name, digest: `sha256:${digest}` };
-}
-
-export async function publishGitHubReleaseEvidence({
+async function publishReleaseTail({
+  enabled,
+  dryRun,
+  declarative,
+  releaseTailStatePath,
+  result,
   octokit,
-  owner,
-  repo,
   token,
-  apiUrl,
-  tag,
-  target,
-  channel = "",
-  title = "",
-  notes = "",
-  publishEvidencePath = "",
-  releasePassportPath = "",
-  releasePassportOutputDir = "",
-  additionalAssetPaths = [],
+  sha,
+  title,
+  notes,
+  artifactPaths,
+  targetRef,
 } = {}) {
-  if (!tag) {
-    throw new Error("github-release=true requires promote-buildchain-ref to resolve a public release tag");
+  if (!enabled || dryRun) return null;
+  const releaseComplete = result.publishTransaction?.state === "complete";
+  const finalizationComplete = result.publishTransaction?.finalizationNeeded !== true;
+  if (
+    !releaseComplete ||
+    !finalizationComplete
+  ) {
+    core.info(
+      `github-release=true is waiting for a complete release transaction before creating or updating the public GitHub Release; transaction-state=${result.publishTransaction?.state || ""} finalization-needed=${result.publishTransaction?.finalizationNeeded === true}`,
+    );
+    return null;
   }
-  const assets = collectGitHubReleaseEvidenceAssets({
-    publishEvidencePath,
-    releasePassportPath,
-    releasePassportOutputDir,
-    additionalAssetPaths,
-  });
-  const release = await ensureGitHubRelease({
-    apiUrl,
+  const releaseOptions = {
+    octokit,
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
     token,
-    repository: `${owner}/${repo}`,
-    tag,
-    title: title || tag,
-    notes: notes || `Buildchain release passport assets for ${tag}.`,
-    target,
-    channel,
-  });
-  const assetResults = [];
-  for (const assetPath of assets) {
-    assetResults.push(await uploadReleaseAssetImmutable({
-      octokit,
-      owner,
-      repo,
-      releaseId: release.release.id,
-      assetPath,
-    }));
-  }
-  return {
-    action: release.action,
-    url: release.release.html_url || "",
-    tag,
-    assetCount: assets.length,
-    uploadedAssetCount: assetResults.filter((asset) => asset.action === "uploaded").length,
-    preservedAssetCount: assetResults.filter((asset) => asset.action === "preserved").length,
+    apiUrl: process.env.GITHUB_API_URL || "https://api.github.com",
+    tag:
+      result.publishTransaction?.publicReleaseTag ||
+      result.publishTransaction?.exactTag ||
+      "",
+    target: result.publishTransaction?.releaseSha || sha,
+    channel: result.publishTransaction?.channel || "",
+    title,
+    notes,
+    publishEvidencePath: result.publishTransaction?.evidencePath || "",
+    releasePassportPath: result.publishTransaction?.releasePassportPath || "",
+    releasePassportOutputDir:
+      result.publishTransaction?.releasePassportOutputDir || "",
+    additionalAssetPaths: result.publishTransaction?.sealedReleaseAssetPaths
+      ?.length
+      ? result.publishTransaction.sealedReleaseAssetPaths
+      : artifactPaths,
+    reuseExistingCompleteEvidence: recoveryCompletedBeforeThisRun(
+      releaseCandidateRecoveryReceiptPath,
+    ),
+    targetRef,
   };
+  const release = await publishSelectedGitHubRelease({
+    declarative,
+    title,
+    notes,
+    legacyOptions: releaseOptions,
+    declarativeOptions: {
+      octokit,
+      repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
+      sourceSha: releaseOptions.target,
+      version:
+        result.publishTransaction?.version ||
+        String(releaseOptions.tag).replace(/^v/u, ""),
+      tag: releaseOptions.tag,
+      channel: releaseOptions.channel,
+      publishEvidencePath: releaseOptions.publishEvidencePath,
+      releasePassportPath: releaseOptions.releasePassportPath,
+      releasePassportOutputDir: releaseOptions.releasePassportOutputDir,
+      additionalAssetPaths: releaseOptions.additionalAssetPaths,
+      statePath: releaseTailStatePath,
+      targetRef,
+    },
+  });
+  const completion = await recordGitHubReleaseTransactionCompletion({
+    octokit,
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    cwd: process.cwd(),
+    statePath: result.publishTransaction.statePath,
+    evidencePath: result.publishTransaction.evidencePath,
+    release,
+  });
+  result.publishTransaction.publicationState =
+    completion.transaction.publication_state;
+  result.publishTransaction.stateSha = completion.durable?.sha || "";
+  core.setOutput(
+    "transaction-publication-state",
+    completion.transaction.publication_state,
+  );
+  core.setOutput("transaction-state-sha", completion.durable?.sha || "");
+  core.info(
+    `github release ${release.action}: ${release.tag} (${release.assetCount} assets)`,
+  );
+  return release;
 }
 
 async function main() {
@@ -261,6 +212,7 @@ async function main() {
   const tagInput = core.getInput("tags");
   const tags = tagInput ? parseTags(tagInput) : undefined;
   const dryRun = core.getBooleanInput("dry-run");
+  const planBeforeTargetAdvance = core.getBooleanInput("plan-before-target-advance");
   const requireGovernance = core.getBooleanInput("require-governance");
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
@@ -324,6 +276,8 @@ async function main() {
     "release-passport-github-artifact-attestation-policy-jsons",
   );
   const githubRelease = core.getBooleanInput("github-release");
+  const declarativeReleaseTail = core.getBooleanInput("declarative-release-tail");
+  const releaseTailStatePath = core.getInput("release-tail-state-path") || ".buildchain/release-tail/github-release-state.json";
   const githubReleaseArtifactPaths = core.getMultilineInput("github-release-artifact-paths")
     .map((entry) => entry.trim())
     .filter(Boolean);
@@ -372,6 +326,7 @@ async function main() {
     targetRef,
     tags,
     dryRun,
+    planBeforeTargetAdvance,
     allowRepository,
     requireGovernance,
     requireVersionState,
@@ -388,6 +343,7 @@ async function main() {
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
+    expectedTransactionId: process.env.BUILDCHAIN_EXPECTED_TRANSACTION_ID,
     publishSealedBundleRoot,
     publishSealedBundleManifest,
     publishRequiredArtifactsJson,
@@ -427,8 +383,8 @@ async function main() {
     releasePassportGitHubArtifactAttestationPolicyJsons,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
-    releaseCandidateBuildSummaryPath,
-    releaseCandidateVersion,
+    releaseCandidateBuildSummaryPath, releaseCandidateVersion,
+    releaseCandidateRecoveryReceiptPath,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,
@@ -437,7 +393,6 @@ async function main() {
     runId: String(github.context.runId || ""),
     publishTransactionOverride,
   });
-
   for (const update of result.updates) {
     const target =
       update.tag ||
@@ -476,51 +431,29 @@ async function main() {
     "finalization-needed",
     String(result.publishTransaction?.finalizationNeeded === true),
   );
-  let githubReleaseResult;
-  if (githubRelease && !dryRun) {
-    if (result.publishTransaction?.state === "complete" && result.publishTransaction?.finalizationNeeded !== true) {
-      githubReleaseResult = await publishGitHubReleaseEvidence({
-        octokit,
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        token,
-        apiUrl: process.env.GITHUB_API_URL || "https://api.github.com",
-        tag: result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "",
-        target: result.publishTransaction?.releaseSha || sha,
-        channel: result.publishTransaction?.channel || "",
-        title: githubReleaseTitle,
-        notes: githubReleaseNotes,
-        publishEvidencePath: result.publishTransaction?.evidencePath || "",
-        releasePassportPath: result.publishTransaction?.releasePassportPath || "",
-        releasePassportOutputDir: result.publishTransaction?.releasePassportOutputDir || "",
-        additionalAssetPaths: result.publishTransaction?.sealedReleaseAssetPaths?.length
-          ? result.publishTransaction.sealedReleaseAssetPaths
-          : githubReleaseArtifactPaths,
-      });
-      const completion = await recordGitHubReleaseTransactionCompletion({
-        octokit,
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        cwd: process.cwd(),
-        statePath: result.publishTransaction.statePath,
-        evidencePath: result.publishTransaction.evidencePath,
-        release: githubReleaseResult,
-      });
-      result.publishTransaction.publicationState = completion.transaction.publication_state;
-      result.publishTransaction.stateSha = completion.durable?.sha || "";
-      core.setOutput("transaction-publication-state", completion.transaction.publication_state);
-      core.setOutput("transaction-state-sha", completion.durable?.sha || "");
-      core.info(
-        `github release ${githubReleaseResult.action}: ${githubReleaseResult.tag} (${githubReleaseResult.assetCount} assets)`,
-      );
-    } else {
-      core.info(
-        `github-release=true is waiting for a complete release transaction before creating or updating the public GitHub Release; transaction-state=${result.publishTransaction?.state || ""} finalization-needed=${result.publishTransaction?.finalizationNeeded === true}`,
-      );
-    }
-  }
+  const githubReleaseResult = await publishReleaseTail({
+    enabled: githubRelease,
+    dryRun,
+    declarative: declarativeReleaseTail,
+    releaseTailStatePath,
+    result,
+    octokit,
+    token,
+    sha,
+    title: githubReleaseTitle,
+    notes: githubReleaseNotes,
+    artifactPaths: githubReleaseArtifactPaths,
+    targetRef,
+  });
   core.setOutput("github-release-url", githubReleaseResult?.url || "");
   core.setOutput("github-release-action", githubReleaseResult?.action || "");
+  core.setOutput("release-tail-declaration-path", githubReleaseResult?.declarationPath || "");
+  core.setOutput("release-tail-declaration-root", githubReleaseResult?.declarationRoot || "");
+  core.setOutput("release-tail-transaction-state", githubReleaseResult?.transaction?.state || "");
+  core.setOutput("release-tail-transaction-root", githubReleaseResult?.transaction?.transactionRoot || "");
+  core.setOutput("release-tail-state-path", githubReleaseResult?.statePath || "");
+  core.setOutput("release-tail-state-root", githubReleaseResult?.transaction?.stateRoot || "");
+  core.setOutput("release-tail-receipt-roots-json", JSON.stringify((githubReleaseResult?.transaction?.receipts || []).map((receipt) => receipt.receiptRoot)));
   core.setOutput(
     "tags",
     result.updates

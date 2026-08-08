@@ -77,7 +77,7 @@ function workCommands(executionProfile = null, repository = "", branch = "", bas
     stages: {
       materialize: profile.updateCommand || "<consumer update command from the exact execution profile>",
       "verify-release": profile.verifyCommand || "<consumer verification command from the exact execution profile>",
-      "push-branch": `git push --force-with-lease=<exact-expected-old> origin HEAD:refs/heads/${branch || "<managed-branch>"}`,
+      "push-branch": "buildchain release-propagation work push-branch --work <work.json> --expected-work-root <sha256:...> --cwd <downstream-worktree> --remote origin --execute --json",
       "pull-request": `gh pr create --repo ${repository || "<downstream-repository>"} --base ${baseRef || "<base-ref>"} --head ${branch || "<managed-branch>"}`,
       preview: `gh run list --repo ${repository || "<downstream-repository>"} --workflow ${workflow} --branch ${branch || "<managed-branch>"} --event pull_request --json databaseId,status,conclusion,url,headSha`,
       "independent-review": `gh pr review <pr-number> --repo ${repository || "<downstream-repository>"} --approve`,

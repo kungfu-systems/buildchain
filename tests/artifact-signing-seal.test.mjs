@@ -166,6 +166,62 @@ kind = "archive"
   }
 });
 
+test("signing request seals Buildchain-owned JIT intent without entitlement files", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-signing-jit-profile-"),
+  );
+  try {
+    const artifact = path.join(workspace, "dist", "runtime.tar.gz");
+    fs.mkdirSync(path.dirname(artifact), { recursive: true });
+    fs.writeFileSync(artifact, "runtime archive\n");
+    fs.writeFileSync(
+      path.join(workspace, "buildchain.toml"),
+      `schema = 1
+
+[[signing.artifacts]]
+path = "dist/runtime.tar.gz"
+kind = "archive"
+entitlements_profile = "jit-executable-v1"
+entitlements_paths = ["runtime/python/bin/python3"]
+`,
+    );
+    fs.writeFileSync(
+      path.join(workspace, "manifest.json"),
+      `${JSON.stringify({
+        platform: { id: "macos-arm64", os: "macos", arch: "arm64" },
+        files: [
+          {
+            path: "dist/runtime.tar.gz",
+            size: fs.statSync(artifact).size,
+            sha256: sha256(artifact),
+          },
+        ],
+      })}\n`,
+    );
+    const outputRoot = path.join(workspace, ".buildchain", "signing");
+    const index = sealArtifactSigningRequests({
+      workspace,
+      manifestPath: "manifest.json",
+      outputRoot,
+      repository: "kungfu-systems/consumer",
+      sourceSha: SOURCE_SHA,
+      sourceTreeSha: TREE_SHA,
+      runtimeSha: RUNTIME_SHA,
+      platformId: "macos-arm64",
+    });
+    const sealed = JSON.parse(
+      fs.readFileSync(path.join(outputRoot, index.requests[0].path), "utf8"),
+    );
+    assert.equal(sealed.signature.entitlementsProfile, "jit-executable-v1");
+    assert.deepEqual(sealed.signature.entitlementsPaths, [
+      "runtime/python/bin/python3",
+    ]);
+    assert.doesNotMatch(JSON.stringify(sealed), /\.plist/u);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("declared signing directories do not require duplicate artifact-path configuration", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-signing-declared-directory-"),

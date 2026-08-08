@@ -32,11 +32,13 @@ const BUILDCHAIN_COMMAND_REGISTRY = Object.freeze([
   { id: "paper", aliases: [] },
   { id: "release-propagation", aliases: [] },
   { id: "release-governance", aliases: [] },
+  { id: "release-tail", aliases: [] },
   { id: "github-governance", aliases: [] },
   { id: "badges", aliases: [] },
   { id: "homebrew", aliases: [] },
   { id: "build-contract", aliases: [] },
   { id: "publish-source", aliases: [] },
+  { id: "architecture", aliases: [] },
 ]);
 
 function buildCommandLookup(registry = BUILDCHAIN_COMMAND_REGISTRY) {

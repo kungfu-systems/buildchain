@@ -669,6 +669,8 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /artifact-transfer:/);
+  assert.match(workflow, /INPUT_RELAY_REQUIRED:/);
+  assert.match(workflow, /github-hosted-platform-ids-json:/);
   assert.match(workflow, /artifact-relay-s3\.mjs upload/);
   assert.match(workflow, /artifact-relay-s3\.mjs download/);
   assert.match(workflow, /artifact-relay-s3\.mjs cleanup/);
@@ -677,6 +679,32 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /relay-artifacts:/);
   assert.match(workflow, /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'/);
   assert.match(workflow, /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts'/);
+  assert.match(
+    workflow,
+    /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts' \|\| matrix\.platform\.githubHosted == true/,
+  );
+  assert.match(
+    workflow,
+    /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts' && matrix\.platform\.githubHosted != true/,
+  );
+  const deterministicPayloadUploads = [
+    ...workflow.matchAll(
+      /\n      - name: (?:Upload|Publish final signed) deterministic artifact\n([\s\S]*?)(?=\n      - name:|\n  [a-z])/g,
+    ),
+  ];
+  assert.equal(deterministicPayloadUploads.length, 4);
+  for (const [, uploadStep] of deterministicPayloadUploads) {
+    assert.match(uploadStep, /include-hidden-files: true/);
+  }
+  const relayJob = workflow.slice(
+    workflow.indexOf("\n  relay-artifacts:"),
+    workflow.indexOf("\n  artifact-signing-control:"),
+  );
+  assert.equal(
+    (relayJob.match(/if: \$\{\{ matrix\.platform\.githubHosted != true \}\}/g) || [])
+      .length,
+    9,
+  );
   assert.match(workflow, /process-summary-required:/);
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
@@ -1036,7 +1064,21 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
+  const publicWorkflow = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
   assert.match(workflow, /workflow_call:/);
+  assert.match(publicWorkflow, /publication-consumer-qualification-controller-sha:/);
+  assert.match(
+    publicWorkflow,
+    /publication-consumer-qualification-controller-sha: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/,
+  );
+  assert.match(
+    publicWorkflow,
+    /publication-authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/,
+  );
+  assert.match(workflow, /^  promote:\s*$/m);
   assert.match(workflow, /release-candidate-resolver\.mjs/);
   assert.match(workflow, /release-candidate-workflow-file:/);
   assert.match(workflow, /default: "build\.yml"/);
@@ -1161,13 +1203,21 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
   assert.match(workflow, /publication-gate-aggregate-json:/);
+  assert.match(workflow, /publication-gate-command:/);
+  assert.match(workflow, /publication-gate-controller-sha:/);
+  assert.match(workflow, /publication-consumer-qualification-controller-sha:/);
+  assert.match(workflow, /publication-authority-workflow-path:/);
+  assert.match(workflow, /release-candidate-wait-seconds:/);
   assert.match(workflow, /publication-auto-admission:/);
   assert.match(workflow, /auto-admission: \$\{\{ inputs\.publication-auto-admission \}\}/);
   assert.match(workflow, /publication-auto-no-gate:/);
   assert.match(workflow, /auto-no-gate: \$\{\{ inputs\.publication-auto-no-gate \}\}/);
+  assert.match(workflow, /consumer-gate-command: \$\{\{ inputs\.publication-gate-command \}\}/);
+  assert.match(workflow, /consumer-gate-controller-sha: \$\{\{ inputs\.publication-gate-controller-sha \}\}/);
+  assert.match(workflow, /BUILDCHAIN_RC_WAIT_SECONDS: \$\{\{ inputs\.release-candidate-wait-seconds \}\}/);
   assert.match(workflow, /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/);
-  assert.match(workflow, /authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/);
+  assert.match(workflow, /authority-workflow-path: \$\{\{ inputs\.publication-authority-workflow-path \}\}/);
   assert.match(workflow, /evidence-run-id:/);
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
@@ -1176,6 +1226,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
   assert.match(workflow, /name: Bind consumer publication predicate/);
   assert.match(workflow, /name: Run consumer publication predicate/);
+  assert.match(workflow, /BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/);
+  assert.match(workflow, /const controllerSha = explicitControllerSha \|\| gateControllerSha \|\| sourceSha/);
+  assert.match(workflow, /update\(`\$\{command\}\\0\$\{controllerSha\}`\)/);
+  assert.match(workflow, /controller-sha=\$\{command \? controllerSha : ""\}/);
+  assert.match(workflow, /ref: \$\{\{ needs\.qualification-plan\.outputs\.controller-sha \}\}/);
   assert.match(workflow, /permissions: \{\}/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_PATH/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH/);
@@ -1296,7 +1351,19 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /release-candidate admission requires a repository-local publisher workflow path/);
   assert.match(workflow, /release-candidate GitHub Release admission requires an empty publication-package-name and exact github-release:/);
   assert.match(workflow, /publisher_mode="github-token"/);
-  assert.match(workflow, /release-candidate admission requires a Gate aggregate or explicit publication-auto-no-gate decision/);
+  assert.match(workflow, /release-candidate admission requires exactly one Gate aggregate, consumer Gate command, or explicit publication-auto-no-gate decision/);
+  assert.match(workflow, /name: Checkout exact consumer Gate subject/);
+  assert.match(workflow, /name: Checkout exact consumer Gate controller/);
+  assert.match(workflow, /name: Assemble consumer Gate from exact downloaded evidence/);
+  assert.match(workflow, /BUILDCHAIN_CONSUMER_GATE_COMMAND: \$\{\{ inputs\.consumer-gate-command \}\}/);
+  assert.match(workflow, /consumer-gate-controller-sha:/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_CONSUMER_CONTROLLER_SHA/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_SUBJECT_ROOT/);
+  assert.match(workflow, /consumerGateController/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_GATE_RESULT_PATH/);
+  assert.match(workflow, /rebindPublicationGateAggregateForEquivalentTree/);
+  assert.match(workflow, /consumer-gate-evidence-source-sha:/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_EVIDENCE_SOURCE_TREE/);
   assert.match(workflow, /name: Audit managed release-candidate publication control plane/);
   assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);
   assert.match(workflow, /--workflow-repository "\$\{\{ inputs\.buildchain-repository \}\}"/);
@@ -1332,8 +1399,19 @@ test("self-publication admission assembly binds downloaded evidence without publ
   assert.match(script, /admitted source tree does not match release candidate/);
   assert.match(script, /BUILDCHAIN_ALLOW_NO_GATE/);
   assert.match(script, /managed-release-candidate-no-gate/);
+  assert.match(script, /policyDigest: gateBindings\.policyDigest/);
+  assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
   assert.match(script, /github-hosted-single-job/);
   assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
+});
+
+test("publication artifact admission uses validated Gate policy bindings", () => {
+  const script = fs.readFileSync(
+    path.join(root, "scripts/assemble-publication-artifact-admission.mjs"),
+    "utf8",
+  );
+  assert.match(script, /policyDigest: gateBindings\.policyDigest/);
+  assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
 });
 
 test("publication control-plane audit defers npm OIDC authorization to the publish transaction", () => {
@@ -1391,7 +1469,11 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /target-branch:/);
+  assert.match(workflow, /expected-pr-number:/);
+  assert.match(workflow, /expected-head-sha:/);
+  assert.match(workflow, /diagnostic-context:/);
   assert.match(workflow, /required-status-checks:/);
+  assert.match(workflow, /queue-admission-context:/);
   assert.match(workflow, /default: "check \/ check"/);
   assert.match(workflow, /ready-label:/);
   assert.match(workflow, /block-labels:/);
@@ -1403,6 +1485,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /default: "auto"/);
   assert.match(workflow, /enqueued-count:/);
   assert.match(workflow, /action-count:/);
+  assert.match(workflow, /admission-state:/);
+  assert.match(workflow, /admission-receipt-root:/);
   assert.match(workflow, /dry-run:/);
   assert.match(workflow, /default: true/);
   assert.match(workflow, /dev\/v\*\/v\*/);
@@ -1411,9 +1495,13 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /contents: write/);
   assert.match(workflow, /pull-requests: write/);
   assert.match(workflow, /checks: read/);
-  assert.match(workflow, /statuses: read/);
+  assert.match(workflow, /statuses: write/);
+  assert.match(workflow, /continue-on-error: true/);
+  assert.match(workflow, /Qualify exact source before scheduling[\s\S]*--landing-mode queue[\s\S]*--qualification-only/);
+  assert.match(workflow, /Enforce targeted admission result/);
   assert.match(workflow, /buildchain-dev-pr-admission-/);
   assert.match(workflow, /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/);
+  assert.match(workflow, /BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT:/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 
   const verify = fs.readFileSync(path.join(root, ".github/workflows/verify.yml"), "utf8");
@@ -1421,6 +1509,65 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(verify, /merge_group:/);
   assert.match(verify, /types: \[checks_requested\]/);
   assert.doesNotMatch(verify, /github\.event\.pull_request/);
+});
+
+test("queued Warrant cancellation workflow binds exact terminal event authority", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-delivery-warrant-cancel.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /expected-candidate-id:/);
+  assert.match(workflow, /expected-source-head-sha:/);
+  assert.match(workflow, /observed-source-head-sha:/);
+  assert.match(workflow, /expected-old-state-root:/);
+  assert.match(workflow, /terminal-evidence-root:/);
+  assert.match(workflow, /cancel-queued/);
+  assert.match(workflow, /--expected-old/);
+  assert.match(workflow, /contents: write/);
+  assert.match(workflow, /actions\/checkout@v7\.0\.0/);
+  assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+});
+
+test("Buildchain self-delivery requires an exact Warrant before Merge Queue admission", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-dev-delivery.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /expected-pr-number:/);
+  assert.match(workflow, /expected-head-sha:/);
+  assert.match(workflow, /native-roots-json:/);
+  assert.match(workflow, /expected-pr-number: \$\{\{ fromJSON\(github\.event\.inputs\.expected-pr-number\) \}\}/);
+  assert.match(workflow, /assignment-root: \$\{\{ fromJSON\(github\.event\.inputs\.native-roots-json\)\.assignmentRoot \}\}/);
+  assert.match(workflow, /initiative-root: \$\{\{ fromJSON\(github\.event\.inputs\.native-roots-json\)\.initiativeRoot \}\}/);
+  assert.match(workflow, /source-identity-root:/);
+  assert.match(workflow, /source-patch-root:/);
+  assert.match(workflow, /plan-root:/);
+  assert.match(workflow, /closure-root:/);
+  assert.match(workflow, /dependency-root:/);
+  assert.match(workflow, /toolchain-root:/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
+  assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /delivery-warrant-mode: required/);
+  assert.match(workflow, /delivery-class: native-proof-required/);
+  assert.match(workflow, /delivery-priority: ordinary/);
+  assert.match(workflow, /required-status-checks: check/);
+  assert.match(
+    workflow,
+    /allowed-head-prefixes: feature\/,fix\/,chore\/,docs\/,ci\/,refactor\/,automation\/auditable-demo-/,
+  );
+  assert.match(workflow, /landing-mode: queue/);
+  assert.match(workflow, /dry-run: false/);
+  assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ inputs\.expected-pr-number \}\} · required Delivery Warrant"/);
+  assert.doesNotMatch(workflow, /secrets: inherit/);
+  assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
+  assert.doesNotMatch(workflow.slice(workflow.indexOf("    with:")), /\$\{\{ inputs\./);
+  const dispatchInputs = workflow
+    .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
+    .match(/^      [a-z][a-z0-9-]+:$/gmu);
+  assert.equal(dispatchInputs?.length, 10);
 });
 
 test("declared merge queue governance reconciles automatically on dev changes", () => {
@@ -2507,7 +2654,10 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     promotion,
     /if: \$\{\{ inputs\.standalone-binary-distribution && !inputs\.dry-run && steps\.promote\.outcome == 'success'/,
   );
-  assert.match(selfPromotion, /standalone-binary-distribution: true/);
+  assert.match(
+    selfPromotion,
+    /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/,
+  );
   assert.match(
     selfPromotion,
     /recover-durable-transaction:[\s\S]*?type: boolean/,
@@ -2518,7 +2668,7 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
   );
   assert.match(
     selfPromotion,
-    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
   );
   assert.match(
     selfPromotion,
@@ -2715,6 +2865,7 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
     assert.match(workflow, /const officialChannelRef = \/\^v\\d\+/);
     assert.match(workflow, /const officialChannel = officialChannelRef\.test\(requested\)/);
     if (
+      workflowFile === ".github/workflows/.build.yml" ||
       workflowFile === ".github/workflows/paper-release.yml" ||
       workflowFile === ".github/workflows/publication-artifact.yml"
     ) {
@@ -2759,6 +2910,14 @@ test("runtime-aware workflows pin same-repository pull request merge refs", () =
     assert.match(workflow, /const workflowSha = String\(context\.sha \|\| ""\)/);
     assert.match(workflow, /current workflow SHA is invalid for Buildchain pull request merge ref/);
   }
+});
+
+test("Gate profile treats its exact workflow shell SHA as a pinned self runtime", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.gate-profile.yml"), "utf8");
+  assert.match(workflow, /const pinnedSelfRuntime =/);
+  assert.match(workflow, /sameRepositoryWorkflow &&[\s\S]*exactSha\.test\(requested\)[\s\S]*exactSha\.test\(shellRef\)/);
+  assert.match(workflow, /requested\.toLowerCase\(\) === shellRef\.toLowerCase\(\)/);
+  assert.match(workflow, /requested && !official\.test\(requested\) && !pinnedSelfRuntime/);
 });
 
 test("build workflow only trusts an exact same-repository pull request head override", () => {

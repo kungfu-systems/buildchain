@@ -106,7 +106,7 @@ test("Windows campaign is one-shot, source-bound, and atomically capped", () => 
   assert.equal(arm[1].Put.Item.accepted_instances.N, "0");
   assert.equal(arm[1].Put.Item.reserved_usd.N, "0");
   assert.equal(arm[1].Put.Item.phase_spend_baseline_usd.N, "51.98572625");
-  assert.equal(arm[1].Put.Item.budget_limit_usd.N, "80");
+  assert.equal(arm[1].Put.Item.budget_limit_usd.N, "110");
   assert.equal(arm[1].Put.Item.campaign_reservation_ceiling_usd.N, "21.75");
   assert.equal(arm[1].Put.Item.campaign_safety_ceiling_usd.N, "26.1");
 
@@ -181,6 +181,30 @@ test("Windows campaign narrows its paid slot ceiling without widening the phase 
   );
 });
 
+test("Windows campaign admits the USD 110 two-allocation timeout envelope", () => {
+  const campaign = createWindowsJitCampaignArmPlan({
+    campaignId: "win-timeout-110",
+    sourceSha: "a".repeat(40),
+    stateTable: "kungfu-buildchain-windows-jit-CampaignState-example",
+    armedAt: "2026-08-03T02:00:00Z",
+    expiresAt: "2026-08-04T02:00:00Z",
+    phaseSpendBaselineUsd: 88.52290745,
+    maxAcceptedInstances: 2,
+  });
+  assert.equal(campaign.limits.maxAcceptedInstances, 2);
+  assert.equal(campaign.limits.campaignReservationCeilingUsd, 8.7);
+  assert.equal(campaign.limits.campaignSafetyCeilingUsd, 13.05);
+  assert.equal(
+    windowsCampaignArmItems(campaign)[1].Put.Item.remaining_phase_budget_usd.N,
+    "21.47709255",
+  );
+  assert.equal(
+    campaign.limits.phaseSpendBaselineUsd +
+      campaign.limits.campaignSafetyCeilingUsd,
+    101.57290745,
+  );
+});
+
 test("Windows campaign requires a prior-spend baseline and rejects an exhausted cap", () => {
   const values = {
     campaignId: "win-20260802-ledger",
@@ -197,7 +221,7 @@ test("Windows campaign requires a prior-spend baseline and rejects an exhausted 
     () =>
       createWindowsJitCampaignArmPlan({
         ...values,
-        phaseSpendBaselineUsd: 53.9,
+        phaseSpendBaselineUsd: 84,
       }),
     /safety envelope must remain below the remaining Windows phase budget/,
   );
@@ -231,7 +255,7 @@ test("Windows campaign CLI plans without mutating AWS", () => {
   assert.equal(plan.kind, "campaign-arm-plan");
   assert.equal(plan.limits.maxAcceptedInstances, 1);
   assert.equal(plan.limits.phaseSpendBaselineUsd, 51.98572625);
-  assert.equal(plan.limits.remainingPhaseBudgetUsd, 28.01427375);
+  assert.equal(plan.limits.remainingPhaseBudgetUsd, 58.01427375);
   assert.equal(plan.limits.campaignSafetyCeilingUsd, 8.7);
 });
 
@@ -382,7 +406,24 @@ const args = process.argv.slice(2);
 const previous = fs.existsSync(process.env.FAKE_COMMAND_LOG) ? fs.readFileSync(process.env.FAKE_COMMAND_LOG, "utf8") : "";
 fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "aws", args }) + "\n");
 const joined = args.join(" ");
-if (joined.includes("ec2 describe-instances")) {
+if (joined.includes("sts get-caller-identity")) {
+  process.stdout.write(JSON.stringify({ Account: "123456789012" }));
+} else if (joined.includes("cloudformation describe-stacks")) {
+  if (args.includes("--query")) process.stdout.write("arn:aws:sns:us-east-1:123456789012:windows-budget-topic");
+  else process.stdout.write(JSON.stringify({ Stacks: [{ Outputs: [{ OutputKey: "KillSwitchTopic", OutputValue: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }] }));
+} else if (joined.includes("budgets describe-budget")) {
+  process.stdout.write(JSON.stringify({ Budget: { BudgetName: "kungfu-buildchain-windows-jit-actual-spend", BudgetLimit: { Amount: "110", Unit: "USD" }, BudgetType: "COST", Metrics: ["UnblendedCost"], FilterExpression: { And: [{ Dimensions: { Key: "USAGE_TYPE", Values: ["BoxUsage:c7i.4xlarge"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "OPERATION", Values: ["RunInstances:0002"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "REGION", Values: ["us-east-1"], MatchOptions: ["EQUALS"] } }] } } }));
+} else if (joined.includes("budgets describe-notifications-for-budget")) {
+  process.stdout.write(JSON.stringify({ Notifications: [
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 80 },
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 95 }
+  ] }));
+} else if (joined.includes("budgets describe-subscribers-for-notification")) {
+  process.stdout.write(JSON.stringify({ Subscribers: [{ SubscriptionType: "SNS", Address: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }));
+} else if (joined.includes("ssm get-parameter")) {
+  process.stderr.write("ParameterNotFound");
+  process.exitCode = 254;
+} else if (joined.includes("ec2 describe-instances")) {
   const afterLaunch = previous.includes('"run-instances"') && !previous.includes('"--dry-run"}');
   process.stdout.write(JSON.stringify(afterLaunch ? { Reservations: [{ Instances: [{ InstanceId: "i-0123456789abcdef0" }] }] } : { Reservations: [] }));
 } else if (joined.includes("ssm describe-parameters")) {
@@ -530,7 +571,24 @@ const fs = require("node:fs");
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "aws", args }) + "\n");
 const joined = args.join(" ");
-if (joined.includes("ec2 describe-instances")) {
+if (joined.includes("sts get-caller-identity")) {
+  process.stdout.write(JSON.stringify({ Account: "123456789012" }));
+} else if (joined.includes("cloudformation describe-stacks")) {
+  if (args.includes("--query")) process.stdout.write("arn:aws:sns:us-east-1:123456789012:windows-budget-topic");
+  else process.stdout.write(JSON.stringify({ Stacks: [{ Outputs: [{ OutputKey: "KillSwitchTopic", OutputValue: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }] }));
+} else if (joined.includes("budgets describe-budget")) {
+  process.stdout.write(JSON.stringify({ Budget: { BudgetName: "kungfu-buildchain-windows-jit-actual-spend", BudgetLimit: { Amount: "110", Unit: "USD" }, BudgetType: "COST", Metrics: ["UnblendedCost"], FilterExpression: { And: [{ Dimensions: { Key: "USAGE_TYPE", Values: ["BoxUsage:c7i.4xlarge"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "OPERATION", Values: ["RunInstances:0002"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "REGION", Values: ["us-east-1"], MatchOptions: ["EQUALS"] } }] } } }));
+} else if (joined.includes("budgets describe-notifications-for-budget")) {
+  process.stdout.write(JSON.stringify({ Notifications: [
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 80, ThresholdType: "PERCENTAGE" },
+    { ComparisonOperator: "GREATER_THAN", NotificationType: "ACTUAL", Threshold: 95, ThresholdType: "PERCENTAGE" }
+  ] }));
+} else if (joined.includes("budgets describe-subscribers-for-notification")) {
+  process.stdout.write(JSON.stringify({ Subscribers: [{ SubscriptionType: "SNS", Address: "arn:aws:sns:us-east-1:123456789012:windows-budget-topic" }] }));
+} else if (joined.includes("ssm get-parameter")) {
+  process.stderr.write("ParameterNotFound");
+  process.exitCode = 254;
+} else if (joined.includes("ec2 describe-instances")) {
   process.stdout.write(JSON.stringify({ Reservations: [] }));
 } else if (joined.includes("ssm describe-parameters")) {
   process.stdout.write(JSON.stringify({ Parameters: [] }));
@@ -618,6 +676,14 @@ if (joined.includes("ec2 describe-instances")) {
     const log = fs.readFileSync(commandLog, "utf8");
     assert.doesNotMatch(log, /secret-jit-config/);
     const commands = log.trim().split("\n").map(JSON.parse);
+    const budgetGateIndex = commands.findIndex(
+      (entry) => entry.command === "aws" && entry.args.includes("describe-budget"),
+    );
+    const jitConfigIndex = commands.findIndex(
+      (entry) =>
+        entry.command === "gh" &&
+        entry.args.some((argument) => argument.includes("generate-jitconfig")),
+    );
     const dryRunIndex = commands.findIndex(
       (entry) =>
         entry.command === "aws" &&
@@ -638,7 +704,9 @@ if (joined.includes("ec2 describe-instances")) {
       (entry) => entry.command === "aws" && entry.args.includes("update-item"),
     );
     assert.ok(
-      dryRunIndex >= 0 &&
+      budgetGateIndex >= 0 &&
+        jitConfigIndex > budgetGateIndex &&
+        dryRunIndex > jitConfigIndex &&
         reservationIndex > dryRunIndex &&
         launchIndex > reservationIndex &&
         markIndex > launchIndex,

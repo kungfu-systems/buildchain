@@ -1,0 +1,601 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-tail-contract-inventory",
+  "baseline": {
+    "branch": "dev/v3/v3.0",
+    "commit": "7c8956e8babb521d3e743d40108f115a59a40427",
+    "tree": "7e24ca6bafe98b571d94c3bcf07a9d38b31092c5",
+    "observedAt": "2026-08-07"
+  },
+  "reverseScan": {
+    "workflowInputs": [
+      ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.publication-authority.yml"
+    ],
+    "actionInputs": ["actions/promote-buildchain-ref/action.yml"],
+    "runtimeSources": [
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.publication-authority.yml",
+      "actions/promote-buildchain-ref/lib.js",
+      "actions/promote-buildchain-ref/internal/version-state-operations.js",
+      "packages/core/release-passport.js",
+      "packages/core/release-line-dry-run.js",
+      "scripts/release-line-dry-run.mjs"
+    ],
+    "workflowCommandNames": [
+      "consumer-gate-command",
+      "publication-commit-command",
+      "publication-consumer-qualification-command",
+      "publication-gate-command",
+      "publish-command",
+      "release-activation-command",
+      "release-passport-attachment-command",
+      "release-passport-evidence-command",
+      "release-passport-invariant-passport-command",
+      "release-passport-kfd-3-artifact-verify-command"
+    ],
+    "actionCommandNames": [
+      "publish-command",
+      "release-passport-attachment-command",
+      "release-passport-evidence-command",
+      "release-passport-invariant-passport-command",
+      "release-passport-kfd-3-artifact-verify-command",
+      "verification-command"
+    ],
+    "configAndCliAliases": [
+      "config:buildchain.toml#lifecycle.publish",
+      "cli:scripts/release-line-dry-run.mjs#--publish-command"
+    ],
+    "orphanPolicy": "Every command-bearing release-tail input, alias, default and execution site discovered in the declared production roots must have exactly one classification and migration disposition."
+  },
+  "canonicalTransaction": {
+    "id": "buildchain.release-tail/v1",
+    "owner": "Buildchain release transaction",
+    "singleWriter": true,
+    "states": [
+      "preparing",
+      "prepared",
+      "publishing",
+      "committing",
+      "activating",
+      "reading-back",
+      "settling",
+      "complete",
+      "blocked",
+      "repair-required",
+      "terminal-failure"
+    ],
+    "phases": [
+      {
+        "id": "prepare",
+        "consumes": ["declaration", "source-root", "candidate-root"],
+        "emits": ["effect-plan", "prepared-receipt"]
+      },
+      {
+        "id": "publish",
+        "consumes": ["artifact.publish effect-plan"],
+        "emits": ["provider-observation", "artifact-publication receipt"]
+      },
+      {
+        "id": "commit",
+        "consumes": ["signed-channel.commit effect-plan"],
+        "emits": ["provider-observation", "publication-commit receipt"]
+      },
+      {
+        "id": "activate",
+        "consumes": ["release.activate effect-plan"],
+        "emits": ["provider-observation", "activation receipt set"]
+      },
+      {
+        "id": "readback",
+        "consumes": ["all declared readback predicates"],
+        "emits": ["verified observations", "readback receipt"]
+      },
+      {
+        "id": "settle",
+        "consumes": ["all required receipt roots"],
+        "emits": ["released evidence", "terminal classification"]
+      }
+    ],
+    "operationIdentity": {
+      "schema": "kungfu.buildchain.release-tail.operation/v1",
+      "fields": [
+        "transactionRoot",
+        "capabilityId",
+        "subjectRoot",
+        "targetRoot",
+        "attemptKey"
+      ],
+      "derivation": "sha256(canonical-json(fields))"
+    },
+    "effectSchema": "kungfu.buildchain.release-tail.effect/v1",
+    "observationSchema": "kungfu.buildchain.release-tail.observation/v1",
+    "receiptSchema": "kungfu.buildchain.release-tail.receipt/v1",
+    "retryClasses": [
+      {
+        "id": "never",
+        "localAttempts": 0,
+        "exhausted": "terminal-failure"
+      },
+      {
+        "id": "readback",
+        "localAttempts": 2,
+        "exhausted": "repair-required"
+      },
+      {
+        "id": "provider-transient",
+        "localAttempts": 2,
+        "exhausted": "blocked"
+      }
+    ],
+    "terminalClasses": [
+      "complete",
+      "blocked",
+      "repair-required",
+      "terminal-failure"
+    ],
+    "adapterBoundary": {
+      "may": [
+        "translate a rooted effect into provider API calls",
+        "perform declared provider readback",
+        "return standardized observations"
+      ],
+      "mustNot": [
+        "choose transaction transitions",
+        "change capability or subject identity",
+        "synthesize terminal success",
+        "execute repository-supplied shell"
+      ]
+    }
+  },
+  "declarativeContract": {
+    "contract": "kungfu-buildchain-release-tail-capabilities",
+    "schemaVersion": 1,
+    "schemaPath": "contracts/release-tail-capabilities-v1.schema.json",
+    "fixturePaths": [
+      "contracts/fixtures/release-tail-capabilities-v1/kungfu-alpha.json"
+    ],
+    "requiredCapabilityIds": [
+      "artifact.publish",
+      "signed-channel.commit",
+      "release.activate",
+      "released-evidence.synthesize"
+    ],
+    "forbiddenKeys": ["command", "cmd", "script", "shell", "run"],
+    "requiredDimensions": [
+      "artifactRoles",
+      "destination",
+      "channelPolicy",
+      "activationPolicy",
+      "readbackPredicates",
+      "effect",
+      "observation",
+      "receipt",
+      "operationIdentity",
+      "idempotency",
+      "retry",
+      "evidenceRequirements"
+    ]
+  },
+  "providerPlane": {
+    "status": "preview-implemented",
+    "train": "train/v3/v3.0/declarative-release-provider-plane",
+    "bindingSchemaPath": "contracts/release-tail-provider-bindings-v1.schema.json",
+    "coreSources": [
+      "packages/core/release-tail-provider-plane.js",
+      "packages/core/release-tail-provider-adapters.js",
+      "packages/core/release-tail-compatibility.js"
+    ],
+    "entrySurfaces": [
+      "cli:release-tail",
+      "action:release-tail",
+      "workflow:release-tail"
+    ],
+    "executionRule": "All four fixed capabilities use the same durable transaction, rooted observation, receipt, and bounded local-retry implementation.",
+    "consumerCommandPolicy": "deny",
+    "productionCutover": false,
+    "selfDogfoodCutover": {
+      "status": "alpha-train",
+      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b",
+      "providerCapability": "artifact.publish",
+      "stableCutover": false
+    }
+  },
+  "publicationRehearsal": {
+    "status": "implemented",
+    "capsuleContract": "kungfu.buildchain.publication-rehearsal-capsule/v1",
+    "schemaPath": "contracts/publication-rehearsal-capsule-v1.schema.json",
+    "runtimeSource": "packages/core/publication-rehearsal-runtime.js",
+    "projectionSource": "packages/core/publication-rehearsal-projection.js",
+    "entrySurfaces": [
+      "cli:release-tail rehearse",
+      "action:release-tail",
+      "workflow:publication-rehearsal"
+    ],
+    "executionRule": "Local simulation, recorded replay, and hosted execution consume one explicit rooted capsule and execute the canonical release-tail transaction without a second state machine.",
+    "ambientAuthorityPolicy": "deny"
+  },
+  "legacyExecutableSurfaces": [
+    {
+      "id": "publication-admission-commands",
+      "classification": "pre-tail-policy",
+      "owner": "Buildchain publication authority",
+      "publicNames": [
+        "publication-gate-command",
+        "publication-consumer-qualification-command"
+      ],
+      "aliases": [
+        {
+          "name": "consumer-gate-command",
+          "scope": ".publication-authority internal workflow",
+          "default": ""
+        }
+      ],
+      "default": "disabled",
+      "coordinates": [
+        "workflow:.github/workflows/release-candidate-promote.yml#publication-gate-command",
+        "workflow:.github/workflows/release-candidate-promote.yml#publication-consumer-qualification-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#publication-gate-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#publication-consumer-qualification-command",
+        "workflow:.github/workflows/.publication-authority.yml#consumer-gate-command"
+      ],
+      "executionSites": [
+        {
+          "path": ".github/workflows/.publication-authority.yml",
+          "marker": "bash -euo pipefail -c \"$BUILDCHAIN_CONSUMER_GATE_COMMAND\""
+        },
+        {
+          "path": ".github/workflows/.release-candidate-promote.yml",
+          "marker": "run: ${{ inputs.publication-consumer-qualification-command }}"
+        }
+      ],
+      "currentCallers": ["kungfu-alpha-promotion"],
+      "replacement": "declarative admission predicates evaluated by Buildchain core",
+      "disposition": "migrate-before-release-tail-command-removal"
+    },
+    {
+      "id": "artifact-publication-command",
+      "classification": "release-tail",
+      "owner": "Buildchain publish transaction",
+      "publicNames": ["publish-command"],
+      "aliases": [
+        {
+          "name": "lifecycle.publish",
+          "scope": "buildchain.toml",
+          "default": "used when publish-command is empty"
+        },
+        {
+          "name": "--publish-command",
+          "scope": "release-line dry-run CLI",
+          "default": "plan-only empty string"
+        }
+      ],
+      "default": "lifecycle.publish, otherwise disabled",
+      "coordinates": [
+        "workflow:.github/workflows/release-candidate-promote.yml#publish-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#publish-command",
+        "action:actions/promote-buildchain-ref/action.yml#publish-command",
+        "config:buildchain.toml#lifecycle.publish",
+        "cli:scripts/release-line-dry-run.mjs#--publish-command"
+      ],
+      "executionSites": [
+        {
+          "path": "actions/promote-buildchain-ref/lib.js",
+          "marker": "function runPublishCommand({ cwd, command, loadedConfig, env })"
+        }
+      ],
+      "currentCallers": [
+        "buildchain-paper-release",
+        "buildchain-paper-release-sealed",
+        "kungfu-alpha-promotion"
+      ],
+      "replacement": "artifact.publish",
+      "disposition": "compatibility-adapter-only"
+    },
+    {
+      "id": "release-passport-producer-commands",
+      "classification": "release-tail-evidence-preparation",
+      "owner": "Buildchain release trust plane",
+      "publicNames": [
+        "release-passport-kfd-3-artifact-verify-command",
+        "release-passport-invariant-passport-command",
+        "release-passport-attachment-command"
+      ],
+      "aliases": [
+        {
+          "name": "release-passport-evidence-command",
+          "scope": "promote-buildchain-ref Action only",
+          "default": "deprecated alias for release-passport-attachment-command"
+        }
+      ],
+      "default": "disabled",
+      "coordinates": [
+        "workflow:.github/workflows/release-candidate-promote.yml#release-passport-kfd-3-artifact-verify-command",
+        "workflow:.github/workflows/release-candidate-promote.yml#release-passport-invariant-passport-command",
+        "workflow:.github/workflows/release-candidate-promote.yml#release-passport-attachment-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#release-passport-kfd-3-artifact-verify-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#release-passport-invariant-passport-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#release-passport-attachment-command",
+        "action:actions/promote-buildchain-ref/action.yml#release-passport-kfd-3-artifact-verify-command",
+        "action:actions/promote-buildchain-ref/action.yml#release-passport-invariant-passport-command",
+        "action:actions/promote-buildchain-ref/action.yml#release-passport-attachment-command",
+        "action:actions/promote-buildchain-ref/action.yml#release-passport-evidence-command"
+      ],
+      "executionSites": [
+        {
+          "path": "packages/core/release-passport.js",
+          "marker": "function parseJsonCommandOutput({ command = \"\", cwd = process.cwd(), label = \"command\" } = {})"
+        },
+        {
+          "path": "actions/promote-buildchain-ref/lib.js",
+          "marker": "function generateReleaseEvidenceInputs({"
+        }
+      ],
+      "currentCallers": ["kungfu-alpha-promotion", "libnode-alpha-promotion"],
+      "replacement": "typed evidence requirements and Buildchain-owned projectors",
+      "disposition": "split-alias-before-removal"
+    },
+    {
+      "id": "publication-commit-command",
+      "classification": "release-tail",
+      "owner": "Buildchain release transaction",
+      "publicNames": ["publication-commit-command"],
+      "aliases": [],
+      "default": "disabled",
+      "coordinates": [
+        "workflow:.github/workflows/release-candidate-promote.yml#publication-commit-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#publication-commit-command"
+      ],
+      "executionSites": [
+        {
+          "path": ".github/workflows/.release-candidate-promote.yml",
+          "marker": "bash -euo pipefail -c \"${BUILDCHAIN_PUBLICATION_COMMIT_COMMAND}\""
+        }
+      ],
+      "currentCallers": ["kungfu-alpha-promotion"],
+      "replacement": "signed-channel.commit",
+      "disposition": "compatibility-adapter-only"
+    },
+    {
+      "id": "release-activation-command",
+      "classification": "release-tail",
+      "owner": "Buildchain release transaction",
+      "publicNames": ["release-activation-command"],
+      "aliases": [],
+      "default": "disabled",
+      "coordinates": [
+        "workflow:.github/workflows/release-candidate-promote.yml#release-activation-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#release-activation-command"
+      ],
+      "executionSites": [
+        {
+          "path": ".github/workflows/.release-candidate-promote.yml",
+          "marker": "bash -euo pipefail -c \"${BUILDCHAIN_RELEASE_ACTIVATION_COMMAND}\""
+        }
+      ],
+      "currentCallers": ["kungfu-alpha-promotion"],
+      "replacement": "release.activate",
+      "disposition": "compatibility-adapter-only"
+    },
+    {
+      "id": "released-evidence-command",
+      "classification": "release-tail",
+      "owner": "Buildchain release transaction",
+      "publicNames": ["release-passport-evidence-command"],
+      "aliases": [
+        {
+          "name": "release-passport-evidence-command",
+          "scope": "promote-buildchain-ref Action",
+          "default": "deprecated attachment-command alias with incompatible semantics"
+        }
+      ],
+      "default": "disabled",
+      "coordinates": [
+        "workflow:.github/workflows/release-candidate-promote.yml#release-passport-evidence-command",
+        "workflow:.github/workflows/.release-candidate-promote.yml#release-passport-evidence-command"
+      ],
+      "executionSites": [
+        {
+          "path": ".github/workflows/.release-candidate-promote.yml",
+          "marker": "bash -euo pipefail -c \"${{ inputs.release-passport-evidence-command }}\""
+        }
+      ],
+      "currentCallers": ["kungfu-alpha-promotion"],
+      "replacement": "released-evidence.synthesize",
+      "disposition": "reject-cross-layer-alias-and-migrate"
+    },
+    {
+      "id": "version-state-verification-command",
+      "classification": "adjacent-non-tail",
+      "owner": "Buildchain version-state plane",
+      "publicNames": ["verification-command"],
+      "aliases": [
+        {
+          "name": "lifecycle.verify or lifecycle.version-state",
+          "scope": "buildchain.toml",
+          "default": "used when verification-command is empty"
+        }
+      ],
+      "default": "configured lifecycle or disabled",
+      "coordinates": [
+        "action:actions/promote-buildchain-ref/action.yml#verification-command"
+      ],
+      "executionSites": [
+        {
+          "path": "actions/promote-buildchain-ref/internal/version-state-operations.js",
+          "marker": "runVersionVerification({"
+        }
+      ],
+      "currentCallers": [],
+      "replacement": "out of release-tail contract scope",
+      "disposition": "retain-separate-version-state-contract"
+    }
+  ],
+  "managedConsumerCallers": [
+    {
+      "id": "buildchain-self-bootstrap",
+      "repository": "kungfu-systems/buildchain",
+      "sourceCommit": "7c8956e8babb521d3e743d40108f115a59a40427",
+      "sourceTree": "7e24ca6bafe98b571d94c3bcf07a9d38b31092c5",
+      "workflow": ".github/workflows/buildchain-ref-promotion.yml",
+      "runtimeRef": "local exact checkout",
+      "executableSurfaceIds": []
+    },
+    {
+      "id": "buildchain-paper-release",
+      "repository": "kungfu-systems/buildchain",
+      "sourceCommit": "7c8956e8babb521d3e743d40108f115a59a40427",
+      "sourceTree": "7e24ca6bafe98b571d94c3bcf07a9d38b31092c5",
+      "workflow": ".github/workflows/paper-release.yml",
+      "runtimeRef": "local bundled Action",
+      "executableSurfaceIds": ["artifact-publication-command"]
+    },
+    {
+      "id": "buildchain-paper-release-sealed",
+      "repository": "kungfu-systems/buildchain",
+      "sourceCommit": "7c8956e8babb521d3e743d40108f115a59a40427",
+      "sourceTree": "7e24ca6bafe98b571d94c3bcf07a9d38b31092c5",
+      "workflow": ".github/workflows/paper-release-sealed.yml",
+      "runtimeRef": "local bundled Action",
+      "executableSurfaceIds": ["artifact-publication-command"]
+    },
+    {
+      "id": "kungfu-alpha-promotion",
+      "repository": "kungfu-systems/kungfu",
+      "sourceCommit": "445ec32d6bf53dd5ff502d685792406ad38dd4f5",
+      "sourceTree": "4963b2f9deb0245f7277cea7224ab0d062a0cc54",
+      "workflow": ".github/workflows/release-new-version.yml",
+      "runtimeRef": "train/v3/v3.0/resume-candidate-run",
+      "executableSurfaceIds": [
+        "publication-admission-commands",
+        "artifact-publication-command",
+        "release-passport-producer-commands",
+        "publication-commit-command",
+        "release-activation-command",
+        "released-evidence-command"
+      ]
+    },
+    {
+      "id": "libnode-alpha-promotion",
+      "repository": "kungfu-systems/libnode",
+      "sourceCommit": "4bef69b88a441f22024fa9f3d7bfd76a89963e8a",
+      "sourceTree": "6c4dec7fd70cbdcfbc9ada19e66271654eb393af",
+      "workflow": ".github/workflows/release-new-version.yml",
+      "runtimeRef": "v3-alpha",
+      "executableSurfaceIds": ["release-passport-producer-commands"]
+    },
+    {
+      "id": "kfd-alpha-promotion",
+      "repository": "kungfu-systems/kfd",
+      "sourceCommit": "e82fe11acecdbebfd0c42778c7a1bd6fdc54ab81",
+      "sourceTree": "fe0ad4f4b98889c7c246fe16958e118ff79b193b",
+      "workflow": ".github/workflows/buildchain-ref-promotion.yml",
+      "runtimeRef": "v3-alpha",
+      "executableSurfaceIds": []
+    },
+    {
+      "id": "paper-white-paper-promotion",
+      "repository": "kungfu-systems/paper-kungfu-product-white-paper",
+      "sourceCommit": "82dd748d6b0edf18d0074262cc8d8ac803e45c7e",
+      "sourceTree": "a918f8840608931fdf88d007e20bc4f70ab7eb54",
+      "workflow": ".github/workflows/buildchain-ref-promotion.yml",
+      "runtimeRef": "v3",
+      "executableSurfaceIds": []
+    }
+  ],
+  "excludedCallers": [
+    {
+      "repository": "kungfu-systems/agent-hub-demo",
+      "sourceCommit": "633111450867919d5063298308cdbfcbd77a8d2e",
+      "workflow": ".github/workflows/buildchain-ref-promotion.yml",
+      "runtimeRef": "v2",
+      "reason": "outside the Buildchain v3 contract inventory"
+    }
+  ],
+  "migration": {
+    "compatibilityWindow": {
+      "startsAt": "train/v3/v3.0/release-tail-contract",
+      "maximumDurationDays": 90,
+      "maximumMinorLines": 2,
+      "closesAt": "the earlier of 90 days after train publication or the first v3.2 stable release",
+      "permanentEscapeHatch": false
+    },
+    "publishedReleasePreservation": [
+      "Never rewrite a published tag, release asset, package coordinate, signed channel document, Passport, or receipt.",
+      "The compatibility reader may replay only exact retained declarations or exact enumerated legacy commands bound to their original source and transaction roots.",
+      "A migrated declaration creates a new transaction; it does not reinterpret an already settled release."
+    ],
+    "rejectionRules": [
+      {
+        "code": "release-tail-command-forbidden",
+        "condition": "a new or unregistered command-bearing release-tail input is discovered",
+        "terminal": true
+      },
+      {
+        "code": "release-tail-alias-collision",
+        "condition": "one public name maps to more than one semantic capability",
+        "terminal": true
+      },
+      {
+        "code": "release-tail-operation-id-missing",
+        "condition": "an effect lacks stable subject, target, capability and attempt identity",
+        "terminal": true
+      },
+      {
+        "code": "release-tail-readback-missing",
+        "condition": "a mutation has no declared readback predicate and receipt schema",
+        "terminal": true
+      },
+      {
+        "code": "release-tail-retry-unbounded",
+        "condition": "a declaration or adapter requests unbounded local retry",
+        "terminal": true
+      }
+    ],
+    "exceptionLedger": [
+      {
+        "id": "legacy-buildchain-paper-publish",
+        "owner": "Buildchain maintainers",
+        "surfaceIds": ["artifact-publication-command"],
+        "callers": [
+          "buildchain-paper-release",
+          "buildchain-paper-release-sealed"
+        ],
+        "expires": "compatibility-window-close",
+        "removalTest": "both paper workflows consume capability declarations with no command inputs"
+      },
+      {
+        "id": "legacy-kungfu-release-tail",
+        "owner": "Kungfu release maintainers",
+        "surfaceIds": [
+          "publication-admission-commands",
+          "artifact-publication-command",
+          "release-passport-producer-commands",
+          "publication-commit-command",
+          "release-activation-command",
+          "released-evidence-command"
+        ],
+        "callers": ["kungfu-alpha-promotion"],
+        "expires": "compatibility-window-close",
+        "removalTest": "Kungfu alpha declares all four capabilities and the legacy command inputs are absent"
+      },
+      {
+        "id": "legacy-libnode-passport-producer",
+        "owner": "Libnode release maintainers",
+        "surfaceIds": ["release-passport-producer-commands"],
+        "callers": ["libnode-alpha-promotion"],
+        "expires": "compatibility-window-close",
+        "removalTest": "Libnode artifact witness is selected by a typed evidence requirement"
+      }
+    ],
+    "cutoverOrder": [
+      "Buildchain paper release callers and self-bootstrap no-command regression",
+      "Kungfu alpha end-to-end release tail",
+      "Libnode evidence producer",
+      "KFD and white-paper no-command regression verification",
+      "remove the direct-Action evidence alias",
+      "reject every remaining arbitrary command input"
+    ]
+  }
+}

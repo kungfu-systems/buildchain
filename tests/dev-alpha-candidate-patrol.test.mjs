@@ -194,6 +194,8 @@ function client({
   sourceHistory = [SOURCE_SHA],
   runs = [apiRun(DEV), apiRun(ALPHA)],
   comparison = { status: "ahead", ahead_by: 4 },
+  comparisons,
+  promotionBaseline,
   openPullRequests = [],
 } = {}) {
   const calls = [];
@@ -201,7 +203,9 @@ function client({
     calls,
     resolveBranch: async (branch) =>
       branch.startsWith("dev/") ? sourceHead : TARGET_SHA,
-    compare: async () => comparison,
+    compare: async (baseSha, headSha) =>
+      comparisons?.get(`${baseSha}...${headSha}`) || comparison,
+    resolveManagedPromotionBaseline: async () => promotionBaseline || null,
     listBranchHistory: async () => sourceHistory,
     listCompletedWorkflowRuns: async (workflowPath) =>
       runs.filter((run) => run.path === workflowPath),
@@ -221,6 +225,54 @@ function client({
       calls.push(["update-pr", number, body]),
   };
 }
+
+test("managed Alpha promotion merge uses its exact source as the patrol baseline", async () => {
+  const promotedSourceSha = "e".repeat(40);
+  const fake = client({
+    promotionBaseline: {
+      mode: "managed-candidate-merge-source",
+      targetSha: TARGET_SHA,
+      sourceSha: promotedSourceSha,
+      pullRequestNumber: 2536,
+      pullRequestUrl: "https://example.invalid/pull/2536",
+    },
+    comparisons: new Map([
+      [`${TARGET_SHA}...${SOURCE_SHA}`, { status: "diverged", ahead_by: 3 }],
+      [
+        `${promotedSourceSha}...${SOURCE_SHA}`,
+        { status: "ahead", ahead_by: 2 },
+      ],
+    ]),
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, createPullRequest: false, dryRun: true },
+    fake,
+  );
+  assert.equal(result.decision.eligible, true);
+  assert.equal(
+    result.decision.selection.mode,
+    "latest-qualified-source-after-managed-promotion",
+  );
+  assert.deepEqual(result.decision.selection.targetBaseline, {
+    mode: "managed-candidate-merge-source",
+    targetSha: TARGET_SHA,
+    sourceSha: promotedSourceSha,
+    pullRequestNumber: 2536,
+    pullRequestUrl: "https://example.invalid/pull/2536",
+  });
+});
+
+test("unmanaged target divergence remains ineligible", async () => {
+  const fake = client({
+    comparison: { status: "diverged", ahead_by: 3 },
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, createPullRequest: false, dryRun: true },
+    fake,
+  );
+  assert.equal(result.decision.eligible, false);
+  assert.equal(result.decision.reason, "source-does-not-lead-target");
+});
 
 const patrolOptions = {
   repository: "kungfu-systems/kungfu",
@@ -318,6 +370,32 @@ test("a failed latest rerun excludes that SHA and falls back to the next qualifi
   assert.equal(selected.skippedNewerCommitCount, 1);
 });
 
+test("a cancelled duplicate preserves the latest completed qualification verdict", () => {
+  const selected = selectLatestQualifiedSource({
+    sourceHistory: [SOURCE_SHA],
+    workflowRunsByPath: new Map([
+      [
+        DEV,
+        [
+          apiRun(DEV),
+          apiRun(DEV, {
+            id: 303,
+            conclusion: "cancelled",
+          }),
+        ],
+      ],
+      [ALPHA, [apiRun(ALPHA)]],
+    ]),
+    requiredWorkflowPaths: [DEV, ALPHA],
+    now: NOW,
+    maxAgeSeconds: 86400,
+  });
+  assert.equal(selected.sourceSha, SOURCE_SHA);
+  assert.equal(selected.skippedNewerCommitCount, 0);
+  assert.equal(selected.workflowEvidence[0].runId, 101);
+  assert.equal(selected.workflowEvidence[0].conclusion, "success");
+});
+
 test("patrol fails closed when no source ancestor has the complete evidence pair", async () => {
   const fake = client({ runs: [apiRun(ALPHA)] });
   const result = await runDevAlphaCandidatePatrol(
@@ -346,10 +424,7 @@ test("candidate mode creates only an immutable branch and protected PR request",
   ]);
   assert.equal(fake.calls[1][0], "pr");
   assert.equal(fake.calls[1][1].base, "alpha/v4/v4.0");
-  assert.doesNotMatch(
-    fake.calls[1][1].body,
-    /publish npm|create release/iu,
-  );
+  assert.doesNotMatch(fake.calls[1][1].body, /publish npm|create release/iu);
   assert.equal(result.controller.state, "active");
   assert.equal(result.controller.settlementAction, "create-active-candidate");
   assert.equal(
@@ -415,7 +490,10 @@ test("candidate settlement preserves already-enabled auto-merge idempotently", a
     fake,
   );
 
-  assert.equal(fake.calls.some(([operation]) => operation === "auto-merge"), false);
+  assert.equal(
+    fake.calls.some(([operation]) => operation === "auto-merge"),
+    false,
+  );
   assert.equal(result.autoMerge.enabled, true);
 });
 
@@ -915,8 +993,5 @@ test("reusable workflow retains the no-publication boundary", () => {
   assert.match(settleJob, /BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE/u);
   assert.match(settleJob, /BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD/u);
   assert.match(workflowText, /scripts\/dev-alpha-candidate-patrol\.mjs/u);
-  assert.doesNotMatch(
-    workflowText,
-    /npm publish|gh release create|git tag/iu,
-  );
+  assert.doesNotMatch(workflowText, /npm publish|gh release create|git tag/iu);
 });

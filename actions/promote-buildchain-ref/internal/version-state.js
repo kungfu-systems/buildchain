@@ -252,6 +252,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     ".buildchain/release-evidence/",
     ".buildchain/release-passport/",
     ".buildchain/release-state/",
+    ".buildchain/promotion-shell/",
     ".buildchain/runtime/",
   ];
   const isEphemeralBuildchainEvidence = (status, filePath) =>
@@ -316,13 +317,13 @@ function runVersionVerification({
   version,
   changedFiles,
   allowedPaths,
-  env: extraEnv,
+  env: extraEnv, runLifecycleVerify = true,
 }) {
   const lifecycleVerify = getLifecycleStage(loadedConfig, "verify");
   const lifecycleVersionState =
     getLifecycleStage(loadedConfig, "version-state") ||
     getLifecycleStage(loadedConfig, "version_state");
-  if (!command && !lifecycleVerify && !lifecycleVersionState) {
+  if (!command && (!runLifecycleVerify || !lifecycleVerify) && !lifecycleVersionState) {
     return changedFiles;
   }
   applyLocalVersionState(cwd, changedFiles);
@@ -339,7 +340,7 @@ function runVersionVerification({
   const env = { ...process.env, ...lifecycleEnv };
   if (command) {
     execSync(command, { cwd, env, stdio: "inherit", shell: true });
-  } else {
+  } else if (runLifecycleVerify && lifecycleVerify) {
     runLifecycleStage({
       cwd,
       loadedConfig,

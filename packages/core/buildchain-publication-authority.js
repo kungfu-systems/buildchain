@@ -24,6 +24,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/build-surface-fixture.yml", "non-publication-oidc"],
   [".github/workflows/build.yml", "non-publication-oidc"],
   [".github/workflows/buildchain-alpha-self-dogfood.yml", "non-publication-oidc"],
+  [".github/workflows/buildchain-dev-delivery.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-daily.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-monthly.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-weekly.yml", "governance-write"],
@@ -32,6 +33,8 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/buildchain-stable-candidate-patrol.yml", "governance-write"],
   [".github/workflows/dev-qualification-patrol.yml", "governance-write"],
   [".github/workflows/dev-alpha-candidate-patrol.yml", "governance-write"],
+  [".github/workflows/dev-delivery-warrant-close.yml", "governance-write"],
+  [".github/workflows/dev-delivery-warrant-cancel.yml", "governance-write"],
   [".github/workflows/dev-merge-queue-governance.yml", "governance-write"],
   [".github/workflows/dev-pr-auto-merge.yml", "governance-write"],
   [".github/workflows/github-governance-audit.yml", "governance-write"],
@@ -47,6 +50,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/release-candidate-promote.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/release-line-bootstrap.yml", "governance-write"],
   [".github/workflows/release-propagation.yml", "governance-write"],
+  [".github/workflows/release-tail.yml", "product-publication", true, ["artifact.publish", "signed-channel.commit", "release.activate", "released-evidence.synthesize"], "caller-secrets", "caller-bound", "caller-bound", "fixed"],
   [".github/workflows/release-verify.yml", "governance-write"],
   [".github/workflows/stable-candidate-patrol.yml", "governance-write"],
 ]);
@@ -75,7 +79,6 @@ export function buildchainPublicationAuthorityDescriptors() {
     runnerPolicy: publicationCapable ? "qualified-measured" : "unqualified",
   }));
 }
-
 export function createBuildchainPublicationAuthorityRegistry({ root = process.cwd() } = {}) {
   const workflowsDir = path.join(root, ".github", "workflows");
   const workflows = fs.readdirSync(workflowsDir)

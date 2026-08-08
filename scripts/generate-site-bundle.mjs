@@ -56,7 +56,6 @@ const requireFromHere = createRequire(import.meta.url);
 function readText(rel) {
   return fs.readFileSync(path.join(root, rel), "utf8");
 }
-
 function readJson(rel) {
   return JSON.parse(readText(rel));
 }
@@ -361,6 +360,9 @@ const manualMetaById = new Map(Object.entries({
   "auditable-demo": { capabilityGroup: "reusable-build", audience: ["consumer", "agent"], maturity: "preview", order: 207 },
   "binary-distribution": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 110 },
   "publish-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator"], maturity: "stable", order: 120 },
+  "release-tail-contract": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent", "maintainer"], maturity: "draft", order: 122 },
+  "release-tail-provider-plane": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent", "maintainer"], maturity: "preview", order: 123 },
+  "publication-rehearsal": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent", "maintainer"], maturity: "preview", order: 124 },
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
@@ -515,16 +517,18 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
 
 function workflowCapabilityGroup(entry) {
   if (entry.id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
+  if (entry.id === "release-tail") return capabilityGroup("release-passport-trust");
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
   if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
-  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge")) return capabilityGroup("governance-versioning");
+  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge") || entry.id.includes("dev-delivery-warrant") || entry.id.includes("buildchain-dev-delivery")) return capabilityGroup("governance-versioning");
   if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
   return capabilityGroup("api-cli-reference");
 }
 
 function actionCapabilityGroup(id) {
   if (id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
+  if (id === "release-tail") return capabilityGroup("release-passport-trust");
   if (id === "promote-buildchain-ref") return capabilityGroup("release-passport-trust");
   if (id === "run-lifecycle" || id === "validate-config") return capabilityGroup("reusable-build");
   if (id === "report-buildchain-issue") return capabilityGroup("observability-diagnostics");
@@ -777,7 +781,9 @@ function buildSiteBundle() {
         ["release-candidate-promote", "release-governance"],
         ["paper-release", "reusable-build"],
         ["release-propagation", "release-propagation"],
+        ["release-tail", "release-tail-provider-plane"],
         ["dev-pr-auto-merge", "dev-governance"],
+        ["buildchain-dev-delivery", "dev-governance"],
         ["github-governance-audit", "dev-governance"],
         ["binary-distribution", "release-passport"],
         ["github-artifact-attestation", "release-passport"],
@@ -901,6 +907,9 @@ function buildSiteBundle() {
       "buildchain.release.json",
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
+      "schemas/publication-rehearsal-capsule-v1.schema.json",
+      "schemas/release-tail-capabilities-v1.schema.json",
+      "schemas/release-tail-provider-bindings-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/kfd-support-projection-v1.schema.json",
@@ -936,6 +945,9 @@ function buildSiteBundle() {
       "artifact-schemas.json",
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
+      "schemas/publication-rehearsal-capsule-v1.schema.json",
+      "schemas/release-tail-capabilities-v1.schema.json",
+      "schemas/release-tail-provider-bindings-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/kfd-support-projection-v1.schema.json",
@@ -1067,6 +1079,9 @@ function buildSiteBundle() {
       "artifact-schemas.json",
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
+      "schemas/publication-rehearsal-capsule-v1.schema.json",
+      "schemas/release-tail-capabilities-v1.schema.json",
+      "schemas/release-tail-provider-bindings-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/kfd-support-projection-v1.schema.json",
@@ -1242,6 +1257,15 @@ function buildSiteBundle() {
     "artifact-schemas.json": artifactSchemas,
     "release-passport-check-manifest.json": createReleasePassportCheckManifest(),
     "schemas/release-passport-v1.schema.json": RELEASE_PASSPORT_SCHEMA,
+    "schemas/publication-rehearsal-capsule-v1.schema.json": readJson(
+      "contracts/publication-rehearsal-capsule-v1.schema.json",
+    ),
+    "schemas/release-tail-capabilities-v1.schema.json": readJson(
+      "contracts/release-tail-capabilities-v1.schema.json",
+    ),
+    "schemas/release-tail-provider-bindings-v1.schema.json": readJson(
+      "contracts/release-tail-provider-bindings-v1.schema.json",
+    ),
     "schemas/kfd-agent-hub-adoption.schema.json": KFD_AGENT_HUB_ADOPTION_SCHEMA,
     "schemas/kfd-product-gate-input-v1.schema.json": KFD_PRODUCT_GATE_INPUT_SCHEMA,
     "schemas/kfd-support-projection-v1.schema.json": KFD_SUPPORT_PROJECTION_SCHEMA,

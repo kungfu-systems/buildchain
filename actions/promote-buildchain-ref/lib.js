@@ -82,6 +82,7 @@ import {
   verifyReleasePassport,
 } from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
+import { validateReleaseCandidateRecoveryReceipt } from "../../packages/core/release-candidate-recovery.js";
 import { verifyPublicationQualificationReceipt } from "../../packages/core/publication-authority.js";
 import {
   createBuildchainKfd1Witness,
@@ -518,7 +519,9 @@ function validatePromotionReleaseCandidate({
   buildSummaryPath = ".buildchain/artifacts/build-summary.json",
   repository,
   targetChannel,
+  targetRef = "",
   version = "",
+  recoveryReceiptPath = "",
   sourceHeadSha,
   sourceTreeSha = "",
   requirePlatforms = true,
@@ -542,7 +545,7 @@ function validatePromotionReleaseCandidate({
     passport,
     repository,
     targetChannel: releaseCandidateEvidenceChannel(targetChannel),
-    version,
+    version: recoveryReceiptPath ? "" : version,
     buildSummary,
     requirePlatforms,
     requireFamilyEvidence,
@@ -550,6 +553,26 @@ function validatePromotionReleaseCandidate({
     familyInitiativeId,
     familyAssignmentId,
   });
+  let recoveryReceiptValidation;
+  if (recoveryReceiptPath) {
+    const resolvedRecoveryReceiptPath = resolveMaybeRelative(cwd, recoveryReceiptPath);
+    if (!fs.existsSync(resolvedRecoveryReceiptPath)) {
+      validation.errors.push(`recovery receipt is missing: ${recoveryReceiptPath}`);
+    } else {
+      const recoveryReceipt = JSON.parse(fs.readFileSync(resolvedRecoveryReceiptPath, "utf8"));
+      recoveryReceiptValidation = validateReleaseCandidateRecoveryReceipt({
+        receipt: recoveryReceipt,
+        passport,
+        repository,
+        targetChannel: releaseCandidateEvidenceChannel(targetChannel),
+        targetRef,
+        targetSha: sourceHeadSha,
+        targetTree: sourceTreeSha,
+        version,
+      });
+      validation.errors.push(...recoveryReceiptValidation.errors.map((error) => `recovery receipt: ${error}`));
+    }
+  }
   const acceptedSourceShas = [
     passport.source?.headSha,
     passport.source?.mergeRefSha,
@@ -582,6 +605,8 @@ function validatePromotionReleaseCandidate({
     promotionChannelTreeSha: sourceTreeSha || "",
     treeEquivalent: Boolean(sourceTreeSha && sourceTreeHash && sourceTreeSha === sourceTreeHash,
     ),
+    recoveredCandidate: recoveryReceiptValidation?.ok === true,
+    publicationVersionBinding: recoveryReceiptValidation?.ok ? "recovery-receipt" : "candidate-passport",
   };
 }
 
@@ -1079,6 +1104,7 @@ function preparePublishTransactionContext({
   publishCommand = "",
   publishEvidencePath = "",
   transactionStatePath = "",
+  expectedTransactionId = "",
   publishSealedBundleRoot = "",
   publishSealedBundleManifest = "",
   publishRequiredArtifactsJson = "",
@@ -1173,6 +1199,7 @@ function preparePublishTransactionContext({
     actor, runId, explicitOverride, allowVersionStateFinalization, promotionGeneratedAt,
     repository, resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
     existingNpmPromotion, expected, durableStateRef, requestedBundleRoot, requestedBundleManifest,
+    expectedTransactionId: String(expectedTransactionId || "").trim(),
   };
 }
 
@@ -1180,7 +1207,7 @@ async function restorePublishTransactionContext(context) {
   const {
     octokit, owner, repo, cwd, version, channel, sourceSha, releaseSha, targetRef,
     requiredArtifacts, expected, durableStateRef, resolvedStatePath, resolvedEvidencePath,
-    requestedBundleRoot, requestedBundleManifest,
+    requestedBundleRoot, requestedBundleManifest, expectedTransactionId,
   } = context;
   const durableExisting = await restoreDurableReleaseTransaction({
     octokit,
@@ -1198,6 +1225,12 @@ async function restorePublishTransactionContext(context) {
     );
   }
   let existing = durableExisting || localExisting;
+  if (expectedTransactionId && !existing) {
+    throw new Error(`expected release transaction ${expectedTransactionId} does not exist`);
+  }
+  if (expectedTransactionId && existing.id !== expectedTransactionId) {
+    throw new Error(`release transaction identity mismatch: expected ${expectedTransactionId}, got ${existing.id}`);
+  }
   const durableBundleVerification = durableExisting?.sealed_bundle?.root
     ? readAndVerifySealedBundle({
         cwd,
@@ -1220,16 +1253,18 @@ async function restorePublishTransactionContext(context) {
           manifest: localExisting.sealed_bundle,
         })
       : undefined;
-  if (
+  const sealedBundleRootMismatch =
     durableBundleVerification &&
     requestedBundleVerification &&
     durableBundleVerification.root !== requestedBundleVerification.root
-  ) {
-    throw new Error(
-      `sealed bundle root mismatch: durable=${durableBundleVerification.root} requested=${requestedBundleVerification.root}`,
-    );
-  }
+      ? `sealed bundle root mismatch: durable=${durableBundleVerification.root} requested=${requestedBundleVerification.root}`
+      : "";
   let sealedBundleVerification = durableBundleVerification || requestedBundleVerification || localBundleVerification;
+  const sealedVersion = String(sealedBundleVerification?.npm?.version || "").trim();
+  const publishSealedNpmTarball = sealedVersion === version;
+  if (sealedVersion && !publishSealedNpmTarball && !(channel === "release" && sealedVersion.startsWith(`${version}-alpha.`))) {
+    throw new Error(`publication sealed bundle npm version ${sealedVersion} does not match ${version}`);
+  }
   let existingEvidence = readPublishEvidence(resolvedEvidencePath);
   let existingValidation;
   if (existingEvidence) {
@@ -1245,8 +1280,10 @@ async function restorePublishTransactionContext(context) {
       requiredArtifacts,
     });
   }
-  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, existingEvidence, existingValidation };
+  return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, sealedBundleRootMismatch, publishSealedNpmTarball, existingEvidence, existingValidation };
 }
+
+function assertSealedBundleRootCompatibility(mismatch, versionStateFinalization) { if (mismatch && !versionStateFinalization) throw new Error(mismatch); }
 
 async function canFinalizePublishVersionState({ context, error, existing }) {
   const {
@@ -1343,7 +1380,7 @@ async function resolvePublishTransactionResume(context) {
 function publishTransactionEnvironment({
   version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
-  requiredArtifacts, publishContract,
+  publishSealedNpmTarball, requiredArtifacts, publishContract,
 }) {
   return {
     BUILDCHAIN_VERSION: version,
@@ -1363,11 +1400,9 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
     BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
     BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundleVerification?.root || "",
-    BUILDCHAIN_SEALED_NPM_TARBALL:
-      sealedBundleVerification?.npm.absolutePath || "",
-    BUILDCHAIN_SEALED_NPM_INTEGRITY:
-      sealedBundleVerification?.npm.integrity || "",
-    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundleVerification?.npm.sha256 || "",
+    BUILDCHAIN_SEALED_NPM_TARBALL: (publishSealedNpmTarball && sealedBundleVerification?.npm.absolutePath) || "",
+    BUILDCHAIN_SEALED_NPM_INTEGRITY: (publishSealedNpmTarball && sealedBundleVerification?.npm.integrity) || "",
+    BUILDCHAIN_SEALED_NPM_SHA256: (publishSealedNpmTarball && sealedBundleVerification?.npm.sha256) || "",
     BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
@@ -1388,8 +1423,8 @@ async function runPublishTransaction(options) {
     actor, runId, explicitOverride, promotionGeneratedAt, repository,
     resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
     existingNpmPromotion, expected, durableExisting, existing, existingEvidence,
-    existingValidation, sealedBundleVerification, versionStateFinalization,
-  } = context;
+    existingValidation, sealedBundleVerification, sealedBundleRootMismatch, versionStateFinalization,
+  } = context; assertSealedBundleRootCompatibility(sealedBundleRootMismatch, versionStateFinalization);
   let transaction =
     existing ||
     createReleaseTransaction({
@@ -2801,14 +2836,17 @@ async function resumableAlphaTransactionState({
           transactionReleaseSha: transaction?.release_material_sha,
         })
       ));
+    const exactCompletedTransaction =
+      transaction?.state === "complete" && exactTransactionSource;
     if (
       transaction &&
       (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state,
-      ) &&
-      (exactTransactionSource || transactionInSourceHistory)
+      !["abandoned", "failed_permanently"].includes(transaction.state) &&
+      (exactCompletedTransaction ||
+        (transaction.state !== "complete" &&
+          (exactTransactionSource || transactionInSourceHistory)))
     ) {
       return {
         ...candidate,
@@ -2877,9 +2915,9 @@ async function resumableReleaseTransactionState({
       (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state,
-      ) &&
-      (exactTransactionSource || transactionInSourceHistory)
+      !["abandoned", "failed_permanently"].includes(transaction.state) &&
+      (transaction.state === "complete" ? exactTransactionSource
+        : exactTransactionSource || transactionInSourceHistory)
     ) {
       return {
         ...candidate,
@@ -4469,6 +4507,7 @@ async function promoteBuildchainRefs({
   targetRef,
   tags,
   dryRun = false,
+  planBeforeTargetAdvance = false,
   allowRepository = DEFAULT_REPOSITORY,
   cwd = process.cwd(),
   versionState = true,
@@ -4487,6 +4526,7 @@ async function promoteBuildchainRefs({
   publishCommand = "",
   publishEvidencePath = "",
   transactionStatePath = "",
+  expectedTransactionId = "",
   publishSealedBundleRoot = "",
   publishSealedBundleManifest = "",
   publishRequiredArtifactsJson = "",
@@ -4529,6 +4569,7 @@ async function promoteBuildchainRefs({
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releaseCandidateVersion = "",
+  releaseCandidateRecoveryReceiptPath = "",
   releaseCandidateFamilyEvidenceRequired = false,
   releaseCandidateFamilyEvidenceRoot = "",
   releaseCandidateFamilyInitiativeId = "",
@@ -4540,6 +4581,9 @@ async function promoteBuildchainRefs({
   assertPromotableRepository(owner, repo, allowRepository);
   assertPromotableTargetRef(targetRef);
   assertSha(sha);
+  if (planBeforeTargetAdvance && !dryRun) {
+    throw new Error("plan-before-target-advance is restricted to dry-run publication planning");
+  }
   const rule = getPromotionRule(targetRef);
   const assertPublicationQualification = ({ version = expectedPublicationVersion, channel = rule.channel } = {}) => {
     if (!requirePublicationQualification || dryRun) return;
@@ -4575,9 +4619,19 @@ async function promoteBuildchainRefs({
     repo,
     ref: `heads/${targetRef}`,
   });
-  const branchSha = branchRef.object.sha; let advancedPublicationTransaction;
+  const branchSha = branchRef.object.sha;
+  let advancedPublicationTransaction;
+  let plannedBeforeTargetAdvance;
   if (branchSha !== sha) {
-    if (requireGovernance && !dryRun) {
+    if (planBeforeTargetAdvance) {
+      plannedBeforeTargetAdvance = {
+        action: "planned-before-target-advance",
+        ref: targetRef,
+        observedTargetSha: branchSha,
+        requestedSourceSha: sha,
+        sha,
+      };
+    } else if (requireGovernance && !dryRun) {
       const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
         owner,
         repo,
@@ -4622,12 +4676,16 @@ async function promoteBuildchainRefs({
     } else if (dryRun && publishTransactionOverride && Boolean(publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
       const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${sha}...${branchSha}` }); const statePrefix = rule.releasePrefix.replace(/^v/, "").replaceAll(".", "-"); const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({ owner, repo, ref: `heads/buildchain/release-state/${statePrefix}-` }); const resumeResolver = rule.channel === "alpha" ? resumableAlphaTransactionState : rule.channel === "release" ? resumableReleaseTransactionState : undefined; const resumable = resumeResolver && await resumeResolver({ octokit, owner, repo, cwd, refs: stateRefs, releasePrefix: rule.releasePrefix, targetRef, sourceSha: sha, expectedVersion: expectedPublicationVersion }); if (comparison.status !== "ahead") throw new Error(`Ref ${targetRef} moved incompatibly from requested SHA ${sha} to ${branchSha} (${comparison.status})`); if (!resumable) throw new Error(`Ref ${targetRef} advanced to ${branchSha}, but no exact resumable transaction accepts requested SHA ${sha}`); advancedPublicationTransaction = resumable.transaction;
     }
-    if (!advancedPublicationTransaction) {
+    if (!advancedPublicationTransaction && !plannedBeforeTargetAdvance) {
       throw new Error(`Ref ${targetRef} points at ${branchSha}, not requested SHA ${sha}`);
     }
   }
 
-  const updates = []; if (advancedPublicationTransaction) {
+  const updates = [];
+  if (plannedBeforeTargetAdvance) {
+    updates.push(plannedBeforeTargetAdvance);
+  }
+  if (advancedPublicationTransaction) {
     updates.push({
       action: "resumed-advanced-publication",
       ref: targetRef,
@@ -4649,6 +4707,8 @@ async function promoteBuildchainRefs({
       repository: `${owner}/${repo}`,
       targetChannel: rule.channel,
       version: releaseCandidateVersion,
+      recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
+      targetRef,
       sourceHeadSha: sha,
       sourceTreeSha: targetCommitInfo.treeSha,
       requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
@@ -4662,6 +4722,7 @@ async function promoteBuildchainRefs({
       candidateHash: releaseCandidateValidation.candidateHash,
       platformCount: releaseCandidateValidation.platformCount,
       passportPath: path.relative(cwd, releaseCandidateValidation.passportPath).split(path.sep).join("/"),
+      publicationVersionBinding: releaseCandidateValidation.publicationVersionBinding,
     });
   }
 
@@ -4693,6 +4754,7 @@ async function promoteBuildchainRefs({
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
+    expectedTransactionId,
     publishSealedBundleRoot,
     publishSealedBundleManifest,
     publishRequiredArtifactsJson,
@@ -4735,6 +4797,7 @@ async function promoteBuildchainRefs({
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,
     releaseCandidateVersion,
+    releaseCandidateRecoveryReceiptPath,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,

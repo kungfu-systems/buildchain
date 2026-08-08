@@ -466,11 +466,22 @@ test("published alpha finalization stays bound to its exact transaction after th
   const channelMergeSha = "3".repeat(40);
   const version = "1.0.0-alpha.0";
   const exactTag = `v${version}`;
+  const durableTarballPath = ".buildchain/sealed/durable-alpha.tgz";
+  const requestedTarballPath = ".buildchain/sealed/version-state-rebuild.tgz";
+  const durableAssetPath = ".buildchain/sealed/durable-passport.json";
+  const requestedAssetPath = ".buildchain/sealed/version-state-passport.json";
+  const durableTarballBytes = Buffer.from("durable published alpha bytes", "utf8");
+  const requestedTarballBytes = Buffer.from("rebuilt version-state alpha bytes", "utf8");
+  const durableAssetBytes = Buffer.from('{"source":"durable"}\n', "utf8");
+  const requestedAssetBytes = Buffer.from('{"source":"version-state"}\n', "utf8");
+  const durableIntegrity =
+    `sha512-${crypto.createHash("sha512").update(durableTarballBytes).digest("base64")}`;
   const artifact = {
     kind: "npm",
     name: "@kungfu-tech/buildchain",
     ref: version,
-    digest: "sha512:alpha0",
+    digest: durableIntegrity,
+    integrity: durableIntegrity,
   };
   const cwd = makeTempWorkspace({
     "package.json": {
@@ -479,6 +490,105 @@ test("published alpha finalization stays bound to its exact transaction after th
       packageManager: "pnpm@11.7.0",
     },
   });
+  for (const [relativePath, bytes] of [
+    [durableTarballPath, durableTarballBytes],
+    [requestedTarballPath, requestedTarballBytes],
+    [durableAssetPath, durableAssetBytes],
+    [requestedAssetPath, requestedAssetBytes],
+  ]) {
+    const target = path.join(cwd, relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, bytes);
+  }
+  const createCandidate = ({ relativePath, bytes, assetPath, assetBytes, sourceSha }) => {
+    const payload = {
+      schemaVersion: 1,
+      contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+      repository: "kungfu-systems/buildchain",
+      sourceSha,
+      sourceTreeSha: crypto.createHash("sha1").update(bytes).digest("hex"),
+      runtimeSha: "4".repeat(40),
+      manifestDigest: "5".repeat(64),
+      passportDigest: "6".repeat(64),
+      controllerReceiptDigest: "7".repeat(64),
+      files: [
+        { path: relativePath, bytes },
+        { path: assetPath, bytes: assetBytes },
+      ]
+        .map((entry) => ({
+          path: entry.path,
+          size: entry.bytes.length,
+          sha256: crypto.createHash("sha256").update(entry.bytes).digest("hex"),
+        }))
+        .sort((left, right) => left.path.localeCompare(right.path)),
+    };
+    return {
+      ...payload,
+      candidateDigest: publicationArtifactCandidateDigest(payload),
+    };
+  };
+  const durableManifest = createPublicationSealedBundle({
+    candidate: createCandidate({
+      relativePath: durableTarballPath,
+      bytes: durableTarballBytes,
+      assetPath: durableAssetPath,
+      assetBytes: durableAssetBytes,
+      sourceSha: transactionSourceSha,
+    }),
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: version,
+    npmTarballPath: durableTarballPath,
+    npmIntegrity: durableIntegrity,
+    releaseAssetPaths: [durableAssetPath],
+  });
+  const requestedIntegrity =
+    `sha512-${crypto.createHash("sha512").update(requestedTarballBytes).digest("base64")}`;
+  const requestedManifest = createPublicationSealedBundle({
+    candidate: createCandidate({
+      relativePath: requestedTarballPath,
+      bytes: requestedTarballBytes,
+      assetPath: requestedAssetPath,
+      assetBytes: requestedAssetBytes,
+      sourceSha: channelMergeSha,
+    }),
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: version,
+    npmTarballPath: requestedTarballPath,
+    npmIntegrity: requestedIntegrity,
+    releaseAssetPaths: [requestedAssetPath],
+  });
+  const requestedManifestPath = path.join(
+    cwd,
+    ".buildchain/admitted/version-state-sealed-bundle.json",
+  );
+  fs.mkdirSync(path.dirname(requestedManifestPath), { recursive: true });
+  fs.writeFileSync(
+    requestedManifestPath,
+    `${JSON.stringify(requestedManifest, null, 2)}\n`,
+  );
+  const finalizationManifest = createPublicationSealedBundle({
+    candidate: createCandidate({
+      relativePath: durableTarballPath,
+      bytes: durableTarballBytes,
+      assetPath: durableAssetPath,
+      assetBytes: durableAssetBytes,
+      sourceSha: channelMergeSha,
+    }),
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: version,
+    npmTarballPath: durableTarballPath,
+    npmIntegrity: durableIntegrity,
+    releaseAssetPaths: [durableAssetPath],
+  });
+  assert.notEqual(finalizationManifest.root, durableManifest.root);
+  const finalizationManifestPath = path.join(
+    cwd,
+    ".buildchain/admitted/version-state-finalization-sealed-bundle.json",
+  );
+  fs.writeFileSync(
+    finalizationManifestPath,
+    `${JSON.stringify(finalizationManifest, null, 2)}\n`,
+  );
   const evidencePath = path.join(
     cwd,
     ".buildchain/release-evidence",
@@ -539,11 +649,68 @@ test("published alpha finalization stays bound to its exact transaction after th
       failure: "",
       artifacts: [artifact],
       evidence: [".buildchain/release-evidence/v1.0.0-alpha.0/evidence.json"],
+      sealed_bundle: durableManifest,
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
     },
     evidencePath,
+    extraFiles: durableManifest.files.map((entry) => ({
+      path: `${durableManifest.durablePath}/files/${entry.path}`,
+      sourcePath: entry.path,
+    })),
   });
+  await assert.rejects(
+    runPublishTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      cwd,
+      loadedConfig: loadBuildchainConfig(cwd),
+      targetRef: "alpha/v1/v1.0",
+      sourceSha: transactionSourceSha,
+      releaseSha: transactionReleaseSha,
+      releaseMaterialSha: transactionReleaseSha,
+      publishToolingSha: transactionReleaseSha,
+      version,
+      exactTag,
+      channel: "alpha",
+      line: "v1.0",
+      publishTransaction: true,
+      publishSealedBundleRoot: cwd,
+      publishSealedBundleManifest: finalizationManifestPath,
+      publishRequiredArtifactsJson: JSON.stringify([artifact]),
+      publishAuth: "trusted-publishing",
+      publishDistTag: "alpha",
+      publishPackageMain: "@kungfu-tech/buildchain",
+    }),
+    /sealed bundle root mismatch/,
+  );
+  const finalizationOnly = await runPublishTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    loadedConfig: loadBuildchainConfig(cwd),
+    targetRef: "alpha/v1/v1.0",
+    sourceSha: channelMergeSha,
+    releaseSha: channelMergeSha,
+    releaseMaterialSha: channelMergeSha,
+    publishToolingSha: channelMergeSha,
+    version,
+    exactTag,
+    channel: "alpha",
+    line: "v1.0",
+    publishTransaction: true,
+    publishSealedBundleRoot: cwd,
+    publishSealedBundleManifest: finalizationManifestPath,
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    publishAuth: "trusted-publishing",
+    publishDistTag: "alpha",
+    publishPackageMain: "@kungfu-tech/buildchain",
+    allowVersionStateFinalization: true,
+  });
+  assert.equal(finalizationOnly.transaction.state, "finalizing");
+  assert.equal(finalizationOnly.sealedBundle.root, durableManifest.root);
   fs.rmSync(path.join(cwd, ".buildchain/release-state"), {
     recursive: true,
     force: true,
@@ -584,7 +751,13 @@ test("published alpha finalization stays bound to its exact transaction after th
     targetRef: "alpha/v1/v1.0",
     cwd,
     publishTransaction: true,
-    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    publishSealedBundleRoot: cwd,
+    publishSealedBundleManifest: requestedManifestPath,
+    publishRequiredArtifactsJson: JSON.stringify([{
+      ...artifact,
+      digest: requestedIntegrity,
+      integrity: requestedIntegrity,
+    }]),
     requireVersionState: true,
     expectedPublicationVersion: version,
     releasePassport: false,
@@ -593,6 +766,16 @@ test("published alpha finalization stays bound to its exact transaction after th
   assert.equal(result.sha, channelMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
+  assert.equal(
+    result.publishTransaction.sealedBundleRoot,
+    durableManifest.root,
+  );
+  const finalizedTransaction = JSON.parse(
+    fs.readFileSync(path.join(cwd, result.publishTransaction.statePath), "utf8"),
+  );
+  assert.equal(finalizedTransaction.artifacts.length, 1);
+  assert.equal(finalizedTransaction.artifacts[0].digest, durableIntegrity);
+  assert.notEqual(finalizedTransaction.artifacts[0].digest, requestedIntegrity);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), channelMergeSha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), channelMergeSha);
   assert.equal(refs.get(`tags/${exactTag}`), transactionSourceSha);
@@ -2578,6 +2761,152 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       fs.readFileSync(path.join(freshCwd, "publish-input.json"), "utf8"),
     ).tarballPath,
     recoveredTarball,
+  );
+});
+
+test("stable publication rematerializes final package bytes instead of publishing the sealed alpha tarball", async () => {
+  const version = "0.1.0";
+  const candidateVersion = `${version}-alpha.4`;
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+fs.writeFileSync("publish-input.json", JSON.stringify({
+  sealedBundleRoot: process.env.BUILDCHAIN_SEALED_BUNDLE_ROOT,
+  sealedNpmTarball: process.env.BUILDCHAIN_SEALED_NPM_TARBALL
+}, null, 2) + "\\n");
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:stable"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const tarballPath = `.buildchain/publication/npm-tarball/buildchain-${candidateVersion}.tgz`;
+  const assetPath = "release-passport.json";
+  const tarballBytes = Buffer.from("sealed alpha package bytes", "utf8");
+  const assetBytes = Buffer.from("sealed candidate passport", "utf8");
+  for (const [relativePath, bytes] of [
+    [tarballPath, tarballBytes],
+    [assetPath, assetBytes],
+  ]) {
+    const target = path.join(cwd, relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, bytes);
+  }
+  const fileEntry = (relativePath) => {
+    const bytes = fs.readFileSync(path.join(cwd, relativePath));
+    return {
+      path: relativePath,
+      size: bytes.length,
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+    };
+  };
+  const candidatePayload = {
+    schemaVersion: 1,
+    contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+    repository: "kungfu-systems/buildchain",
+    sourceSha: SHA,
+    sourceTreeSha: "b".repeat(40),
+    runtimeSha: "c".repeat(40),
+    manifestDigest: "d".repeat(64),
+    passportDigest: "e".repeat(64),
+    controllerReceiptDigest: "f".repeat(64),
+    files: [fileEntry(tarballPath), fileEntry(assetPath)]
+      .sort((left, right) => left.path.localeCompare(right.path)),
+  };
+  const candidate = {
+    ...candidatePayload,
+    candidateDigest: publicationArtifactCandidateDigest(candidatePayload),
+  };
+  const manifest = createPublicationSealedBundle({
+    candidate,
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: candidateVersion,
+    npmTarballPath: tarballPath,
+    npmIntegrity:
+      `sha512-${crypto.createHash("sha512").update(tarballBytes).digest("base64")}`,
+    releaseAssetPaths: [assetPath],
+  });
+  const manifestPath = path.join(cwd, ".buildchain/admitted/sealed-bundle.json");
+  fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const { octokit } = createGitMock();
+  const result = await runPublishTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    loadedConfig: loadBuildchainConfig(cwd),
+    targetRef: "release/v0/v0.1",
+    sourceSha: SHA,
+    releaseSha: OTHER_SHA,
+    version,
+    exactTag: `v${version}`,
+    channel: "release",
+    line: "v0.1",
+    publishTransaction: true,
+    publishSealedBundleRoot: cwd,
+    publishSealedBundleManifest: manifestPath,
+    publishRequiredArtifactsJson: JSON.stringify([
+      { kind: "npm", name: "@kungfu-tech/buildchain", ref: version },
+    ]),
+    releaseMaterialSha: OTHER_SHA,
+    publishToolingSha: OTHER_SHA,
+  });
+
+  const publishInput = JSON.parse(
+    fs.readFileSync(path.join(cwd, "publish-input.json"), "utf8"),
+  );
+  assert.equal(publishInput.sealedBundleRoot, manifest.root);
+  assert.equal(publishInput.sealedNpmTarball, "");
+  assert.equal(result.transaction.state, "published");
+  assert.equal(result.transaction.artifacts[0].ref, version);
+  assert.equal(result.transaction.sealed_bundle.npm.version, candidateVersion);
+
+  await assert.rejects(
+    runPublishTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      cwd,
+      loadedConfig: loadBuildchainConfig(cwd),
+      targetRef: "release/v0/v0.2",
+      sourceSha: SHA,
+      releaseSha: OTHER_SHA,
+      version: "0.2.0",
+      exactTag: "v0.2.0",
+      channel: "release",
+      line: "v0.2",
+      publishTransaction: true,
+      publishSealedBundleRoot: cwd,
+      publishSealedBundleManifest: manifestPath,
+      publishRequiredArtifactsJson: JSON.stringify([
+        { kind: "npm", name: "@kungfu-tech/buildchain", ref: "0.2.0" },
+      ]),
+      releaseMaterialSha: OTHER_SHA,
+      publishToolingSha: OTHER_SHA,
+    }),
+    /publication sealed bundle npm version 0\.1\.0-alpha\.4 does not match 0\.2\.0/,
   );
 });
 

@@ -34,7 +34,7 @@ function digest(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
 }
 
-function fixture({ platform = "windows", kind = "pe" } = {}) {
+function fixture({ platform = "windows", kind = "pe", signature = {} } = {}) {
   const root = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-native-signing-"),
   );
@@ -64,6 +64,7 @@ function fixture({ platform = "windows", kind = "pe" } = {}) {
         digest: digest(payload),
       },
     },
+    signature,
   });
   fs.writeFileSync(
     path.join(item, "request.json"),
@@ -185,6 +186,7 @@ test("authority intake routes native profiles without accepting source substitut
     assert.equal(matrices.detached.length, 0);
     assert.equal(matrices.windows[0].platformId, "windows");
     assert.equal(matrices.windows[0].sourceSha, "1".repeat(40));
+    assert.equal(matrices.windows[0].entitlementsProfile, "none");
     assert.throws(
       () =>
         inspectArtifactSigningRequests({
@@ -192,6 +194,33 @@ test("authority intake routes native profiles without accepting source substitut
           expectedRepository: "other/repository",
         }),
       /source repository mismatch/,
+    );
+  } finally {
+    fs.rmSync(value.root, { recursive: true, force: true });
+  }
+});
+
+test("authority intake carries sealed JIT profile intent into the macOS matrix", () => {
+  const value = fixture({
+    platform: "macos",
+    kind: "archive",
+    signature: {
+      profile: "apple-developer-id",
+      entitlementsProfile: "jit-executable-v1",
+      entitlementsPaths: ["runtime/python/bin/python3"],
+    },
+  });
+  try {
+    const matrices = inspectArtifactSigningRequests({
+      inputRoot: value.input,
+      expectedRepository: "kungfu-systems/agent-hub-demo",
+      expectedRuntimeSha: "3".repeat(40),
+    });
+    assert.equal(matrices.macos.length, 1);
+    assert.equal(matrices.macos[0].entitlementsProfile, "jit-executable-v1");
+    assert.equal(
+      matrices.macos[0].entitlementsPaths,
+      "runtime/python/bin/python3",
     );
   } finally {
     fs.rmSync(value.root, { recursive: true, force: true });
@@ -487,6 +516,16 @@ test("Buildchain authority owns native credentials and performs provider verific
   );
   assert.match(
     workflow,
+    /BUILDCHAIN_ENTITLEMENTS_PROFILE: \$\{\{ matrix\.request\.entitlementsProfile \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_ENTITLEMENTS_PATHS: \$\{\{ matrix\.request\.entitlementsPaths \}\}/,
+  );
+  assert.match(macos, /--entitlements-profile "\$\{entitlements_profile\}"/);
+  assert.match(macos, /--entitlements-paths "\$\{entitlements_paths\}"/);
+  assert.match(
+    workflow,
     /Developer ID sign, notarize, and staple Apple application[\s\S]*uses: \.\/actions\/macos-credential-island/,
   );
   assert.match(macos, /codesign --verify --strict/);
@@ -525,13 +564,18 @@ test("compound Apple archives sign outer and wheel Mach-O bytes and rebuild RECO
       recursive: true,
     });
     const magic = Buffer.from([0xfe, 0xed, 0xfa, 0xcf]);
-    fs.writeFileSync(
-      path.join(source, "runtime", "kungfu"),
-      Buffer.concat([magic, Buffer.from("outer")]),
-    );
+    const machO = (filetype, suffix) =>
+      Buffer.concat([
+        magic,
+        Buffer.alloc(8),
+        Buffer.from([0, 0, 0, filetype]),
+        Buffer.from(suffix),
+      ]);
+    fs.writeFileSync(path.join(source, "runtime", "kungfu"), machO(2, "outer"));
+    fs.chmodSync(path.join(source, "runtime", "kungfu"), 0o755);
     fs.writeFileSync(
       path.join(wheelRoot, "kungfu", "native.so"),
-      Buffer.concat([magic, Buffer.from("wheel")]),
+      machO(6, "wheel"),
     );
     fs.writeFileSync(
       path.join(wheelRoot, "kungfu-1.0.dist-info", "RECORD"),
@@ -563,6 +607,10 @@ test("compound Apple archives sign outer and wheel Mach-O bytes and rebuild RECO
     fs.writeFileSync(
       fake,
       `#!/bin/sh
+if [ "$1" = "--display" ] && [ "$2" = "--entitlements" ]; then
+  printf '%s\n' '<key>com.apple.security.cs.allow-jit</key>' >&2
+  exit 0
+fi
 case "$1" in
   --display) printf '%s\\n' 'TeamIdentifier=RYNFD6L6DK' 'Runtime Version=15.0.0' 'Timestamp=Jul 29, 2026' >&2 ;;
   --verify) ;;
@@ -593,6 +641,10 @@ esac
         "keychain",
         "--team-id",
         "RYNFD6L6DK",
+        "--entitlements-profile",
+        "jit-executable-v1",
+        "--entitlements-paths",
+        "product/runtime/kungfu",
         "--codesign",
         fake,
       ],
@@ -603,6 +655,11 @@ esac
     assert.equal(proof.machOCount, 1);
     assert.equal(proof.wheelCount, 1);
     assert.equal(proof.wheelMachOCount, 1);
+    assert.equal(proof.entitlementsProfile, "jit-executable-v1");
+    assert.equal(proof.entitledExecutableCount, 1);
+    assert.deepEqual(proof.entitledPaths, ["product/runtime/kungfu"]);
+    assert.match(proof.entitlementsSha256, /^sha256:[0-9a-f]{64}$/u);
+    assert.ok(proof.checks.includes("jit-executable-entitlement"));
     const unpacked = path.join(root, "unpacked");
     fs.mkdirSync(unpacked);
     assert.equal(spawnSync("tar", ["-xzf", archive, "-C", unpacked]).status, 0);

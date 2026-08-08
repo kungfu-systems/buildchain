@@ -74,6 +74,7 @@ const requiredPaths = [
   "docs/shifu-gate-profiles.md",
   "docs/auditable-demo.md",
   "contracts/auditable-demo-scenario-v1.schema.json",
+  "contracts/release-candidate-recovery-v1.schema.json",
   "contracts/auditable-demo-media-profiles-v1.json",
   "contracts/evidence/auditable-demo-web-delivery-v1.json",
   "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json",
@@ -117,6 +118,7 @@ const requiredPaths = [
   "scripts/publication-commit-evidence.mjs",
   "scripts/publication-reproducibility.mjs",
   "scripts/release-candidate-resolver.mjs",
+  "scripts/resume-from-candidate-run.mjs",
   "scripts/buildchain-patrol.mjs",
   "scripts/observed-evidence.mjs",
   "scripts/workflow-friction-report.mjs",
@@ -134,9 +136,11 @@ const requiredPaths = [
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
+  ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
   ".github/workflows/release-line-bootstrap.yml",
   ".github/workflows/release-governance-reconcile.yml",
   ".github/workflows/dev-pr-auto-merge.yml",
+  ".github/workflows/buildchain-dev-delivery.yml",
   ".github/workflows/buildchain-patrol.yml",
   ".github/workflows/patrol-daily.yml",
   ".github/workflows/patrol-weekly.yml",
@@ -272,14 +276,23 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
-  `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}-alpha`,
+  `/${promotionShellRouting.alpha.workflowPath}@${promotionShellRouting.alpha.callRef}`,
   `/${promotionShellRouting.stable.workflowPath}@${promotionShellRouting.stable.callRef}`,
   `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
   "promotion-contract-lock-digest:",
   "authorize-promotion-runtime-override.cjs",
+  "BUILDCHAIN_ROUTER_REPOSITORY: ${{ inputs.buildchain-repository }}",
+  "BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}",
+  "if [[ \"${ref}\" =~ ^[0-9A-Fa-f]{40}$ ]]; then", "sha=\"${ref,,}\"", "git ls-remote",
+  "Recovery router ref does not match resume-buildchain-runtime-sha",
 ]) {
   if (!channelPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`channel promotion workflow missing routing contract: ${requiredSnippet}`);
+  }
+}
+for (const forbiddenSnippet of ["job.workflow_repository", "job.workflow_sha"]) {
+  if (channelPromotionWorkflow.includes(forbiddenSnippet)) {
+    throw new Error(`channel promotion workflow uses unsupported GitHub context: ${forbiddenSnippet}`);
   }
 }
 const promotionOverrideAuthorization = fs.readFileSync(
@@ -717,8 +730,8 @@ const registeredActionIds = (workflowRegistry.actions || []).map((entry) => entr
 const readmeActionIndex = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
-if (registeredActionIds.length !== 6) {
-  throw new Error(`workflow-registry.json must expose the six current action entries, got ${registeredActionIds.length}`);
+if (registeredActionIds.length !== 7) {
+  throw new Error(`workflow-registry.json must expose the seven current action entries, got ${registeredActionIds.length}`);
 }
 for (const actionId of registeredActionIds) {
   if (!readmeActionIndex.includes(`actions/${actionId}`) || !mapActionIndex.includes(`actions/${actionId}`)) {
@@ -979,14 +992,16 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
-  "uses: ./.github/workflows/.release-candidate-promote.yml",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b\n",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
-  "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
+  "resume-candidate-run-id:",
+  "resume-expected-source-tree:",
+  "resume-buildchain-runtime-sha:",
   "github-release: true",
   "release-passport-buildchain-self-kfd: true",
-  "publish-required-artifacts-json: \"[]\"",
+  'artifact-patterns: "buildchain-package-*"',
   "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
@@ -1040,6 +1055,13 @@ for (const requiredSnippet of [
   "BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json",
   "Consumer has no binary-distribution.yml; standalone binary dispatch is not applicable.",
   "gh workflow view binary-distribution.yml",
+  "resume-candidate-run-id:",
+  "node .buildchain/runtime/scripts/resume-from-candidate-run.mjs",
+  "publish-sealed-bundle-root: ${{ steps.rc.outputs.publish-sealed-bundle-root }}",
+  "BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}",
+  "if: ${{ inputs.resume-candidate-run-id == '' }}",
+  "Bridge Buildchain self-runtime dependencies",
+  "ln -s .buildchain/runtime/node_modules node_modules",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
     throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);
@@ -1092,7 +1114,7 @@ for (const retiredWorkflow of [
   }
 }
 const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/action.yml"), "utf8");
-const promoteBuildchainRefIndex = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/index.js"), "utf8");
+const promoteBuildchainRefIndex = ["actions/promote-buildchain-ref/index.js", "actions/promote-buildchain-ref/github-release.js"].map((entry) => fs.readFileSync(path.join(root, entry), "utf8")).join("\n");
 for (const requiredSnippet of [
   "github-release:",
   "github-release-title:",
@@ -1118,8 +1140,8 @@ for (const requiredSnippet of [
   }
 }
 for (const forbiddenSnippet of [
-  "run: node scripts/release-candidate-resolver.mjs",
-  "uses: ./actions/promote-buildchain-ref",
+  "uses: ./.github/workflows/.release-candidate-promote.yml",
+  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@",
 ]) {
   if (buildchainRefPromotionWorkflow.includes(forbiddenSnippet)) {
     throw new Error(`buildchain ref promotion workflow must use the declarative wrapper, found manual snippet: ${forbiddenSnippet}`);
@@ -1262,7 +1284,7 @@ if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-rele
   throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "release-passport-check-manifest.json", "schemas/release-passport-v1.schema.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "release-passport-check-manifest.json", "schemas/release-passport-v1.schema.json", "schemas/publication-rehearsal-capsule-v1.schema.json", "schemas/release-tail-capabilities-v1.schema.json", "schemas/release-tail-provider-bindings-v1.schema.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

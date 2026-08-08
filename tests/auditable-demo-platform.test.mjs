@@ -50,6 +50,7 @@ function scenario() {
   });
   return {
     schema: "buildchain.declarative-binary-demo/v1",
+    compositionMode: "terminal-fill",
     product: { id: "fixture", displayName: "Fixture CLI", binaryName: "fixture" },
     artifact: { platformId: "linux-x64", binaryPath: "fixture", metadataPath: "fixture.json", metadataContract: "fixture.binary/v1", runtimeDependencies: [] },
     execution: { deterministic: true, network: "none", secrets: "none", totalTimeoutSeconds: 30, environment: {} },
@@ -73,6 +74,63 @@ function scenario() {
   };
 }
 
+function declareLongForm(value) {
+  value.execution.durationClass = "long-form";
+  value.execution.totalTimeoutSeconds = 180;
+  for (const demo of value.demos) {
+    for (const step of demo.steps) step.timeoutSeconds = 180;
+  }
+}
+
+function declarePresentation(value) {
+  declareLongForm(value);
+  value.presentation = {
+    schema: "buildchain.declarative-demo-presentation/v1",
+    proofs: value.demos.map((demo, index) => ({
+      demoId: demo.id,
+      label: index === 0 ? "Continuity" : "Failure retention",
+      question: demo.title,
+      summary: index === 0
+        ? "The first proof isolates continuity across sessions."
+        : "The second proof places continuity under failure.",
+      ...(index === 0 ? { transitionAfter: "Continuity must also survive failure." } : {}),
+    })),
+    materialization: {
+      readmeMode: "media-only",
+      technicalSpecPath: "docs/demo-technical-spec.md",
+      technicalSpecTitle: "Fixture demo technical specification",
+      technicalMarker: "fixture-demo:technical",
+    },
+  };
+}
+
+function oversizedLongFormRendererManifest() {
+  const replay = "x".repeat(4 * 1024 * 1024);
+  return {
+    schema: "build-images.auditable-demo-render/v1",
+    renderer: { image: `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"e".repeat(64)}` },
+    inputs: {
+      renditions: [
+        { id: "1080p", role: "primary", width: 1920, height: 1080 },
+        { id: "720p", role: "responsive", width: 1280, height: 720 },
+      ].map((rendition, index) => ({
+        id: rendition.id,
+        role: rendition.role,
+        scene: { path: { durationClass: "long-form", durationMs: 180_000, fps: 10, width: rendition.width, height: rendition.height } },
+        terminalCapture: {
+          schema: "kungfu.terminal-capture/v1",
+          root: `sha256:${(index === 0 ? "c" : "d").repeat(64)}`,
+          durationMs: 179_000,
+          events: 10_000,
+          bytes: 4 * 1024 * 1024,
+          path: { normalizedReplay: replay },
+        },
+      })),
+    },
+    outputs: {},
+  };
+}
+
 function fixture(t) {
   const root = temporary(t);
   const artifact = path.join(root, "artifact");
@@ -93,7 +151,7 @@ elif sys.argv[1:] == ["read"]:
 elif sys.argv[1:] == ["independent"]:
   assert not os.path.exists("state.json")
   print("\\x1b[38;5;214mINDEPENDENT START\\x1b[0m", flush=True)
-  time.sleep(0.18)
+  time.sleep(float(os.environ.get("FIXTURE_DELAY", "0.18")))
   print("\\x1b[38;5;81mINDEPENDENT END\\x1b[0m", flush=True)
 elif sys.argv[1:] == ["slow"]:
   time.sleep(2)
@@ -157,13 +215,46 @@ function capture(t, demoId, transformScenario = null) {
 }
 
 test("scenario contract accepts multiple demos and rejects shell command authority", () => {
-  assert.deepEqual(validateScenario(scenario()).demos.map((entry) => entry.id), ["shared-state", "independent"]);
+  const admitted = validateScenario(scenario());
+  assert.deepEqual(admitted.demos.map((entry) => entry.id), ["shared-state", "independent"]);
+  assert.equal(admitted.compositionMode, "terminal-fill");
   const invalid = structuredClone(scenario());
   invalid.demos[0].steps[0].command = "fixture write";
   assert.throws(() => validateScenario(invalid), /command is not allowed|must not use a shell/u);
   const privileged = structuredClone(scenario());
   privileged.authority.grants.push("system-identity");
   assert.throws(() => validateScenario(privileged), /authority boundary/u);
+  const invalidComposition = structuredClone(scenario());
+  invalidComposition.compositionMode = "cropped-terminal";
+  assert.throws(() => validateScenario(invalidComposition), /composition mode/u);
+
+  const readable = structuredClone(scenario());
+  readable.playback = {
+    schema: "buildchain.declarative-demo-playback/v1",
+    mode: "deterministic-readable",
+    activeDurationMs: 1600,
+    finalHoldMs: 700,
+  };
+  assert.equal(validateScenario(readable).playback.activeDurationMs, 1600);
+  readable.playback.finalHoldMs = 60_000;
+  assert.throws(() => validateScenario(readable), /final hold|duration class/u);
+});
+
+test("optional presentation binds consumer proof semantics without changing the legacy default", () => {
+  const legacy = scenario();
+  assert.equal(validateScenario(legacy).presentation, undefined);
+
+  const presented = structuredClone(legacy);
+  declarePresentation(presented);
+  assert.equal(validateScenario(presented).presentation.materialization.readmeMode, "media-only");
+
+  const reordered = structuredClone(presented);
+  [reordered.presentation.proofs[0], reordered.presentation.proofs[1]] = [reordered.presentation.proofs[1], reordered.presentation.proofs[0]];
+  assert.throws(() => validateScenario(reordered), /preserve demo order/u);
+
+  const divergentQuestion = structuredClone(presented);
+  divergentQuestion.presentation.proofs[0].question = "A different product claim?";
+  assert.throws(() => validateScenario(divergentQuestion), /must equal the demo title/u);
 });
 
 test("duration class keeps standard at 60 seconds and admits only bounded long-form", () => {
@@ -268,12 +359,61 @@ test("generic adapter projects exact captures into the existing Gate contract", 
   assert.notEqual(result.renditionRoots[0], result.renditionRoots[1]);
   const set = JSON.parse(fs.readFileSync(path.join(adapted, "rendition-set.json"), "utf8"));
   assert.deepEqual(set.renditions.map(({ id, role }) => [id, role]), [["1080p", "primary"], ["720p", "responsive"]]);
+  for (const name of ["scene.json", "scene-720p.json"]) {
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(adapted, name), "utf8")).compositionMode,
+      "terminal-fill",
+    );
+  }
   const gateCheck = spawnSync(process.execPath, [
     path.join(ROOT, "scripts/auditable-demo.mjs"), "prepare-smoke",
     "--adapter-output", adapted,
     "--output", path.join(root, "smoke"),
   ], { encoding: "utf8" });
   assert.equal(gateCheck.status, 0, gateCheck.stderr);
+});
+
+test("omitting composition preserves the presentation-framed adapter default", { skip: process.platform === "win32" }, (t) => {
+  const { root, output } = capture(t, "shared-state", (declared) => {
+    delete declared.compositionMode;
+  });
+  const adapted = path.join(root, "adapted-default-composition");
+  adaptCapture({ artifactRoot: output, output: adapted });
+  for (const name of ["scene.json", "scene-720p.json"]) {
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(adapted, name), "utf8")).compositionMode,
+      "presentation-framed",
+    );
+  }
+});
+
+test("declared readable playback normalizes latency without changing terminal payloads or order", { skip: process.platform === "win32" }, (t) => {
+  const declarePlayback = (delay) => (declared) => {
+    declared.execution.environment.FIXTURE_DELAY = delay;
+    declared.playback = {
+      schema: "buildchain.declarative-demo-playback/v1",
+      mode: "deterministic-readable",
+      activeDurationMs: 1600,
+      finalHoldMs: 700,
+    };
+  };
+  const fast = capture(t, "independent", declarePlayback("0.05"));
+  const slow = capture(t, "independent", declarePlayback("0.35"));
+  const readCapture = ({ output }) => JSON.parse(fs.readFileSync(path.join(output, "renditions/1080p/terminal-capture.json"), "utf8"));
+  const fastCapture = readCapture(fast);
+  const slowCapture = readCapture(slow);
+  assert.deepEqual(fastCapture.events.map((event) => event.data), slowCapture.events.map((event) => event.data));
+  assert.deepEqual(fastCapture.events.map((event) => event.atMs), slowCapture.events.map((event) => event.atMs));
+  assert.equal(fastCapture.durationMs, 2300);
+  assert.equal(fastCapture.playback.eventOrder, "preserved");
+  assert.ok(slowCapture.playback.observedLastEventMs >= 300, "the slower PTY latency remains recorded as evidence");
+
+  const adapted = path.join(fast.root, "adapted-readable");
+  adaptCapture({ artifactRoot: fast.output, output: adapted });
+  const projected = JSON.parse(fs.readFileSync(path.join(adapted, "terminal-capture.json"), "utf8"));
+  const scene = JSON.parse(fs.readFileSync(path.join(adapted, "scene.json"), "utf8"));
+  assert.equal(projected.durationMs, 2300);
+  assert.equal(scene.durationMs, 2300, "declared final hold is not extended by an implicit adapter hold");
 });
 
 test("generic adapter projects an explicit long-form renderer contract", { skip: process.platform === "win32" }, (t) => {
@@ -350,7 +490,7 @@ test("capture enforces the total deadline inside a running step", { skip: proces
 });
 
 test("materializer verifies exact bundles and updates README idempotently", { skip: process.platform === "win32" }, (t) => {
-  const value = capture(t, "shared-state");
+  const value = capture(t, "shared-state", declareLongForm);
   const repository = path.join(value.root, "consumer");
   const gate = path.join(value.root, "gate");
   const media = path.join(value.root, "media");
@@ -363,11 +503,16 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   for (const name of ["demo.gif", "demo.mp4", "demo.webm", "demo-720p.mp4", "demo-720p.webm", "poster.png", "manifest.json", "media-probe.json", "media-inspection.json", "renderer-checksums.sha256"]) {
     fs.writeFileSync(path.join(media, name), Buffer.from(`fixture:${name}\n`));
   }
+  const rendererManifest = Buffer.from(`${JSON.stringify(oversizedLongFormRendererManifest(), null, 2)}\n`);
+  assert.ok(rendererManifest.length > 8 * 1024 * 1024);
+  fs.writeFileSync(path.join(media, "manifest.json"), rendererManifest);
+  fs.writeFileSync(path.join(media, "demo.mp4"), Buffer.alloc(8 * 1024 * 1024 + 1, 0x61));
   writeJson(path.join(media, "gate-receipt.json"), { schema: "buildchain.auditable-demo-gate/v1", status: "passed" });
   writeJson(path.join(media, "media-receipt.json"), {
     schema: "buildchain.auditable-demo-media/v2",
     status: "passed",
     qualifiedGateRoot: gateRoot,
+    rendererManifestRoot: sha256(rendererManifest),
     qualification: { profile: { id: "responsive-web-delivery-v1" }, qualificationRoot: `sha256:${"c".repeat(64)}` },
     qualificationRoot: `sha256:${"c".repeat(64)}`,
   });
@@ -383,13 +528,56 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
     rendererImage: `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"e".repeat(64)}`,
   };
   const first = materializeDemo(args);
+  assert.ok(fs.statSync(path.join(repository, first.evidenceDirectory, "demo.mp4")).size > 8 * 1024 * 1024);
+  assert.ok(fs.statSync(path.join(repository, first.evidenceDirectory, "manifest.json")).size > 8 * 1024 * 1024);
   const firstReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
   const second = materializeDemo(args);
   assert.equal(second.evidenceRoot, first.evidenceRoot);
   assert.equal(fs.readFileSync(path.join(repository, "README.md"), "utf8"), firstReadme);
   assert.match(firstReadme, /\$ fixture write[\s\S]*\$ fixture read/u);
   assert.match(firstReadme, /1080p MP4[\s\S]*720p MP4/u);
-  const independent = capture(t, "independent");
+
+  const legacyBlock = firstReadme.match(/<!-- fixture-demo:shared-state:start -->[\s\S]*?<!-- fixture-demo:shared-state:end -->/u)?.[0];
+  assert.ok(legacyBlock);
+  fs.writeFileSync(path.join(repository, "README.md"), [
+    "# Fixture consumer",
+    "",
+    "## Three consumer-owned proofs",
+    "",
+    "### Can Work survive a new Agent?",
+    "",
+    "Human-authored narrative stays outside the generated marker.",
+    "",
+    legacyBlock,
+    "",
+    "The bridge to the next proof also remains consumer-owned.",
+    "",
+  ].join("\n"));
+  const presented = capture(t, "shared-state", declarePresentation);
+  const presentedArgs = {
+    ...args,
+    scenarioPath: presented.scenarioPath,
+    captureRoot: presented.output,
+  };
+  const presentedFirst = materializeDemo(presentedArgs);
+  assert.equal(presentedFirst.technicalSpecPath, "docs/demo-technical-spec.md");
+  const presentedReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
+  assert.match(presentedReadme, /Human-authored narrative stays outside the generated marker/u);
+  assert.match(presentedReadme, /The bridge to the next proof also remains consumer-owned/u);
+  const presentedBlock = presentedReadme.match(/<!-- fixture-demo:shared-state:start -->[\s\S]*?<!-- fixture-demo:shared-state:end -->/u)?.[0] || "";
+  assert.match(presentedBlock, /\[!\[Shared state\]/u);
+  assert.doesNotMatch(presentedBlock, /Animation scenario|Native renditions|<details>/u);
+  const technicalSpec = fs.readFileSync(path.join(repository, "docs/demo-technical-spec.md"), "utf8");
+  assert.match(technicalSpec, /## Continuity: Shared state/u);
+  assert.match(technicalSpec, /\$ fixture write[\s\S]*\$ fixture read/u);
+  assert.match(technicalSpec, /Native renditions:[\s\S]*Claim boundary:/u);
+  assert.match(technicalSpec, /Continuity must also survive failure\./u);
+  assert.ok(technicalSpec.indexOf("fixture-demo:technical:shared-state:start") < technicalSpec.indexOf("fixture-demo:technical:independent:start"));
+  materializeDemo(presentedArgs);
+  assert.equal(fs.readFileSync(path.join(repository, "README.md"), "utf8"), presentedReadme);
+  assert.equal(fs.readFileSync(path.join(repository, "docs/demo-technical-spec.md"), "utf8"), technicalSpec);
+
+  const independent = capture(t, "independent", declareLongForm);
   materializeDemo({
     ...args,
     demoId: "independent",
@@ -399,13 +587,52 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   const multiReadme = fs.readFileSync(path.join(repository, "README.md"), "utf8");
   assert.match(multiReadme, /<!-- fixture-demo:shared-state:start -->/u);
   assert.match(multiReadme, /<!-- fixture-demo:independent:start -->/u);
-  assert.match(multiReadme, /\$ fixture write/u);
+  assert.match(multiReadme, /Human-authored narrative stays outside the generated marker/u);
   assert.match(multiReadme, /\$ fixture independent/u);
   const passport = JSON.parse(fs.readFileSync(path.join(repository, first.evidenceDirectory, "release-passport.json"), "utf8"));
   assert.deepEqual(passport.authority.grants, []);
   assert.equal(passport.authority.productSystemRole, "assembly-and-distribution-metadata-only");
+  const standard = capture(t, "shared-state");
+  assert.throws(() => materializeDemo({
+    ...args,
+    scenarioPath: standard.scenarioPath,
+    captureRoot: standard.output,
+  }), /media bundle member must be a bounded regular file/u);
+
+  const checksumsPath = path.join(media, "checksums.sha256");
+  const validChecksums = fs.readFileSync(checksumsPath);
+  const firstChecksum = validChecksums.toString("utf8").split("\n")[0];
+  fs.appendFileSync(checksumsPath, `${firstChecksum}\n`);
+  assert.throws(() => materializeDemo(args), /checksum member is repeated/u);
+  fs.writeFileSync(checksumsPath, validChecksums);
+
+  fs.appendFileSync(checksumsPath, `${"0".repeat(64)}  ../escape\n`);
+  assert.throws(() => materializeDemo(args), /checksum member escapes its root/u);
+  fs.writeFileSync(checksumsPath, validChecksums);
+
+  fs.writeFileSync(path.join(media, "undeclared.bin"), "undeclared");
+  assert.throws(() => materializeDemo(args), /checksum member set is not exact/u);
+  fs.rmSync(path.join(media, "undeclared.bin"));
+
+  fs.symlinkSync(path.join(media, "demo.gif"), path.join(media, "linked.gif"));
+  assert.throws(() => materializeDemo(args), /bundle member must not be a symbolic link/u);
+  fs.rmSync(path.join(media, "linked.gif"));
+
+  const gifPath = path.join(media, "demo.gif");
+  const gifBytes = fs.readFileSync(gifPath);
   fs.appendFileSync(path.join(media, "demo.gif"), "drift");
   assert.throws(() => materializeDemo(args), /checksum mismatch/u);
+  fs.writeFileSync(gifPath, gifBytes);
+
+  const mp4Path = path.join(media, "demo.mp4");
+  const mp4Bytes = fs.statSync(mp4Path).size;
+  fs.truncateSync(mp4Path, 64 * 1024 * 1024 + 1);
+  assert.throws(() => materializeDemo(args), /media bundle member must be a bounded regular file/u);
+  fs.truncateSync(mp4Path, mp4Bytes);
+
+  fs.truncateSync(mp4Path, 64 * 1024 * 1024);
+  fs.truncateSync(path.join(media, "demo.webm"), 64 * 1024 * 1024);
+  assert.throws(() => materializeDemo(args), /media bundle exceeds its aggregate byte budget/u);
 });
 
 test("Gate smoke stays bounded while full render consumes both native captures", () => {
@@ -423,6 +650,24 @@ test("Gate smoke stays bounded while full render consumes both native captures",
   assert.match(full, /--rendition-set \/input\/rendition-set\.json/u);
   assert.match(workflow, /demo-renderer --validate-only[\s\S]*--rendition-set/u);
   assert.match(workflow, /prepare-artifact[\s\S]*--artifact-root "source-artifact"/u);
+});
+
+test("advisory media failure preserves the required Gate and suppresses publication", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.declarative-auditable-demo.yml"), "utf8");
+  const gateIndex = workflow.indexOf("name: Run required Gate for every declared demo");
+  const renderIndex = workflow.indexOf("name: Render full media for every declared demo");
+  assert.ok(gateIndex >= 0 && renderIndex > gateIndex);
+  assert.match(workflow, /render-failure-advisory:[\s\S]*default: false[\s\S]*type: boolean/u);
+  assert.match(workflow.slice(renderIndex, workflow.indexOf("name: Bind evidence collection identity", renderIndex)), /id: render[\s\S]*continue-on-error: \$\{\{ inputs\.render-failure-advisory \}\}/u);
+  assert.match(workflow, /render-result: \$\{\{ steps\.render\.outcome \}\}/u);
+  assert.match(workflow, /inputs\.materialize && inputs\.render-media && needs\.qualify\.outputs\.render-result == 'success'/u);
+  assert.match(workflow, /The required Gate remains successful and no materialization PR will be opened/u);
+});
+
+test("declarative publication stages an optional consumer-owned technical specification", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.declarative-auditable-demo.yml"), "utf8");
+  assert.match(workflow, /technical_spec_path=.*technicalSpecPath/u);
+  assert.match(workflow, /git add -- "\$\{technical_spec_path\}"/u);
 });
 
 test("reusable builds run the transport simulation before either artifact upload path", () => {

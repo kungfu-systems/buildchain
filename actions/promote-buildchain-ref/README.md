@@ -80,6 +80,14 @@ publish npm packages. The GitHub action dry-run still calls GitHub APIs to
 resolve the current target SHA and concrete pending ref updates, but every
 write is reported as a dry-run update.
 
+When the requested version already matches every declared version-state file,
+dry-run planning still runs `lifecycle.version-state` and any explicit
+`verification-command` so it can discover declared derived material. It does
+not fall back to the repository-wide `lifecycle.verify` in that no-op case;
+full product verification can require candidate artifacts that are deliberately
+not present until the later admission phase. Non-dry-run version-state writes
+continue to require the configured verification lifecycle before any ref moves.
+
 Repositories whose package version is anchored to an explicitly selected
 upstream release can opt into manual next-anchor behavior:
 
@@ -452,7 +460,11 @@ it does not have to equal the original `source_sha` or the transaction
 `release_sha`. Reruns accept exact tags that already point at the transaction
 release/material SHA or the finalized channel head, and continue moving any
 missing floating tags or dev/alpha refs before marking the transaction
-`complete`.
+`complete`. An explicit recovery of an already `complete` transaction is also
+accepted when the requested source SHA, version, exact tag, channel, and target
+all match the durable record exactly. It returns the completed transaction
+without republishing package bytes; a source accepted only through later branch
+history is not sufficient for this terminal-state reuse.
 
 Normal reruns accept already-published artifacts only when evidence matches.
 Missing required artifacts can be published on the next run. Conflicting
