@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 294,
-    "maxHandMaintainedSourceLines": 112321,
+    "maxHandMaintainedSourceFiles": 296,
+    "maxHandMaintainedSourceLines": 113197,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22269,
-    "latestTransition": "The Delivery Warrant v4 read candidate adds one explicit, reversible, qualification-bound observation path while TypeScript v3 remains the sole writer and default reader.",
-    "rationale": "The exact v4-read-candidate ceiling adds one hand-maintained JavaScript source below the unchanged 600-line new-file limit. Only observe may select the candidate, and only through an explicit v4 switch bound to the exact retained semantic-diff report root, TypeScript and Rust revisions, validator version, unexpired retention window, effect-disabled host capability, projected state root, parity evidence, and a caller-owned retention receipt. Missing, blocked, expired, drifted, crashed, timed-out, cancelled, malformed, unsupported, non-parity, or unretained reads stop without silent fallback. Every mutation command ignores the switch, TypeScript v3 remains the sole production writer and rollback authority, and rollback is the explicit caller change back to the default v3 read. Existing per-file, per-function, workflow, provider-boundary, public-surface, and zero-second-writer budgets remain unchanged. These exact repository ceilings cannot grow implicitly; another source file, effect, writer, fallback policy, provider boundary, or cutover scope requires a separately reviewed transition."
+    "latestTransition": "The Wave 2 Stage Capsule contract adds one closed JavaScript validator and one byte-equivalent Rust validator for immutable per-platform stage identity, retention promise, current availability, and fail-closed reuse without a production authority change.",
+    "rationale": "The exact Stage Capsule ceiling adds two hand-maintained source files, each below the unchanged 600-line new-file limit, plus the minimal canonical-domain and fixture-runner wiring needed for shared Rust and JavaScript evidence. One schema and one TypeScript v3 writer remain authoritative; Rust is validation-only. Platform, stage, source, toolchain, runtime, policy, declared inputs, transformation, output manifest, qualification, and explicitly rooted observations bind immutable identity, while retention promise, current availability, explicit evaluation time, and rooted transport locators remain separate. Missing, expired, corrupt, or root-mismatched reuse stops without fallback. Raw provider run or artifact IDs, runner paths, credentials, ambient clocks, network observations, provider SDK imports, new effects, v3 consumer changes, and second writers remain hard-zero. Existing per-file, per-function, workflow, public-surface, and no-widening budgets remain unchanged. These exact repository ceilings cannot grow implicitly; storage, checkpoint, resume, reconciliation, provider, writer, or cutover scope requires a separately reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain-v4-stage-capsule-fixtures/v1",
+  "validCases": [
+    {
+      "id": "linux-build-stage",
+      "capsule": {
+        "schema": "buildchain-v4-stage-capsule/v1",
+        "writerAuthority": "typescript-v3",
+        "rustAuthority": "validation-only",
+        "identity": {
+          "schema": "buildchain-v4-stage-capsule-identity/v1",
+          "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "platform": "linux-x64-gnu",
+          "platformRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "stage": "build",
+          "toolchainRoots": [
+            {
+              "name": "clang",
+              "root": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            {
+              "name": "node",
+              "root": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+            }
+          ],
+          "runtimeRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+          "policyRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "declaredInputs": [
+            {
+              "name": "lockfile",
+              "root": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            {
+              "name": "source-tree",
+              "root": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+            }
+          ],
+          "transformationRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+          "outputManifestRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "observationRoots": [
+            {
+              "name": "supply-chain",
+              "root": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            }
+          ]
+        },
+        "identityRoot": "sha256:48e3ef563193c466785032b512aae986c4ce02c2c94b6749910e711812bcbacf",
+        "retentionPromise": {
+          "class": "wave-two",
+          "retainUntil": "2026-11-07T00:00:00.000Z"
+        },
+        "capsuleRoot": "sha256:d847ce1b9dc5d5c6f888ee5c196e9f17f921429b89c6f10ddcb5b9449e87d998"
+      },
+      "availability": {
+        "schema": "buildchain-v4-stage-capsule-availability/v1",
+        "capsuleRoot": "sha256:d847ce1b9dc5d5c6f888ee5c196e9f17f921429b89c6f10ddcb5b9449e87d998",
+        "observedAt": "2026-08-09T00:00:00.000Z",
+        "status": "available",
+        "contentRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "transports": [
+          {
+            "name": "primary",
+            "root": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          }
+        ],
+        "faultCode": null
+      },
+      "reuse": {
+        "evaluatedAt": "2026-08-10T00:00:00.000Z",
+        "expectedCapsuleRoot": "sha256:d847ce1b9dc5d5c6f888ee5c196e9f17f921429b89c6f10ddcb5b9449e87d998",
+        "expectedOutputManifestRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expectedQualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    }
+  ],
+  "invalidCases": [
+    {
+      "id": "provider-run-id-is-not-identity",
+      "kind": "identity",
+      "value": {
+        "schema": "buildchain-v4-stage-capsule-identity/v1",
+        "providerRunId": "mutable-run-42"
+      }
+    },
+    {
+      "id": "missing-requires-fault",
+      "kind": "availability",
+      "value": {
+        "schema": "buildchain-v4-stage-capsule-availability/v1",
+        "capsuleRoot": "sha256:d847ce1b9dc5d5c6f888ee5c196e9f17f921429b89c6f10ddcb5b9449e87d998",
+        "observedAt": "2026-08-09T00:00:00.000Z",
+        "status": "missing",
+        "contentRoot": null,
+        "qualificationRoot": null,
+        "transports": [],
+        "faultCode": null
+      }
+    },
+    {
+      "id": "reuse-shape-is-closed",
+      "kind": "reuse",
+      "value": {
+        "schema": "buildchain-v4-stage-capsule-reuse/v1",
+        "ambientNow": "2026-08-09T00:00:00.000Z"
+      }
+    }
+  ]
+}

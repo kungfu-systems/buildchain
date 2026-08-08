@@ -6,7 +6,8 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use buildchain_v4_contracts::{
     EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root,
-    project_delivery_warrant_state_bytes, run_delivery_warrant_trace_fixture, validate_clock,
+    project_delivery_warrant_state_bytes, run_delivery_warrant_trace_fixture,
+    run_stage_capsule_fixture, validate_clock,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -253,6 +254,16 @@ fn run_trace_fixture(fixture_path: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn run_stage_capsule_fixtures(fixture_path: &str) -> Result<(), String> {
+    let bytes = fs::read(fixture_path).map_err(|error| format!("cannot read fixtures: {error}"))?;
+    let projection = run_stage_capsule_fixture(&bytes)
+        .map_err(|fault| format!("{} at {}: {}", fault.code, fault.path, fault.message))?;
+    serde_json::to_writer(std::io::stdout().lock(), &projection)
+        .map_err(|error| error.to_string())?;
+    println!();
+    Ok(())
+}
+
 fn read_stdin() -> Result<Vec<u8>, String> {
     let mut bytes = Vec::new();
     std::io::stdin()
@@ -358,7 +369,12 @@ fn run() -> Result<(), String> {
         [command] if command == "host" => run_shadow_host(),
         [fixture_path] => run_canonical_fixture(fixture_path),
         [command, fixture_path] if command == "trace" => run_trace_fixture(fixture_path),
-        _ => Err("usage: buildchain-v4-contracts [trace FIXTURES.json|host]".to_owned()),
+        [command, fixture_path] if command == "stage-capsule" => {
+            run_stage_capsule_fixtures(fixture_path)
+        }
+        _ => Err(
+            "usage: buildchain-v4-contracts [trace|stage-capsule FIXTURES.json|host]".to_owned(),
+        ),
     }
 }
 

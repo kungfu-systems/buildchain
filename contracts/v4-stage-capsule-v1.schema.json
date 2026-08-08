@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-stage-capsule-v1.schema.json",
+  "title": "Buildchain v4 Stage Capsule contract suite",
+  "description": "The sole closed schema authority for immutable per-platform Stage Capsule identity, retention promise, current availability, and fail-closed reuse decisions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "identity", "capsule", "availability", "reuse"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "identity": { "$ref": "#/$defs/identity" },
+    "capsule": { "$ref": "#/$defs/capsule" },
+    "availability": { "$ref": "#/$defs/availability" },
+    "reuse": { "$ref": "#/$defs/reuse" }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "clock": {
+      "type": "string",
+      "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "namedRoot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "root"],
+      "properties": {
+        "name": { "$ref": "#/$defs/token" },
+        "root": { "$ref": "#/$defs/root" }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "sourceRoot",
+        "platform",
+        "platformRoot",
+        "stage",
+        "toolchainRoots",
+        "runtimeRoot",
+        "policyRoot",
+        "declaredInputs",
+        "transformationRoot",
+        "outputManifestRoot",
+        "qualificationRoot",
+        "observationRoots"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-stage-capsule-identity/v1" },
+        "sourceRoot": { "$ref": "#/$defs/root" },
+        "platform": { "$ref": "#/$defs/token" },
+        "platformRoot": { "$ref": "#/$defs/root" },
+        "stage": { "$ref": "#/$defs/token" },
+        "toolchainRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/namedRoot" }
+        },
+        "runtimeRoot": { "$ref": "#/$defs/root" },
+        "policyRoot": { "$ref": "#/$defs/root" },
+        "declaredInputs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/namedRoot" }
+        },
+        "transformationRoot": { "$ref": "#/$defs/root" },
+        "outputManifestRoot": { "$ref": "#/$defs/root" },
+        "qualificationRoot": { "$ref": "#/$defs/root" },
+        "observationRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/namedRoot" }
+        }
+      }
+    },
+    "retentionPromise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "retainUntil"],
+      "properties": {
+        "class": { "$ref": "#/$defs/token" },
+        "retainUntil": { "$ref": "#/$defs/clock" }
+      }
+    },
+    "capsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "writerAuthority",
+        "rustAuthority",
+        "identity",
+        "identityRoot",
+        "retentionPromise",
+        "capsuleRoot"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-stage-capsule/v1" },
+        "writerAuthority": { "const": "typescript-v3" },
+        "rustAuthority": { "const": "validation-only" },
+        "identity": { "$ref": "#/$defs/identity" },
+        "identityRoot": { "$ref": "#/$defs/root" },
+        "retentionPromise": { "$ref": "#/$defs/retentionPromise" },
+        "capsuleRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "capsuleRoot",
+        "observedAt",
+        "status",
+        "contentRoot",
+        "qualificationRoot",
+        "transports",
+        "faultCode"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-stage-capsule-availability/v1" },
+        "capsuleRoot": { "$ref": "#/$defs/root" },
+        "observedAt": { "$ref": "#/$defs/clock" },
+        "status": {
+          "enum": [
+            "available",
+            "missing",
+            "expired",
+            "corrupt",
+            "root-mismatch"
+          ]
+        },
+        "contentRoot": {
+          "anyOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "qualificationRoot": {
+          "anyOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "transports": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/namedRoot" }
+        },
+        "faultCode": {
+          "anyOf": [{ "$ref": "#/$defs/token" }, { "type": "null" }]
+        }
+      }
+    },
+    "reuse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "capsule",
+        "availability",
+        "evaluatedAt",
+        "expectedCapsuleRoot",
+        "expectedOutputManifestRoot",
+        "expectedQualificationRoot"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-stage-capsule-reuse/v1" },
+        "capsule": { "$ref": "#/$defs/capsule" },
+        "availability": { "$ref": "#/$defs/availability" },
+        "evaluatedAt": { "$ref": "#/$defs/clock" },
+        "expectedCapsuleRoot": { "$ref": "#/$defs/root" },
+        "expectedOutputManifestRoot": { "$ref": "#/$defs/root" },
+        "expectedQualificationRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}
