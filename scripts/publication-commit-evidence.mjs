@@ -104,7 +104,7 @@ function validateInstallerBundle(evidence, expected) {
   }
   if (
     exactSha(bundle.sourceCommit, "installerBundle.sourceCommit") !==
-      expected.sourceSha ||
+      expected.candidateSourceSha ||
     !["alpha", "stable"].includes(bundle.channel)
   ) {
     throw new Error("installer bundle release identity mismatch");
@@ -228,6 +228,7 @@ function validateInstallerBundle(evidence, expected) {
   return {
     schema: bundle.schema,
     bundleRoot,
+    sourceCommit: bundle.sourceCommit,
     manifestDigest: bundle.manifestDigest,
     channel: bundle.channel,
     channelPayloadRoot: bundle.channelPayloadRoot,
@@ -241,7 +242,7 @@ function validateInstallerBundle(evidence, expected) {
 
 export function validatePublicationCommitEvidence(
   evidence,
-  { version, sourceSha, releaseSha, releaseTag } = {},
+  { version, sourceSha, candidateSourceSha, releaseSha, releaseTag } = {},
 ) {
   if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) {
     throw new Error("publication commit evidence must be an object");
@@ -289,7 +290,13 @@ export function validatePublicationCommitEvidence(
       "publication recovery must preserve or explicitly declare no previous authority",
     );
   }
-  const installerBundle = validateInstallerBundle(evidence, expected);
+  const installerBundle = validateInstallerBundle(evidence, {
+    ...expected,
+    candidateSourceSha: exactSha(
+      candidateSourceSha ?? sourceSha,
+      "expected candidateSourceSha",
+    ),
+  });
   return {
     schema: SCHEMA,
     status: "passed",
@@ -336,7 +343,7 @@ export async function verifyInstallerBundleReadback(
     semanticRoot(unsigned) !== bundle.bundleRoot ||
     manifest.package?.name !== "@kungfu-tech/site" ||
     typeof manifest.package?.version !== "string" ||
-    manifest.identity?.sourceCommit !== result.identity.sourceSha ||
+    manifest.identity?.sourceCommit !== bundle.sourceCommit ||
     manifest.identity?.releaseSha !== result.identity.releaseSha ||
     manifest.identity?.releaseTag !== result.identity.releaseTag ||
     manifest.identity?.version !== result.identity.version ||
@@ -394,7 +401,7 @@ export async function verifyInstallerBundleReadback(
     schema: "kungfu-buildchain-installer-publication-bundle-seal/v1",
     bundleRoot: bundle.bundleRoot,
     manifestDigest: bundle.manifestDigest,
-    sourceCommit: result.identity.sourceSha,
+    sourceCommit: bundle.sourceCommit,
     releaseTag: result.identity.releaseTag,
     releasePassport: bundle.releasePassport,
     observations,
@@ -409,6 +416,8 @@ async function main(args) {
     if (value === "--evidence") options.evidence = args[++index];
     else if (value === "--version") options.version = args[++index];
     else if (value === "--source-sha") options.sourceSha = args[++index];
+    else if (value === "--candidate-source-sha")
+      options.candidateSourceSha = args[++index];
     else if (value === "--release-sha") options.releaseSha = args[++index];
     else if (value === "--release-tag") options.releaseTag = args[++index];
     else throw new Error(`unknown argument: ${value}`);

@@ -9,6 +9,7 @@ import {
 
 const SOURCE_SHA = "1".repeat(40);
 const RELEASE_SHA = "2".repeat(40);
+const CANDIDATE_SOURCE_SHA = "3".repeat(40);
 const ROOT = `sha256:${"a".repeat(64)}`;
 
 function canonical(value) {
@@ -60,7 +61,7 @@ const expected = {
   releaseTag: "v4.0.0-alpha.2",
 };
 
-function installerFixture() {
+function installerFixture(sourceCommit = SOURCE_SHA) {
   const releaseBase =
     "https://github.com/kungfu-systems/kungfu/releases/download/v4.0.0-alpha.2";
   const immutablePath = `installers/v1/alpha/4.0.0-alpha.2/${"9".repeat(64)}`;
@@ -124,7 +125,7 @@ function installerFixture() {
     identity: {
       channel: "alpha",
       version: "4.0.0-alpha.2",
-      sourceCommit: SOURCE_SHA,
+      sourceCommit,
       releaseSha: RELEASE_SHA,
       releaseTag: "v4.0.0-alpha.2",
       channelPayloadRoot: `sha256:${"3".repeat(64)}`,
@@ -159,7 +160,7 @@ function installerFixture() {
         schema: unsigned.schema,
         bundleRoot,
         manifestDigest: digest(manifestBytes),
-        sourceCommit: SOURCE_SHA,
+        sourceCommit,
         channel: "alpha",
         channelPayloadRoot: unsigned.identity.channelPayloadRoot,
         channelFileDigest: unsigned.identity.channelFileDigest,
@@ -235,6 +236,25 @@ test("installer publication bundle is independently sealed from public bytes", a
   );
   assert.equal(seal.bundleRoot, value.evidence.publication.payloadRoot);
   assert.match(seal.sealRoot, /^sha256:[a-f0-9]{64}$/);
+});
+
+test("sealed recovery binds installer bundle to its distinct candidate source", () => {
+  const value = installerFixture(CANDIDATE_SOURCE_SHA);
+  const recoveryExpected = {
+    ...expected,
+    candidateSourceSha: CANDIDATE_SOURCE_SHA,
+  };
+  const result = validatePublicationCommitEvidence(
+    value.evidence,
+    recoveryExpected,
+  );
+  assert.equal(result.identity.sourceSha, SOURCE_SHA);
+  assert.equal(result.installerBundle.sourceCommit, CANDIDATE_SOURCE_SHA);
+
+  assert.throws(
+    () => validatePublicationCommitEvidence(value.evidence, expected),
+    /installer bundle release identity mismatch/,
+  );
 });
 
 test("installer publication bundle rejects transport and read-back drift", async () => {

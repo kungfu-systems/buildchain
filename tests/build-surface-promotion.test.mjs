@@ -291,6 +291,14 @@ test("promotion commits consumer discovery authority only after public release a
   );
   assert.match(
     wrapper,
+    /BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: \$\{\{ steps\.rc\.outputs\.release-candidate-source-sha \|\| needs\.preflight\.outputs\.requested-sha \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /--candidate-source-sha "\$\{BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA\}"/,
+  );
+  assert.match(
+    wrapper,
     /publication-commit-command requires standalone-binary-distribution=false/,
   );
   assert.match(

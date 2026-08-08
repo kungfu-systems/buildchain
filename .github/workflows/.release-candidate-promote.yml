@@ -1897,6 +1897,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_COMMIT_TOKEN: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_TOKEN }}
           BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY }}
           BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: ${{ steps.rc.outputs.release-candidate-source-sha || needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA: ${{ steps.promote.outputs.transaction-release-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
           GH_TOKEN: ${{ github.token }}
@@ -1924,6 +1925,7 @@ jobs:
               --evidence "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" \
               --version "${BUILDCHAIN_PUBLICATION_COMMIT_VERSION}" \
               --source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA}" \
+              --candidate-source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA}" \
               --release-sha "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA}" \
               --release-tag "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG}"
           )"
