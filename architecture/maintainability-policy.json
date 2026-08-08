@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 286,
-    "maxHandMaintainedSourceLines": 110486,
+    "maxHandMaintainedSourceFiles": 287,
+    "maxHandMaintainedSourceLines": 110917,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22500,
-    "latestTransition": "Delivery Warrant admission now retains an exact active head across regenerated proof timestamps, rereads current protected authority before enqueue, absorbs bounded status propagation, and rejects locked protected branches before selection.",
-    "rationale": "The transition adds only the current-authority readback, bounded enqueue retry, ruleset-aware locked-branch preflight, exact-head idempotence, documentation, and adversarial tests needed to remove observed Warrant waits. The preflight distinguishes a legitimate ruleset-only branch from an inaccessible classic protection document, the existing controller stays below its approved file ceiling, no authority is duplicated, and these exact repository ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22547,
+    "latestTransition": "Apple archive signing seals exact JIT entitlement intent, Delivery Warrant admission retains exact active heads and ruleset authority, and diagnostic probes plus standalone staging are bounded away from shared temporary roots.",
+    "rationale": "The combined transition preserves the protected signing authority from the current base and adds current-authority readback, bounded enqueue retry, ruleset-aware locked-branch preflight, exact-head idempotence, bounded tool-version probes, ephemeral standalone staging cleanup, documentation, and adversarial tests needed to remove observed waits. No authority is duplicated, and the exact merged repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -20,8 +20,8 @@
   },
   "approvedNewFileTransitions": {
     "packages/core/publication-rehearsal-runtime.js": {
-      "maxLines": 909,
-      "rationale": "The public audit surface keeps strict capsule normalization, path and file verification, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."
+      "maxLines": 921,
+      "rationale": "The public audit surface keeps strict capsule normalization, path and streaming file verification including artifacts larger than the Node Buffer limit, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."
     },
     "packages/core/release-tail-provider-plane.js": {
       "maxLines": 1228,
@@ -46,9 +46,17 @@
       "maxFunctionLines": 679,
       "rationale": "The contract world records the additive candidate-run recovery inputs, reuse guarantees, and reviewed predecessor digests for both public promotion surfaces; this exact public-contract wiring ceiling cannot grow implicitly."
     },
+    "packages/core/buildchain-config.js": {
+      "maxLines": 1806,
+      "rationale": "Artifact signing configuration admits only the Buildchain-owned JIT profile with exact safe archive-relative target paths while rejecting credentials, entitlement files, wildcard paths, incompatible artifact kinds, and incomplete declarations; this exact wiring ceiling cannot grow implicitly."
+    },
     "packages/core/index.js": {
       "maxLines": 695,
       "rationale": "The root package index exposes the three provider-plane modules while preserving every existing export; this exact additive public wiring ceiling cannot grow implicitly."
+    },
+    "packages/core/diagnostics.js": {
+      "maxLines": 1909,
+      "rationale": "Tool-version discovery now executes from a bounded filesystem root instead of walking arbitrary consumer and shared temporary parents; the five-line exact ceiling increase prevents uninterruptible diagnostic scans without changing project-aware commands."
     },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
@@ -137,6 +145,7 @@
           "github-release-artifact-paths",
           "github-release-notes",
           "github-release-title",
+          "plan-before-target-advance",
           "promote-only-release-candidate",
           "publication-capability-json",
           "publication-gate-aggregate-json",
@@ -205,7 +214,7 @@
         "secrets": [],
         "outputs": []
       },
-      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording."
+      "rationale": "Add an opt-in declarative release-tail selector and durable state path while retaining the legacy default. The selected path uses the same sealed assets, exact release SHA, bounded provider retries, public readback, rooted receipts, and existing publication completion recording. The dry-run-only pre-target planning input records both the observed target SHA and requested source SHA without weakening normal ref identity checks."
     },
     "action:run-lifecycle": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

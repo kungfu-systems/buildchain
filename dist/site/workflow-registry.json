@@ -2917,6 +2917,7 @@
         "github-release-artifact-paths",
         "github-release-notes",
         "github-release-title",
+        "plan-before-target-advance",
         "promote-only-release-candidate",
         "publication-capability-json",
         "publication-gate-aggregate-json",
@@ -2982,7 +2983,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 78,
+      "inputCount": 79,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

@@ -237,7 +237,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:042c593463977be9745b91163196920da17b41c853d012e40c60c9130ed66fb2"
+      "digest": "sha256:42c79a5459172d7fb26f858067b2f757a32b5581dca68abbc0b2f931e05d61fd"
     },
     {
       "id": "build-facts",
@@ -277,7 +277,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7bc04f658d7e298872756278c60143d8edf5dfb841d0b0d3ea62af8028735b54"
+      "digest": "sha256:4741dc7661d40e14df8203d88a709b9becb08edc4313f5ad308c7e80bf672085"
     },
     {
       "id": "publish-transaction",
@@ -301,7 +301,7 @@
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2c02447a0087d8b9a0d677357a157f5d095678367a8bfc27e4802a5e1417d5a7"
+      "digest": "sha256:24371b855ac80a4277018a412d9d73266eb2524d650c0f7ea80739bc2982ae15"
     },
     {
       "id": "publication-rehearsal",

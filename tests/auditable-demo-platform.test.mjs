@@ -16,7 +16,7 @@ const NON_AUTHORITIES = [
 ];
 const RENDITIONS = [
   { id: "1080p", role: "primary", columns: 150, rows: 36, width: 1920, height: 1080 },
-  { id: "720p", role: "responsive", columns: 100, rows: 28, width: 1280, height: 720 },
+  { id: "720p", role: "responsive", columns: 150, rows: 28, width: 1280, height: 720 },
 ];
 
 function temporary(t) {
@@ -227,6 +227,12 @@ test("scenario contract accepts multiple demos and rejects shell command authori
   const invalidComposition = structuredClone(scenario());
   invalidComposition.compositionMode = "cropped-terminal";
   assert.throws(() => validateScenario(invalidComposition), /composition mode/u);
+  const shrunkenResponsiveGrid = structuredClone(scenario());
+  shrunkenResponsiveGrid.renditions[1].columns = 100;
+  assert.throws(
+    () => validateScenario(shrunkenResponsiveGrid),
+    /native rendition profiles exactly/u,
+  );
 
   const readable = structuredClone(scenario());
   readable.playback = {
@@ -344,7 +350,7 @@ test("capture shares ordered state within a demo and creates independent native 
   const manifest = JSON.parse(fs.readFileSync(path.join(output, "manifest.json"), "utf8"));
   assert.equal(manifest.status, "qualified");
   assert.equal(manifest.networkIsolation, "test-only");
-  assert.deepEqual(manifest.renditions.map(({ columns, rows }) => [columns, rows]), [[150, 36], [100, 28]]);
+  assert.deepEqual(manifest.renditions.map(({ columns, rows }) => [columns, rows]), [[150, 36], [150, 28]]);
   assert.notEqual(manifest.renditions[0].terminalCaptureRoot, manifest.renditions[1].terminalCaptureRoot);
   const captureValue = JSON.parse(fs.readFileSync(path.join(output, "renditions/1080p/terminal-capture.json"), "utf8"));
   assert.equal(captureValue.events.some((event) => Buffer.from(event.data, "base64").includes(Buffer.from("\u001b[38;5;42m"))), true, "ANSI color bytes remain in the capture");

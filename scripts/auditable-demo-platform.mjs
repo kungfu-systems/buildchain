@@ -23,7 +23,7 @@ const NON_AUTHORITIES = [
 ];
 const RENDITIONS = [
   { id: "1080p", role: "primary", columns: 150, rows: 36, width: 1920, height: 1080 },
-  { id: "720p", role: "responsive", columns: 100, rows: 28, width: 1280, height: 720 },
+  { id: "720p", role: "responsive", columns: 150, rows: 28, width: 1280, height: 720 },
 ];
 const STANDARD_MAX_SECONDS = 60;
 const LONG_FORM_MAX_SECONDS = 180;

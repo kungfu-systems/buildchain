@@ -61,6 +61,43 @@ jobs:
           node-version: "24"
           registry-url: "https://registry.npmjs.org/"
 
+      - name: Install candidate tooling dependencies
+        run: corepack pnpm@11.7.0 install --frozen-lockfile --ignore-scripts
+
+      - name: Plan the exact self-publication version before sealing product bytes
+        id: publication-plan
+        uses: ./actions/promote-buildchain-ref
+        with:
+          token: ${{ github.token }}
+          sha: ${{ github.event.pull_request.head.sha }}
+          target-ref: ${{ github.base_ref }}
+          dry-run: "true"
+          plan-before-target-advance: "true"
+          require-governance: "false"
+          require-version-state: "true"
+          allow-repository: ${{ github.repository }}
+          publish-transaction: "true"
+          require-publish-source-lock: "false"
+          publish-source-ref: ""
+          publish-source-sha: ""
+          publish-source-locked: ""
+          release-passport: "false"
+
+      - name: Materialize the planned version in the candidate workspace
+        shell: bash
+        env:
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ steps.publication-plan.outputs.planned-publication-version }}
+          BUILDCHAIN_PUBLICATION_CHANNEL: ${{ startsWith(github.base_ref, 'alpha/') && 'alpha' || 'release' }}
+          BUILDCHAIN_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          generated_at="$(git show -s --format=%cI "${GITHUB_SHA}")"
+          node scripts/materialize-self-release-candidate-version.mjs \
+            --version "${BUILDCHAIN_PUBLICATION_VERSION}" \
+            --channel "${BUILDCHAIN_PUBLICATION_CHANNEL}" \
+            --source-sha "${BUILDCHAIN_SOURCE_SHA}" \
+            --generated-at "${generated_at}"
+
       - name: Download exact Release Candidate Passport
         uses: actions/download-artifact@v7.0.0
         with:
@@ -84,6 +121,10 @@ jobs:
 
           const passportPath = ".buildchain/buildchain-package-candidate/passport/release-candidate-passport.json";
           const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+          const pack = JSON.parse(fs.readFileSync(".buildchain/buildchain-package-candidate/npm-pack.json", "utf8"));
+          if (pack.length !== 1 || pack[0].version !== process.env.EXPECTED_VERSION) {
+            throw new Error(`sealed package version ${pack[0]?.version || "<empty>"} differs from planned publication ${process.env.EXPECTED_VERSION}`);
+          }
           const tree = process.env.GITHUB_SHA
             ? String((await import("node:child_process")).execFileSync("git", ["show", "-s", "--format=%T", process.env.GITHUB_SHA], { encoding: "utf8" })).trim()
             : "";
@@ -112,6 +153,8 @@ jobs:
           fs.writeFileSync(path.join(process.env.OUTPUT_DIR, "product-payload-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `artifact-name=${manifest.artifactName}\n`);
           NODE
+        env:
+          EXPECTED_VERSION: ${{ steps.publication-plan.outputs.planned-publication-version }}
 
       - name: Upload sealed Buildchain product payload
         uses: actions/upload-artifact@v7.0.1

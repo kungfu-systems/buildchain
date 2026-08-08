@@ -376,6 +376,12 @@ export function sealArtifactSigningRequests({
       signature: {
         profile: declaration.profile,
         required: declaration.required,
+        ...(declaration.entitlementsProfile !== "none"
+          ? {
+              entitlementsProfile: declaration.entitlementsProfile,
+              entitlementsPaths: declaration.entitlementsPaths,
+            }
+          : {}),
       },
     });
     const check = validateArtifactSigningRequest(request);

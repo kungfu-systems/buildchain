@@ -17,6 +17,9 @@ inputs:
   dry-run:
     description: "Explain the release-line promotion plan and report planned ref updates without writing refs"
     default: "false"
+  plan-before-target-advance:
+    description: "Dry-run only: plan the exact publication for an unmerged source while retaining the observed target-ref SHA in evidence"
+    default: "false"
   require-governance:
     description: "Require protected-channel PR lineage and release-from-alpha checks"
     default: "true"
