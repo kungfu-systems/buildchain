@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "70d4fd87f75f92acd4f5a9229100cce21b0d0e47ce2563c4e5b211913448d529",
+    "sha256": "668701e0a65d9b4800e67c818957fe7f444001561cc2002e06f3f798c7e755d5",
     "summary": {
       "cliCommandCount": 113,
       "workflowCount": 64,
       "actionCount": 6,
-      "sitePageCount": 67,
+      "sitePageCount": 68,
       "docCommandRefCount": 896,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "70d4fd87f75f92acd4f5a9229100cce21b0d0e47ce2563c4e5b211913448d529",
+      "sha256": "668701e0a65d9b4800e67c818957fe7f444001561cc2002e06f3f798c7e755d5",
       "summary": {
         "cliCommandCount": 113,
         "workflowCount": 64,
         "actionCount": 6,
-        "sitePageCount": 67,
+        "sitePageCount": 68,
         "docCommandRefCount": 896,
         "failureCount": 0
       },
@@ -6197,6 +6197,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-delivery-warrant-semantic-diff",
+          "name": "site-page:manual:v4-delivery-warrant-semantic-diff",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:versioning",
           "name": "site-page:manual:versioning",
           "kind": "site-page",
@@ -6403,6 +6415,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 405
+    "publicSurfaceCount": 406
   }
 }

@@ -529,7 +529,7 @@ pub fn run_delivery_warrant_trace_fixture(bytes: &[u8]) -> ContractResult<TraceR
         ));
     }
     require_token(&fixture.trace.id, "$/trace/id")?;
-    if !["golden", "replay"].contains(&fixture.trace.kind.as_str()) {
+    if !["golden", "property", "replay"].contains(&fixture.trace.kind.as_str()) {
         return Err(fault(
             "invalid-trace-kind",
             "$/trace/kind",

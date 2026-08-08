@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-delivery-warrant-semantic-diff-report-v1.schema.json",
+  "title": "Buildchain v4 Delivery Warrant semantic diff report",
+  "description": "Source-bound fail-closed qualification evidence for paired TypeScript and effect-disabled Rust projections.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "authority",
+    "rustAuthority",
+    "rustEffects",
+    "recordedAt",
+    "retainUntil",
+    "sources",
+    "contracts",
+    "coverage",
+    "cases",
+    "faultInjection",
+    "stopPolicy",
+    "retention",
+    "blockers",
+    "verdict",
+    "reportRoot"
+  ],
+  "properties": {
+    "schema": {
+      "const": "buildchain-v4-delivery-warrant-semantic-diff-report/v1"
+    },
+    "authority": { "const": "typescript-v3" },
+    "rustAuthority": { "const": "none" },
+    "rustEffects": { "const": "disabled" },
+    "recordedAt": { "$ref": "#/$defs/clock" },
+    "retainUntil": { "$ref": "#/$defs/clock" },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["typescriptRevision", "rustRevision", "validatorVersion"],
+      "properties": {
+        "typescriptRevision": { "$ref": "#/$defs/revision" },
+        "rustRevision": { "$ref": "#/$defs/revision" },
+        "validatorVersion": { "$ref": "#/$defs/token" }
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trace",
+        "projection",
+        "observation",
+        "runner",
+        "traceSchemaRoot",
+        "reportSchemaRoot",
+        "runnerRoot"
+      ],
+      "properties": {
+        "trace": {
+          "const": "buildchain-v4-delivery-warrant-trace-fixture/v1"
+        },
+        "projection": {
+          "const": "buildchain-v4-delivery-warrant-semantic-projection/v1"
+        },
+        "observation": {
+          "const": "buildchain-v4-delivery-warrant-shadow-observation/v1"
+        },
+        "runner": {
+          "const": "buildchain-v4-delivery-warrant-fixture-runner/v1"
+        },
+        "traceSchemaRoot": { "$ref": "#/$defs/root" },
+        "reportSchemaRoot": { "$ref": "#/$defs/root" },
+        "runnerRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "observed", "missing"],
+      "properties": {
+        "required": { "$ref": "#/$defs/tokens" },
+        "observed": { "$ref": "#/$defs/tokens" },
+        "missing": { "$ref": "#/$defs/tokens" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/case" }
+    },
+    "faultInjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bounded", "maximumProbes", "receipts"],
+      "properties": {
+        "bounded": { "const": true },
+        "maximumProbes": { "const": 32 },
+        "receipts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/faultReceipt" }
+        }
+      }
+    },
+    "stopPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retryBudget", "conditions"],
+      "properties": {
+        "retryBudget": { "const": 0 },
+        "conditions": { "$ref": "#/$defs/tokens" }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidenceRoot", "receiptRoot"],
+      "properties": {
+        "status": { "enum": ["retained", "failed"] },
+        "evidenceRoot": { "$ref": "#/$defs/root" },
+        "receiptRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/blocker" }
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "zeroUnexplainedDifferences",
+        "nextEligibleStage",
+        "v4WriteAuthorized"
+      ],
+      "properties": {
+        "status": { "enum": ["qualified", "blocked"] },
+        "zeroUnexplainedDifferences": { "type": "boolean" },
+        "nextEligibleStage": {
+          "oneOf": [
+            { "const": "legacy-authoritative-v4-read" },
+            { "type": "null" }
+          ]
+        },
+        "v4WriteAuthorized": { "const": false }
+      }
+    },
+    "reportRoot": { "$ref": "#/$defs/root" }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40,64}$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "tokens": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/token" }
+    },
+    "clock": {
+      "type": "string",
+      "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "retry"],
+      "properties": {
+        "code": { "$ref": "#/$defs/token" },
+        "retry": { "const": "stop" }
+      }
+    },
+    "difference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "legacyRoot",
+        "rustRoot",
+        "differenceRoot",
+        "classification"
+      ],
+      "properties": {
+        "path": { "type": "string", "pattern": "^\\$" },
+        "kind": {
+          "enum": ["missing-legacy", "missing-rust", "value-mismatch"]
+        },
+        "legacyRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "rustRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "differenceRoot": { "$ref": "#/$defs/root" },
+        "classification": {
+          "enum": ["unexplained", "reviewed-exclusion"]
+        },
+        "dispositionRoot": { "$ref": "#/$defs/root" },
+        "reasonCode": { "$ref": "#/$defs/token" },
+        "reviewRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "coverage",
+        "inputRoot",
+        "observationRoot",
+        "legacyProjectionRoot",
+        "rustProjectionRoot",
+        "differences",
+        "differenceRoot",
+        "blockers",
+        "evidenceRoot",
+        "status"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/token" },
+        "coverage": { "$ref": "#/$defs/tokens" },
+        "inputRoot": { "$ref": "#/$defs/root" },
+        "observationRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "legacyProjectionRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "rustProjectionRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "differences": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/difference" }
+        },
+        "differenceRoot": { "$ref": "#/$defs/root" },
+        "blockers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/blocker" }
+        },
+        "evidenceRoot": { "$ref": "#/$defs/root" },
+        "status": { "enum": ["zero-unexplained-diff", "blocked"] }
+      }
+    },
+    "faultReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "caseId",
+        "operation",
+        "path",
+        "detected",
+        "differenceRoots",
+        "receiptRoot"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/token" },
+        "caseId": { "$ref": "#/$defs/token" },
+        "operation": { "enum": ["remove", "replace"] },
+        "path": { "type": "string", "pattern": "^\\$" },
+        "detected": { "type": "boolean" },
+        "differenceRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/root" }
+        },
+        "receiptRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}

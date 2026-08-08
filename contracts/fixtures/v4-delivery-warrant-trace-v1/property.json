@@ -1,0 +1,380 @@
+{
+  "contract": "buildchain-v4-delivery-warrant-trace-fixture/v1",
+  "expectedProjectionRoot": "sha256:e7bda3b6632475fde1701217f0be2ce207473b3d7cef2144308d0dee60d12933",
+  "runner": "buildchain-v4-delivery-warrant-fixture-runner/v1",
+  "schemaVersion": 1,
+  "trace": {
+    "id": "property-recovery-stop",
+    "initialState": {
+      "activeWarrant": null,
+      "candidates": [
+        {
+          "candidateId": "candidate-201",
+          "pullRequestNumber": 201,
+          "status": "queued"
+        }
+      ],
+      "fencingCounter": 0,
+      "generation": 1,
+      "schema": "buildchain-v4-delivery-warrant-state/v1"
+    },
+    "initialStateRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae",
+    "kind": "property",
+    "steps": [
+      {
+        "decision": { "action": "duplicate-noop", "fault": null },
+        "effects": [],
+        "event": {
+          "eventId": "sha256:2d7e8407c3a24e301dc382cc619046a96e5b58f7be8ff6a65c237284e2683d12",
+          "eventType": "duplicate-submitted",
+          "occurredAt": "2026-08-08T00:01:00.000Z",
+          "payload": { "candidateId": "candidate-201" },
+          "schema": "buildchain-v4-event-envelope/v1",
+          "subjectRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae"
+        },
+        "id": "duplicate",
+        "observations": [],
+        "operation": "duplicate-submit",
+        "priorStateRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae",
+        "receipt": {
+          "eventRoot": "sha256:4c538f3d2c16e45dda687df49f2ac27af8a3dc5911715d519a1aca7218632ac6",
+          "fault": null,
+          "nextStateRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae",
+          "outcome": "noop",
+          "priorStateRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae",
+          "receiptType": "duplicate-submitted",
+          "recordedAt": "2026-08-08T00:01:00.000Z",
+          "schema": "buildchain-v4-receipt-envelope/v1"
+        },
+        "receiptRoot": "sha256:bd372555e6d7a959f57e804f757f90bb3ec3ad13e3ac9f23886a65664cb27cda",
+        "sequence": 0,
+        "successorRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae",
+        "successorState": {
+          "activeWarrant": null,
+          "candidates": [
+            {
+              "candidateId": "candidate-201",
+              "pullRequestNumber": 201,
+              "status": "queued"
+            }
+          ],
+          "fencingCounter": 0,
+          "generation": 1,
+          "schema": "buildchain-v4-delivery-warrant-state/v1"
+        }
+      },
+      {
+        "decision": { "action": "candidate-cancelled", "fault": null },
+        "effects": [
+          {
+            "payload": {
+              "expectedOldStateRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae",
+              "nextStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374"
+            },
+            "sequence": 0,
+            "type": "persist-successor"
+          }
+        ],
+        "event": {
+          "eventId": "sha256:e45d54dc086a71ce5160999e91566df7247c277e801f535c9e76ea70b257aafc",
+          "eventType": "candidate-cancelled",
+          "occurredAt": "2026-08-08T00:01:01.000Z",
+          "payload": { "candidateId": "candidate-201" },
+          "schema": "buildchain-v4-event-envelope/v1",
+          "subjectRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae"
+        },
+        "id": "cancel",
+        "observations": [],
+        "operation": "cancel",
+        "priorStateRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae",
+        "receipt": {
+          "eventRoot": "sha256:4f969f5aba0e7d33832d7d65a133708893c4efe7c9c294323970a7b973d35dc8",
+          "fault": null,
+          "nextStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "outcome": "accepted",
+          "priorStateRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae",
+          "receiptType": "candidate-cancelled",
+          "recordedAt": "2026-08-08T00:01:01.000Z",
+          "schema": "buildchain-v4-receipt-envelope/v1"
+        },
+        "receiptRoot": "sha256:6880cf191e73c76f88aae833f5ffcdf5bfbf7c4581c691664a3382092258cbe9",
+        "sequence": 1,
+        "successorRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "successorState": {
+          "activeWarrant": null,
+          "candidates": [
+            {
+              "candidateId": "candidate-201",
+              "pullRequestNumber": 201,
+              "status": "cancelled"
+            }
+          ],
+          "fencingCounter": 0,
+          "generation": 2,
+          "schema": "buildchain-v4-delivery-warrant-state/v1"
+        }
+      },
+      {
+        "decision": { "action": "duplicate-cancellation-noop", "fault": null },
+        "effects": [],
+        "event": {
+          "eventId": "sha256:18d2859f3a2c09dc54e5b894b5d471a9bab7410586da93989e585e3a5b8cb26e",
+          "eventType": "duplicate-cancellation",
+          "occurredAt": "2026-08-08T00:01:02.000Z",
+          "payload": { "candidateId": "candidate-201" },
+          "schema": "buildchain-v4-event-envelope/v1",
+          "subjectRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374"
+        },
+        "id": "duplicate-cancel",
+        "observations": [],
+        "operation": "cancel",
+        "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "receipt": {
+          "eventRoot": "sha256:e2e9f1d81d343c2036f210d10c5dd0c48894bca1bdae7118eb073d05a6629e0f",
+          "fault": null,
+          "nextStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "outcome": "noop",
+          "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "receiptType": "duplicate-cancellation",
+          "recordedAt": "2026-08-08T00:01:02.000Z",
+          "schema": "buildchain-v4-receipt-envelope/v1"
+        },
+        "receiptRoot": "sha256:9d149ae5530f7bbac54b3a0f191b0bf4196357a5b2a7635427655deb631d7e3f",
+        "sequence": 2,
+        "successorRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "successorState": {
+          "activeWarrant": null,
+          "candidates": [
+            {
+              "candidateId": "candidate-201",
+              "pullRequestNumber": 201,
+              "status": "cancelled"
+            }
+          ],
+          "fencingCounter": 0,
+          "generation": 2,
+          "schema": "buildchain-v4-delivery-warrant-state/v1"
+        }
+      },
+      {
+        "decision": { "action": "cas-accepted", "fault": null },
+        "effects": [],
+        "event": {
+          "eventId": "sha256:07b5707bf6b70487eaf2ad99b00b68f71b72323699973fc3aba4b296c44f3163",
+          "eventType": "expected-old-accepted",
+          "occurredAt": "2026-08-08T00:01:03.000Z",
+          "payload": {
+            "expectedOldStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374"
+          },
+          "schema": "buildchain-v4-event-envelope/v1",
+          "subjectRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374"
+        },
+        "id": "cas",
+        "observations": [],
+        "operation": "expected-old",
+        "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "receipt": {
+          "eventRoot": "sha256:9420c596e7ff99ef6234e927882b0d5f21e7e65c414ebaa60a20ff5e170cf881",
+          "fault": null,
+          "nextStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "outcome": "noop",
+          "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "receiptType": "expected-old-accepted",
+          "recordedAt": "2026-08-08T00:01:03.000Z",
+          "schema": "buildchain-v4-receipt-envelope/v1"
+        },
+        "receiptRoot": "sha256:89b8bd266822fc6065081d38751cd75d4f1d50e219fbac6085c3aaa3c26f4653",
+        "sequence": 3,
+        "successorRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "successorState": {
+          "activeWarrant": null,
+          "candidates": [
+            {
+              "candidateId": "candidate-201",
+              "pullRequestNumber": 201,
+              "status": "cancelled"
+            }
+          ],
+          "fencingCounter": 0,
+          "generation": 2,
+          "schema": "buildchain-v4-delivery-warrant-state/v1"
+        }
+      },
+      {
+        "decision": { "action": "committed-readback", "fault": null },
+        "effects": [],
+        "event": {
+          "eventId": "sha256:4a52e1139ce973a263caeeaaacd56bc643a1812bf0272ee0ebf67c670f9314b8",
+          "eventType": "state-readback",
+          "occurredAt": "2026-08-08T00:01:04.000Z",
+          "payload": {
+            "observedStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374"
+          },
+          "schema": "buildchain-v4-event-envelope/v1",
+          "subjectRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374"
+        },
+        "id": "response-loss",
+        "observations": [
+          {
+            "payload": {
+              "readbackRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+              "status": "matched"
+            },
+            "sequence": 0,
+            "type": "state-readback"
+          }
+        ],
+        "operation": "response-loss-readback",
+        "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "receipt": {
+          "eventRoot": "sha256:f4c5c6f3b1137a3b153cac761630726caf59488e82435ffc4aad53548053728c",
+          "fault": null,
+          "nextStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "outcome": "noop",
+          "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "receiptType": "state-readback",
+          "recordedAt": "2026-08-08T00:01:04.000Z",
+          "schema": "buildchain-v4-receipt-envelope/v1"
+        },
+        "receiptRoot": "sha256:907540a65dddc0d324019b5c8a39acd573ed37374a33f74af86125e05499345f",
+        "sequence": 4,
+        "successorRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "successorState": {
+          "activeWarrant": null,
+          "candidates": [
+            {
+              "candidateId": "candidate-201",
+              "pullRequestNumber": 201,
+              "status": "cancelled"
+            }
+          ],
+          "fencingCounter": 0,
+          "generation": 2,
+          "schema": "buildchain-v4-delivery-warrant-state/v1"
+        }
+      },
+      {
+        "decision": {
+          "action": null,
+          "fault": {
+            "class": "concurrency",
+            "code": "stale-expected-old",
+            "message": "expected-old root did not match the retained queue state",
+            "path": "$/state/expectedOldStateRoot",
+            "retry": "reread",
+            "schema": "buildchain-v4-contract-fault/v1"
+          }
+        },
+        "effects": [],
+        "event": {
+          "eventId": "sha256:b767617ee5ac729f93081179589e70ae1085bbd28d982f23585619eefbbbcc81",
+          "eventType": "expected-old-rejected",
+          "occurredAt": "2026-08-08T00:01:05.000Z",
+          "payload": {
+            "expectedOldStateRoot": "sha256:ed4e9fa7c3c33b4ada924c673169fd1d41dcfd38be1a12172847b4bd111177ae"
+          },
+          "schema": "buildchain-v4-event-envelope/v1",
+          "subjectRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374"
+        },
+        "id": "stale-cas",
+        "observations": [],
+        "operation": "expected-old",
+        "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "receipt": {
+          "eventRoot": "sha256:be938cb4584d8a2cc314810e80ee497f96858fb5ef65540f7d1177e9125d6b89",
+          "fault": {
+            "class": "concurrency",
+            "code": "stale-expected-old",
+            "message": "expected-old root did not match the retained queue state",
+            "path": "$/state/expectedOldStateRoot",
+            "retry": "reread",
+            "schema": "buildchain-v4-contract-fault/v1"
+          },
+          "nextStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "outcome": "rejected",
+          "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "receiptType": "expected-old-rejected",
+          "recordedAt": "2026-08-08T00:01:05.000Z",
+          "schema": "buildchain-v4-receipt-envelope/v1"
+        },
+        "receiptRoot": "sha256:0be302818c47e4ee7a60365d1601768c41937ee7afd2bdd52b26d05ad91dde31",
+        "sequence": 5,
+        "successorRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "successorState": {
+          "activeWarrant": null,
+          "candidates": [
+            {
+              "candidateId": "candidate-201",
+              "pullRequestNumber": 201,
+              "status": "cancelled"
+            }
+          ],
+          "fencingCounter": 0,
+          "generation": 2,
+          "schema": "buildchain-v4-delivery-warrant-state/v1"
+        }
+      },
+      {
+        "decision": {
+          "action": null,
+          "fault": {
+            "class": "authority",
+            "code": "provider-conflict",
+            "message": "provider readback disagreed with the expected successor root",
+            "path": "$/provider/readbackRoot",
+            "retry": "stop",
+            "schema": "buildchain-v4-contract-fault/v1"
+          }
+        },
+        "effects": [],
+        "event": {
+          "eventId": "sha256:3038f17d9f0bd05fb827b6af024f480f8990fabc97bbcd7d4986e1589a1b0868",
+          "eventType": "provider-conflict",
+          "occurredAt": "2026-08-08T00:01:06.000Z",
+          "payload": {
+            "observedStateRoot": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "schema": "buildchain-v4-event-envelope/v1",
+          "subjectRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374"
+        },
+        "id": "provider-conflict",
+        "observations": [],
+        "operation": "provider-conflict",
+        "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "receipt": {
+          "eventRoot": "sha256:cdffae9fb2728f55db0dbe8d0dec4fc38195cc308d150de091b5a2468eee15d1",
+          "fault": {
+            "class": "authority",
+            "code": "provider-conflict",
+            "message": "provider readback disagreed with the expected successor root",
+            "path": "$/provider/readbackRoot",
+            "retry": "stop",
+            "schema": "buildchain-v4-contract-fault/v1"
+          },
+          "nextStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "outcome": "rejected",
+          "priorStateRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+          "receiptType": "provider-conflict",
+          "recordedAt": "2026-08-08T00:01:06.000Z",
+          "schema": "buildchain-v4-receipt-envelope/v1"
+        },
+        "receiptRoot": "sha256:74f3c73cfdc7942e0fd2012217217d523ed06ab6b58d2088f1d4c7cbd4cbe55b",
+        "sequence": 6,
+        "successorRoot": "sha256:083e2600a3e6bb7353a45a3ea8ada28bea89c39a42f268e737eb7b1e61f37374",
+        "successorState": {
+          "activeWarrant": null,
+          "candidates": [
+            {
+              "candidateId": "candidate-201",
+              "pullRequestNumber": 201,
+              "status": "cancelled"
+            }
+          ],
+          "fencingCounter": 0,
+          "generation": 2,
+          "schema": "buildchain-v4-delivery-warrant-state/v1"
+        }
+      }
+    ]
+  }
+}

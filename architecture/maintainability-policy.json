@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 111590,
+    "maxHandMaintainedSourceFiles": 293,
+    "maxHandMaintainedSourceLines": 111942,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22269,
-    "latestTransition": "The TypeScript Delivery Warrant shadow adapter adds one bounded public-safe observation path and an effect-disabled Rust host command while preserving TypeScript v3 as the only authoritative writer.",
-    "rationale": "The exact typescript-shadow-adapter ceiling adds one hand-maintained JavaScript source below the unchanged 600-line new-file limit and extends the existing Rust contracts CLI with a strict host request and response boundary. The adapter runs the legacy TypeScript projection first, passes identical canonical bytes to Rust, binds retained public-safe observations to exact source revisions and a validator version, and bounds timeout, cancellation, crash, malformed response, unsupported capability, and retention failure. Rust exposes only the pure trace projection with an effects-disabled capability; configuration cannot grant writer or provider authority. Focused tests prove the authoritative TypeScript result is unchanged for every shadow outcome and that diagnostics do not leak private failure details. Existing per-file, per-function, workflow, provider-boundary, public-surface, and zero-second-writer budgets remain unchanged. These exact repository ceilings cannot grow implicitly; another source file, effect, writer, verdict policy, or cutover scope requires a separately reviewed transition."
+    "latestTransition": "The Delivery Warrant semantic diff gate adds one fail-closed, source-bound qualification surface over the existing TypeScript-authoritative and effect-disabled Rust shadow projections.",
+    "rationale": "The exact semantic-diff-gate ceiling adds one hand-maintained JavaScript source below the unchanged 600-line new-file limit. It compares retained golden, captured replay, lease-fence, cancellation, duplicate, CAS, response-loss, conflict, and bounded property traces without retaining raw difference values; binds every report to exact TypeScript, Rust, schema, runner, and validator roots; and requires reviewed, root-bound dispositions for exclusions. Bounded fault probes cover decision, successor, generation, fencing, effects, observations, and receipt drift, while failed coverage, observation, source binding, public-safety, retention, or fault detection stops qualification with zero retry budget. The qualified verdict permits only the next legacy-authoritative v4 read stage and always records v4WriteAuthorized=false, so this transition creates no writer, provider, cutover, or production authority. Existing per-file, per-function, workflow, provider-boundary, public-surface, and zero-second-writer budgets remain unchanged. These exact repository ceilings cannot grow implicitly; another source file, effect, writer, verdict policy, or cutover scope requires a separately reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,

@@ -201,7 +201,7 @@
       "required": ["id", "kind", "initialState", "initialStateRoot", "steps"],
       "properties": {
         "id": { "$ref": "#/$defs/token" },
-        "kind": { "enum": ["golden", "replay"] },
+        "kind": { "enum": ["golden", "property", "replay"] },
         "initialState": { "$ref": "#/$defs/state" },
         "initialStateRoot": { "$ref": "#/$defs/root" },
         "steps": {

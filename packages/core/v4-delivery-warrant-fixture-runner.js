@@ -329,7 +329,7 @@ export function runV4DeliveryWarrantTraceFixture(
     "$/trace",
   );
   token(fixture.trace.id, "$/trace/id");
-  if (!["golden", "replay"].includes(fixture.trace.kind))
+  if (!["golden", "property", "replay"].includes(fixture.trace.kind))
     fail("invalid-trace-kind", "$/trace/kind", "unsupported trace kind");
   if (!Array.isArray(fixture.trace.steps) || fixture.trace.steps.length === 0)
     fail(
