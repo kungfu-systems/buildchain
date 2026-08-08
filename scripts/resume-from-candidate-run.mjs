@@ -207,6 +207,7 @@ function candidateArtifactNames({ passport, selected, artifacts, artifactPattern
 
 export function normalizePlatformManifests(downloads, passport) {
   const manifests = [];
+  const paths = [];
   const evidenceByArtifact = new Map();
   const platformById = new Map((passport.platformMatrix || []).map((entry) => [String(entry.platformId || ""), entry]));
   const seenPlatformIds = new Set();
@@ -235,6 +236,7 @@ export function normalizePlatformManifests(downloads, passport) {
       manifest.artifactName = expectedPlatform.artifactName;
       seenPlatformIds.add(platformId);
       manifests.push(manifest);
+      paths.push(file.absolutePath);
       addEvidence(manifest.artifactName, download.record.files);
     }
     if (String(download.artifact.name).includes("-diagnostics-")) {
@@ -249,7 +251,7 @@ export function normalizePlatformManifests(downloads, passport) {
     artifactName,
     files: [...files.values()].sort((left, right) => left.path.localeCompare(right.path)),
   }));
-  return { manifests, evidence };
+  return { manifests, paths, evidence };
 }
 
 function normalizeControllerReceipts(downloads, passport) {
@@ -619,7 +621,7 @@ export async function resumeFromCandidateRun({
         passport: outputPath(passportPath),
         buildSummary: outputPath(initialDownloads[1].files.find((file) => path.basename(file.path) === "build-summary.json").absolutePath),
         payloads: outputPath(payloadRoot),
-        platformManifests: downloads.flatMap((download) => download.files.filter((file) => path.basename(file.path) === "manifest.json").map((file) => outputPath(file.absolutePath))),
+        platformManifests: platformManifestEvidence.paths.map(outputPath),
         githubArtifactAttestationPolicies,
         npmTarballs: tarballs,
         releaseAssets: publication.releaseAssets.map((asset) => outputPath(asset.absolutePath)),

@@ -415,10 +415,18 @@ test("candidate recovery excludes credential-island manifests outside the Passpo
       const evidence = { path: "manifest.json", size: fs.statSync(absolutePath).size, sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex")}` };
       return { artifact: { name }, files: [{ ...evidence, absolutePath }], record: { files: [evidence] } };
     });
+    const unrelatedManifestPath = path.join(workspace, "payload-manifest.json");
+    fs.writeFileSync(unrelatedManifestPath, `${JSON.stringify({ name: "dependency-manifest" })}\n`);
+    downloads.push({
+      artifact: { name: "kungfu-macos-arm64-source" },
+      files: [{ path: "node_modules/example/manifest.json", absolutePath: unrelatedManifestPath }],
+      record: { files: [] },
+    });
     const normalized = normalizePlatformManifests(downloads, {
       platformMatrix: [{ platformId: "macos-arm64", artifactName: "kungfu-macos-arm64-source" }],
     });
     assert.deepEqual(normalized.manifests.map((entry) => entry.platform.id), ["macos-arm64"]);
+    assert.deepEqual(normalized.paths, [path.join(workspace, "macos-arm64.json")]);
     assert.deepEqual(normalized.evidence.map((entry) => entry.artifactName), ["kungfu-macos-arm64-source"]);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
@@ -689,7 +697,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(
     advanced,
-    /name: Bridge recovered Buildchain runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' \}\}/,
+    /name: Bridge Buildchain self-runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' \}\}/,
   );
   assert.match(
     advanced,
