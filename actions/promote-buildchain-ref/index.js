@@ -459,6 +459,7 @@ async function main() {
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath, releaseCandidateVersion,
     releaseCandidateRecoveryReceiptPath,
+    releaseCandidateReleaseAssetPaths: githubReleaseArtifactPaths,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,

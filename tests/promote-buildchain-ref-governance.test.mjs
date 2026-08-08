@@ -3652,6 +3652,11 @@ throw new Error("validated durable evidence must prevent a second registry publi
   run(["git", "init"], cwd);
   run(["git", "add", "."], cwd);
   run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "release material"], cwd);
+  const releaseAssetPath = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-recovered-asset-")),
+    "kungfu-episodes-cli-linux-x64.tar.gz",
+  );
+  fs.writeFileSync(releaseAssetPath, "sealed-candidate-bytes");
 
   const artifact = {
     group: "libnode",
@@ -3733,6 +3738,7 @@ throw new Error("validated durable evidence must prevent a second registry publi
     cwd,
     publishTransaction: true,
     promoteOnlyReleaseCandidate: true,
+    releaseCandidateReleaseAssetPaths: [releaseAssetPath],
     expectedPublicationVersion: packageVersion,
     releasePassport: true,
     releasePassportProductName: "Libnode",
@@ -3745,6 +3751,17 @@ throw new Error("validated durable evidence must prevent a second registry publi
   assert.equal(refs.get(`tags/${staleTag}`), staleTagSha);
   assert.equal(refs.get(`tags/${requestedTag}`), SHA);
   assert.equal(refs.get(`tags/v${packageVersion}`), SHA);
+  const recoveredPassport = JSON.parse(
+    fs.readFileSync(
+      path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+      "utf8",
+    ),
+  );
+  assert.ok(
+    recoveredPassport.artifacts.some(
+      (artifact) => artifact.name === "kungfu-episodes-cli-linux-x64.tar.gz",
+    ),
+  );
   const recoveredImpact = JSON.parse(
     fs.readFileSync(path.join(cwd, ".buildchain/release-passport/impact.json"), "utf8"),
   );

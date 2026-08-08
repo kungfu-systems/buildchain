@@ -4747,6 +4747,7 @@ async function promoteBuildchainRefs({
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releaseCandidateVersion = "",
   releaseCandidateRecoveryReceiptPath = "",
+  releaseCandidateReleaseAssetPaths = [],
   releaseCandidateFamilyEvidenceRequired = false,
   releaseCandidateFamilyEvidenceRoot = "",
   releaseCandidateFamilyInitiativeId = "",
@@ -4860,22 +4861,25 @@ async function promoteBuildchainRefs({
   let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
     const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
-    releaseCandidateValidation = validatePromotionReleaseCandidate({
-      cwd,
-      passportPath: releaseCandidatePassportPath,
-      buildSummaryPath: releaseCandidateBuildSummaryPath,
-      repository: `${owner}/${repo}`,
-      targetChannel: rule.channel,
-      version: releaseCandidateVersion,
-      recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
-      targetRef,
-      sourceHeadSha: sha,
-      sourceTreeSha: targetCommitInfo.treeSha,
-      requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
-      familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
-      familyInitiativeId: releaseCandidateFamilyInitiativeId,
-      familyAssignmentId: releaseCandidateFamilyAssignmentId,
-    });
+    releaseCandidateValidation = {
+      ...validatePromotionReleaseCandidate({
+        cwd,
+        passportPath: releaseCandidatePassportPath,
+        buildSummaryPath: releaseCandidateBuildSummaryPath,
+        repository: `${owner}/${repo}`,
+        targetChannel: rule.channel,
+        version: releaseCandidateVersion,
+        recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
+        targetRef,
+        sourceHeadSha: sha,
+        sourceTreeSha: targetCommitInfo.treeSha,
+        requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
+        familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
+        familyInitiativeId: releaseCandidateFamilyInitiativeId,
+        familyAssignmentId: releaseCandidateFamilyAssignmentId,
+      }),
+      releaseAssets: uniquePaths(releaseCandidateReleaseAssetPaths),
+    };
     updates.push({
       action: "verified-release-candidate",
       sha,

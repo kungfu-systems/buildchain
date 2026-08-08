@@ -116,6 +116,17 @@ test("release passport recovers the live candidate release-asset paths", () => {
   );
 });
 
+test("production action forwards recovered release assets into candidate validation", () => {
+  const source = fs.readFileSync(
+    fileURLToPath(new URL("../actions/promote-buildchain-ref/index.js", import.meta.url)),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /releaseCandidateReleaseAssetPaths:\s*githubReleaseArtifactPaths/,
+  );
+});
+
 test("publish subprocesses omit oversized inline variables", () => {
   const name = "INPUT_RELEASE_PASSPORT_PLATFORM_MANIFEST_PATHS";
   const previous = process.env[name];
