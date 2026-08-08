@@ -37,6 +37,7 @@ const {
   generateReleaseEvidenceInputs,
   resolveProtectedStatusCheckContext,
   releasePassportArtifactFiles,
+  releasePassportAssetsFromSealedBundle,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
@@ -54,6 +55,38 @@ const {
 const {
   transitionReleaseTransaction,
 } = await import("../packages/core/publish-transaction.js");
+
+test("release passport recovers assets from the durable sealed-bundle manifest", () => {
+  const cwd = path.join("/tmp", "buildchain-recovered-passport");
+  const assets = releasePassportAssetsFromSealedBundle({
+    cwd,
+    result: {
+      transaction: {
+        version: "4.0.0-alpha.1",
+        sealed_bundle: {
+          releaseAssets: [{
+            path: "release-assets/kungfu-episodes-cli-linux-x64.tar.gz",
+            size: 42,
+            sha256: "a".repeat(64),
+          }],
+        },
+      },
+    },
+  });
+  assert.deepEqual(assets, [{
+    name: "kungfu-episodes-cli-linux-x64.tar.gz",
+    path: path.join(
+      cwd,
+      ".buildchain",
+      "recovered-publication",
+      "4.0.0-alpha.1",
+      "release-assets",
+      "kungfu-episodes-cli-linux-x64.tar.gz",
+    ),
+    size: 42,
+    sha256: "a".repeat(64),
+  }]);
+});
 
 test("publish subprocesses omit oversized inline variables", () => {
   const name = "INPUT_RELEASE_PASSPORT_PLATFORM_MANIFEST_PATHS";

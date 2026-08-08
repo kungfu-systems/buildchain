@@ -1869,6 +1869,24 @@ function generateReleaseEvidenceInputs({
   });
 }
 
+function releasePassportAssetsFromSealedBundle({ result, cwd }) {
+  const verifiedBundle = result?.sealedBundle;
+  const durableManifest = verifiedBundle?.manifest || result?.transaction?.sealed_bundle;
+  const releaseAssets = verifiedBundle?.releaseAssets?.length > 0
+    ? verifiedBundle.releaseAssets
+    : durableManifest?.releaseAssets || [];
+  const bundleRoot = verifiedBundle?.bundleRoot || sealedBundleRecoveryRoot(
+    cwd,
+    result?.transaction?.version,
+  );
+  return releaseAssets.map((asset) => ({
+    name: path.basename(asset.path || asset.absolutePath || ""),
+    path: asset.absolutePath || resolveMaybeRelative(bundleRoot, asset.path || ""),
+    size: asset.size,
+    sha256: asset.sha256,
+  }));
+}
+
 async function collectAndPersistReleasePassport({
   result,
   owner,
@@ -1927,12 +1945,7 @@ async function collectAndPersistReleasePassport({
     const artifactName = normalized.slice(markerIndex + marker.length).split(path.sep)[0];
     return artifactName ? [normalized.slice(0, markerIndex + marker.length) + artifactName] : [];
   }))];
-  const sealedReleaseAssets = (result.sealedBundle?.releaseAssets || []).map((asset) => ({
-    name: path.basename(asset.absolutePath || asset.path || ""),
-    path: asset.absolutePath || resolveMaybeRelative(result.sealedBundle?.bundleRoot || cwd, asset.path || ""),
-    size: asset.size,
-    sha256: asset.sha256,
-  }));
+  const sealedReleaseAssets = releasePassportAssetsFromSealedBundle({ result, cwd });
   const loadedConfig = loadBuildchainConfig(cwd);
   const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
   const anchorManifestPath = anchorManifest?.path ? path.resolve(cwd, anchorManifest.path) : "";
@@ -5078,6 +5091,7 @@ export {
   createDurableTransactionOperations,
   createRefMutationOperations,
   releasePassportArtifactFiles,
+  releasePassportAssetsFromSealedBundle,
   validatePromotionReleaseCandidate,
   sanitizedPublishProcessEnvironment,
 };
