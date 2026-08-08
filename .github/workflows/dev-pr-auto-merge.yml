@@ -313,6 +313,34 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Reject a locked protected branch before Warrant selection
+        if: inputs.delivery-warrant-mode == 'required'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+        run: |
+          set -euo pipefail
+          encoded_branch="${TARGET_BRANCH//\//%2F}"
+          protection_error="$(mktemp)"
+          if protection="$(gh api "repos/$GITHUB_REPOSITORY/branches/$encoded_branch/protection" 2>"$protection_error")"; then
+            locked="$(jq -r '.lock_branch.enabled // false' <<<"$protection")"
+          elif grep -q 'HTTP 404' "$protection_error"; then
+            locked=false
+          else
+            cat "$protection_error" >&2
+            exit 1
+          fi
+          rm -f "$protection_error"
+          applied_rules="$(gh api "repos/$GITHUB_REPOSITORY/rules/branches/$encoded_branch")"
+          if jq -e 'any(.[]?; .type == "update")' <<<"$applied_rules" >/dev/null; then
+            locked=true
+          fi
+          if [ "$locked" = "true" ]; then
+            echo "::error::Protected branch $TARGET_BRANCH is locked by classic protection or an applied update rule; native merge queue admission cannot change a locked branch"
+            exit 1
+          fi
+
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"

@@ -2,7 +2,6 @@
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { createBuildchainLogger } from "../packages/core/logging.js";
@@ -224,16 +223,16 @@ function postjectArgs(binaryPath, blobPath) {
   return args;
 }
 
-export function buildStandaloneBinary({
+function buildStandaloneBinaryInTemp({
   cwd = process.cwd(),
   outputDir = "dist/binary",
   name = "buildchain",
   version = "",
   packageManagerInstall = false,
   logPath = undefined,
+  tempDir,
 } = {}) {
   const resolvedOutputDir = path.resolve(cwd, outputDir);
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-sea-"));
   const triple = platformTriple();
   const archiveBase = `${name}-${triple}`;
   const logger = createBuildchainLogger({
@@ -382,6 +381,18 @@ export function buildStandaloneBinary({
   });
   writeLogSummary(logger, cwd, resolvedOutputDir, archiveBase);
   return manifest;
+}
+
+export function buildStandaloneBinary(options = {}) {
+  const cwd = path.resolve(options.cwd || process.cwd());
+  const tempRoot = path.join(cwd, ".buildchain", "tmp");
+  fs.mkdirSync(tempRoot, { recursive: true });
+  const tempDir = fs.mkdtempSync(path.join(tempRoot, "sea-"));
+  try {
+    return buildStandaloneBinaryInTemp({ ...options, cwd, tempDir });
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

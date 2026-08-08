@@ -223,7 +223,12 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
           selected = existing;
         } else {
           if (before.activeWarrant?.candidateId === existing.candidateId) {
-            throw new Error("selected candidate sourceHead cannot change before terminal Warrant closeout");
+            if (existing.sourceHead !== attemptedCandidate.sourceHead) {
+              throw new Error("selected candidate sourceHead cannot change before terminal Warrant closeout");
+            }
+            action = "active-warrant-retained-noop";
+            selected = existing;
+            return { candidate: selected, action };
           }
           const headChanged = existing.sourceHead !== attemptedCandidate.sourceHead;
           existing.sourceHead = attemptedCandidate.sourceHead;

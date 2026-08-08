@@ -1561,6 +1561,14 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /dry-run: false/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ inputs\.expected-pr-number \}\} · required Delivery Warrant"/);
+  const controller = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
+    "utf8",
+  );
+  assert.match(controller, /branches\/\$encoded_branch\/protection/);
+  assert.match(controller, /grep -q 'HTTP 404'/);
+  assert.match(controller, /rules\/branches\/\$encoded_branch/);
+  assert.match(controller, /\.type == "update"/);
   assert.doesNotMatch(workflow, /secrets: inherit/);
   assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
   assert.doesNotMatch(workflow.slice(workflow.indexOf("    with:")), /\$\{\{ inputs\./);

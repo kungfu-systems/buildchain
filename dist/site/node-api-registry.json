@@ -4794,7 +4794,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 559
+        "line": 564
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4831,7 +4831,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 511
+        "line": 516
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5113,7 +5113,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 428
+        "line": 433
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5179,7 +5179,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 562
+        "line": 567
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5212,7 +5212,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 269
+        "line": 274
       },
       "example": "import { rankDevDeliveryCandidates } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5245,7 +5245,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 461
+        "line": 466
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5278,7 +5278,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 293
+        "line": 298
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5302,7 +5302,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 560
+        "line": 565
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5560,7 +5560,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1085
+        "line": 1090
       },
       "example": "import { classifyProcessCommand } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5589,7 +5589,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 248
+        "line": 252
       },
       "example": "import { collectBuildchainDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5618,7 +5618,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 922
+        "line": 927
       },
       "example": "import { collectCacheDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5647,7 +5647,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 573
+        "line": 578
       },
       "example": "import { collectCompilerCacheDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5676,7 +5676,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 944
+        "line": 949
       },
       "example": "import { collectGitDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5705,7 +5705,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 295
+        "line": 299
       },
       "example": "import { collectNativeDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5734,7 +5734,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1029
+        "line": 1034
       },
       "example": "import { collectProcessTreeSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5758,7 +5758,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 468
+        "line": 472
       },
       "example": "import { collectRunnerDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5787,7 +5787,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 495
+        "line": 499
       },
       "example": "import { collectToolDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5816,7 +5816,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1408
+        "line": 1413
       },
       "example": "import { createDiagnosticsArtifact } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5845,7 +5845,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 722
+        "line": 727
       },
       "example": "import { createStructuredCacheEvidence } from \"@kungfu-tech/buildchain/diagnostics\";",
       "maturity": "stable",
@@ -5874,7 +5874,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1188
+        "line": 1193
       },
       "example": "import { detectRequestedParallelism } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5903,7 +5903,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1223
+        "line": 1228
       },
       "example": "import { detectRequestedParallelismFromProcessSamples } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5932,7 +5932,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1786
+        "line": 1791
       },
       "example": "import { formatDiagnosticsSummaryTable } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5961,7 +5961,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1468
+        "line": 1473
       },
       "example": "import { readDiagnosticsArtifact } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5998,7 +5998,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 953
+        "line": 958
       },
       "example": "import { redactDiagnosticsValue } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6027,7 +6027,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1362
+        "line": 1367
       },
       "example": "import { startProcessSampler } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6056,7 +6056,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1824
+        "line": 1829
       },
       "example": "import { summarizeDiagnosticsArtifacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6085,7 +6085,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 219
+        "line": 223
       },
       "example": "import { summarizeLifecycleObservability } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6114,7 +6114,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1254
+        "line": 1259
       },
       "example": "import { summarizeProcessSamples } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6143,7 +6143,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 325
+        "line": 329
       },
       "example": "import { validateAnchoredPackageRelease } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6176,7 +6176,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1459
+        "line": 1464
       },
       "example": "import { writeDiagnosticsArtifact } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20852,7 +20852,7 @@
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
-      "digest": "sha256:21d14194f9b876927c54b53cecf8265b23085b05f98d57c5526ef2a4a033962f",
+      "digest": "sha256:f1f9ded9dbb022c930d21fa408c2b0f19ff164b6fcf047f3ee644fd183ff4584",
       "summary": "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -20904,7 +20904,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:09a0b75d556d9722faab70a7e9113701f33edf51386d6c4d5f00c7a1d786e925",
+      "digest": "sha256:5acf61bf7e7da8e1722fc807988a47a20bc29ebb5f8330f2a579425cbefd3226",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -22188,7 +22188,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:5688f0011cd14191ca2fe15dc88970278c51f588bff9d40fc20b2076110db23c"
+      "digest": "sha256:42c79a5459172d7fb26f858067b2f757a32b5581dca68abbc0b2f931e05d61fd"
     },
     {
       "id": "build-facts",

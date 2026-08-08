@@ -91,6 +91,42 @@ test("duplicate submission is idempotent and safe head repair retains queue age"
   assert.equal(repaired.receipt.sourceProofRoot, ROOTS.proof);
 });
 
+test("active exact-head Warrant ignores regenerated proof timestamps without rewriting proof", () => {
+  const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(first.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+  const replayed = submitDevDeliveryCandidate(
+    selected.queue,
+    candidate(100, { sourceProofRoot: ROOTS.context }),
+    { now: "2026-08-04T00:05:00Z" },
+  );
+
+  assert.equal(replayed.receipt.action, "active-warrant-retained-noop");
+  assert.equal(replayed.receipt.expectedOldStateRoot, selected.queue.stateRoot);
+  assert.equal(replayed.queue.activeWarrant.fencingToken, selected.warrant.fencingToken);
+  assert.equal(replayed.queue.candidates[0].sourceProofRoot, ROOTS.proof);
+  assert.equal(replayed.queue.candidates[0].attempts, 1);
+  assert.equal(replayed.queue.candidates[0].updatedAt, "2026-08-04T00:00:01.000Z");
+});
+
+test("active Warrant still rejects an exact semantic candidate head change", () => {
+  const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(first.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+
+  assert.throws(
+    () =>
+      submitDevDeliveryCandidate(
+        selected.queue,
+        candidate(100, { sourceHead: "f".repeat(40) }),
+        { now: "2026-08-04T00:05:00Z" },
+      ),
+    /selected candidate sourceHead cannot change/u,
+  );
+});
+
 test("a terminal semantic candidate opens a chained delivery attempt without rewriting history", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const selected = selectDevDeliveryWarrant(first.queue, { now: "2026-08-04T00:00:01Z" });
