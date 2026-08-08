@@ -89,6 +89,10 @@
       "maxLines": 1368,
       "rationale": "The publication authority now declares the alpha/v4/v4.0 and release/v4/v4.0 protected channels required for the v4 public train. This exact two-line channel transition cannot grow implicitly."
     },
+    "packages/core/buildchain-config.js": {
+      "maxLines": 1806,
+      "rationale": "Artifact signing configuration admits only the Buildchain-owned JIT profile with exact safe archive-relative target paths while rejecting credentials, entitlement files, wildcard paths, incompatible artifact kinds, and incomplete declarations; this exact wiring ceiling cannot grow implicitly."
+    },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."

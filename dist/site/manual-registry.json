@@ -347,7 +347,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:742375e0ecad05796840f5c8abe0bb4b8937d527c075c5815487d2ff5418a76a",
+      "digest": "sha256:86d6031a56f2a7bc4cb01c0d51eead76cce50fc97a65df03cee6fdde3e9d55ac",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -418,7 +418,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:f4e1bccad294e2eb7ade3f558d42abcd34f8b8e98bed55693dfb09a5297c49f6",
+      "digest": "sha256:6d6c4902fcf6396f69f4c9c0054808fc91c1cb4643a5478becb3ffefd547424f",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
