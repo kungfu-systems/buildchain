@@ -968,6 +968,66 @@ test("complete candidate recovery reuses verified public evidence and preserves 
   assert.deepEqual(uploaded, []);
 });
 
+test("complete candidate recovery reuses GitHub-normalized product payload names", async () => {
+  const cwd = makeTempWorkspace({
+    "dist/Kungfu Episodes Setup 4.0.0-alpha.1.exe": "sealed desktop bytes",
+  });
+  const passport = {
+    release: {
+      publicTag: "v4.0.0-alpha.1",
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+      releaseSha: SHA,
+    },
+    product: { repository: "kungfu-systems/kungfu" },
+  };
+  const payloadPath = path.join(
+    cwd,
+    "dist/Kungfu Episodes Setup 4.0.0-alpha.1.exe",
+  );
+  const payloadDigest = crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(payloadPath))
+    .digest("hex");
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({
+          data: [
+            { id: 1, name: "buildchain.release.json" },
+            {
+              id: 2,
+              name: "Kungfu.Episodes.Setup.4.0.0-alpha.1.exe",
+              digest: `sha256:${payloadDigest}`,
+            },
+          ],
+        }),
+        getReleaseAsset: async ({ asset_id }) => ({
+          data: asset_id === 1 ? Buffer.from(JSON.stringify(passport)) : null,
+        }),
+        uploadReleaseAsset: async ({ name }) => uploaded.push(name),
+      },
+    },
+  };
+
+  const result = await reuseCompleteGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    release: { id: 123 },
+    tag: "v4.0.0-alpha.1",
+    target: SHA,
+    channel: "alpha",
+    targetRef: "alpha/v4/v4.0",
+    additionalAssetPaths: [payloadPath],
+    verifyPassport: async () => ({ ok: true, issues: [] }),
+  });
+
+  assert.equal(result.uploadedAssetCount, 0);
+  assert.deepEqual(uploaded, []);
+});
+
 test("complete candidate recovery fills an existing GitHub Release when its public Passport is absent", async (t) => {
   const cwd = makeTempWorkspace({
     ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json": { state: "complete" },
