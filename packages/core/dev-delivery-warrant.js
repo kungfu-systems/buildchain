@@ -69,7 +69,7 @@ function normalizeCandidate(input, expected) {
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
     toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
-    sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0),
+    ...(Object.hasOwn(input, "sourceWorkflowRunId") ? { sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0) } : {}),
     priority: priority(input.priority),
     enqueuedAt: timestamp(input.enqueuedAt, "candidate enqueuedAt"),
     updatedAt: timestamp(input.updatedAt || input.enqueuedAt, "candidate updatedAt"),
