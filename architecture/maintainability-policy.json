@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 110917,
+    "maxHandMaintainedSourceLines": 111405,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22547,
-    "latestTransition": "Apple archive signing seals exact JIT entitlement intent, Delivery Warrant admission retains exact active heads and ruleset authority, and diagnostic probes plus standalone staging are bounded away from shared temporary roots.",
-    "rationale": "The combined transition preserves the protected signing authority from the current base and adds current-authority readback, bounded enqueue retry, ruleset-aware locked-branch preflight, exact-head idempotence, bounded tool-version probes, ephemeral standalone staging cleanup, documentation, and adversarial tests needed to remove observed waits. No authority is duplicated, and the exact merged repository ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22567,
+    "latestTransition": "Sealed-candidate recovery reuses exact four-platform payload bytes across interrupted publication, with bounded evidence transport and rooted idempotent receipts.",
+    "rationale": "The recovery transition carries the exact candidate, artifact, Passport, controller, transaction, and publication identities needed to finish an interrupted Alpha without rebuilding product payloads. The workflow delta exposes only the explicit recovery inputs and immutable runtime binding, and the source delta includes adversarial replay tests; these exact post-integration ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -26,20 +26,30 @@
     "packages/core/release-tail-provider-plane.js": {
       "maxLines": 1228,
       "rationale": "The one versioned transaction authority keeps strict declaration normalization, deterministic effect planning, atomic checkpoints, rooted observations and receipts, and bounded recovery in one independently tested audit surface; this exact preview ceiling cannot grow implicitly."
+    },
+    "scripts/resume-from-candidate-run.mjs": {
+      "maxLines": 712,
+      "rationale": "The recovery resolver keeps immutable run identity, candidate and platform evidence verification, bounded manifest materialization, and a single rooted handoff together so resumed publication cannot substitute or rebuild payload bytes; this exact reviewed ceiling cannot grow implicitly."
     }
   },
   "approvedExistingDebtTransitions": {
     "actions/promote-buildchain-ref/lib.js": {
       "maxLines": 6952,
-      "rationale": "Named responsibility factories preserve both the audited legacy promotion implementation and the sealed-publication and family-evidence behavior already present at the enforcement revision, while the terminal orchestration budget drops from 3066 lines to at most 600. This exact post-integration ceiling cannot grow implicitly."
+      "maxFunctionLines": 699,
+      "rationale": "Named responsibility factories preserve the audited legacy promotion implementation while the recovery path restores exact durable transaction material and reuses already-complete release state. The largest factory grows only to carry the bounded recovery seams, while terminal orchestration remains independently budgeted; these exact ceilings cannot grow implicitly."
     },
     "bin/buildchain.mjs": {
       "maxLines": 1946,
       "rationale": "The runtime entrypoint now binds every compatibility command and alias, including the upstream paper command, through the tested command registry; this exact post-integration wiring ceiling cannot grow implicitly."
     },
     "packages/core/release-passport.js": {
-      "maxLines": 2859,
-      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification while the terminal report constructor drops from 470 lines to at most 180. This exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 2965,
+      "maxFunctionLines": 317,
+      "rationale": "Responsibility-owned validators preserve issue ordering and byte-stable reports while admitting the exact recovery receipt, candidate payload root, platform manifests, and original runtime binding required by an idempotent resumed Passport. These exact post-integration ceilings cannot grow implicitly."
+    },
+    "packages/core/kfd-gate.js": {
+      "maxLines": 1702,
+      "rationale": "The existing KFD Gate validates the additional rooted recovery witness and original-candidate identity without creating a second publication authority; this exact post-integration ceiling cannot grow implicitly."
     },
     "packages/core/buildchain-contract.js": {
       "maxLines": 1037,
@@ -67,7 +77,7 @@
       "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and all existing no-widening checks remain unchanged."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1468,
+      "maxLines": 1470,
       "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, bounded Buildchain self-runtime dependency bridge, and contained durable-finalization helper; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
@@ -75,7 +85,7 @@
       "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator; this combined train ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 810,
+      "maxLines": 816,
       "maxFunctionLines": 306,
       "maxFunctionComplexity": 63,
       "rationale": "The shared candidate resolver selects the original Passport runtime, seals exact payloads under the existing publication bundle contract, streams GitHub archives to disk, and verifies size and sha256 with bounded-memory reads; the exact ceiling cannot grow implicitly."
@@ -89,7 +99,7 @@
       "rationale": "The existing single-flight exact-source Alpha controller now idempotently registers repository-selected GitHub auto-merge intent only after settlement revalidation, with explicit merge-method validation and no direct merge or approval path; this exact ceiling cannot grow implicitly."
     },
     "scripts/build-contract-core.mjs": {
-      "maxLines": 1229,
+      "maxLines": 1234,
       "rationale": "Runner matrix resolution now binds one explicit GitHub-hosted identity and exact hosted versus relay projections so artifact transport cannot cross regions unnecessarily; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-site-bundle.mjs": {
@@ -1221,6 +1231,11 @@
       "maxComplexity": 1,
       "rationale": "Transplanted legacy reconciliation operations; isolated from orchestration and prevented from growing beyond this exact extraction point."
     },
+    "actions/promote-buildchain-ref/lib.js#restorePublishTransactionContext": {
+      "maxLines": 104,
+      "maxComplexity": 30,
+      "rationale": "The recovery helper validates and restores the complete durable publication context in one fail-closed path so a resumed transaction cannot accept partial or mixed identities; this exact ceiling cannot grow implicitly."
+    },
     "actions/promote-buildchain-ref/internal/version-state-operations.js#createVersionStateOperations": {
       "maxLines": 440,
       "maxComplexity": 1,
@@ -1285,8 +1300,8 @@
     },
     "runPublishTransaction": {
       "file": "actions/promote-buildchain-ref/lib.js",
-      "lines": 259,
-      "complexity": 33
+      "lines": 263,
+      "complexity": 34
     },
     "collectPaperStatus": {
       "file": "packages/core/paper.js",
