@@ -146,6 +146,15 @@ function invariantSemanticPreimage(passport) {
   return value;
 }
 
+function hasCompleteInvariantCoverage(value) {
+  const coverage = value?.coverage;
+  return Number.isInteger(coverage?.required)
+    && coverage.required > 0
+    && coverage.verified === coverage.required
+    && [coverage.missing, coverage.falsified, coverage.unqualified]
+      .every((items) => Array.isArray(items) && items.length === 0);
+}
+
 function normalizeInvariantPassport(meta, index = 0) {
   const value = meta?.value;
   const label = `invariantPassportJsons[${index}]`;
@@ -165,11 +174,18 @@ function normalizeInvariantPassport(meta, index = 0) {
   if (value.passportRoot !== expectedRoot) {
     throw new Error(`${label}.passportRoot mismatch: expected ${expectedRoot}, got ${value.passportRoot}`);
   }
-  if (value.verdict !== "verified") {
-    throw new Error(`${label}.verdict must be verified, got ${value.verdict}`);
-  }
-  if (value.coverage?.complete !== true) {
-    throw new Error(`${label}.coverage.complete must be true`);
+  const verifiedPassport = value.verdict === "verified" && value.coverage?.complete === true;
+  const scopedUnqualifiedClaim = value.verdict === "unqualified"
+    && value.coverage?.complete === false
+    && hasCompleteInvariantCoverage(value)
+    && value.releaseClaims?.verdict === "unqualified"
+    && /^sha256:[0-9a-f]{64}$/.test(optionalString(value.releaseClaims?.claimRoot))
+    && Array.isArray(value.releaseClaims?.diagnostics)
+    && value.releaseClaims.diagnostics.length > 0
+    && Array.isArray(value.diagnostics)
+    && value.diagnostics.length === 0;
+  if (!verifiedPassport && !scopedUnqualifiedClaim) {
+    throw new Error(`${label}.verdict must be verified, or unqualified only for complete invariant coverage with one explicit unqualified releaseClaims section`);
   }
   if (value.source?.dirty !== false) {
     throw new Error(`${label}.source.dirty must be false`);
@@ -182,6 +198,9 @@ function normalizeInvariantPassport(meta, index = 0) {
     : [];
   if (platforms.length === 0) throw new Error(`${label}.coverage.platforms must be non-empty`);
   if (!Array.isArray(value.residualRisk)) throw new Error(`${label}.residualRisk must be an array`);
+  const releaseClaimRisks = scopedUnqualifiedClaim
+    ? value.releaseClaims.diagnostics.map((entry) => `Exit/provider claim ${optionalString(entry?.code) || "unqualified"}: ${optionalString(entry?.message) || "consumer claim remains unqualified"}`)
+    : [];
   return {
     path: optionalString(meta.path),
     sha256: optionalString(meta.sha256),
@@ -194,7 +213,15 @@ function normalizeInvariantPassport(meta, index = 0) {
     source: structuredClone(value.source),
     coverage: structuredClone(value.coverage),
     platforms,
-    residualRisk: structuredClone(value.residualRisk),
+    admission: {
+      scope: "consumer-invariant-coverage",
+      result: "passed",
+      consumerVerdict: value.verdict,
+      releaseClaimsVerdict: optionalString(value.releaseClaims?.verdict),
+    },
+    releaseClaims: value.releaseClaims ? structuredClone(value.releaseClaims) : undefined,
+    diagnostics: Array.isArray(value.diagnostics) ? structuredClone(value.diagnostics) : [],
+    residualRisk: [...new Set([...value.residualRisk, ...releaseClaimRisks])].sort(),
   };
 }
 
@@ -2490,8 +2517,15 @@ function validatePassportTrustSections({ passport, issues }) {
   ].filter(Boolean));
   for (const [index, entry] of (section.passports || []).entries()) {
     const prefix = `invariantPassports.passports[${index}]`;
-    if (entry.verdict !== "verified") issues.push(issue("error", `${prefix}.verdict`, `${prefix}.verdict must be verified`));
-    if (entry.coverage?.complete !== true) issues.push(issue("error", `${prefix}.coverage`, `${prefix}.coverage.complete must be true`));
+    if (entry.admission?.scope !== "consumer-invariant-coverage" || entry.admission?.result !== "passed") {
+      issues.push(issue("error", `${prefix}.admission`, `${prefix}.admission must record passed consumer invariant coverage`));
+    }
+    if (entry.verdict !== "verified" && !(entry.verdict === "unqualified" && entry.releaseClaims?.verdict === "unqualified")) {
+      issues.push(issue("error", `${prefix}.verdict`, `${prefix}.verdict must be verified or preserve one explicit unqualified releaseClaims verdict`));
+    }
+    if (entry.coverage?.complete !== true && !hasCompleteInvariantCoverage(entry)) {
+      issues.push(issue("error", `${prefix}.coverage`, `${prefix}.coverage must be complete or prove every required invariant coordinate verified`));
+    }
     if (entry.source?.dirty !== false) issues.push(issue("error", `${prefix}.source.dirty`, `${prefix}.source.dirty must be false`));
     if (acceptedSourceShas.size > 0 && !acceptedSourceShas.has(entry.source?.revision)) {
       issues.push(issue("error", `${prefix}.source.revision`, `${prefix}.source.revision must match a release source identity`));

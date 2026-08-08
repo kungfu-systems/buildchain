@@ -3074,6 +3074,55 @@ test("release passport projects a verified cross-platform invariant Passport", (
   assert.equal(passport.invariantPassports.passports[0].source.revision, "a".repeat(40));
 });
 
+test("release passport admits complete invariant coverage without qualifying a separate Exit migration claim", async () => {
+  const cwd = tempDir("invariant-passport-scoped-unqualified");
+  const assetsDir = path.join(cwd, "assets");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "fixture.tar.gz"), "fixture\n");
+  const value = invariantPassportFixture({
+    verdict: "unqualified",
+    coverage: {
+      complete: false,
+      required: 51,
+      verified: 51,
+      missing: [],
+      falsified: [],
+      unqualified: [],
+      platforms: ["darwin-arm64", "linux-x64", "win32-x64"],
+    },
+    diagnostics: [],
+    releaseClaims: {
+      schema: "kungfu.exit-migration-release-claims/v1",
+      id: "kungfu-exit-migration-release",
+      verdict: "unqualified",
+      claimRoot: `sha256:${"e".repeat(64)}`,
+      diagnostics: [{ code: "release-platform-unqualified", message: "linux-x64 remains unqualified" }],
+      nextActions: ["Run exact installed-product qualification."],
+      residualRisk: ["Only the retained macOS artifact is qualified."],
+    },
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.14.2-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "a".repeat(40),
+    outputDir: "release-passport",
+    assetsDir,
+    invariantPassportJsons: [JSON.stringify(value)],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const entry = passport.invariantPassports.passports[0];
+
+  assert.equal(entry.verdict, "unqualified");
+  assert.equal(entry.coverage.complete, false);
+  assert.equal(entry.admission.result, "passed");
+  assert.equal(entry.releaseClaims.verdict, "unqualified");
+  assert.ok(entry.residualRisk.some((item) => item.includes("release-platform-unqualified")));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  assert.equal(report.ok, true, JSON.stringify(report.issues));
+});
+
 test("invariant Passport gate rejects tampered, falsified, incomplete, and dirty evidence", () => {
   const cwd = tempDir("invariant-passport-invalid");
   const collect = (value) => collectGitHubReleasePassport({
@@ -3091,7 +3140,16 @@ test("invariant Passport gate rejects tampered, falsified, incomplete, and dirty
   assert.throws(() => collect(invariantPassportFixture({ verdict: "falsified" })), /verdict must be verified/);
   assert.throws(
     () => collect(invariantPassportFixture({ coverage: { complete: false, platforms: ["linux-x64"] } })),
-    /coverage\.complete must be true/,
+    /verdict must be verified/,
+  );
+  assert.throws(
+    () => collect(invariantPassportFixture({
+      verdict: "unqualified",
+      coverage: { complete: false, required: 51, verified: 50, missing: ["one"], falsified: [], unqualified: [], platforms: ["linux-x64"] },
+      diagnostics: [],
+      releaseClaims: { verdict: "unqualified", claimRoot: `sha256:${"e".repeat(64)}`, diagnostics: [{ code: "missing", message: "missing" }] },
+    })),
+    /verdict must be verified/,
   );
   assert.throws(
     () => collect(invariantPassportFixture({ source: { revision: "a".repeat(40), tree: "d".repeat(40), dirty: true } })),
