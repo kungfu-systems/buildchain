@@ -8,9 +8,9 @@
     "maxHandMaintainedSourceFiles": 286,
     "maxHandMaintainedSourceLines": 110486,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22487,
+    "maxWorkflowLines": 22500,
     "latestTransition": "Delivery Warrant admission now retains an exact active head across regenerated proof timestamps, rereads current protected authority before enqueue, absorbs bounded status propagation, and rejects locked protected branches before selection.",
-    "rationale": "The transition adds only the current-authority readback, bounded enqueue retry, locked-branch preflight, exact-head idempotence, documentation, and adversarial tests needed to remove observed Warrant waits. The existing controller stays below its approved file ceiling, no authority is duplicated, and these exact repository ceilings cannot grow implicitly."
+    "rationale": "The transition adds only the current-authority readback, bounded enqueue retry, ruleset-aware locked-branch preflight, exact-head idempotence, documentation, and adversarial tests needed to remove observed Warrant waits. The preflight distinguishes a legitimate ruleset-only branch from an inaccessible classic protection document, the existing controller stays below its approved file ceiling, no authority is duplicated, and these exact repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
