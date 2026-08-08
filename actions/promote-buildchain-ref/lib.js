@@ -1919,6 +1919,20 @@ async function collectAndPersistReleasePassport({
     : [];
   const platformManifests = [...new Set([...configuredManifests, ...derivedManifests]),
   ];
+  const sealedCandidateArtifactRoots = [...new Set(platformManifests.flatMap((manifestPath) => {
+    const normalized = path.resolve(manifestPath);
+    const marker = `${path.sep}sealed-candidate${path.sep}artifacts${path.sep}`;
+    const markerIndex = normalized.indexOf(marker);
+    if (markerIndex < 0) return [];
+    const artifactName = normalized.slice(markerIndex + marker.length).split(path.sep)[0];
+    return artifactName ? [normalized.slice(0, markerIndex + marker.length) + artifactName] : [];
+  }))];
+  const sealedReleaseAssets = (result.sealedBundle?.releaseAssets || []).map((asset) => ({
+    name: path.basename(asset.absolutePath || asset.path || ""),
+    path: asset.absolutePath || resolveMaybeRelative(result.sealedBundle?.bundleRoot || cwd, asset.path || ""),
+    size: asset.size,
+    sha256: asset.sha256,
+  }));
   const loadedConfig = loadBuildchainConfig(cwd);
   const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
   const anchorManifestPath = anchorManifest?.path ? path.resolve(cwd, anchorManifest.path) : "";
@@ -1991,6 +2005,8 @@ async function collectAndPersistReleasePassport({
     productName: productName || "Buildchain",
     packageName: packageName || result.packageSet?.main?.name || "@kungfu-tech/buildchain",
     packageVersion: result.transaction.version,
+    assetsJson: sealedReleaseAssets.length > 0 ? JSON.stringify(sealedReleaseAssets) : "",
+    kfdArtifactSearchRoots: sealedCandidateArtifactRoots,
     packageSetJson: result.packageSet ? JSON.stringify(result.packageSet) : "",
     publishEvidenceJson: result.evidencePath,
     trustedPublishingJson: result.publishContract?.auth === "trusted-publishing"

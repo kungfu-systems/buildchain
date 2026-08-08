@@ -2460,6 +2460,29 @@ test("release passport projects legacy string residual risk into the KFD-2 trust
   assert.equal(risk.reason, "Remote evidence freshness depends on the configured source runtime.");
 });
 
+test("release passport verifies KFD-1 bytes from a recovered nested candidate artifact root", async () => {
+  const { cwd, assetsDir, witnessPath, actualSha256 } = createKfdWitnessFixture();
+  const nestedRoot = path.join(cwd, "sealed-candidate", "artifacts", "linux-x64", "product", "runtime");
+  fs.mkdirSync(path.join(nestedRoot, "config"), { recursive: true });
+  fs.copyFileSync(path.join(assetsDir, "config.schema.json"), path.join(nestedRoot, "config", "config.schema.json"));
+  fs.writeFileSync(path.join(cwd, "config.schema.json"), "wrong source fallback\n");
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "d".repeat(40),
+    outputDir: "release-passport",
+    assetsDir,
+    kfdArtifactSearchRoots: [path.join(cwd, "sealed-candidate", "artifacts", "linux-x64")],
+    kfd1WitnessJsons: [witnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport["kfd-1"].status, "passed");
+  assert.equal(passport["kfd-1"].contractWorlds[0].artifactVerification.surfaces[0].actualSha256, actualSha256);
+});
+
 test("release passport fails closed when a KFD-2 downgrade reason uses an unknown taxonomy value", () => {
   const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
   const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {

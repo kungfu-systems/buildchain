@@ -1569,6 +1569,7 @@ export function collectGitHubReleasePassport({
   outputDir = ".buildchain/release-passport",
   assetsJson = "",
   assetsDir = "",
+  kfdArtifactSearchRoots = [],
   releaseJson = "",
   productName = "Buildchain",
   packageName = "@kungfu-tech/buildchain",
@@ -1755,6 +1756,7 @@ export function collectGitHubReleasePassport({
   const kfd1 = createKfd1ReleaseGateEvidence({
     cwd,
     artifactRoot: assetsDir ? path.resolve(cwd, assetsDir) : "",
+    artifactSearchRoots: kfdArtifactSearchRoots.map((root) => path.resolve(cwd, root)),
     artifacts: assets,
     witnesses: kfd1WitnessMetas.map((meta) => meta.value),
   });
@@ -2183,7 +2185,17 @@ function validateReleaseEvidenceContracts({
   for (const [index, value] of (passport?.githubArtifactAttestations || []).entries()) {
     try {
       const policy = normalizeGitHubArtifactAttestationPolicy(value);
-      if (policy.caller.sourceSha !== String(passport?.release?.sourceSha || "").toLowerCase()) {
+      const release = passport?.release || {};
+      const acceptedSourceShas = new Set([String(release.sourceSha || "").toLowerCase()]);
+      if (
+        release.treeEquivalent === true
+        && release.builtSourceTreeSha
+        && release.builtSourceTreeSha === release.promotionChannelTreeSha
+        && release.builtSourceSha
+      ) {
+        acceptedSourceShas.add(String(release.builtSourceSha).toLowerCase());
+      }
+      if (!acceptedSourceShas.has(policy.caller.sourceSha)) {
         issues.push(issue(
           "error",
           `githubArtifactAttestations[${index}].caller.sourceSha`,
