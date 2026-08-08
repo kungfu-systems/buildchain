@@ -2,12 +2,135 @@ use std::env;
 use std::fs;
 use std::io::Read;
 
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use buildchain_v4_contracts::{
     EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root,
     run_delivery_warrant_trace_fixture, validate_clock,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+const HOST_REQUEST_CONTRACT: &str = "kungfu-buildchain-v4-host-request";
+const HOST_RESPONSE_CONTRACT: &str = "kungfu-buildchain-v4-host-response";
+const HOST_CAPABILITIES: &[&str] = &[
+    "canonical-input-v1",
+    "delivery-warrant-trace-projection-v1",
+    "diagnostics-v1",
+    "effects-disabled-v1",
+    "structured-result-v1",
+];
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct HostRequest {
+    schema_version: u8,
+    contract: String,
+    protocol_version: String,
+    request_id: String,
+    command: HostCommand,
+    input: EncodedBytes,
+    required_capabilities: Vec<String>,
+    timeout_ms: u64,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct HostCommand {
+    id: String,
+    arguments: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct EncodedBytes {
+    encoding: String,
+    bytes: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HostIdentity {
+    kind: &'static str,
+    implementation: &'static str,
+    capabilities: &'static [&'static str],
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HostOutput {
+    stdout: EncodedBytes,
+    stderr: EncodedBytes,
+}
+
+#[derive(Serialize)]
+struct Diagnostic {
+    code: String,
+    message: String,
+    retryable: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ExitSemantics {
+    code: u8,
+    signal: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HostResponse {
+    schema_version: u8,
+    contract: &'static str,
+    protocol_version: &'static str,
+    request_id: String,
+    status: &'static str,
+    host: HostIdentity,
+    command: HostCommand,
+    output: HostOutput,
+    structured_result: Value,
+    diagnostics: Vec<Diagnostic>,
+    exit: ExitSemantics,
+}
+
+fn encoded_bytes(value: &[u8]) -> EncodedBytes {
+    EncodedBytes {
+        encoding: "base64".to_owned(),
+        bytes: BASE64.encode(value),
+    }
+}
+
+fn host_response(
+    request: HostRequest,
+    status: &'static str,
+    structured_result: Value,
+    diagnostics: Vec<Diagnostic>,
+    exit: u8,
+) -> HostResponse {
+    HostResponse {
+        schema_version: 1,
+        contract: HOST_RESPONSE_CONTRACT,
+        protocol_version: "1.0",
+        request_id: request.request_id,
+        status,
+        host: HostIdentity {
+            kind: "rust-subprocess",
+            implementation: "buildchain-v4-contracts-shadow-host",
+            capabilities: HOST_CAPABILITIES,
+        },
+        command: request.command,
+        output: HostOutput {
+            stdout: encoded_bytes(&[]),
+            stderr: encoded_bytes(&[]),
+        },
+        structured_result,
+        diagnostics,
+        exit: ExitSemantics {
+            code: exit,
+            signal: None,
+        },
+    }
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -129,12 +252,87 @@ fn run_trace_fixture(fixture_path: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn read_stdin() -> Result<Vec<u8>, String> {
+    let mut bytes = Vec::new();
+    std::io::stdin()
+        .read_to_end(&mut bytes)
+        .map_err(|error| format!("cannot read stdin: {error}"))?;
+    Ok(bytes)
+}
+
+fn run_shadow_host() -> Result<(), String> {
+    let request: HostRequest = serde_json::from_slice(&read_stdin()?)
+        .map_err(|error| format!("invalid host request: {error}"))?;
+    if request.schema_version != 1
+        || request.contract != HOST_REQUEST_CONTRACT
+        || request.protocol_version != "1.0"
+        || request.request_id.is_empty()
+        || request.timeout_ms == 0
+        || request.timeout_ms > 30_000
+        || request.input.encoding != "base64"
+    {
+        return Err("unsupported host request contract".to_owned());
+    }
+    let unsupported = request
+        .required_capabilities
+        .iter()
+        .filter(|capability| !HOST_CAPABILITIES.contains(&capability.as_str()))
+        .cloned()
+        .collect::<Vec<_>>();
+    let response = if !unsupported.is_empty()
+        || request.command.id != "delivery-warrant.trace-project"
+        || !request.command.arguments.is_empty()
+    {
+        host_response(
+            request,
+            "unsupported",
+            Value::Null,
+            vec![Diagnostic {
+                code: "unsupported-capability".to_owned(),
+                message: "the requested effect-disabled projection capability is unsupported"
+                    .to_owned(),
+                retryable: false,
+            }],
+            64,
+        )
+    } else {
+        let input = BASE64
+            .decode(&request.input.bytes)
+            .map_err(|_| "host input is not canonical base64".to_owned())?;
+        match run_delivery_warrant_trace_fixture(&input) {
+            Ok(result) => host_response(
+                request,
+                "ok",
+                serde_json::to_value(result).map_err(|error| error.to_string())?,
+                Vec::new(),
+                0,
+            ),
+            Err(fault) => host_response(
+                request,
+                "failed",
+                Value::Null,
+                vec![Diagnostic {
+                    code: fault.code,
+                    message: "the retained trace failed closed validation".to_owned(),
+                    retryable: false,
+                }],
+                65,
+            ),
+        }
+    };
+    serde_json::to_writer(std::io::stdout().lock(), &response)
+        .map_err(|error| error.to_string())?;
+    println!();
+    Ok(())
+}
+
 fn run() -> Result<(), String> {
     let args = env::args().skip(1).collect::<Vec<_>>();
     match args.as_slice() {
+        [command] if command == "host" => run_shadow_host(),
         [fixture_path] => run_canonical_fixture(fixture_path),
         [command, fixture_path] if command == "trace" => run_trace_fixture(fixture_path),
-        _ => Err("usage: buildchain-v4-contracts [trace] FIXTURES.json".to_owned()),
+        _ => Err("usage: buildchain-v4-contracts [trace FIXTURES.json|host]".to_owned()),
     }
 }
 

@@ -7,6 +7,10 @@ import {
   V4_DELIVERY_WARRANT_PROJECTION_CONTRACT,
   runV4DeliveryWarrantTraceFixture,
 } from "../packages/core/v4-delivery-warrant-fixture-runner.js";
+import {
+  V4_DELIVERY_WARRANT_SHADOW_OBSERVATION_CONTRACT,
+  runV4DeliveryWarrantShadow,
+} from "../packages/core/v4-delivery-warrant-shadow-adapter.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const fixtureRoot = new URL(
@@ -33,6 +37,42 @@ function rustRunner(bytes) {
     ],
     { cwd: root, input: bytes, encoding: "utf8" },
   );
+}
+
+const sources = Object.freeze({
+  typescriptRevision: "a".repeat(40),
+  rustRevision: "b".repeat(40),
+  validatorVersion: "fixture-runner-v1",
+});
+
+function hostResponse(request, structuredResult, overrides = {}) {
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-v4-host-response",
+    protocolVersion: "1.0",
+    requestId: request.requestId,
+    status: "ok",
+    host: {
+      kind: "rust-subprocess",
+      implementation: "fixture",
+      capabilities: [
+        "canonical-input-v1",
+        "delivery-warrant-trace-projection-v1",
+        "diagnostics-v1",
+        "effects-disabled-v1",
+        "structured-result-v1",
+      ],
+    },
+    command: request.command,
+    output: {
+      stdout: { encoding: "base64", bytes: "" },
+      stderr: { encoding: "base64", bytes: "" },
+    },
+    structuredResult,
+    diagnostics: [],
+    exit: { code: 0, signal: null },
+    ...overrides,
+  };
 }
 
 test("JavaScript and Rust adapters emit one semantic projection for retained traces", () => {
@@ -201,4 +241,193 @@ test("the trace schema and pure runners remain closed and provider-free", () => 
     "octocrab",
   ])
     assert.equal(rust.includes(forbidden), false, forbidden);
+});
+
+test("TypeScript shadow passes identical bytes to legacy and Rust while retaining no second authority", async () => {
+  const bytes = readFixture("golden.json");
+  const seen = [];
+  const retained = [];
+  const result = await runV4DeliveryWarrantShadow(bytes, {
+    enabled: true,
+    requestId: "paired-fixture",
+    recordedAt: "2026-08-08T00:00:00.000Z",
+    sources,
+    invokeLegacy(input) {
+      seen.push(Buffer.from(input));
+      return runV4DeliveryWarrantTraceFixture(input);
+    },
+    invokeRust(request) {
+      const input = Buffer.from(request.input.bytes, "base64");
+      seen.push(input);
+      return hostResponse(request, runV4DeliveryWarrantTraceFixture(input));
+    },
+    retain(observation) {
+      retained.push(observation);
+    },
+  });
+  assert.deepEqual(seen, [bytes, bytes]);
+  assert.equal(result.shadow.status, "observed");
+  assert.equal(result.shadow.authority, "typescript-v3");
+  assert.equal(result.shadow.rustAuthority, "none");
+  assert.equal(result.shadow.rustEffects, "disabled");
+  assert.equal(result.shadow.retention.status, "retained");
+  assert.equal(
+    retained[0].schema,
+    V4_DELIVERY_WARRANT_SHADOW_OBSERVATION_CONTRACT,
+  );
+  assert.equal(retained[0].retention.classification, "public-safe-fixture");
+  assert.equal(retained[0].retainUntil, "2026-11-06T00:00:00.000Z");
+  assert.equal(
+    retained[0].legacy.projection.projectionRoot,
+    retained[0].rust.projection.projectionRoot,
+  );
+  assert.equal("verdict" in retained[0], false);
+});
+
+test("the default Rust shadow host emits an effect-disabled projection", async () => {
+  const result = await runV4DeliveryWarrantShadow(readFixture("replay.json"), {
+    enabled: true,
+    recordedAt: "2026-08-08T00:00:00.000Z",
+    sources,
+  });
+  assert.equal(result.shadow.status, "observed");
+  assert.equal(result.shadow.diagnostics.length, 0);
+  assert.equal(
+    result.authoritativeResult.projectionRoot,
+    result.shadow.observation.rust.projection.projectionRoot,
+  );
+});
+
+test("disabled, unsafe, and invalid shadow configuration never changes the legacy result", async () => {
+  const bytes = Buffer.from("public-safe-authoritative-result\n");
+  const authoritative = { writer: "typescript-v3", committed: true };
+  let rustCalls = 0;
+  const invokeLegacy = () => authoritative;
+  const invokeRust = () => {
+    rustCalls += 1;
+    throw new Error("must not run");
+  };
+  for (const options of [
+    { enabled: false, sources },
+    {
+      enabled: true,
+      sources,
+      retention: { kind: "captured-replay", publicSafe: false },
+    },
+    { enabled: true, sources: { ...sources, rustRevision: "floating" } },
+  ]) {
+    const result = await runV4DeliveryWarrantShadow(bytes, {
+      ...options,
+      invokeLegacy,
+      invokeRust,
+    });
+    assert.strictEqual(result.authoritativeResult, authoritative);
+    assert.equal(result.shadow.status, "skipped");
+  }
+  assert.equal(rustCalls, 0);
+  const unsafe = await runV4DeliveryWarrantShadow(
+    Buffer.from("private-token-value"),
+    {
+      enabled: true,
+      sources,
+      retention: { kind: "captured-replay", publicSafe: false },
+      invokeLegacy,
+    },
+  );
+  assert.doesNotMatch(JSON.stringify(unsafe.shadow), /private-token-value/u);
+});
+
+test("timeout, crash, cancellation, malformed response, unsupported host, and retention failure are bounded observations", async () => {
+  const bytes = readFixture("golden.json");
+  const cases = [
+    {
+      code: "host-timeout",
+      host: {
+        command: process.execPath,
+        arguments: ["-e", "setInterval(() => {}, 1000)"],
+      },
+      timeoutMs: 25,
+    },
+    {
+      code: "host-crashed",
+      host: { command: process.execPath, arguments: ["-e", "process.exit(7)"] },
+    },
+    {
+      code: "host-response-invalid",
+      host: {
+        command: process.execPath,
+        arguments: ["-e", "process.stdout.write('not-json')"],
+      },
+    },
+  ];
+  for (const entry of cases) {
+    const result = await runV4DeliveryWarrantShadow(bytes, {
+      enabled: true,
+      recordedAt: "2026-08-08T00:00:00.000Z",
+      sources,
+      host: entry.host,
+      timeoutMs: entry.timeoutMs || 1_000,
+    });
+    assert.equal(result.shadow.status, "unavailable", entry.code);
+    assert.equal(result.shadow.diagnostics[0].code, entry.code);
+    assert.match(result.authoritativeResult.projectionRoot, /^sha256:/u);
+  }
+
+  const unsupported = await runV4DeliveryWarrantShadow(bytes, {
+    enabled: true,
+    recordedAt: "2026-08-08T00:00:00.000Z",
+    sources,
+    invokeRust(request) {
+      return hostResponse(request, null, {
+        status: "unsupported",
+        host: {
+          kind: "rust-subprocess",
+          implementation: "old",
+          capabilities: [],
+        },
+        exit: { code: 64, signal: null },
+      });
+    },
+  });
+  assert.equal(
+    unsupported.shadow.diagnostics[0].code,
+    "unsupported-capability",
+  );
+
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), 25);
+  const cancelled = await runV4DeliveryWarrantShadow(bytes, {
+    enabled: true,
+    recordedAt: "2026-08-08T00:00:00.000Z",
+    sources,
+    signal: controller.signal,
+    timeoutMs: 1_000,
+    host: {
+      command: process.execPath,
+      arguments: ["-e", "setInterval(() => {}, 1000)"],
+    },
+  });
+  assert.equal(cancelled.shadow.status, "cancelled");
+  assert.equal(cancelled.shadow.diagnostics[0].code, "host-cancelled");
+
+  const retentionFailure = await runV4DeliveryWarrantShadow(bytes, {
+    enabled: true,
+    recordedAt: "2026-08-08T00:00:00.000Z",
+    sources,
+    invokeRust(request) {
+      return hostResponse(request, runV4DeliveryWarrantTraceFixture(bytes));
+    },
+    retain() {
+      throw new Error("private sink detail must not escape");
+    },
+  });
+  assert.equal(retentionFailure.shadow.retention.status, "failed");
+  assert.equal(
+    retentionFailure.shadow.diagnostics.at(-1).code,
+    "retention-failed",
+  );
+  assert.doesNotMatch(
+    JSON.stringify(retentionFailure.shadow),
+    /private sink detail/u,
+  );
 });

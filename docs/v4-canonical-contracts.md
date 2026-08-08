@@ -66,6 +66,12 @@ The retained public-safe fixtures are:
 
 The runner is not a state-machine implementation and does not sample time, execute effects, access Git/GitHub, or move production authority. TypeScript v3 remains the sole production writer. Later Rust decide/fold and TypeScript shadow adapters supply or consume this contract instead of defining another projection shape.
 
+## TypeScript shadow adapter
+
+The adapter in [`packages/core/v4-delivery-warrant-shadow-adapter.js`](../packages/core/v4-delivery-warrant-shadow-adapter.js) runs the existing TypeScript v3 fixture projection first and preserves that exact result as the only authoritative output. When explicitly enabled, it sends the same canonical input bytes to the replaceable Rust host command, requires the effect-disabled host capability, and captures the returned semantic projection only as a non-authoritative observation. Rust never receives effect authority, and success, failure, timeout, cancellation, malformed output, or an unsupported host cannot change the v3 result.
+
+Shadow retention accepts only checked-in fixtures or captured replays explicitly marked public-safe. Each returned observation binds the input root, exact TypeScript and Rust source revisions, validator version, capture time, fixed retention deadline, both projections, and sanitized diagnostics. It contains no comparison verdict or cutover signal. The adapter is disabled unless the caller opts in or sets `BUILDCHAIN_V4_WARRANT_SHADOW=enabled`; even then, invalid source bindings or an unsafe retention class skip Rust invocation.
+
 ## Pure Rust Delivery Warrant domain
 
 The `warrant` module in [`crates/buildchain-v4-contracts`](../crates/buildchain-v4-contracts) implements the protected Delivery Warrant manifest as provider-free typed state, seven event decisions, and a separate fold. It freezes all nine candidate states and all nine primitives from the shadow bootstrap plan. Every decision binds the event's exact `subjectRoot`, takes time only from the validated event envelope, and returns a typed action or fault. Fold produces a canonical successor; the combined transition produces only ordered `persist-successor` and `request-admission` intents plus a rooted receipt. It never executes either intent.
