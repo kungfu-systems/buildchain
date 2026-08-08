@@ -45,8 +45,8 @@ on:
         description: "JSON array of paths covered by source qualification"
         type: string
         required: true
-
 permissions:
+  actions: write
   contents: write
   pull-requests: write
   checks: read

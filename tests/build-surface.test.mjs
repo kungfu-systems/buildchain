@@ -1562,6 +1562,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /toolchain-root:/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /permissions:\n  actions: write/);
   assert.match(workflow, /delivery-warrant-mode: required/);
   assert.match(workflow, /delivery-class: native-proof-required/);
   assert.match(workflow, /delivery-priority: ordinary/);
