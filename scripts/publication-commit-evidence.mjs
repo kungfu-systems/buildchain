@@ -82,7 +82,7 @@ function expectedContentType(assetPath) {
   throw new Error(`installer bundle asset type is unsupported: ${assetPath}`);
 }
 
-function validateInstallerBundle(evidence, expected) {
+function validateInstallerBundle(evidence, expected, candidateSourceSha) {
   const bundle = evidence.publication?.installerBundle;
   if (!bundle) return null;
   if (bundle.schema !== INSTALLER_BUNDLE_SCHEMA) {
@@ -90,10 +90,7 @@ function validateInstallerBundle(evidence, expected) {
       `installer bundle schema must be ${INSTALLER_BUNDLE_SCHEMA}`,
     );
   }
-  const bundleRoot = sha256Root(
-    bundle.bundleRoot,
-    "installerBundle.bundleRoot",
-  );
+  const bundleRoot = sha256Root(bundle.bundleRoot, "installerBundle.bundleRoot");
   if (
     bundleRoot !== evidence.publication.payloadRoot ||
     bundleRoot !== evidence.readback?.payloadRoot
@@ -104,7 +101,7 @@ function validateInstallerBundle(evidence, expected) {
   }
   if (
     exactSha(bundle.sourceCommit, "installerBundle.sourceCommit") !==
-      expected.sourceSha ||
+      candidateSourceSha ||
     !["alpha", "stable"].includes(bundle.channel)
   ) {
     throw new Error("installer bundle release identity mismatch");
@@ -238,7 +235,6 @@ function validateInstallerBundle(evidence, expected) {
     assets: bundle.assets,
   };
 }
-
 export function validatePublicationCommitEvidence(
   evidence,
   { version, sourceSha, releaseSha, releaseTag } = {},
@@ -264,6 +260,10 @@ export function validatePublicationCommitEvidence(
       throw new Error(`publication commit evidence ${field} mismatch`);
     }
   }
+  expected.candidateSourceSha = exactSha(
+    identity.candidateSourceSha || expected.sourceSha,
+    "identity.candidateSourceSha",
+  );
   const publicUrl = publicHttps(evidence.publication?.url, "publication.url");
   const payloadRoot = sha256Root(
     evidence.publication?.payloadRoot,
@@ -289,7 +289,7 @@ export function validatePublicationCommitEvidence(
       "publication recovery must preserve or explicitly declare no previous authority",
     );
   }
-  const installerBundle = validateInstallerBundle(evidence, expected);
+  const installerBundle = validateInstallerBundle(evidence, expected, expected.candidateSourceSha);
   return {
     schema: SCHEMA,
     status: "passed",
@@ -336,7 +336,7 @@ export async function verifyInstallerBundleReadback(
     semanticRoot(unsigned) !== bundle.bundleRoot ||
     manifest.package?.name !== "@kungfu-tech/site" ||
     typeof manifest.package?.version !== "string" ||
-    manifest.identity?.sourceCommit !== result.identity.sourceSha ||
+    manifest.identity?.sourceCommit !== result.identity.candidateSourceSha ||
     manifest.identity?.releaseSha !== result.identity.releaseSha ||
     manifest.identity?.releaseTag !== result.identity.releaseTag ||
     manifest.identity?.version !== result.identity.version ||
@@ -394,7 +394,7 @@ export async function verifyInstallerBundleReadback(
     schema: "kungfu-buildchain-installer-publication-bundle-seal/v1",
     bundleRoot: bundle.bundleRoot,
     manifestDigest: bundle.manifestDigest,
-    sourceCommit: result.identity.sourceSha,
+    sourceCommit: result.identity.candidateSourceSha,
     releaseTag: result.identity.releaseTag,
     releasePassport: bundle.releasePassport,
     observations,
