@@ -234,7 +234,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3634029d64cd50aa0a0ce0b6bfed0aca96a56f0ef908cb86d8ad95a74625c984"
+      "digest": "sha256:1558e1d6ecfda54bd7ed8833107cc2d53c37c7f5e1f883715c1162d0e96721e1"
     },
     {
       "id": "build-facts",
@@ -274,7 +274,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fe06637d604101269b013163be558c1ecc842276e27f2b5abfb6eea39e98feb0"
+      "digest": "sha256:ecfe4c272a39e01a9e00c14e320c59e0b849cd42fec29a5a1bb1eb53e833345b"
     },
     {
       "id": "publish-transaction",

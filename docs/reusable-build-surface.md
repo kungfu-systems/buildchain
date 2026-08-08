@@ -683,6 +683,17 @@ For a declared macOS `archive`, the authority safely extracts the sealed
 container, signs and verifies every Mach-O payload, signs Mach-O payloads inside
 embedded Python wheels, rebuilds each affected wheel's PEP 427 `RECORD`, and
 recreates the original zip or tar.gz before returning the exact final bytes.
+Archives whose executable hosts a JIT runtime can additionally request the
+Buildchain-owned `entitlements_profile = "jit-executable-v1"` and exact paths,
+for example `entitlements_paths = ["product/runtime/python/bin/python3"]`.
+Paths are relative to the extracted archive root. The authority
+then attaches only `com.apple.security.cs.allow-jit` to the exact executable
+Mach-O files sealed in `entitlements_paths`, leaves every other executable and
+library without exception entitlements, and records the profile, paths, and
+entitled executable count in provider evidence. Consumer-provided entitlement
+files and wildcard target paths are unsupported. The profile is valid only for
+Apple `archive` requests and fails closed on an unsafe, missing,
+non-executable, duplicate, or unsealed target path.
 Windows `pe` and `binary` artifacts
 resolve to timestamped native `windows-authenticode`; Windows PE never falls
 back to a detached signature. Linux and other non-native binary files,

@@ -151,6 +151,8 @@ jobs:
           BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
           BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ matrix.request.slug }}/provider-evidence.json
           BUILDCHAIN_ARTIFACT_KIND: ${{ matrix.request.kind }}
+          BUILDCHAIN_ENTITLEMENTS_PROFILE: ${{ matrix.request.entitlementsProfile }}
+          BUILDCHAIN_ENTITLEMENTS_PATHS: ${{ matrix.request.entitlementsPaths }}
           BUILDCHAIN_APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
           BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
           BUILDCHAIN_APPLE_CERTIFICATE_SHA1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
