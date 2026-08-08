@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 291,
-    "maxHandMaintainedSourceLines": 110945,
+    "maxHandMaintainedSourceFiles": 292,
+    "maxHandMaintainedSourceLines": 111590,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22269,
-    "latestTransition": "The Rust Delivery Warrant domain adds three bounded provider-free modules for typed state and faults, pure decision logic, and fold plus declarative transition projection.",
-    "rationale": "The exact rust-warrant-domain ceiling adds three hand-maintained Rust modules, each below the unchanged 600-line new-file limit: typed state and bounded retry primitives, the seven-event decide surface, and fold plus canonical receipt and declarative-effect projection. Existing shared golden and replay bytes drive the domain boundary, while focused tests cover all nine states and primitives, retained legacy disagreements, deterministic and property replay, duplicate submission, stale expected-old and fencing, lease expiry and reselection, settlement, cancellation, response loss, provider conflict, and retry exhaustion. Static guards reject provider, filesystem, network, process, ambient-clock, hidden-writer, and unbounded-loop surfaces. TypeScript v3 remains the sole production writer with a zero second-writer budget; no adapter, effect execution, workflow, daemon, database, credential owner, consumer cutover, or architecture ceiling changes. Existing per-file, per-function, workflow, provider-boundary, and zero-second-writer budgets remain unchanged. These exact repository ceilings cannot grow implicitly; another source file, effect, writer, or state-machine scope requires a separately reviewed transition."
+    "latestTransition": "The TypeScript Delivery Warrant shadow adapter adds one bounded public-safe observation path and an effect-disabled Rust host command while preserving TypeScript v3 as the only authoritative writer.",
+    "rationale": "The exact typescript-shadow-adapter ceiling adds one hand-maintained JavaScript source below the unchanged 600-line new-file limit and extends the existing Rust contracts CLI with a strict host request and response boundary. The adapter runs the legacy TypeScript projection first, passes identical canonical bytes to Rust, binds retained public-safe observations to exact source revisions and a validator version, and bounds timeout, cancellation, crash, malformed response, unsupported capability, and retention failure. Rust exposes only the pure trace projection with an effects-disabled capability; configuration cannot grant writer or provider authority. Focused tests prove the authoritative TypeScript result is unchanged for every shadow outcome and that diagnostics do not leak private failure details. Existing per-file, per-function, workflow, provider-boundary, public-surface, and zero-second-writer budgets remain unchanged. These exact repository ceilings cannot grow implicitly; another source file, effect, writer, verdict policy, or cutover scope requires a separately reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
