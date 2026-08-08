@@ -4,6 +4,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+mod trace;
+
+pub use trace::{
+    DELIVERY_WARRANT_PROJECTION_CONTRACT, DELIVERY_WARRANT_RUNNER_CONTRACT,
+    DELIVERY_WARRANT_TRACE_CONTRACT, TraceRun, run_delivery_warrant_trace_fixture,
+};
+
 pub const CANONICAL_JSON_CONTRACT: &str = "buildchain-canonical-json/v1";
 pub const EVENT_ENVELOPE_CONTRACT: &str = "buildchain-v4-event-envelope/v1";
 pub const RECEIPT_ENVELOPE_CONTRACT: &str = "buildchain-v4-receipt-envelope/v1";
@@ -35,7 +42,7 @@ pub struct ContractFault {
 }
 
 impl ContractFault {
-    fn validation(code: &str, path: &str, message: impl Into<String>) -> Self {
+    pub(crate) fn validation(code: &str, path: &str, message: impl Into<String>) -> Self {
         Self {
             schema: CONTRACT_FAULT_CONTRACT.to_owned(),
             code: code.to_owned(),
@@ -139,7 +146,7 @@ impl ReceiptEnvelope {
     }
 }
 
-fn ascii_token(value: &str) -> bool {
+pub(crate) fn ascii_token(value: &str) -> bool {
     let mut bytes = value.bytes();
     matches!(bytes.next(), Some(b'a'..=b'z'))
         && bytes.all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')

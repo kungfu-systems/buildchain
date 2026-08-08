@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 286,
-    "maxHandMaintainedSourceLines": 108668,
+    "maxHandMaintainedSourceFiles": 288,
+    "maxHandMaintainedSourceLines": 109671,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22269,
-    "latestTransition": "The first Wave 1 slice adds one provider-free Rust contract crate and one JavaScript peer for byte-identical canonical JSON, roots, explicit clocks, closed envelopes, and typed faults.",
-    "rationale": "The exact Wave 1 canonical-contract ceiling adds three hand-maintained implementation files: a pure Rust library, its fixture-only CLI projection, and a pure JavaScript peer. Shared golden and adversarial fixtures freeze printable-ASCII key ordering, safe integer bounds, UTF-8 plus one LF, domain-separated sha256 roots, calendar-valid explicit UTC millisecond clocks, closed event and receipt envelopes, and typed faults. The focused check compares Rust and JavaScript bytes and roots and rejects ambient clocks and provider imports. No production writer, provider effect, Git ref, workflow, daemon, database, credential owner, decide/fold implementation, or consumer cutover is introduced. Existing per-file, per-function, workflow, provider-boundary, and zero-second-writer budgets remain unchanged. These exact ceilings cannot grow implicitly; a new domain, schema widening, effect, writer, or source file requires another reviewed transition."
+    "latestTransition": "The shared-fixture-runner slice adds one provider-free Rust trace reader and one JavaScript peer that consume identical retained Delivery Warrant bytes and emit one semantic projection.",
+    "rationale": "The exact shared-fixture-runner ceiling adds two hand-maintained implementation files: a pure Rust Delivery Warrant trace reader and its pure JavaScript peer. Retained golden and replay fixtures freeze input bytes, state roots, event and receipt bindings, typed faults, ordered effects and observations, generations, fencing counters, and byte-identical semantic projections. Focused checks compare both adapters and fail closed on malformed, incomplete, reordered, stale-root, BOM, missing-LF, and unsupported inputs. No production writer, provider effect, Git ref, workflow, daemon, database, credential owner, or consumer cutover is introduced. Existing per-file, per-function, workflow, provider-boundary, and zero-second-writer budgets remain unchanged. These exact ceilings cannot grow implicitly; a new domain, schema widening, effect, writer, or source file requires another reviewed transition."
   },
   "sourceBudgets": {
     "newFileLines": 600,
