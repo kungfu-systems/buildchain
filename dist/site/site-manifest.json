@@ -237,7 +237,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:6dd79b998f63cf996e5c76b4fe0c654d12ca603cd5db1277ef3347f489b96ef0"
+      "digest": "sha256:042c593463977be9745b91163196920da17b41c853d012e40c60c9130ed66fb2"
     },
     {
       "id": "build-facts",

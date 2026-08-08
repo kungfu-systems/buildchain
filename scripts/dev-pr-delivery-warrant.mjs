@@ -116,6 +116,56 @@ export function readDeliveryWarrantResult(options, pullRequest) {
   };
 }
 
+export async function readCurrentDeliveryQueueState(client, repository, targetBranch) {
+  if (typeof client.getDevDeliveryQueueState === "function") {
+    return client.getDevDeliveryQueueState(targetBranch);
+  }
+  const stateRef = `buildchain/dev-delivery-warrant/${targetBranch.replaceAll("/", "-")}`;
+  const query = new URLSearchParams({ ref: stateRef });
+  const { data } = await client.request(
+    "GET",
+    `/repos/${repository.owner}/${repository.repo}/contents/queue.json?${query}`,
+  );
+  if (data?.type !== "file" || data?.encoding !== "base64" || !data?.content) {
+    mismatch("delivery-warrant-current-readback-invalid");
+  }
+  return JSON.parse(Buffer.from(String(data.content).replace(/\s+/g, ""), "base64").toString("utf8"));
+}
+
+export async function verifyCurrentDeliveryWarrant(client, options, pullRequest, warrant) {
+  if (!warrant) return;
+  let queue;
+  try {
+    queue = await readCurrentDeliveryQueueState(client, options.repository, options.targetBranch);
+  } catch {
+    mismatch("delivery-warrant-current-readback-failed");
+  }
+  const active = queue?.activeWarrant;
+  const candidate = queue?.candidates?.find((entry) => entry.candidateId === active?.candidateId);
+  requireMatch(active?.candidateId === warrant.candidateId, "delivery-warrant-no-longer-active");
+  requireMatch(active?.fencingToken === warrant.fencingToken, "delivery-warrant-current-fencing-mismatch");
+  requireMatch(Number(active?.generation) === Number(warrant.generation), "delivery-warrant-current-generation-mismatch");
+  requireMatch(Number(active?.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-current-pr-mismatch");
+  requireMatch(String(active?.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-current-head-mismatch");
+  requireMatch(candidate?.status === "selected", "delivery-warrant-current-candidate-not-selected");
+  requireMatch(candidate?.sourceHead === active.sourceHead, "delivery-warrant-current-candidate-head-mismatch");
+}
+
+export async function enqueueAfterStatusPropagation({ enqueue, input, attempts, delayMs, sleep }) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await enqueue(input);
+    } catch (error) {
+      lastError = error;
+      const propagation = /required status(?:es| check).*failing|failing required status/i.test(String(error?.message || ""));
+      if (!propagation || attempt === attempts) throw error;
+      await sleep(delayMs);
+    }
+  }
+  throw lastError;
+}
+
 export async function runSourceQualification({ options, pullRequest, readiness, client, evaluate, admissionState, createReceipt, root, publishDiagnostic, reject }) {
   const decision = await evaluate(pullRequest, { ...options, landingMode: options.landingMode, dryRun: true }, client);
   if (decision.observedHeadSha && String(decision.observedHeadSha).toLowerCase() !== options.expectedHeadSha) {

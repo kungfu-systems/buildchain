@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { verifyProjectCutReplayProof } from "../packages/core/dev-delivery-warrant.js";
-import { admitExistingQueueEntry, createDevPrAdmissionReceipt, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission } from "./dev-pr-delivery-warrant.mjs";
+import { admitExistingQueueEntry, createDevPrAdmissionReceipt, enqueueAfterStatusPropagation, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission, verifyCurrentDeliveryWarrant } from "./dev-pr-delivery-warrant.mjs";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
 const DEFAULT_REQUIRED_CHECKS = ["check"];
@@ -853,6 +853,7 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   let warrant = null;
   try {
     warrant = readDeliveryWarrantResult(options, pr);
+    await verifyCurrentDeliveryWarrant(client, options, pr, warrant);
   } catch (error) {
     return reject("blocked", error.code || "invalid-delivery-warrant");
   }
@@ -1068,9 +1069,12 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
         } else {
           try {
             entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "success");
-            const queueEntry = await client.enqueuePullRequest({
-              pullRequestId: decision.pullRequestId,
-              expectedHeadOid: expectedHeadSha,
+            const queueEntry = await enqueueAfterStatusPropagation({
+              enqueue: (input) => client.enqueuePullRequest(input),
+              input: { pullRequestId: decision.pullRequestId, expectedHeadOid: expectedHeadSha },
+              attempts: options.pollMergeableAttempts,
+              delayMs: options.pollMergeableDelayMs,
+              sleep: delay,
             });
             entry.action = "enqueued";
             entry.reason = "enqueued-with-expected-head";

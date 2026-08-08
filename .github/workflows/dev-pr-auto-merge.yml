@@ -313,6 +313,21 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Reject a locked protected branch before Warrant selection
+        if: inputs.delivery-warrant-mode == 'required'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+        run: |
+          set -euo pipefail
+          encoded_branch="${TARGET_BRANCH//\//%2F}"
+          protection="$(gh api "repos/$GITHUB_REPOSITORY/branches/$encoded_branch/protection")"
+          if jq -e '.lock_branch.enabled == true' <<<"$protection" >/dev/null; then
+            echo "::error::Protected branch $TARGET_BRANCH has lock_branch enabled; native merge queue admission cannot change a locked branch"
+            exit 1
+          fi
+
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"

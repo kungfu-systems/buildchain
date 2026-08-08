@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 286,
-    "maxHandMaintainedSourceLines": 110440,
+    "maxHandMaintainedSourceLines": 110486,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22474,
-    "latestTransition": "Publication rehearsal and consumer-equivalent self-release now share the declarative provider plane while retaining explicit local construction, hosted transport, route, transaction, receipt, and readback evidence.",
-    "rationale": "The combined transition adds the capsule runtime and projection module, rooted diagnostics and evidence, thin CLI and Action wrappers, generated init and Paper surfaces, normative ADR, schema, parity tests, one GitHub Release adapter coordinator, and consumer-equivalent self-release routing. It introduces no second transaction writer or executable consumer hook, and these exact ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22487,
+    "latestTransition": "Delivery Warrant admission now retains an exact active head across regenerated proof timestamps, rereads current protected authority before enqueue, absorbs bounded status propagation, and rejects locked protected branches before selection.",
+    "rationale": "The transition adds only the current-authority readback, bounded enqueue retry, locked-branch preflight, exact-head idempotence, documentation, and adversarial tests needed to remove observed Warrant waits. The existing controller stays below its approved file ceiling, no authority is duplicated, and these exact repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
