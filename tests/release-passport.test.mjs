@@ -2418,6 +2418,48 @@ test("release passport downgrades a public KFD-2 claim that is machine-bound but
   assert.equal(report.issues.some((entry) => entry.level === "warning" && entry.code.includes("kfd-2")), true);
 });
 
+test("release passport projects legacy string residual risk into the KFD-2 trust taxonomy", async () => {
+  const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
+  const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {
+    id: "remote-fact-boundary",
+    public: true,
+    claim: "Remote facts remain source-scoped until explicitly promoted.",
+    sourceBindings: [{ path: "docs/KFD-2.md", sha256: actualSha256 }],
+    machineEvidence: [{ path: "release-notes.md", sha256: actualSha256 }],
+    hashes: { sourceSha256: actualSha256, evidenceSha256: actualSha256 },
+    artifacts: [{ name: "generic.schema", path: "config.schema.json", sha256: actualSha256 }],
+    verification: { result: "passed-with-residual-risk" },
+    auditBoundary: { scope: "remote fact import" },
+    responsibility: { sourceOwner: "kungfu", releaseDecisionOwner: "Kungfu release maintainer" },
+    residualRisk: ["Remote evidence freshness depends on the configured source runtime."],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({ channel: "alpha", targetRef: "alpha/v4/v4.0" }),
+    kfd2ClaimJsons: [claimPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const risk = passport["kfd-2"].claims[0].residualRisk[0];
+
+  assert.equal(report.ok, true, JSON.stringify(report.issues));
+  assert.equal(passport["kfd-2"].status, "downgraded");
+  assert.equal(risk.id, "remote-fact-boundary-residual-risk-1");
+  assert.equal(risk.riskType, "manual-review-risk");
+  assert.equal(risk.trustImpact, "downgrade-warning");
+  assert.equal(risk.machineProvability, "not-machine-verifiable");
+  assert.equal(risk.agentAction, "request-maintainer-review");
+  assert.equal(risk.owner, "Kungfu release maintainer");
+  assert.equal(risk.reason, "Remote evidence freshness depends on the configured source runtime.");
+});
+
 test("release passport fails closed when a KFD-2 downgrade reason uses an unknown taxonomy value", () => {
   const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
   const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {

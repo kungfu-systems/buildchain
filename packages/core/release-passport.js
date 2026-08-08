@@ -916,6 +916,41 @@ function arrayOrSingleton(value) {
   return value && typeof value === "object" ? [value] : [];
 }
 
+const KFD2_RESIDUAL_RISK_SCHEMA = "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk";
+
+function normalizeKfd2ResidualRisk(entry, { claim = {}, claimIndex = 0, riskIndex = 0 } = {}) {
+  if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+    return entry;
+  }
+  const reason = optionalString(entry).trim();
+  if (!reason) {
+    return entry;
+  }
+  const claimId = optionalString(claim.id || `claim-${claimIndex + 1}`)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || `claim-${claimIndex + 1}`;
+  const responsibility = claim.responsibility && typeof claim.responsibility === "object" && !Array.isArray(claim.responsibility)
+    ? claim.responsibility
+    : {};
+  return {
+    id: `${claimId}-residual-risk-${riskIndex + 1}`,
+    definedBy: KFD2_RESIDUAL_RISK_SCHEMA,
+    riskType: "manual-review-risk",
+    trustImpact: "downgrade-warning",
+    machineProvability: "not-machine-verifiable",
+    agentAction: "request-maintainer-review",
+    reason,
+    owner: optionalString(
+      responsibility.releaseDecisionOwner
+      || responsibility.owner
+      || responsibility.sourceOwner
+      || responsibility.sourceContractOwner
+      || "release maintainer",
+    ),
+  };
+}
+
 function normalizeKfd2Claim(raw = {}, index = 0) {
   const claim = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
   const sourceBindings = arrayOrEmpty(claim.sourceBindings || claim.source_bindings || claim.sources || claim.declaredSources);
@@ -929,10 +964,13 @@ function normalizeKfd2Claim(raw = {}, index = 0) {
       ? claim.audit_boundary
       : {};
   const responsibility = claim.responsibility && typeof claim.responsibility === "object" && !Array.isArray(claim.responsibility) ? claim.responsibility : {};
-  const residualRisk = arrayOrSingleton(claim.residualRisk || claim.residual_risk).map((entry, riskIndex) => validateKfd2TrustTaxonomyEntry(entry, {
-    kind: "residualRisk",
-    label: `kfd-2.claims[${index}].residualRisk[${riskIndex}]`,
-  }));
+  const residualRisk = arrayOrSingleton(claim.residualRisk || claim.residual_risk).map((entry, riskIndex) => validateKfd2TrustTaxonomyEntry(
+    normalizeKfd2ResidualRisk(entry, { claim, claimIndex: index, riskIndex }),
+    {
+      kind: "residualRisk",
+      label: `kfd-2.claims[${index}].residualRisk[${riskIndex}]`,
+    },
+  ));
   const downgradeReasons = arrayOrSingleton(claim.downgradeReasons || claim.downgrade_reasons || claim.downgradeReason || claim.downgrade_reason)
     .map((entry, reasonIndex) => validateKfd2TrustTaxonomyEntry(entry, {
       kind: "downgradeReason",
