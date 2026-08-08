@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-08-07T19:48:25.228Z"
+    "updatedAt": "2026-08-08T19:23:57.936Z"
   },
   "candidates": [
     {
@@ -764,9 +764,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-07-30T10:19:42.000Z",
-        "soakElapsedSeconds": 725323,
+        "soakElapsedSeconds": 810255,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -791,7 +791,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -812,9 +812,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-07-31T13:57:29.000Z",
-        "soakElapsedSeconds": 625856,
+        "soakElapsedSeconds": 710788,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -839,7 +839,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -852,9 +852,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-07-31T15:40:10.000Z",
-        "soakElapsedSeconds": 619695,
+        "soakElapsedSeconds": 704627,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -879,7 +879,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -892,9 +892,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-07-31T16:16:47.000Z",
-        "soakElapsedSeconds": 617498,
+        "soakElapsedSeconds": 702430,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -919,7 +919,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -940,9 +940,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T00:28:54.000Z",
-        "soakElapsedSeconds": 587971,
+        "soakElapsedSeconds": 672903,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -967,7 +967,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -980,9 +980,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T01:08:19.000Z",
-        "soakElapsedSeconds": 585606,
+        "soakElapsedSeconds": 670538,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1007,7 +1007,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1020,9 +1020,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T01:35:50.000Z",
-        "soakElapsedSeconds": 583955,
+        "soakElapsedSeconds": 668887,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1047,7 +1047,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1060,9 +1060,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T07:41:28.000Z",
-        "soakElapsedSeconds": 562017,
+        "soakElapsedSeconds": 646949,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1087,7 +1087,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1100,9 +1100,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T08:15:14.000Z",
-        "soakElapsedSeconds": 559991,
+        "soakElapsedSeconds": 644923,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1127,7 +1127,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1140,9 +1140,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T09:29:35.000Z",
-        "soakElapsedSeconds": 555530,
+        "soakElapsedSeconds": 640462,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1167,7 +1167,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1180,9 +1180,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T11:20:59.000Z",
-        "soakElapsedSeconds": 548846,
+        "soakElapsedSeconds": 633778,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1207,7 +1207,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1220,9 +1220,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T12:08:34.000Z",
-        "soakElapsedSeconds": 545991,
+        "soakElapsedSeconds": 630923,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1247,7 +1247,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1260,9 +1260,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T13:00:25.000Z",
-        "soakElapsedSeconds": 542880,
+        "soakElapsedSeconds": 627812,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1287,7 +1287,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1300,9 +1300,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T13:18:26.000Z",
-        "soakElapsedSeconds": 541799,
+        "soakElapsedSeconds": 626731,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1327,7 +1327,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1340,9 +1340,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-01T14:15:22.000Z",
-        "soakElapsedSeconds": 538383,
+        "soakElapsedSeconds": 623315,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1367,7 +1367,7 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
@@ -1388,7 +1388,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1415,7 +1415,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1428,7 +1428,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1455,7 +1455,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1468,9 +1468,9 @@
       "state": "qualified",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "2026-08-02T01:32:26.000Z",
-        "soakElapsedSeconds": 497759,
+        "soakElapsedSeconds": 582691,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1495,15 +1495,15 @@
       },
       "decision": {
         "reason": "qualification-satisfied",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       },
       "promotionRequest": {
         "stableTag": "v3.0.5",
         "sourceRef": "publish-gate/release/v3/v3.0/3.0.5-alpha.0",
         "targetRef": "release/v3/v3.0",
-        "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/2442",
-        "requestedAt": "2026-08-07T19:48:25.228Z",
+        "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/2471",
+        "requestedAt": "2026-08-08T19:23:57.936Z",
         "authority": "policy"
       }
     },
@@ -1516,7 +1516,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1543,7 +1543,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1556,7 +1556,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1583,7 +1583,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1596,7 +1596,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1623,7 +1623,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1636,7 +1636,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1663,7 +1663,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1676,7 +1676,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1703,7 +1703,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1716,7 +1716,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1743,7 +1743,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1756,7 +1756,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1783,7 +1783,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -1796,7 +1796,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-07T19:48:25.228Z",
+        "observedAt": "2026-08-08T19:23:57.936Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1823,7 +1823,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-07T19:48:25.228Z",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -2092,9 +2092,49 @@
         "stableSha": "4d3415855debb03bac01c4f5d11417f0d1ea42d8",
         "promotedAt": "2026-08-07T06:29:45.000Z"
       }
+    },
+    {
+      "version": "3.0.7-alpha.0",
+      "stableVersion": "3.0.7",
+      "sha": "54cc55e5d7aadb5e3fa5a064d5d4d08caad65bc1",
+      "tag": "v3.0.7-alpha.0",
+      "publishedAt": "2026-08-07T20:55:25.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-08-08T19:23:57.936Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-08-07T20:55:25.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.7-alpha.0"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-08-08T19:23:57.936Z",
+        "actor": "buildchain-patrol"
+      }
     }
   ],
-  "updatedAt": "2026-08-07T06:29:45.000Z",
+  "updatedAt": "2026-08-08T19:23:57.936Z",
   "stableReleases": [
     {
       "version": "3.0.6",
