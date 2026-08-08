@@ -1,8 +1,10 @@
 use std::env;
 use std::fs;
+use std::io::Read;
 
 use buildchain_v4_contracts::{
-    EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root, validate_clock,
+    EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root,
+    run_delivery_warrant_trace_fixture, validate_clock,
 };
 use serde::Serialize;
 use serde_json::Value;
@@ -29,12 +31,9 @@ struct FixtureProjection {
     invalid_cases: Vec<FaultProjection>,
 }
 
-fn run() -> Result<(), String> {
-    let fixture_path = env::args()
-        .nth(1)
-        .ok_or_else(|| "usage: buildchain-v4-contracts FIXTURES.json".to_owned())?;
+fn run_canonical_fixture(fixture_path: &str) -> Result<(), String> {
     let fixtures: Value = serde_json::from_slice(
-        &fs::read(&fixture_path).map_err(|error| format!("cannot read fixtures: {error}"))?,
+        &fs::read(fixture_path).map_err(|error| format!("cannot read fixtures: {error}"))?,
     )
     .map_err(|error| format!("invalid fixtures: {error}"))?;
     let cases = fixtures["validCases"]
@@ -111,6 +110,32 @@ fn run() -> Result<(), String> {
         .map_err(|error| error.to_string())?;
     println!();
     Ok(())
+}
+
+fn run_trace_fixture(fixture_path: &str) -> Result<(), String> {
+    let bytes = if fixture_path == "-" {
+        let mut bytes = Vec::new();
+        std::io::stdin()
+            .read_to_end(&mut bytes)
+            .map_err(|error| format!("cannot read fixtures: {error}"))?;
+        bytes
+    } else {
+        fs::read(fixture_path).map_err(|error| format!("cannot read fixtures: {error}"))?
+    };
+    let result = run_delivery_warrant_trace_fixture(&bytes)
+        .map_err(|fault| format!("{} at {}: {}", fault.code, fault.path, fault.message))?;
+    serde_json::to_writer(std::io::stdout().lock(), &result).map_err(|error| error.to_string())?;
+    println!();
+    Ok(())
+}
+
+fn run() -> Result<(), String> {
+    let args = env::args().skip(1).collect::<Vec<_>>();
+    match args.as_slice() {
+        [fixture_path] => run_canonical_fixture(fixture_path),
+        [command, fixture_path] if command == "trace" => run_trace_fixture(fixture_path),
+        _ => Err("usage: buildchain-v4-contracts [trace] FIXTURES.json".to_owned()),
+    }
 }
 
 fn main() {

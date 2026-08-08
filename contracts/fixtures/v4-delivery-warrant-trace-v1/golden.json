@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain-v4-delivery-warrant-trace-fixture/v1",
+  "runner": "buildchain-v4-delivery-warrant-fixture-runner/v1",
+  "trace": {
+    "id": "golden-submit-select",
+    "kind": "golden",
+    "initialState": {
+      "schema": "buildchain-v4-delivery-warrant-state/v1",
+      "generation": 0,
+      "fencingCounter": 0,
+      "activeWarrant": null,
+      "candidates": []
+    },
+    "initialStateRoot": "sha256:1e18ecb69d09e4ed2e370dfd364846a089bc5776f295018e11d85582d19f972b",
+    "steps": [
+      {
+        "sequence": 0,
+        "id": "submit",
+        "operation": "submit",
+        "event": {
+          "schema": "buildchain-v4-event-envelope/v1",
+          "eventId": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "eventType": "candidate-submitted",
+          "occurredAt": "2026-08-07T00:00:01.000Z",
+          "subjectRoot": "sha256:1e18ecb69d09e4ed2e370dfd364846a089bc5776f295018e11d85582d19f972b",
+          "payload": {
+            "candidateId": "candidate-101",
+            "pullRequestNumber": 101
+          }
+        },
+        "decision": { "action": "candidate-submitted", "fault": null },
+        "priorStateRoot": "sha256:1e18ecb69d09e4ed2e370dfd364846a089bc5776f295018e11d85582d19f972b",
+        "successorState": {
+          "schema": "buildchain-v4-delivery-warrant-state/v1",
+          "generation": 1,
+          "fencingCounter": 0,
+          "activeWarrant": null,
+          "candidates": [
+            {
+              "candidateId": "candidate-101",
+              "pullRequestNumber": 101,
+              "status": "queued"
+            }
+          ]
+        },
+        "successorRoot": "sha256:18049afcd211acf798f4eef2d11bb7a85823c7860dd9eb452f71b9abbde1a719",
+        "effects": [
+          {
+            "sequence": 0,
+            "type": "persist-successor",
+            "payload": {
+              "expectedOldStateRoot": "sha256:1e18ecb69d09e4ed2e370dfd364846a089bc5776f295018e11d85582d19f972b",
+              "nextStateRoot": "sha256:18049afcd211acf798f4eef2d11bb7a85823c7860dd9eb452f71b9abbde1a719"
+            }
+          }
+        ],
+        "observations": [
+          {
+            "sequence": 0,
+            "type": "state-readback",
+            "payload": {
+              "readbackRoot": "sha256:18049afcd211acf798f4eef2d11bb7a85823c7860dd9eb452f71b9abbde1a719",
+              "status": "matched"
+            }
+          }
+        ],
+        "receipt": {
+          "schema": "buildchain-v4-receipt-envelope/v1",
+          "receiptType": "candidate-submitted",
+          "recordedAt": "2026-08-07T00:00:01.000Z",
+          "eventRoot": "sha256:e990f213f7cfdc7ba028325b7e918bc12baf9ebbd0b07cd4bb65a06858649a0a",
+          "priorStateRoot": "sha256:1e18ecb69d09e4ed2e370dfd364846a089bc5776f295018e11d85582d19f972b",
+          "nextStateRoot": "sha256:18049afcd211acf798f4eef2d11bb7a85823c7860dd9eb452f71b9abbde1a719",
+          "outcome": "accepted",
+          "fault": null
+        },
+        "receiptRoot": "sha256:0eefe3a9f161b83895037ef423b465dda3993befb203dfab2adcc2581faee7df"
+      },
+      {
+        "sequence": 1,
+        "id": "select",
+        "operation": "select",
+        "event": {
+          "schema": "buildchain-v4-event-envelope/v1",
+          "eventId": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "eventType": "warrant-selected",
+          "occurredAt": "2026-08-07T00:00:02.000Z",
+          "subjectRoot": "sha256:18049afcd211acf798f4eef2d11bb7a85823c7860dd9eb452f71b9abbde1a719",
+          "payload": {
+            "candidateId": "candidate-101",
+            "fencingToken": "fence-1"
+          }
+        },
+        "decision": { "action": "warrant-selected", "fault": null },
+        "priorStateRoot": "sha256:18049afcd211acf798f4eef2d11bb7a85823c7860dd9eb452f71b9abbde1a719",
+        "successorState": {
+          "schema": "buildchain-v4-delivery-warrant-state/v1",
+          "generation": 2,
+          "fencingCounter": 1,
+          "activeWarrant": {
+            "candidateId": "candidate-101",
+            "fencingToken": "fence-1",
+            "generation": 2
+          },
+          "candidates": [
+            {
+              "candidateId": "candidate-101",
+              "pullRequestNumber": 101,
+              "status": "selected"
+            }
+          ]
+        },
+        "successorRoot": "sha256:dc85db06e2cea6b53afa8e5888f0d42b4d5374e9fc42bbc3c2fd3943e3d31363",
+        "effects": [
+          {
+            "sequence": 0,
+            "type": "persist-successor",
+            "payload": {
+              "expectedOldStateRoot": "sha256:18049afcd211acf798f4eef2d11bb7a85823c7860dd9eb452f71b9abbde1a719",
+              "nextStateRoot": "sha256:dc85db06e2cea6b53afa8e5888f0d42b4d5374e9fc42bbc3c2fd3943e3d31363"
+            }
+          },
+          {
+            "sequence": 1,
+            "type": "request-admission",
+            "payload": {
+              "candidateId": "candidate-101",
+              "fencingToken": "fence-1"
+            }
+          }
+        ],
+        "observations": [
+          {
+            "sequence": 0,
+            "type": "state-readback",
+            "payload": {
+              "readbackRoot": "sha256:dc85db06e2cea6b53afa8e5888f0d42b4d5374e9fc42bbc3c2fd3943e3d31363",
+              "status": "matched"
+            }
+          }
+        ],
+        "receipt": {
+          "schema": "buildchain-v4-receipt-envelope/v1",
+          "receiptType": "warrant-selected",
+          "recordedAt": "2026-08-07T00:00:02.000Z",
+          "eventRoot": "sha256:3d58747d5231ad3404f30e8f065fa0980a42d73bb791ed5193a4156251287823",
+          "priorStateRoot": "sha256:18049afcd211acf798f4eef2d11bb7a85823c7860dd9eb452f71b9abbde1a719",
+          "nextStateRoot": "sha256:dc85db06e2cea6b53afa8e5888f0d42b4d5374e9fc42bbc3c2fd3943e3d31363",
+          "outcome": "accepted",
+          "fault": null
+        },
+        "receiptRoot": "sha256:15e48ac87c06e1a7dad01d2d1848547abc4f01a06abd319261162a06ae8b86a7"
+      }
+    ]
+  },
+  "expectedProjectionRoot": "sha256:c1e1086119449f2cfef191fba51b60f91af668ee7c9b6159ef0c5a756f54c9c3"
+}

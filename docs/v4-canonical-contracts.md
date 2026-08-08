@@ -52,3 +52,16 @@ pnpm run check:v4-contracts
 ```
 
 The check validates both implementations, compares exact UTF-8 bytes and SHA-256 roots, exercises invalid numbers, keys, clocks, domains, and envelope shapes, and scans the pure libraries for ambient clock or provider imports. Delivery Warrant decide/fold, shadow invocation, provider effects, and production authority remain outside this contract slice.
+
+## Shared Delivery Warrant fixture runner
+
+The versioned trace contract in [`contracts/v4-delivery-warrant-trace-v1.schema.json`](../contracts/v4-delivery-warrant-trace-v1.schema.json) is the language-neutral boundary for retained Delivery Warrant fixtures. The JavaScript runner in [`packages/core/v4-delivery-warrant-fixture-runner.js`](../packages/core/v4-delivery-warrant-fixture-runner.js) and the Rust runner in [`crates/buildchain-v4-contracts`](../crates/buildchain-v4-contracts) consume the same UTF-8 fixture bytes and emit the same deterministic semantic projection.
+
+Each trace is closed and ordered. It binds the exact prior root, event, action or typed fault, canonical successor bytes and root, generation, fencing counter, ordered declarative effects, provider-neutral observations, and rooted receipt. The runner verifies the full root chain before returning a projection. Malformed JSON, missing or unknown fields, reordered sequences, stale roots, and unsupported contract versions fail closed.
+
+The retained public-safe fixtures are:
+
+- [`golden.json`](../contracts/fixtures/v4-delivery-warrant-trace-v1/golden.json) for accepted submit/select transitions and ordered effects;
+- [`replay.json`](../contracts/fixtures/v4-delivery-warrant-trace-v1/replay.json) for a stale-fence typed fault and response-loss readback.
+
+The runner is not a state-machine implementation and does not sample time, execute effects, access Git/GitHub, or move production authority. TypeScript v3 remains the sole production writer. Later Rust decide/fold and TypeScript shadow adapters supply or consume this contract instead of defining another projection shape.
