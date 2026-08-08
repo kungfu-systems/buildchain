@@ -667,7 +667,7 @@
     "children": [
       {
         "id": "canonical-contracts",
-        "assignmentId": "2026-08-06-buildchain-v4-canonical-contracts",
+        "assignmentId": "2026-08-07-buildchain-v4-canonical-contracts",
         "status": "proved",
         "pullRequest": 2428,
         "sourceRevision": "b15011e59614c6316522507498f3f80c2fb7447b",
@@ -680,7 +680,7 @@
       },
       {
         "id": "shared-fixture-runner",
-        "assignmentId": "2026-08-06-buildchain-v4-shared-fixture-runner",
+        "assignmentId": "2026-08-07-buildchain-v4-shared-fixture-runner",
         "status": "proved",
         "pullRequest": 2449,
         "sourceRevision": "3bb081e9adbfa28a1d035eb9418ff227e6a3f71c",
