@@ -9,6 +9,7 @@ import {
 
 const SOURCE_SHA = "1".repeat(40);
 const RELEASE_SHA = "2".repeat(40);
+const CANDIDATE_SOURCE_SHA = "3".repeat(40);
 const ROOT = `sha256:${"a".repeat(64)}`;
 
 function canonical(value) {
@@ -124,7 +125,7 @@ function installerFixture() {
     identity: {
       channel: "alpha",
       version: "4.0.0-alpha.2",
-      sourceCommit: SOURCE_SHA,
+      sourceCommit: CANDIDATE_SOURCE_SHA,
       releaseSha: RELEASE_SHA,
       releaseTag: "v4.0.0-alpha.2",
       channelPayloadRoot: `sha256:${"3".repeat(64)}`,
@@ -152,6 +153,10 @@ function installerFixture() {
   const manifestBytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
   const evidence = {
     ...fixture(),
+    identity: {
+      ...fixture().identity,
+      candidateSourceSha: CANDIDATE_SOURCE_SHA,
+    },
     publication: {
       url: `${releaseBase}/kungfu-installer-publication-bundle.json`,
       payloadRoot: bundleRoot,
@@ -159,7 +164,7 @@ function installerFixture() {
         schema: unsigned.schema,
         bundleRoot,
         manifestDigest: digest(manifestBytes),
-        sourceCommit: SOURCE_SHA,
+        sourceCommit: CANDIDATE_SOURCE_SHA,
         channel: "alpha",
         channelPayloadRoot: unsigned.identity.channelPayloadRoot,
         channelFileDigest: unsigned.identity.channelFileDigest,
@@ -234,7 +239,17 @@ test("installer publication bundle is independently sealed from public bytes", a
     "kungfu-buildchain-installer-publication-bundle-seal/v1",
   );
   assert.equal(seal.bundleRoot, value.evidence.publication.payloadRoot);
+  assert.equal(seal.sourceCommit, CANDIDATE_SOURCE_SHA);
   assert.match(seal.sealRoot, /^sha256:[a-f0-9]{64}$/);
+});
+
+test("installer publication bundle rejects an unbound candidate source", () => {
+  const value = installerFixture();
+  delete value.evidence.identity.candidateSourceSha;
+  assert.throws(
+    () => validatePublicationCommitEvidence(value.evidence, expected),
+    /installer bundle release identity mismatch/,
+  );
 });
 
 test("installer publication bundle rejects transport and read-back drift", async () => {
