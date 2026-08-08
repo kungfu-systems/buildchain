@@ -16,6 +16,7 @@ import {
 import {
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
+  deduplicateReleaseAssets,
   exposeRecoveredPassportPath,
   exposeRecoveredPayloadRoot,
   normalizePlatformManifests,
@@ -23,6 +24,29 @@ import {
   recoveredArtifactPathsByBasename,
 } from "../scripts/resume-from-candidate-run.mjs";
 import { generatePublishRequiredArtifacts } from "../scripts/release-candidate-resolver.mjs";
+
+test("recovered Release assets deduplicate identical basenames and reject byte collisions", () => {
+  const identical = [
+    {
+      path: "platform/product/release/Kungfu-Episodes-alpha.zip",
+      size: 12,
+      sha256: `sha256:${"a".repeat(64)}`,
+    },
+    {
+      path: "platform/signing/credential-artifact/product/release/Kungfu-Episodes-alpha.zip",
+      size: 12,
+      sha256: "a".repeat(64),
+    },
+  ];
+  assert.deepEqual(deduplicateReleaseAssets(identical), [identical[0]]);
+  assert.throws(
+    () => deduplicateReleaseAssets([
+      identical[0],
+      { ...identical[1], sha256: "b".repeat(64) },
+    ]),
+    /basename collision.*different sealed bytes/u,
+  );
+});
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);

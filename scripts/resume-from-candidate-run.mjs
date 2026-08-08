@@ -295,6 +295,35 @@ export function createRecoveredPublicationCandidate({
   return { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
 }
 
+export function deduplicateReleaseAssets(files = []) {
+  const assets = new Map();
+  for (const file of files) {
+    const name = path.basename(file.path);
+    const existing = assets.get(name);
+    if (!existing) {
+      assets.set(name, file);
+      continue;
+    }
+    const digest = String(file.sha256 || "").replace(/^sha256:/, "");
+    const existingDigest = String(existing.sha256 || "").replace(/^sha256:/, "");
+    if (digest !== existingDigest || Number(file.size) !== Number(existing.size)) {
+      throw new Error(
+        `recovered GitHub Release asset basename collision: ${name} maps to different sealed bytes`,
+      );
+    }
+    if (
+      String(file.path).length < String(existing.path).length ||
+      (String(file.path).length === String(existing.path).length &&
+        String(file.path).localeCompare(String(existing.path)) < 0)
+    ) {
+      assets.set(name, file);
+    }
+  }
+  return [...assets.values()].sort((left, right) =>
+    path.basename(left.path).localeCompare(path.basename(right.path)),
+  );
+}
+
 export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests }) {
   const allFiles = downloads.flatMap((download) => download.files.map((file) => ({
     path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
@@ -311,8 +340,8 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
   const releaseAssetFiles = kind !== "npm" && platformArtifactNames.size > 0
     ? allFiles.filter((file) => platformArtifactNames.has(file.artifactName))
     : allFiles;
-  const releaseAssets = releaseAssetFiles.filter((file) =>
-    releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
+  const releaseAssets = deduplicateReleaseAssets(releaseAssetFiles.filter((file) =>
+    releaseMatchers.some((matcher) => matcher.test(path.basename(file.path)))));
   if (kind !== "npm") {
     createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
     const version = String(passport.target?.version || "").trim();
