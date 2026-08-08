@@ -140,6 +140,10 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   closeout. Re-running qualification for the same selected head may regenerate
   timestamped proof bytes, but it retains the immutable active Warrant and its
   originally selected proof instead of rewriting or rejecting that attempt.
+  Each candidate also retains the exact successful source workflow run. If a
+  controller discovers that another candidate owns the active Warrant, a
+  configured consumer workflow is dispatched immediately for that exact PR,
+  head, and source run; the candidate is not left waiting for a patrol cron.
 
 Consumers should deploy `shadow` first, inspect receipts, then change their
 protected caller to `required`. Rollback is a reviewed caller change back to
@@ -149,7 +153,9 @@ merged candidate (or accepts explicit evidence for another terminal outcome),
 then closes only the current fencing generation. The separate queued
 cancellation reusable workflow cannot close an active generation; it advances
 the state ref only when the caller's complete terminal binding and expected-old
-root still match.
+root still match. A delayed `dequeued` event is ignored when GitHub readback
+shows the same exact PR head is already queued again, so an earlier queue event
+cannot close a newer active Warrant generation.
 
 Buildchain uses the same contract for its own protected dev line through
 `buildchain-dev-delivery.yml`. The manual caller requires the exact PR head and

@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 110917,
+    "maxHandMaintainedSourceLines": 110922,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22547,
-    "latestTransition": "Apple archive signing seals exact JIT entitlement intent, Delivery Warrant admission retains exact active heads and ruleset authority, and diagnostic probes plus standalone staging are bounded away from shared temporary roots.",
-    "rationale": "The combined transition preserves the protected signing authority from the current base and adds current-authority readback, bounded enqueue retry, ruleset-aware locked-branch preflight, exact-head idempotence, bounded tool-version probes, ephemeral standalone staging cleanup, documentation, and adversarial tests needed to remove observed waits. No authority is duplicated, and the exact merged repository ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22626,
+    "latestTransition": "Delivery Warrant candidates retain their exact source workflow run, active-candidate handoff is immediate, and stale dequeue events cannot close a newer queued generation.",
+    "rationale": "The five source lines retain one exact source-run coordinate in the existing Warrant authority. The workflow increase adds bounded immediate dispatch and exact merge-queue readback so controllers neither wait for patrol cron nor let delayed dequeue events terminalize a re-enqueued head. No scheduler, writer, or authority is duplicated, and the exact merged repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -311,6 +311,7 @@
           "dry-run",
           "expected-head-sha",
           "expected-pr-number",
+          "handoff-workflow-id",
           "initiative-root",
           "landing-mode",
           "max-merges",
@@ -325,6 +326,7 @@
           "shard-evidence-roots-json",
           "source-identity-root",
           "source-patch-root",
+          "source-workflow-run-id",
           "target-branch",
           "toolchain-root",
           "warrant-lease-seconds"
@@ -346,7 +348,7 @@
           "warrant-state-root"
         ]
       },
-      "rationale": "Extend targeted exact-head admission with an optional rooted Project Cut replay proof for the exact current base and immutable Warrant state-commit readback while independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
+      "rationale": "Extend targeted exact-head admission with the exact source workflow run and one explicitly configured consumer handoff workflow so a controller can immediately resume the active Warrant candidate instead of waiting for patrol cadence. Independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
