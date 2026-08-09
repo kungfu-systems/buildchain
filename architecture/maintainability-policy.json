@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 305,
-    "maxHandMaintainedSourceLines": 116378,
+    "maxHandMaintainedSourceFiles": 308,
+    "maxHandMaintainedSourceLines": 117561,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22309,
-    "latestTransition": "The Wave 2 resume-planner successor adds one pure Rust domain split, one byte-identical TypeScript projection, and one real-platform rehearsal driver, without production skip or provider authority.",
-    "rationale": "The exact resume-planner ceiling adds four hand-maintained source files, 1,067 hand-maintained source lines, and four protected-workflow lines. The Rust request/planner and causal-invalidation modules stay below the 600-line new-file ceiling; the TypeScript projection consumes the same closed request and shared fixture. Explicit topological targets produce only required restores and rebuilds. Source, platform, toolchain, runtime, policy, input, transformation, output-manifest, retention, availability, root, and qualification changes have deterministic reason codes and rooted causes. Provider and release-tail effects remain separate, readback-required, and mutation-disabled. The planner has no filesystem, network, environment, credential, or ambient-clock input and remains shadow-only with v3 production authority unchanged. Existing per-file, per-function, workflow-file, public-surface, and no-widening budgets remain unchanged. Qualification reconciliation, production providers, writer cutover, or public reuse authority requires another separately reviewed transition."
+    "maxWorkflowLines": 22386,
+    "latestTransition": "The final Wave 2 qualification successor adds one closed evidence validator, one fixture campaign library, and one clean-process driver for six protected real-runner campaigns and exact terminal reconciliation.",
+    "rationale": "The qualification ceiling adds three hand-maintained source files, 1,183 hand-maintained source lines, and 77 protected-workflow lines. The evidence validator, campaign constructor, and driver each remain below the 600-line new-file ceiling and every new function remains below the line and complexity budgets. Buildchain self-dogfood and an exact-source Kungfu shadow profile each run on macOS arm64, Linux x64, and Windows x64. A late failure retains install and build Capsules; a separate process restores only the necessary build output and rebuilds verify plus package. Fresh and resumed artifact-manifest/content roots must match. Eleven missing, expiry, corruption, partial, cross-boundary, drift, stale-writer, and root faults fail closed with zero false reuse or false rebuild. Qualification records retained bytes, restore overhead, planner accuracy, and one non-destructive v3 rollback switch. The aggregate and five-child reconciliation remain evidence-only: there are no provider SDKs, production writes, release effects, production stage skips, v3 behavior changes, or public reuse authority. Existing public-surface, workflow-file, per-file, per-function, and no-widening budgets remain unchanged."
   },
   "sourceBudgets": {
     "newFileLines": 600,

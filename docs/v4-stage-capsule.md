@@ -130,3 +130,43 @@ mismatch, and insufficient qualification reject reuse fail closed.
 Effects never participate in Capsule reuse. They remain ordered declarations
 with required provider readback and planner mutation disabled. This planner is
 shadow-only: it does not skip a v3 production stage or move v3 authority.
+
+## Three-platform qualification and Wave reconciliation
+
+`architecture/v4-stage-capsule-qualification.json` closes the Wave 2
+qualification boundary. The protected workflow runs the same consumer-equivalent
+interface for Buildchain self-dogfood and an exact-source Kungfu shadow profile
+on real macOS arm64, Linux x64, and Windows x64 runners. Each campaign uses a
+seed process that records successful `install` and `build` Capsules before an
+intentional late `verify` failure, followed by a separate resume process over
+the retained store. The planner restores only the exact `build` dependency and
+rebuilds only `verify` plus `package`; retained `install` evidence remains
+available without an unnecessary restore.
+
+Qualification compares the declared artifact-manifest and aggregate content
+roots from a fresh full build with the roots assembled from retained and rebuilt
+Capsules. It fails closed on missing, expired, corrupt, partial, cross-platform,
+cross-stage, source/toolchain/policy drift, stale-writer, and root-mismatch
+campaigns. The rooted report records retained bytes, restore overhead, planner
+accuracy, false reuse, and false rebuild counts. All six consumer/platform
+reports are required before one qualification root is emitted.
+
+The post-merge reconciliation interface accepts that qualification root only
+with all five Wave 2 children in native terminal state, exact source and
+protected merge revisions, independent review roots, Delivery Warrant roots,
+native gate roots, and an empty protected-delivery queue. It emits evidence; it
+does not rewrite child authority. `--stage-capsule-mode v3` is the explicit
+non-destructive rollback switch. No migration, retained-state deletion,
+production reuse, provider effect, release effect, or v3 behavior change is
+authorized by this qualification.
+
+Focused local rehearsal:
+
+```sh
+node scripts/v4-stage-capsule-qualification.mjs campaign \
+  --work-root /tmp/buildchain-v4-stage-qualification \
+  --platform linux-x64 \
+  --consumer buildchain-self-dogfood \
+  --runtime-ref <exact-buildchain-commit> \
+  --consumer-source-revision <exact-consumer-commit>
+```

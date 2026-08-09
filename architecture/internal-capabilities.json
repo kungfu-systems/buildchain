@@ -44,6 +44,9 @@
     "packages/core/v4-stage-capsule-local-store.js",
     "packages/core/v4-platform-stage-checkpoints.js",
     "scripts/v4-platform-stage-checkpoint-rehearsal.mjs",
+    "packages/core/v4-stage-capsule-qualification.js",
+    "packages/core/v4-stage-capsule-qualification-campaign.js",
+    "scripts/v4-stage-capsule-qualification.mjs",
     "crates/buildchain-v4-contracts/src/stage_capsule.rs",
     "crates/buildchain-v4-contracts/src/stage_capsule_store.rs"
   ],
@@ -361,6 +364,9 @@
         "packages/core/v4-stage-capsule-local-store.js",
         "packages/core/v4-platform-stage-checkpoints.js",
         "scripts/v4-platform-stage-checkpoint-rehearsal.mjs",
+        "packages/core/v4-stage-capsule-qualification.js",
+        "packages/core/v4-stage-capsule-qualification-campaign.js",
+        "scripts/v4-stage-capsule-qualification.mjs",
         "crates/buildchain-v4-contracts/src/stage_capsule.rs",
         "crates/buildchain-v4-contracts/src/stage_capsule_store.rs"
       ],
@@ -369,7 +375,8 @@
         "tests/v4-bridge.test.mjs",
         "tests/v4-stage-capsule.test.mjs",
         "tests/v4-stage-capsule-store.test.mjs",
-        "tests/v4-platform-stage-checkpoints.test.mjs"
+        "tests/v4-platform-stage-checkpoints.test.mjs",
+        "tests/v4-stage-capsule-qualification.test.mjs"
       ],
       "contracts": [
         "architecture/v4-architecture-constitution.md",
@@ -381,6 +388,7 @@
         "architecture/v4-stage-capsule-contract.json",
         "architecture/v4-stage-capsule-store-contract.json",
         "architecture/v4-platform-stage-checkpoints.json",
+        "architecture/v4-stage-capsule-qualification.json",
         "contracts/v4-host-contract-v1.schema.json",
         "contracts/v4-stage-capsule-v1.schema.json",
         "contracts/v4-stage-capsule-store-v1.schema.json",

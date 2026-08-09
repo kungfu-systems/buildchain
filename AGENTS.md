@@ -90,6 +90,13 @@ Stage Capsule resume planning is governed by
 TypeScript projection pure and byte-identical; explicit provider/release-tail
 effects always require readback and never become Capsule reuse.
 
+Stage Capsule qualification and Wave 2 reconciliation are governed by
+`architecture/v4-stage-capsule-qualification.json`. Both Buildchain
+self-dogfood and the exact-source Kungfu shadow consumer must pass the complete
+three-platform, clean-process fault campaign. Qualification remains shadow-only:
+it cannot enable production reuse, change v3 authority, perform provider or
+release effects, or destroy retained state during rollback.
+
 `pnpm run check` validates inventory data, generated public references and site
 bundle drift, lints root workflows, runs unit tests, and rebuilds every action
 bundle.
