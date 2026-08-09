@@ -106,7 +106,14 @@ async function verifyPublicPassport({ octokit, owner, repo, remoteAssets, localF
   try {
     const passportPath = await stagePublicPassport({ octokit, owner, repo, remoteAssets, localFallbacks, directory });
     const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
-    const report = await verifyPassport({ passportLocation: passportPath });
+    // A complete public Release is an immutable historical snapshot. Re-check
+    // freshness at the snapshot cut recorded by the Passport; using wall-clock
+    // time would make every otherwise valid release fail recovery after its
+    // bounded gate evidence expires.
+    const report = await verifyPassport({
+      passportLocation: passportPath,
+      checkedAt: passport.generatedAt || undefined,
+    });
     if (report?.ok !== true) {
       const issues = (report?.issues || [])
         .map((issue) => `${issue.code || "unknown"}: ${issue.message || "verification failed"}`)

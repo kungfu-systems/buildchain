@@ -736,6 +736,7 @@ test("declarative GitHub Release recovery verifies existing evidence and publish
     },
   });
   const publicPassport = Buffer.from(JSON.stringify({
+    generatedAt: "2026-08-08T09:27:03.433Z",
     release: {
       tag: "v1.0.1-alpha.0",
       publicTag: "v1.0.1-alpha.0",
@@ -793,9 +794,10 @@ test("declarative GitHub Release recovery verifies existing evidence and publish
     releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
     releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
     statePath: path.join(cwd, ".buildchain/release-tail/state.json"),
-    verifyPassport: async ({ passportLocation }) => {
+    verifyPassport: async ({ passportLocation, checkedAt }) => {
       assert.equal(JSON.parse(fs.readFileSync(passportLocation, "utf8")).generatedBy, "original-run");
       assert.equal(fs.existsSync(path.join(path.dirname(passportLocation), "impact.json")), true);
+      assert.equal(checkedAt, "2026-08-08T09:27:03.433Z");
       return { ok: true, issues: [] };
     },
   });
