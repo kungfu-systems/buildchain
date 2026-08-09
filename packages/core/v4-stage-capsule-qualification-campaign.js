@@ -6,7 +6,6 @@ import {
   v4CanonicalBytes,
   v4ContentRoot,
 } from "./v4-canonical-contracts.js";
-import { loadBuildchainConfig } from "./buildchain-config.js";
 import { emitV4PlatformStageCheckpoint } from "./v4-platform-stage-checkpoints.js";
 import { V4_STAGE_CAPSULE_QUALIFICATION_FAULTS } from "./v4-stage-capsule-qualification.js";
 import { planV4StageCapsuleResume } from "./v4-stage-capsule-resume-planner.js";
@@ -172,7 +171,13 @@ export function createV4StageCapsuleCampaignProfile(context) {
     };
   }
 
-  const loaded = loadBuildchainConfig(context.repoRoot);
+  const loaded = context.lifecycleConfig;
+  if (!loaded?.filePath || !loaded?.config)
+    campaignFault(
+      "missing-stage-capsule-lifecycle-config",
+      "$/lifecycleConfig",
+      "Buildchain self-dogfood requires an explicitly loaded lifecycle config",
+    );
   const lifecycle = loaded?.config?.lifecycle || {};
   const stageNames = Object.keys(lifecycle).filter(
     (name) => !["env", "shell"].includes(name),

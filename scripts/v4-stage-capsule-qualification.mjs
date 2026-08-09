@@ -87,6 +87,13 @@ function contextFromArgs() {
 }
 
 function prepareContext(context) {
+  if (context.consumer === "buildchain-self-dogfood") {
+    if (!buildchainConfigModule)
+      throw new Error("real lifecycle config loader is unavailable");
+    context.lifecycleConfig = buildchainConfigModule.loadBuildchainConfig(
+      context.repoRoot,
+    );
+  }
   context.campaignProfile = createV4StageCapsuleCampaignProfile(context);
   return context;
 }
@@ -481,6 +488,10 @@ function reconcile() {
 }
 
 const action = process.argv[2] || "";
+const buildchainConfigModule =
+  option("consumer") === "buildchain-self-dogfood"
+    ? await import("../packages/core/buildchain-config.js")
+    : null;
 if (action === "seed") seed(contextFromArgs());
 else if (action === "resume") resume(contextFromArgs());
 else if (action === "campaign") campaign(contextFromArgs());
