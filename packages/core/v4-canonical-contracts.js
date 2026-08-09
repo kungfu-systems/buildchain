@@ -49,6 +49,11 @@ const ROOT_DOMAINS = new Set([
   "release-activation-step",
   "release-activation-plan",
   "release-activation-state",
+  "stable-publication-candidate",
+  "stable-publication-qualification",
+  "stable-publication-target",
+  "stable-publication-plan",
+  "stable-publication-fence",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",

@@ -172,3 +172,18 @@ dependency is confirmed. Missing qualification, dependency cycles, operation or
 authority drift, conflicting event ordinals, and impossible journal transitions
 fail closed. This domain performs no provider call or live mutation, and v3
 remains the sole production activation authority.
+
+## 11. Wave 3 stable publication fence
+
+The stable-candidate publication shadow boundary is governed by
+[`v4-stable-publication-fence.json`](v4-stable-publication-fence.json). It
+binds one exact candidate root to source, metadata, provider-operation journal,
+protected ancestry, provider confirmations, and an independently sealed
+qualification before a shadow publication plan can exist.
+
+Candidate generation N cannot qualify itself. An N-1 policy requires the
+immediately preceding authority generation; an independent-seal policy requires
+a qualifier authority distinct from the publisher authority. Stable refs, npm
+tags, OCI tags, and GitHub Releases remain target-shaped facts only. The fence
+emits zero effects, performs no network or credential operation, changes no
+public or protected ref, and preserves TypeScript v3 as sole production writer.
