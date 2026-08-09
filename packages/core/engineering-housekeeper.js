@@ -95,7 +95,10 @@ export function classifyHousekeeperBranch(branch, policyInput = {}) {
   if (branch.isDefault) reasons.push(HOUSEKEEPER_REASON_CODES.DEFAULT_BRANCH);
   if (branch.name === branch.target?.name)
     reasons.push(HOUSEKEEPER_REASON_CODES.TARGET_BRANCH);
-  if (matchesAny(policy.protectedPatterns, branch.name))
+  if (
+    branch.isProtected === true ||
+    matchesAny(policy.protectedPatterns, branch.name)
+  )
     reasons.push(HOUSEKEEPER_REASON_CODES.PROTECTED_BRANCH);
   if (matchesAny(policy.retainedPatterns, branch.name))
     reasons.push(HOUSEKEEPER_REASON_CODES.RETAINED_BRANCH);

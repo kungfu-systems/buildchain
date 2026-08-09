@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6632db4192e83c2905671127f59fb23cf3cd7db973f74e9d3703f297324a382b",
+    "sha256": "6350a612909c9eff5b47695b616e13368888a4d67b3dc3cc83015f4a134c3da9",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 65,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6632db4192e83c2905671127f59fb23cf3cd7db973f74e9d3703f297324a382b",
+      "sha256": "6350a612909c9eff5b47695b616e13368888a4d67b3dc3cc83015f4a134c3da9",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 65,
@@ -1663,6 +1663,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./engineering-housekeeper"
+        },
+        {
+          "id": "export:./engineering-housekeeper-github",
+          "name": "@kungfu-tech/buildchain/engineering-housekeeper-github",
+          "kind": "package-export",
+          "sourcePath": "packages/core/engineering-housekeeper-github.js",
+          "evidencePath": "packages/core/engineering-housekeeper-github.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./engineering-housekeeper-github"
         },
         {
           "id": "export:./kfd-gate",
@@ -6600,6 +6612,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 419
+    "publicSurfaceCount": 420
   }
 }
