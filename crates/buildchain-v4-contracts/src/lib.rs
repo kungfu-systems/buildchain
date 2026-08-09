@@ -4,11 +4,18 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+mod provider_operation_journal;
 mod stage_capsule;
 mod stage_capsule_resume;
 mod stage_capsule_store;
 mod trace;
 mod warrant;
+
+pub use provider_operation_journal::{
+    ProviderOperationEntry, ProviderOperationFixtureProjection, ProviderOperationIdentity,
+    ProviderOperationJournalState, fold_provider_operation_journal,
+    run_provider_operation_journal_fixture,
+};
 
 pub use stage_capsule::{
     RetentionPromise, STAGE_CAPSULE_AVAILABILITY_CONTRACT, STAGE_CAPSULE_CONTRACT,
@@ -82,6 +89,14 @@ const ROOT_DOMAINS: &[&str] = &[
     "stage-capsule-platform-qualification",
     "stage-capsule-qualification",
     "stage-capsule-wave-reconciliation",
+    "provider-operation-identity",
+    "provider-operation-intent",
+    "provider-operation-attempt",
+    "provider-operation-observation",
+    "provider-operation-confirmation",
+    "provider-operation-reconciliation",
+    "provider-operation-journal",
+    "provider-operation-journal-state",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

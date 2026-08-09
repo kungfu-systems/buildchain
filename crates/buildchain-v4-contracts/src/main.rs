@@ -7,7 +7,8 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use buildchain_v4_contracts::{
     EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root, plan_stage_capsule_resume_bytes,
     project_delivery_warrant_state_bytes, run_delivery_warrant_trace_fixture,
-    run_stage_capsule_fixture, run_stage_capsule_store_fixture, validate_clock,
+    run_provider_operation_journal_fixture, run_stage_capsule_fixture,
+    run_stage_capsule_store_fixture, validate_clock,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -274,6 +275,16 @@ fn run_stage_capsule_store_fixtures(fixture_path: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn run_provider_operation_journal_fixtures(fixture_path: &str) -> Result<(), String> {
+    let bytes = fs::read(fixture_path).map_err(|error| format!("cannot read fixtures: {error}"))?;
+    let projection = run_provider_operation_journal_fixture(&bytes)
+        .map_err(|fault| format!("{} at {}: {}", fault.code, fault.path, fault.message))?;
+    serde_json::to_writer(std::io::stdout().lock(), &projection)
+        .map_err(|error| error.to_string())?;
+    println!();
+    Ok(())
+}
+
 fn run_stage_capsule_resume_request(request_path: &str) -> Result<(), String> {
     let bytes = if request_path == "-" {
         read_stdin()?
@@ -398,10 +409,13 @@ fn run() -> Result<(), String> {
         [command, fixture_path] if command == "stage-capsule-store" => {
             run_stage_capsule_store_fixtures(fixture_path)
         }
+        [command, fixture_path] if command == "provider-operation-journal" => {
+            run_provider_operation_journal_fixtures(fixture_path)
+        }
         [command, request_path] if command == "resume-plan" => {
             run_stage_capsule_resume_request(request_path)
         }
-        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store|resume-plan INPUT.json|host]".to_owned()),
+        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store|provider-operation-journal|resume-plan INPUT.json|host]".to_owned()),
     }
 }
 

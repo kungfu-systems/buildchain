@@ -36,6 +36,14 @@ const ROOT_DOMAINS = new Set([
   "stage-capsule-platform-qualification",
   "stage-capsule-qualification",
   "stage-capsule-wave-reconciliation",
+  "provider-operation-identity",
+  "provider-operation-intent",
+  "provider-operation-attempt",
+  "provider-operation-observation",
+  "provider-operation-confirmation",
+  "provider-operation-reconciliation",
+  "provider-operation-journal",
+  "provider-operation-journal-state",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",
