@@ -506,7 +506,7 @@ test("queue admission revokes the temporary lease when enqueue is rejected", asy
   assert.deepEqual(fake.commitStatuses.map((entry) => entry.body.state), ["success", "failure"]);
 });
 
-test("queue admission absorbs required-status propagation inside one controller run", async () => {
+test("queue admission absorbs provider status propagation inside one controller run", async () => {
   const fake = client({
     pullRequests: [pr({ number: 1, nodeId: "PR_node_1" })],
     branchShas: ["base-1", "base-1", "base-1"],
@@ -514,7 +514,10 @@ test("queue admission absorbs required-status propagation inside one controller 
       { enabled: true, id: "MQ_1", entries: [] },
       { enabled: true, id: "MQ_1", entries: [] },
     ],
-    enqueueErrors: [new Error('Pull request has failing required statuses and Required status check "Queue admission lease" is failing')],
+    enqueueErrors: [
+      new Error("Pull request Cannot change this locked branch"),
+      new Error('Pull request has failing required statuses and Required status check "Queue admission lease" is failing'),
+    ],
   });
   const result = await runDevPrAutoMerge(
     {

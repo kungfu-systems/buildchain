@@ -38,6 +38,11 @@ on:
         default: ""
         type: string
         required: false
+      source-workflow-id:
+        description: "Optional consumer source workflow file used to recover a legacy active candidate's exact successful run"
+        default: ""
+        type: string
+        required: false
       diagnostic-context:
         description: "Commit-status context used for PR-visible targeted admission state"
         default: "Buildchain delivery intent"
@@ -514,10 +519,28 @@ jobs:
           selected_pr="$(jq -er '.observation.activeWarrant.pullRequestNumber' .buildchain/dev-delivery/warrant.json)"
           selected_head="$(jq -er '.observation.activeWarrant.sourceHead' .buildchain/dev-delivery/warrant.json)"
           if [ "$selected_pr" != "$EXPECTED_PR" ] || [ "$selected_head" != "$EXPECTED_HEAD" ]; then
-            source_run_id="$(jq -er '.observation.activeWarrant.sourceWorkflowRunId | select(. > 0)' .buildchain/dev-delivery/warrant.json)"
             if [ -z "$HANDOFF_WORKFLOW_ID" ]; then
               echo "::error::Active Warrant belongs to PR #$selected_pr, but no immediate handoff workflow was configured"
               exit 1
+            fi
+            source_run_id="$(jq -r '.observation.activeWarrant.sourceWorkflowRunId // 0' .buildchain/dev-delivery/warrant.json)"
+            if [ "$source_run_id" -eq 0 ]; then
+              if [ -z "$SOURCE_WORKFLOW_ID" ]; then
+                echo "::error::Legacy active Warrant for PR #$selected_pr has no source run and no source workflow was configured"
+                exit 1
+              fi
+              source_runs="$(gh api --method GET \
+                "repos/$GITHUB_REPOSITORY/actions/workflows/$SOURCE_WORKFLOW_ID/runs" \
+                -f head_sha="$selected_head" \
+                -f event=pull_request \
+                -f status=completed \
+                -f per_page=100)"
+              source_run_count="$(jq --argjson pr "$selected_pr" '[.workflow_runs[] | select(.conclusion == "success" and any(.pull_requests[]?; .number == $pr))] | length' <<<"$source_runs")"
+              if [ "$source_run_count" -ne 1 ]; then
+                echo "::error::Legacy active Warrant source recovery requires exactly one successful $SOURCE_WORKFLOW_ID run for PR #$selected_pr at $selected_head; found $source_run_count"
+                exit 1
+              fi
+              source_run_id="$(jq -er --argjson pr "$selected_pr" '.workflow_runs[] | select(.conclusion == "success" and any(.pull_requests[]?; .number == $pr)) | .id' <<<"$source_runs")"
             fi
             gh workflow run "$HANDOFF_WORKFLOW_ID" \
               --repo "$GITHUB_REPOSITORY" \
@@ -570,6 +593,7 @@ jobs:
           EXPECTED_PR: ${{ inputs.expected-pr-number }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
           HANDOFF_WORKFLOW_ID: ${{ inputs.handoff-workflow-id }}
+          SOURCE_WORKFLOW_ID: ${{ inputs.source-workflow-id }}
 
       - name: Run Buildchain dev PR auto-merge
         id: merge

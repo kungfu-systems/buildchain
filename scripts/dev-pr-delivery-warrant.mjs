@@ -158,7 +158,7 @@ export async function enqueueAfterStatusPropagation({ enqueue, input, attempts, 
       return await enqueue(input);
     } catch (error) {
       lastError = error;
-      const propagation = /required status(?:es| check).*failing|failing required status/i.test(String(error?.message || ""));
+      const propagation = /required status(?:es| check).*failing|failing required status|cannot change this locked branch/i.test(String(error?.message || ""));
       if (!propagation || attempt === attempts) throw error;
       await sleep(delayMs);
     }
