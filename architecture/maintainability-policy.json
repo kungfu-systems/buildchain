@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 111411,
+    "maxHandMaintainedSourceLines": 111417,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22671,
-    "latestTransition": "Legacy Delivery Warrant handoff recovers one exact successful source run and retries transient provider branch locks inside the current controller attempt.",
-    "rationale": "The bounded workflow increase resolves only the active legacy PR and head against one named source workflow before immediate handoff. Provider branch-lock propagation reuses the existing bounded enqueue retry instead of creating another scheduler, writer, or authority; these exact post-integration ceilings cannot grow implicitly."
+    "latestTransition": "Installer public read-back reuses the existing bounded web-surface edge convergence retry.",
+    "rationale": "The six-line runtime increase routes signed installer byte checks through the same bounded 403, 404, and server-error retry already used by surface health. It preserves manual redirect handling, exact digest and cache-policy verification, and the existing timeout ceiling without adding another scheduler or authority; this exact post-integration ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
