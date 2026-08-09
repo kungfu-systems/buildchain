@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 114,
-    "workflowCount": 65,
+    "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 69,
+    "sitePageCount": 70,
     "docCommandRefCount": 924,
     "failureCount": 0
   },
@@ -2080,6 +2080,78 @@
         "outputCount": 7
       },
       {
+        "id": "engineering-housekeeper-daily",
+        "path": ".github/workflows/engineering-housekeeper-daily.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper-monthly",
+        "path": ".github/workflows/engineering-housekeeper-monthly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper-weekly",
+        "path": ".github/workflows/engineering-housekeeper-weekly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper",
+        "path": ".github/workflows/engineering-housekeeper.yml",
+        "reusable": true,
+        "inputs": [
+          "apply-enabled",
+          "artifact-prefix",
+          "artifact-retention-days",
+          "buildchain-ref",
+          "buildchain-repository",
+          "max-actions",
+          "mode",
+          "protected-patterns",
+          "repository",
+          "retained-patterns",
+          "stale-days",
+          "stale-pull-request-label",
+          "target-branch"
+        ],
+        "inputCount": 13,
+        "secrets": [
+          "github_app_id",
+          "github_app_private_key",
+          "github_token"
+        ],
+        "secretCount": 3,
+        "outputs": [
+          "action-count",
+          "branch-receipt-root",
+          "outcome",
+          "plan-artifact",
+          "plan-root",
+          "pull-request-receipt-root",
+          "receipt-artifact",
+          "report-artifact",
+          "report-receipt-root"
+        ],
+        "outputCount": 9
+      },
+      {
         "id": "github-artifact-attestation",
         "path": ".github/workflows/github-artifact-attestation.yml",
         "reusable": true,
@@ -3133,6 +3205,10 @@
       },
       {
         "id": "manual:dev-qualification-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:engineering-housekeeper",
         "category": "manual"
       },
       {
@@ -7912,8 +7988,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "3465688cf20cf1733aa4f21861bf41981b41cc8ea7032d411b1463c4dc4625ef",
-    "pageRegistryDigest": "4500a112b0ecf85616e82406eaf201a635a03145d8c6be1c966b6ed5cc745842"
+    "workflowRegistryDigest": "efbd8d8222875d23f85fa43101cce8e67f4af010568db5939dd74d357c2fc939",
+    "pageRegistryDigest": "8a3214f52095ae19e241a9ce046e5b8ae59b0107dd32c797c5b55f6ee89168f4"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -791,6 +791,12 @@ active semver dev line, so consumers do not pin patrol to a stale minor branch.
 The separate workflow names keep consumer schedules readable and stable while
 Buildchain adds new checks behind the cadence wrappers.
 
+Branch and pull-request residue uses the separate
+[`Engineering Housekeeper`](engineering-housekeeper.md) contract. Its scheduled
+callers are report-only and read-only by default; apply requires a manual,
+explicit two-part gate, exact provider-state revalidation, scoped job
+permissions, and rooted plan/report/receipt evidence.
+
 ## Package-Manager Adapters
 
 Old ABV assumed JavaScript repositories with root version state and often

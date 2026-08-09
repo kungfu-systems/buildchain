@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "afddd15f29b50f0d89775c3a0cd9f8741ed16b266dae52c0f02a90734b47012a",
+    "sha256": "fb212457048b6c2ee26f71890b12fdf1a277e064b0525c88abb1b87033517766",
     "summary": {
       "cliCommandCount": 114,
-      "workflowCount": 65,
+      "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 69,
+      "sitePageCount": 70,
       "docCommandRefCount": 924,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "afddd15f29b50f0d89775c3a0cd9f8741ed16b266dae52c0f02a90734b47012a",
+      "sha256": "fb212457048b6c2ee26f71890b12fdf1a277e064b0525c88abb1b87033517766",
       "summary": {
         "cliCommandCount": 114,
-        "workflowCount": 65,
+        "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 69,
+        "sitePageCount": 70,
         "docCommandRefCount": 924,
         "failureCount": 0
       },
@@ -4736,6 +4736,76 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:engineering-housekeeper-daily",
+          "name": "workflow:engineering-housekeeper-daily",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-daily.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-daily.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper-monthly",
+          "name": "workflow:engineering-housekeeper-monthly",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-monthly.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-monthly.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper-weekly",
+          "name": "workflow:engineering-housekeeper-weekly",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-weekly.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-weekly.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper",
+          "name": "workflow:engineering-housekeeper",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 13,
+          "inputs": [
+            "apply-enabled",
+            "artifact-prefix",
+            "artifact-retention-days",
+            "buildchain-ref",
+            "buildchain-repository",
+            "max-actions",
+            "mode",
+            "protected-patterns",
+            "repository",
+            "retained-patterns",
+            "stale-days",
+            "stale-pull-request-label",
+            "target-branch"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:github-artifact-attestation",
           "name": "workflow:github-artifact-attestation",
           "kind": "workflow",
@@ -5998,6 +6068,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:engineering-housekeeper",
+          "name": "site-page:manual:engineering-housekeeper",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:getting-started",
           "name": "site-page:manual:getting-started",
           "kind": "site-page",
@@ -6612,6 +6694,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 420
+    "publicSurfaceCount": 425
   }
 }

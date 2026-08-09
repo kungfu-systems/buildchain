@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 291,
-    "maxHandMaintainedSourceLines": 112956,
-    "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22679,
-    "latestTransition": "Dev Delivery Warrant adds bounded-concurrency shadow qualification.",
-    "rationale": "Building on the bounded Engineering Housekeeper GitHub engine, one effect-disabled source module adds deterministic one-or-two-lane replay, exact per-lane evidence binding, threshold qualification, and fail-closed fixtures without adding a writer, scheduler, workflow, live Warrant, or production authority. The existing production queue remains single-flight, and this exact post-integration ceiling cannot grow implicitly."
+    "maxHandMaintainedSourceFiles": 292,
+    "maxHandMaintainedSourceLines": 113373,
+    "maxWorkflowFiles": 69,
+    "maxWorkflowLines": 23243,
+    "latestTransition": "Engineering Housekeeper publishes its reusable workflow and thin scheduled callers.",
+    "rationale": "One bounded workflow runtime exposes the existing provider-neutral and GitHub Engineering Housekeeper engines through a default-report reusable contract. Four declarative workflows separate inventory, exact branch deletion, optional pull-request labeling, and daily, weekly, and monthly caller policy; explicit apply gates, caller-owned credentials, rooted artifacts, and exact-head revalidation prevent a second policy or mutation authority. This exact v3 capability ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
