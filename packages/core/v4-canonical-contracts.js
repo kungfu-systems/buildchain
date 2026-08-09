@@ -44,6 +44,8 @@ const ROOT_DOMAINS = new Set([
   "provider-operation-reconciliation",
   "provider-operation-journal",
   "provider-operation-journal-state",
+  "provider-readback-sample",
+  "provider-readback-fold",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",

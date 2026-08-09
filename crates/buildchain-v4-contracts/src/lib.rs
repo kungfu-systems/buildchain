@@ -5,6 +5,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 mod provider_operation_journal;
+mod provider_readback_idempotency;
 mod stage_capsule;
 mod stage_capsule_resume;
 mod stage_capsule_store;
@@ -15,6 +16,11 @@ pub use provider_operation_journal::{
     ProviderOperationEntry, ProviderOperationFixtureProjection, ProviderOperationIdentity,
     ProviderOperationJournalState, fold_provider_operation_journal,
     run_provider_operation_journal_fixture,
+};
+pub use provider_readback_idempotency::{
+    PROVIDER_READBACK_FOLD_CONTRACT, PROVIDER_READBACK_SAMPLE_CONTRACT,
+    ProviderReadbackCoordinates, ProviderReadbackFixtureProjection, ProviderReadbackProjection,
+    ProviderReadbackSample, fold_provider_readback_samples, run_provider_readback_fixture,
 };
 
 pub use stage_capsule::{
@@ -97,6 +103,8 @@ const ROOT_DOMAINS: &[&str] = &[
     "provider-operation-reconciliation",
     "provider-operation-journal",
     "provider-operation-journal-state",
+    "provider-readback-sample",
+    "provider-readback-fold",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

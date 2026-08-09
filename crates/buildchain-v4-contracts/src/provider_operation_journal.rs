@@ -218,7 +218,7 @@ impl ProviderOperationEntry {
         }
     }
 
-    fn calculated_root(&self) -> ContractResult<String> {
+    pub(crate) fn calculated_root(&self) -> ContractResult<String> {
         let mut value = serde_json::to_value(self)
             .map_err(|error| fault("canonicalization-failed", "$/entry", error.to_string()))?;
         value

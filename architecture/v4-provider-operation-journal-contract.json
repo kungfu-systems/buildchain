@@ -15,7 +15,9 @@
   "implementations": {
     "rustContract": "crates/buildchain-v4-contracts/src/provider_operation_journal.rs",
     "rustFold": "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs",
-    "typescript": "packages/core/v4-provider-operation-journal.js"
+    "rustReadback": "crates/buildchain-v4-contracts/src/provider_readback_idempotency.rs",
+    "typescript": "packages/core/v4-provider-operation-journal.js",
+    "typescriptReadback": "packages/core/v4-provider-readback-idempotency.js"
   },
   "roots": [
     "provider-operation-identity",
@@ -25,7 +27,9 @@
     "provider-operation-confirmation",
     "provider-operation-reconciliation",
     "provider-operation-journal",
-    "provider-operation-journal-state"
+    "provider-operation-journal-state",
+    "provider-readback-sample",
+    "provider-readback-fold"
   ],
   "identityIncludes": [
     "transactionRoot",
@@ -53,6 +57,23 @@
     "retryIdentity": "operationRoot",
     "attemptIdentity": "entryRoot",
     "observationEvidence": "non-empty-sorted-root-set"
+  },
+  "readbackAdapters": {
+    "providers": ["github-release", "npm-publication", "oci-manifest"],
+    "inputAuthority": "fixture-backed-provider-shaped-responses",
+    "outputAuthority": "provider-neutral-rooted-observation-samples",
+    "duplicateHandling": "deduplicate-by-sample-root",
+    "ordering": "byte-sorted-sample-roots",
+    "typedStates": ["not-found", "eventually-visible", "already-applied"],
+    "typedFaults": [
+      "conflicting-provider-readback",
+      "malformed-provider-readback",
+      "provider-readback-root-mismatch",
+      "provider-readback-coordinate-mismatch"
+    ],
+    "emits": "provider-operation-observation-only",
+    "confirmationAuthority": "independent-journal-qualification",
+    "releaseStateAuthority": false
   },
   "foldRejects": [
     "impossible-transition",
