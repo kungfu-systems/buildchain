@@ -941,6 +941,48 @@ test("exact active Warrant authorizes only its bound PR head", async () => {
   });
 });
 
+test("exact active Warrant remains valid across fenced delivery progress states", async () => {
+  for (const status of ["proving", "waiting", "blocked"]) {
+    await withWarrantResult({}, async (resultPath, warrantResult) => {
+      const target = pr({ number: 21, headSha: exactHead });
+      const fake = client({
+        pullRequests: [target],
+        branchShas: ["base-1", "base-1", "base-1"],
+        queueStates: Array.from({ length: 3 }, () => ({
+          enabled: true,
+          id: "MQ_1",
+          entries: [],
+        })),
+        currentDeliveryQueue: {
+          activeWarrant: warrantResult.warrant,
+          candidates: [{
+            candidateId: warrantResult.warrant.candidateId,
+            sourceHead: warrantResult.warrant.sourceHead,
+            status,
+          }],
+        },
+      });
+
+      const result = await runDevPrAdmission(
+        {
+          ...targetedOptions,
+          dryRun: false,
+          warrantMode: "required",
+          warrantResultPath: resultPath,
+        },
+        fake,
+      );
+
+      assert.equal(result.ok, true, status);
+      assert.deepEqual(
+        fake.enqueued,
+        [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }],
+        status,
+      );
+    });
+  }
+});
+
 test("terminal current authority rejects a previously valid Warrant readback", async () => {
   await withWarrantResult({}, async (resultPath) => {
     const target = pr({ number: 21, headSha: exactHead });
