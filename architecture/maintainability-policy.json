@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 321,
-    "maxHandMaintainedSourceLines": 123396,
+    "maxHandMaintainedSourceLines": 123398,
     "maxWorkflowFiles": 64,
     "maxWorkflowLines": 22425,
     "latestTransition": "Buildchain v4 real-lifecycle dogfood now invokes Windows command shims through explicit argument-preserving cmd.exe boundaries, keeps the flattened checkout bootstrap self-contained, and terminates timed-out lifecycle process trees without moving v3 production authority.",
-    "rationale": "This successor ceiling adds no hand-maintained source or workflow files and exactly 209 hand-maintained source lines above the preceding real-lifecycle dogfood ceiling. The added lines centralize Windows .cmd resolution, explicit argument-preserving batch invocation, bounded lifecycle process-tree termination, standalone fallback behavior, and a self-contained flattened checkout bootstrap with a regression assertion; provider tests remain fake-backed and provider mutation, credential reads, publication, signing, production reuse, production stage skipping, production authority changes, and v3 behavior changes remain hard-zero. Existing workflow-file, per-file, per-function, and no-widening budgets remain unchanged."
+    "rationale": "This successor ceiling adds no hand-maintained source or workflow files and exactly 211 hand-maintained source lines above the preceding real-lifecycle dogfood ceiling. The added lines centralize Windows .cmd resolution, explicit argument-preserving verbatim batch invocation, bounded lifecycle process-tree termination, standalone fallback behavior, and a self-contained flattened checkout bootstrap with regression assertions; provider tests remain fake-backed and provider mutation, credential reads, publication, signing, production reuse, production stage skipping, production authority changes, and v3 behavior changes remain hard-zero. Existing workflow-file, per-file, per-function, and no-widening budgets remain unchanged."
   },
   "sourceBudgets": {
     "newFileLines": 600,

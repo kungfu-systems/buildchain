@@ -144,6 +144,7 @@ test("default runner invokes Windows package-manager shims through explicit cmd 
   assert.deepEqual(calls[0].args, ["/d", "/s", "/c", 'npm.cmd run build "{\\"Key\\":\\"value with space\\"}"']);
   assert.equal(calls[0].options.cwd, "C:\\agent-hub");
   assert.equal(calls[0].options.shell, false);
+  assert.equal(calls[0].options.windowsVerbatimArguments, true);
 });
 
 test("default runner resolves arbitrary Windows command shims from PATH", () => {

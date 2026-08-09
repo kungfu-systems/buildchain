@@ -64,6 +64,7 @@ export function spawnSyncCommand(
     return spawn(invocation.command, invocation.args, {
       ...options,
       shell: false,
+      windowsVerbatimArguments: true,
     });
   }
   return spawn(resolvedCommand, args, {
