@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   V4_DELIVERY_WARRANT_PROJECTION_CONTRACT,
@@ -17,7 +18,7 @@ import {
 } from "../packages/core/v4-delivery-warrant-semantic-diff-gate.js";
 import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const fixtureRoot = new URL(
   "../contracts/fixtures/v4-delivery-warrant-trace-v1/",
   import.meta.url,

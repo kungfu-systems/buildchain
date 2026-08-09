@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { V4ContractFault } from "../packages/core/v4-canonical-contracts.js";
 import { foldV4ProviderOperationJournal } from "../packages/core/v4-provider-operation-journal.js";
@@ -13,7 +14,7 @@ import {
   projectV4ProviderReadbackFixtures,
 } from "../packages/core/v4-provider-readback-idempotency.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const fixturePath = new URL(
   "../contracts/fixtures/v4-provider-readback-idempotency-v1/shared.json",
   import.meta.url,
@@ -121,7 +122,11 @@ test("Rust and TypeScript produce byte-equivalent readback folds and typed failu
     ],
     { cwd: root, encoding: "utf8" },
   );
-  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(
+    result.status,
+    0,
+    result.error?.stack || result.stderr || result.stdout,
+  );
   assert.deepEqual(JSON.parse(result.stdout), typescript);
 });
 

@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   V4ContractFault,
@@ -23,7 +24,7 @@ import {
   validateV4StageCapsuleTransport,
 } from "../packages/core/v4-stage-capsule-store.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const fixturePath = new URL(
   "../contracts/fixtures/v4-stage-capsule-store-v1/shared.json",
   import.meta.url,
@@ -125,7 +126,11 @@ test("store contracts freeze byte-identical JavaScript and Rust roots", () => {
     ],
     { cwd: root, encoding: "utf8" },
   );
-  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(
+    result.status,
+    0,
+    result.error?.stack || result.stderr || result.stdout,
+  );
   assert.deepEqual(JSON.parse(result.stdout), {
     validCases: [
       {
