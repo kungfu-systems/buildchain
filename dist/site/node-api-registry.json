@@ -957,7 +957,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 464
+        "line": 466
       },
       "example": "import { aggregateBuildFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1160,7 +1160,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 152
+        "line": 154
       },
       "example": "import { collectGitSourceFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1189,7 +1189,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 308
+        "line": 310
       },
       "example": "import { collectModuleBuildFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1218,7 +1218,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 179
+        "line": 181
       },
       "example": "import { collectVersionSourceFact } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1247,7 +1247,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 526
+        "line": 528
       },
       "example": "import { createKungfuBuildInfoProjection } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1276,7 +1276,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 429
+        "line": 431
       },
       "example": "import { verifyBuildFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1305,7 +1305,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 555
+        "line": 557
       },
       "example": "import { writeBuildFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1334,7 +1334,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 563
+        "line": 565
       },
       "example": "import { writeKungfuBuildInfoProjection } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11530,7 +11530,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2413
+        "line": 2414
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11559,7 +11559,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1471
+        "line": 1472
       },
       "example": "import { collectPaperStatus } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11588,7 +11588,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2655
+        "line": 2656
       },
       "example": "import { createPaperAlphaPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11617,7 +11617,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2592
+        "line": 2593
       },
       "example": "import { createPaperBuildPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11675,7 +11675,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2713
+        "line": 2714
       },
       "example": "import { createPaperResumePlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11704,7 +11704,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2840
+        "line": 2841
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12088,7 +12088,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1129
+        "line": 1130
       },
       "example": "import { writePaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18336,7 +18336,7 @@
       "specifier": "@kungfu-tech/buildchain/build-facts",
       "export": "./build-facts",
       "target": "./packages/core/build-facts.js",
-      "digest": "sha256:b7fd2ab9fc5d1d19d6144f6b21c415691b0cfc5b293b0ab4b7fe380edec4b7d5",
+      "digest": "sha256:03aa240b20dbbe5a42c8666515fbe05611857566871b1625d4fa480a72e3eaef",
       "summary": "Git source, version, module output, product artifact, and legacy Kungfu build fact APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -19868,7 +19868,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-reproducibility",
       "export": "./publication-reproducibility",
       "target": "./packages/core/publication-reproducibility.js",
-      "digest": "sha256:a4880872e8408b522dd1102c3fa1b7728b104ab85ea2ec5e309f07d5e4faf660",
+      "digest": "sha256:391e64d58a18495850c8a2f61dc82234641c803d8b40c76fed35ae7b1dd4d17e",
       "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -19917,7 +19917,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:cff26683b1bedf42023a25c96d1fea905b085ac75458f6c080fea54ac2df472b",
+      "digest": "sha256:a119c4fe3e845a30838ca61307f48b4bb8ff125da4ec9111d22e20697e2b8865",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -20489,7 +20489,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:afd6192b411dcc6a63a5b2992e18a1bbbbe2fa1839a78eba13d4e5e23bc94d52"
+      "digest": "sha256:10151cdc17aa4e88b014f68693fd2726006802aa0d298e28989a2ebd0b789d42"
     },
     {
       "id": "build-facts",

@@ -286,8 +286,8 @@ function sourceFacts(cwd, requestedSha = "") {
   const repositoryRoot = fs.realpathSync(
     git(canonicalCwd, ["rev-parse", "--show-toplevel"]),
   );
-  const projectPath =
-    toPosix(path.relative(repositoryRoot, canonicalCwd)) || ".";
+  const projectPath = toPosix(git(canonicalCwd, ["rev-parse", "--show-prefix"]))
+    .replace(/\/+$/u, "") || ".";
   const head = git(repositoryRoot, ["rev-parse", "HEAD"]);
   const sha = git(repositoryRoot, [
     "rev-parse",

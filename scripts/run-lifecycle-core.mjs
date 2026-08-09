@@ -202,7 +202,7 @@ function shellCommandArgs(command, shell) {
     return [shell, "-c", command];
   }
   if (process.platform === "win32") {
-    return [process.env.ComSpec || "cmd.exe", "/d", "/s", "/c", command];
+    return [process.env.ComSpec || "cmd.exe", "/d", "/s", "/c", `"${command}"`];
   }
   return [process.env.SHELL || "/bin/sh", "-c", command];
 }

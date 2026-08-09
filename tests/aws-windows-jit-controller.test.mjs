@@ -341,6 +341,13 @@ test("Windows RunInstances args use one raw fileb user-data boundary and reaper 
   });
   const userDataIndex = args.indexOf("--user-data");
   assert.equal(args[userDataIndex + 1], "fileb:///private/tmp/bootstrap.ps1");
+  const windowsArgs = windowsRunInstancesArgs(plan, {
+    bootstrapPath: "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\bootstrap.ps1",
+  });
+  assert.equal(
+    windowsArgs[windowsArgs.indexOf("--user-data") + 1],
+    "fileb://C:\\Users\\runneradmin\\AppData\\Local\\Temp\\bootstrap.ps1",
+  );
   assert.equal(args.includes("--dry-run"), true);
   assert.equal(
     args[args.indexOf("--client-token") + 1],

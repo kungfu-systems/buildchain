@@ -1151,6 +1151,12 @@ async function runProcessTreeSample(sampleArgs = []) {
     cwd: process.cwd(),
     env: process.env,
     stdio: ["ignore", "pipe", "pipe"],
+    windowsVerbatimArguments:
+      process.platform === "win32" &&
+      path.basename(command).toLowerCase() === "cmd.exe" &&
+      args[0] === "/d" &&
+      args[1] === "/s" &&
+      args[2] === "/c",
   });
   child.stdout?.on("data", (chunk) => {
     stdoutTail.append(chunk);
