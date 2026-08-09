@@ -1492,6 +1492,41 @@ test("release passport records generic KFD-1 contract-world gate evidence from K
   assert.equal(passport.evidence.kfd1, metadata.key);
 });
 
+test("release passport resolves duplicate recovered KFD-1 surfaces by frozen digest", async () => {
+  const { cwd, assetsDir, witnessPath, metadata, actualSha256 } = createKfdWitnessFixture({
+    artifactPath: "config/kungfu-config.contract.json",
+    content: "{\"runtime\":\"qualified\"}\n",
+  });
+  const conflictingRoot = path.join(cwd, "recovered-windows-x64");
+  const conflictingPath = path.join(conflictingRoot, "runtime/config/kungfu-config.contract.json");
+  fs.mkdirSync(path.dirname(conflictingPath), { recursive: true });
+  fs.writeFileSync(conflictingPath, "{\"runtime\":\"different-platform-copy\"}\n");
+
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "a".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    kfdArtifactSearchRoots: [assetsDir, conflictingRoot],
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd1WitnessJsons: [witnessPath],
+  });
+  const passport = JSON.parse(
+    fs.readFileSync(path.join(collected.outputDir, "buildchain.release.json"), "utf8"),
+  );
+  const surface = passport[metadata.key].contractWorlds[0].artifactVerification.surfaces[0];
+
+  assert.equal(passport[metadata.key].status, "passed");
+  assert.equal(surface.status, "passed");
+  assert.equal(surface.expectedSha256, actualSha256);
+  assert.equal(surface.actualSha256, actualSha256);
+});
+
 test("release passport accepts cwd-relative KFD witness path inputs", async () => {
   const { cwd, assetsDir, witnessPath, metadata } = createKfdWitnessFixture();
   const relativeWitnessPath = ".buildchain/kfd/kfd-1/contract-world.witness.json";
