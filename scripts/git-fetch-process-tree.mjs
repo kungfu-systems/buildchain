@@ -5,13 +5,19 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const INTERNAL_COMMAND = "--buildchain-internal-git-fetch";
+const CMD_META_CHARACTERS = /([()\][%!^`"<>&|;, *?])/g;
 const TIMEOUT_EXIT_CODE = 124;
 const scriptPath = fileURLToPath(import.meta.url);
 
-function cmdQuote(value) {
-  const text = String(value);
-  if (/^[A-Za-z0-9_./:\\-]+$/u.test(text)) return text;
-  return `"${text.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/g, "$1$1")}"`;
+function cmdEscapeCommand(value) {
+  return String(value).replace(CMD_META_CHARACTERS, "^$1");
+}
+
+function cmdEscapeArgument(value) {
+  let text = String(value);
+  text = text.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
+  text = text.replace(/(?=(\\+?)?)\1$/g, "$1$1");
+  return `"${text}"`.replace(CMD_META_CHARACTERS, "^$1");
 }
 
 function resolveGitInvocation(args, env = process.env) {
@@ -21,9 +27,14 @@ function resolveGitInvocation(args, env = process.env) {
     .map((directory) => path.join(directory, "git.cmd"))
     .find((candidate) => fs.existsSync(candidate));
   if (!gitShim) return { command: "git", args };
+  const shellCommand = [
+    cmdEscapeCommand(gitShim),
+    ...args.map(cmdEscapeArgument),
+  ].join(" ");
   return {
-    command: env.ComSpec || process.env.ComSpec || "cmd.exe",
-    args: ["/d", "/s", "/c", [gitShim, ...args].map(cmdQuote).join(" ")],
+    command: env.ComSpec || env.comspec || process.env.ComSpec || process.env.comspec || "cmd.exe",
+    args: ["/d", "/s", "/c", `"${shellCommand}"`],
+    windowsVerbatimArguments: true,
   };
 }
 
@@ -90,6 +101,7 @@ async function runInternalGitFetch() {
     detached: process.platform !== "win32",
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
+    windowsVerbatimArguments: invocation.windowsVerbatimArguments,
   });
   const stdout = [];
   const stderr = [];

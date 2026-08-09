@@ -82,9 +82,15 @@ function readTrackedFiles(cwd, root = ".") {
   const repoRoot = fs.realpathSync(path.resolve(cwd));
   const requestedRoot = fs.realpathSync(path.resolve(cwd, root));
   const relativeRoot = posixPath(path.relative(repoRoot, requestedRoot) || ".");
-  const args = relativeRoot === "." ? ["ls-files", "-z"] : ["ls-files", "-z", "--", relativeRoot];
-  return parseZeroSeparated(git(repoRoot, args))
-    .filter((entry) => entry && !entry.startsWith(".git/"))
+  return parseZeroSeparated(git(repoRoot, ["ls-files", "-z"]))
+    .filter((entry) =>
+      entry
+      && !entry.startsWith(".git/")
+      && (
+        relativeRoot === "."
+        || entry === relativeRoot
+        || entry.startsWith(`${relativeRoot}/`)
+      ))
     .sort();
 }
 

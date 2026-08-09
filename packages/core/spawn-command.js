@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const WINDOWS_CMD_SHIMS = new Set(["corepack", "npm", "npx", "pnpm", "yarn"]);
+const CMD_META_CHARACTERS = /([()\][%!^`"<>&|;, *?])/g;
 const INTERNAL_PROCESS_TREE_COMMAND = "--buildchain-internal-process-tree-command";
 const TIMEOUT_EXIT_CODE = 124;
 const modulePath = fileURLToPath(import.meta.url);
@@ -34,16 +35,25 @@ export function usesShellForSpawnCommand(command, platform = process.platform, e
   return platform === "win32" && /\.cmd$/i.test(resolveSpawnCommand(command, platform, env));
 }
 
-function cmdQuote(value) {
-  const text = String(value);
-  if (/^[A-Za-z0-9_./:\\-]+$/u.test(text)) return text;
-  return `"${text.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/g, "$1$1")}"`;
+function cmdEscapeCommand(value) {
+  return String(value).replace(CMD_META_CHARACTERS, "^$1");
+}
+
+function cmdEscapeArgument(value) {
+  let text = String(value);
+  text = text.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
+  text = text.replace(/(?=(\\+?)?)\1$/g, "$1$1");
+  return `"${text}"`.replace(CMD_META_CHARACTERS, "^$1");
 }
 
 export function windowsBatchInvocation(command, args, env = process.env) {
+  const shellCommand = [
+    cmdEscapeCommand(command),
+    ...args.map(cmdEscapeArgument),
+  ].join(" ");
   return {
-    command: env.ComSpec || process.env.ComSpec || "cmd.exe",
-    args: ["/d", "/s", "/c", [command, ...args].map(cmdQuote).join(" ")],
+    command: env.ComSpec || env.comspec || process.env.ComSpec || process.env.comspec || "cmd.exe",
+    args: ["/d", "/s", "/c", `"${shellCommand}"`],
   };
 }
 
@@ -126,6 +136,7 @@ async function runInternalProcessTreeCommand() {
     detached: process.platform !== "win32",
     stdio: ["ignore", "inherit", "inherit"],
     windowsHide: true,
+    windowsVerbatimArguments: payload.windowsVerbatimArguments === true,
   });
   let timedOut = false;
   let spawnError;
@@ -151,12 +162,18 @@ async function runInternalProcessTreeCommand() {
       : (result.code ?? 1);
 }
 
-function shellCommandArgs(command, shell) {
-  if (typeof shell === "string" && shell.trim()) return [shell, "-c", command];
-  if (process.platform === "win32") {
-    return [process.env.ComSpec || "cmd.exe", "/d", "/s", "/c", command];
+function shellCommandInvocation(command, shell) {
+  if (typeof shell === "string" && shell.trim()) {
+    return { command: shell, args: ["-c", command] };
   }
-  return [process.env.SHELL || "/bin/sh", "-c", command];
+  if (process.platform === "win32") {
+    return {
+      command: process.env.ComSpec || process.env.comspec || "cmd.exe",
+      args: ["/d", "/s", "/c", `"${command}"`],
+      windowsVerbatimArguments: true,
+    };
+  }
+  return { command: process.env.SHELL || "/bin/sh", args: ["-c", command] };
 }
 
 function standaloneProcessCommand(command, args, options) {
@@ -177,6 +194,7 @@ export function runProcessTreeCommandSync(command, args, {
   stdio = "inherit",
   timeout,
   graceMs = 2000,
+  windowsVerbatimArguments = false,
 } = {}) {
   if (runningStandaloneBundle()) {
     return standaloneProcessCommand(command, args, { cwd, env, stdio, timeout });
@@ -189,7 +207,14 @@ export function runProcessTreeCommandSync(command, args, {
       cwd,
       env,
       stdio: commandStdio,
-      input: JSON.stringify({ command, args, cwd, timeoutMs: timeout, graceMs }),
+      input: JSON.stringify({
+        command,
+        args,
+        cwd,
+        timeoutMs: timeout,
+        graceMs,
+        windowsVerbatimArguments,
+      }),
       windowsHide: true,
     });
   } catch (error) {
@@ -200,8 +225,11 @@ export function runProcessTreeCommandSync(command, args, {
 
 export function runShellCommandSync(command, options = {}) {
   if (runningStandaloneBundle()) return execSync(command, options);
-  const [shell, ...args] = shellCommandArgs(command, options.shell);
-  return runProcessTreeCommandSync(shell, args, options);
+  const invocation = shellCommandInvocation(command, options.shell);
+  return runProcessTreeCommandSync(invocation.command, invocation.args, {
+    ...options,
+    windowsVerbatimArguments: invocation.windowsVerbatimArguments,
+  });
 }
 
 if (

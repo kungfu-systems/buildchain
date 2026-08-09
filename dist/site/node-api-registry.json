@@ -957,7 +957,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 458
+        "line": 464
       },
       "example": "import { aggregateBuildFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1160,7 +1160,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 146
+        "line": 152
       },
       "example": "import { collectGitSourceFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1189,7 +1189,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 302
+        "line": 308
       },
       "example": "import { collectModuleBuildFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1218,7 +1218,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 173
+        "line": 179
       },
       "example": "import { collectVersionSourceFact } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1247,7 +1247,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 520
+        "line": 526
       },
       "example": "import { createKungfuBuildInfoProjection } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1276,7 +1276,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 423
+        "line": 429
       },
       "example": "import { verifyBuildFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1305,7 +1305,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 549
+        "line": 555
       },
       "example": "import { writeBuildFacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1334,7 +1334,7 @@
       ],
       "source": {
         "path": "packages/core/build-facts.js",
-        "line": 557
+        "line": 563
       },
       "example": "import { writeKungfuBuildInfoProjection } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18336,7 +18336,7 @@
       "specifier": "@kungfu-tech/buildchain/build-facts",
       "export": "./build-facts",
       "target": "./packages/core/build-facts.js",
-      "digest": "sha256:b7b4204610fef46731f840f33f4a8bf66c0100c149e63bf6e78241f7e8a99f27",
+      "digest": "sha256:b7fd2ab9fc5d1d19d6144f6b21c415691b0cfc5b293b0ab4b7fe380edec4b7d5",
       "summary": "Git source, version, module output, product artifact, and legacy Kungfu build fact APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -20489,7 +20489,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:6c58f69c76a3c3b398503e5ab8e11546a47c7ce23f97515552453afd6de3098b"
+      "digest": "sha256:afd6192b411dcc6a63a5b2992e18a1bbbbe2fa1839a78eba13d4e5e23bc94d52"
     },
     {
       "id": "build-facts",

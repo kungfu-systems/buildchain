@@ -2229,7 +2229,9 @@ test("runLifecycle command override inherits declared stage shell and lifecycle 
       required: true,
       workspace,
     });
-    assert.deepEqual(fs.readFileSync(path.join(fixture, "command-override.txt"), "utf8").trim().split("\n"), ["bash", "shared-value", "stage-value"]);
+    const output = fs.readFileSync(path.join(fixture, "command-override.txt"), "utf8").trim().split(/\r?\n/u);
+    output[0] = output[0].split(/[\\/]/u).at(-1);
+    assert.deepEqual(output, ["bash", "shared-value", "stage-value"]);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

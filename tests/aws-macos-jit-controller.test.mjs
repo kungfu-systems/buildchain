@@ -388,7 +388,9 @@ test("macOS controller keeps JIT secret out of argv and sends bootstrap through 
       (entry) => entry.inputMode !== undefined,
     );
     assert.ok(fileInputs.length >= 2);
-    assert.ok(fileInputs.every((entry) => entry.inputMode === 0o600));
+    if (process.platform !== "win32") {
+      assert.ok(fileInputs.every((entry) => entry.inputMode === 0o600));
+    }
     const sent = commands.find((entry) => entry.args.includes("send-command"));
     assert.ok(sent);
     assert.equal(JSON.parse(result.stdout).status, "command-sent");

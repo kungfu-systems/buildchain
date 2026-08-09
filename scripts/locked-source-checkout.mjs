@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -113,12 +112,12 @@ function ensureCheckoutTarget(targetPath, workspace) {
 function git(args, { cwd, env = {}, timeoutMs = 60000, stdio = ["ignore", "pipe", "pipe"] } = {}) {
   try {
     const commandEnv = { ...process.env, ...env };
-    const output = args[0] === "fetch" ? runGitFetchSync({ args, cwd, env: commandEnv, timeoutMs, stdio }) : execFileSync("git", args, {
+    const output = runGitFetchSync({
+      args,
       cwd,
       env: commandEnv,
-      encoding: "utf8",
+      timeoutMs,
       stdio,
-      timeout: timeoutMs,
     });
     return output ? String(output).trim() : "";
   } catch (error) {

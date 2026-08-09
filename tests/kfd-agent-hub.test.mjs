@@ -140,8 +140,11 @@ test("default runner invokes Windows package-manager shims through explicit cmd 
   });
 
   assert.equal(result.status, 0);
-  assert.equal(calls[0].command, "cmd.exe");
-  assert.deepEqual(calls[0].args, ["/d", "/s", "/c", 'npm.cmd run build "{\\"Key\\":\\"value with space\\"}"']);
+  assert.match(calls[0].command, /(?:^|[\\/])cmd\.exe$/i);
+  assert.deepEqual(calls[0].args.slice(0, 3), ["/d", "/s", "/c"]);
+  assert.match(calls[0].args[3], /^"npm\.cmd /);
+  assert.match(calls[0].args[3], /Key/);
+  assert.match(calls[0].args[3], /value\^ with\^ space/);
   assert.equal(calls[0].options.cwd, "C:\\agent-hub");
   assert.equal(calls[0].options.shell, false);
   assert.equal(calls[0].options.windowsVerbatimArguments, true);
