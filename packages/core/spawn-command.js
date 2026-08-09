@@ -39,17 +39,23 @@ function cmdEscapeCommand(value) {
   return String(value).replace(CMD_META_CHARACTERS, "^$1");
 }
 
-function cmdEscapeArgument(value) {
+function cmdEscapeArgument(value, doubleEscapeMetaCharacters = false) {
   let text = String(value);
   text = text.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
   text = text.replace(/(?=(\\+?)?)\1$/g, "$1$1");
-  return `"${text}"`.replace(CMD_META_CHARACTERS, "^$1");
+  let escaped = `"${text}"`.replace(CMD_META_CHARACTERS, "^$1");
+  if (doubleEscapeMetaCharacters) {
+    escaped = escaped.replace(CMD_META_CHARACTERS, "^$1");
+  }
+  return escaped;
 }
 
 export function windowsBatchInvocation(command, args, env = process.env) {
   const shellCommand = [
     cmdEscapeCommand(command),
-    ...args.map(cmdEscapeArgument),
+    ...args.map((argument) =>
+      cmdEscapeArgument(argument, /\.cmd$/i.test(command)),
+    ),
   ].join(" ");
   return {
     command: env.ComSpec || env.comspec || process.env.ComSpec || process.env.comspec || "cmd.exe",

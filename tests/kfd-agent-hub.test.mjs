@@ -144,7 +144,8 @@ test("default runner invokes Windows package-manager shims through explicit cmd 
   assert.deepEqual(calls[0].args.slice(0, 3), ["/d", "/s", "/c"]);
   assert.match(calls[0].args[3], /^"npm\.cmd /);
   assert.match(calls[0].args[3], /Key/);
-  assert.match(calls[0].args[3], /value\^ with\^ space/);
+  assert.match(calls[0].args[3], /value\^\^\^ with\^\^\^ space/);
+  assert.ok(calls[0].args[3].includes('\\^^^"Key'));
   assert.equal(calls[0].options.cwd, "C:\\agent-hub");
   assert.equal(calls[0].options.shell, false);
   assert.equal(calls[0].options.windowsVerbatimArguments, true);
