@@ -640,6 +640,13 @@ function existingFiles(paths = [], cwd = process.cwd()) {
     .filter((filePath) => fs.existsSync(filePath));
 }
 
+export function sealedCandidateArtifactRootsFromPlatformManifests(platformManifests = []) {
+  const roots = platformManifests.flatMap((manifestPath) => { const normalized = path.resolve(manifestPath), marker = `${path.sep}sealed-candidate${path.sep}artifacts${path.sep}`, markerIndex = normalized.indexOf(marker); if (markerIndex < 0) return [];
+    const artifactRoot = normalized.slice(0, markerIndex + marker.length), manifestArtifactName = normalized.slice(markerIndex + marker.length).split(path.sep)[0], payloadArtifactName = String(JSON.parse(fs.readFileSync(normalized, "utf8")).artifactName || "").trim(); if (payloadArtifactName && (payloadArtifactName === "." || payloadArtifactName === ".." || path.basename(payloadArtifactName) !== payloadArtifactName)) throw new Error(`recovered platform manifest has unsafe artifactName: ${payloadArtifactName}`);
+    const payloadRoot = payloadArtifactName ? path.join(artifactRoot, payloadArtifactName) : ""; if (payloadRoot && (!fs.existsSync(payloadRoot) || !fs.statSync(payloadRoot).isDirectory())) throw new Error(`recovered platform payload artifact is missing: ${payloadArtifactName}`);
+    return [manifestArtifactName ? path.join(artifactRoot, manifestArtifactName) : "", payloadRoot].filter(Boolean);
+  }); return [...new Set(roots)]; }
+
 function platformManifestPathsFromBuildSummary(buildSummaryPath, cwd = process.cwd()) {
   const summary = readJsonFileIfExists(buildSummaryPath);
   if (!summary) {
@@ -1962,14 +1969,7 @@ async function collectAndPersistReleasePassport({
     : [];
   const platformManifests = [...new Set([...configuredManifests, ...derivedManifests]),
   ];
-  const sealedCandidateArtifactRoots = [...new Set(platformManifests.flatMap((manifestPath) => {
-    const normalized = path.resolve(manifestPath);
-    const marker = `${path.sep}sealed-candidate${path.sep}artifacts${path.sep}`;
-    const markerIndex = normalized.indexOf(marker);
-    if (markerIndex < 0) return [];
-    const artifactName = normalized.slice(markerIndex + marker.length).split(path.sep)[0];
-    return artifactName ? [normalized.slice(0, markerIndex + marker.length) + artifactName] : [];
-  }))];
+  const sealedCandidateArtifactRoots = sealedCandidateArtifactRootsFromPlatformManifests(platformManifests);
   const sealedReleaseAssets = releasePassportAssetsFromSealedBundle({
     result,
     cwd,
