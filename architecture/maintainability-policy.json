@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 111440,
+    "maxHandMaintainedSourceFiles": 288,
+    "maxHandMaintainedSourceLines": 111699,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22679,
-    "latestTransition": "Installer public read-back reuses the existing bounded web-surface edge convergence retry.",
-    "rationale": "The six-line runtime increase above the current dev baseline routes signed installer byte checks through the same bounded 403, 404, and server-error retry already used by surface health. It preserves manual redirect handling, exact digest and cache-policy verification, and the existing timeout ceiling without adding another scheduler or authority; this exact post-integration ceiling cannot grow implicitly."
+    "latestTransition": "Engineering Housekeeper adds one version-neutral contract and fail-closed classifier.",
+    "rationale": "The bounded H1 contract adds one pure provider-neutral source module for deterministic branch and pull-request inventory, classification, plan, receipt, replay, and apply-time revalidation. It introduces no scheduler, provider client, workflow, or second policy authority; this exact post-integration ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -61,8 +61,8 @@
       "rationale": "Artifact signing configuration admits only the Buildchain-owned JIT profile with exact safe archive-relative target paths while rejecting credentials, entitlement files, wildcard paths, incompatible artifact kinds, and incomplete declarations; this exact wiring ceiling cannot grow implicitly."
     },
     "packages/core/index.js": {
-      "maxLines": 695,
-      "rationale": "The root package index exposes the three provider-plane modules while preserving every existing export; this exact additive public wiring ceiling cannot grow implicitly."
+      "maxLines": 697,
+      "rationale": "The root package index adds the version-neutral Engineering Housekeeper contract export while preserving every existing export; this exact additive public wiring ceiling cannot grow implicitly."
     },
     "packages/core/diagnostics.js": {
       "maxLines": 1909,

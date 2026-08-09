@@ -287,6 +287,8 @@ export {
   verifyGithubGovernanceReceipt,
 } from "./github-governance-authority.js";
 
+export * from "./engineering-housekeeper.js";
+
 export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,
   ARTIFACT_PASSPORT_POINTER_CONTRACT,

@@ -1,0 +1,68 @@
+{
+  "contract": "kungfu-buildchain-engineering-housekeeper-fixtures/v1",
+  "cases": [
+    {
+      "id": "active",
+      "branch": {
+        "name": "feature/active",
+        "ancestry": "ancestor",
+        "openPullRequestNumbers": [11]
+      },
+      "eligible": false,
+      "reason": "branch.open-pr-head"
+    },
+    {
+      "id": "merged",
+      "branch": {
+        "name": "feature/merged",
+        "ancestry": "ancestor",
+        "openPullRequestNumbers": []
+      },
+      "eligible": true,
+      "reason": "eligible.merged-branch"
+    },
+    {
+      "id": "stale",
+      "branch": {
+        "name": "feature/stale",
+        "ancestry": "diverged",
+        "openPullRequestNumbers": []
+      },
+      "eligible": false,
+      "reason": "branch.not-merged"
+    },
+    {
+      "id": "advanced",
+      "revalidation": "head",
+      "reason": "branch.head-advanced"
+    },
+    { "id": "renamed", "revalidation": "name", "reason": "branch.renamed" },
+    {
+      "id": "protected",
+      "branch": {
+        "name": "dev/v3/v3.0",
+        "ancestry": "ancestor",
+        "openPullRequestNumbers": []
+      },
+      "eligible": false,
+      "reason": "branch.protected"
+    },
+    {
+      "id": "forked",
+      "branch": {
+        "name": "feature/forked",
+        "ancestry": "ancestor",
+        "openPullRequestNumbers": [],
+        "sourceRepository": "fork/buildchain"
+      },
+      "eligible": false,
+      "reason": "branch.cross-repository"
+    },
+    {
+      "id": "permission-denied",
+      "outcome": "denied",
+      "reason": "branch.permission-denied"
+    },
+    { "id": "repeated", "replay": true, "reason": "replay.already-applied" }
+  ]
+}

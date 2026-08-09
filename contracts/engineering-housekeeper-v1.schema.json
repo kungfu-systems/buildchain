@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.kungfu.ai/contracts/engineering-housekeeper-v1.schema.json",
+  "title": "Buildchain Engineering Housekeeper contract",
+  "oneOf": [{ "$ref": "#/$defs/plan" }, { "$ref": "#/$defs/receipt" }],
+  "$defs": {
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "oid": { "type": "string", "pattern": "^[0-9a-f]{40,64}$" },
+    "target": {
+      "type": "object",
+      "required": ["name", "headOid"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "headOid": { "$ref": "#/$defs/oid" }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": ["protectedPatterns", "retainedPatterns", "pullRequests"],
+      "properties": {
+        "protectedPatterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "retainedPatterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "pullRequests": {
+          "type": "object",
+          "required": ["reportStale", "label", "autoClose"],
+          "properties": {
+            "reportStale": { "type": "boolean" },
+            "label": { "type": "string" },
+            "autoClose": { "const": false }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "inventory": {
+      "type": "object",
+      "required": ["kind", "repository", "headOid", "reasonCodes"],
+      "properties": {
+        "kind": { "enum": ["branch", "pull-request"] },
+        "repository": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "name": { "type": "string" },
+        "number": { "type": "integer", "minimum": 1 },
+        "headRepository": { "type": "string" },
+        "headRef": { "type": "string" },
+        "headOid": { "$ref": "#/$defs/oid" },
+        "target": { "$ref": "#/$defs/target" },
+        "eligible": { "type": "boolean" },
+        "decision": { "enum": ["delete", "retain"] },
+        "state": { "enum": ["open", "draft", "closed", "merged"] },
+        "actions": {
+          "type": "array",
+          "items": { "enum": ["report", "label"] },
+          "uniqueItems": true
+        },
+        "reasonCodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "enum": ["delete-branch", "report-pull-request", "label-pull-request"]
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "number": { "type": "integer", "minimum": 1 },
+        "expectedHeadOid": { "$ref": "#/$defs/oid" },
+        "targetName": { "type": "string", "minLength": 1 },
+        "expectedTargetHeadOid": { "$ref": "#/$defs/oid" }
+      },
+      "additionalProperties": false
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "contract",
+        "schemaVersion",
+        "mode",
+        "repository",
+        "target",
+        "observedAt",
+        "policy",
+        "inventory",
+        "actions",
+        "planRoot"
+      ],
+      "properties": {
+        "contract": { "const": "kungfu-buildchain-engineering-housekeeper/v1" },
+        "schemaVersion": { "const": 1 },
+        "mode": { "const": "plan" },
+        "repository": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "target": { "$ref": "#/$defs/target" },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "policy": { "$ref": "#/$defs/policy" },
+        "inventory": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/inventory" }
+        },
+        "actions": { "type": "array", "items": { "$ref": "#/$defs/action" } },
+        "planRoot": { "$ref": "#/$defs/root" }
+      },
+      "additionalProperties": false
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "contract",
+        "schemaVersion",
+        "mode",
+        "planRoot",
+        "appliedAt",
+        "outcomes",
+        "receiptRoot"
+      ],
+      "properties": {
+        "contract": { "const": "kungfu-buildchain-engineering-housekeeper/v1" },
+        "schemaVersion": { "const": 1 },
+        "mode": { "const": "receipt" },
+        "planRoot": { "$ref": "#/$defs/root" },
+        "appliedAt": { "type": "string", "format": "date-time" },
+        "outcomes": { "type": "array", "items": { "type": "object" } },
+        "receiptRoot": { "$ref": "#/$defs/root" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
