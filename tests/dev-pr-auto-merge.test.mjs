@@ -466,6 +466,44 @@ test("queue apply binds enqueuePullRequest to the immutable PR head", async () =
   assert.equal(result.enqueued[0].admissionReceipt.finalSafetyBoundary, "github-merge-group");
 });
 
+test("queue retry reactivates the exact merge-group lease before enqueue", async () => {
+  const fake = client({
+    pullRequests: [pr({ number: 1, nodeId: "PR_node_1" })],
+    branchShas: ["base-1", "base-1", "base-1"],
+    queueStates: [
+      { enabled: true, id: "MQ_1", entries: [] },
+      { enabled: true, id: "MQ_1", entries: [] },
+    ],
+  });
+  const result = await runDevPrAutoMerge(
+    {
+      ...baseOptions,
+      landingMode: "queue",
+      dryRun: false,
+      queueAdmissionContext: "Queue admission lease",
+      activeLeaseContext: "Queue family lease/exact",
+    },
+    fake,
+  );
+
+  assert.equal(result.enqueued[0].action, "enqueued");
+  assert.deepEqual(
+    fake.commitStatuses.map((entry) => entry.body),
+    [
+      {
+        state: "pending",
+        context: "Queue family lease/exact",
+        description: "Buildchain reactivated this exact lease for merge-group qualification",
+      },
+      {
+        state: "success",
+        context: "Queue admission lease",
+        description: "Buildchain admitted this exact PR head to the merge queue",
+      },
+    ],
+  );
+});
+
 test("queue admission fails closed when the target base moves", async () => {
   const fake = client({
     pullRequests: [pr({ number: 1 }), pr({ number: 2 })],
@@ -504,6 +542,38 @@ test("queue admission revokes the temporary lease when enqueue is rejected", asy
 
   assert.equal(result.evaluated[0].reason, "enqueue-rejected");
   assert.deepEqual(fake.commitStatuses.map((entry) => entry.body.state), ["success", "failure"]);
+});
+
+test("queue rejection releases the exact merge-group lease in the same controller run", async () => {
+  const fake = client({
+    pullRequests: [pr({ number: 1, nodeId: "PR_node_1" })],
+    branchShas: ["base-1", "base-1", "base-1"],
+    queueStates: [
+      { enabled: true, id: "MQ_1", entries: [] },
+      { enabled: true, id: "MQ_1", entries: [] },
+    ],
+    enqueueError: new Error("expected queue rejection"),
+  });
+  await runDevPrAutoMerge(
+    {
+      ...baseOptions,
+      landingMode: "queue",
+      dryRun: false,
+      queueAdmissionContext: "Queue admission lease",
+      activeLeaseContext: "Queue family lease/exact",
+    },
+    fake,
+  );
+
+  assert.deepEqual(
+    fake.commitStatuses.map((entry) => [entry.body.context, entry.body.state]),
+    [
+      ["Queue family lease/exact", "pending"],
+      ["Queue admission lease", "success"],
+      ["Queue admission lease", "failure"],
+      ["Queue family lease/exact", "failure"],
+    ],
+  );
 });
 
 test("queue admission absorbs provider status propagation inside one controller run", async () => {

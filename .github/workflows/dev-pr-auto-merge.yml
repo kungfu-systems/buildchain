@@ -165,6 +165,13 @@ on:
           type: string,
           required: false,
         }
+      active-lease-context:
+        {
+          description: "Exact-head lease status context that must remain pending while merge-group qualification runs",
+          default: "",
+          type: string,
+          required: false,
+        }
       ready-label:
         description: "Required label for PRs eligible to merge. Empty disables the label gate."
         default: "ready"
@@ -613,6 +620,7 @@ jobs:
           BUILDCHAIN_DEV_PR_SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
           BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ inputs.required-status-checks }}
           BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: ${{ inputs.queue-admission-context }}
+          BUILDCHAIN_DEV_PR_ACTIVE_LEASE_CONTEXT: ${{ inputs.active-lease-context }}
           BUILDCHAIN_DEV_PR_READY_LABEL: ${{ inputs.ready-label }}
           BUILDCHAIN_DEV_PR_BLOCK_LABELS: ${{ inputs.block-labels }}
           BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES: ${{ inputs.allowed-head-prefixes }}
