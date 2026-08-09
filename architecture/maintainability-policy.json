@@ -8,9 +8,9 @@
     "maxHandMaintainedSourceFiles": 287,
     "maxHandMaintainedSourceLines": 111411,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22646,
-    "latestTransition": "Sealed-candidate recovery reuses exact four-platform payload bytes across interrupted publication, with bounded evidence transport and rooted idempotent receipts.",
-    "rationale": "The recovery transition carries the exact candidate, artifact, Passport, controller, transaction, and publication identities needed to finish an interrupted Alpha without rebuilding product payloads. It composes with the concurrently merged Delivery Warrant source-run and stale-dequeue fencing without duplicating scheduler or publication authority; these exact post-integration ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22671,
+    "latestTransition": "Legacy Delivery Warrant handoff recovers one exact successful source run and retries transient provider branch locks inside the current controller attempt.",
+    "rationale": "The bounded workflow increase resolves only the active legacy PR and head against one named source workflow before immediate handoff. Provider branch-lock propagation reuses the existing bounded enqueue retry instead of creating another scheduler, writer, or authority; these exact post-integration ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -337,6 +337,7 @@
           "shard-evidence-roots-json",
           "source-identity-root",
           "source-patch-root",
+          "source-workflow-id",
           "source-workflow-run-id",
           "target-branch",
           "toolchain-root",
@@ -359,7 +360,7 @@
           "warrant-state-root"
         ]
       },
-      "rationale": "Extend targeted exact-head admission with the exact source workflow run and one explicitly configured consumer handoff workflow so a controller can immediately resume the active Warrant candidate instead of waiting for patrol cadence. Independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
+      "rationale": "Extend targeted exact-head admission with the exact source workflow run, one explicitly configured consumer handoff workflow, and one bounded source workflow identifier used only to recover legacy active candidates, so a controller can immediately resume the active Warrant candidate instead of waiting for patrol cadence. Independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

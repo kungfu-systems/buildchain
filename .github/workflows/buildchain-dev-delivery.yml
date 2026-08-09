@@ -61,6 +61,7 @@ jobs:
       target-branch: dev/v3/v3.0
       expected-pr-number: ${{ fromJSON(github.event.inputs.expected-pr-number) }}
       expected-head-sha: ${{ github.event.inputs.expected-head-sha }}
+      source-workflow-run-id: ${{ fromJSON(github.run_id) }}
       delivery-warrant-mode: required
       assignment-root: ${{ fromJSON(github.event.inputs.native-roots-json).assignmentRoot }}
       initiative-root: ${{ fromJSON(github.event.inputs.native-roots-json).initiativeRoot }}

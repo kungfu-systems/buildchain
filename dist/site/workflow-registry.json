@@ -1857,12 +1857,13 @@
         "shard-evidence-roots-json",
         "source-identity-root",
         "source-patch-root",
+        "source-workflow-id",
         "source-workflow-run-id",
         "target-branch",
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 34,
+      "inputCount": 35,
       "secrets": [
         "github-token"
       ],

@@ -2018,12 +2018,13 @@
           "shard-evidence-roots-json",
           "source-identity-root",
           "source-patch-root",
+          "source-workflow-id",
           "source-workflow-run-id",
           "target-branch",
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 34,
+        "inputCount": 35,
         "secrets": [
           "github-token"
         ],
@@ -7900,7 +7901,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "dcdbc6d9fed29f48a09137cbf125b97758d3990c771f69a52e31a9557ca30acf",
+    "workflowRegistryDigest": "b39a59bf5cda21c43b54adc86fc84930e62edd0ac7a5591e3fe545d24ec34804",
     "pageRegistryDigest": "7a110de871d2473b2f88c2a0e74616ce34abf6e40611c2be698b2a6d330410bb"
   },
   "comparison": {
