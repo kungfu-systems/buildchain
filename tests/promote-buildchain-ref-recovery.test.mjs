@@ -38,6 +38,7 @@ const {
   resolveProtectedStatusCheckContext,
   releasePassportArtifactFiles,
   releasePassportAssetsFromSealedBundle,
+  sealedCandidateArtifactRootsFromPlatformManifests,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
@@ -113,6 +114,56 @@ test("release passport recovers the live candidate release-asset paths", () => {
   assert.equal(
     assets[0].sha256,
     crypto.createHash("sha256").update("sealed-candidate-bytes").digest("hex"),
+  );
+});
+
+test("release passport searches the recovered payload artifact named by each platform manifest", () => {
+  const cwd = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-kfd-recovered-payload-"),
+  );
+  const artifactsRoot = path.join(cwd, "sealed-candidate", "artifacts");
+  const manifestRoot = path.join(
+    artifactsRoot,
+    "kungfu-manifest-linux-x64-source",
+  );
+  const payloadRoot = path.join(
+    artifactsRoot,
+    "kungfu-linux-x64-source",
+  );
+  fs.mkdirSync(manifestRoot, { recursive: true });
+  fs.mkdirSync(payloadRoot, { recursive: true });
+  const manifestPath = path.join(manifestRoot, "manifest.json");
+  fs.writeFileSync(
+    manifestPath,
+    `${JSON.stringify({ artifactName: "kungfu-linux-x64-source" })}\n`,
+  );
+
+  assert.deepEqual(
+    sealedCandidateArtifactRootsFromPlatformManifests([manifestPath]),
+    [manifestRoot, payloadRoot],
+  );
+});
+
+test("recovered platform manifests cannot escape the sealed artifact root", () => {
+  const cwd = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-kfd-recovered-escape-"),
+  );
+  const manifestRoot = path.join(
+    cwd,
+    "sealed-candidate",
+    "artifacts",
+    "kungfu-manifest-linux-x64-source",
+  );
+  fs.mkdirSync(manifestRoot, { recursive: true });
+  const manifestPath = path.join(manifestRoot, "manifest.json");
+  fs.writeFileSync(
+    manifestPath,
+    `${JSON.stringify({ artifactName: "../outside" })}\n`,
+  );
+
+  assert.throws(
+    () => sealedCandidateArtifactRootsFromPlatformManifests([manifestPath]),
+    /unsafe artifactName/u,
   );
 });
 
