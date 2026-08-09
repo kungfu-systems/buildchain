@@ -672,7 +672,7 @@ test("promote-only recovery binds publication version through the immutable reco
     contract: "kungfu-buildchain-release-candidate-recovery/v1",
     action: "reused",
     repository: "kungfu-systems/buildchain",
-    originalCandidate: { sourceSha: OTHER_SHA, tree: `tree-${SHA}` },
+    originalCandidate: { pullRequest: 42, sourceSha: OTHER_SHA, tree: `tree-${SHA}` },
     target: { channel: "alpha", ref: "alpha/v1/v1.0", sha: SHA, tree: `tree-${SHA}`, version: "3.0.6-alpha.4" },
     recovered: { candidateRoot: `sha256:${candidateHash}` },
     skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
@@ -694,6 +694,7 @@ test("promote-only recovery binds publication version through the immutable reco
     });
     assert.equal(result.publicationVersionBinding, "recovery-receipt");
     assert.equal(result.recoveredCandidate, true);
+    assert.equal(result.recoveryProviderPullRequest, 42);
     assert.throws(
       () => validatePromotionReleaseCandidate({
         cwd,
@@ -993,6 +994,137 @@ test("strict alpha promotion uses provider transaction evidence when protection 
   );
 });
 
+test("provider-hidden protection accepts only an exact receipt-bound alpha recovery", async () => {
+  const checkedRefs = [];
+  const recoveryPullRequestHeadSha = "c".repeat(40);
+  let recoveryMergeSha = SHA;
+  const octokit = {
+    rest: {
+      repos: {
+        getBranchProtection: async () => {
+          const error = new Error("Resource not accessible by integration");
+          error.status = 403;
+          throw error;
+        },
+        getBranch: async () => ({
+          data: {
+            protected: true,
+            commit: { sha: SHA },
+            protection: {
+              required_status_checks: {
+                enforcement_level: "everyone",
+                contexts: ["check"],
+                checks: [{ context: "check", app_id: 15368 }],
+              },
+            },
+          },
+        }),
+        listPullRequestsAssociatedWithCommit: async () => {
+          assert.fail("an exact recovery receipt must not invent PR lineage");
+        },
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          assert.equal(pull_number, 42);
+          return {
+            data: {
+              number: 42,
+              merged_at: "2026-08-06T00:23:05Z",
+              merge_commit_sha: recoveryMergeSha,
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                sha: recoveryPullRequestHeadSha,
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          };
+        },
+        listReviews: async () => {
+          assert.fail("an exact recovery receipt must not invent PR review");
+        },
+      },
+      checks: {
+        listForRef: async ({ ref }) => {
+          checkedRefs.push(ref);
+          return {
+            data: {
+              check_runs: [
+                { name: "check", conclusion: "success", app: { id: 15368 } },
+              ],
+            },
+          };
+        },
+      },
+    },
+  };
+  const exactRecovery = {
+    recoveredCandidate: true,
+    treeEquivalent: true,
+    publicationVersionBinding: "recovery-receipt",
+    promotionChannelSha: SHA,
+    recoveryProviderPullRequest: 42,
+  };
+
+  const resolvedStatusCheck = await assertProtectedChannel({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sourceSha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    requiredStatusCheck: "check",
+    exactReleaseCandidateSource: exactRecovery,
+  });
+  assert.equal(resolvedStatusCheck, "check");
+  assert.deepEqual(checkedRefs, [recoveryPullRequestHeadSha]);
+
+  await assert.rejects(
+    assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+      exactReleaseCandidateSource: {
+        ...exactRecovery,
+        recoveryProviderPullRequest: 0,
+      },
+    }),
+    /missing its original provider pull request/,
+  );
+
+  recoveryMergeSha = OTHER_SHA;
+  await assert.rejects(
+    assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+      exactReleaseCandidateSource: exactRecovery,
+    }),
+    /provider pull request is not bound/,
+  );
+  recoveryMergeSha = SHA;
+
+  await assert.rejects(
+    assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+      exactReleaseCandidateSource: {
+        ...exactRecovery,
+        promotionChannelSha: OTHER_SHA,
+      },
+    }),
+    /must not invent PR lineage/,
+  );
+});
+
 test("managed channels reuse provider-enforced policy when protection details are unreadable", async () => {
   let requiredContexts = ["check"];
   let protectionReadStatus = 403;
@@ -1052,7 +1184,17 @@ test("managed channels reuse provider-enforced policy when protection details ar
   assert.equal(hiddenEvidence.action, "branch-protection-policy-observed");
   assert.deepEqual(hiddenEvidence.after.requiredStatusChecks, ["check"]);
 
-  requiredContexts = ["security"];
+  requiredContexts = ["affected-native / linux"];
+  const devEvidence = await ensureManagedChannelBranchProtection({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    branch: "dev/v1/v1.0",
+    requiredStatusCheck: "build / Finalize build controller evidence",
+  });
+  assert.equal(devEvidence.action, "branch-protection-policy-observed");
+  assert.deepEqual(devEvidence.after.requiredStatusChecks, ["affected-native / linux"]);
+
   await assert.rejects(
     ensureManagedChannelBranchProtection({
       octokit,
@@ -1362,6 +1504,115 @@ test("strict alpha promotion accepts same-line version-state PR lineage", async 
   assert.equal(result.sha, SHA);
   assert.equal(refs.get("tags/v1.0.1-alpha.0"), SHA);
   assert.equal(refs.get("tags/v1.0-alpha"), SHA);
+});
+
+test("strict alpha promotion accepts the exact immutable recovery receipt source", async () => {
+  const candidateHash = "a".repeat(64);
+  const passportPath = ".buildchain/artifacts/release-candidate-passport.json";
+  const receiptPath = ".buildchain/artifacts/recovery-receipt.json";
+  const passport = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-passport",
+    repository: "kungfu-systems/buildchain",
+    target: {
+      channel: "alpha",
+      ref: "alpha/v1/v1.0",
+      version: "1.0.0-alpha.0",
+    },
+    source: {
+      headSha: OTHER_SHA,
+      mergeRefSha: OTHER_SHA,
+      treeHash: `tree-${SHA}`,
+    },
+    platformMatrix: [
+      { platformId: "linux-x64", artifactName: "buildchain-linux-x64" },
+    ],
+    diagnostics: {},
+    candidateHash,
+  };
+  const receipt = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-recovery/v1",
+    action: "reused",
+    repository: "kungfu-systems/buildchain",
+    originalCandidate: { sourceSha: OTHER_SHA, tree: `tree-${SHA}` },
+    target: {
+      channel: "alpha",
+      ref: "alpha/v1/v1.0",
+      sha: SHA,
+      tree: `tree-${SHA}`,
+      version: "1.0.1-alpha.0",
+    },
+    recovered: { candidateRoot: `sha256:${candidateHash}` },
+    skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
+    payloadBytes: "unchanged",
+  };
+  receipt.root = `sha256:${sha256Json(receipt)}`;
+  const cwd = makeTempWorkspace({
+    [passportPath]: passport,
+    [receiptPath]: receipt,
+  });
+  const refs = new Map([["heads/alpha/v1/v1.0", SHA]]);
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) return { data: { object: { sha: refs.get(ref) } } };
+          throw notFound();
+        },
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` }, parents: [] },
+        }),
+        listMatchingRefs: async ({ ref }) =>
+          ref === "tags/v1.0."
+            ? { data: [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }] }
+            : { data: [] },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        listPullRequestsAssociatedWithCommit: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  try {
+    const result = await promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      cwd,
+      versionState: false,
+      requireGovernance: true,
+      promoteOnlyReleaseCandidate: true,
+      releaseCandidatePassportPath: passportPath,
+      releaseCandidateRecoveryReceiptPath: receiptPath,
+      releaseCandidateVersion: "1.0.1-alpha.0",
+    });
+
+    assert.equal(result.sha, SHA);
+    assert.equal(refs.get("tags/v1.0.1-alpha.0"), SHA);
+    assert.equal(
+      result.updates.some(
+        (update) =>
+          update.action === "accepted-exact-alpha-recovery-source" &&
+          update.sha === SHA &&
+          update.publicationVersionBinding === "recovery-receipt",
+      ),
+      true,
+    );
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
 });
 
 test("strict alpha promotion accepts same-line publish-gate PR lineage", async () => {
@@ -3537,6 +3788,11 @@ throw new Error("validated durable evidence must prevent a second registry publi
   run(["git", "init"], cwd);
   run(["git", "add", "."], cwd);
   run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "release material"], cwd);
+  const releaseAssetPath = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-recovered-asset-")),
+    "kungfu-episodes-cli-linux-x64.tar.gz",
+  );
+  fs.writeFileSync(releaseAssetPath, "sealed-candidate-bytes");
 
   const artifact = {
     group: "libnode",
@@ -3618,6 +3874,7 @@ throw new Error("validated durable evidence must prevent a second registry publi
     cwd,
     publishTransaction: true,
     promoteOnlyReleaseCandidate: true,
+    releaseCandidateReleaseAssetPaths: [releaseAssetPath],
     expectedPublicationVersion: packageVersion,
     releasePassport: true,
     releasePassportProductName: "Libnode",
@@ -3630,6 +3887,17 @@ throw new Error("validated durable evidence must prevent a second registry publi
   assert.equal(refs.get(`tags/${staleTag}`), staleTagSha);
   assert.equal(refs.get(`tags/${requestedTag}`), SHA);
   assert.equal(refs.get(`tags/v${packageVersion}`), SHA);
+  const recoveredPassport = JSON.parse(
+    fs.readFileSync(
+      path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+      "utf8",
+    ),
+  );
+  assert.ok(
+    recoveredPassport.artifacts.some(
+      (artifact) => artifact.name === "kungfu-episodes-cli-linux-x64.tar.gz",
+    ),
+  );
   const recoveredImpact = JSON.parse(
     fs.readFileSync(path.join(cwd, ".buildchain/release-passport/impact.json"), "utf8"),
   );

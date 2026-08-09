@@ -81,6 +81,18 @@ test("selected Warrant retains the exact source workflow run for immediate contr
   assert.equal(selected.receipt.sourceWorkflowRunId, 31000000100);
 });
 
+test("legacy queue roots remain stable when source workflow identity is absent", () => {
+  const submitted = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const legacy = structuredClone(submitted.queue);
+  delete legacy.candidates[0].sourceWorkflowRunId;
+  delete legacy.stateRoot;
+  legacy.stateRoot = devDeliveryContentRoot(legacy);
+
+  const normalized = normalizeDevDeliveryQueue(legacy);
+  assert.equal(normalized.stateRoot, legacy.stateRoot);
+  assert.equal(Object.hasOwn(normalized.candidates[0], "sourceWorkflowRunId"), false);
+});
+
 test("duplicate submission is idempotent and safe head repair retains queue age", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const duplicate = submitDevDeliveryCandidate(first.queue, candidate(100), {

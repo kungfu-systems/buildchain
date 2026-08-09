@@ -2448,6 +2448,71 @@ test("release passport downgrades a public KFD-2 claim that is machine-bound but
   assert.equal(report.issues.some((entry) => entry.level === "warning" && entry.code.includes("kfd-2")), true);
 });
 
+test("release passport projects legacy string residual risk into the KFD-2 trust taxonomy", async () => {
+  const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
+  const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {
+    id: "remote-fact-boundary",
+    public: true,
+    claim: "Remote facts remain source-scoped until explicitly promoted.",
+    sourceBindings: [{ path: "docs/KFD-2.md", sha256: actualSha256 }],
+    machineEvidence: [{ path: "release-notes.md", sha256: actualSha256 }],
+    hashes: { sourceSha256: actualSha256, evidenceSha256: actualSha256 },
+    artifacts: [{ name: "generic.schema", path: "config.schema.json", sha256: actualSha256 }],
+    verification: { result: "passed-with-residual-risk" },
+    auditBoundary: { scope: "remote fact import" },
+    responsibility: { sourceOwner: "kungfu", releaseDecisionOwner: "Kungfu release maintainer" },
+    residualRisk: ["Remote evidence freshness depends on the configured source runtime."],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({ channel: "alpha", targetRef: "alpha/v4/v4.0" }),
+    kfd2ClaimJsons: [claimPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const risk = passport["kfd-2"].claims[0].residualRisk[0];
+
+  assert.equal(report.ok, true, JSON.stringify(report.issues));
+  assert.equal(passport["kfd-2"].status, "downgraded");
+  assert.equal(risk.id, "remote-fact-boundary-residual-risk-1");
+  assert.equal(risk.riskType, "manual-review-risk");
+  assert.equal(risk.trustImpact, "downgrade-warning");
+  assert.equal(risk.machineProvability, "not-machine-verifiable");
+  assert.equal(risk.agentAction, "request-maintainer-review");
+  assert.equal(risk.owner, "Kungfu release maintainer");
+  assert.equal(risk.reason, "Remote evidence freshness depends on the configured source runtime.");
+});
+
+test("release passport verifies KFD-1 bytes from a recovered nested candidate artifact root", async () => {
+  const { cwd, assetsDir, witnessPath, actualSha256 } = createKfdWitnessFixture();
+  const nestedRoot = path.join(cwd, "sealed-candidate", "artifacts", "linux-x64", "product", "runtime");
+  fs.mkdirSync(path.join(nestedRoot, "config"), { recursive: true });
+  fs.copyFileSync(path.join(assetsDir, "config.schema.json"), path.join(nestedRoot, "config", "config.schema.json"));
+  fs.writeFileSync(path.join(cwd, "config.schema.json"), "wrong source fallback\n");
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "d".repeat(40),
+    outputDir: "release-passport",
+    assetsDir,
+    kfdArtifactSearchRoots: [path.join(cwd, "sealed-candidate", "artifacts", "linux-x64")],
+    kfd1WitnessJsons: [witnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport["kfd-1"].status, "passed");
+  assert.equal(passport["kfd-1"].contractWorlds[0].artifactVerification.surfaces[0].actualSha256, actualSha256);
+});
+
 test("release passport fails closed when a KFD-2 downgrade reason uses an unknown taxonomy value", () => {
   const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
   const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {
@@ -2660,6 +2725,42 @@ test("release passport can collect KFD-3 artifact witness from product verify co
 
   assert.equal(report.ok, true);
   assert.equal(passport[metadata.key].collaborationInterfaces[0].artifactWitness.id, "kungfu-agent-bridge");
+});
+
+test("KFD-3 artifact command can materialize transient product gate inputs before collection", () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitness } = createKfd3WitnessFixture();
+  const gatePath = path.join(cwd, "transient-product-gate.json");
+  const commandFixturePath = path.join(cwd, "emit-artifact-witness-and-gate.mjs");
+  fs.writeFileSync(
+    commandFixturePath,
+    [
+      'import fs from "node:fs";',
+      `fs.writeFileSync(${JSON.stringify(gatePath)}, ${JSON.stringify(`${JSON.stringify({ contract: "transient-gate" })}\n`)});`,
+      `process.stdout.write(${JSON.stringify(JSON.stringify(artifactWitness))});`,
+      "",
+    ].join("\n"),
+  );
+
+  assert.throws(
+    () => collectGitHubReleasePassport({
+      cwd,
+      tag: "v4.0.0-alpha.0",
+      repository: "kungfu-systems/kungfu",
+      productName: "Kungfu",
+      sourceSha: "d".repeat(40),
+      assetsDir: path.relative(cwd, assetsDir),
+      outputDir: "release-passport",
+      releaseJsonExtra: JSON.stringify({
+        channel: "alpha",
+        targetRef: "alpha/v4/v4.0",
+      }),
+      kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+      kfd3ArtifactVerifyCommand: `${process.execPath} ${commandFixturePath}`,
+      kfdProductGateJsons: [gatePath],
+    }),
+    /KFD product gate inputs require --kfd-support-matrix-json/,
+  );
+  assert.equal(fs.existsSync(gatePath), true);
 });
 
 test("release passport fails closed when KFD-3 declared shipped surface is absent from artifact", async () => {
@@ -3068,6 +3169,119 @@ test("release passport projects a verified cross-platform invariant Passport", (
   assert.equal(passport.invariantPassports.passports[0].source.revision, "a".repeat(40));
 });
 
+test("release passport admits complete invariant coverage without qualifying a separate Exit migration claim", async () => {
+  const cwd = tempDir("invariant-passport-scoped-unqualified");
+  const assetsDir = path.join(cwd, "assets");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "fixture.tar.gz"), "fixture\n");
+  const value = invariantPassportFixture({
+    verdict: "unqualified",
+    coverage: {
+      complete: false,
+      required: 51,
+      verified: 51,
+      missing: [],
+      falsified: [],
+      unqualified: [],
+      platforms: ["darwin-arm64", "linux-x64", "win32-x64"],
+    },
+    diagnostics: [],
+    releaseClaims: {
+      schema: "kungfu.exit-migration-release-claims/v1",
+      id: "kungfu-exit-migration-release",
+      verdict: "unqualified",
+      claimRoot: `sha256:${"e".repeat(64)}`,
+      diagnostics: [{ code: "release-platform-unqualified", message: "linux-x64 remains unqualified" }],
+      nextActions: ["Run exact installed-product qualification."],
+      residualRisk: ["Only the retained macOS artifact is qualified."],
+    },
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.14.2-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "a".repeat(40),
+    outputDir: "release-passport",
+    assetsDir,
+    invariantPassportJsons: [JSON.stringify(value)],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const entry = passport.invariantPassports.passports[0];
+
+  assert.equal(entry.verdict, "unqualified");
+  assert.equal(entry.coverage.complete, false);
+  assert.equal(entry.admission.result, "passed");
+  assert.equal(entry.releaseClaims.verdict, "unqualified");
+  assert.ok(entry.residualRisk.some((item) => item.includes("release-platform-unqualified")));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  assert.equal(report.ok, true, JSON.stringify(report.issues));
+});
+
+test("invariant Passport command admits exit 2 only for complete scoped consumer coverage", async () => {
+  const cwd = tempDir("invariant-passport-scoped-command");
+  const assetsDir = path.join(cwd, "assets");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "fixture.tar.gz"), "fixture\n");
+  const value = invariantPassportFixture({
+    verdict: "unqualified",
+    coverage: {
+      complete: false,
+      required: 51,
+      verified: 51,
+      missing: [],
+      falsified: [],
+      unqualified: [],
+      platforms: ["darwin-arm64", "linux-x64", "win32-x64"],
+    },
+    diagnostics: [],
+    releaseClaims: {
+      schema: "kungfu.exit-migration-release-claims/v1",
+      id: "kungfu-exit-migration-release",
+      verdict: "unqualified",
+      claimRoot: `sha256:${"e".repeat(64)}`,
+      diagnostics: [{ code: "release-platform-unqualified", message: "linux-x64 remains unqualified" }],
+      nextActions: ["Run exact installed-product qualification."],
+      residualRisk: ["Only the retained macOS artifact is qualified."],
+    },
+  });
+  const commandPath = path.join(cwd, "emit-invariant-passport.mjs");
+  fs.writeFileSync(commandPath, `process.stdout.write(${JSON.stringify(JSON.stringify(value))}); process.exitCode = 2;\n`);
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.14.2-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "a".repeat(40),
+    outputDir: "release-passport",
+    assetsDir,
+    invariantPassportCommand: `node ${JSON.stringify(commandPath)}`,
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport.invariantPassports.passports[0].admission.result, "passed");
+  assert.equal(passport.invariantPassports.passports[0].releaseClaims.verdict, "unqualified");
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  assert.equal(report.ok, true, JSON.stringify(report.issues));
+
+  fs.writeFileSync(
+    commandPath,
+    `process.stdout.write(${JSON.stringify(JSON.stringify(invariantPassportFixture()))}); process.exitCode = 2;\n`,
+  );
+  assert.throws(
+    () => collectGitHubReleasePassport({
+      cwd,
+      tag: "v2.14.2-alpha.1",
+      repository: "kungfu-systems/kungfu",
+      sourceSha: "a".repeat(40),
+      outputDir: "release-passport-rejected",
+      assetsDir,
+      invariantPassportCommand: `node ${JSON.stringify(commandPath)}`,
+    }),
+    /invariant passport command exited with 2/,
+  );
+});
+
 test("invariant Passport gate rejects tampered, falsified, incomplete, and dirty evidence", () => {
   const cwd = tempDir("invariant-passport-invalid");
   const collect = (value) => collectGitHubReleasePassport({
@@ -3085,7 +3299,16 @@ test("invariant Passport gate rejects tampered, falsified, incomplete, and dirty
   assert.throws(() => collect(invariantPassportFixture({ verdict: "falsified" })), /verdict must be verified/);
   assert.throws(
     () => collect(invariantPassportFixture({ coverage: { complete: false, platforms: ["linux-x64"] } })),
-    /coverage\.complete must be true/,
+    /verdict must be verified/,
+  );
+  assert.throws(
+    () => collect(invariantPassportFixture({
+      verdict: "unqualified",
+      coverage: { complete: false, required: 51, verified: 50, missing: ["one"], falsified: [], unqualified: [], platforms: ["linux-x64"] },
+      diagnostics: [],
+      releaseClaims: { verdict: "unqualified", claimRoot: `sha256:${"e".repeat(64)}`, diagnostics: [{ code: "missing", message: "missing" }] },
+    })),
+    /verdict must be verified/,
   );
   assert.throws(
     () => collect(invariantPassportFixture({ source: { revision: "a".repeat(40), tree: "d".repeat(40), dirty: true } })),

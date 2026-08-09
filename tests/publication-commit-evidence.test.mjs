@@ -61,7 +61,7 @@ const expected = {
   releaseTag: "v4.0.0-alpha.2",
 };
 
-function installerFixture() {
+function installerFixture(sourceCommit = CANDIDATE_SOURCE_SHA) {
   const releaseBase =
     "https://github.com/kungfu-systems/kungfu/releases/download/v4.0.0-alpha.2";
   const immutablePath = `installers/v1/alpha/4.0.0-alpha.2/${"9".repeat(64)}`;
@@ -125,7 +125,7 @@ function installerFixture() {
     identity: {
       channel: "alpha",
       version: "4.0.0-alpha.2",
-      sourceCommit: CANDIDATE_SOURCE_SHA,
+      sourceCommit,
       releaseSha: RELEASE_SHA,
       releaseTag: "v4.0.0-alpha.2",
       channelPayloadRoot: `sha256:${"3".repeat(64)}`,
@@ -164,7 +164,7 @@ function installerFixture() {
         schema: unsigned.schema,
         bundleRoot,
         manifestDigest: digest(manifestBytes),
-        sourceCommit: CANDIDATE_SOURCE_SHA,
+        sourceCommit,
         channel: "alpha",
         channelPayloadRoot: unsigned.identity.channelPayloadRoot,
         channelFileDigest: unsigned.identity.channelFileDigest,
@@ -249,6 +249,30 @@ test("installer publication bundle rejects an unbound candidate source", () => {
   assert.throws(
     () => validatePublicationCommitEvidence(value.evidence, expected),
     /installer bundle release identity mismatch/,
+  );
+});
+
+test("sealed recovery binds installer bundle to its distinct candidate source", () => {
+  const value = installerFixture();
+  const recoveryExpected = {
+    ...expected,
+    candidateSourceSha: CANDIDATE_SOURCE_SHA,
+  };
+  const result = validatePublicationCommitEvidence(
+    value.evidence,
+    recoveryExpected,
+  );
+  assert.equal(result.identity.sourceSha, SOURCE_SHA);
+  assert.equal(result.identity.candidateSourceSha, CANDIDATE_SOURCE_SHA);
+  assert.equal(result.installerBundle.sourceCommit, CANDIDATE_SOURCE_SHA);
+
+  assert.throws(
+    () =>
+      validatePublicationCommitEvidence(value.evidence, {
+        ...expected,
+        candidateSourceSha: "4".repeat(40),
+      }),
+    /candidateSourceSha mismatch/,
   );
 });
 

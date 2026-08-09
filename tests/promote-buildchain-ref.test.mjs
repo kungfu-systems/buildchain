@@ -1063,6 +1063,132 @@ test("complete candidate recovery reuses verified public evidence and preserves 
   assert.deepEqual(uploaded, []);
 });
 
+test("complete candidate recovery reuses GitHub-normalized product payload names", async () => {
+  const cwd = makeTempWorkspace({
+    "dist/Kungfu Episodes Setup 4.0.0-alpha.1.exe": "sealed desktop bytes",
+  });
+  const passport = {
+    release: {
+      publicTag: "v4.0.0-alpha.1",
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+      releaseSha: SHA,
+    },
+    product: { repository: "kungfu-systems/kungfu" },
+  };
+  const payloadPath = path.join(
+    cwd,
+    "dist/Kungfu Episodes Setup 4.0.0-alpha.1.exe",
+  );
+  const payloadDigest = crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(payloadPath))
+    .digest("hex");
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({
+          data: [
+            { id: 1, name: "buildchain.release.json" },
+            {
+              id: 2,
+              name: "Kungfu.Episodes.Setup.4.0.0-alpha.1.exe",
+              digest: `sha256:${payloadDigest}`,
+            },
+          ],
+        }),
+        getReleaseAsset: async ({ asset_id }) => ({
+          data: asset_id === 1 ? Buffer.from(JSON.stringify(passport)) : null,
+        }),
+        uploadReleaseAsset: async ({ name }) => uploaded.push(name),
+      },
+    },
+  };
+
+  const result = await reuseCompleteGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    release: { id: 123 },
+    tag: "v4.0.0-alpha.1",
+    target: SHA,
+    channel: "alpha",
+    targetRef: "alpha/v4/v4.0",
+    additionalAssetPaths: [payloadPath],
+    verifyPassport: async () => ({ ok: true, issues: [] }),
+  });
+
+  assert.equal(result.uploadedAssetCount, 0);
+  assert.deepEqual(uploaded, []);
+});
+
+test("complete candidate recovery fills an existing GitHub Release when its public Passport is absent", async (t) => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json": { state: "complete" },
+    ".buildchain/release-passport/buildchain.release.json": {
+      release: { publicTag: "v1.0.1-alpha.0", channel: "alpha", releaseSha: SHA },
+    },
+    ".buildchain/release-passport/artifact-evidence.json": { ok: true },
+    "dist/package.tgz": "sealed product bytes",
+  });
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).endsWith("/releases/tags/v1.0.1-alpha.0")) {
+      return new Response(JSON.stringify({
+        id: 123,
+        html_url: "https://github.test/release",
+        name: "v1.0.1-alpha.0",
+        body: "Buildchain release passport assets for v1.0.1-alpha.0.",
+        prerelease: true,
+        make_latest: "false",
+        target_commitish: SHA,
+      }), { status: 200 });
+    }
+    if (String(url).endsWith("/releases/123") && options.method === "PATCH") {
+      return new Response(JSON.stringify({ id: 123, html_url: "https://github.test/release" }), { status: 200 });
+    }
+    throw new Error(`unexpected request: ${url}`);
+  };
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({ data: [] }),
+        uploadReleaseAsset: async ({ name }) => uploaded.push(name),
+      },
+    },
+  };
+
+  const result = await publishGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    token: "token",
+    apiUrl: "https://api.github.test",
+    tag: "v1.0.1-alpha.0",
+    target: SHA,
+    channel: "alpha",
+    publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json"),
+    releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+    releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+    additionalAssetPaths: [path.join(cwd, "dist/package.tgz")],
+    reuseExistingCompleteEvidence: true,
+  });
+
+  assert.equal(result.action, "updated");
+  assert.equal(result.uploadedAssetCount, 4);
+  assert.deepEqual(uploaded.sort(), [
+    "artifact-evidence.json",
+    "buildchain.release.json",
+    "evidence.json",
+    "package.tgz",
+  ]);
+});
+
 test("complete candidate recovery rejects a conflicting public product payload", async () => {
   const cwd = makeTempWorkspace({
     "dist/package.tgz": "sealed product bytes",

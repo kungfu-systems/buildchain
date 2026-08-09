@@ -95,12 +95,18 @@ function findFiles(root, predicate) {
   return collectFiles(root).filter((file) => predicate(file.path, file.absolutePath));
 }
 
+export function recoveredArtifactPathsByBasename(downloads, filename) {
+  return downloads.flatMap((download) => download.files
+    .filter((file) => path.basename(file.path) === filename)
+    .map((file) => outputPath(file.absolutePath)));
+}
+
 function readOnlyJson(files, label) {
   if (files.length !== 1) throw new Error(`expected exactly one ${label}, found ${files.length}`);
   return JSON.parse(fs.readFileSync(files[0].absolutePath, "utf8"));
 }
 
-async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version }) {
+export async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version }) {
   const stateRef = releaseTransactionStateRef(version);
   const response = await githubJson({
     apiUrl,
@@ -110,10 +116,31 @@ async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, ver
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/contents/state.json?ref=${encodeURIComponent(stateRef)}`,
   });
   if (!response) return undefined;
-  if (response.type !== "file" || response.encoding !== "base64" || !response.content) {
-    throw new Error(`durable transaction ${stateRef} did not expose a base64 state.json file`);
+  if (response.type !== "file") {
+    throw new Error(`durable transaction ${stateRef} did not expose a state.json file`);
   }
-  return JSON.parse(Buffer.from(String(response.content).replace(/\s/g, ""), "base64").toString("utf8"));
+  let encoded = response.encoding === "base64" && response.content
+    ? response
+    : undefined;
+  if (!encoded) {
+    const blobSha = String(response.sha || "").trim();
+    if (!/^[0-9a-f]{40}$/i.test(blobSha)) {
+      throw new Error(`durable transaction ${stateRef} did not expose inline content or an exact blob identity`);
+    }
+    encoded = await githubJson({
+      apiUrl,
+      token,
+      fetchImpl,
+      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/blobs/${blobSha}`,
+    });
+    if (String(encoded?.sha || "").trim() !== blobSha) {
+      throw new Error(`durable transaction ${stateRef} blob identity drifted from ${blobSha}`);
+    }
+  }
+  if (encoded?.encoding !== "base64" || !encoded.content) {
+    throw new Error(`durable transaction ${stateRef} did not expose base64 state.json content`);
+  }
+  return JSON.parse(Buffer.from(String(encoded.content).replace(/\s/g, ""), "base64").toString("utf8"));
 }
 
 function outputPath(filePath) {
@@ -180,6 +207,7 @@ function candidateArtifactNames({ passport, selected, artifacts, artifactPattern
 
 export function normalizePlatformManifests(downloads, passport) {
   const manifests = [];
+  const paths = [];
   const evidenceByArtifact = new Map();
   const platformById = new Map((passport.platformMatrix || []).map((entry) => [String(entry.platformId || ""), entry]));
   const seenPlatformIds = new Set();
@@ -208,6 +236,7 @@ export function normalizePlatformManifests(downloads, passport) {
       manifest.artifactName = expectedPlatform.artifactName;
       seenPlatformIds.add(platformId);
       manifests.push(manifest);
+      paths.push(file.absolutePath);
       addEvidence(manifest.artifactName, download.record.files);
     }
     if (String(download.artifact.name).includes("-diagnostics-")) {
@@ -222,7 +251,7 @@ export function normalizePlatformManifests(downloads, passport) {
     artifactName,
     files: [...files.values()].sort((left, right) => left.path.localeCompare(right.path)),
   }));
-  return { manifests, evidence };
+  return { manifests, paths, evidence };
 }
 
 function normalizeControllerReceipts(downloads, passport) {
@@ -268,16 +297,53 @@ export function createRecoveredPublicationCandidate({
   return { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
 }
 
+export function deduplicateReleaseAssets(files = []) {
+  const assets = new Map();
+  for (const file of files) {
+    const name = path.basename(file.path);
+    const existing = assets.get(name);
+    if (!existing) {
+      assets.set(name, file);
+      continue;
+    }
+    const digest = String(file.sha256 || "").replace(/^sha256:/, "");
+    const existingDigest = String(existing.sha256 || "").replace(/^sha256:/, "");
+    if (digest !== existingDigest || Number(file.size) !== Number(existing.size)) {
+      throw new Error(
+        `recovered GitHub Release asset basename collision: ${name} maps to different sealed bytes`,
+      );
+    }
+    if (
+      String(file.path).length < String(existing.path).length ||
+      (String(file.path).length === String(existing.path).length &&
+        String(file.path).localeCompare(String(existing.path)) < 0)
+    ) {
+      assets.set(name, file);
+    }
+  }
+  return [...assets.values()].sort((left, right) =>
+    path.basename(left.path).localeCompare(path.basename(right.path)),
+  );
+}
+
 export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests }) {
   const allFiles = downloads.flatMap((download) => download.files.map((file) => ({
     path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
     size: file.size,
     sha256: file.sha256.replace(/^sha256:/, ""),
     absolutePath: file.absolutePath,
+    artifactName: String(download.artifact?.name || ""),
   }))).sort((left, right) => left.path.localeCompare(right.path));
   const kind = String(publishArtifactKind || "npm");
   const releaseMatchers = splitPatterns(releasePatterns).map(patternMatcher);
-  const releaseAssets = allFiles.filter((file) => releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
+  const platformArtifactNames = new Set(
+    platformManifests.map((manifest) => String(manifest.artifactName || "")).filter(Boolean),
+  );
+  const releaseAssetFiles = kind !== "npm" && platformArtifactNames.size > 0
+    ? allFiles.filter((file) => platformArtifactNames.has(file.artifactName))
+    : allFiles;
+  const releaseAssets = deduplicateReleaseAssets(releaseAssetFiles.filter((file) =>
+    releaseMatchers.some((matcher) => matcher.test(path.basename(file.path)))));
   if (kind !== "npm") {
     createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
     const version = String(passport.target?.version || "").trim();
@@ -365,6 +431,42 @@ async function recoverCandidateEvidence({
     run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
     passport, buildSummary, chosen, downloads,
   };
+}
+
+export function exposeRecoveredPayloadRoot({ resolvedOutput, bundleRoot }) {
+  const recoveredPayloadRoot = path.join(bundleRoot, "artifacts");
+  if (!fs.existsSync(recoveredPayloadRoot) || !fs.statSync(recoveredPayloadRoot).isDirectory()) {
+    throw new Error(`recovered candidate payload root is missing: ${recoveredPayloadRoot}`);
+  }
+  const compatibilityRoot = path.join(resolvedOutput, "payloads");
+  try {
+    fs.lstatSync(compatibilityRoot);
+    if (fs.realpathSync(compatibilityRoot) !== fs.realpathSync(recoveredPayloadRoot)) {
+      throw new Error(`recovered candidate payload compatibility path is already occupied: ${compatibilityRoot}`);
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    fs.symlinkSync(path.relative(resolvedOutput, recoveredPayloadRoot), compatibilityRoot, "dir");
+  }
+  return compatibilityRoot;
+}
+
+export function exposeRecoveredPassportPath({ resolvedOutput, recoveredPassportPath }) {
+  if (!fs.existsSync(recoveredPassportPath) || !fs.statSync(recoveredPassportPath).isFile()) {
+    throw new Error(`recovered candidate passport is missing: ${recoveredPassportPath}`);
+  }
+  const recoveredPassportRoot = path.dirname(recoveredPassportPath);
+  const compatibilityRoot = path.join(resolvedOutput, "passport");
+  try {
+    fs.lstatSync(compatibilityRoot);
+    if (fs.realpathSync(compatibilityRoot) !== fs.realpathSync(recoveredPassportRoot)) {
+      throw new Error(`recovered candidate passport compatibility path is already occupied: ${compatibilityRoot}`);
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    fs.symlinkSync(path.relative(resolvedOutput, recoveredPassportRoot), compatibilityRoot, "dir");
+  }
+  return path.join(compatibilityRoot, path.basename(recoveredPassportPath));
 }
 
 async function resolveTargetAdvance({ observedTargetSha, targetSha, transactionId, existingTransaction, repoInfo, apiUrl, token, fetchImpl }) {
@@ -494,7 +596,16 @@ export async function resumeFromCandidateRun({
     if (publication.manifest) fs.writeFileSync(sealedManifestPath, `${JSON.stringify(publication.manifest, null, 2)}\n`);
     const publishRequiredArtifacts = publication.publishRequiredArtifacts;
     fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(publishRequiredArtifacts, null, 2)}\n`);
+    const payloadRoot = exposeRecoveredPayloadRoot({ resolvedOutput, bundleRoot });
+    const recoveredPassportPath = initialDownloads[0].files.find(
+      (file) => path.basename(file.path) === "release-candidate-passport.json",
+    ).absolutePath;
+    const passportPath = exposeRecoveredPassportPath({ resolvedOutput, recoveredPassportPath });
     const tarballs = publication.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
+    const githubArtifactAttestationPolicies = recoveredArtifactPathsByBasename(
+      downloads,
+      "github-artifact-attestation-policy.json",
+    );
     return {
       enabled: true,
       action: "reused",
@@ -507,10 +618,11 @@ export async function resumeFromCandidateRun({
       receipt: recovery.receipt,
       publishRequiredArtifacts,
       paths: {
-        passport: outputPath(initialDownloads[0].files.find((file) => path.basename(file.path) === "release-candidate-passport.json").absolutePath),
+        passport: outputPath(passportPath),
         buildSummary: outputPath(initialDownloads[1].files.find((file) => path.basename(file.path) === "build-summary.json").absolutePath),
-        payloads: outputPath(path.join(bundleRoot, "artifacts")),
-        platformManifests: downloads.flatMap((download) => download.files.filter((file) => path.basename(file.path) === "manifest.json").map((file) => outputPath(file.absolutePath))),
+        payloads: outputPath(payloadRoot),
+        platformManifests: platformManifestEvidence.paths.map(outputPath),
+        githubArtifactAttestationPolicies,
         npmTarballs: tarballs,
         releaseAssets: publication.releaseAssets.map((asset) => outputPath(asset.absolutePath)),
         publishRequiredArtifacts: outputPath(requiredArtifactsPath),
@@ -560,6 +672,8 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-payload-artifacts": result.artifacts.payloads.join(","),
       "release-candidate-payload-dir": result.paths.payloads,
       "release-candidate-platform-manifest-paths": result.paths.platformManifests.join(","),
+      "release-candidate-github-artifact-attestation-policy-paths": result.paths.githubArtifactAttestationPolicies.join(","),
+      "release-candidate-github-artifact-attestation-policy-count": String(result.paths.githubArtifactAttestationPolicies.length),
       "release-candidate-npm-tarball-paths": result.paths.npmTarballs.join(","),
       "release-candidate-github-release-artifact-paths": result.paths.releaseAssets.join("\n"),
       "publish-required-artifacts-json": JSON.stringify(result.publishRequiredArtifacts),

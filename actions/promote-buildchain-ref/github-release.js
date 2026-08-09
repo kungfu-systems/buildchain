@@ -338,17 +338,25 @@ export async function publishGitHubReleaseEvidence({
     channel,
   });
   if (reuseExistingCompleteEvidence) {
-    return reuseCompleteGitHubReleaseEvidence({
-      octokit,
+    const listed = await octokit.rest.repos.listReleaseAssets({
       owner,
       repo,
-      release: release.release,
-      tag,
-      target,
-      channel,
-      targetRef,
-      additionalAssetPaths,
+      release_id: release.release.id,
+      per_page: 100,
     });
+    if ((listed.data || []).some((asset) => asset?.name === "buildchain.release.json")) {
+      return reuseCompleteGitHubReleaseEvidence({
+        octokit,
+        owner,
+        repo,
+        release: release.release,
+        tag,
+        target,
+        channel,
+        targetRef,
+        additionalAssetPaths,
+      });
+    }
   }
   const assetResults = [];
   for (const assetPath of assets) {

@@ -82,7 +82,7 @@ function expectedContentType(assetPath) {
   throw new Error(`installer bundle asset type is unsupported: ${assetPath}`);
 }
 
-function validateInstallerBundle(evidence, expected, candidateSourceSha) {
+function validateInstallerBundle(evidence, expected) {
   const bundle = evidence.publication?.installerBundle;
   if (!bundle) return null;
   if (bundle.schema !== INSTALLER_BUNDLE_SCHEMA) {
@@ -101,7 +101,7 @@ function validateInstallerBundle(evidence, expected, candidateSourceSha) {
   }
   if (
     exactSha(bundle.sourceCommit, "installerBundle.sourceCommit") !==
-      candidateSourceSha ||
+      expected.candidateSourceSha ||
     !["alpha", "stable"].includes(bundle.channel)
   ) {
     throw new Error("installer bundle release identity mismatch");
@@ -225,6 +225,7 @@ function validateInstallerBundle(evidence, expected, candidateSourceSha) {
   return {
     schema: bundle.schema,
     bundleRoot,
+    sourceCommit: bundle.sourceCommit,
     manifestDigest: bundle.manifestDigest,
     channel: bundle.channel,
     channelPayloadRoot: bundle.channelPayloadRoot,
@@ -237,7 +238,7 @@ function validateInstallerBundle(evidence, expected, candidateSourceSha) {
 }
 export function validatePublicationCommitEvidence(
   evidence,
-  { version, sourceSha, releaseSha, releaseTag } = {},
+  { version, sourceSha, candidateSourceSha, releaseSha, releaseTag } = {},
 ) {
   if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) {
     throw new Error("publication commit evidence must be an object");
@@ -261,9 +262,16 @@ export function validatePublicationCommitEvidence(
     }
   }
   expected.candidateSourceSha = exactSha(
-    identity.candidateSourceSha || expected.sourceSha,
-    "identity.candidateSourceSha",
+    candidateSourceSha ?? identity.candidateSourceSha ?? expected.sourceSha,
+    "expected candidateSourceSha",
   );
+  if (
+    identity.candidateSourceSha !== undefined &&
+    exactSha(identity.candidateSourceSha, "identity.candidateSourceSha") !==
+      expected.candidateSourceSha
+  ) {
+    throw new Error("publication commit evidence candidateSourceSha mismatch");
+  }
   const publicUrl = publicHttps(evidence.publication?.url, "publication.url");
   const payloadRoot = sha256Root(
     evidence.publication?.payloadRoot,
@@ -289,7 +297,7 @@ export function validatePublicationCommitEvidence(
       "publication recovery must preserve or explicitly declare no previous authority",
     );
   }
-  const installerBundle = validateInstallerBundle(evidence, expected, expected.candidateSourceSha);
+  const installerBundle = validateInstallerBundle(evidence, expected);
   return {
     schema: SCHEMA,
     status: "passed",
@@ -409,6 +417,8 @@ async function main(args) {
     if (value === "--evidence") options.evidence = args[++index];
     else if (value === "--version") options.version = args[++index];
     else if (value === "--source-sha") options.sourceSha = args[++index];
+    else if (value === "--candidate-source-sha")
+      options.candidateSourceSha = args[++index];
     else if (value === "--release-sha") options.releaseSha = args[++index];
     else if (value === "--release-tag") options.releaseTag = args[++index];
     else throw new Error(`unknown argument: ${value}`);

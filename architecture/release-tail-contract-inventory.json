@@ -325,7 +325,7 @@
       "executionSites": [
         {
           "path": "packages/core/release-passport.js",
-          "marker": "function parseJsonCommandOutput({ command = \"\", cwd = process.cwd(), label = \"command\" } = {})"
+          "marker": "function parseJsonCommandOutput({"
         },
         {
           "path": "actions/promote-buildchain-ref/lib.js",
