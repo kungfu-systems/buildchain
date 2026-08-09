@@ -179,7 +179,7 @@ test("closed contracts exclude provider ids, artifact ids, paths, credentials, a
 
 test("Rust and JavaScript accept the shared roots and reject typed invalid fixtures", () => {
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

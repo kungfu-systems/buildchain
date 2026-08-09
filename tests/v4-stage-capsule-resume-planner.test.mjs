@@ -49,7 +49,7 @@ test("late platform failure restores completed work and rebuilds only the missin
 
 test("same explicit observations produce byte-identical Rust and JavaScript plans", () => {
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",
@@ -74,7 +74,7 @@ test("Rust and JavaScript emit the same causal invalidation roots", () => {
   changed.nodes[0].expectedIdentity.sourceRoot =
     "sha256:0000000000000000000000000000000000000000000000000000000000000000";
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

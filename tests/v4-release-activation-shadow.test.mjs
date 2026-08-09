@@ -162,7 +162,7 @@ test("Rust and TypeScript produce byte-equivalent plans, folds, and roots", () =
   ];
   const typescript = projectV4ReleaseActivation(request);
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",
@@ -195,7 +195,7 @@ test("ASCII step ordering is byte-stable across the Rust and TypeScript boundary
     ["a-z", "aa"],
   );
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

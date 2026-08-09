@@ -112,7 +112,7 @@ test("store contracts freeze byte-identical JavaScript and Rust roots", () => {
     );
 
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

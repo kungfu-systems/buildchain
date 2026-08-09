@@ -108,7 +108,7 @@ test("all provider conflict, malformed, and root mismatch fixtures fail closed",
 test("Rust and TypeScript produce byte-equivalent readback folds and typed failures", () => {
   const typescript = projectV4ProviderReadbackFixtures(fixtures);
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

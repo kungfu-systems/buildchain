@@ -46,7 +46,7 @@ test("provider operation retries preserve logical identity and append distinct a
 test("Rust and TypeScript produce byte-equivalent roots and typed failures", () => {
   const typescript = projectV4ProviderOperationFixtures(fixtures);
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

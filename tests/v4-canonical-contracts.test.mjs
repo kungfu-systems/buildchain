@@ -147,7 +147,7 @@ test("the checked-in schema suite is closed and freezes every v1 byte rule", () 
 
 test("Rust and JavaScript produce byte-identical fixture projections", () => {
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

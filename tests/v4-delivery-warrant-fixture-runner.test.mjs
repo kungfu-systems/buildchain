@@ -29,7 +29,7 @@ function readFixture(name) {
 
 function rustRunner(bytes) {
   return spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

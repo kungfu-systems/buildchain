@@ -32,7 +32,7 @@ function expectFault(request, code) {
 
 function rustProjection(request) {
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",
