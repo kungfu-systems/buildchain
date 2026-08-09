@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-provider-operation-journal-architecture",
+  "schemaAuthority": "contracts/v4-provider-operation-journal-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-provider-operation-journal-v1/shared.json",
+  "mode": "shadow-fixture-only",
+  "authority": {
+    "productionWriter": "typescript-v3",
+    "productionWriterCount": 1,
+    "stateFoldAuthority": "rust-shadow-core",
+    "stateFoldWriterCount": 1,
+    "typescript": "contract-and-conformance-plane",
+    "productionWriteChange": false
+  },
+  "implementations": {
+    "rustContract": "crates/buildchain-v4-contracts/src/provider_operation_journal.rs",
+    "rustFold": "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs",
+    "typescript": "packages/core/v4-provider-operation-journal.js"
+  },
+  "roots": [
+    "provider-operation-identity",
+    "provider-operation-intent",
+    "provider-operation-attempt",
+    "provider-operation-observation",
+    "provider-operation-confirmation",
+    "provider-operation-reconciliation",
+    "provider-operation-journal",
+    "provider-operation-journal-state"
+  ],
+  "identityIncludes": [
+    "transactionRoot",
+    "capabilityId",
+    "subjectRoot",
+    "targetRoot",
+    "authorityRoot",
+    "policyRoot"
+  ],
+  "identityExcludes": [
+    "attemptOrdinal",
+    "providerRunId",
+    "providerRequestId",
+    "providerResourceId",
+    "credential",
+    "signedUrl",
+    "ambientClock",
+    "networkResponseBody",
+    "runnerPath",
+    "transportLocalId"
+  ],
+  "appendOnly": {
+    "sequence": "zero-based-contiguous",
+    "causalLink": "priorEntryRoot",
+    "retryIdentity": "operationRoot",
+    "attemptIdentity": "entryRoot",
+    "observationEvidence": "non-empty-sorted-root-set"
+  },
+  "foldRejects": [
+    "impossible-transition",
+    "non-contiguous-sequence",
+    "causal-link-mismatch",
+    "logical-operation-identity-drift",
+    "confirmation-without-rooted-success-observation",
+    "conflicting-terminal-confirmation",
+    "authority-root-escalation",
+    "observation-disposition-conflict"
+  ],
+  "budgets": {
+    "schemaAuthorities": 1,
+    "stateFoldWriters": 1,
+    "secondStateFoldWriters": 0,
+    "providerSdkImportsInContracts": 0,
+    "providerSdkImportsInRustDomain": 0,
+    "liveProviderMutations": 0,
+    "productionWriteAuthorityChanges": 0,
+    "v3ConsumerBehaviorChanges": 0
+  },
+  "successors": [
+    "provider-readback-idempotency-adapters",
+    "release-activation-shadow-domain",
+    "stable-candidate-publication-fencing-shadow",
+    "partial-mutation-recovery-qualification"
+  ]
+}

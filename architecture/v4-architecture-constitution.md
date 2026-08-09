@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-09
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -127,3 +127,20 @@ six real-runner shadow campaigns and one exact terminal reconciliation. A
 qualification root is evidence only: TypeScript v3 remains production
 authority, retained state is non-destructive, and production reuse, provider
 effects, release effects, and public cutover remain outside this transition.
+
+## 9. Wave 3 provider operation journal
+
+The executable provider operation journal contract is
+[`v4-provider-operation-journal-contract.json`](v4-provider-operation-journal-contract.json).
+It freezes one closed schema authority and one Rust shadow state-fold authority
+for append-only intent, attempt, rooted observation, confirmation, and
+reconciliation records. The TypeScript plane performs contract and conformance
+projection against the same fixtures; v3 remains the sole production writer.
+
+Logical operation identity excludes attempt ordinals and mutable provider or
+runner facts. Every retry preserves `operationRoot`, while every attempt and
+observation has a distinct causal entry root. The fold rejects impossible
+transitions, non-append sequence, confirmation without successful rooted
+observation, conflicting confirmation, reconciliation disagreement, and
+authority-root escalation. Provider SDK imports, live mutations, production
+write-authority changes, and v3 behavior changes retain hard-zero budgets.

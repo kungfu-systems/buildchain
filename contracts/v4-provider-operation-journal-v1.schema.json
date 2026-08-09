@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-provider-operation-journal-v1.schema.json",
+  "title": "Buildchain v4 provider operation journal contract suite",
+  "description": "The sole closed schema authority for append-only shadow intent, attempt, rooted observation, confirmation, reconciliation, and deterministic journal state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "identity", "entry", "state"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "identity": { "$ref": "#/$defs/identity" },
+    "entry": { "$ref": "#/$defs/entry" },
+    "state": { "$ref": "#/$defs/state" }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "clock": {
+      "type": "string",
+      "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "transactionRoot",
+        "capabilityId",
+        "subjectRoot",
+        "targetRoot",
+        "authorityRoot",
+        "policyRoot"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-provider-operation-identity/v1" },
+        "transactionRoot": { "$ref": "#/$defs/root" },
+        "capabilityId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
+        },
+        "subjectRoot": { "$ref": "#/$defs/root" },
+        "targetRoot": { "$ref": "#/$defs/root" },
+        "authorityRoot": { "$ref": "#/$defs/root" },
+        "policyRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "entryBase": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema",
+        "sequence",
+        "priorEntryRoot",
+        "operationRoot",
+        "entryRoot"
+      ],
+      "properties": {
+        "kind": { "$ref": "#/$defs/token" },
+        "schema": { "type": "string", "minLength": 1 },
+        "sequence": { "$ref": "#/$defs/sequence" },
+        "priorEntryRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "operationRoot": { "$ref": "#/$defs/root" },
+        "entryRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "intent": {
+      "allOf": [
+        { "$ref": "#/$defs/entryBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "sequence",
+            "priorEntryRoot",
+            "operation",
+            "operationRoot",
+            "declaredAt",
+            "inputRoot",
+            "entryRoot"
+          ],
+          "properties": {
+            "kind": { "const": "intent" },
+            "schema": { "const": "buildchain-v4-provider-operation-intent/v1" },
+            "sequence": { "const": 0 },
+            "priorEntryRoot": { "type": "null" },
+            "operation": { "$ref": "#/$defs/identity" },
+            "operationRoot": { "$ref": "#/$defs/root" },
+            "declaredAt": { "$ref": "#/$defs/clock" },
+            "inputRoot": { "$ref": "#/$defs/root" },
+            "entryRoot": { "$ref": "#/$defs/root" }
+          }
+        }
+      ]
+    },
+    "attempt": {
+      "allOf": [
+        { "$ref": "#/$defs/entryBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "sequence",
+            "priorEntryRoot",
+            "operationRoot",
+            "attemptOrdinal",
+            "attemptedAt",
+            "effectRoot",
+            "entryRoot"
+          ],
+          "properties": {
+            "kind": { "const": "attempt" },
+            "schema": {
+              "const": "buildchain-v4-provider-operation-attempt/v1"
+            },
+            "sequence": { "$ref": "#/$defs/sequence" },
+            "priorEntryRoot": { "$ref": "#/$defs/root" },
+            "operationRoot": { "$ref": "#/$defs/root" },
+            "attemptOrdinal": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "attemptedAt": { "$ref": "#/$defs/clock" },
+            "effectRoot": { "$ref": "#/$defs/root" },
+            "entryRoot": { "$ref": "#/$defs/root" }
+          }
+        }
+      ]
+    },
+    "observation": {
+      "allOf": [
+        { "$ref": "#/$defs/entryBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "sequence",
+            "priorEntryRoot",
+            "operationRoot",
+            "attemptRoot",
+            "observedAt",
+            "status",
+            "evidenceRoots",
+            "entryRoot"
+          ],
+          "properties": {
+            "kind": { "const": "observation" },
+            "schema": {
+              "const": "buildchain-v4-provider-operation-observation/v1"
+            },
+            "sequence": { "$ref": "#/$defs/sequence" },
+            "priorEntryRoot": { "$ref": "#/$defs/root" },
+            "operationRoot": { "$ref": "#/$defs/root" },
+            "attemptRoot": { "$ref": "#/$defs/root" },
+            "observedAt": { "$ref": "#/$defs/clock" },
+            "status": { "enum": ["succeeded", "failed", "unknown"] },
+            "evidenceRoots": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/root" }
+            },
+            "entryRoot": { "$ref": "#/$defs/root" }
+          }
+        }
+      ]
+    },
+    "confirmation": {
+      "allOf": [
+        { "$ref": "#/$defs/entryBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "sequence",
+            "priorEntryRoot",
+            "operationRoot",
+            "observationRoot",
+            "authorityRoot",
+            "confirmedAt",
+            "outcome",
+            "entryRoot"
+          ],
+          "properties": {
+            "kind": { "const": "confirmation" },
+            "schema": {
+              "const": "buildchain-v4-provider-operation-confirmation/v1"
+            },
+            "sequence": { "$ref": "#/$defs/sequence" },
+            "priorEntryRoot": { "$ref": "#/$defs/root" },
+            "operationRoot": { "$ref": "#/$defs/root" },
+            "observationRoot": { "$ref": "#/$defs/root" },
+            "authorityRoot": { "$ref": "#/$defs/root" },
+            "confirmedAt": { "$ref": "#/$defs/clock" },
+            "outcome": { "enum": ["confirmed", "rejected"] },
+            "entryRoot": { "$ref": "#/$defs/root" }
+          }
+        }
+      ]
+    },
+    "reconciliation": {
+      "allOf": [
+        { "$ref": "#/$defs/entryBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "sequence",
+            "priorEntryRoot",
+            "operationRoot",
+            "observationRoot",
+            "authorityRoot",
+            "reconciledAt",
+            "disposition",
+            "entryRoot"
+          ],
+          "properties": {
+            "kind": { "const": "reconciliation" },
+            "schema": {
+              "const": "buildchain-v4-provider-operation-reconciliation/v1"
+            },
+            "sequence": { "$ref": "#/$defs/sequence" },
+            "priorEntryRoot": { "$ref": "#/$defs/root" },
+            "operationRoot": { "$ref": "#/$defs/root" },
+            "observationRoot": { "$ref": "#/$defs/root" },
+            "authorityRoot": { "$ref": "#/$defs/root" },
+            "reconciledAt": { "$ref": "#/$defs/clock" },
+            "disposition": { "enum": ["retry", "confirm", "terminal"] },
+            "entryRoot": { "$ref": "#/$defs/root" }
+          }
+        }
+      ]
+    },
+    "entry": {
+      "oneOf": [
+        { "$ref": "#/$defs/intent" },
+        { "$ref": "#/$defs/attempt" },
+        { "$ref": "#/$defs/observation" },
+        { "$ref": "#/$defs/confirmation" },
+        { "$ref": "#/$defs/reconciliation" }
+      ]
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operationRoot",
+        "phase",
+        "entryCount",
+        "attemptCount",
+        "lastEntryRoot",
+        "activeAttemptRoot",
+        "lastObservationRoot",
+        "confirmationRoot",
+        "reconciliationRoot"
+      ],
+      "properties": {
+        "schema": {
+          "const": "buildchain-v4-provider-operation-journal-state/v1"
+        },
+        "operationRoot": { "$ref": "#/$defs/root" },
+        "phase": {
+          "enum": [
+            "intended",
+            "attempting",
+            "observed",
+            "retryable",
+            "confirmable",
+            "confirmed",
+            "rejected",
+            "terminal"
+          ]
+        },
+        "entryCount": { "$ref": "#/$defs/sequence" },
+        "attemptCount": { "$ref": "#/$defs/sequence" },
+        "lastEntryRoot": { "$ref": "#/$defs/root" },
+        "activeAttemptRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "lastObservationRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "confirmationRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "reconciliationRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        }
+      }
+    }
+  }
+}
