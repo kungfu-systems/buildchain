@@ -1,0 +1,155 @@
+{
+  "schema": "buildchain-v4-partial-mutation-recovery-fixtures/v1",
+  "baseRequest": {
+    "schema": "buildchain-v4-partial-mutation-recovery-request/v1",
+    "evaluatedAt": "2026-08-09T09:30:00.000Z",
+    "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "policyRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "platformRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "qualificationRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "maxAttempts": 3,
+    "compensableBoundaryRoots": [
+      "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "stageResume": {
+      "schema": "buildchain-v4-stage-capsule-resume-evidence/v1",
+      "planRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "policyRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "platformRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "qualificationRoots": [
+        "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+      ],
+      "decisions": [
+        { "stageKey": "build", "decision": "reuse", "reasonCode": "eligible" },
+        { "stageKey": "verify", "decision": "reuse", "reasonCode": "eligible" }
+      ]
+    },
+    "activation": {
+      "schema": "buildchain-v4-release-activation-recovery-evidence/v1",
+      "planRoot": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "stateRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "qualificationRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "policyRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "steps": [
+        {
+          "stepId": "github-release",
+          "operationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "phase": "planned",
+          "journalRoot": null,
+          "journalStateRoot": null,
+          "compensationBoundaryRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "attemptCount": 0
+        },
+        {
+          "stepId": "npm-package",
+          "operationRoot": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "phase": "planned",
+          "journalRoot": null,
+          "journalStateRoot": null,
+          "compensationBoundaryRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "attemptCount": 0
+        },
+        {
+          "stepId": "oci-image",
+          "operationRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "phase": "planned",
+          "journalRoot": null,
+          "journalStateRoot": null,
+          "compensationBoundaryRoot": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "attemptCount": 0
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "no-effect-failure",
+      "steps": [
+        { "stepId": "github-release", "phase": "retryable", "attemptCount": 1 },
+        { "stepId": "npm-package", "phase": "confirmed", "attemptCount": 1 },
+        { "stepId": "oci-image", "phase": "confirmed", "attemptCount": 1 }
+      ],
+      "expectedClassification": "retry",
+      "expectedNextStepIds": ["github-release"]
+    },
+    {
+      "id": "applied-but-unobserved",
+      "steps": [
+        {
+          "stepId": "github-release",
+          "phase": "attempting",
+          "attemptCount": 1
+        },
+        { "stepId": "npm-package", "phase": "confirmed", "attemptCount": 1 },
+        { "stepId": "oci-image", "phase": "confirmed", "attemptCount": 1 }
+      ],
+      "expectedClassification": "wait",
+      "expectedNextStepIds": ["github-release"]
+    },
+    {
+      "id": "observed-but-unconfirmed",
+      "steps": [
+        { "stepId": "github-release", "phase": "observed", "attemptCount": 1 },
+        { "stepId": "npm-package", "phase": "confirmed", "attemptCount": 1 },
+        { "stepId": "oci-image", "phase": "confirmed", "attemptCount": 1 }
+      ],
+      "expectedClassification": "reconcile",
+      "expectedNextStepIds": ["github-release"]
+    },
+    {
+      "id": "partial-multi-provider",
+      "steps": [
+        { "stepId": "github-release", "phase": "confirmed", "attemptCount": 1 },
+        { "stepId": "npm-package", "phase": "planned", "attemptCount": 0 },
+        { "stepId": "oci-image", "phase": "terminal", "attemptCount": 1 }
+      ],
+      "compensableBoundaryRoots": [
+        "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      ],
+      "expectedClassification": "compensate",
+      "expectedNextStepIds": ["oci-image", "npm-package"]
+    },
+    {
+      "id": "noncompensable-terminal",
+      "steps": [
+        { "stepId": "github-release", "phase": "terminal", "attemptCount": 1 },
+        { "stepId": "npm-package", "phase": "confirmed", "attemptCount": 1 },
+        { "stepId": "oci-image", "phase": "confirmed", "attemptCount": 1 }
+      ],
+      "compensableBoundaryRoots": [],
+      "expectedClassification": "escalate",
+      "expectedNextStepIds": ["github-release"]
+    },
+    {
+      "id": "repeated-terminal-resume",
+      "steps": [
+        { "stepId": "github-release", "phase": "confirmed", "attemptCount": 1 },
+        { "stepId": "npm-package", "phase": "confirmed", "attemptCount": 1 },
+        { "stepId": "oci-image", "phase": "confirmed", "attemptCount": 1 }
+      ],
+      "expectedClassification": "terminal-noop",
+      "expectedNextStepIds": []
+    },
+    {
+      "id": "attempt-budget-exhausted",
+      "steps": [
+        { "stepId": "github-release", "phase": "retryable", "attemptCount": 3 },
+        { "stepId": "npm-package", "phase": "confirmed", "attemptCount": 1 },
+        { "stepId": "oci-image", "phase": "confirmed", "attemptCount": 1 }
+      ],
+      "expectedClassification": "escalate",
+      "expectedNextStepIds": ["github-release"]
+    }
+  ],
+  "stageFailureCases": [
+    {
+      "id": "missing-stage",
+      "decision": "rebuild",
+      "reasonCode": "unavailable"
+    },
+    { "id": "expired-stage", "decision": "rebuild", "reasonCode": "expired" },
+    { "id": "corrupt-stage", "decision": "reject", "reasonCode": "corrupt" }
+  ]
+}
