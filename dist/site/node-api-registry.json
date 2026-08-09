@@ -8252,7 +8252,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-gate.js",
-        "line": 1001
+        "line": 1000
       },
       "example": "import { createKfd1ReleaseGateEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21662,7 +21662,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd-gate",
       "export": "./kfd-gate",
       "target": "./packages/core/kfd-gate.js",
-      "digest": "sha256:84f92f7ef28478295c4b4cd674096793f25acf1fb4ffa117caff6035a19adc48",
+      "digest": "sha256:0ee7f76d04f9b77a63ec2cc12cec8e804da47b8ef81075982feb351346ac3d5b",
       "summary": "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -22188,7 +22188,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:2b2d92de2741d668acc239e9cb4633f34a7c8ea3efc63c92a2bb2e0ecf128762"
+      "digest": "sha256:3123b28a9ad2a380dbe3ee67276e5e5ad10d7f23567ea40b4e9b00a4aaee2a17"
     },
     {
       "id": "build-facts",

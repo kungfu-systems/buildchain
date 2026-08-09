@@ -7903,7 +7903,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
     "workflowRegistryDigest": "3465688cf20cf1733aa4f21861bf41981b41cc8ea7032d411b1463c4dc4625ef",
-    "pageRegistryDigest": "695217b40ab27c680f5b138d2e8f0948d81fc573abe5f6a596a294e822dec2b3"
+    "pageRegistryDigest": "333f665c697ffe131594693bd046a80ff32f77d56612350d16e7397a980b097e"
   },
   "comparison": {
     "missingCliRegistry": [],
