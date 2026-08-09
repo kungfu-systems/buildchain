@@ -542,12 +542,12 @@ jobs:
                 -f event=pull_request \
                 -f status=completed \
                 -f per_page=100)"
-              source_run_count="$(jq --argjson pr "$selected_pr" '[.workflow_runs[] | select(.conclusion == "success" and any(.pull_requests[]?; .number == $pr))] | length' <<<"$source_runs")"
-              if [ "$source_run_count" -ne 1 ]; then
-                echo "::error::Legacy active Warrant source recovery requires exactly one successful $SOURCE_WORKFLOW_ID run for PR #$selected_pr at $selected_head; found $source_run_count"
+              source_run_candidates="$(jq --argjson pr "$selected_pr" --arg head "$selected_head" '[.workflow_runs[] | select(.conclusion == "success" and .head_sha == $head and any(.pull_requests[]?; .number == $pr))] | sort_by(.id)' <<<"$source_runs")"
+              if [ "$(jq 'length' <<<"$source_run_candidates")" -eq 0 ]; then
+                echo "::error::Legacy active Warrant source recovery requires a successful $SOURCE_WORKFLOW_ID run for PR #$selected_pr at $selected_head; found none"
                 exit 1
               fi
-              source_run_id="$(jq -er --argjson pr "$selected_pr" '.workflow_runs[] | select(.conclusion == "success" and any(.pull_requests[]?; .number == $pr)) | .id' <<<"$source_runs")"
+              source_run_id="$(jq -er 'last | .id' <<<"$source_run_candidates")"
             fi
             gh workflow run "$HANDOFF_WORKFLOW_ID" \
               --repo "$GITHUB_REPOSITORY" \
