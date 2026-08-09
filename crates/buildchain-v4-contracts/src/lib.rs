@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+mod partial_mutation_recovery;
 mod provider_operation_journal;
 mod provider_readback_idempotency;
 mod release_activation_shadow;
@@ -14,6 +15,11 @@ mod stage_capsule_store;
 mod trace;
 mod warrant;
 
+pub use partial_mutation_recovery::{
+    PARTIAL_MUTATION_RECOVERY_PLAN_CONTRACT, PARTIAL_MUTATION_RECOVERY_REQUEST_CONTRACT,
+    PartialMutationRecoveryPlan, PartialMutationRecoveryRequest, plan_partial_mutation_recovery,
+    plan_partial_mutation_recovery_bytes,
+};
 pub use provider_operation_journal::{
     ProviderOperationEntry, ProviderOperationFixtureProjection, ProviderOperationIdentity,
     ProviderOperationJournalState, fold_provider_operation_journal,
@@ -129,6 +135,8 @@ const ROOT_DOMAINS: &[&str] = &[
     "stable-publication-target",
     "stable-publication-plan",
     "stable-publication-fence",
+    "partial-mutation-recovery-checkpoint",
+    "partial-mutation-recovery-plan",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

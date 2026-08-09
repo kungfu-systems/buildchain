@@ -187,3 +187,21 @@ a qualifier authority distinct from the publisher authority. Stable refs, npm
 tags, OCI tags, and GitHub Releases remain target-shaped facts only. The fence
 emits zero effects, performs no network or credential operation, changes no
 public or protected ref, and preserves TypeScript v3 as sole production writer.
+
+## 12. Wave 3 partial-mutation recovery qualification
+
+The executable recovery qualification boundary is
+[`v4-partial-mutation-recovery-qualification.json`](v4-partial-mutation-recovery-qualification.json).
+It consumes retained Stage Capsule resume evidence and release-activation journal
+state only after exact source, policy, platform, qualification, plan, state,
+operation, journal, and compensation-boundary roots agree.
+
+Every nonterminal operation maps deterministically to `retry`, `wait`,
+`reconcile`, `compensate`, or `escalate`; confirmed operations are permanent
+`terminal-noop` facts and never re-enter the next-operation set. Missing,
+expired, corrupt, conflicting, cross-boundary, or attempt-budget-exhausted
+evidence fails closed at an exact Stage Capsule or provider-operation
+checkpoint. The Rust domain is the sole shadow planner and TypeScript is a
+byte-equivalent projection. Both are pure: they perform zero provider,
+filesystem, network, credential, ref, package, image, or release mutation, and
+v3 remains the sole production writer.

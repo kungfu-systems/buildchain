@@ -59,7 +59,9 @@
     "crates/buildchain-v4-contracts/src/release_activation_shadow/model.rs",
     "crates/buildchain-v4-contracts/src/release_activation_shadow/journal.rs",
     "packages/core/v4-stable-publication-fence.js",
-    "crates/buildchain-v4-contracts/src/stable_publication_fence.rs"
+    "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
+    "packages/core/v4-partial-mutation-recovery-qualification.js",
+    "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs"
   ],
   "ownershipRules": [
     {
@@ -374,6 +376,7 @@
         "packages/core/v4-provider-readback-idempotency.js",
         "packages/core/v4-release-activation-shadow.js",
         "packages/core/v4-stable-publication-fence.js",
+        "packages/core/v4-partial-mutation-recovery-qualification.js",
         "packages/core/v4-stage-capsule.js",
         "packages/core/v4-stage-capsule-store.js",
         "packages/core/v4-stage-capsule-local-store.js",
@@ -390,7 +393,8 @@
         "crates/buildchain-v4-contracts/src/release_activation_shadow.rs",
         "crates/buildchain-v4-contracts/src/release_activation_shadow/model.rs",
         "crates/buildchain-v4-contracts/src/release_activation_shadow/journal.rs",
-        "crates/buildchain-v4-contracts/src/stable_publication_fence.rs"
+        "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
+        "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs"
       ],
       "tests": [
         "tests/v4-architecture.test.mjs",
@@ -399,6 +403,7 @@
         "tests/v4-provider-readback-idempotency.test.mjs",
         "tests/v4-release-activation-shadow.test.mjs",
         "tests/v4-stable-publication-fence.test.mjs",
+        "tests/v4-partial-mutation-recovery-qualification.test.mjs",
         "tests/v4-stage-capsule.test.mjs",
         "tests/v4-stage-capsule-store.test.mjs",
         "tests/v4-platform-stage-checkpoints.test.mjs",
@@ -414,6 +419,7 @@
         "architecture/v4-provider-operation-journal-contract.json",
         "architecture/v4-release-activation-shadow-domain.json",
         "architecture/v4-stable-publication-fence.json",
+        "architecture/v4-partial-mutation-recovery-qualification.json",
         "architecture/v4-stage-capsule-contract.json",
         "architecture/v4-stage-capsule-store-contract.json",
         "architecture/v4-platform-stage-checkpoints.json",
@@ -422,6 +428,7 @@
         "contracts/v4-provider-operation-journal-v1.schema.json",
         "contracts/v4-release-activation-shadow-v1.schema.json",
         "contracts/v4-stable-publication-fence-v1.schema.json",
+        "contracts/v4-partial-mutation-recovery-v1.schema.json",
         "contracts/v4-stage-capsule-v1.schema.json",
         "contracts/v4-stage-capsule-store-v1.schema.json",
         "contracts/fixtures/v4-stage-capsule-v1/shared.json",
@@ -430,6 +437,7 @@
         "contracts/fixtures/v4-provider-readback-idempotency-v1/shared.json",
         "contracts/fixtures/v4-release-activation-shadow-v1/shared.json",
         "contracts/fixtures/v4-stable-publication-fence-v1/shared.json",
+        "contracts/fixtures/v4-partial-mutation-recovery-v1/shared.json",
         "docs/v4-stage-capsule.md"
       ]
     }

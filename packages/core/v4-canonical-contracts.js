@@ -54,6 +54,8 @@ const ROOT_DOMAINS = new Set([
   "stable-publication-target",
   "stable-publication-plan",
   "stable-publication-fence",
+  "partial-mutation-recovery-checkpoint",
+  "partial-mutation-recovery-plan",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",

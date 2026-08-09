@@ -5,7 +5,8 @@ use std::io::Read;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use buildchain_v4_contracts::{
-    EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root, plan_stage_capsule_resume_bytes,
+    EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root,
+    plan_partial_mutation_recovery_bytes, plan_stage_capsule_resume_bytes,
     project_delivery_warrant_state_bytes, project_release_activation_bytes,
     project_stable_publication_bytes, run_delivery_warrant_trace_fixture,
     run_provider_operation_journal_fixture, run_provider_readback_fixture,
@@ -339,6 +340,19 @@ fn run_stable_publication_request(request_path: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn run_partial_mutation_recovery_request(request_path: &str) -> Result<(), String> {
+    let bytes = if request_path == "-" {
+        read_stdin()?
+    } else {
+        fs::read(request_path).map_err(|error| format!("cannot read recovery request: {error}"))?
+    };
+    let plan = plan_partial_mutation_recovery_bytes(&bytes)
+        .map_err(|fault| format!("{} at {}: {}", fault.code, fault.path, fault.message))?;
+    serde_json::to_writer(std::io::stdout().lock(), &plan).map_err(|error| error.to_string())?;
+    println!();
+    Ok(())
+}
+
 fn read_stdin() -> Result<Vec<u8>, String> {
     let mut bytes = Vec::new();
     std::io::stdin()
@@ -465,7 +479,10 @@ fn run() -> Result<(), String> {
         [command, request_path] if command == "stable-publication" => {
             run_stable_publication_request(request_path)
         }
-        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store|provider-operation-journal|provider-readback|resume-plan|release-activation|stable-publication INPUT.json|host]".to_owned()),
+        [command, request_path] if command == "partial-mutation-recovery" => {
+            run_partial_mutation_recovery_request(request_path)
+        }
+        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store|provider-operation-journal|provider-readback|resume-plan|release-activation|stable-publication|partial-mutation-recovery INPUT.json|host]".to_owned()),
     }
 }
 
