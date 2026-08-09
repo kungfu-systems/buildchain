@@ -7,6 +7,7 @@ use sha2::{Digest, Sha256};
 mod provider_operation_journal;
 mod provider_readback_idempotency;
 mod release_activation_shadow;
+mod stable_publication_fence;
 mod stage_capsule;
 mod stage_capsule_resume;
 mod stage_capsule_store;
@@ -29,6 +30,13 @@ pub use release_activation_shadow::{
     ReleaseActivationPlanStep, ReleaseActivationProjection, ReleaseActivationRequest,
     ReleaseActivationState, ReleaseActivationStep, ReleaseActivationStepState,
     project_release_activation, project_release_activation_bytes,
+};
+pub use stable_publication_fence::{
+    STABLE_PUBLICATION_FENCE_CONTRACT, STABLE_PUBLICATION_PLAN_CONTRACT,
+    STABLE_PUBLICATION_REQUEST_CONTRACT, StablePublicationCandidate, StablePublicationFence,
+    StablePublicationPlan, StablePublicationPlanTarget, StablePublicationProjection,
+    StablePublicationQualification, StablePublicationQualifiedEvidence, StablePublicationRequest,
+    StablePublicationTarget, project_stable_publication, project_stable_publication_bytes,
 };
 
 pub use stage_capsule::{
@@ -116,6 +124,11 @@ const ROOT_DOMAINS: &[&str] = &[
     "release-activation-step",
     "release-activation-plan",
     "release-activation-state",
+    "stable-publication-candidate",
+    "stable-publication-qualification",
+    "stable-publication-target",
+    "stable-publication-plan",
+    "stable-publication-fence",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

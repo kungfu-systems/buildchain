@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-stable-publication-fence-v1.schema.json",
+  "title": "Buildchain v4 stable publication shadow fence request",
+  "description": "The sole closed schema authority for independently qualified stable-candidate publication planning. It grants no provider, ref, package, image, release, or production write authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "declaredAt",
+    "candidate",
+    "qualification",
+    "publisherAuthorityRoot",
+    "targets"
+  ],
+  "properties": {
+    "schema": { "const": "buildchain-v4-stable-publication-request/v1" },
+    "declaredAt": { "$ref": "#/$defs/clock" },
+    "candidate": { "$ref": "#/$defs/candidate" },
+    "qualification": { "$ref": "#/$defs/qualification" },
+    "publisherAuthorityRoot": { "$ref": "#/$defs/root" },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/target" }
+    }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "clock": {
+      "type": "string",
+      "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "rootSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/root" }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generation",
+        "commit",
+        "sourceRoot",
+        "metadataRoot",
+        "journalRoot",
+        "protectedAncestryRoot"
+      ],
+      "properties": {
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "sourceRoot": { "$ref": "#/$defs/root" },
+        "metadataRoot": { "$ref": "#/$defs/root" },
+        "journalRoot": { "$ref": "#/$defs/root" },
+        "protectedAncestryRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "authorityGeneration",
+        "qualifiedCandidateRoot",
+        "qualifierAuthorityRoot",
+        "sealRoot",
+        "sourceRoot",
+        "metadataRoot",
+        "journalRoot",
+        "protectedAncestryRoot",
+        "providerConfirmationRoots"
+      ],
+      "properties": {
+        "mode": { "enum": ["n-minus-one", "independent-seal"] },
+        "authorityGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "qualifiedCandidateRoot": { "$ref": "#/$defs/root" },
+        "qualifierAuthorityRoot": { "$ref": "#/$defs/root" },
+        "sealRoot": { "$ref": "#/$defs/root" },
+        "sourceRoot": { "$ref": "#/$defs/root" },
+        "metadataRoot": { "$ref": "#/$defs/root" },
+        "journalRoot": { "$ref": "#/$defs/root" },
+        "protectedAncestryRoot": { "$ref": "#/$defs/root" },
+        "providerConfirmationRoots": { "$ref": "#/$defs/rootSet" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "desired", "providerConfirmationRoot"],
+      "properties": {
+        "id": { "$ref": "#/$defs/token" },
+        "kind": {
+          "enum": ["stable-ref", "npm-tag", "oci-tag", "github-release"]
+        },
+        "desired": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "^[!-~]+$"
+        },
+        "providerConfirmationRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}
