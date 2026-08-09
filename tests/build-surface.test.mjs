@@ -620,6 +620,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-runner-burst-core\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-windows-jit-core\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-macos-jit-core\.mjs/);
+  assert.doesNotMatch(
+    fs.readFileSync(path.resolve(import.meta.dirname, "..", "scripts", "git-fetch-process-tree.mjs"), "utf8"),
+    /from\s+["']\.\.\//,
+    "the flattened runtime bootstrap must not import files outside scripts/",
+  );
   assert.equal((workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length, 0);
   assert.equal(
     (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-controller\.mjs seal/g) || []).length,

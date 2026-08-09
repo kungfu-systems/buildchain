@@ -1,15 +1,31 @@
 #!/usr/bin/env node
 import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import {
-  resolveSpawnCommand,
-  usesShellForSpawnCommand,
-} from "../packages/core/spawn-command.js";
 
 const INTERNAL_COMMAND = "--buildchain-internal-git-fetch";
 const TIMEOUT_EXIT_CODE = 124;
 const scriptPath = fileURLToPath(import.meta.url);
+
+function cmdQuote(value) {
+  const text = String(value);
+  if (/^[A-Za-z0-9_./:\\-]+$/u.test(text)) return text;
+  return `"${text.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/g, "$1$1")}"`;
+}
+
+function resolveGitInvocation(args, env = process.env) {
+  if (process.platform !== "win32") return { command: "git", args };
+  const gitShim = String(env.PATH || "")
+    .split(path.delimiter)
+    .map((directory) => path.join(directory, "git.cmd"))
+    .find((candidate) => fs.existsSync(candidate));
+  if (!gitShim) return { command: "git", args };
+  return {
+    command: env.ComSpec || process.env.ComSpec || "cmd.exe",
+    args: ["/d", "/s", "/c", [gitShim, ...args].map(cmdQuote).join(" ")],
+  };
+}
 
 async function terminateProcessTree(child, graceMs) {
   if (!child?.pid) return;
@@ -67,11 +83,11 @@ async function runInternalGitFetch() {
     50,
     Number(process.env.BUILDCHAIN_GIT_TIMEOUT_GRACE_MS || 2000),
   );
-  const child = spawn(resolveSpawnCommand("git"), payload.args, {
+  const invocation = resolveGitInvocation(payload.args);
+  const child = spawn(invocation.command, invocation.args, {
     cwd: payload.cwd,
     env: process.env,
     detached: process.platform !== "win32",
-    shell: usesShellForSpawnCommand("git"),
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
