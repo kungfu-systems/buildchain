@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   DEFAULT_ARTIFACT_NAME_TEMPLATE,
   LINUX_CONTAINER_PRESETS,
@@ -94,7 +95,7 @@ import {
 } from "../packages/core/diagnostics.js";
 
 const root = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
+  path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
 
