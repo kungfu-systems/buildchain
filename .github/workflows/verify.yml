@@ -116,10 +116,7 @@ jobs:
       - name: Restore exact commit bytes for real lifecycle dogfood
         if: matrix.consumer == 'buildchain-self-dogfood' && runner.os == 'Windows'
         shell: bash
-        run: |
-          git config --local core.autocrlf false
-          git config --local core.eol lf
-          git checkout-index --all --force
+        run: git config --local core.autocrlf false && git config --local core.eol lf && git ls-files -z | xargs -0 rm -f && git checkout-index --all --force
       - name: Run real declared verify lifecycle
         if: matrix.consumer == 'buildchain-self-dogfood'
         run: >-
