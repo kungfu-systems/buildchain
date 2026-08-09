@@ -76,9 +76,9 @@ function scenario() {
 
 function declareLongForm(value) {
   value.execution.durationClass = "long-form";
-  value.execution.totalTimeoutSeconds = 180;
+  value.execution.totalTimeoutSeconds = 360;
   for (const demo of value.demos) {
-    for (const step of demo.steps) step.timeoutSeconds = 180;
+    for (const step of demo.steps) step.timeoutSeconds = 360;
   }
 }
 
@@ -274,14 +274,14 @@ test("duration class keeps standard at 60 seconds and admits only bounded long-f
 
   const longForm = structuredClone(scenario());
   longForm.execution.durationClass = "long-form";
-  longForm.execution.totalTimeoutSeconds = 180;
-  longForm.demos[0].steps[0].timeoutSeconds = 180;
+  longForm.execution.totalTimeoutSeconds = 360;
+  longForm.demos[0].steps[0].timeoutSeconds = 360;
   assert.equal(validateScenario(longForm).execution.durationClass, "long-form");
 
-  longForm.execution.totalTimeoutSeconds = 181;
+  longForm.execution.totalTimeoutSeconds = 361;
   assert.throws(() => validateScenario(longForm), /total timeout/u);
-  longForm.execution.totalTimeoutSeconds = 180;
-  longForm.demos[0].steps[0].timeoutSeconds = 181;
+  longForm.execution.totalTimeoutSeconds = 360;
+  longForm.demos[0].steps[0].timeoutSeconds = 361;
   assert.throws(() => validateScenario(longForm), /timeoutSeconds/u);
 
   const unboundedSmoke = structuredClone(scenario());
