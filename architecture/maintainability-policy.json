@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 111411,
+    "maxHandMaintainedSourceLines": 111434,
     "maxWorkflowFiles": 65,
-    "maxWorkflowLines": 22671,
-    "latestTransition": "Legacy Delivery Warrant handoff recovers one exact successful source run and retries transient provider branch locks inside the current controller attempt.",
-    "rationale": "The bounded workflow increase resolves only the active legacy PR and head against one named source workflow before immediate handoff. Provider branch-lock propagation reuses the existing bounded enqueue retry instead of creating another scheduler, writer, or authority; these exact post-integration ceilings cannot grow implicitly."
+    "maxWorkflowLines": 22679,
+    "latestTransition": "Protected synchronize events evict stale queued Delivery Warrant heads, and exact-head queue retries reactivate their merge-group lease before admission.",
+    "rationale": "The bounded workflow increase carries one optional exact lease context into the existing queue controller. The controller reactivates that context on every exact-head retry and releases it on enqueue rejection, without adding another scheduler, writer, or authority; these exact post-integration ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -113,9 +113,9 @@
       "rationale": "The runtime action now enforces the audited compiler-cache activity gate immediately after a successful build, so consumers receive fail-closed verification before their reusable workflow shell advances; exact existing function complexity does not increase."
     },
     "scripts/dev-pr-auto-merge.mjs": {
-      "maxLines": 1224,
+      "maxLines": 1245,
       "maxFunctionComplexity": 53,
-      "rationale": "The existing Dev PR controller now supports one targeted exact-head Agent admission path with typed receipts and PR-visible diagnostics while preserving independent approval, required-check, same-repository, readiness, and merge-queue gates; this exact post-integration ceiling cannot grow implicitly."
+      "rationale": "The existing Dev PR controller supports targeted exact-head admission and now reactivates one caller-declared exact lease before every queue retry while preserving independent approval, required-check, same-repository, readiness, and merge-queue gates; this exact post-integration ceiling cannot grow implicitly."
     }
   },
   "approvedPublicSurfaceTransitions": {
@@ -307,6 +307,7 @@
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
         "inputs": [
+          "active-lease-context",
           "affected-paths-json",
           "allowed-head-prefixes",
           "assignment-root",
@@ -360,7 +361,7 @@
           "warrant-state-root"
         ]
       },
-      "rationale": "Extend targeted exact-head admission with the exact source workflow run, one explicitly configured consumer handoff workflow, and one bounded source workflow identifier used only to recover legacy active candidates, so a controller can immediately resume the active Warrant candidate instead of waiting for patrol cadence. Independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
+      "rationale": "Extend targeted exact-head admission with immediate active-candidate handoff and one optional exact lease context that is reactivated before every queue retry. Independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

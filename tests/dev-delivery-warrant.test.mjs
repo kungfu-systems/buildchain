@@ -315,6 +315,16 @@ test("heartbeat and terminal closeout bind the current fencing generation", () =
   assert.equal(closed.receipt.nextAction, "Select the next queued candidate, if any.");
 });
 
+test("late terminal evidence closes the exact expired Warrant without reviving execution authority", () => {
+  const submitted = submit(queue(), 145, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z", leaseSeconds: 60 });
+  assert.throws(() => heartbeatDevDeliveryWarrant(selected.queue, selected.warrant, { now: "2026-08-04T00:02:00Z" }), /lease expired/);
+  const closed = closeDevDeliveryWarrant(selected.queue, selected.warrant, { outcome: "merged", evidenceRoot: ROOTS.evidence, now: "2026-08-04T00:02:00Z" });
+  assert.equal(closed.queue.activeWarrant, null);
+  assert.equal(closed.queue.candidates[0].status, "merged");
+  assert.equal(closed.receipt.leaseGeneration, selected.warrant.generation);
+});
+
 test("terminal settlement is an explicit no-op when the PR never entered Warrant authority", () => {
   const settled = settleDevDeliveryTerminalEvent(queue(), {
     pullRequestNumber: 149,
@@ -408,6 +418,25 @@ test("queued cancellation binds recorded and observed heads without minting a Wa
     now: "2026-08-04T00:03:01Z",
   });
   assert.equal(selected.warrant.pullRequestNumber, 151);
+});
+
+test("queued cancellation accepts a protected synchronize event for stale head eviction", () => {
+  const submitted = submit(queue(), 150, "2026-08-04T00:00:00Z");
+  const queued = submitted.queue.candidates[0];
+  const cancelled = cancelQueuedDevDeliveryCandidate(submitted.queue, {
+    candidateId: queued.candidateId,
+    pullRequestNumber: queued.pullRequestNumber,
+    expectedSourceHead: queued.sourceHead,
+    observedSourceHead: "f".repeat(40),
+    eventAction: "synchronize",
+    outcome: "cancelled",
+    evidenceRoot: ROOTS.evidence,
+    reason: "protected pull request head changed",
+  }, { now: "2026-08-04T00:01:00Z" });
+
+  assert.equal(cancelled.receipt.action, "queued-candidate-cancelled");
+  assert.equal(cancelled.receipt.eventAction, "synchronize");
+  assert.equal(cancelled.queue.candidates[0].terminal.observedSourceHead, "f".repeat(40));
 });
 
 test("queued cancellation fails closed on identity, evidence, state, and event drift", () => {

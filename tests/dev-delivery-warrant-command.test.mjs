@@ -138,6 +138,17 @@ test("selection and observation use the same durable state contract", async () =
   assert.equal(observed.observation.activeWarrant.fencingToken, selected.warrant.fencingToken);
 });
 
+test("expired Warrant recovery and reselection persist as one expected-old transition", async () => {
+  const store = new MemoryStore();
+  await runDevDeliveryCommand(submitOptions({ execute: true }), store);
+  const selected = await runDevDeliveryCommand({ command: "select", repository: "kungfu-systems/kungfu", branch: "dev/v4/v4.0", now: "2026-08-04T00:02:00Z", leaseSeconds: 60, execute: true }, store);
+  const reselected = await runDevDeliveryCommand({ command: "select", repository: "kungfu-systems/kungfu", branch: "dev/v4/v4.0", now: "2026-08-04T00:04:00Z", leaseSeconds: 60, execute: true }, store);
+  assert.equal(reselected.receipt.expectedOldStateRoot, selected.after.stateRoot);
+  assert.equal(reselected.warrant.generation, selected.warrant.generation + 1);
+  assert.equal(reselected.mutationApplied, true);
+  assert.equal(store.writes.length, 3);
+});
+
 test("terminal settlement records a verified non-applicable no-op without writing", async () => {
   const store = new MemoryStore();
   const result = await runDevDeliveryCommand({

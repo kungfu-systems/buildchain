@@ -1827,6 +1827,7 @@
       "path": ".github/workflows/dev-pr-auto-merge.yml",
       "reusable": true,
       "inputs": [
+        "active-lease-context",
         "affected-paths-json",
         "allowed-head-prefixes",
         "assignment-root",
@@ -1863,7 +1864,7 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 35,
+      "inputCount": 36,
       "secrets": [
         "github-token"
       ],
