@@ -610,6 +610,12 @@ The reusable caller supports `off`, read-only `shadow`, and fail-closed
 `required` rollout modes. GitHub Merge Queue remains the final protected-ref
 authority in every mode.
 
+Bounded-concurrency experiments use the separate effect-disabled Warrant
+shadow planner. It may evaluate at most two fully bound lanes from one exact
+observation, but it cannot mint a second production Warrant or mutate GitHub.
+Its aggregate threshold decision is qualification evidence for a later rollout
+change, not authority to change the live single-flight policy.
+
 The canonical consumer required check context is `check / check`, matching the
 reusable workflow call plus its `check` job. Buildchain's own `Verify` workflow
 emits the repository-local context `check`, so Buildchain self-promotion,

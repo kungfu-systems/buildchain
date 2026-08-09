@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 288,
-    "maxHandMaintainedSourceLines": 111699,
+    "maxHandMaintainedSourceFiles": 289,
+    "maxHandMaintainedSourceLines": 112227,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22679,
-    "latestTransition": "Engineering Housekeeper adds one version-neutral contract and fail-closed classifier.",
-    "rationale": "The bounded H1 contract adds one pure provider-neutral source module for deterministic branch and pull-request inventory, classification, plan, receipt, replay, and apply-time revalidation. It introduces no scheduler, provider client, workflow, or second policy authority; this exact post-integration ceiling cannot grow implicitly."
+    "latestTransition": "Dev Delivery Warrant adds bounded-concurrency shadow qualification.",
+    "rationale": "One effect-disabled source module adds deterministic one-or-two-lane replay, exact per-lane evidence binding, threshold qualification, and fail-closed fixtures without adding a writer, scheduler, workflow, live Warrant, or production authority. The existing production queue remains single-flight, and this exact post-integration ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

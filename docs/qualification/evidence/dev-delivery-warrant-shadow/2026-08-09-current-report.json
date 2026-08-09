@@ -1,0 +1,203 @@
+{
+  "schema": "kungfu.buildchain.dev-delivery-warrant-bounded-concurrency-shadow-report/v1",
+  "generatedAt": "2026-08-09T16:12:07Z",
+  "mode": "read-only-effect-disabled",
+  "sourceCut": {
+    "repository": "kungfu-systems/kungfu",
+    "protectedBase": "dev/v4/v4.0",
+    "baseHead": "30fe82d269a375dcc59d0f1de26d55d373a5a95e",
+    "stateRef": "buildchain/dev-delivery-warrant/dev-v4-v4.0",
+    "stateCommit": "6b2f2e2df0b27cf0bc964c2ddaba52ba64d68b6f",
+    "queueStateRoot": "sha256:7687b2e6f9d2e51a2c62aa22eec9220d76b7b48076c3701c91f4106c80a569e5",
+    "queueGeneration": 623,
+    "rulesetId": 19057118,
+    "rulesetUpdatedAt": "2026-08-06T01:05:44.090+08:00",
+    "nativeQueueRoot": "sha256:7a0b7943ccd293821e69c3413abdfebf3d74e3d9a2a92c2f362a7fcbab72f8b3"
+  },
+  "productionReadback": {
+    "activeWarrantCount": 1,
+    "activePullRequest": 2699,
+    "warrantGeneration": 166,
+    "nativeQueueEntryCount": 0,
+    "maxEntriesToBuild": 2,
+    "maxEntriesToMerge": 1,
+    "groupingStrategy": "ALLGREEN",
+    "buildchainProductionLine": "v3",
+    "warrantMode": "required"
+  },
+  "evaluatedCandidates": [
+    {
+      "pullRequestNumber": 2699,
+      "candidateId": "sha256:f4eaae10edb6f7bc77aab573b39c13763899445ffd675077d1b9ec7f01472c06",
+      "sourceHead": "e124e5127215590239f6c08a3a51ec08533dd08e",
+      "status": "selected",
+      "enqueuedAt": "2026-08-09T15:10:58.491Z"
+    },
+    {
+      "pullRequestNumber": 2706,
+      "candidateId": "sha256:16131e2969155b1ba7812aff2dce3b5fc3f0b58a4616ed43e7f2ac3e094cfa58",
+      "sourceHead": "e4774819550e6f3fd49939414cd01444731685a1",
+      "status": "queued",
+      "enqueuedAt": "2026-08-09T15:22:58.461Z"
+    }
+  ],
+  "recentQueueWindow": {
+    "sampleSize": 50,
+    "residenceSeconds": {
+      "median": 1509,
+      "p90": 4478,
+      "max": 7647
+    },
+    "currentQueuedAgeSeconds": 2949,
+    "projectedQualificationOverlapBenefitSeconds": 266,
+    "additionalRunnerSeconds": 266
+  },
+  "fixtureCoverage": [
+    "empty",
+    "one-candidate",
+    "two-candidate",
+    "over-capacity",
+    "stale",
+    "conflict",
+    "native-queue-occupied",
+    "partial-failure",
+    "single-flight-parity"
+  ],
+  "thresholds": {
+    "minObservationCount": 1,
+    "minEligibleOverlapCount": 1,
+    "minProjectedQueueWaitBenefitSeconds": 300,
+    "maxAdditionalRunnerSeconds": 1800,
+    "maxAmbiguityCount": 0,
+    "maxFalsePositiveCount": 0
+  },
+  "currentPlan": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant-shadow-plan/v1",
+    "observationId": "kungfu-dev-v4-2026-08-09T16:12:07Z",
+    "observationRoot": "sha256:f851d4077b629dd1b80ec41c33a4576e76c9c7c802d99e307da897c139871ee1",
+    "observedAt": "2026-08-09T16:12:07.000Z",
+    "maxConcurrency": 2,
+    "productionCandidateId": "sha256:f4eaae10edb6f7bc77aab573b39c13763899445ffd675077d1b9ec7f01472c06",
+    "singleFlightParity": {
+      "evaluated": false,
+      "candidateIdentityMatches": false
+    },
+    "lanes": [
+      {
+        "schema": "kungfu.buildchain.dev-delivery-warrant-shadow-lane/v1",
+        "candidateId": "sha256:f4eaae10edb6f7bc77aab573b39c13763899445ffd675077d1b9ec7f01472c06",
+        "pullRequestNumber": 2699,
+        "sourceHead": "e124e5127215590239f6c08a3a51ec08533dd08e",
+        "baseHead": "30fe82d269a375dcc59d0f1de26d55d373a5a95e",
+        "queueStateRoot": "sha256:7687b2e6f9d2e51a2c62aa22eec9220d76b7b48076c3701c91f4106c80a569e5",
+        "bindingRoot": "sha256:7f3bbb726851e87d8479471923977c6f6b341b09dafce33da628b6af4ff6f6a4",
+        "accepted": false,
+        "reasonCodes": [
+          "projectCut-not-qualified",
+          "requiredChecks-not-passed",
+          "status-not-ready"
+        ],
+        "effects": [],
+        "productionAuthority": false,
+        "laneId": "sha256:2ee7a2567a8049b9a9d66c814d8482919f54c223618b601bffd87c25bd4ddb08"
+      },
+      {
+        "schema": "kungfu.buildchain.dev-delivery-warrant-shadow-lane/v1",
+        "candidateId": "sha256:16131e2969155b1ba7812aff2dce3b5fc3f0b58a4616ed43e7f2ac3e094cfa58",
+        "pullRequestNumber": 2706,
+        "sourceHead": "e4774819550e6f3fd49939414cd01444731685a1",
+        "baseHead": "30fe82d269a375dcc59d0f1de26d55d373a5a95e",
+        "queueStateRoot": "sha256:7687b2e6f9d2e51a2c62aa22eec9220d76b7b48076c3701c91f4106c80a569e5",
+        "bindingRoot": "sha256:78c4f6416899a4a622e094b7a0a3c6e8eb2decf5f5c12717a1c33e46ad3ff499",
+        "accepted": false,
+        "reasonCodes": [
+          "projectCut-not-qualified",
+          "requiredChecks-not-passed",
+          "status-not-ready"
+        ],
+        "effects": [],
+        "productionAuthority": false,
+        "laneId": "sha256:4155e467c450195777fa3a9b242fa879a59ac8141fbcf72993e748c937d110ed"
+      }
+    ],
+    "acceptedLaneCount": 0,
+    "rejectedLaneCount": 2,
+    "deferredCandidateIds": [
+      "sha256:895caf93d262b3b9224b2b8296210be784fba6ab7a43baa6562543604b2f3d57",
+      "sha256:24e4a9c840ca95ab8abb307f014442171472c4c14f8508a39c6f4ce714320480"
+    ],
+    "metrics": {
+      "baselineQueueWaitSeconds": 2949,
+      "shadowQueueWaitSeconds": 2683,
+      "additionalCheckSeconds": 266,
+      "additionalRunnerSeconds": 266,
+      "ambiguous": true
+    },
+    "decision": "hold",
+    "effects": [],
+    "mutationAllowed": false,
+    "productionAuthority": "unchanged-single-flight",
+    "rolloutAuthorized": false,
+    "planRoot": "sha256:8ccea7976e956934fb34d5425e5139fb3f1b7b8891513281382adcb0d46b9d04"
+  },
+  "qualification": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant-shadow-qualification/v1",
+    "decision": "hold",
+    "reasonCodes": [
+      "threshold-eligibleOverlap-not-met",
+      "threshold-projectedQueueWaitBenefit-not-met",
+      "threshold-ambiguity-not-met"
+    ],
+    "thresholds": {
+      "minObservationCount": 1,
+      "minEligibleOverlapCount": 1,
+      "minProjectedQueueWaitBenefitSeconds": 300,
+      "maxAdditionalRunnerSeconds": 1800,
+      "maxAmbiguityCount": 0,
+      "maxFalsePositiveCount": 0
+    },
+    "metrics": {
+      "observationCount": 1,
+      "eligibleOverlapCount": 0,
+      "projectedQueueWaitBenefitSeconds": 266,
+      "additionalCheckSeconds": 266,
+      "additionalRunnerSeconds": 266,
+      "ambiguityCount": 1,
+      "falsePositiveCount": 0
+    },
+    "checks": {
+      "observationCount": true,
+      "eligibleOverlap": false,
+      "projectedQueueWaitBenefit": false,
+      "runnerCost": true,
+      "ambiguity": false,
+      "falsePositives": true
+    },
+    "planRoots": [
+      "sha256:8ccea7976e956934fb34d5425e5139fb3f1b7b8891513281382adcb0d46b9d04"
+    ],
+    "effects": [],
+    "mutationAllowed": false,
+    "productionAuthority": "unchanged-single-flight",
+    "rolloutAuthorized": false,
+    "qualificationRoot": "sha256:c6ee606362c68cb62c31ba776acf85484da9c1297556e25bea385f19aed2a2e0"
+  },
+  "decision": "hold",
+  "decisionReasons": [
+    "threshold-eligibleOverlap-not-met",
+    "threshold-projectedQueueWaitBenefit-not-met",
+    "threshold-ambiguity-not-met",
+    "current-project-cut-not-qualified",
+    "required-queue-admission-check-absent",
+    "production-rollout-requires-separate-assignment"
+  ],
+  "unchangedAssertions": {
+    "liveRulesetMutation": false,
+    "productionAuthorityMutation": false,
+    "productionWarrantMutation": false,
+    "protectedBranchMutation": false,
+    "stableBuildchainRefMutation": false
+  },
+  "rolloutAuthorized": false,
+  "reportRoot": "sha256:4083d28f0e60e661bae3202fcf29e3f2749202f1b1fc637a0919a7b4f56fd901"
+}

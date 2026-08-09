@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-09
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-04
+  generated_at: 2026-08-09
   invisible_context: not asserted
 ---
 
@@ -124,6 +124,39 @@ buildchain dev proof replay-proof \
   --qualification-receipt project-cut-admission.json ...
 buildchain dev proof integration --warrant-result warrant.json ...
 ```
+
+## Bounded-concurrency shadow qualification
+
+The production queue remains single-flight. A separate effect-disabled shadow
+planner can replay the same deterministic candidate order with a bound of one
+or two lanes. It does not issue, renew, supersede, close, or persist a Warrant;
+it cannot enqueue a pull request; and its output explicitly carries no
+production or rollout authority.
+
+Each lane binds the exact queue root and generation, protected-base head,
+source head, projected-base root, Project Cut, approval, required checks,
+status, and lease evidence. An active production candidate must additionally
+match its current fencing token and lease generation. A queued shadow lane must
+not carry either. Stale evidence, an occupied native queue, cross-lane evidence
+aliasing, shared conflict keys, or an incompatible projected base fails closed.
+A failure in one lane remains visible without converting or concealing the
+other lane's result.
+
+The planner and aggregate qualification command consume immutable JSON files:
+
+```sh
+buildchain dev warrant shadow-plan --input observation.json \
+  --max-concurrency 2 --output shadow-plan.json
+
+buildchain dev warrant shadow-qualify --input qualification-input.json \
+  --output shadow-qualification.json
+```
+
+Both commands reject `--execute`. Qualification reports compare explicit
+thresholds for sample count, eligible overlap, projected queue-wait benefit,
+additional runner cost, ambiguity, and false positives. A `proceed` result is
+only evidence for a separate reviewed rollout decision; it never changes the
+live Warrant schema, queue state, merge-queue policy, or protected branch.
 
 ## Workflow rollout and rollback
 
