@@ -87,9 +87,10 @@ jobs:
       - uses: actions/checkout@v7.0.0
         with:
           persist-credentials: false
-      - name: Restore exact tracked bytes for real lifecycle dogfood
+      - name: Restore exact commit bytes for real lifecycle dogfood
         if: matrix.consumer == 'buildchain-self-dogfood' && runner.os == 'Windows'
-        run: git -c core.autocrlf=false checkout-index --force --all
+        shell: bash
+        run: git archive HEAD | tar -xf -
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"

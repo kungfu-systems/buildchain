@@ -738,8 +738,8 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   assert.deepEqual(manifest.platform, {
     id: "linux-x64",
     name: "Linux x64",
-    os: process.platform,
-    arch: process.arch,
+    os: process.env.RUNNER_OS || process.platform,
+    arch: process.env.RUNNER_ARCH || process.arch,
   });
   assert.equal(manifest.lifecycle.stage, "build");
   assert.equal(manifest.files[0].path, "out/result.txt");
