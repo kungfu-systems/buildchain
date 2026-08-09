@@ -50,7 +50,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:768042c2b38dd261803f49a141898fe80ce3e19b2a948abda2867e47c56c0b5c"
+      "digest": "sha256:08cfae94c78776694736e81142e2d64480fdc3e67341b415340c03d3539531e7"
     },
     {
       "id": "getting-started",
@@ -234,7 +234,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:d4ded24b985e24afb815ce4434495a8412e8be2ad18e5d25cbbefdc74315efa4"
+      "digest": "sha256:524ecea1c2ba61ec61079c05b27b40decbbdd4bbf5b4982d7edcd618af622542"
     },
     {
       "id": "build-facts",
@@ -314,7 +314,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:361e55daab99f057363dced8ccfe8986422e725f88b5fbcea8dfc96c7aecd2a5"
+      "digest": "sha256:e03d5beb2a2e241339426e0389dfcc4ada0c4476b9990cce1d51358da8bdf86d"
     },
     {
       "id": "release-flow",
