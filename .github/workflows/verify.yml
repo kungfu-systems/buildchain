@@ -55,7 +55,6 @@ jobs:
           name: v4-stage-checkpoint-${{ matrix.platform }}-${{ github.sha }}
           path: .buildchain/v4-stage-checkpoint/evidence.json
           if-no-files-found: error
-
   # Qualification authority: architecture/v4-stage-capsule-qualification.json
   stage-capsule-qualification:
     name: Stage Capsule qualification (${{ matrix.consumer }}, ${{ matrix.platform }})
@@ -86,6 +85,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.0
         with:
+          fetch-depth: ${{ matrix.consumer == 'buildchain-self-dogfood' && '0' || '1' }}
           persist-credentials: false
       - uses: actions/setup-node@v6.4.0
         with:

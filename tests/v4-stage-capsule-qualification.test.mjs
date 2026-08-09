@@ -352,4 +352,18 @@ test("architecture freezes the shadow consumer, rollback, and authority ceilings
   assert.equal(architecture.authority.productionReuse, false);
   assert.equal(architecture.budgets.providerSdkImports, 0);
   assert.equal(architecture.budgets.productionWriteAuthorityChanges, 0);
+
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/verify.yml"),
+    "utf8",
+  );
+  const qualificationWorkflow = workflow.slice(
+    workflow.indexOf("  stage-capsule-qualification:"),
+    workflow.indexOf("  stage-capsule-qualification-reconciliation:"),
+  );
+  assert.match(
+    qualificationWorkflow,
+    /fetch-depth: \$\{\{ matrix\.consumer == 'buildchain-self-dogfood' && '0' \|\| '1' \}\}/u,
+  );
+  assert.match(qualificationWorkflow, /persist-credentials: false/u);
 });
