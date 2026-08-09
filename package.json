@@ -49,6 +49,7 @@
     "./publication-control-plane-audit": "./packages/core/publication-control-plane-audit.js",
     "./buildchain-publication-authority": "./packages/core/buildchain-publication-authority.js",
     "./github-governance-authority": "./packages/core/github-governance-authority.js",
+    "./engineering-housekeeper": "./packages/core/engineering-housekeeper.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",
     "./release-candidate-recovery": "./packages/core/release-candidate-recovery.js",
