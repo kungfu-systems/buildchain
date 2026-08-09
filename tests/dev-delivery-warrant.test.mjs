@@ -410,6 +410,25 @@ test("queued cancellation binds recorded and observed heads without minting a Wa
   assert.equal(selected.warrant.pullRequestNumber, 151);
 });
 
+test("queued cancellation accepts a protected synchronize event for stale head eviction", () => {
+  const submitted = submit(queue(), 150, "2026-08-04T00:00:00Z");
+  const queued = submitted.queue.candidates[0];
+  const cancelled = cancelQueuedDevDeliveryCandidate(submitted.queue, {
+    candidateId: queued.candidateId,
+    pullRequestNumber: queued.pullRequestNumber,
+    expectedSourceHead: queued.sourceHead,
+    observedSourceHead: "f".repeat(40),
+    eventAction: "synchronize",
+    outcome: "cancelled",
+    evidenceRoot: ROOTS.evidence,
+    reason: "protected pull request head changed",
+  }, { now: "2026-08-04T00:01:00Z" });
+
+  assert.equal(cancelled.receipt.action, "queued-candidate-cancelled");
+  assert.equal(cancelled.receipt.eventAction, "synchronize");
+  assert.equal(cancelled.queue.candidates[0].terminal.observedSourceHead, "f".repeat(40));
+});
+
 test("queued cancellation fails closed on identity, evidence, state, and event drift", () => {
   const submitted = submit(queue(), 160, "2026-08-04T00:00:00Z");
   const queued = submitted.queue.candidates[0];

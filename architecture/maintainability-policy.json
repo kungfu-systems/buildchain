@@ -6,10 +6,10 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 111411,
+    "maxHandMaintainedSourceLines": 111412,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22671,
-    "latestTransition": "Legacy Delivery Warrant handoff recovers one exact successful source run and retries transient provider branch locks inside the current controller attempt.",
+    "latestTransition": "Protected synchronize events evict stale queued Delivery Warrant heads before they can hold a lease.",
     "rationale": "The bounded workflow increase resolves only the active legacy PR and head against one named source workflow before immediate handoff. Provider branch-lock propagation reuses the existing bounded enqueue retry instead of creating another scheduler, writer, or authority; these exact post-integration ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
