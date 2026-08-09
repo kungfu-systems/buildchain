@@ -56,8 +56,85 @@ jobs:
           path: .buildchain/v4-stage-checkpoint/evidence.json
           if-no-files-found: error
 
-  check:
+  # Qualification authority: architecture/v4-stage-capsule-qualification.json
+  stage-capsule-qualification:
+    name: Stage Capsule qualification (${{ matrix.consumer }}, ${{ matrix.platform }})
     needs: stage-capsule-checkpoints
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runner: ubuntu-24.04
+            consumer: buildchain-self-dogfood
+          - platform: macos-arm64
+            runner: macos-15
+            consumer: buildchain-self-dogfood
+          - platform: windows-x64
+            runner: windows-2025
+            consumer: buildchain-self-dogfood
+          - platform: linux-x64
+            runner: ubuntu-24.04
+            consumer: kungfu-shadow
+          - platform: macos-arm64
+            runner: macos-15
+            consumer: kungfu-shadow
+          - platform: windows-x64
+            runner: windows-2025
+            consumer: kungfu-shadow
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+      - name: Run retained failure and clean-process resume campaign
+        run: >-
+          node scripts/v4-stage-capsule-qualification.mjs campaign
+          --work-root .buildchain/v4-stage-qualification/${{ matrix.consumer }}-${{ matrix.platform }}
+          --platform ${{ matrix.platform }}
+          --consumer ${{ matrix.consumer }}
+          --runtime-ref ${{ github.sha }}
+          --consumer-source-revision ${{ matrix.consumer == 'kungfu-shadow' && '9ca8f445fd5d7921f480c47b059addb2f84f40db' || github.sha }}
+      - name: Upload exact Stage Capsule qualification evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-stage-qualification-${{ matrix.consumer }}-${{ matrix.platform }}-${{ github.sha }}
+          path: .buildchain/v4-stage-qualification/${{ matrix.consumer }}-${{ matrix.platform }}/*.json
+          if-no-files-found: error
+
+  stage-capsule-qualification-reconciliation:
+    name: Stage Capsule qualification reconciliation
+    needs: stage-capsule-qualification
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+      - name: Download exact platform and consumer qualification evidence
+        uses: actions/download-artifact@v7.0.0
+        with:
+          pattern: v4-stage-qualification-*-${{ github.sha }}
+          path: .buildchain/v4-stage-qualification-inputs
+      - name: Reconcile the complete three-platform consumer campaign
+        run: >-
+          node scripts/v4-stage-capsule-qualification.mjs aggregate
+          --input-dir .buildchain/v4-stage-qualification-inputs
+          --output .buildchain/v4-stage-qualification.json
+      - name: Upload exact Stage Capsule qualification root
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-stage-qualification-${{ github.sha }}
+          path: .buildchain/v4-stage-qualification.json
+          if-no-files-found: error
+
+  check:
+    needs: stage-capsule-qualification-reconciliation
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.0

@@ -74,6 +74,14 @@ const ROOT_DOMAINS: &[&str] = &[
     "stage-capsule-quarantine",
     "stage-capsule-resume-observation",
     "stage-capsule-resume-plan",
+    "stage-capsule-artifact-manifest",
+    "stage-capsule-artifact-content",
+    "stage-capsule-fault-campaign",
+    "stage-capsule-seed-evidence",
+    "stage-capsule-resume-evidence",
+    "stage-capsule-platform-qualification",
+    "stage-capsule-qualification",
+    "stage-capsule-wave-reconciliation",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

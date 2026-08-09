@@ -119,3 +119,11 @@ store. GitHub Artifact and S3-compatible adapters remain effect-disabled or
 fixture-backed. Provider locations, retention promises, observed availability,
 and qualification evidence stay separate facts; none becomes Capsule identity,
 qualification authority, or a production writer.
+
+Final Wave 2 qualification is governed by
+[`v4-stage-capsule-qualification.json`](v4-stage-capsule-qualification.json).
+It consumes the existing Capsule, store, checkpoint, and resume authorities for
+six real-runner shadow campaigns and one exact terminal reconciliation. A
+qualification root is evidence only: TypeScript v3 remains production
+authority, retained state is non-destructive, and production reuse, provider
+effects, release effects, and public cutover remain outside this transition.

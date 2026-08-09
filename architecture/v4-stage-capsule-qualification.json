@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-stage-capsule-qualification",
+  "capsuleAuthority": "architecture/v4-stage-capsule-contract.json",
+  "storeAuthority": "architecture/v4-stage-capsule-store-contract.json",
+  "checkpointAuthority": "architecture/v4-platform-stage-checkpoints.json",
+  "resumeAuthority": "architecture/v4-stage-capsule-resume-planner.json",
+  "implementation": "packages/core/v4-stage-capsule-qualification.js",
+  "rehearsal": "scripts/v4-stage-capsule-qualification.mjs",
+  "mode": "shadow-only",
+  "productionAuthority": "v3",
+  "campaign": {
+    "platforms": ["linux-x64", "macos-arm64", "windows-x64"],
+    "processRuns": ["seed", "resume"],
+    "consumers": ["buildchain-self-dogfood", "kungfu-shadow"],
+    "requiredComparisons": [
+      "artifact-manifest-root",
+      "content-root",
+      "planner-decision",
+      "retained-byte-cost",
+      "restore-overhead",
+      "rollback"
+    ]
+  },
+  "kungfuShadow": {
+    "sourceRevision": "9ca8f445fd5d7921f480c47b059addb2f84f40db",
+    "dispatchWorkflow": ".github/workflows/build.yml",
+    "runtimeOverrideInput": "buildchain-ref",
+    "committedRefChanged": false,
+    "productionAlphaAuthorityChanged": false
+  },
+  "faultCampaign": [
+    "corrupt",
+    "cross-platform",
+    "cross-stage",
+    "expired",
+    "missing",
+    "partial",
+    "policy-drift",
+    "root-mismatch",
+    "source-drift",
+    "stale-writer",
+    "toolchain-drift"
+  ],
+  "qualification": {
+    "freshAndResumedRootsMustMatch": true,
+    "falseReuseMaximum": 0,
+    "falseRebuildMaximum": 0,
+    "allFaultsMustPass": true,
+    "threePlatformAggregateRequired": true,
+    "fiveNativeTerminalChildrenRequired": true,
+    "protectedDeliveryMustBeDrained": true
+  },
+  "rollback": {
+    "switch": "stage-capsule-mode=v3",
+    "migrationRequired": false,
+    "retainedStateDestroyed": false
+  },
+  "authority": {
+    "providerEffects": false,
+    "productionWrites": false,
+    "productionReuse": false,
+    "releaseEffects": false,
+    "credentials": false,
+    "ambientEnvironment": false,
+    "ambientClock": false,
+    "v3BehaviorChange": false
+  },
+  "budgets": {
+    "qualificationImplementations": 1,
+    "canonicalQualificationRoots": 1,
+    "providerSdkImports": 0,
+    "productionStageSkippingChanges": 0,
+    "productionWriteAuthorityChanges": 0,
+    "v3ConsumerBehaviorChanges": 0
+  }
+}
