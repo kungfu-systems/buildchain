@@ -34,6 +34,19 @@ export function usesShellForSpawnCommand(command, platform = process.platform, e
   return platform === "win32" && /\.cmd$/i.test(resolveSpawnCommand(command, platform, env));
 }
 
+function cmdQuote(value) {
+  const text = String(value);
+  if (/^[A-Za-z0-9_./:\\-]+$/u.test(text)) return text;
+  return `"${text.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/g, "$1$1")}"`;
+}
+
+export function windowsBatchInvocation(command, args, env = process.env) {
+  return {
+    command: env.ComSpec || process.env.ComSpec || "cmd.exe",
+    args: ["/d", "/s", "/c", [command, ...args].map(cmdQuote).join(" ")],
+  };
+}
+
 export function spawnSyncCommand(
   command,
   args,
@@ -41,9 +54,21 @@ export function spawnSyncCommand(
   { platform = process.platform, spawn = spawnSync } = {},
 ) {
   const env = options.env || process.env;
-  return spawn(resolveSpawnCommand(command, platform, env), args, {
+  const resolvedCommand = resolveSpawnCommand(command, platform, env);
+  if (
+    platform === "win32" &&
+    /\.cmd$/i.test(resolvedCommand) &&
+    options.shell !== false
+  ) {
+    const invocation = windowsBatchInvocation(resolvedCommand, args, env);
+    return spawn(invocation.command, invocation.args, {
+      ...options,
+      shell: false,
+    });
+  }
+  return spawn(resolvedCommand, args, {
     ...options,
-    shell: options.shell ?? usesShellForSpawnCommand(command, platform, env),
+    shell: options.shell ?? false,
   });
 }
 
