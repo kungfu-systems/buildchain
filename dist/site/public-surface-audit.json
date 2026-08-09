@@ -7,7 +7,7 @@
     "workflowCount": 65,
     "actionCount": 7,
     "sitePageCount": 69,
-    "docCommandRefCount": 922,
+    "docCommandRefCount": 924,
     "failureCount": 0
   },
   "enumerated": {
@@ -4182,6 +4182,16 @@
       },
       {
         "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant shadow-plan"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant shadow-qualify"
+      },
+      {
+        "id": "dev",
         "path": "docs/release-governance.md",
         "command": "buildchain dev merge-queue"
       },
@@ -7903,7 +7913,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
     "workflowRegistryDigest": "3465688cf20cf1733aa4f21861bf41981b41cc8ea7032d411b1463c4dc4625ef",
-    "pageRegistryDigest": "2eb2e49d5af9f6c3ccb4f746872b24a26ae892e1e91b7da698f39cbb8794c3d3"
+    "pageRegistryDigest": "4500a112b0ecf85616e82406eaf201a635a03145d8c6be1c966b6ed5cc745842"
   },
   "comparison": {
     "missingCliRegistry": [],

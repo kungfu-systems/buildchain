@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 290,
-    "maxHandMaintainedSourceLines": 112428,
+    "maxHandMaintainedSourceFiles": 291,
+    "maxHandMaintainedSourceLines": 112956,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22679,
-    "latestTransition": "Engineering Housekeeper adds one bounded GitHub client and one contract-consuming execution engine.",
-    "rationale": "The H2 GitHub engine adds one narrow REST client plus one independently testable inventory and apply module. Together they provide complete pagination, deterministic contract plans, default dry-run behavior, exact-head mutation fences, bounded label and ref actions, and rooted receipts without adding a scheduler, workflow, credential authority, or second policy authority; this exact post-integration ceiling cannot grow implicitly."
+    "latestTransition": "Dev Delivery Warrant adds bounded-concurrency shadow qualification.",
+    "rationale": "Building on the bounded Engineering Housekeeper GitHub engine, one effect-disabled source module adds deterministic one-or-two-lane replay, exact per-lane evidence binding, threshold qualification, and fail-closed fixtures without adding a writer, scheduler, workflow, live Warrant, or production authority. The existing production queue remains single-flight, and this exact post-integration ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
