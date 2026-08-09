@@ -1477,7 +1477,10 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /source-workflow-run-id:/);
   assert.match(workflow, /handoff-workflow-id:/);
   assert.match(workflow, /source-workflow-id:/);
-  assert.match(workflow, /Legacy active Warrant source recovery requires exactly one successful/);
+  assert.match(workflow, /Legacy active Warrant source recovery requires a successful/);
+  assert.match(workflow, /\.head_sha == \$head/);
+  assert.match(workflow, /sort_by\(\.id\)/);
+  assert.match(workflow, /last \| \.id/);
   assert.match(workflow, /active-warrant-handoff-dispatched/);
   assert.match(workflow, /gh workflow run "\$HANDOFF_WORKFLOW_ID"/);
   assert.match(workflow, /diagnostic-context:/);
