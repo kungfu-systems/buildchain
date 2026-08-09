@@ -144,3 +144,13 @@ transitions, non-append sequence, confirmation without successful rooted
 observation, conflicting confirmation, reconciliation disagreement, and
 authority-root escalation. Provider SDK imports, live mutations, production
 write-authority changes, and v3 behavior changes retain hard-zero budgets.
+
+GitHub release, npm publication, and OCI manifest readback adapters remain
+fixture-backed and effect-disabled. They discard provider-shaped transport
+fields at the boundary and emit only rooted, provider-neutral samples. Duplicate
+and reordered samples fold by byte-sorted sample root into one journal
+observation. Not-found and eventually-visible reads stay unknown; already
+applied reads may become a successful observation, but no adapter may confirm
+the operation or advance release state without independent journal
+qualification. Conflicting, malformed, and root-mismatched evidence fails
+closed with typed faults.

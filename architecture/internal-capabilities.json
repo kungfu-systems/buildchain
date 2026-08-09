@@ -51,7 +51,9 @@
     "crates/buildchain-v4-contracts/src/stage_capsule.rs",
     "crates/buildchain-v4-contracts/src/stage_capsule_store.rs",
     "crates/buildchain-v4-contracts/src/provider_operation_journal.rs",
-    "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs"
+    "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs",
+    "packages/core/v4-provider-readback-idempotency.js",
+    "crates/buildchain-v4-contracts/src/provider_readback_idempotency.rs"
   ],
   "ownershipRules": [
     {
@@ -363,6 +365,7 @@
         "scripts/v4-host-adapter.mjs",
         "crates/buildchain-v4-bridge/src/main.rs",
         "packages/core/v4-provider-operation-journal.js",
+        "packages/core/v4-provider-readback-idempotency.js",
         "packages/core/v4-stage-capsule.js",
         "packages/core/v4-stage-capsule-store.js",
         "packages/core/v4-stage-capsule-local-store.js",
@@ -374,12 +377,14 @@
         "crates/buildchain-v4-contracts/src/stage_capsule.rs",
         "crates/buildchain-v4-contracts/src/stage_capsule_store.rs",
         "crates/buildchain-v4-contracts/src/provider_operation_journal.rs",
-        "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs"
+        "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs",
+        "crates/buildchain-v4-contracts/src/provider_readback_idempotency.rs"
       ],
       "tests": [
         "tests/v4-architecture.test.mjs",
         "tests/v4-bridge.test.mjs",
         "tests/v4-provider-operation-journal.test.mjs",
+        "tests/v4-provider-readback-idempotency.test.mjs",
         "tests/v4-stage-capsule.test.mjs",
         "tests/v4-stage-capsule-store.test.mjs",
         "tests/v4-platform-stage-checkpoints.test.mjs",
@@ -404,6 +409,7 @@
         "contracts/fixtures/v4-stage-capsule-v1/shared.json",
         "contracts/fixtures/v4-stage-capsule-store-v1/shared.json",
         "contracts/fixtures/v4-provider-operation-journal-v1/shared.json",
+        "contracts/fixtures/v4-provider-readback-idempotency-v1/shared.json",
         "docs/v4-stage-capsule.md"
       ]
     }

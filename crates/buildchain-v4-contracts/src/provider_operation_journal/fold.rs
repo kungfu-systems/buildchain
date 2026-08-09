@@ -20,7 +20,7 @@ pub struct ProviderOperationJournalState {
 }
 
 impl ProviderOperationJournalState {
-    pub(super) fn root(&self) -> ContractResult<String> {
+    pub(crate) fn root(&self) -> ContractResult<String> {
         content_root(
             "provider-operation-journal-state",
             &serde_json::to_value(self)

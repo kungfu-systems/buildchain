@@ -1,0 +1,682 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain-v4-provider-readback-idempotency-fixtures/v1",
+  "context": {
+    "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+    "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+    "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "expectedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "coordinates": {
+    "sequence": 2,
+    "priorEntryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+    "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+    "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+    "observedAt": "2026-08-09T05:00:00.000Z"
+  },
+  "journalPrefix": [
+    {
+      "kind": "intent",
+      "schema": "buildchain-v4-provider-operation-intent/v1",
+      "sequence": 0,
+      "priorEntryRoot": null,
+      "operation": {
+        "schema": "buildchain-v4-provider-operation-identity/v1",
+        "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "capabilityId": "artifact.publish",
+        "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+      "declaredAt": "2026-08-09T04:00:00.000Z",
+      "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "entryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d"
+    },
+    {
+      "kind": "attempt",
+      "schema": "buildchain-v4-provider-operation-attempt/v1",
+      "sequence": 1,
+      "priorEntryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d",
+      "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+      "attemptOrdinal": 1,
+      "attemptedAt": "2026-08-09T04:00:01.000Z",
+      "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "entryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497"
+    }
+  ],
+  "validCases": [
+    {
+      "id": "github-not-found",
+      "readbacks": [
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 404,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": null,
+            "evidenceRoot": "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+          ],
+          "sampleRoot": "sha256:8545497295c5ee42aa6068875fb3fd3bea0b8f16c2131cc294730121448d1bf1"
+        }
+      ]
+    },
+    {
+      "id": "github-eventually-visible",
+      "readbacks": [
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 202,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": null,
+            "evidenceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "eventually-visible",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          "sampleRoot": "sha256:8795b7fae8c27ba4a76a9eaf5194b4003cc5e0ba9e1e0f688da3cf96e9ae4adb"
+        }
+      ]
+    },
+    {
+      "id": "github-already-applied",
+      "readbacks": [
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 200,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "evidenceRoot": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "already-applied",
+          "observedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "evidenceRoots": [
+            "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+          ],
+          "sampleRoot": "sha256:6d9f760eea5877f76e7f0b1a6ee2d9570d7a07bc6982584295000e7653ea61f5"
+        }
+      ]
+    },
+    {
+      "id": "npm-not-found",
+      "readbacks": [
+        {
+          "provider": "npm",
+          "response": {
+            "schema": "buildchain-v4-npm-publication-readback/v1",
+            "status": "not-found",
+            "packageSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "versionTargetRoot": null,
+            "evidenceRoot": "sha256:1313131313131313131313131313131313131313131313131313131313131313"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1313131313131313131313131313131313131313131313131313131313131313"
+          ],
+          "sampleRoot": "sha256:91eae57f0f80297af1450dd0ae76875ee2e16a6ab6003fb219236a98f3bcb0a3"
+        }
+      ]
+    },
+    {
+      "id": "npm-eventually-visible",
+      "readbacks": [
+        {
+          "provider": "npm",
+          "response": {
+            "schema": "buildchain-v4-npm-publication-readback/v1",
+            "status": "processing",
+            "packageSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "versionTargetRoot": null,
+            "evidenceRoot": "sha256:1414141414141414141414141414141414141414141414141414141414141414"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "eventually-visible",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1414141414141414141414141414141414141414141414141414141414141414"
+          ],
+          "sampleRoot": "sha256:76918adca6bb1d0dba86979e68559e3ef9599df3a63cc7c91f8d7f4e7195d4b6"
+        }
+      ]
+    },
+    {
+      "id": "npm-already-applied",
+      "readbacks": [
+        {
+          "provider": "npm",
+          "response": {
+            "schema": "buildchain-v4-npm-publication-readback/v1",
+            "status": "published",
+            "packageSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "versionTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "evidenceRoot": "sha256:1515151515151515151515151515151515151515151515151515151515151515"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "already-applied",
+          "observedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "evidenceRoots": [
+            "sha256:1515151515151515151515151515151515151515151515151515151515151515"
+          ],
+          "sampleRoot": "sha256:20978debf5eec5a25ab542640b30a488c0679f29f08c494477258cf9351547f6"
+        }
+      ]
+    },
+    {
+      "id": "oci-not-found",
+      "readbacks": [
+        {
+          "provider": "oci",
+          "response": {
+            "schema": "buildchain-v4-oci-manifest-readback/v1",
+            "status": 404,
+            "repositorySubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "manifestTargetRoot": null,
+            "evidenceRoot": "sha256:1616161616161616161616161616161616161616161616161616161616161616"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1616161616161616161616161616161616161616161616161616161616161616"
+          ],
+          "sampleRoot": "sha256:f66e7316df3dcafaa22975b3e82275d4ab5d16d19fa1b572df9c860d4e91c3c6"
+        }
+      ]
+    },
+    {
+      "id": "oci-eventually-visible",
+      "readbacks": [
+        {
+          "provider": "oci",
+          "response": {
+            "schema": "buildchain-v4-oci-manifest-readback/v1",
+            "status": 202,
+            "repositorySubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "manifestTargetRoot": null,
+            "evidenceRoot": "sha256:1717171717171717171717171717171717171717171717171717171717171717"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "eventually-visible",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1717171717171717171717171717171717171717171717171717171717171717"
+          ],
+          "sampleRoot": "sha256:06295e5d13ebb2f6767b4c82e1aee9c386aff7d33ed6591c692df3561d3b6346"
+        }
+      ]
+    },
+    {
+      "id": "oci-already-applied",
+      "readbacks": [
+        {
+          "provider": "oci",
+          "response": {
+            "schema": "buildchain-v4-oci-manifest-readback/v1",
+            "status": 200,
+            "repositorySubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "manifestTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "evidenceRoot": "sha256:1818181818181818181818181818181818181818181818181818181818181818"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "already-applied",
+          "observedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "evidenceRoots": [
+            "sha256:1818181818181818181818181818181818181818181818181818181818181818"
+          ],
+          "sampleRoot": "sha256:3e11ce8b7e7f106f2db92a14f0db3ff3d1206579599b8caf14c00e741965104d"
+        }
+      ]
+    },
+    {
+      "id": "duplicate-readback-is-idempotent",
+      "readbacks": [
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 200,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "evidenceRoot": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+          }
+        },
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 200,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "evidenceRoot": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "already-applied",
+          "observedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "evidenceRoots": [
+            "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+          ],
+          "sampleRoot": "sha256:6d9f760eea5877f76e7f0b1a6ee2d9570d7a07bc6982584295000e7653ea61f5"
+        },
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "already-applied",
+          "observedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "evidenceRoots": [
+            "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+          ],
+          "sampleRoot": "sha256:6d9f760eea5877f76e7f0b1a6ee2d9570d7a07bc6982584295000e7653ea61f5"
+        }
+      ]
+    },
+    {
+      "id": "reordered-readbacks-are-idempotent",
+      "readbacks": [
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 202,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": null,
+            "evidenceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        },
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 404,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": null,
+            "evidenceRoot": "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "eventually-visible",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          "sampleRoot": "sha256:8795b7fae8c27ba4a76a9eaf5194b4003cc5e0ba9e1e0f688da3cf96e9ae4adb"
+        },
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+          ],
+          "sampleRoot": "sha256:8545497295c5ee42aa6068875fb3fd3bea0b8f16c2131cc294730121448d1bf1"
+        }
+      ]
+    }
+  ],
+  "invalidCases": [
+    {
+      "id": "github-conflicting-target",
+      "readbacks": [
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 409,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "evidenceRoot": "sha256:1919191919191919191919191919191919191919191919191919191919191919"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "already-applied",
+          "observedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "evidenceRoots": [
+            "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+          ],
+          "sampleRoot": "sha256:6d9f760eea5877f76e7f0b1a6ee2d9570d7a07bc6982584295000e7653ea61f5"
+        },
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+          ],
+          "sampleRoot": "sha256:8545497295c5ee42aa6068875fb3fd3bea0b8f16c2131cc294730121448d1bf1"
+        }
+      ]
+    },
+    {
+      "id": "github-malformed",
+      "readbacks": [
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 404,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": null
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "github-root-mismatch",
+      "readbacks": [
+        {
+          "provider": "github",
+          "response": {
+            "schema": "buildchain-v4-github-release-readback/v1",
+            "status": 200,
+            "assetSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "assetTargetRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "evidenceRoot": "sha256:2020202020202020202020202020202020202020202020202020202020202020"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+          ],
+          "sampleRoot": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "id": "npm-conflicting-target",
+      "readbacks": [
+        {
+          "provider": "npm",
+          "response": {
+            "schema": "buildchain-v4-npm-publication-readback/v1",
+            "status": "conflict",
+            "packageSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "versionTargetRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "evidenceRoot": "sha256:2121212121212121212121212121212121212121212121212121212121212121"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "already-applied",
+          "observedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "evidenceRoots": [
+            "sha256:1515151515151515151515151515151515151515151515151515151515151515"
+          ],
+          "sampleRoot": "sha256:20978debf5eec5a25ab542640b30a488c0679f29f08c494477258cf9351547f6"
+        },
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1313131313131313131313131313131313131313131313131313131313131313"
+          ],
+          "sampleRoot": "sha256:91eae57f0f80297af1450dd0ae76875ee2e16a6ab6003fb219236a98f3bcb0a3"
+        }
+      ]
+    },
+    {
+      "id": "npm-malformed",
+      "readbacks": [
+        {
+          "provider": "npm",
+          "response": {
+            "schema": "buildchain-v4-npm-publication-readback/v1",
+            "status": "not-found",
+            "packageSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "versionTargetRoot": null
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1313131313131313131313131313131313131313131313131313131313131313"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npm-root-mismatch",
+      "readbacks": [
+        {
+          "provider": "npm",
+          "response": {
+            "schema": "buildchain-v4-npm-publication-readback/v1",
+            "status": "published",
+            "packageSubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "versionTargetRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "evidenceRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1313131313131313131313131313131313131313131313131313131313131313"
+          ],
+          "sampleRoot": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "id": "oci-conflicting-target",
+      "readbacks": [
+        {
+          "provider": "oci",
+          "response": {
+            "schema": "buildchain-v4-oci-manifest-readback/v1",
+            "status": 409,
+            "repositorySubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "manifestTargetRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "evidenceRoot": "sha256:2323232323232323232323232323232323232323232323232323232323232323"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "already-applied",
+          "observedTargetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "evidenceRoots": [
+            "sha256:1818181818181818181818181818181818181818181818181818181818181818"
+          ],
+          "sampleRoot": "sha256:3e11ce8b7e7f106f2db92a14f0db3ff3d1206579599b8caf14c00e741965104d"
+        },
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1616161616161616161616161616161616161616161616161616161616161616"
+          ],
+          "sampleRoot": "sha256:f66e7316df3dcafaa22975b3e82275d4ab5d16d19fa1b572df9c860d4e91c3c6"
+        }
+      ]
+    },
+    {
+      "id": "oci-malformed",
+      "readbacks": [
+        {
+          "provider": "oci",
+          "response": {
+            "schema": "buildchain-v4-oci-manifest-readback/v1",
+            "status": 404,
+            "repositorySubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "manifestTargetRoot": null
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1616161616161616161616161616161616161616161616161616161616161616"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oci-root-mismatch",
+      "readbacks": [
+        {
+          "provider": "oci",
+          "response": {
+            "schema": "buildchain-v4-oci-manifest-readback/v1",
+            "status": 200,
+            "repositorySubjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "manifestTargetRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "evidenceRoot": "sha256:2424242424242424242424242424242424242424242424242424242424242424"
+          }
+        }
+      ],
+      "neutralSamples": [
+        {
+          "schema": "buildchain-v4-provider-readback-sample/v1",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "state": "not-found",
+          "observedTargetRoot": null,
+          "evidenceRoots": [
+            "sha256:1616161616161616161616161616161616161616161616161616161616161616"
+          ],
+          "sampleRoot": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
+    }
+  ]
+}
