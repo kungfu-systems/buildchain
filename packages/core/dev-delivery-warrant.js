@@ -316,7 +316,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
       candidateId: queue.activeWarrant.candidateId,
       fencingToken: queue.activeWarrant.fencingToken,
       leaseGeneration: queue.activeWarrant.generation,
-      expectedOldStateRoot: queue.stateRoot,
+      expectedOldStateRoot: recoveryReceipt?.expectedOldStateRoot || queue.stateRoot,
       nextStateRoot: queue.stateRoot,
       nextAction: "Continue the active delivery attempt; later candidates remain visibly queued.",
     };
@@ -413,7 +413,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
     effectivePriority: selected.priority.score,
     fencingToken: transaction.result.warrant.fencingToken,
     leaseGeneration: transaction.result.warrant.generation,
-    expectedOldStateRoot: transaction.expectedOldStateRoot,
+    expectedOldStateRoot: recoveryReceipt?.expectedOldStateRoot || transaction.expectedOldStateRoot,
     nextStateRoot: transaction.after.stateRoot,
     nextAction: transaction.result.warrant.nextAction,
   };
