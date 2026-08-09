@@ -512,7 +512,9 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(windows, /SignatureStatus\]::Valid/);
 });
 
-test("compound Apple archives sign outer and wheel Mach-O bytes and rebuild RECORD", () => {
+test("compound Apple archives sign outer and wheel Mach-O bytes and rebuild RECORD", {
+  skip: process.platform === "win32",
+}, () => {
   const root = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-compound-signing-"),
   );

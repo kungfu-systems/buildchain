@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { execFileSync, execSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -9,6 +9,7 @@ import {
   normalizeLifecycleStage,
   runLifecycleStage,
 } from "../packages/core/buildchain-config.js";
+import { runProcessTreeCommandSync, runShellCommandSync } from "../packages/core/spawn-command.js";
 import {
   createBuildchainLogger,
   readBuildchainLogEvents,
@@ -244,16 +245,14 @@ function executeSampledShellCommand({
     args.push("--requested-parallelism", String(Number(requestedParallelism)));
   }
   args.push("--", ...shellCommandArgs(command, shell));
-  const result = spawnSync(process.execPath, args, {
-    cwd,
-    env,
-    stdio: "inherit",
-    timeout,
-  });
-  if (result.error || result.status !== 0 || result.signal) {
-    const error = result.error || new Error(`sampled lifecycle command failed with status ${result.status ?? ""}`);
-    error.status = result.status ?? error.status ?? 1;
-    error.signal = result.signal || error.signal || "";
+  try {
+    runProcessTreeCommandSync(process.execPath, args, {
+      cwd,
+      env,
+      stdio: "inherit",
+      timeout,
+    });
+  } catch (error) {
     attachProcessSampleFailureEvidence(error, processSummaryPath);
     throw error;
   }
@@ -565,7 +564,7 @@ export function runLifecycle({
           timeout: effectiveCommandTimeoutMinutes ? effectiveCommandTimeoutMinutes * 60_000 : undefined,
         });
       } else {
-        execSync(command, {
+        runShellCommandSync(command, {
           cwd: resolvedCwd,
           env: commandEnv,
           shell: commandShell,

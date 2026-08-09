@@ -564,7 +564,10 @@ test("release propagation write-lock writes exact downstream lock", () => {
   });
   const lock = JSON.parse(fs.readFileSync(result.path, "utf8"));
 
-  assert.equal(path.relative(cwd, result.path), "buildchain.upstreams/kfd.release.json");
+  assert.equal(
+    path.relative(cwd, result.path).split(path.sep).join("/"),
+    "buildchain.upstreams/kfd.release.json",
+  );
   assert.equal(lock.contract, "kungfu-buildchain-release-propagation-lock");
   assert.equal(lock.downstream.repository, "kungfu-systems/site-libkungfu-dev");
   assert.equal(lock.upstream.tag, "v1.4.0-alpha.3");

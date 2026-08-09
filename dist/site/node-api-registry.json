@@ -1726,7 +1726,7 @@
         "May throw an Error on rejected input or failed operations; follow the linked source contract."
       ],
       "sideEffects": [
-        "subprocess"
+        "may-write-or-invoke-external-actions"
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
@@ -19868,7 +19868,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-reproducibility",
       "export": "./publication-reproducibility",
       "target": "./packages/core/publication-reproducibility.js",
-      "digest": "sha256:ce857ae600c4abb88b21c180c68f014044b3ea673c97b32227806c7bd91f6879",
+      "digest": "sha256:a4880872e8408b522dd1102c3fa1b7728b104ab85ea2ec5e309f07d5e4faf660",
       "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -20489,7 +20489,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:adee59b8a52eb3f2782191caec1fa0253b4c0a98097ace8403f882f087ccbccb"
+      "digest": "sha256:6c58f69c76a3c3b398503e5ab8e11546a47c7ce23f97515552453afd6de3098b"
     },
     {
       "id": "build-facts",

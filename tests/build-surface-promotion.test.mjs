@@ -2219,7 +2219,7 @@ test("runLifecycle command override inherits declared stage shell and lifecycle 
   fs.cpSync(path.join(root, "fixtures/libnode-shaped"), fixture, { recursive: true });
   const configPath = path.join(fixture, "buildchain.toml");
   fs.writeFileSync(configPath, fs.readFileSync(configPath, "utf8")
-    .replace('[lifecycle.verify]\ncommand = "node scripts/verify.mjs"', '[lifecycle.verify]\ncommand = "node scripts/verify.mjs"\nshell = "/bin/bash"\n\n[lifecycle.verify.env]\nBUILDCHAIN_STAGE_ENV = "stage-value"')
+    .replace('[lifecycle.verify]\ncommand = "node scripts/verify.mjs"', '[lifecycle.verify]\ncommand = "node scripts/verify.mjs"\nshell = "bash"\n\n[lifecycle.verify.env]\nBUILDCHAIN_STAGE_ENV = "stage-value"')
     .replace("[lifecycle.install]", '[lifecycle.env]\nBUILDCHAIN_SHARED_ENV = "shared-value"\n\n[lifecycle.install]'));
   try {
     runLifecycle({
@@ -2229,7 +2229,7 @@ test("runLifecycle command override inherits declared stage shell and lifecycle 
       required: true,
       workspace,
     });
-    assert.deepEqual(fs.readFileSync(path.join(fixture, "command-override.txt"), "utf8").trim().split("\n"), ["/bin/bash", "shared-value", "stage-value"]);
+    assert.deepEqual(fs.readFileSync(path.join(fixture, "command-override.txt"), "utf8").trim().split("\n"), ["bash", "shared-value", "stage-value"]);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
@@ -2388,7 +2388,7 @@ test("runLifecycle records sampled command failure evidence", () => {
       () => runLifecycle({
         cwd: fixture,
         command: [
-          JSON.stringify(process.execPath),
+          "node",
           "-e",
           JSON.stringify("console.log('wrapped stdout marker'); console.error('wrapped stderr marker'); process.exit(7);"),
         ].join(" "),

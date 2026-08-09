@@ -121,7 +121,7 @@ test("Build Facts Node API collects module facts, product facts, and stale sourc
   assert.equal(productFact.modules[0].verificationStatus, "passed");
   assert.equal(productFact.verification.ok, true, JSON.stringify(productFact.verification.issues, null, 2));
 
-  writeFile(path.join(cwd, "src/core/main.cc"), "int kungfu_core(void) { return 2; }\n");
+  writeFile(path.join(cwd, "src/core/main.cc"), "int kungfu_core(void) { return 200; }\n");
   const stale = verifyBuildFacts({ cwd, fact: moduleFact });
   assert.equal(stale.ok, false);
   assert.equal(stale.issues.some((issue) => issue.id === "git.sourceDigest"), true);

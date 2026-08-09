@@ -1,4 +1,3 @@
-import { execSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -8,6 +7,7 @@ import {
   BUILDCHAIN_CONFIG_PATH,
   resolveBuildchainConfigPath,
 } from "./buildchain-layout.js";
+import { runShellCommandSync } from "./spawn-command.js";
 
 const CONFIG_FILE = BUILDCHAIN_CONFIG_PATH;
 const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
@@ -1403,11 +1403,11 @@ export function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, sta
   };
   const runOnce = () => {
     if (selected.mode === "script") {
-      execSync(selected.script, execOptions);
+      runShellCommandSync(selected.script, execOptions);
       return;
     }
     for (const command of selected.commands) {
-      execSync(command, execOptions);
+      runShellCommandSync(command, execOptions);
     }
   };
   let lastError;

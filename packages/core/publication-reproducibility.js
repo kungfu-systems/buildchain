@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -8,6 +7,7 @@ import zlib from "node:zlib";
 import { loadBuildchainConfig } from "./buildchain-config.js";
 import { writePublicationArtifact } from "./publication-artifact.js";
 import { preparePublicationNpmPackage } from "./publication-package.js";
+import { spawnSyncCommand } from "./spawn-command.js";
 
 export const PUBLICATION_REPRODUCIBILITY_RECEIPT_CONTRACT =
   "kungfu-buildchain-publication-reproducibility-receipt";
@@ -62,7 +62,7 @@ function run(
   args,
   { cwd, env = process.env, label = [command, ...args].join(" ") } = {},
 ) {
-  const result = spawnSync(command, args, {
+  const result = spawnSyncCommand(command, args, {
     cwd,
     env,
     encoding: "utf8",

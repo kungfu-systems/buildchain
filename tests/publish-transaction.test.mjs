@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 import {
   attachReleaseTransactionSealedBundle,
@@ -738,7 +739,7 @@ test("npm publish transaction fails closed on non-404 registry lookup errors", (
   const fakeBin = path.join(cwd, "bin");
   fs.mkdirSync(fakeBin);
   const fakeNpm = path.join(fakeBin, "npm");
-  fs.writeFileSync(fakeNpm, `#!/usr/bin/env node
+  materializeCommandShim(fakeNpm, `#!/usr/bin/env node
 const args = process.argv.slice(2);
 if (args[0] === "pack") {
   process.stdout.write(JSON.stringify([{
@@ -758,7 +759,6 @@ if (args[0] === "view") {
 process.stderr.write("unexpected npm command: " + args.join(" ") + "\\n");
 process.exit(2);
 `);
-  fs.chmodSync(fakeNpm, 0o755);
   const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.2.3/evidence.json");
   const run = spawnSync(process.execPath, [
     path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),

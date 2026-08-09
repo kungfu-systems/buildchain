@@ -17,6 +17,7 @@ import {
   windowsCampaignKillArgs,
   windowsCampaignReservationItems,
 } from "../scripts/aws-windows-jit-campaign-core.mjs";
+import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 function launchPlan(overrides = {}) {
   return createWindowsJitLaunchPlan({
@@ -264,7 +265,7 @@ test("Windows campaign kill persists state before publishing cleanup", () => {
     path.join(os.tmpdir(), "buildchain-windows-jit-kill-test-"),
   );
   const log = path.join(tempRoot, "aws.jsonl");
-  fs.writeFileSync(
+  materializeCommandShim(
     path.join(tempRoot, "aws"),
     `#!/usr/bin/env node
 const fs = require("node:fs");
@@ -301,7 +302,7 @@ process.stdout.write(JSON.stringify(args.includes("publish") ? { MessageId: "mes
         encoding: "utf8",
         env: {
           ...process.env,
-          PATH: `${tempRoot}:${process.env.PATH}`,
+          PATH: `${tempRoot}${path.delimiter}${process.env.PATH}`,
           FAKE_COMMAND_LOG: log,
         },
       },
@@ -372,7 +373,7 @@ test("Windows controller terminates an exact tagged instance after an ambiguous 
   const commandLog = path.join(tempRoot, "commands.jsonl");
   const fake = (name, source) => {
     const file = path.join(tempRoot, name);
-    fs.writeFileSync(file, `#!/usr/bin/env node\n${source}\n`, { mode: 0o700 });
+    materializeCommandShim(file, `#!/usr/bin/env node\n${source}\n`, { mode: 0o700 });
   };
   fake(
     "gh",
@@ -498,7 +499,7 @@ if (joined.includes("sts get-caller-identity")) {
       encoding: "utf8",
       env: {
         ...process.env,
-        PATH: `${tempRoot}:${process.env.PATH}`,
+        PATH: `${tempRoot}${path.delimiter}${process.env.PATH}`,
         FAKE_COMMAND_LOG: commandLog,
       },
     });
@@ -539,7 +540,7 @@ test("Windows controller execute keeps JIT material out of argv and launches onl
   const commandLog = path.join(tempRoot, "commands.jsonl");
   const fake = (name, source) => {
     const file = path.join(tempRoot, name);
-    fs.writeFileSync(file, `#!/usr/bin/env node\n${source}\n`, { mode: 0o700 });
+    materializeCommandShim(file, `#!/usr/bin/env node\n${source}\n`, { mode: 0o700 });
     return file;
   };
   fake(
@@ -664,7 +665,7 @@ if (joined.includes("sts get-caller-identity")) {
         encoding: "utf8",
         env: {
           ...process.env,
-          PATH: `${tempRoot}:${process.env.PATH}`,
+          PATH: `${tempRoot}${path.delimiter}${process.env.PATH}`,
           FAKE_COMMAND_LOG: commandLog,
         },
       },

@@ -13,7 +13,11 @@ import {
   inspectKfdAgentHub,
   testKfdAgentHub,
 } from "../packages/core/kfd-agent-hub.js";
-import { spawnSyncCommand } from "../packages/core/spawn-command.js";
+import {
+  resolveSpawnCommand,
+  spawnSyncCommand,
+  usesShellForSpawnCommand,
+} from "../packages/core/spawn-command.js";
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
@@ -140,6 +144,17 @@ test("default runner resolves Windows package-manager command shims", () => {
   assert.deepEqual(calls[0].args, ["run", "build"]);
   assert.equal(calls[0].options.cwd, "C:\\agent-hub");
   assert.equal(calls[0].options.shell, true);
+});
+
+test("default runner resolves arbitrary Windows command shims from PATH", () => {
+  const bin = tempDir("windows-command-shim");
+  fs.writeFileSync(path.join(bin, "gh.cmd"), "@echo off\r\n");
+  const env = { PATH: bin };
+
+  assert.equal(resolveSpawnCommand("gh", "win32", env), "gh.cmd");
+  assert.equal(usesShellForSpawnCommand("gh", "win32", env), true);
+  assert.equal(resolveSpawnCommand("aws", "win32", env), "aws");
+  assert.equal(usesShellForSpawnCommand("aws", "win32", env), false);
 });
 
 test("inspect locks the exact KFD package, profile, suite, and adapter artifact", () => {

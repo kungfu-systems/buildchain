@@ -2,6 +2,10 @@
 import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import {
+  resolveSpawnCommand,
+  usesShellForSpawnCommand,
+} from "../packages/core/spawn-command.js";
 
 const INTERNAL_COMMAND = "--buildchain-internal-git-fetch";
 const TIMEOUT_EXIT_CODE = 124;
@@ -63,10 +67,11 @@ async function runInternalGitFetch() {
     50,
     Number(process.env.BUILDCHAIN_GIT_TIMEOUT_GRACE_MS || 2000),
   );
-  const child = spawn("git", payload.args, {
+  const child = spawn(resolveSpawnCommand("git"), payload.args, {
     cwd: payload.cwd,
     env: process.env,
     detached: process.platform !== "win32",
+    shell: usesShellForSpawnCommand("git"),
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });

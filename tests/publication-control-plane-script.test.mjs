@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE_SHA = "a".repeat(40);
@@ -108,8 +109,7 @@ function runAudit({ requiredCheckConclusion = "success", historicalSource = fals
   const bin = path.join(cwd, "bin");
   fs.mkdirSync(bin);
   const gh = path.join(bin, "gh");
-  fs.writeFileSync(gh, fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit));
-  fs.chmodSync(gh, 0o755);
+  materializeCommandShim(gh, fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit));
   const result = spawnSync(process.execPath, [
     path.join(root, "scripts/audit-publication-control-plane.mjs"),
     "--repository", "kungfu-systems/buildchain",

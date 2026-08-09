@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { spawnSync } from "node:child_process";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 export function commandResult(command, args, options = {}) {
-  const result = spawnSync(command, args, {
+  const result = spawnSyncCommand(command, args, {
     encoding: "utf8",
     maxBuffer: 16 * 1024 * 1024,
     stdio: [options.input === undefined ? "ignore" : "pipe", "pipe", "pipe"],
