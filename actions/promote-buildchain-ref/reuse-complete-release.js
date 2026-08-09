@@ -106,7 +106,7 @@ async function verifyPublicPassport({ octokit, owner, repo, remoteAssets, localF
   try {
     const passportPath = await stagePublicPassport({ octokit, owner, repo, remoteAssets, localFallbacks, directory });
     const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
-    const report = await verifyPassport({ passportLocation: passportPath });
+    const report = await verifyPassport({ passportLocation: passportPath, checkedAt: passport.generatedAt || undefined });
     if (report?.ok !== true) {
       const issues = (report?.issues || [])
         .map((issue) => `${issue.code || "unknown"}: ${issue.message || "verification failed"}`)
