@@ -426,12 +426,12 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
   };
 }
 
-function assertWarrantMutation(queue, warrant, now) {
+function assertWarrantMutation(queue, warrant, now, { allowExpired = false } = {}) {
   if (!queue.activeWarrant) throw new Error("no active Delivery Warrant");
   if (text(warrant?.fencingToken) !== queue.activeWarrant.fencingToken) throw new Error("stale fencing token");
   if (Number(warrant?.generation) !== queue.activeWarrant.generation) throw new Error("stale lease generation");
   if (text(warrant?.candidateId) !== queue.activeWarrant.candidateId) throw new Error("Warrant candidate mismatch");
-  if (Date.parse(queue.activeWarrant.expiresAt) <= Date.parse(now)) throw new Error("Delivery Warrant lease expired");
+  if (!allowExpired && Date.parse(queue.activeWarrant.expiresAt) <= Date.parse(now)) throw new Error("Delivery Warrant lease expired");
 }
 
 export function heartbeatDevDeliveryWarrant(queueInput, warrant, { now = new Date().toISOString(), leaseSeconds } = {}) {
@@ -526,7 +526,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
   const transaction = transition(
     queueInput,
     (queue, before) => {
-      assertWarrantMutation(before, warrant, currentTime);
+      assertWarrantMutation(before, warrant, currentTime, { allowExpired: true });
       const active = clone(queue.activeWarrant);
       const candidate = queue.candidates.find((entry) => entry.candidateId === active.candidateId);
       candidate.status = normalizedOutcome;
