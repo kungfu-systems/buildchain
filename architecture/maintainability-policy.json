@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 289,
-    "maxHandMaintainedSourceLines": 112227,
+    "maxHandMaintainedSourceFiles": 291,
+    "maxHandMaintainedSourceLines": 112956,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22679,
     "latestTransition": "Dev Delivery Warrant adds bounded-concurrency shadow qualification.",
-    "rationale": "One effect-disabled source module adds deterministic one-or-two-lane replay, exact per-lane evidence binding, threshold qualification, and fail-closed fixtures without adding a writer, scheduler, workflow, live Warrant, or production authority. The existing production queue remains single-flight, and this exact post-integration ceiling cannot grow implicitly."
+    "rationale": "Building on the bounded Engineering Housekeeper GitHub engine, one effect-disabled source module adds deterministic one-or-two-lane replay, exact per-lane evidence binding, threshold qualification, and fail-closed fixtures without adding a writer, scheduler, workflow, live Warrant, or production authority. The existing production queue remains single-flight, and this exact post-integration ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -61,8 +61,8 @@
       "rationale": "Artifact signing configuration admits only the Buildchain-owned JIT profile with exact safe archive-relative target paths while rejecting credentials, entitlement files, wildcard paths, incompatible artifact kinds, and incomplete declarations; this exact wiring ceiling cannot grow implicitly."
     },
     "packages/core/index.js": {
-      "maxLines": 697,
-      "rationale": "The root package index adds the version-neutral Engineering Housekeeper contract export while preserving every existing export; this exact additive public wiring ceiling cannot grow implicitly."
+      "maxLines": 698,
+      "rationale": "The root package index adds the bounded GitHub Engineering Housekeeper engine beside its provider-neutral contract while preserving every existing export; this exact additive public wiring ceiling cannot grow implicitly."
     },
     "packages/core/diagnostics.js": {
       "maxLines": 1909,

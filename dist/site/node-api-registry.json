@@ -6186,6 +6186,170 @@
       ]
     },
     {
+      "id": "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
+      "name": "GitHubHousekeeperClient",
+      "kind": "class",
+      "signature": "class GitHubHousekeeperClient",
+      "parameters": [],
+      "returns": "GitHubHousekeeperClient",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github-client.js",
+        "line": 53
+      },
+      "example": "import { GitHubHousekeeperClient } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
+      "name": "GitHubHousekeeperProviderError",
+      "kind": "class",
+      "signature": "class GitHubHousekeeperProviderError",
+      "parameters": [],
+      "returns": "GitHubHousekeeperProviderError",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github-client.js",
+        "line": 36
+      },
+      "example": "import { GitHubHousekeeperProviderError } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github.js#applyGitHubHousekeeperPlan",
+      "name": "applyGitHubHousekeeperPlan",
+      "kind": "function",
+      "signature": "async function applyGitHubHousekeeperPlan({ client, plan, dryRun = true, priorReceipt, appliedAt = new Date().toISOString(), staleDays = DEFAULT_STALE_DAYS, maxActions = DEFAULT_MAX_ACTIONS, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ client, plan, dryRun = true, priorReceipt, appliedAt = new Date().toISOString(), staleDays = DEFAULT_STALE_DAYS, maxActions = DEFAULT_MAX_ACTIONS, }"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github.js",
+        "line": 409
+      },
+      "example": "import { applyGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github.js#collectGitHubHousekeeperInventory",
+      "name": "collectGitHubHousekeeperInventory",
+      "kind": "function",
+      "signature": "async function collectGitHubHousekeeperInventory({ client, repository, targetBranch, observedAt, staleDays = DEFAULT_STALE_DAYS, policy = {}, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ client, repository, targetBranch, observedAt, staleDays = DEFAULT_STALE_DAYS, policy = {}, }"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github.js",
+        "line": 110
+      },
+      "example": "import { collectGitHubHousekeeperInventory } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github.js#formatGitHubHousekeeperPlan",
+      "name": "formatGitHubHousekeeperPlan",
+      "kind": "function",
+      "signature": "function formatGitHubHousekeeperPlan(plan)",
+      "parameters": [
+        {
+          "name": "plan",
+          "signature": "plan"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github.js",
+        "line": 491
+      },
+      "example": "import { formatGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github.js#runGitHubHousekeeper",
+      "name": "runGitHubHousekeeper",
+      "kind": "function",
+      "signature": "async function runGitHubHousekeeper(options)",
+      "parameters": [
+        {
+          "name": "options",
+          "signature": "options"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github.js",
+        "line": 485
+      },
+      "example": "import { runGitHubHousekeeper } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
       "name": "classifyHousekeeperBranch",
       "kind": "function",
@@ -6242,7 +6406,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 126
+        "line": 129
       },
       "example": "import { classifyHousekeeperPullRequest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6275,7 +6439,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 247
+        "line": 250
       },
       "example": "import { classifyHousekeeperReplay } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6304,7 +6468,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 152
+        "line": 155
       },
       "example": "import { createEngineeringHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6333,7 +6497,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 228
+        "line": 231
       },
       "example": "import { createEngineeringHousekeeperReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6495,7 +6659,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 205
+        "line": 208
       },
       "example": "import { revalidateHousekeeperBranchAction } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19507,14 +19671,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:e920962ff665e51f83a6fbef4728ea1698172bd1e8f94d865ea8d359ac952273",
+      "digest": "sha256:ae7917ccdbbf268073bad5dac68e9af915d6e40ede628171f4e5241c4e5bc88a",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 603,
+      "symbolCount": 609,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -19522,6 +19686,7 @@
         "packages/core/controller-evidence.js#aggregateControllerReceipts",
         "packages/core/anchored-version-material.js#ANCHORED_VERSION_MATERIAL_CONTRACT",
         "packages/core/logging.js#appendBuildchainLogEvent",
+        "packages/core/engineering-housekeeper-github.js#applyGitHubHousekeeperPlan",
         "packages/core/surface-manifest.js#applySurfaceTimestampPolicy",
         "packages/core/release-passport.js#ARTIFACT_EVIDENCE_CONTRACT",
         "packages/core/artifact-passport.js#ARTIFACT_PASSPORT_LOCATOR_CONTRACT",
@@ -19624,6 +19789,7 @@
         "packages/core/diagnostics.js#collectCacheDiagnostics",
         "packages/core/diagnostics.js#collectCompilerCacheDiagnostics",
         "packages/core/diagnostics.js#collectGitDiagnostics",
+        "packages/core/engineering-housekeeper-github.js#collectGitHubHousekeeperInventory",
         "packages/core/release-passport.js#collectGitHubReleasePassport",
         "packages/core/build-facts.js#collectGitSourceFacts",
         "packages/core/homebrew.js#collectHomebrewTapFacts",
@@ -19784,6 +19950,7 @@
         "packages/core/buildchain-contract.js#finalizeBuildchainContractWorld",
         "packages/core/candidate-timeline.js#formatCandidateTimelineReport",
         "packages/core/diagnostics.js#formatDiagnosticsSummaryTable",
+        "packages/core/engineering-housekeeper-github.js#formatGitHubHousekeeperPlan",
         "packages/core/release-line-dry-run.js#formatReleaseLineDryRun",
         "packages/core/buildchain-config.js#getLifecycleStage",
         "packages/core/buildchain-config.js#getNativeDiagnosticsProfile",
@@ -19806,6 +19973,8 @@
         "packages/core/github-artifact-attestation.js#githubArtifactAttestationSha256Buffer",
         "packages/core/github-artifact-attestation.js#githubArtifactAttestationSha256File",
         "packages/core/github-governance-authority.js#githubGovernanceDigest",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
         "packages/core/issue-reporting.js#GitHubIssueRequestError",
         "packages/core/release-tail-provider-adapters.js#githubReleaseAssetsTargetRoot",
         "packages/core/homebrew.js#HOMEBREW_TAP_CHECK_CONTRACT",
@@ -20028,6 +20197,7 @@
         "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction",
         "packages/core/stable-candidate-ledger.js#revokeStableCandidate",
         "packages/core/release-activation-transaction.js#rollbackReleaseActivationTransaction",
+        "packages/core/engineering-housekeeper-github.js#runGitHubHousekeeper",
         "packages/core/buildchain-config.js#runLifecycleStage",
         "packages/core/publication-authority.js#RUNNER_PROVENANCE_CLASSES",
         "packages/core/publication-authority.js#RUNNER_PROVENANCE_CONTRACT",
@@ -20208,14 +20378,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:e920962ff665e51f83a6fbef4728ea1698172bd1e8f94d865ea8d359ac952273",
+      "digest": "sha256:ae7917ccdbbf268073bad5dac68e9af915d6e40ede628171f4e5241c4e5bc88a",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 603,
+      "symbolCount": 609,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -20223,6 +20393,7 @@
         "packages/core/controller-evidence.js#aggregateControllerReceipts",
         "packages/core/anchored-version-material.js#ANCHORED_VERSION_MATERIAL_CONTRACT",
         "packages/core/logging.js#appendBuildchainLogEvent",
+        "packages/core/engineering-housekeeper-github.js#applyGitHubHousekeeperPlan",
         "packages/core/surface-manifest.js#applySurfaceTimestampPolicy",
         "packages/core/release-passport.js#ARTIFACT_EVIDENCE_CONTRACT",
         "packages/core/artifact-passport.js#ARTIFACT_PASSPORT_LOCATOR_CONTRACT",
@@ -20325,6 +20496,7 @@
         "packages/core/diagnostics.js#collectCacheDiagnostics",
         "packages/core/diagnostics.js#collectCompilerCacheDiagnostics",
         "packages/core/diagnostics.js#collectGitDiagnostics",
+        "packages/core/engineering-housekeeper-github.js#collectGitHubHousekeeperInventory",
         "packages/core/release-passport.js#collectGitHubReleasePassport",
         "packages/core/build-facts.js#collectGitSourceFacts",
         "packages/core/homebrew.js#collectHomebrewTapFacts",
@@ -20485,6 +20657,7 @@
         "packages/core/buildchain-contract.js#finalizeBuildchainContractWorld",
         "packages/core/candidate-timeline.js#formatCandidateTimelineReport",
         "packages/core/diagnostics.js#formatDiagnosticsSummaryTable",
+        "packages/core/engineering-housekeeper-github.js#formatGitHubHousekeeperPlan",
         "packages/core/release-line-dry-run.js#formatReleaseLineDryRun",
         "packages/core/buildchain-config.js#getLifecycleStage",
         "packages/core/buildchain-config.js#getNativeDiagnosticsProfile",
@@ -20507,6 +20680,8 @@
         "packages/core/github-artifact-attestation.js#githubArtifactAttestationSha256Buffer",
         "packages/core/github-artifact-attestation.js#githubArtifactAttestationSha256File",
         "packages/core/github-governance-authority.js#githubGovernanceDigest",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
         "packages/core/issue-reporting.js#GitHubIssueRequestError",
         "packages/core/release-tail-provider-adapters.js#githubReleaseAssetsTargetRoot",
         "packages/core/homebrew.js#HOMEBREW_TAP_CHECK_CONTRACT",
@@ -20729,6 +20904,7 @@
         "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction",
         "packages/core/stable-candidate-ledger.js#revokeStableCandidate",
         "packages/core/release-activation-transaction.js#rollbackReleaseActivationTransaction",
+        "packages/core/engineering-housekeeper-github.js#runGitHubHousekeeper",
         "packages/core/buildchain-config.js#runLifecycleStage",
         "packages/core/publication-authority.js#RUNNER_PROVENANCE_CLASSES",
         "packages/core/publication-authority.js#RUNNER_PROVENANCE_CONTRACT",
@@ -22003,7 +22179,7 @@
       "specifier": "@kungfu-tech/buildchain/engineering-housekeeper",
       "export": "./engineering-housekeeper",
       "target": "./packages/core/engineering-housekeeper.js",
-      "digest": "sha256:503abcde30210eaaea36038d3b8ff85dd8080d2bb249e57896df4d205e807696",
+      "digest": "sha256:8d2075a7a4836dc8b08bc72e3e08171e3f9bcdbc18e626db912e4048769c627b",
       "summary": "Provider-neutral repository hygiene classification, deterministic plan and receipt, apply-time revalidation, and replay APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -22023,6 +22199,34 @@
         "packages/core/engineering-housekeeper.js#engineeringHousekeeperRoot",
         "packages/core/engineering-housekeeper.js#HOUSEKEEPER_REASON_CODES",
         "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/engineering-housekeeper-github",
+      "export": "./engineering-housekeeper-github",
+      "target": "./packages/core/engineering-housekeeper-github.js",
+      "digest": "sha256:fb9a9d15b284236cd4e09aedb238927d6ccd900ff011ad85eb184cecf7105750",
+      "summary": "Paginated GitHub repository hygiene inventory, default-dry-run execution, exact-head mutation fences, and rooted provider receipts.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 6,
+      "symbolIds": [
+        "packages/core/engineering-housekeeper-github.js#applyGitHubHousekeeperPlan",
+        "packages/core/engineering-housekeeper-github.js#collectGitHubHousekeeperInventory",
+        "packages/core/engineering-housekeeper-github.js#formatGitHubHousekeeperPlan",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
+        "packages/core/engineering-housekeeper-github.js#runGitHubHousekeeper"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -22562,7 +22766,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:3ad64b6fa382ea811b41c915a6db9df5f673b7d379ed459d5929863ba0ae9002"
+      "digest": "sha256:d4ded24b985e24afb815ce4434495a8412e8be2ad18e5d25cbbefdc74315efa4"
     },
     {
       "id": "build-facts",

@@ -58,6 +58,10 @@ test("fixtures cover all required safety classes", () => {
 test("branch deletion requires exact ancestry, no open PR, and no protected or retained match", () => {
   assert.equal(classifyHousekeeperBranch(branch()).eligible, true);
   assert.equal(
+    classifyHousekeeperBranch(branch({ isProtected: true })).eligible,
+    false,
+  );
+  assert.equal(
     classifyHousekeeperBranch(branch({ name: "train/v3/v3.0/demo" })).eligible,
     false,
   );
