@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 288,
-    "maxHandMaintainedSourceLines": 111698,
+    "maxHandMaintainedSourceLines": 111699,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22679,
     "latestTransition": "Engineering Housekeeper adds one version-neutral contract and fail-closed classifier.",
