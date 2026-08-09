@@ -7715,9 +7715,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
+    "cliRegistryDigest": "8a27fc9ffb5d0567a78c2f0811b77332f1493d07ecbb56cbab411e8ef4eb7b07",
     "workflowRegistryDigest": "b8d8226430132d16f40865603ff710197bb3ab9cea12d79082a3e4ad0f82a22b",
-    "pageRegistryDigest": "2cbb3159d8a1628519df92e6b9462968f7dc614dfeb42be92bb11c4a27f51fac"
+    "pageRegistryDigest": "b482ce073fbdacfb6307fd163c34130e60288aa0c14504b471308bb6cd427a7c"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 321,
-    "maxHandMaintainedSourceLines": 122873,
+    "maxHandMaintainedSourceLines": 123471,
     "maxWorkflowFiles": 64,
-    "maxWorkflowLines": 22386,
-    "latestTransition": "The partial-mutation recovery successor qualifies rooted Stage Capsule restore and activation journal evidence into one bounded shadow-only next-operation plan without adding production authority.",
-    "rationale": "The exact partial-mutation-recovery ceiling adds two hand-maintained source files and 970 hand-maintained source lines with no workflow growth. The 395-line TypeScript projection and 548-line Rust domain remain below the unchanged 600-line file ceiling, and every new function remains within existing line and complexity budgets. The closed request binds source, policy, platform, Stage Capsule qualification, activation qualification, resume plan, activation plan and state, provider operation, journal state, and compensation boundary roots. Rust remains the sole shadow planner and TypeScript is byte-equivalent. Confirmed operations are terminal noops; every nonterminal operation maps to retry, wait, reconcile, compensate, or escalate under a bounded attempt budget and exact checkpoint. Missing, expired, corrupt, conflicting, duplicate-operation, cross-boundary, or exhausted evidence fails closed. Provider SDK imports, credential reads, live mutation, filesystem and network authority, ambient clocks, public or protected ref changes, production authority changes, and v3 behavior changes remain hard-zero. Existing public-surface, workflow-file, per-file, per-function, and no-widening budgets remain unchanged; final Wave 3 reconciliation remains a separately reviewed successor."
+    "maxWorkflowLines": 22425,
+    "latestTransition": "Buildchain v4 real-lifecycle dogfood now invokes Windows command shims through explicit argument-preserving cmd.exe boundaries, keeps the flattened checkout bootstrap self-contained, and terminates timed-out lifecycle process trees without moving v3 production authority.",
+    "rationale": "This successor ceiling adds no hand-maintained source or workflow files and exactly 284 hand-maintained source lines above the preceding real-lifecycle dogfood ceiling. The added lines centralize Windows .cmd resolution, complete argument-preserving cmd.exe meta-character escaping, verbatim batch invocation, bounded lifecycle process-tree termination, standalone fallback behavior, self-contained flattened checkout bootstrap, native Git prefix handling across Windows path aliases, and cross-platform shell, Git, npm, and path handling with regression assertions; provider tests remain fake-backed and provider mutation, credential reads, publication, signing, production reuse, production stage skipping, production authority changes, and v3 behavior changes remain hard-zero. Existing workflow-file, per-file, per-function, and no-widening budgets remain unchanged."
   },
   "sourceBudgets": {
     "newFileLines": 600,

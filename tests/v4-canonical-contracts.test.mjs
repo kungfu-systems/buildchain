@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   V4ContractFault,
@@ -12,7 +13,7 @@ import {
   validateV4ReceiptEnvelope,
 } from "../packages/core/v4-canonical-contracts.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const fixturePath = new URL(
   "../architecture/v4-canonical-contract-fixtures.json",
   import.meta.url,
@@ -147,7 +148,7 @@ test("the checked-in schema suite is closed and freezes every v1 byte rule", () 
 
 test("Rust and JavaScript produce byte-identical fixture projections", () => {
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",
@@ -159,7 +160,11 @@ test("Rust and JavaScript produce byte-identical fixture projections", () => {
     ],
     { cwd: root, encoding: "utf8" },
   );
-  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(
+    result.status,
+    0,
+    result.error?.stack || result.stderr || result.stdout,
+  );
   const rust = JSON.parse(result.stdout);
   assert.deepEqual(
     rust.validCases,

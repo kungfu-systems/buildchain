@@ -1021,10 +1021,11 @@ export function planPaperMigration({
     "rev-parse",
     "--show-toplevel",
   ]);
-  if (
-    !repositoryRoot ||
-    fs.realpathSync(repositoryRoot) !== fs.realpathSync(resolvedCwd)
-  ) {
+  const repositoryPrefix = gitValue(resolvedCwd, [
+    "rev-parse",
+    "--show-prefix",
+  ]).replace(/\/+$/u, "");
+  if (!repositoryRoot || repositoryPrefix) {
     throw new Error("paper migration must target the exact repository root");
   }
   const source = {

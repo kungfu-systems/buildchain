@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { V4ContractFault } from "../packages/core/v4-canonical-contracts.js";
 import {
@@ -10,7 +11,7 @@ import {
   projectV4ReleaseActivation,
 } from "../packages/core/v4-release-activation-shadow.js";
 
-const repositoryRoot = new URL("..", import.meta.url).pathname;
+const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const fixture = JSON.parse(
   fs.readFileSync(
     new URL(
@@ -162,7 +163,7 @@ test("Rust and TypeScript produce byte-equivalent plans, folds, and roots", () =
   ];
   const typescript = projectV4ReleaseActivation(request);
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",
@@ -179,7 +180,11 @@ test("Rust and TypeScript produce byte-equivalent plans, folds, and roots", () =
       encoding: "utf8",
     },
   );
-  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(
+    result.status,
+    0,
+    result.error?.stack || result.stderr || result.stdout,
+  );
   assert.deepEqual(JSON.parse(result.stdout), typescript);
 });
 
@@ -195,7 +200,7 @@ test("ASCII step ordering is byte-stable across the Rust and TypeScript boundary
     ["a-z", "aa"],
   );
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",
@@ -212,7 +217,11 @@ test("ASCII step ordering is byte-stable across the Rust and TypeScript boundary
       encoding: "utf8",
     },
   );
-  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(
+    result.status,
+    0,
+    result.error?.stack || result.stderr || result.stdout,
+  );
   assert.deepEqual(JSON.parse(result.stdout).plan, typescript);
 });
 

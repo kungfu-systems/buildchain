@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   loadWarrantPlan,
@@ -8,7 +9,7 @@ import {
   validatePlan,
 } from "../scripts/v4-warrant-shadow-plan.mjs";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 
 test("v4 Warrant plan validates complete authority and cutover coverage", () => {
   const { plan, report, fixtureResults } = loadWarrantPlan(root);

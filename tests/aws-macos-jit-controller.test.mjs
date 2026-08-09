@@ -15,6 +15,7 @@ import {
   macosReleaseHostsArgs,
   macosRunInstancesArgs,
 } from "../scripts/aws-macos-jit-controller-core.mjs";
+import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 const values = {
   repository: "kungfu-systems/kungfu",
@@ -142,7 +143,7 @@ test("macOS close plan refuses release before the 24-hour provider minimum", () 
 function installFakes(tempRoot) {
   const fake = (name, source) => {
     const file = path.join(tempRoot, name);
-    fs.writeFileSync(file, `#!/usr/bin/env node\n${source}\n`, { mode: 0o700 });
+    materializeCommandShim(file, `#!/usr/bin/env node\n${source}\n`, { mode: 0o700 });
   };
   fake(
     "gh",
@@ -294,7 +295,7 @@ test("macOS controller launches only after exact-source preflight and both AWS D
         encoding: "utf8",
         env: {
           ...process.env,
-          PATH: `${tempRoot}:${process.env.PATH}`,
+          PATH: `${tempRoot}${path.delimiter}${process.env.PATH}`,
           FAKE_COMMAND_LOG: commandLog,
         },
       },
@@ -364,7 +365,7 @@ function runJobWithFakes({ sendFailure = false } = {}) {
       encoding: "utf8",
       env: {
         ...process.env,
-        PATH: `${tempRoot}:${process.env.PATH}`,
+        PATH: `${tempRoot}${path.delimiter}${process.env.PATH}`,
         FAKE_COMMAND_LOG: commandLog,
         FAKE_SEND_FAILURE: sendFailure ? "true" : "false",
       },
@@ -387,7 +388,9 @@ test("macOS controller keeps JIT secret out of argv and sends bootstrap through 
       (entry) => entry.inputMode !== undefined,
     );
     assert.ok(fileInputs.length >= 2);
-    assert.ok(fileInputs.every((entry) => entry.inputMode === 0o600));
+    if (process.platform !== "win32") {
+      assert.ok(fileInputs.every((entry) => entry.inputMode === 0o600));
+    }
     const sent = commands.find((entry) => entry.args.includes("send-command"));
     assert.ok(sent);
     assert.equal(JSON.parse(result.stdout).status, "command-sent");
@@ -447,7 +450,7 @@ test("macOS controller terminates the exact instance before releasing the 24-hou
         encoding: "utf8",
         env: {
           ...process.env,
-          PATH: `${tempRoot}:${process.env.PATH}`,
+          PATH: `${tempRoot}${path.delimiter}${process.env.PATH}`,
           FAKE_COMMAND_LOG: commandLog,
         },
       },

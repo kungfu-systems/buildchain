@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function run(command, args, { cwd, json = false } = {}) {
-  const result = spawnSync(command, args, {
+  const result = spawnSyncCommand(command, args, {
     cwd,
     encoding: "utf8",
     env: {

@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 import {
   PAPER_AGENT_ENTRY_CONTRACT,
@@ -137,8 +138,7 @@ test("installed Paper runtime does not inherit the consumer Git head", () => {
   const binDir = tempDir("installed-runtime-bin");
   const sourceSha = "a".repeat(40);
   const npm = path.join(binDir, "npm");
-  fs.writeFileSync(npm, `#!/bin/sh\nprintf '%s\\n' '"${sourceSha}"'\n`);
-  fs.chmodSync(npm, 0o755);
+  materializeCommandShim(npm, `#!/bin/sh\nprintf '%s\\n' '"${sourceSha}"'\n`);
   const originalPath = process.env.PATH;
   process.env.PATH = `${binDir}${path.delimiter}${originalPath || ""}`;
   try {
@@ -888,7 +888,7 @@ test("paper provisioning authority rejects caller drift and requires exact npm t
   const fakeBin = path.join(trustedCwd, "fake-bin");
   fs.mkdirSync(fakeBin);
   const fakeNpm = path.join(fakeBin, "npm");
-  fs.writeFileSync(
+  materializeCommandShim(
     fakeNpm,
     `#!/bin/sh
 case "$1 $2" in
@@ -904,10 +904,9 @@ case "$1 $2" in
 esac
 `,
   );
-  fs.chmodSync(fakeNpm, 0o755);
   const originalPath = process.env.PATH;
   const originalTrust = process.env.FAKE_NPM_TRUST_JSON;
-  process.env.PATH = `${fakeBin}:${originalPath}`;
+  process.env.PATH = `${fakeBin}${path.delimiter}${originalPath}`;
   try {
     process.env.FAKE_NPM_TRUST_JSON = JSON.stringify([
       {

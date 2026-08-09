@@ -16,10 +16,31 @@
     "requiredComparisons": [
       "artifact-manifest-root",
       "content-root",
+      "campaign-profile-root",
       "planner-decision",
       "retained-byte-cost",
       "restore-overhead",
       "rollback"
+    ]
+  },
+  "selfDogfood": {
+    "configPath": ".buildchain/buildchain.toml",
+    "evidenceRoot": ".buildchain/artifacts/v4-stage-capsule-self-dogfood",
+    "executableStages": ["install", "verify"],
+    "dependencies": {
+      "install": [],
+      "verify": ["install"]
+    },
+    "excludedStages": {
+      "version-state": "generated-output-mutation",
+      "publish": "provider-mutation"
+    },
+    "requiredBindings": [
+      "config-root",
+      "command",
+      "manifest-root",
+      "summary-root",
+      "output-roots"
     ]
   },
   "kungfuShadow": {

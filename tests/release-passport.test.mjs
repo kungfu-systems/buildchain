@@ -3094,6 +3094,6 @@ test("invariant Passport command fails closed when it emits no canonical JSON", 
       outputDir: "release-passport",
       invariantPassportCommand: "node -e 'process.stdout.write(\"not-json\")'",
     }),
-    /invariant passport command output must be valid JSON/,
+    /invariant passport command (?:output must be valid JSON|produced no JSON)/,
   );
 });

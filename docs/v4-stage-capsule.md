@@ -134,14 +134,21 @@ shadow-only: it does not skip a v3 production stage or move v3 authority.
 ## Three-platform qualification and Wave reconciliation
 
 `architecture/v4-stage-capsule-qualification.json` closes the Wave 2
-qualification boundary. The protected workflow runs the same consumer-equivalent
-interface for Buildchain self-dogfood and an exact-source Kungfu shadow profile
-on real macOS arm64, Linux x64, and Windows x64 runners. Each campaign uses a
-seed process that records successful `install` and `build` Capsules before an
-intentional late `verify` failure, followed by a separate resume process over
-the retained store. The planner restores only the exact `build` dependency and
-rebuilds only `verify` plus `package`; retained `install` evidence remains
-available without an unnecessary restore.
+qualification boundary. The protected workflow runs Buildchain's real declared
+`install` and `verify` lifecycle on macOS arm64, Linux x64, and Windows x64. Its
+self-dogfood profile is derived from `.buildchain/buildchain.toml` and binds the
+configuration, command, lifecycle manifest, summary, and actual output roots.
+`version-state` and `publish` are rooted as excluded mutation stages and are
+never executed by the shadow lane. A seed process retains the successful
+`install` Capsule before an intentional late `verify` failure; a separate
+process re-reads the lifecycle evidence and retained store, restores `install`,
+and rebuilds only `verify`. Any configuration, evidence, source, platform, or
+output drift fails closed.
+
+The exact-source Kungfu lane retains the consumer-equivalent four-stage fault
+campaign: successful `install` and `build` Capsules precede the late `verify`
+failure, then the clean resume restores `build` and rebuilds `verify` plus
+`package`. Both profiles remain under the same closed qualification root.
 
 Qualification compares the declared artifact-manifest and aggregate content
 roots from a fresh full build with the roots assembled from retained and rebuilt
@@ -168,5 +175,6 @@ node scripts/v4-stage-capsule-qualification.mjs campaign \
   --platform linux-x64 \
   --consumer buildchain-self-dogfood \
   --runtime-ref <exact-buildchain-commit> \
-  --consumer-source-revision <exact-consumer-commit>
+  --consumer-source-revision <exact-consumer-commit> \
+  --lifecycle-evidence-root .buildchain/artifacts/v4-stage-capsule-self-dogfood
 ```

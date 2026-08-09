@@ -251,7 +251,7 @@ test("Rust and TypeScript emit byte-equivalent recovery decisions and roots", ()
   const request = materializeCase(entry);
   const typescript = planV4PartialMutationRecovery(request);
   const result = spawnSync(
-    "cargo",
+    process.platform === "win32" ? "cargo.exe" : "cargo",
     [
       "run",
       "--locked",

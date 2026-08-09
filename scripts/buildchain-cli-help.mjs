@@ -24,6 +24,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                       [--require-lifecycle-stages <comma-list>]
   buildchain lifecycle run <stage> [--cwd <dir>] [--required]
                              [--artifact-name <name>] [--artifact-path <path>]...
+                             [--platform-id <id>] [--platform-name <name>]
                              [--manifest-path <path>] [--summary-path <path>]
                              [--process-summary <json>]
   buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]

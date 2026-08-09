@@ -8,7 +8,7 @@ import { publishObservedEvidence, validateObservedEvidenceBundle } from "../scri
 
 function fixture({ withProjection = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "observed-evidence-"));
-  const snapshotId = "snapshot-2026-07-21T00:00:00Z";
+  const snapshotId = "snapshot-2026-07-21T00-00-00Z";
   const document = `${JSON.stringify({ snapshotId, value: 1 })}\n`;
   fs.mkdirSync(path.join(root, "snapshots"));
   fs.writeFileSync(path.join(root, "snapshots", `${snapshotId}.json`), document);

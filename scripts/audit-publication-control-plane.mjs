@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 import {
   evaluateBuildchainReleaseReconciliation,
@@ -17,7 +17,7 @@ function flag(name, fallback = "") {
 }
 
 function commandJson(command, args, label) {
-  const result = spawnSync(command, args, {
+  const result = spawnSyncCommand(command, args, {
     encoding: "utf8",
     timeout: 60_000,
     maxBuffer: GITHUB_JSON_MAX_BUFFER,
@@ -38,7 +38,7 @@ function githubJson(apiPath, label) {
 }
 
 function githubJsonOptional(apiPath, label, fallback) {
-  const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
+  const result = spawnSyncCommand("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
     encoding: "utf8",
     timeout: 60_000,
     maxBuffer: GITHUB_JSON_MAX_BUFFER,
@@ -56,7 +56,7 @@ function githubJsonOptional(apiPath, label, fallback) {
 }
 
 function githubJsonReadLimited(apiPath, label, fallback) {
-  const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
+  const result = spawnSyncCommand("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
     encoding: "utf8",
     timeout: 60_000,
     maxBuffer: GITHUB_JSON_MAX_BUFFER,

@@ -16,12 +16,13 @@ import {
   validateV4PlatformStageCheckpointDeclaration,
 } from "../packages/core/v4-platform-stage-checkpoints.js";
 import {
-  V4_STAGE_CAPSULE_CAMPAIGN_DEPENDENCIES,
   V4_STAGE_CAPSULE_CAMPAIGN_RECORDED_AT,
-  V4_STAGE_CAPSULE_CAMPAIGN_STAGES,
+  createV4StageCapsuleCampaignProfile,
   emitV4StageCapsuleCampaignCheckpoint,
   runV4StageCapsuleFaultCampaign,
   v4StageCapsuleCampaignAggregateRoots,
+  v4StageCapsuleCampaignDependencies,
+  v4StageCapsuleCampaignStages,
 } from "../packages/core/v4-stage-capsule-qualification-campaign.js";
 import {
   V4_STAGE_CAPSULE_PLATFORM_QUALIFICATION_CONTRACT,
@@ -72,12 +73,28 @@ function contextFromArgs() {
     consumer: required("consumer"),
     runtimeRef: required("runtime-ref"),
     consumerSourceRevision: required("consumer-source-revision"),
+    lifecycleEvidenceRoot: option("lifecycle-evidence-root")
+      ? path.resolve(option("lifecycle-evidence-root"))
+      : "",
+    repoRoot,
     declaration: declaration(),
   };
   if (!context.declaration.platforms.some(({ id }) => id === context.platform))
     throw new Error(`undeclared platform: ${context.platform}`);
   if (!/^[0-9a-f]{40}$/u.test(context.consumerSourceRevision))
     throw new Error("--consumer-source-revision must be an exact commit");
+  return context;
+}
+
+function prepareContext(context) {
+  if (context.consumer === "buildchain-self-dogfood") {
+    if (!buildchainConfigModule)
+      throw new Error("real lifecycle config loader is unavailable");
+    context.lifecycleConfig = buildchainConfigModule.loadBuildchainConfig(
+      context.repoRoot,
+    );
+  }
+  context.campaignProfile = createV4StageCapsuleCampaignProfile(context);
   return context;
 }
 
@@ -95,25 +112,31 @@ function directoryBytes(directory) {
 }
 
 function seed(context) {
+  prepareContext(context);
+  const campaignStages = v4StageCapsuleCampaignStages(context);
+  const retainedStages = campaignStages.slice(
+    0,
+    context.consumer === "buildchain-self-dogfood" ? 1 : 2,
+  );
+  const failedStage = "verify";
+  const targetStage = campaignStages.at(-1);
   const referenceStore = new V4StageCapsuleLocalStore(
     path.join(context.workRoot, "reference-store"),
   );
   const retainedStore = new V4StageCapsuleLocalStore(
     path.join(context.workRoot, "retained-store"),
   );
-  const reference = V4_STAGE_CAPSULE_CAMPAIGN_STAGES.map((stage) => ({
+  const reference = campaignStages.map((stage) => ({
     stage,
     ...emitV4StageCapsuleCampaignCheckpoint(context, stage, referenceStore),
   }));
-  const retained = V4_STAGE_CAPSULE_CAMPAIGN_STAGES.slice(0, 2).map(
-    (stage) => ({
-      stage,
-      ...emitV4StageCapsuleCampaignCheckpoint(context, stage, retainedStore),
-    }),
-  );
+  const retained = retainedStages.map((stage) => ({
+    stage,
+    ...emitV4StageCapsuleCampaignCheckpoint(context, stage, retainedStore),
+  }));
   const lateFailure = emitV4StageCapsuleCampaignCheckpoint(
     context,
-    "verify",
+    failedStage,
     retainedStore,
     "failure",
   );
@@ -124,12 +147,13 @@ function seed(context) {
     consumer: context.consumer,
     platform: context.platform,
     runtimeRef: context.runtimeRef,
+    campaignProfileRoot: context.campaignProfile.profileRoot,
     referenceRoots: v4StageCapsuleCampaignAggregateRoots(reference),
     retainedCapsuleRoots: retained.map(({ stage, capsule }) => ({
       stage,
       capsuleRoot: capsule.capsuleRoot,
     })),
-    failedStage: "verify",
+    failedStage,
     failedStageCapsuleEmitted: false,
     retainedBytes: directoryBytes(
       path.join(context.workRoot, "retained-store"),
@@ -148,6 +172,17 @@ function seed(context) {
     platform: context.platform,
     runtimeRef: context.runtimeRef,
     consumerSourceRevision: context.consumerSourceRevision,
+    campaignProfileRoot: context.campaignProfile.profileRoot,
+    campaignStages,
+    dependencies: Object.fromEntries(
+      campaignStages.map((stage) => [
+        stage,
+        v4StageCapsuleCampaignDependencies(context, stage),
+      ]),
+    ),
+    retainedStages,
+    failedStage,
+    targetStage,
     reference: reference.map(({ stage, capsule, manifest }) => ({
       stage,
       capsule,
@@ -160,7 +195,7 @@ function seed(context) {
 
 function stageNode(state, store, reference) {
   let candidate = null;
-  if (["install", "build"].includes(reference.stage)) {
+  if (state.retainedStages.includes(reference.stage)) {
     const restored = store.restore({
       capsuleRoot: reference.capsule.capsuleRoot,
       recordedAt: V4_STAGE_CAPSULE_CAMPAIGN_RECORDED_AT,
@@ -172,7 +207,7 @@ function stageNode(state, store, reference) {
   }
   return {
     key: reference.stage,
-    dependencies: V4_STAGE_CAPSULE_CAMPAIGN_DEPENDENCIES[reference.stage],
+    dependencies: state.dependencies[reference.stage],
     expectedIdentity: reference.capsule.identity,
     expectedRetentionPromise: reference.capsule.retentionPromise,
     candidate,
@@ -186,7 +221,7 @@ function resumeRequest(state, store) {
     nodes: state.reference.map((reference) =>
       stageNode(state, store, reference),
     ),
-    targets: ["package"],
+    targets: [state.targetStage],
     effects: [],
   };
 }
@@ -207,6 +242,7 @@ function emitMissing(context, state, store, stageId) {
 }
 
 function resume(context) {
+  prepareContext(context);
   const state = readJson(path.join(context.workRoot, "campaign-state.json"));
   for (const name of [
     "consumer",
@@ -216,15 +252,21 @@ function resume(context) {
   ])
     if (state[name] !== context[name])
       throw new Error(`campaign ${name} mismatch`);
+  if (state.campaignProfileRoot !== context.campaignProfile.profileRoot)
+    throw new Error("campaign lifecycle profile mismatch");
   const store = new V4StageCapsuleLocalStore(
     path.join(context.workRoot, "retained-store"),
   );
   const request = resumeRequest(state, store);
   const plan = planV4StageCapsuleResume(request);
+  const expectedRestores = [state.retainedStages.at(-1)];
+  const expectedStages = state.campaignStages.filter(
+    (stage) => !state.retainedStages.includes(stage),
+  );
   if (
-    JSON.stringify(plan.requiredRestores) !== JSON.stringify(["build"]) ||
-    JSON.stringify(plan.requiredStages) !==
-      JSON.stringify(["verify", "package"])
+    JSON.stringify(plan.requiredRestores) !==
+      JSON.stringify(expectedRestores) ||
+    JSON.stringify(plan.requiredStages) !== JSON.stringify(expectedStages)
   )
     throw new Error(
       `resume planner did not select the minimal recovery set: ${JSON.stringify(
@@ -261,18 +303,18 @@ function resume(context) {
     emitMissing(context, state, store, stageId),
   );
   const retained = state.reference
-    .filter(({ stage }) => ["install", "build"].includes(stage))
+    .filter(({ stage }) => state.retainedStages.includes(stage))
     .map(({ stage, capsule, manifest }) => ({ stage, capsule, manifest }));
   const resumedEntries = [...retained, ...rebuilt].sort(
     (left, right) =>
-      V4_STAGE_CAPSULE_CAMPAIGN_STAGES.indexOf(left.stage) -
-      V4_STAGE_CAPSULE_CAMPAIGN_STAGES.indexOf(right.stage),
+      state.campaignStages.indexOf(left.stage) -
+      state.campaignStages.indexOf(right.stage),
   );
   const freshBuild = v4StageCapsuleCampaignAggregateRoots(state.reference);
   const resumedBuild = v4StageCapsuleCampaignAggregateRoots(resumedEntries);
   const campaignFaults = runV4StageCapsuleFaultCampaign(request);
   const metrics = {
-    fullStageCount: V4_STAGE_CAPSULE_CAMPAIGN_STAGES.length,
+    fullStageCount: state.campaignStages.length,
     rebuiltStageCount: plan.requiredStages.length,
     retainedStageCount: retained.length,
     restoredStageCount: plan.requiredRestores.length,
@@ -310,6 +352,7 @@ function resume(context) {
     consumer: context.consumer,
     platform: context.platform,
     runtimeRef: context.runtimeRef,
+    campaignProfileRoot: context.campaignProfile.profileRoot,
     processRuns: [
       {
         id: "seed",
@@ -371,6 +414,9 @@ function child(action, context) {
       context.runtimeRef,
       "--consumer-source-revision",
       context.consumerSourceRevision,
+      ...(context.lifecycleEvidenceRoot
+        ? ["--lifecycle-evidence-root", context.lifecycleEvidenceRoot]
+        : []),
     ],
     { cwd: repoRoot, encoding: "utf8" },
   );
@@ -442,6 +488,10 @@ function reconcile() {
 }
 
 const action = process.argv[2] || "";
+const buildchainConfigModule =
+  option("consumer") === "buildchain-self-dogfood"
+    ? await import("../packages/core/buildchain-config.js")
+    : null;
 if (action === "seed") seed(contextFromArgs());
 else if (action === "resume") resume(contextFromArgs());
 else if (action === "campaign") campaign(contextFromArgs());
