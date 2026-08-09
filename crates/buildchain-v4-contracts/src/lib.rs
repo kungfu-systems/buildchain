@@ -6,6 +6,7 @@ use sha2::{Digest, Sha256};
 
 mod provider_operation_journal;
 mod provider_readback_idempotency;
+mod release_activation_shadow;
 mod stage_capsule;
 mod stage_capsule_resume;
 mod stage_capsule_store;
@@ -21,6 +22,13 @@ pub use provider_readback_idempotency::{
     PROVIDER_READBACK_FOLD_CONTRACT, PROVIDER_READBACK_SAMPLE_CONTRACT,
     ProviderReadbackCoordinates, ProviderReadbackFixtureProjection, ProviderReadbackProjection,
     ProviderReadbackSample, fold_provider_readback_samples, run_provider_readback_fixture,
+};
+pub use release_activation_shadow::{
+    RELEASE_ACTIVATION_PLAN_CONTRACT, RELEASE_ACTIVATION_REQUEST_CONTRACT,
+    RELEASE_ACTIVATION_STATE_CONTRACT, ReleaseActivationEvent, ReleaseActivationPlan,
+    ReleaseActivationPlanStep, ReleaseActivationProjection, ReleaseActivationRequest,
+    ReleaseActivationState, ReleaseActivationStep, ReleaseActivationStepState,
+    project_release_activation, project_release_activation_bytes,
 };
 
 pub use stage_capsule::{
@@ -105,6 +113,9 @@ const ROOT_DOMAINS: &[&str] = &[
     "provider-operation-journal-state",
     "provider-readback-sample",
     "provider-readback-fold",
+    "release-activation-step",
+    "release-activation-plan",
+    "release-activation-state",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

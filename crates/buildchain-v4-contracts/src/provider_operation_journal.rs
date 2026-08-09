@@ -11,13 +11,15 @@ pub use fold::{ProviderOperationJournalState, fold_provider_operation_journal};
 
 pub const PROVIDER_OPERATION_IDENTITY_CONTRACT: &str =
     "buildchain-v4-provider-operation-identity/v1";
-const PROVIDER_OPERATION_INTENT_CONTRACT: &str = "buildchain-v4-provider-operation-intent/v1";
-const PROVIDER_OPERATION_ATTEMPT_CONTRACT: &str = "buildchain-v4-provider-operation-attempt/v1";
-const PROVIDER_OPERATION_OBSERVATION_CONTRACT: &str =
+pub(crate) const PROVIDER_OPERATION_INTENT_CONTRACT: &str =
+    "buildchain-v4-provider-operation-intent/v1";
+pub(crate) const PROVIDER_OPERATION_ATTEMPT_CONTRACT: &str =
+    "buildchain-v4-provider-operation-attempt/v1";
+pub(crate) const PROVIDER_OPERATION_OBSERVATION_CONTRACT: &str =
     "buildchain-v4-provider-operation-observation/v1";
-const PROVIDER_OPERATION_CONFIRMATION_CONTRACT: &str =
+pub(crate) const PROVIDER_OPERATION_CONFIRMATION_CONTRACT: &str =
     "buildchain-v4-provider-operation-confirmation/v1";
-const PROVIDER_OPERATION_RECONCILIATION_CONTRACT: &str =
+pub(crate) const PROVIDER_OPERATION_RECONCILIATION_CONTRACT: &str =
     "buildchain-v4-provider-operation-reconciliation/v1";
 const PROVIDER_OPERATION_JOURNAL_STATE_CONTRACT: &str =
     "buildchain-v4-provider-operation-journal-state/v1";
