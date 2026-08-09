@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 287,
-    "maxHandMaintainedSourceLines": 111434,
+    "maxHandMaintainedSourceLines": 111440,
     "maxWorkflowFiles": 65,
     "maxWorkflowLines": 22679,
-    "latestTransition": "Protected synchronize events evict stale queued Delivery Warrant heads, and exact-head queue retries reactivate their merge-group lease before admission.",
-    "rationale": "The bounded workflow increase carries one optional exact lease context into the existing queue controller. The controller reactivates that context on every exact-head retry and releases it on enqueue rejection, without adding another scheduler, writer, or authority; these exact post-integration ceilings cannot grow implicitly."
+    "latestTransition": "Installer public read-back reuses the existing bounded web-surface edge convergence retry.",
+    "rationale": "The six-line runtime increase above the current dev baseline routes signed installer byte checks through the same bounded 403, 404, and server-error retry already used by surface health. It preserves manual redirect handling, exact digest and cache-policy verification, and the existing timeout ceiling without adding another scheduler or authority; this exact post-integration ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
