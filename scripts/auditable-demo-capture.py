@@ -38,7 +38,7 @@ RENDITIONS = [
     {"id": "720p", "role": "responsive", "columns": 150, "rows": 28, "width": 1280, "height": 720},
 ]
 STANDARD_MAX_SECONDS = 60
-LONG_FORM_MAX_SECONDS = 180
+LONG_FORM_MAX_SECONDS = 360
 MAX_EXECUTABLE_FILES = 32
 MAX_CAPTURE_EVENTS = 10_000
 
