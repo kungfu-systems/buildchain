@@ -332,11 +332,16 @@ function capabilityGroup(id) {
   return id;
 }
 
-function publicSurfaceLifecycle({ owner, maturity, nonDuplicationRationale }) {
+function publicSurfaceLifecycle({
+  owner,
+  maturity,
+  nonDuplicationRationale,
+  introducedVersion = "pre-3.0.2-alpha.4",
+}) {
   return {
     owner,
     maturity,
-    introducedVersion: "pre-3.0.2-alpha.4",
+    introducedVersion,
     compatibilityPromise: "preserved-through-the-v3-major-line",
     deprecationReplacement: "",
     sunsetCondition: "explicit-breaking-change-review-in-a-future-major-line",
@@ -368,6 +373,7 @@ const manualMetaById = new Map(Object.entries({
   "dev-alpha-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 137 },
   "v4-canonical-contracts": { capabilityGroup: "governance-versioning", audience: ["developer", "maintainer", "agent"], maturity: "preview", order: 138 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
+  "engineering-housekeeper": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer", "agent"], maturity: "preview", order: 145 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
   "lifecycle-protocol": { capabilityGroup: "reusable-build", audience: ["consumer", "developer"], maturity: "stable", order: 210 },
   "runtime-train-validation": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer"], maturity: "stable", order: 220 },
@@ -523,7 +529,7 @@ function workflowCapabilityGroup(entry) {
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
   if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
-  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge") || entry.id.includes("dev-delivery-warrant") || entry.id.includes("buildchain-dev-delivery")) return capabilityGroup("governance-versioning");
+  if (entry.id.includes("patrol") || entry.id.includes("housekeeper") || entry.id.includes("dev-pr-auto-merge") || entry.id.includes("dev-delivery-warrant") || entry.id.includes("buildchain-dev-delivery")) return capabilityGroup("governance-versioning");
   if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
   return capabilityGroup("api-cli-reference");
 }
@@ -733,6 +739,7 @@ function buildSiteBundle() {
       "docs/dev-qualification-patrol.md",
       "docs/dev-alpha-candidate-patrol.md",
       "docs/observed-evidence-patrol.md",
+      "docs/engineering-housekeeper.md",
       "docs/release-governance.md",
       "docs/release-passport.md",
       "docs/controller-evidence.md",
@@ -791,6 +798,10 @@ function buildSiteBundle() {
         ["buildchain-patrol-daily", "repository-patrol"],
         ["buildchain-patrol-weekly", "repository-patrol"],
         ["buildchain-patrol-monthly", "repository-patrol"],
+        ["engineering-housekeeper", "repository-patrol"],
+        ["engineering-housekeeper-daily", "repository-patrol"],
+        ["engineering-housekeeper-weekly", "repository-patrol"],
+        ["engineering-housekeeper-monthly", "repository-patrol"],
         ["stable-candidate-patrol", "repository-patrol"],
         ["dev-qualification-patrol", "repository-patrol"],
         ["dev-alpha-candidate-patrol", "repository-patrol"],
@@ -808,8 +819,13 @@ function buildSiteBundle() {
         ["candidate-lab", "repository-internal"],
         ["build-surface-fixture", "repository-internal"],
         ["buildchain-stable-candidate-qualification", "repository-internal"],
+        ["engineering-housekeeper", "preview"],
+        ["engineering-housekeeper-daily", "preview"],
+        ["engineering-housekeeper-weekly", "preview"],
+        ["engineering-housekeeper-monthly", "preview"],
         ["self-hosted-runner-smoke", "compatibility-fixture"],
       ]);
+      const engineeringHousekeeper = entry.id.startsWith("engineering-housekeeper");
       return {
         ...entry,
         surface: surfaceById.get(entry.id) || (entry.path.includes("/.") ? "reusable-workflow" : "repository-workflow"),
@@ -821,7 +837,10 @@ function buildSiteBundle() {
         ...publicSurfaceLifecycle({
           owner: "buildchain-workflows",
           maturity: statusById.get(entry.id) || "active",
-          nonDuplicationRationale: "Existing workflow identity retained for caller compatibility and repository orchestration.",
+          introducedVersion: engineeringHousekeeper ? packageJson.version : undefined,
+          nonDuplicationRationale: engineeringHousekeeper
+            ? "One reusable policy and evidence boundary owns Engineering Housekeeper execution; scheduled callers contain cadence values only."
+            : "Existing workflow identity retained for caller compatibility and repository orchestration.",
         }),
       };
     }),
