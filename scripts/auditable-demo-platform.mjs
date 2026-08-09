@@ -26,7 +26,7 @@ const RENDITIONS = [
   { id: "720p", role: "responsive", columns: 150, rows: 28, width: 1280, height: 720 },
 ];
 const STANDARD_MAX_SECONDS = 60;
-const LONG_FORM_MAX_SECONDS = 180;
+const LONG_FORM_MAX_SECONDS = 360;
 const PRESENTATION_FRAMED = "presentation-framed";
 const TERMINAL_FILL = "terminal-fill";
 const MAX_EXECUTABLE_FILES = 32;
