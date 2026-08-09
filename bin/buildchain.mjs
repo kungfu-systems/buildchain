@@ -2,6 +2,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { initBuildchainRepo } from "../scripts/init-repo.mjs";
@@ -1556,6 +1557,12 @@ async function handleLifecycleCommand(args) {
       required: readBooleanFlag(lifecycleArgs, "required"),
       artifactName: readFlag(lifecycleArgs, "artifact-name", "buildchain-artifact"),
       artifactPaths,
+      platformId: readFlag(lifecycleArgs, "platform-id", os.platform()),
+      platformName: readFlag(
+        lifecycleArgs,
+        "platform-name",
+        readFlag(lifecycleArgs, "platform-id", os.platform()),
+      ),
       manifestPath: readFlag(lifecycleArgs, "manifest-path", ".buildchain/artifacts/manifest.json"),
       summaryPath: readFlag(lifecycleArgs, "summary-path", ".buildchain/artifacts/summary.json"),
       expectedArtifactsJson: readFlag(lifecycleArgs, "expected-artifacts-json", ""),

@@ -1311,11 +1311,11 @@ buildchain lifecycle
 
 - Help: `buildchain lifecycle run --help`
 - Canonical id: `lifecycle`
-- Options: `--artifact-name`, `--artifact-path`, `--cwd`, `--manifest-path`, `--process-summary`, `--required`, `--summary-path`
+- Options: `--artifact-name`, `--artifact-path`, `--cwd`, `--manifest-path`, `--platform-id`, `--platform-name`, `--process-summary`, `--required`, `--summary-path`
 - Syntax:
 
 ```text
-buildchain lifecycle run <stage> [--cwd <dir>] [--required] [--artifact-name <name>] [--artifact-path <path>]... [--manifest-path <path>] [--summary-path <path>] [--process-summary <json>]
+buildchain lifecycle run <stage> [--cwd <dir>] [--required] [--artifact-name <name>] [--artifact-path <path>]... [--platform-id <id>] [--platform-name <name>] [--manifest-path <path>] [--summary-path <path>] [--process-summary <json>]
 ```
 
 ## `log`

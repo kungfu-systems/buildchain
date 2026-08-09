@@ -97,6 +97,12 @@ three-platform, clean-process fault campaign. Qualification remains shadow-only:
 it cannot enable production reuse, change v3 authority, perform provider or
 release effects, or destroy retained state during rollback.
 
+Buildchain self-dogfood must execute only the real `install` and `verify`
+lifecycle declared in `.buildchain/buildchain.toml`, then bind its exact
+manifest, summary, command, and output roots into the campaign profile.
+Mutation stages such as `version-state` and `publish` remain excluded and must
+never be invoked by Stage Capsule qualification.
+
 `pnpm run check` validates inventory data, generated public references and site
 bundle drift, lints root workflows, runs unit tests, and rebuilds every action
 bundle.

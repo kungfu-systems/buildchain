@@ -723,6 +723,10 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
     "out",
     "--artifact-name",
     "fixture",
+    "--platform-id",
+    "linux-x64",
+    "--platform-name",
+    "Linux x64",
     "--log-path",
     ".buildchain/logs/events.jsonl",
     "--process-summary",
@@ -731,6 +735,12 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   const manifest = JSON.parse(output.slice(output.indexOf("{")));
 
   assert.equal(manifest.artifactName, "fixture");
+  assert.deepEqual(manifest.platform, {
+    id: "linux-x64",
+    name: "Linux x64",
+    os: process.platform,
+    arch: process.arch,
+  });
   assert.equal(manifest.lifecycle.stage, "build");
   assert.equal(manifest.files[0].path, "out/result.txt");
   assert.equal(manifest.observability.log.contract, "kungfu-buildchain-log-event");

@@ -267,6 +267,7 @@ export function validateV4StageCapsulePlatformQualification(value) {
       "consumer",
       "platform",
       "runtimeRef",
+      "campaignProfileRoot",
       "processRuns",
       "freshBuild",
       "resumedBuild",
@@ -281,6 +282,7 @@ export function validateV4StageCapsulePlatformQualification(value) {
     "$",
   );
   validateAuthorityAndRuns(value);
+  validateV4Root(value.campaignProfileRoot, "$/campaignProfileRoot");
   validateBuildAndPlan(value);
   validateFaults(value.faultCampaign, "$/faultCampaign");
   validateMetricsAndRollback(value);

@@ -90,6 +90,36 @@ jobs:
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+      - name: Enable package manager shims for real lifecycle dogfood
+        if: matrix.consumer == 'buildchain-self-dogfood'
+        run: |
+          corepack prepare pnpm@11.7.0 --activate
+          corepack enable
+      - name: Bootstrap Buildchain runtime dependencies
+        if: matrix.consumer == 'buildchain-self-dogfood'
+        run: corepack pnpm@11.7.0 install --prod --frozen-lockfile --ignore-scripts
+      - name: Run real declared install lifecycle
+        if: matrix.consumer == 'buildchain-self-dogfood'
+        run: >-
+          node bin/buildchain.mjs lifecycle run install
+          --cwd .
+          --required
+          --platform-id ${{ matrix.platform }}
+          --artifact-name buildchain-v4-self-dogfood-install
+          --artifact-path node_modules/.modules.yaml
+          --manifest-path .buildchain/artifacts/v4-stage-capsule-self-dogfood/install-manifest.json
+          --summary-path .buildchain/artifacts/v4-stage-capsule-self-dogfood/install-summary.json
+      - name: Run real declared verify lifecycle
+        if: matrix.consumer == 'buildchain-self-dogfood'
+        run: >-
+          node bin/buildchain.mjs lifecycle run verify
+          --cwd .
+          --required
+          --platform-id ${{ matrix.platform }}
+          --artifact-name buildchain-v4-self-dogfood-verify
+          --artifact-path dist/site
+          --manifest-path .buildchain/artifacts/v4-stage-capsule-self-dogfood/verify-manifest.json
+          --summary-path .buildchain/artifacts/v4-stage-capsule-self-dogfood/verify-summary.json
       - name: Run retained failure and clean-process resume campaign
         run: >-
           node scripts/v4-stage-capsule-qualification.mjs campaign
@@ -98,6 +128,7 @@ jobs:
           --consumer ${{ matrix.consumer }}
           --runtime-ref ${{ github.sha }}
           --consumer-source-revision ${{ matrix.consumer == 'kungfu-shadow' && '9ca8f445fd5d7921f480c47b059addb2f84f40db' || github.sha }}
+          ${{ matrix.consumer == 'buildchain-self-dogfood' && '--lifecycle-evidence-root .buildchain/artifacts/v4-stage-capsule-self-dogfood' || '' }}
       - name: Upload exact Stage Capsule qualification evidence
         uses: actions/upload-artifact@v7.0.1
         with:
