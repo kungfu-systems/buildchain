@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-release-activation-shadow-architecture",
+  "schemaAuthority": "contracts/v4-release-activation-shadow-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-release-activation-shadow-v1/shared.json",
+  "journalAuthority": "architecture/v4-provider-operation-journal-contract.json",
+  "mode": "shadow-only",
+  "authority": {
+    "productionWriter": "typescript-v3",
+    "productionWriterCount": 1,
+    "planAndFoldAuthority": "rust-shadow-core",
+    "planAndFoldWriterCount": 1,
+    "typescript": "byte-equivalent-contract-projection",
+    "productionWriteChange": false
+  },
+  "implementations": {
+    "rustDomain": "crates/buildchain-v4-contracts/src/release_activation_shadow.rs",
+    "rustModel": "crates/buildchain-v4-contracts/src/release_activation_shadow/model.rs",
+    "rustJournalMaterializer": "crates/buildchain-v4-contracts/src/release_activation_shadow/journal.rs",
+    "typescript": "packages/core/v4-release-activation-shadow.js"
+  },
+  "roots": [
+    "release-activation-step",
+    "release-activation-plan",
+    "release-activation-state"
+  ],
+  "resumePolicy": {
+    "confirmed": "never-replay",
+    "attempting": "readback-before-any-retry",
+    "observed": "readback-before-any-retry",
+    "confirmable": "readback-before-any-retry",
+    "planned": "eligible-only-after-confirmed-dependencies",
+    "retryable": "eligible-only-after-confirmed-dependencies",
+    "rejected": "block-plan",
+    "terminal": "block-plan"
+  },
+  "foldRejects": [
+    "missing-qualification",
+    "dependency-cycle",
+    "unknown-or-self-dependency",
+    "logical-operation-conflict",
+    "coordinate-or-authority-mismatch",
+    "conflicting-event-ordinal",
+    "event-ordinal-gap",
+    "provider-journal-impossible-transition"
+  ],
+  "budgets": {
+    "schemaAuthorities": 1,
+    "planAndFoldWriters": 1,
+    "secondStateFoldWriters": 0,
+    "providerSdkImportsInContracts": 0,
+    "providerSdkImportsInRustDomain": 0,
+    "liveProviderMutations": 0,
+    "productionWriteAuthorityChanges": 0,
+    "v3ConsumerBehaviorChanges": 0
+  },
+  "successors": [
+    "stable-candidate-publication-fencing-shadow",
+    "partial-mutation-recovery-qualification"
+  ]
+}

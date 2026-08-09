@@ -46,6 +46,9 @@ const ROOT_DOMAINS = new Set([
   "provider-operation-journal-state",
   "provider-readback-sample",
   "provider-readback-fold",
+  "release-activation-step",
+  "release-activation-plan",
+  "release-activation-state",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",

@@ -19,6 +19,15 @@
     "typescript": "packages/core/v4-provider-operation-journal.js",
     "typescriptReadback": "packages/core/v4-provider-readback-idempotency.js"
   },
+  "activationDomain": {
+    "architecture": "architecture/v4-release-activation-shadow-domain.json",
+    "qualifiedInput": "buildchain-v4-release-activation-request/v1",
+    "journalConsumption": "sole-existing-provider-operation-journal-fold",
+    "confirmedResumeRule": "never-replay",
+    "uncertainResumeRule": "readback-before-any-retry",
+    "productionAuthority": "typescript-v3",
+    "liveMutation": false
+  },
   "roots": [
     "provider-operation-identity",
     "provider-operation-intent",

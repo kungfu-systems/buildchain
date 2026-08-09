@@ -154,3 +154,21 @@ applied reads may become a successful observation, but no adapter may confirm
 the operation or advance release state without independent journal
 qualification. Conflicting, malformed, and root-mismatched evidence fails
 closed with typed faults.
+
+## 10. Wave 3 release activation shadow domain
+
+The executable release activation boundary is
+[`v4-release-activation-shadow-domain.json`](v4-release-activation-shadow-domain.json).
+It consumes an explicit qualification root, dependency graph, compensation
+boundaries, provider-operation identities, and append-only journal facts to
+derive one deterministic activation plan and resume state. Rust is the sole
+shadow plan-and-fold authority; TypeScript must remain byte-equivalent against
+the same closed schema and fixture.
+
+Confirmed operations are never eligible for replay. Attempting, observed, and
+confirmable operations require provider-neutral readback before any retry,
+while planned or retryable operations become eligible only after every declared
+dependency is confirmed. Missing qualification, dependency cycles, operation or
+authority drift, conflicting event ordinals, and impossible journal transitions
+fail closed. This domain performs no provider call or live mutation, and v3
+remains the sole production activation authority.
