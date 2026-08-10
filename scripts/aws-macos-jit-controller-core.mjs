@@ -165,7 +165,7 @@ export function createMacosJitCampaignPlan(values = {}) {
       exactSourceRequired: true,
       activeHostCeiling: MACOS_EC2_JIT.maxAcceptedHosts,
       activeInstanceCeiling: 1,
-      awsDryRunRequiredBeforeAllocation: true,
+      awsPermissionSimulationRequiredBeforeAllocation: true,
       awsDryRunRequiredBeforeLaunch: true,
       retainHostOnInstanceLaunchFailure: true,
       minimumHostAllocationHours: MACOS_EC2_JIT.minimumHostAllocationHours,
@@ -187,7 +187,7 @@ export function createMacosJitCampaignPlan(values = {}) {
   return { ...plan, digest: digest(plan) };
 }
 
-export function macosAllocateHostsArgs(plan, { dryRun = false } = {}) {
+export function macosAllocateHostsArgs(plan) {
   if (
     plan?.contract !== AWS_MACOS_JIT_CONTROLLER_CONTRACT ||
     plan.kind !== "campaign-launch-plan"
@@ -214,7 +214,6 @@ export function macosAllocateHostsArgs(plan, { dryRun = false } = {}) {
     "--output",
     "json",
   ];
-  if (dryRun) args.splice(2, 0, "--dry-run");
   return args;
 }
 

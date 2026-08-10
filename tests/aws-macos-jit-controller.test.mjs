@@ -94,10 +94,10 @@ test("macOS controller requires a unique exact qualification label per job", () 
   );
 });
 
-test("macOS AllocateHosts and RunInstances enforce DryRun, host placement, and stop reuse", () => {
+test("macOS AllocateHosts binds one host while RunInstances enforces DryRun and stop reuse", () => {
   const plan = campaignPlan();
-  const allocate = macosAllocateHostsArgs(plan, { dryRun: true });
-  assert.equal(allocate.includes("--dry-run"), true);
+  const allocate = macosAllocateHostsArgs(plan);
+  assert.equal(allocate.includes("--dry-run"), false);
   assert.equal(allocate[allocate.indexOf("--quantity") + 1], "1");
   const launch = macosRunInstancesArgs(plan, {
     hostId: "h-0123456789abcdef0",
@@ -222,8 +222,8 @@ if (joined.includes("sts get-caller-identity")) {
   process.stdout.write(JSON.stringify({ Subnets: [{ SubnetId: "subnet-fa5c77b7", AvailabilityZone: "us-east-1a" }] }));
 } else if (joined.includes("ec2 describe-volumes")) {
   process.stdout.write(JSON.stringify({ Volumes: [{ VolumeId: "vol-0123456789abcdef0", Encrypted: true }] }));
-} else if (joined.includes("ec2 allocate-hosts") && args.includes("--dry-run")) {
-  process.stderr.write("DryRunOperation"); process.exitCode = 255;
+} else if (joined.includes("iam simulate-principal-policy")) {
+  process.stdout.write(JSON.stringify({ EvaluationResults: [{ EvalActionName: "ec2:AllocateHosts", EvalDecision: process.env.FAKE_ALLOCATE_DENIED === "true" ? "implicitDeny" : "allowed", MissingContextValues: [] }] }));
 } else if (joined.includes("ec2 allocate-hosts")) {
   process.stdout.write(JSON.stringify({ HostIds: ["h-0123456789abcdef0"] }));
 } else if (joined.includes("ec2 run-instances") && args.includes("--dry-run")) {
@@ -284,7 +284,7 @@ function commonCliArgs() {
   ];
 }
 
-test("macOS controller launches only after exact-source preflight and both AWS DryRuns", () => {
+test("macOS controller launches only after exact-source preflight, IAM simulation, and RunInstances DryRun", () => {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "mac-jit-launch-test-"),
   );
@@ -330,12 +330,67 @@ test("macOS controller launches only after exact-source preflight and both AWS D
     const runIndexes = commands
       .map((entry, index) => ({ entry, index }))
       .filter(({ entry }) => entry.args.includes("run-instances"));
-    assert.equal(allocateIndexes.length, 2);
+    assert.equal(allocateIndexes.length, 1);
     assert.equal(runIndexes.length, 2);
-    assert.equal(allocateIndexes[0].entry.args.includes("--dry-run"), true);
-    assert.equal(allocateIndexes[1].entry.args.includes("--dry-run"), false);
+    assert.equal(allocateIndexes[0].entry.args.includes("--dry-run"), false);
+    const simulationIndex = commands.findIndex((entry) =>
+      entry.args.includes("simulate-principal-policy"),
+    );
+    assert.equal(simulationIndex >= 0, true);
+    assert.equal(simulationIndex < allocateIndexes[0].index, true);
     assert.equal(runIndexes[0].entry.args.includes("--dry-run"), true);
     assert.equal(runIndexes[1].entry.args.includes("--dry-run"), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS controller fails closed before allocation when IAM simulation denies AllocateHosts", () => {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "mac-jit-allocation-denied-test-"),
+  );
+  const commandLog = path.join(tempRoot, "commands.jsonl");
+  installFakes(tempRoot);
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "scripts/aws-macos-jit-controller.mjs",
+        "launch-campaign",
+        "--execute",
+        "--confirm-source-sha",
+        values.sourceSha,
+        "--confirm-campaign-id",
+        values.campaignId,
+        "--created-at",
+        "2026-08-02T01:00:00Z",
+        ...commonCliArgs(),
+      ],
+      {
+        cwd: path.resolve(import.meta.dirname, ".."),
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${tempRoot}:${process.env.PATH}`,
+          FAKE_COMMAND_LOG: commandLog,
+          FAKE_ALLOCATE_DENIED: "true",
+        },
+      },
+    );
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /ec2:AllocateHosts IAM policy simulation did not allow allocation/,
+    );
+    const commands = fs
+      .readFileSync(commandLog, "utf8")
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
   } finally {
     fs.rmSync(tempRoot, { recursive: true });
   }
