@@ -553,6 +553,11 @@ test("architecture freezes the shadow consumer, rollback, and authority ceilings
     canaryWorkflow,
     /BUILDCHAIN_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/u,
   );
+  assert.doesNotMatch(canaryWorkflow, /\$\{BUILDCHAIN_WORKFLOW_SHA,,\}/u);
+  assert.equal(
+    canaryWorkflow.match(/tr '\[:upper:\]' '\[:lower:\]'/gu)?.length,
+    2,
+  );
   assert.match(
     canaryWorkflow,
     /BUILDCHAIN_RUNTIME_SHA: \$\{\{ steps\.runtime\.outputs\.sha \}\}/u,
@@ -563,6 +568,7 @@ test("architecture freezes the shadow consumer, rollback, and authority ceilings
     canaryWorkflow,
     /--consumer-source-revision "\$\{CONSUMER_SOURCE_SHA\}"/u,
   );
+  assert.match(canaryWorkflow, /defaults:\n      run:\n        shell: bash/u);
   for (const stage of ["install", "build", "verify"])
     assert.match(canaryWorkflow, new RegExp(`lifecycle run ${stage}`, "u"));
   assert.doesNotMatch(canaryWorkflow, /lifecycle run publish/u);
