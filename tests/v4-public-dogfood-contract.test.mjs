@@ -157,3 +157,16 @@ test("the gate rejects a dogfood build that relies on a global pnpm shim", () =>
     /tracked consumer lifecycle is missing/u,
   );
 });
+
+test("the gate requires install to expose the pinned Corepack pnpm shim", () => {
+  const hiddenPnpm = mutate(".buildchain/buildchain.toml", (text) =>
+    text.replace(
+      "corepack enable pnpm && corepack pnpm@11.7.0 install --frozen-lockfile",
+      "corepack pnpm@11.7.0 install --frozen-lockfile",
+    ),
+  );
+  assert.throws(
+    () => checkV4PublicDogfoodContract(hiddenPnpm),
+    /tracked consumer lifecycle is missing/u,
+  );
+});
