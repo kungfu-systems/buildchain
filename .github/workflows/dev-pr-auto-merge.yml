@@ -18,11 +18,160 @@ on:
         default: ""
         type: string
         required: false
-      required-status-checks:
-        description: "Comma or newline separated required status/check-run name fragments"
-        default: "check / check"
+      expected-pr-number:
+        description: "Optional exact PR number for targeted Agent admission; requires expected-head-sha"
+        default: 0
+        type: number
+        required: false
+      expected-head-sha:
+        description: "Exact 40-character PR head required for targeted Agent admission"
+        default: ""
         type: string
         required: false
+      source-workflow-run-id:
+        description: "Exact successful source workflow run retained for immediate Warrant handoff"
+        default: 0
+        type: number
+        required: false
+      handoff-workflow-id:
+        description: "Optional consumer workflow file to dispatch when another candidate owns the active Warrant"
+        default: ""
+        type: string
+        required: false
+      source-workflow-id:
+        description: "Optional consumer source workflow file used to recover a legacy active candidate's exact successful run"
+        default: ""
+        type: string
+        required: false
+      diagnostic-context:
+        description: "Commit-status context used for PR-visible targeted admission state"
+        default: "Buildchain delivery intent"
+        type: string
+        required: false
+      delivery-warrant-mode:
+        description: "Delivery Warrant rollout: off, shadow (read-only queue plan), or required"
+        default: "off"
+        type: string
+        required: false
+      assignment-root:
+        {
+          description: "Exact native Assignment content root",
+          default: "",
+          type: string,
+          required: false,
+        }
+      initiative-root:
+        {
+          description: "Exact parent Initiative content root",
+          default: "",
+          type: string,
+          required: false,
+        }
+      source-identity-root:
+        {
+          description: "Immutable semantic source identity root",
+          default: "",
+          type: string,
+          required: false,
+        }
+      source-patch-root:
+        {
+          description: "Immutable source patch or tree-intent root",
+          default: "",
+          type: string,
+          required: false,
+        }
+      project-cut-proof-json:
+        {
+          description: "Optional exact rooted Project Cut replay proof required when GitHub reports the PR behind the current protected base",
+          default: "",
+          type: string,
+          required: false,
+        }
+      plan-root:
+        {
+          description: "Exact qualification plan root",
+          default: "",
+          type: string,
+          required: false,
+        }
+      closure-root:
+        {
+          description: "Exact affected-closure root",
+          default: "",
+          type: string,
+          required: false,
+        }
+      dependency-root:
+        {
+          description: "Exact dependency-graph root",
+          default: "",
+          type: string,
+          required: false,
+        }
+      toolchain-root:
+        {
+          description: "Exact qualification toolchain root",
+          default: "",
+          type: string,
+          required: false,
+        }
+      affected-paths-json:
+        {
+          description: "JSON array of paths covered by source qualification",
+          default: "[]",
+          type: string,
+          required: false,
+        }
+      shard-evidence-roots-json:
+        {
+          description: "JSON array of additional source-shard evidence roots",
+          default: "[]",
+          type: string,
+          required: false,
+        }
+      delivery-class:
+        {
+          description: "Bounded delivery class",
+          default: "native-proof-required",
+          type: string,
+          required: false,
+        }
+      delivery-priority:
+        {
+          description: "Reviewed priority: ordinary, expedited, or emergency",
+          default: "ordinary",
+          type: string,
+          required: false,
+        }
+      warrant-lease-seconds:
+        {
+          description: "Delivery Warrant lease TTL",
+          default: 3600,
+          type: number,
+          required: false,
+        }
+      required-status-checks:
+        {
+          description: "Comma or newline separated required status/check-run name fragments",
+          default: "check / check",
+          type: string,
+          required: false,
+        }
+      queue-admission-context:
+        {
+          description: "Temporary exact-head commit status required before native queue admission",
+          default: "",
+          type: string,
+          required: false,
+        }
+      active-lease-context:
+        {
+          description: "Exact-head lease status context that must remain pending while merge-group qualification runs",
+          default: "",
+          type: string,
+          required: false,
+        }
       ready-label:
         description: "Required label for PRs eligible to merge. Empty disables the label gate."
         default: "ready"
@@ -91,15 +240,37 @@ on:
       final-base-sha:
         description: "Final target branch SHA after the run"
         value: ${{ jobs.merge-dev-prs.outputs.final-base-sha }}
+      admission-state:
+        description: "Typed targeted admission state; empty for cadence patrol"
+        value: ${{ jobs.merge-dev-prs.outputs.admission-state }}
+      admission-receipt-root:
+        description: "Content root of the targeted exact-head admission receipt"
+        value: ${{ jobs.merge-dev-prs.outputs.admission-receipt-root }}
+      source-proof-root:
+        description: "Content root of the reusable Source Qualification Proof"
+        value: ${{ jobs.merge-dev-prs.outputs.source-proof-root }}
+      warrant-receipt-root:
+        description: "Content root of the selected Delivery Warrant receipt"
+        value: ${{ jobs.merge-dev-prs.outputs.warrant-receipt-root }}
+      warrant-state-root:
+        description: "Exact readback root of the durable Warrant queue"
+        value: ${{ jobs.merge-dev-prs.outputs.warrant-state-root }}
+      warrant-state-commit:
+        description: "Immutable queue commit containing the active Warrant readback"
+        value: ${{ jobs.merge-dev-prs.outputs.warrant-state-commit }}
+      project-cut-proof-root:
+        description: "Verified exact Project Cut replay proof root, when supplied"
+        value: ${{ jobs.merge-dev-prs.outputs.project-cut-proof-root }}
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
   checks: read
-  statuses: read
+  statuses: write
 
 concurrency:
-  group: buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}
+  group: buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}-${{ inputs.expected-pr-number || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -113,6 +284,13 @@ jobs:
       action-count: ${{ steps.merge.outputs.action-count }}
       skipped-count: ${{ steps.merge.outputs.skipped-count }}
       final-base-sha: ${{ steps.merge.outputs.final-base-sha }}
+      admission-state: ${{ steps.merge.outputs.admission-state }}
+      admission-receipt-root: ${{ steps.merge.outputs.receipt-root }}
+      source-proof-root: ${{ steps.proof.outputs.source-proof-root }}
+      warrant-receipt-root: ${{ steps.warrant.outputs.warrant-receipt-root }}
+      warrant-state-root: ${{ steps.warrant.outputs.warrant-state-root }}
+      warrant-state-commit: ${{ steps.warrant.outputs.warrant-state-commit }}
+      project-cut-proof-root: ${{ steps.project-cut.outputs.proof-root }}
     steps:
       - name: Resolve target branch
         id: target
@@ -128,8 +306,27 @@ jobs:
           esac
           echo "branch=${target_branch}" >> "${GITHUB_OUTPUT}"
           echo "branch-artifact=${target_branch//\//-}" >> "${GITHUB_OUTPUT}"
+          case "${WARRANT_MODE}" in
+            off|shadow|required) ;;
+            *)
+              echo "::error::delivery-warrant-mode must be off, shadow, or required"
+              exit 1
+              ;;
+          esac
+          if [ "${WARRANT_MODE}" != "off" ] && { [ "${EXPECTED_PR}" = "0" ] || [ -z "${EXPECTED_HEAD}" ]; }; then
+            echo "::error::delivery Warrant rollout requires an exact PR number and head"
+            exit 1
+          fi
+          if [ "${WARRANT_MODE}" = "required" ] && [ "${DRY_RUN}" = "true" ]; then
+            echo "::error::required delivery Warrant mode cannot be combined with dry-run"
+            exit 1
+          fi
         env:
           INPUT_TARGET_BRANCH: ${{ inputs.target-branch }}
+          WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          DRY_RUN: ${{ inputs.dry-run }}
 
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -139,18 +336,291 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Reject a locked protected branch before Warrant selection
+        if: inputs.delivery-warrant-mode == 'required'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+        run: |
+          set -euo pipefail
+          encoded_branch="${TARGET_BRANCH//\//%2F}"
+          protection_error="$(mktemp)"
+          if protection="$(gh api "repos/$GITHUB_REPOSITORY/branches/$encoded_branch/protection" 2>"$protection_error")"; then
+            locked="$(jq -r '.lock_branch.enabled // false' <<<"$protection")"
+          elif grep -q 'HTTP 404' "$protection_error"; then
+            locked=false
+          else
+            cat "$protection_error" >&2
+            exit 1
+          fi
+          rm -f "$protection_error"
+          applied_rules="$(gh api "repos/$GITHUB_REPOSITORY/rules/branches/$encoded_branch")"
+          if jq -e 'any(.[]?; .type == "update")' <<<"$applied_rules" >/dev/null; then
+            locked=true
+          fi
+          if [ "$locked" = "true" ]; then
+            echo "::error::Protected branch $TARGET_BRANCH is locked by classic protection or an applied update rule; native merge queue admission cannot change a locked branch"
+            exit 1
+          fi
+
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
 
+      - name: Verify optional exact Project Cut replay proof
+        id: project-cut
+        if: inputs.project-cut-proof-json != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/dev-delivery
+          printf '%s\n' "${PROJECT_CUT_PROOF_JSON}" > .buildchain/dev-delivery/project-cut-proof.json
+          node .buildchain/runtime/scripts/dev-delivery-proof.mjs verify-replay \
+            --source-proof .buildchain/dev-delivery/project-cut-proof.json \
+            --output .buildchain/dev-delivery/project-cut-verification.json
+          jq -e '.ok == true and .reason == "exact-project-cut-replay"' \
+            .buildchain/dev-delivery/project-cut-verification.json >/dev/null
+          echo "path=.buildchain/dev-delivery/project-cut-proof.json" >> "${GITHUB_OUTPUT}"
+          echo "proof-root=$(jq -er '.proofRoot' .buildchain/dev-delivery/project-cut-proof.json)" >> "${GITHUB_OUTPUT}"
+        env:
+          PROJECT_CUT_PROOF_JSON: ${{ inputs.project-cut-proof-json }}
+
+      - name: Qualify exact source before scheduling
+        id: qualify
+        if: inputs.delivery-warrant-mode != 'off'
+        continue-on-error: true
+        shell: bash
+        run: |
+          args=(
+            --repository "${GITHUB_REPOSITORY}"
+            --branch "${TARGET_BRANCH}"
+            --pull-request "${EXPECTED_PR}"
+            --expected-head "${EXPECTED_HEAD}"
+            --landing-mode queue
+            --qualification-only
+            --source-patch-root "${SOURCE_PATCH_ROOT}"
+            --output .buildchain/dev-delivery/source-admission.json
+          )
+          if [ -n "${PROJECT_CUT_PROOF_PATH}" ]; then
+            args+=(--project-cut-proof "${PROJECT_CUT_PROOF_PATH}")
+          fi
+          if [ "${WARRANT_MODE}" = "required" ] || { [ "${WARRANT_MODE}" = "shadow" ] && [ "${DRY_RUN}" != "true" ]; }; then
+            args+=(--execute)
+          fi
+          node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs "${args[@]}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
+          DRY_RUN: ${{ inputs.dry-run }}
+          SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
+          PROJECT_CUT_PROOF_PATH: ${{ steps.project-cut.outputs.path }}
+          BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT: ${{ inputs.diagnostic-context }}
+          BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ inputs.required-status-checks }}
+          BUILDCHAIN_DEV_PR_READY_LABEL: ${{ inputs.ready-label }}
+          BUILDCHAIN_DEV_PR_BLOCK_LABELS: ${{ inputs.block-labels }}
+          BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES: ${{ inputs.allowed-head-prefixes }}
+          BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL: ${{ inputs.require-approval }}
+          BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY: ${{ inputs.same-repository-only }}
+
+      - name: Seal Source Qualification Proof
+        id: proof
+        if: inputs.delivery-warrant-mode != 'off' && steps.qualify.outcome == 'success'
+        shell: bash
+        run: |
+          receipt_root="$(jq -er '.receiptRoot' .buildchain/dev-delivery/source-admission.json)"
+          evidence_roots="$(jq -cn --arg root "${receipt_root}" --argjson extra "${SHARD_ROOTS}" '$extra + [$root] | unique')"
+          node .buildchain/runtime/scripts/dev-delivery-proof.mjs source \
+            --repository "${GITHUB_REPOSITORY}" \
+            --branch "${TARGET_BRANCH}" \
+            --source-identity-root "${SOURCE_IDENTITY_ROOT}" \
+            --source-head "${EXPECTED_HEAD}" \
+            --source-patch-root "${SOURCE_PATCH_ROOT}" \
+            --plan-root "${PLAN_ROOT}" \
+            --closure-root "${CLOSURE_ROOT}" \
+            --dependency-root "${DEPENDENCY_ROOT}" \
+            --toolchain-root "${TOOLCHAIN_ROOT}" \
+            --affected-paths-json "${AFFECTED_PATHS}" \
+            --shard-evidence-roots-json "${evidence_roots}" \
+            --qualified-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --output .buildchain/dev-delivery/source-proof.json
+          echo "source-proof-root=$(jq -er '.proofRoot' .buildchain/dev-delivery/source-proof.json)" >> "${GITHUB_OUTPUT}"
+        env:
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          SOURCE_IDENTITY_ROOT: ${{ inputs.source-identity-root }}
+          SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
+          PLAN_ROOT: ${{ inputs.plan-root }}
+          CLOSURE_ROOT: ${{ inputs.closure-root }}
+          DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
+          TOOLCHAIN_ROOT: ${{ inputs.toolchain-root }}
+          AFFECTED_PATHS: ${{ inputs.affected-paths-json }}
+          SHARD_ROOTS: ${{ inputs.shard-evidence-roots-json }}
+
+      - name: Submit qualified delivery candidate
+        id: submit
+        if: inputs.delivery-warrant-mode != 'off' && steps.proof.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          args=(
+            submit
+            --repository "${GITHUB_REPOSITORY}"
+            --branch "${TARGET_BRANCH}"
+            --pull-request "${EXPECTED_PR}"
+            --source-head "${EXPECTED_HEAD}"
+            --assignment-root "${ASSIGNMENT_ROOT}"
+            --initiative-root "${INITIATIVE_ROOT}"
+            --source-identity-root "${SOURCE_IDENTITY_ROOT}"
+            --source-patch-root "${SOURCE_PATCH_ROOT}"
+            --source-proof-root "${SOURCE_PROOF_ROOT}"
+            --plan-root "${PLAN_ROOT}"
+            --closure-root "${CLOSURE_ROOT}"
+            --dependency-root "${DEPENDENCY_ROOT}"
+            --toolchain-root "${TOOLCHAIN_ROOT}"
+            --delivery-class "${DELIVERY_CLASS}"
+            --priority "${DELIVERY_PRIORITY}"
+            --output .buildchain/dev-delivery/submission.json
+          )
+          if [ "${SOURCE_WORKFLOW_RUN_ID}" -gt 0 ]; then
+            args+=(--source-workflow-run-id "${SOURCE_WORKFLOW_RUN_ID}")
+          fi
+          if [ "${WARRANT_MODE}" = "required" ]; then
+            args+=(--execute)
+          fi
+          node .buildchain/runtime/scripts/dev-delivery-warrant.mjs "${args[@]}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          ASSIGNMENT_ROOT: ${{ inputs.assignment-root }}
+          INITIATIVE_ROOT: ${{ inputs.initiative-root }}
+          SOURCE_IDENTITY_ROOT: ${{ inputs.source-identity-root }}
+          SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
+          SOURCE_PROOF_ROOT: ${{ steps.proof.outputs.source-proof-root }}
+          SOURCE_WORKFLOW_RUN_ID: ${{ inputs.source-workflow-run-id }}
+          PLAN_ROOT: ${{ inputs.plan-root }}
+          CLOSURE_ROOT: ${{ inputs.closure-root }}
+          DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
+          TOOLCHAIN_ROOT: ${{ inputs.toolchain-root }}
+          DELIVERY_CLASS: ${{ inputs.delivery-class }}
+          DELIVERY_PRIORITY: ${{ inputs.delivery-priority }}
+          WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
+
+      - name: Select exact Delivery Warrant
+        id: warrant
+        if: inputs.delivery-warrant-mode == 'required' && steps.submit.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          node .buildchain/runtime/scripts/dev-delivery-warrant.mjs select \
+            --repository "${GITHUB_REPOSITORY}" \
+            --branch "${TARGET_BRANCH}" \
+            --lease-seconds "${LEASE_SECONDS}" \
+            --execute \
+            --output .buildchain/dev-delivery/warrant.json
+          selected_pr="$(jq -er '.observation.activeWarrant.pullRequestNumber' .buildchain/dev-delivery/warrant.json)"
+          selected_head="$(jq -er '.observation.activeWarrant.sourceHead' .buildchain/dev-delivery/warrant.json)"
+          if [ "$selected_pr" != "$EXPECTED_PR" ] || [ "$selected_head" != "$EXPECTED_HEAD" ]; then
+            if [ -z "$HANDOFF_WORKFLOW_ID" ]; then
+              echo "::error::Active Warrant belongs to PR #$selected_pr, but no immediate handoff workflow was configured"
+              exit 1
+            fi
+            source_run_id="$(jq -r '.observation.activeWarrant.sourceWorkflowRunId // 0' .buildchain/dev-delivery/warrant.json)"
+            if [ "$source_run_id" -eq 0 ]; then
+              if [ -z "$SOURCE_WORKFLOW_ID" ]; then
+                echo "::error::Legacy active Warrant for PR #$selected_pr has no source run and no source workflow was configured"
+                exit 1
+              fi
+              source_runs="$(gh api --method GET \
+                "repos/$GITHUB_REPOSITORY/actions/workflows/$SOURCE_WORKFLOW_ID/runs" \
+                -f head_sha="$selected_head" \
+                -f event=pull_request \
+                -f status=completed \
+                -f per_page=100)"
+              source_run_candidates="$(jq --argjson pr "$selected_pr" --arg head "$selected_head" '[.workflow_runs[] | select(.conclusion == "success" and .head_sha == $head and any(.pull_requests[]?; .number == $pr))] | sort_by(.id)' <<<"$source_runs")"
+              if [ "$(jq 'length' <<<"$source_run_candidates")" -eq 0 ]; then
+                echo "::error::Legacy active Warrant source recovery requires a successful $SOURCE_WORKFLOW_ID run for PR #$selected_pr at $selected_head; found none"
+                exit 1
+              fi
+              source_run_id="$(jq -er 'last | .id' <<<"$source_run_candidates")"
+            fi
+            gh workflow run "$HANDOFF_WORKFLOW_ID" \
+              --repo "$GITHUB_REPOSITORY" \
+              --ref "$TARGET_BRANCH" \
+              -f expected-pr-number="$selected_pr" \
+              -f expected-head-sha="$selected_head" \
+              -f source-workflow-run-id="$source_run_id" \
+              -f dry-run=false
+            mkdir -p .buildchain/dev-pr-auto-merge
+            jq -n \
+              --argjson requestedPr "$EXPECTED_PR" \
+              --arg requestedHead "$EXPECTED_HEAD" \
+              --argjson activePr "$selected_pr" \
+              --arg activeHead "$selected_head" \
+              --argjson sourceRunId "$source_run_id" \
+              '{schema:"kungfu.buildchain.dev-warrant-handoff/v1",ok:true,outcome:"active-warrant-handoff-dispatched",requested:{pullRequestNumber:$requestedPr,sourceHead:$requestedHead},active:{pullRequestNumber:$activePr,sourceHead:$activeHead,sourceWorkflowRunId:$sourceRunId}}' \
+              > .buildchain/dev-pr-auto-merge/result.json
+            {
+              echo "handoff-required=true"
+              echo "handoff-dispatched=true"
+              echo "active-pr-number=$selected_pr"
+              echo "active-head-sha=$selected_head"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "handoff-required=false" >> "$GITHUB_OUTPUT"
+          jq -e \
+            --argjson pr "${EXPECTED_PR}" \
+            --arg head "${EXPECTED_HEAD}" \
+            '.schema == "kungfu.buildchain.dev-delivery-command-result/v1"
+             and .mode == "execute"
+             and (.after.commitSha | test("^[0-9a-f]{40}$"))
+             and (.after.stateRoot == .observation.stateRoot)
+             and (.warrant == .observation.activeWarrant)
+             and (.observation.activeWarrant.pullRequestNumber == $pr)
+             and (.observation.activeWarrant.sourceHead == $head)
+             and (.observation.activeCandidate.pullRequestNumber == $pr)
+             and (.observation.activeCandidate.sourceHead == $head)
+             and (.observation.activeCandidate.candidateId == .observation.activeWarrant.candidateId)' \
+            .buildchain/dev-delivery/warrant.json >/dev/null
+          {
+            echo "warrant-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/warrant.json)"
+            echo "warrant-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/warrant.json)"
+            echo "warrant-state-commit=$(jq -er '.after.commitSha' .buildchain/dev-delivery/warrant.json)"
+          } >> "${GITHUB_OUTPUT}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          LEASE_SECONDS: ${{ inputs.warrant-lease-seconds }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          HANDOFF_WORKFLOW_ID: ${{ inputs.handoff-workflow-id }}
+          SOURCE_WORKFLOW_ID: ${{ inputs.source-workflow-id }}
+
       - name: Run Buildchain dev PR auto-merge
         id: merge
+        if: steps.warrant.outputs.handoff-required != 'true'
+        continue-on-error: true
         run: node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           BUILDCHAIN_DEV_PR_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_DEV_PR_TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          BUILDCHAIN_DEV_PR_EXPECTED_PR_NUMBER: ${{ inputs.expected-pr-number }}
+          BUILDCHAIN_DEV_PR_EXPECTED_HEAD_SHA: ${{ inputs.expected-head-sha }}
+          BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT: ${{ inputs.diagnostic-context }}
+          BUILDCHAIN_DEV_PR_WARRANT_MODE: ${{ inputs.delivery-warrant-mode == 'required' && 'required' || 'off' }}
+          BUILDCHAIN_DEV_PR_WARRANT_RESULT_PATH: .buildchain/dev-delivery/warrant.json
+          BUILDCHAIN_DEV_PR_PROJECT_CUT_PROOF_PATH: ${{ steps.project-cut.outputs.path }}
+          BUILDCHAIN_DEV_PR_SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
           BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ inputs.required-status-checks }}
+          BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: ${{ inputs.queue-admission-context }}
+          BUILDCHAIN_DEV_PR_ACTIVE_LEASE_CONTEXT: ${{ inputs.active-lease-context }}
           BUILDCHAIN_DEV_PR_READY_LABEL: ${{ inputs.ready-label }}
           BUILDCHAIN_DEV_PR_BLOCK_LABELS: ${{ inputs.block-labels }}
           BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES: ${{ inputs.allowed-head-prefixes }}
@@ -163,8 +633,62 @@ jobs:
           BUILDCHAIN_DEV_PR_OUTPUT_PATH: .buildchain/dev-pr-auto-merge/result.json
 
       - name: Upload dev PR auto-merge plan
+        if: always()
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-dev-pr-auto-merge-${{ steps.target.outputs.branch-artifact }}
-          path: ${{ steps.merge.outputs.result-path }}
+          path: .buildchain/dev-pr-auto-merge/result.json
           if-no-files-found: error
+
+      - name: Upload Dev Delivery Warrant evidence
+        if: always() && inputs.delivery-warrant-mode != 'off'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-dev-delivery-warrant-${{ steps.target.outputs.branch-artifact }}-${{ inputs.expected-pr-number }}
+          path: .buildchain/dev-delivery/
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+
+      - name: Enforce targeted admission result
+        if: always()
+        shell: bash
+        run: |
+          if [ "${HANDOFF_REQUIRED}" = "true" ]; then
+            if [ "${WARRANT_OUTCOME}" != "success" ] || [ "${HANDOFF_DISPATCHED}" != "true" ]; then
+              echo "::error::Active Warrant handoff was not dispatched"
+              exit 1
+            fi
+            echo "Immediate handoff dispatched to the active Warrant candidate."
+            exit 0
+          fi
+          if [ "${MERGE_STEP_OUTCOME}" != "success" ]; then
+            echo "::error::Buildchain dev PR controller failed; inspect the uploaded receipt"
+            exit 1
+          fi
+          if [ "${WARRANT_MODE}" != "off" ] && [ "${QUALIFY_OUTCOME}" != "success" ]; then
+            echo "::error::Exact source qualification failed before Warrant scheduling"
+            exit 1
+          fi
+          if [ "${WARRANT_MODE}" != "off" ] && [ "${SUBMIT_OUTCOME}" != "success" ]; then
+            echo "::error::Delivery candidate submission failed"
+            exit 1
+          fi
+          if [ "${WARRANT_MODE}" = "required" ] && [ "${WARRANT_OUTCOME}" != "success" ]; then
+            echo "::error::Exact Delivery Warrant selection failed"
+            exit 1
+          fi
+          if [ "${TARGETED}" = "true" ] && [ "${TARGETED_OK}" != "true" ]; then
+            echo "::error::Targeted PR was not admitted at its expected head"
+            exit 1
+          fi
+        env:
+          MERGE_STEP_OUTCOME: ${{ steps.merge.outcome }}
+          TARGETED: ${{ steps.merge.outputs.targeted }}
+          TARGETED_OK: ${{ steps.merge.outputs.targeted-ok }}
+          WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
+          QUALIFY_OUTCOME: ${{ steps.qualify.outcome }}
+          SUBMIT_OUTCOME: ${{ steps.submit.outcome }}
+          WARRANT_OUTCOME: ${{ steps.warrant.outcome }}
+          HANDOFF_REQUIRED: ${{ steps.warrant.outputs.handoff-required }}
+          HANDOFF_DISPATCHED: ${{ steps.warrant.outputs.handoff-dispatched }}

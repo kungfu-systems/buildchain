@@ -23,6 +23,7 @@ import {
   collectNativeDiagnostics,
   collectProcessTreeSnapshot,
   collectRunnerDiagnostics,
+  collectToolDiagnostics,
   detectRequestedParallelism,
   detectRequestedParallelismFromProcessSamples,
   formatDiagnosticsSummaryTable,
@@ -173,7 +174,12 @@ test("init package creates .buildchain/buildchain.toml and reusable workflow", (
 
   assert.equal(result.type, "package");
   assert.equal(result.packageManager, "npm");
-  assert.deepEqual(result.written.sort(), [".buildchain/buildchain.toml", ".github/workflows/build.yml"]);
+  assert.deepEqual(result.written.sort(), [
+    ".buildchain/buildchain.toml",
+    ".github/workflows/build.yml",
+    ".github/workflows/publication-rehearsal.yml",
+    "AGENTS.md",
+  ]);
   assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /npm ci/);
   const workflow = fs.readFileSync(path.join(cwd, ".github/workflows/build.yml"), "utf8");
   assert.match(workflow, /workflow_dispatch:/);
@@ -200,6 +206,8 @@ test("init infra-contract creates a directly valid observed contract scaffold", 
   assert.deepEqual(result.written.sort(), [
     ".buildchain/buildchain.toml",
     ".github/workflows/build.yml",
+    ".github/workflows/publication-rehearsal.yml",
+    "AGENTS.md",
     "infra/desired.json",
     "infra/outputs.json",
   ]);
@@ -261,6 +269,8 @@ test("init publication-artifact creates a paper artifact scaffold", () => {
   assert.deepEqual(result.written.sort(), [
     ".buildchain/buildchain.toml",
     ".github/workflows/build.yml",
+    ".github/workflows/publication-rehearsal.yml",
+    "AGENTS.md",
   ]);
   const toml = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
   assert.match(toml, /type = "publication-artifact"/);
@@ -941,6 +951,15 @@ test("logging and diagnostics SDK subpaths can be used from CommonJS scripts", (
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }
+});
+
+test("tool version probes never ascend through the consumer workspace", { skip: process.platform === "win32" }, () => {
+  const cwd = tempDir("tool-version-probe-cwd");
+  const probe = path.join(cwd, "report-cwd");
+  fs.writeFileSync(probe, "#!/bin/sh\npwd\n");
+  fs.chmodSync(probe, 0o755);
+  const diagnostics = collectToolDiagnostics({ cwd, tools: [probe] });
+  assert.equal(diagnostics[probe].version, path.parse(process.execPath).root);
 });
 
 test("diagnostics SDK validates anchored package release contracts", () => {
@@ -1868,6 +1887,9 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     stdio: "ignore",
   });
   const executable = path.join(outputDir, process.platform === "win32" ? "buildchain.exe" : "buildchain");
+  const metadataPath = fs.readdirSync(outputDir).map((name) => path.join(outputDir, name)).find((file) => /buildchain-[^.]+\.json$/u.test(path.basename(file)));
+  const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+  assert.deepEqual(metadata.executableFiles, [{ path: path.basename(executable), sha256: metadata.sha256 }]);
 
   assert.equal(execFileSync(executable, ["version"], { encoding: "utf8" }).trim(), version);
   const layout = JSON.parse(execFileSync(executable, ["layout", "--cwd", root, "--json"], {
@@ -1897,7 +1919,7 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     ),
   );
   assert.equal(scaffold.ok, true);
-  assert.equal(scaffold.written.length, 18);
+  assert.equal(scaffold.written.length, 19);
   assert.equal(
     fs.readFileSync(path.join(paperCwd, "pnpm-workspace.yaml"), "utf8"),
     `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${version}'\n`,

@@ -4,7 +4,7 @@
   "product": {
     "id": "kungfu-tech-buildchain",
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.5-alpha.0",
+    "version": "3.0.7-alpha.0",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "source": {
@@ -21,7 +21,7 @@
       "roleValid": true,
       "package": {
         "name": "@kungfu-tech/kfd",
-        "version": "1.0.0-alpha.47"
+        "version": "1.0.0-alpha.53"
       },
       "repository": "kungfu-systems/kfd",
       "kfd": {
@@ -46,7 +46,7 @@
         "line": "v1.0",
         "channel": "alpha",
         "npmPackage": "@kungfu-tech/kfd",
-        "npmVersion": "1.0.0-alpha.47",
+        "npmVersion": "1.0.0-alpha.53",
         "source": {
           "repository": "kungfu-systems/kfd",
           "branch": "alpha/v1/v1.0"
@@ -58,7 +58,7 @@
         {
           "path": "kfd.release.json",
           "kind": "package",
-          "sha256": "sha256:c4e0ca30c47b3cfca1b6d2d00c6277d62dd71423fd367e355f0f231c8a0b445d",
+          "sha256": "sha256:d50e474cf2d158722d765f54188550e30fa126e1728fc9eb748014e220acfc9b",
           "contract": "kfd-release-anchor",
           "role": "",
           "directory": false
@@ -66,7 +66,7 @@
         {
           "path": ".buildchain/kfd-1/contract-world.witness.json",
           "kind": "package",
-          "sha256": "sha256:fdd2d250fbac2246671f2444067234df5b6c519612196d1631c93e9da6de19b2",
+          "sha256": "sha256:438ed07bb8971eead5954125709f2e3459d996af815bdf958283806f7dc23428",
           "contract": "",
           "role": "",
           "directory": false
@@ -74,7 +74,7 @@
         {
           "path": ".buildchain/kfd-2/public-release-trust.claim.json",
           "kind": "package",
-          "sha256": "sha256:4886e6052a56ba0d8527cdb73443614a1b79f98a4fb3ab7f0a37f0c7bf0e5ece",
+          "sha256": "sha256:cae28d5fb20c30896abe6de6dc7bc4785e66293cce1337dce69dfb506b5883f1",
           "contract": "",
           "role": "",
           "directory": false
@@ -82,7 +82,7 @@
         {
           "path": ".buildchain/kfd-2/kfd-foundation.trust-claims.json",
           "kind": "package",
-          "sha256": "sha256:24c21ac663190183c60e1dd56437b0b427f107abe9ded0da73491f0b515eea7e",
+          "sha256": "sha256:cf53b2b4acd0accce7a1c35900a1b77641df78cc7a21423b3b46ff15d9204b20",
           "contract": "kfd-2-trust-claims",
           "role": "",
           "directory": false
@@ -90,7 +90,7 @@
         {
           "path": ".buildchain/kfd-2/kfd-foundation.trust-assessment.json",
           "kind": "package",
-          "sha256": "sha256:11421752a2b6dc376a7006de288ed33115235be229c954bde95901b44b001cdb",
+          "sha256": "sha256:a1004652a532b5add53fb92dfb9261fbf5965dfb33d44452feb7aa8a352c63a6",
           "contract": "kfd-2-trust-assessment",
           "role": "",
           "directory": false
@@ -122,7 +122,7 @@
       "kfd"
     ],
     "packageVersions": {
-      "kfd": "1.0.0-alpha.47"
+      "kfd": "1.0.0-alpha.53"
     },
     "status": "collected"
   }

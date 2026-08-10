@@ -7,6 +7,12 @@ import { pathToFileURL } from "node:url";
 
 const SCHEMA = "kungfu-buildchain-publication-commit-evidence/v1";
 const INSTALLER_BUNDLE_SCHEMA = "kungfu.installer-publication-bundle/v1";
+const RELEASE_REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const RELEASE_REDIRECT_HOSTS = new Set([
+  "github.com",
+  "release-assets.githubusercontent.com",
+  "objects.githubusercontent.com",
+]);
 
 function requiredString(value, label) {
   if (typeof value !== "string" || value.trim() === "") {
@@ -104,7 +110,7 @@ function validateInstallerBundle(evidence, expected) {
   }
   if (
     exactSha(bundle.sourceCommit, "installerBundle.sourceCommit") !==
-      expected.sourceSha ||
+      expected.candidateSourceSha ||
     !["alpha", "stable"].includes(bundle.channel)
   ) {
     throw new Error("installer bundle release identity mismatch");
@@ -228,6 +234,7 @@ function validateInstallerBundle(evidence, expected) {
   return {
     schema: bundle.schema,
     bundleRoot,
+    sourceCommit: bundle.sourceCommit,
     manifestDigest: bundle.manifestDigest,
     channel: bundle.channel,
     channelPayloadRoot: bundle.channelPayloadRoot,
@@ -238,10 +245,9 @@ function validateInstallerBundle(evidence, expected) {
     assets: bundle.assets,
   };
 }
-
 export function validatePublicationCommitEvidence(
   evidence,
-  { version, sourceSha, releaseSha, releaseTag } = {},
+  { version, sourceSha, candidateSourceSha, releaseSha, releaseTag } = {},
 ) {
   if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) {
     throw new Error("publication commit evidence must be an object");
@@ -263,6 +269,17 @@ export function validatePublicationCommitEvidence(
     if (identity[field] !== value) {
       throw new Error(`publication commit evidence ${field} mismatch`);
     }
+  }
+  expected.candidateSourceSha = exactSha(
+    candidateSourceSha ?? identity.candidateSourceSha ?? expected.sourceSha,
+    "expected candidateSourceSha",
+  );
+  if (
+    identity.candidateSourceSha !== undefined &&
+    exactSha(identity.candidateSourceSha, "identity.candidateSourceSha") !==
+      expected.candidateSourceSha
+  ) {
+    throw new Error("publication commit evidence candidateSourceSha mismatch");
   }
   const publicUrl = publicHttps(evidence.publication?.url, "publication.url");
   const payloadRoot = sha256Root(
@@ -313,15 +330,47 @@ export async function verifyInstallerBundleReadback(
   if (typeof fetchImpl !== "function") {
     throw new Error("installer bundle read-back requires fetch");
   }
-  const manifestResponse = await fetchImpl(result.publicUrl, {
-    redirect: "manual",
-    cache: "no-store",
-  });
-  if (manifestResponse.status !== 200) {
-    throw new Error(
-      `installer bundle manifest read-back failed: HTTP ${manifestResponse.status}`,
-    );
-  }
+  const fetchReleaseReadback = async (url, label) => {
+    let current = url;
+    for (let hop = 0; hop <= 3; hop += 1) {
+      const response = await fetchImpl(current, {
+        redirect: "manual",
+        cache: "no-store",
+      });
+      if (response.status === 200) return response;
+      if (!RELEASE_REDIRECT_STATUSES.has(response.status)) {
+        throw new Error(`${label} failed: HTTP ${response.status}`);
+      }
+      if (hop === 3) {
+        throw new Error(`${label} exceeded the bounded redirect limit`);
+      }
+      const location = response.headers?.get?.("location");
+      if (!location) {
+        throw new Error(`${label} redirect omitted Location`);
+      }
+      const redirect = new URL(location, current);
+      if (
+        redirect.protocol !== "https:" ||
+        redirect.username ||
+        redirect.password ||
+        !RELEASE_REDIRECT_HOSTS.has(redirect.hostname) ||
+        (redirect.hostname === "github.com" &&
+          !redirect.pathname.startsWith(
+            "/kungfu-systems/kungfu/releases/download/",
+          ))
+      ) {
+        throw new Error(
+          `${label} redirected outside trusted GitHub release storage`,
+        );
+      }
+      current = redirect.href;
+    }
+    throw new Error(`${label} failed without a terminal response`);
+  };
+  const manifestResponse = await fetchReleaseReadback(
+    result.publicUrl,
+    "installer bundle manifest read-back",
+  );
   const manifestBytes = Buffer.from(await manifestResponse.arrayBuffer());
   if (digest(manifestBytes) !== bundle.manifestDigest) {
     throw new Error("installer bundle manifest digest mismatch");
@@ -336,7 +385,7 @@ export async function verifyInstallerBundleReadback(
     semanticRoot(unsigned) !== bundle.bundleRoot ||
     manifest.package?.name !== "@kungfu-tech/site" ||
     typeof manifest.package?.version !== "string" ||
-    manifest.identity?.sourceCommit !== result.identity.sourceSha ||
+    manifest.identity?.sourceCommit !== result.identity.candidateSourceSha ||
     manifest.identity?.releaseSha !== result.identity.releaseSha ||
     manifest.identity?.releaseTag !== result.identity.releaseTag ||
     manifest.identity?.version !== result.identity.version ||
@@ -365,15 +414,10 @@ export async function verifyInstallerBundleReadback(
   for (const asset of bundle.assets) {
     let observation = byUrl.get(asset.releaseUrl);
     if (!observation) {
-      const response = await fetchImpl(asset.releaseUrl, {
-        redirect: "manual",
-        cache: "no-store",
-      });
-      if (response.status !== 200) {
-        throw new Error(
-          `installer bundle asset read-back failed: HTTP ${response.status}`,
-        );
-      }
+      const response = await fetchReleaseReadback(
+        asset.releaseUrl,
+        "installer bundle asset read-back",
+      );
       const bytes = Buffer.from(await response.arrayBuffer());
       observation = {
         releaseUrl: asset.releaseUrl,
@@ -394,7 +438,7 @@ export async function verifyInstallerBundleReadback(
     schema: "kungfu-buildchain-installer-publication-bundle-seal/v1",
     bundleRoot: bundle.bundleRoot,
     manifestDigest: bundle.manifestDigest,
-    sourceCommit: result.identity.sourceSha,
+    sourceCommit: result.identity.candidateSourceSha,
     releaseTag: result.identity.releaseTag,
     releasePassport: bundle.releasePassport,
     observations,
@@ -409,6 +453,8 @@ async function main(args) {
     if (value === "--evidence") options.evidence = args[++index];
     else if (value === "--version") options.version = args[++index];
     else if (value === "--source-sha") options.sourceSha = args[++index];
+    else if (value === "--candidate-source-sha")
+      options.candidateSourceSha = args[++index];
     else if (value === "--release-sha") options.releaseSha = args[++index];
     else if (value === "--release-tag") options.releaseTag = args[++index];
     else throw new Error(`unknown argument: ${value}`);

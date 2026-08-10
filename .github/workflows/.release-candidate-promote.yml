@@ -122,6 +122,56 @@ on:
         default: "Build"
         type: string
         required: false
+      release-candidate-wait-seconds:
+        description: "Bounded wait for the complete PR-stage release-candidate workflow, including post-required-check evidence tails"
+        default: 10800
+        type: number
+        required: false
+      resume-candidate-repository:
+        description: "Repository that owns the sealed candidate run; empty selects normal candidate discovery"
+        default: ""
+        type: string
+        required: false
+      resume-candidate-run-id:
+        description: "Exact successful candidate workflow run ID to recover through this fresh workflow event"
+        default: ""
+        type: string
+        required: false
+      resume-expected-workflow-file:
+        description: "Exact trusted Build workflow file that produced the candidate"
+        default: ""
+        type: string
+        required: false
+      resume-expected-workflow-name:
+        description: "Exact trusted Build workflow display name that produced the candidate"
+        default: ""
+        type: string
+        required: false
+      resume-expected-source-tree:
+        description: "Optional exact candidate Git tree; required when expected candidate root is empty"
+        default: ""
+        type: string
+        required: false
+      resume-expected-candidate-root:
+        description: "Optional exact sha256 Release Candidate root; required when expected source tree is empty"
+        default: ""
+        type: string
+        required: false
+      resume-expected-candidate-runtime-sha:
+        description: "Exact Buildchain runtime SHA recorded by the original candidate"
+        default: ""
+        type: string
+        required: false
+      resume-buildchain-runtime-sha:
+        description: "Exact current Buildchain tooling SHA authorized to perform recovery"
+        default: ""
+        type: string
+        required: false
+      resume-transaction-id:
+        description: "Optional exact durable publication transaction identity to resume"
+        default: ""
+        type: string
+        required: false
       release-candidate-family-evidence-required:
         description: "Require exact Initiative-family evidence before protected promotion"
         default: false
@@ -175,6 +225,11 @@ on:
       github-release:
         description: "Create/update the public GitHub Release and upload Buildchain release passport/evidence assets after a complete release transaction"
         default: true
+        type: boolean
+        required: false
+      declarative-release-tail:
+        description: "Publish and read back GitHub Release assets through the Buildchain declarative release-tail provider plane"
+        default: false
         type: boolean
         required: false
       github-release-title:
@@ -417,6 +472,16 @@ on:
         default: ""
         type: string
         required: false
+      publication-gate-command:
+        description: "Consumer-owned read-only command that assembles a qualifying Gate aggregate from the exact downloaded release-candidate evidence"
+        default: ""
+        type: string
+        required: false
+      publication-gate-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer Gate command; empty uses the publication source SHA"
+        default: ""
+        type: string
+        required: false
       publication-expected-json:
         description: "Independent exact source/runtime/product/channel/artifact bindings"
         default: ""
@@ -429,6 +494,11 @@ on:
         required: false
       publication-consumer-qualification-command:
         description: "Opt-in consumer-owned predicate command; writes its decision to BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH"
+        default: ""
+        type: string
+        required: false
+      publication-consumer-qualification-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer qualification command; empty uses the Gate controller SHA, then the publication source SHA"
         default: ""
         type: string
         required: false
@@ -455,6 +525,11 @@ on:
       publication-publisher-workflow-path:
         description: "Caller workflow path bound by the provider trusted-publisher policy"
         default: ""
+        type: string
+        required: false
+      publication-authority-workflow-path:
+        description: "Buildchain workflow path exposed as the publication authority; empty uses the internal promotion shell path"
+        default: ".github/workflows/.release-candidate-promote.yml"
         type: string
         required: false
       publication-product:
@@ -515,6 +590,15 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.promote.outputs.release-candidate-artifact }}
+      release-candidate-action:
+        description: "Candidate admission action: discovered or reused"
+        value: ${{ jobs.promote.outputs.release-candidate-action }}
+      release-candidate-recovery-root:
+        description: "Exact sha256 recovery receipt root"
+        value: ${{ jobs.promote.outputs.release-candidate-recovery-root }}
+      release-candidate-recovery-receipt-artifact:
+        description: "Immutable recovery receipt Actions artifact name"
+        value: ${{ jobs.promote.outputs.release-candidate-recovery-receipt-artifact }}
       release-propagation-work-artifact:
         description: "Captured package release propagation Work artifact"
         value: ${{ jobs.promote.outputs.release-propagation-work-artifact }}
@@ -554,6 +638,21 @@ on:
       github-artifact-attestation-publication-receipt-digest:
         description: "Read-back verified GitHub Release evidence publication receipt digest"
         value: ${{ jobs.publish-github-artifact-attestation-evidence.outputs.publication-receipt-digest }}
+      release-tail-declaration-root:
+        description: "Root of the declarative release-tail contract"
+        value: ${{ jobs.promote.outputs.release-tail-declaration-root }}
+      release-tail-transaction-state:
+        description: "Final declarative release-tail transaction state"
+        value: ${{ jobs.promote.outputs.release-tail-transaction-state }}
+      release-tail-transaction-root:
+        description: "Stable declarative release-tail transaction root"
+        value: ${{ jobs.promote.outputs.release-tail-transaction-root }}
+      release-tail-state-root:
+        description: "Root of the final declarative release-tail transaction state"
+        value: ${{ jobs.promote.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json:
+        description: "JSON array of standardized declarative release-tail receipt roots"
+        value: ${{ jobs.promote.outputs.release-tail-receipt-roots-json }}
       controller-receipt-artifact:
         description: "Controller receipt artifact name"
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
@@ -787,8 +886,11 @@ jobs:
     permissions:
       actions: read
       contents: read
+      pull-requests: read
     outputs:
       evidence-run-id: ${{ steps.release-candidate.outputs.release-candidate-run-id }}
+      source-sha: ${{ steps.release-candidate.outputs.release-candidate-source-sha }}
+      version: ${{ steps.release-candidate.outputs.release-candidate-version }}
       passport-artifact: ${{ steps.release-candidate.outputs.release-candidate-artifact }}
       summary-artifact: ${{ steps.release-candidate.outputs.release-candidate-build-summary-artifact }}
       manifest-pattern: ${{ inputs.artifact-name }}-manifest-*-${{ steps.release-candidate.outputs.release-candidate-source-sha }}
@@ -808,7 +910,18 @@ jobs:
 
       - name: Preflight PR-stage release candidate evidence
         id: release-candidate
-        run: node .buildchain/runtime/scripts/release-candidate-resolver.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${BUILDCHAIN_RESUME_CANDIDATE_RUN_ID}" ]; then
+            if [ "${BUILDCHAIN_RESUME_RUNTIME_SHA}" != "${BUILDCHAIN_CURRENT_RUNTIME_SHA}" ]; then
+              echo "::error::resume-buildchain-runtime-sha must equal the checked-out Buildchain runtime ${BUILDCHAIN_CURRENT_RUNTIME_SHA}"
+              exit 1
+            fi
+            node .buildchain/runtime/scripts/resume-from-candidate-run.mjs
+          else
+            node .buildchain/runtime/scripts/release-candidate-resolver.mjs
+          fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
@@ -818,22 +931,37 @@ jobs:
           BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
           BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
           BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RC_WAIT_SECONDS: ${{ inputs.release-candidate-wait-seconds }}
           BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
           BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
           BUILDCHAIN_RC_DOWNLOAD: "false"
+          BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate-preflight
+          BUILDCHAIN_RESUME_CANDIDATE_REPOSITORY: ${{ inputs.resume-candidate-repository }}
+          BUILDCHAIN_RESUME_CANDIDATE_RUN_ID: ${{ inputs.resume-candidate-run-id }}
+          BUILDCHAIN_RESUME_EXPECTED_WORKFLOW_FILE: ${{ inputs.resume-expected-workflow-file || inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_RESUME_EXPECTED_WORKFLOW_NAME: ${{ inputs.resume-expected-workflow-name || inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RESUME_CHANNEL: ${{ needs.preflight.outputs.channel }}
+          BUILDCHAIN_RESUME_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
+          BUILDCHAIN_RESUME_TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_RESUME_EXPECTED_SOURCE_TREE: ${{ inputs.resume-expected-source-tree }}
+          BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_ROOT: ${{ inputs.resume-expected-candidate-root }}
+          BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_RUNTIME_SHA: ${{ inputs.resume-expected-candidate-runtime-sha }}
+          BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}
+          BUILDCHAIN_CURRENT_RUNTIME_SHA: ${{ needs.controller-plan.outputs.runtime-sha }}
+          BUILDCHAIN_RESUME_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
 
   publication-plan:
     name: Plan exact publication version
-    needs: [preflight, controller-plan]
+    needs: [preflight, controller-plan, release-candidate-preflight]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
-      version: ${{ steps.plan.outputs.planned-publication-version }}
-      exact-tag: ${{ steps.plan.outputs.planned-publication-exact-tag }}
-      release-candidate-version: ${{ steps.plan.outputs.planned-release-candidate-version }}
+      version: ${{ steps.plan.outputs.planned-publication-version || steps.recovery-plan.outputs.planned-publication-version }}
+      exact-tag: ${{ steps.plan.outputs.planned-publication-exact-tag || steps.recovery-plan.outputs.planned-publication-exact-tag }}
+      release-candidate-version: ${{ steps.plan.outputs.planned-release-candidate-version || steps.recovery-plan.outputs.planned-release-candidate-version }}
     steps:
       - name: Checkout promotion channel commit
         uses: actions/checkout@v7.0.0
@@ -855,11 +983,13 @@ jobs:
           node-version: "24"
 
       - name: Validate consumer package manager contract
+        if: ${{ inputs.resume-candidate-run-id == '' }}
         run: node .buildchain/runtime/scripts/validate-package-manager-contract.mjs
         env:
           BUILDCHAIN_EXPECTED_PACKAGE_MANAGER: ${{ inputs.package-manager }}
 
       - name: Install exact publication planning dependencies
+        if: ${{ inputs.resume-candidate-run-id == '' }}
         shell: bash
         run: |
           case "${PACKAGE_MANAGER}" in
@@ -892,6 +1022,7 @@ jobs:
 
       - name: Resolve exact publication transaction version
         id: plan
+        if: ${{ inputs.resume-candidate-run-id == '' }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
           token: ${{ github.token }}
@@ -904,11 +1035,30 @@ jobs:
           publish-transaction: "true"
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
           release-passport: "false"
+
+      - name: Reuse sealed candidate publication version
+        id: recovery-plan
+        if: ${{ inputs.resume-candidate-run-id != '' }}
+        shell: bash
+        env:
+          BUILDCHAIN_RECOVERED_VERSION: ${{ needs.release-candidate-preflight.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${BUILDCHAIN_RECOVERED_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::recovered candidate did not provide a valid exact publication version: ${BUILDCHAIN_RECOVERED_VERSION:-<empty>}"
+            exit 1
+          fi
+          {
+            echo "planned-publication-version=${BUILDCHAIN_RECOVERED_VERSION}"
+            echo "planned-publication-exact-tag=v${BUILDCHAIN_RECOVERED_VERSION}"
+            echo "planned-release-candidate-version=${BUILDCHAIN_RECOVERED_VERSION}"
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Require an exact publication transaction version
         shell: bash
         env:
-          BUILDCHAIN_PUBLICATION_VERSION: ${{ steps.plan.outputs.planned-publication-version }}
-          BUILDCHAIN_PUBLICATION_EXACT_TAG: ${{ steps.plan.outputs.planned-publication-exact-tag }}
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ steps.plan.outputs.planned-publication-version || steps.recovery-plan.outputs.planned-publication-version }}
+          BUILDCHAIN_PUBLICATION_EXACT_TAG: ${{ steps.plan.outputs.planned-publication-exact-tag || steps.recovery-plan.outputs.planned-publication-exact-tag }}
         run: |
           set -euo pipefail
           if [[ -z "$BUILDCHAIN_PUBLICATION_VERSION" || -z "$BUILDCHAIN_PUBLICATION_EXACT_TAG" ]]; then
@@ -938,6 +1088,10 @@ jobs:
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
+      consumer-gate-command: ${{ inputs.publication-gate-command }}
+      consumer-gate-controller-sha: ${{ inputs.publication-gate-controller-sha }}
+      consumer-gate-evidence-source-sha: ${{ inputs.resume-candidate-run-id != '' && needs.release-candidate-preflight.outputs.source-sha || '' }}
+      consumer-gate-evidence-source-tree: ${{ inputs.resume-candidate-run-id != '' && inputs.resume-expected-source-tree || '' }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       consumer-qualification-required: ${{ needs.qualification-plan.outputs.required == 'true' }}
@@ -949,7 +1103,7 @@ jobs:
       target-ref: ${{ needs.preflight.outputs.target-ref }}
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
-      authority-workflow-path: .github/workflows/.release-candidate-promote.yml
+      authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
@@ -973,25 +1127,36 @@ jobs:
       required: ${{ steps.plan.outputs.required }}
       predicate-id: ${{ steps.plan.outputs.predicate-id }}
       predicate-digest: ${{ steps.plan.outputs.predicate-digest }}
+      controller-sha: ${{ steps.plan.outputs.controller-sha }}
     steps:
       - name: Seal exact predicate identity
         id: plan
         shell: bash
         env:
           BUILDCHAIN_CONSUMER_PREDICATE_COMMAND: ${{ inputs.publication-consumer-qualification-command }}
+          BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: ${{ inputs.publication-consumer-qualification-controller-sha }}
+          BUILDCHAIN_CONSUMER_GATE_CONTROLLER_SHA: ${{ inputs.publication-gate-controller-sha }}
+          BUILDCHAIN_PUBLICATION_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.publication-consumer-predicate-id }}
         run: |
           node <<'NODE'
           const crypto = require("node:crypto");
           const fs = require("node:fs");
           const command = String(process.env.BUILDCHAIN_CONSUMER_PREDICATE_COMMAND || "");
+          const explicitControllerSha = String(process.env.BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA || "").trim();
+          const gateControllerSha = String(process.env.BUILDCHAIN_CONSUMER_GATE_CONTROLLER_SHA || "").trim();
+          const sourceSha = String(process.env.BUILDCHAIN_PUBLICATION_SOURCE_SHA || "").trim();
+          const controllerSha = explicitControllerSha || gateControllerSha || sourceSha;
           const predicateId = String(process.env.BUILDCHAIN_CONSUMER_PREDICATE_ID || "").trim();
           if (command && !predicateId) throw new Error("consumer qualification command requires publication-consumer-predicate-id");
           if (!command && predicateId) throw new Error("consumer predicate id requires publication-consumer-qualification-command");
+          if (explicitControllerSha && !command) throw new Error("consumer qualification controller requires publication-consumer-qualification-command");
+          if (command && !/^[0-9a-f]{40}$/.test(controllerSha)) throw new Error("consumer qualification command requires an exact controller SHA");
           const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
           output.write(`required=${command ? "true" : "false"}\n`);
           output.write(`predicate-id=${predicateId}\n`);
-          output.write(`predicate-digest=${command ? crypto.createHash("sha256").update(command).digest("hex") : ""}\n`);
+          output.write(`predicate-digest=${command ? crypto.createHash("sha256").update(`${command}\0${controllerSha}`).digest("hex") : ""}\n`);
+          output.write(`controller-sha=${command ? controllerSha : ""}\n`);
           output.end();
           NODE
 
@@ -1011,7 +1176,7 @@ jobs:
         if: ${{ needs.qualification-plan.outputs.required == 'true' }}
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ needs.preflight.outputs.requested-sha }}
+          ref: ${{ needs.qualification-plan.outputs.controller-sha }}
           persist-credentials: false
 
       - name: Checkout exact Buildchain qualification runtime
@@ -1108,6 +1273,9 @@ jobs:
       promoted-sha: ${{ needs.preflight.outputs.requested-sha }}
       built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
       release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
+      release-candidate-action: ${{ steps.rc.outputs.release-candidate-action || 'discovered' }}
+      release-candidate-recovery-root: ${{ steps.rc.outputs.release-candidate-recovery-root }}
+      release-candidate-recovery-receipt-artifact: ${{ steps.recovery-receipt.outputs.artifact-id && format('buildchain-candidate-recovery-{0}-{1}', inputs.resume-candidate-run-id, github.run_id) || '' }}
       release-propagation-work-artifact: ${{ steps.capture-release-propagation.outputs.artifact-name }}
       release-candidate-outcome: ${{ steps.rc.outcome }}
       promotion-outcome: ${{ steps.promote.outcome }}
@@ -1126,6 +1294,11 @@ jobs:
       github-artifact-attestation-source-sha: ${{ steps.attestation-input.outputs.source-sha }}
       github-artifact-attestation-public-release-tag: ${{ steps.promote.outputs.public-release-tag }}
       github-artifact-attestation-github-release-url: ${{ steps.promote.outputs.github-release-url }}
+      release-tail-declaration-root: ${{ steps.promote.outputs.release-tail-declaration-root }}
+      release-tail-transaction-state: ${{ steps.promote.outputs.release-tail-transaction-state }}
+      release-tail-transaction-root: ${{ steps.promote.outputs.release-tail-transaction-root }}
+      release-tail-state-root: ${{ steps.promote.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json: ${{ steps.promote.outputs.release-tail-receipt-roots-json }}
     steps:
       - name: Download release-candidate-promotion controller plan
         uses: actions/download-artifact@v7.0.0
@@ -1137,6 +1310,15 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ needs.preflight.outputs.requested-sha }}
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout exact consumer publication controller
+        if: ${{ inputs.resume-candidate-run-id != '' && inputs.publication-gate-controller-sha != '' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.publication-gate-controller-sha }}
+          path: .buildchain/publication-controller
           clean: true
           persist-credentials: false
 
@@ -1155,6 +1337,7 @@ jobs:
           registry-url: "https://registry.npmjs.org/"
 
       - name: Install promotion dependencies
+        if: ${{ inputs.resume-candidate-run-id == '' }}
         shell: bash
         run: |
           case "${PACKAGE_MANAGER}" in
@@ -1210,7 +1393,7 @@ jobs:
           persist-credentials: false
 
       - name: Install reconciliation dependencies
-        if: ${{ steps.reconciliation.outputs.workspace != '' }}
+        if: ${{ steps.reconciliation.outputs.workspace != '' && inputs.resume-candidate-run-id == '' }}
         shell: bash
         env:
           PACKAGE_MANAGER: ${{ inputs.package-manager }}
@@ -1279,6 +1462,20 @@ jobs:
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
+      - name: Bridge Buildchain self-runtime dependencies
+        if: ${{ inputs.resume-candidate-run-id != '' }}
+        shell: bash
+        run: |
+          test ! -e node_modules
+          mkdir -p .buildchain/runtime/node_modules/@kungfu-tech
+          test ! -e .buildchain/runtime/node_modules/@kungfu-tech/buildchain-alpha
+          test ! -e .buildchain/runtime/node_modules/@kungfu-tech/buildchain
+          test ! -e .buildchain/runtime/node_modules/@kungfu-tech/kfx
+          ln -s ../.. .buildchain/runtime/node_modules/@kungfu-tech/buildchain-alpha
+          ln -s ../.. .buildchain/runtime/node_modules/@kungfu-tech/buildchain
+          ln -s ../../../../framework/kfx .buildchain/runtime/node_modules/@kungfu-tech/kfx
+          ln -s .buildchain/runtime/node_modules node_modules
+
       - name: Check Buildchain contract lock
         id: contract-lock
         shell: bash
@@ -1343,7 +1540,18 @@ jobs:
 
       - name: Resolve PR-stage release candidate
         id: rc
-        run: node .buildchain/runtime/scripts/release-candidate-resolver.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${BUILDCHAIN_RESUME_CANDIDATE_RUN_ID}" ]; then
+            if [ "${BUILDCHAIN_RESUME_RUNTIME_SHA}" != "${BUILDCHAIN_CURRENT_RUNTIME_SHA}" ]; then
+              echo "::error::resume-buildchain-runtime-sha must equal the checked-out Buildchain runtime ${BUILDCHAIN_CURRENT_RUNTIME_SHA}"
+              exit 1
+            fi
+            node .buildchain/runtime/scripts/resume-from-candidate-run.mjs
+          else
+            node .buildchain/runtime/scripts/release-candidate-resolver.mjs
+          fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
@@ -1354,10 +1562,45 @@ jobs:
           BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS: ${{ inputs.github-release-payload-patterns }}
           BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
           BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RC_WAIT_SECONDS: ${{ inputs.release-candidate-wait-seconds }}
           BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
           BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
           BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
+          BUILDCHAIN_RESUME_CANDIDATE_REPOSITORY: ${{ inputs.resume-candidate-repository }}
+          BUILDCHAIN_RESUME_CANDIDATE_RUN_ID: ${{ inputs.resume-candidate-run-id }}
+          BUILDCHAIN_RESUME_EXPECTED_WORKFLOW_FILE: ${{ inputs.resume-expected-workflow-file || inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_RESUME_EXPECTED_WORKFLOW_NAME: ${{ inputs.resume-expected-workflow-name || inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RESUME_CHANNEL: ${{ needs.preflight.outputs.channel }}
+          BUILDCHAIN_RESUME_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
+          BUILDCHAIN_RESUME_TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_RESUME_EXPECTED_SOURCE_TREE: ${{ inputs.resume-expected-source-tree }}
+          BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_ROOT: ${{ inputs.resume-expected-candidate-root }}
+          BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_RUNTIME_SHA: ${{ inputs.resume-expected-candidate-runtime-sha }}
+          BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}
+          BUILDCHAIN_CURRENT_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
+          BUILDCHAIN_RESUME_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
+
+      - name: Stage exact recovery receipt with Release Passport assets
+        if: ${{ inputs.resume-candidate-run-id != '' }}
+        shell: bash
+        env:
+          RECOVERY_RECEIPT: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
+          RELEASE_PASSPORT_OUTPUT_DIR: ${{ inputs.release-passport-output-dir }}
+        run: |
+          set -euo pipefail
+          test -f "${RECOVERY_RECEIPT}"
+          mkdir -p "${RELEASE_PASSPORT_OUTPUT_DIR}"
+          cp "${RECOVERY_RECEIPT}" "${RELEASE_PASSPORT_OUTPUT_DIR}/release-candidate-recovery-receipt.json"
+
+      - name: Upload immutable candidate recovery receipt
+        id: recovery-receipt
+        if: ${{ inputs.resume-candidate-run-id != '' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-candidate-recovery-${{ inputs.resume-candidate-run-id }}-${{ github.run_id }}
+          path: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
+          if-no-files-found: error
 
       - name: Resolve GitHub artifact attestation policy
         id: attestation-policy
@@ -1534,6 +1777,10 @@ jobs:
 
       - name: Promote-only publish
         id: promote
+        env:
+          BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
+          BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
+          BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
           token: ${{ github.token }}
@@ -1553,9 +1800,12 @@ jobs:
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
           publish-command: ${{ inputs.publish-command }}
+          publish-sealed-bundle-root: ${{ steps.rc.outputs.publish-sealed-bundle-root }}
+          publish-sealed-bundle-manifest: ${{ steps.rc.outputs.publish-sealed-bundle-manifest }}
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
-          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
+          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
+          publish-required-artifacts-path: ${{ inputs.publish-required-artifacts-json == '' && steps.rc.outputs.publish-required-artifacts-path || '' }}
           publish-mode: ${{ inputs.publish-mode }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           publish-dist-tag: ${{ inputs.publish-dist-tag }}
@@ -1592,6 +1842,7 @@ jobs:
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           release-passport-github-artifact-attestation-policy-jsons: ${{ steps.attestation-policy.outputs.path }}
           github-release: ${{ inputs.github-release }}
+          declarative-release-tail: ${{ inputs.declarative-release-tail }}
           github-release-artifact-paths: ${{ steps.rc.outputs.release-candidate-github-release-artifact-paths }}
           github-release-title: ${{ inputs.github-release-title }}
           github-release-notes: ${{ inputs.github-release-notes }}
@@ -1603,6 +1854,17 @@ jobs:
           release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
           release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
           release-candidate-family-assignment-id: ${{ inputs.release-candidate-family-assignment-id }}
+
+      - name: Retain declarative release-tail contract and transaction
+        if: ${{ always() && inputs.declarative-release-tail && steps.promote.outputs.release-tail-state-path != '' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-tail-${{ needs.preflight.outputs.requested-sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            ${{ steps.promote.outputs.release-tail-declaration-path }}
+            ${{ steps.promote.outputs.release-tail-state-path }}
 
       - name: Stage sealed GitHub artifact attestation inputs
         id: attestation-input
@@ -1672,6 +1934,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_COMMIT_TOKEN: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_TOKEN }}
           BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY }}
           BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: ${{ steps.rc.outputs.release-candidate-source-sha || needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA: ${{ steps.promote.outputs.transaction-release-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
           GH_TOKEN: ${{ github.token }}
@@ -1699,6 +1962,7 @@ jobs:
               --evidence "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" \
               --version "${BUILDCHAIN_PUBLICATION_COMMIT_VERSION}" \
               --source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA}" \
+              --candidate-source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA}" \
               --release-sha "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA}" \
               --release-tag "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG}"
           )"
@@ -2131,7 +2395,7 @@ jobs:
           if-no-files-found: error
 
       - name: Enforce qualifying release-candidate-promotion controller receipt
-        if: ${{ always() && !inputs.dry-run && needs.preflight.outputs.action == 'promote' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        if: ${{ always() && !inputs.dry-run && needs.preflight.outputs.action == 'promote' && needs.promote.outputs.finalization-needed != 'true' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
         run: |
           echo "::error::release-candidate-promotion controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
           exit 1

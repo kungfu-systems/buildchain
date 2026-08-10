@@ -9,13 +9,19 @@ import {
   matchesGithubDeploymentPolicy,
 } from "../packages/core/publication-control-plane-audit.js";
 
+const GITHUB_JSON_MAX_BUFFER = 16 * 1024 * 1024;
+
 function flag(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
   return index === -1 ? fallback : String(process.argv[index + 1] || "");
 }
 
 function commandJson(command, args, label) {
-  const result = spawnSync(command, args, { encoding: "utf8", timeout: 60_000 });
+  const result = spawnSync(command, args, {
+    encoding: "utf8",
+    timeout: 60_000,
+    maxBuffer: GITHUB_JSON_MAX_BUFFER,
+  });
   if (result.status !== 0) {
     const category = /401|E401|unauthorized/i.test(result.stderr) ? "unauthorized" : "unavailable";
     throw new Error(`${label} is ${category}; publication control-plane audit fails closed`);
@@ -35,6 +41,7 @@ function githubJsonOptional(apiPath, label, fallback) {
   const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
     encoding: "utf8",
     timeout: 60_000,
+    maxBuffer: GITHUB_JSON_MAX_BUFFER,
   });
   if (result.status !== 0) {
     if (/404|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
@@ -52,6 +59,7 @@ function githubJsonReadLimited(apiPath, label, fallback) {
   const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
     encoding: "utf8",
     timeout: 60_000,
+    maxBuffer: GITHUB_JSON_MAX_BUFFER,
   });
   if (result.status !== 0) {
     if (/401|403|404|unauthorized|forbidden|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
@@ -355,9 +363,6 @@ function main() {
       review.user?.login !== mergedPullRequest?.user?.login &&
       String(review.commit_id || "").toLowerCase() === pullRequestHeadSha
     );
-    const checkRuns = /^[0-9a-f]{40}$/.test(pullRequestHeadSha)
-      ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?per_page=100`, "merged pull-request head check runs")
-      : { check_runs: [] };
     const requiredStatusCheckPolicy = branchState.protection?.required_status_checks || {};
     const requiredStatusChecks = [...new Set([
       ...(requiredStatusCheckPolicy.contexts || []),
@@ -372,6 +377,9 @@ function main() {
     const resolvedRequiredStatusCheck = exactRequiredStatusCheck ||
       (prefixedRequiredStatusChecks.length === 1 ? prefixedRequiredStatusChecks[0] : requiredStatusCheck);
     const requiredStatusCheckMatchCount = exactRequiredStatusCheck ? 1 : prefixedRequiredStatusChecks.length;
+    const checkRuns = /^[0-9a-f]{40}$/.test(pullRequestHeadSha)
+      ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?check_name=${encodeURIComponent(resolvedRequiredStatusCheck)}&filter=latest&per_page=100`, "merged pull-request required check runs")
+      : { check_runs: [] };
     const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) =>
       entry.context === resolvedRequiredStatusCheck
     );
@@ -445,7 +453,7 @@ function main() {
   const reviewRules = (environmentState.protection_rules || []).filter((rule) => rule.type === "required_reviewers");
   const runsOn = (block.match(/^\s{4}runs-on:\s*([^\n#]+)/m)?.[1] || "").trim().replace(/["']/g, "");
   const observedAt = new Date();
-  const expiresAt = new Date(observedAt.getTime() + 10 * 60 * 1000);
+  const expiresAt = new Date(observedAt.getTime() + 15 * 60 * 1000);
   const receipt = evaluatePublicationControlPlaneSnapshot({
     repository,
     workflowPath,

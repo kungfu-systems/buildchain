@@ -221,12 +221,13 @@ async function finalizeContainedAlpha(context, state) {
       publishToolingShaOverride:
         transaction.publish_tooling_sha || transaction.release_sha,
       publishDistTagOverride: state.alphaPublishDistTag,
+      durablePublicationMaterial: transaction,
     });
     await context.markFinalizing();
-    await context.ensureTag(transaction.exact_tag, transaction.release_sha, {
+    await context.ensureTag(transaction.exact_tag, transaction.source_sha, {
       acceptedExistingShas: context.transactionAcceptedExactTagShas(
         transaction,
-        transaction.release_sha,
+        transaction.source_sha,
       ),
     });
     await context.updateTag(context.rule.alphaTag, transaction.release_sha);
@@ -386,6 +387,7 @@ async function prepareAlphaCommit(context, candidate) {
       commitSha: context.sha,
       targetRef: context.targetRef,
       allowedPaths: commit.files,
+      exactReleaseCandidateSource: context.releaseCandidateValidation,
     });
   }
   return {
@@ -469,10 +471,11 @@ async function finalizeAlphaPublication(context, state, publication) {
     const transaction =
       context.getLatestPublishTransaction()?.transaction ||
       context.advancedPublicationTransaction;
-    await context.ensureTag(selectedAlpha.tag, alpha.sha, {
+    const exactTagSha = transaction?.source_sha || alpha.sha;
+    await context.ensureTag(selectedAlpha.tag, exactTagSha, {
       acceptedExistingShas: context.transactionAcceptedExactTagShas(
         transaction,
-        alpha.sha,
+        exactTagSha,
       ),
       acceptedExistingMaterialShas: context.transactionAcceptedExactTagShas(
         transaction,
@@ -555,10 +558,11 @@ async function finalizeAlphaPublication(context, state, publication) {
   const transaction =
     context.getLatestPublishTransaction()?.transaction ||
     state.currentAlphaTransaction;
-  await context.ensureTag(selectedAlpha.tag, alpha.sha, {
+  const exactTagSha = transaction?.source_sha || alpha.sha;
+  await context.ensureTag(selectedAlpha.tag, exactTagSha, {
     acceptedExistingShas: context.transactionAcceptedExactTagShas(
       transaction,
-      alpha.sha,
+      exactTagSha,
     ),
     acceptedExistingMaterialShas: context.transactionAcceptedExactTagShas(
       transaction,
@@ -577,7 +581,6 @@ async function finalizeAlphaPublication(context, state, publication) {
     updates: context.updates,
   });
 }
-
 async function promoteAlphaChannel(context) {
   const plan = await planAlphaPublication(context);
   const state = await evaluateAlphaRecovery(context, plan);
@@ -593,5 +596,4 @@ async function promoteAlphaChannel(context) {
   );
   return finalizeAlphaPublication(context, state, publication);
 }
-
 export { promoteAlphaChannel };

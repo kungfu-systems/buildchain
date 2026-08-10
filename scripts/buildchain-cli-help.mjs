@@ -2,6 +2,12 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain --help
   buildchain version
   buildchain layout [--cwd <dir>] [--json]
+  buildchain architecture validate [--cwd <dir>] [--json]
+  buildchain architecture list [--cwd <dir>] [--json]
+  buildchain architecture show <capability-id> [--cwd <dir>] [--json]
+  buildchain architecture qualify --authority-revision <git-revision>
+                                      [--candidate-revision <git-revision>]
+                                      [--cwd <dir>] [--json]
   buildchain portable-cache plan --manifest <file-or-json> [--output <file>]
                                  [--github-output <file>] [--json]
   buildchain portable-cache receipt --plan <file-or-json> [--matched-key <key>]
@@ -33,6 +39,13 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-governance reconcile --repository <owner/repo>
                                --branch <dev|alpha|release/vN/vN.N>
                                --candidate-sha <sha> [--apply] [--json]
+  buildchain release-tail plan --declaration <json-or-path> [--output <path>]
+  buildchain release-tail init --declaration <json-or-path> [--state <path>]
+  buildchain release-tail <status|verify> [--state <path>] [--output <path>]
+  buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
+  buildchain release-tail rehearse --capsule <path> --capsule-root <absolute-path>
+                                    --mode <simulate|replay> --state <path>
+                                    --evidence <path> [--environment-json <json-or-path>]
   buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...
@@ -108,10 +121,18 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain inspect release --passport <file-or-url> [--json]
   buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]
   buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]
+  buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>
+                             --pull-request <n> --expected-head <sha>
+                             [--execute] [--output <file>] [--json]
   buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>
                              [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>]
                              [--check-response-timeout-minutes <n>]
                              [--max-entries-to-build <n>] [--apply]
+  buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe>
+                             --repository <owner/repo> --branch <dev/vN/vN.M>
+                             [--execute] [--output <file>] [--json]
+  buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration>
+                             [--output <file>] [--json]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
                  [--path <jsonl>] [--json]
@@ -208,7 +229,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                           [--execute] [--json]
   buildchain paper status [--cwd <dir>] [--json]
   buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]
-  buildchain release-propagation <plan|write-lock> ...
+  buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
   buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]
@@ -246,6 +267,7 @@ Examples:
   buildchain paper preflight --json
   buildchain paper status --json
   buildchain release-propagation plan --graph graph.json --upstream-release release.json --json
+  buildchain release-propagation pickup plan --config manual-upstreams.json --source-id buildchain --channel release --current-version 3.0.3 --json
   buildchain kfd status --json
   buildchain kfd schema list --json
   buildchain kfd 1 witness --json

@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-03
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -141,7 +141,10 @@ bot, or human service-account token as `approval-token`. The approval identity
 must differ from the promotion token identity that opens the PR. When no
 `approval-token` is passed, `auto-approve: true` falls back to the caller
 `github.token` and therefore requires GitHub Actions approval permission. The
-generated PR may use auto-merge, but it never bypasses the target branch checks.
+generated PR may use auto-merge, but it never bypasses the target branch
+checks. Callers can select `merge-method: merge`, `squash`, or `rebase`; the
+default is `merge` for compatibility. Unsupported values fail closed before
+GitHub is called.
 
 Before enabling `auto-approve` and `auto-merge`, the caller repository must
 provide one approval path and enable auto-merge:

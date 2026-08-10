@@ -1,3 +1,21 @@
+---
+status: active
+period: ongoing
+theme: buildchain-release-propagation
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-08-03
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-08-03
+  invisible_context: not asserted
+---
+
 # Release Propagation
 
 Release propagation lets a finalized upstream release open a downstream update
@@ -205,6 +223,53 @@ The receipt keeps four machine states separate:
 
 Package publication or alpha completion never implies either visibility state.
 
+## Unified Site agent entry
+
+An Agent begins every Site upstream update through one policy-reporting entry:
+
+```bash
+buildchain release-propagation entry plan \
+  --source-id <paper|kfd|buildchain|kungfu-core> \
+  --channel <alpha|release> \
+  --json
+```
+
+The entry does not blur content and code release policies:
+
+| Upstream    | Trigger policy            | Entry result                                       |
+| ----------- | ------------------------- | -------------------------------------------------- |
+| Paper       | automatic release handoff | requires or resumes the exact captured Work        |
+| KFD         | automatic release handoff | requires or resumes the exact captured Work        |
+| Buildchain  | explicit Site intent      | resolves an exact published package before capture |
+| Kungfu Core | explicit Site intent      | resolves an exact published package before capture |
+
+Paper and KFD releases keep automatic capture-only handoff. Buildchain and
+Kungfu Core releases remain inert until a downstream Agent receives explicit
+Site-update intent. In all four cases, the entry reports the selected policy,
+exact release coordinate when one has been admitted, Work root and recovery
+cursor when one exists, and one machine-readable next action. A GitHub PR is a
+delivery stage inside that Work; it is not the handoff unit.
+
+For an automatic handoff, bind the exact artifact rather than resolving a
+floating tag again:
+
+```bash
+buildchain release-propagation entry plan \
+  --source-id kfd \
+  --handoff-work work.json \
+  --json
+```
+
+The deterministic recovery table is available without repository mutation:
+
+```bash
+buildchain release-propagation entry fault-matrix --json
+```
+
+It classifies current and duplicate Work as successful no-ops, supersession as
+an explicit decision boundary, stale base/expected-old and operational failures
+as retryable, and package/schema disagreement as a hard safety gate.
+
 ## Agent-native work envelope
 
 Setting `agent-work-mode: capture-only` makes a finalized release emit a
@@ -371,6 +436,34 @@ buildchain release-propagation work record ... --output successor.json --json
 buildchain release-propagation work repair ... --output successor.json --json
 buildchain release-propagation work complete ... --output successor.json --json
 ```
+
+The `push-branch` stage has an executable, fail-closed entrypoint:
+
+```bash
+buildchain release-propagation work push-plan \
+  --work work.json \
+  --expected-work-root sha256:<64-hex> \
+  --cwd downstream-worktree \
+  --remote origin \
+  --json
+
+buildchain release-propagation work push-branch \
+  --work work.json \
+  --expected-work-root sha256:<64-hex> \
+  --cwd downstream-worktree \
+  --remote origin \
+  --execute \
+  --json
+```
+
+The executor checks the exact GitHub repository, current managed branch,
+captured downstream base, and expected-old Work root. It pushes only the current
+commit with `HEAD:refs/heads/<managed-branch>`, never a bare branch or wildcard,
+never a force option, then reads that exact remote ref back. Its typed branch
+reconciliation evidence records the argv, source SHA, destination ref, prior
+remote SHA, observed remote SHA, and whether a mutation occurred. A wrong
+repository, unrelated branch, stale base, concurrent writer, or non-fast-forward
+target fails closed without mutating another branch.
 
 Known operational races (`stale-branch`, `expected-old-mismatch`,
 `lockfile-drift`, `failed-check`, `interrupted-execution`, and `ci-delay`) return

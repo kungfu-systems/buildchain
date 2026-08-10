@@ -4,6 +4,12 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { BUILDCHAIN_CONFIG_PATH } from "../packages/core/buildchain-layout.js";
 import { detectPackageManager, assertPackageManager } from "../packages/core/package-manager.js";
+import {
+  PUBLICATION_REHEARSAL_WORKFLOW_PATH,
+  appendPublicationRehearsalToml,
+  mergePublicationRehearsalAgentInstructions,
+  publicationRehearsalWorkflow,
+} from "../packages/core/publication-rehearsal-projection.js";
 
 const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v3";
 const DEFAULT_PUBLICATION_LATEX_IMAGE = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder";
@@ -401,6 +407,13 @@ function writeIfAllowed(filePath, content, { force }) {
   return filePath;
 }
 
+function writeManagedAgentEntry(filePath, current) {
+  const content = mergePublicationRehearsalAgentInstructions(current);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content);
+  return filePath;
+}
+
 export function initBuildchainRepo({
   cwd = process.cwd(),
   type = "package",
@@ -411,7 +424,7 @@ export function initBuildchainRepo({
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const manager = detectOrDefaultPackageManager(resolvedCwd, packageManager);
-  const toml = (() => {
+  const toml = appendPublicationRehearsalToml((() => {
     if (type === "package") {
       return packageToml(resolvedCwd, manager);
     }
@@ -431,7 +444,12 @@ export function initBuildchainRepo({
       return anchoredPackageToml(resolvedCwd, manager);
     }
     throw new Error("init --type must be one of package, native, web-surface, infra-contract, publication-artifact, or anchored-package");
-  })();
+  })());
+
+  const agentsPath = path.join(resolvedCwd, "AGENTS.md");
+  const currentAgents = fs.existsSync(agentsPath)
+    ? fs.readFileSync(agentsPath, "utf8")
+    : "";
 
   const written = [
     writeIfAllowed(path.join(resolvedCwd, BUILDCHAIN_CONFIG_PATH), toml, { force }),
@@ -446,6 +464,12 @@ export function initBuildchainRepo({
           }),
       { force },
     ),
+    writeIfAllowed(
+      path.join(resolvedCwd, PUBLICATION_REHEARSAL_WORKFLOW_PATH),
+      publicationRehearsalWorkflow("v3"),
+      { force },
+    ),
+    writeManagedAgentEntry(agentsPath, currentAgents),
   ];
 
   if (type === "anchored-package" && !fs.existsSync(path.join(resolvedCwd, "release.json"))) {

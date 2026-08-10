@@ -1,0 +1,84 @@
+name: Buildchain Dev Delivery
+
+run-name: "Buildchain PR #${{ inputs.expected-pr-number }} · required Delivery Warrant"
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected-pr-number:
+        description: "Exact Buildchain PR number"
+        type: number
+        required: true
+      expected-head-sha:
+        description: "Exact 40-character PR head"
+        type: string
+        required: true
+      native-roots-json:
+        description: "JSON object containing exact assignmentRoot and initiativeRoot"
+        type: string
+        required: true
+      source-identity-root:
+        description: "Immutable semantic source identity root"
+        type: string
+        required: true
+      source-patch-root:
+        description: "Immutable source patch or tree-intent root"
+        type: string
+        required: true
+      plan-root:
+        description: "Exact qualification plan root"
+        type: string
+        required: true
+      closure-root:
+        description: "Exact affected-closure root"
+        type: string
+        required: true
+      dependency-root:
+        description: "Exact dependency-graph root"
+        type: string
+        required: true
+      toolchain-root:
+        description: "Exact qualification toolchain root"
+        type: string
+        required: true
+      affected-paths-json:
+        description: "JSON array of paths covered by source qualification"
+        type: string
+        required: true
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: write
+
+jobs:
+  deliver:
+    uses: ./.github/workflows/dev-pr-auto-merge.yml
+    with:
+      buildchain-repository: kungfu-systems/buildchain
+      buildchain-ref: ${{ github.sha }}
+      target-branch: dev/v3/v3.0
+      expected-pr-number: ${{ fromJSON(github.event.inputs.expected-pr-number) }}
+      expected-head-sha: ${{ github.event.inputs.expected-head-sha }}
+      source-workflow-run-id: ${{ fromJSON(github.run_id) }}
+      delivery-warrant-mode: required
+      assignment-root: ${{ fromJSON(github.event.inputs.native-roots-json).assignmentRoot }}
+      initiative-root: ${{ fromJSON(github.event.inputs.native-roots-json).initiativeRoot }}
+      source-identity-root: ${{ github.event.inputs.source-identity-root }}
+      source-patch-root: ${{ github.event.inputs.source-patch-root }}
+      plan-root: ${{ github.event.inputs.plan-root }}
+      closure-root: ${{ github.event.inputs.closure-root }}
+      dependency-root: ${{ github.event.inputs.dependency-root }}
+      toolchain-root: ${{ github.event.inputs.toolchain-root }}
+      affected-paths-json: ${{ github.event.inputs.affected-paths-json }}
+      delivery-class: native-proof-required
+      delivery-priority: ordinary
+      required-status-checks: check
+      ready-label: ready
+      block-labels: blocked,do-not-merge,work-in-progress
+      allowed-head-prefixes: feature/,fix/,chore/,docs/,ci/,refactor/,automation/auditable-demo-
+      landing-mode: queue
+      dry-run: false
+    secrets:
+      github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

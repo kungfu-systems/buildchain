@@ -487,6 +487,15 @@ same slow checks. Buildchain supports GitHub merge queues for that channel
 shape. The queue validates the projected merged result and serializes the final
 ref update, so concurrent channel movement no longer invalidates the candidate.
 
+GitHub Merge Queue does not by itself decide which candidate may spend a long
+native proof before enqueue. Repositories with that workload use the
+[Dev Delivery Warrant Queue](dev-delivery-warrant.md) as the durable,
+FIFO-aging scheduling and fencing authority before native queue admission. A
+selected Warrant owns one complete delivery attempt and later candidates remain
+visibly queued; GitHub still owns the exact `merge_group` proof and final ref
+mutation. Workflow concurrency remains only a process critical section and is
+not fairness or ownership authority.
+
 Every required workflow must handle both `pull_request` and `merge_group`
 before the queue is enabled. Queue runs do not provide
 `github.event.pull_request`; required workflows must use the checked-out
@@ -545,6 +554,33 @@ inputs: target dev branch, required status/check names, ready and block labels,
 allowed work-branch prefixes, review requirements, maximum merges per run,
 merge method, and dry-run mode.
 
+Agent delivery uses the targeted Buildchain command instead of relying on a
+scheduled scan:
+
+```sh
+buildchain dev pr-admit \
+  --repository kungfu-systems/example \
+  --branch dev/v3/v3.0 \
+  --pull-request 123 \
+  --expected-head 0123456789abcdef0123456789abcdef01234567
+```
+
+The default is a mutation-free plan. After reviewing it, add `--execute` to
+establish the configured readiness label for only that PR and exact head, read
+the state back, and attempt native queue admission. Repeating execute is
+idempotent: an exact matching queue entry is adopted, not submitted again. A
+stale head or base, fork, draft, block label, missing approval, failed check,
+active predecessor, or rejected enqueue exits nonzero. Execute mode also
+creates or updates an exact-head PR comment and named commit status containing
+the current state, reason, receipt root, and copyable next action. The JSON
+receipt remains the complete content-addressed evidence.
+
+GitHub auto-merge is observed but is never readiness or admission authority.
+Approval plus green checks plus auto-merge enabled does not qualify a PR that
+lacks explicit Buildchain delivery intent. The targeted workflow interface
+exposes the same contract through `expected-pr-number` and
+`expected-head-sha`; cadence patrol runs leave those inputs empty.
+
 The workflow defaults are conservative. A PR is skipped unless it targets the
 configured dev line, is not a draft, has the ready label, has no block label,
 comes from the same repository, uses an allowed work-branch prefix, has a
@@ -565,6 +601,21 @@ admission runs; GitHub still owns the atomic queue and protected-ref update.
 Repositories may explicitly select `landing-mode: direct` only when the target
 branch has no native queue. Queue presence always disables the direct path.
 
+For slow candidates on a frequently advancing dev line, the optional
+[Dev Delivery Warrant Queue](dev-delivery-warrant.md) adds durable FIFO plus
+aging scheduling before native queue admission. It separates reusable source
+qualification from exact merge-group integration, uses expected-old Git-ref
+updates and fenced leases, and keeps the PR head unchanged when only dev moves.
+The reusable caller supports `off`, read-only `shadow`, and fail-closed
+`required` rollout modes. GitHub Merge Queue remains the final protected-ref
+authority in every mode.
+
+Bounded-concurrency experiments use the separate effect-disabled Warrant
+shadow planner. It may evaluate at most two fully bound lanes from one exact
+observation, but it cannot mint a second production Warrant or mutate GitHub.
+Its aggregate threshold decision is qualification evidence for a later rollout
+change, not authority to change the live single-flight policy.
+
 The canonical consumer required check context is `check / check`, matching the
 reusable workflow call plus its `check` job. Buildchain's own `Verify` workflow
 emits the repository-local context `check`, so Buildchain self-promotion,
@@ -574,6 +625,38 @@ records branch-protection policy before/after facts; it does not rewrite one
 context shape into the other. Consumer repositories can keep their context
 stable while changing the actual verification command declaratively in
 `buildchain.toml`:
+
+Before a release caller is merged, consumers should also verify its exact
+reusable-workflow call contract. The checker reads the caller and an already
+checked-out exact Buildchain commit; it never resolves a floating ref or starts
+a release. It rejects unknown or missing inputs and secrets, literal type
+drift, insufficient permissions, untrusted event classes, and a caller pin that
+does not equal the checked callee commit. Defaults, workflow bytes, and the
+complete interface are bound into `contractRoot`; the receipt additionally
+binds the caller commit/tree and both workflow digests.
+
+```sh
+node .buildchain/workflow-contract-runtime/scripts/workflow-call-contract.mjs check \
+  --caller-root . \
+  --caller-workflow .github/workflows/release-new-version.yml \
+  --caller-repository kungfu-systems/example \
+  --job promote \
+  --callee-root .buildchain/workflow-contract-runtime \
+  --callee-workflow .github/workflows/release-candidate-promote.yml \
+  --callee-repository kungfu-systems/buildchain \
+  --trusted-event workflow_dispatch \
+  --trusted-event pull_request:closed \
+  --expected-contract-root "$(cat .buildchain/release-call-contract-root)" \
+  --output .buildchain/workflow-call-receipts/release-new-version.json
+```
+
+The checkout at `.buildchain/workflow-contract-runtime` must use the same
+40-character SHA written in the caller's `uses:` edge. To accept an intentional
+contract change, first run without `--expected-contract-root`, review the full
+diagnostic and exact coordinates, then replace only the committed root. The
+ordinary PR check runs this command before any candidate or promotion dispatch.
+Local pre-commit rehearsal may add `--allow-dirty`; that result is marked
+`receiptReusable: false` and cannot replace the clean exact-source receipt.
 
 ```toml
 [lifecycle.install]
@@ -616,16 +699,23 @@ jobs:
       contents: write
       pull-requests: write
       checks: read
-      statuses: read
+      statuses: write
     with:
       target-branch: dev/v3/v3.0
       required-status-checks: check / check
+      queue-admission-context: Queue admission lease
       ready-label: ready
       block-labels: blocked,do-not-merge
       max-merges: 1
       landing-mode: auto
       dry-run: ${{ inputs.dry-run || false }}
 ```
+
+When the protected branch requires a merge-group-only queue lease, the wrapper
+posts that configured context as a temporary success status on the exact PR
+head only after the ready, review, and required-check gates pass. It then
+enqueues with `expectedHeadOid`; a rejected enqueue rewrites the temporary
+status to failure, while the merge group must still produce its own final check.
 
 ## Buildchain Patrol
 
@@ -647,6 +737,13 @@ The cadence names describe patrol intensity, not release cadence:
 - weekly patrol is for medium-cost maintenance and audit checks;
 - monthly patrol is for structural drift checks that should not block ordinary
   development velocity.
+
+Every cadence result is typed `runKind: cadence-patrol` with
+`qualification: false`. A run with no open candidates reports
+`no-op-no-candidates`; a run where every candidate is skipped reports
+`no-op-all-skipped`. Either no-op can keep maintenance green, but neither is a
+delivery qualification, a targeted admission receipt, or evidence that an
+expected PR entered the merge queue.
 
 Stable Candidate Patrol is separate from those maintenance cadences because its
 caller-owned cron is a release-intent window. Its candidate ledger and selection
@@ -694,6 +791,12 @@ active semver dev line, so consumers do not pin patrol to a stale minor branch.
 The separate workflow names keep consumer schedules readable and stable while
 Buildchain adds new checks behind the cadence wrappers.
 
+Branch and pull-request residue uses the separate
+[`Engineering Housekeeper`](engineering-housekeeper.md) contract. Its scheduled
+callers are report-only and read-only by default; apply requires a manual,
+explicit two-part gate, exact provider-state revalidation, scoped job
+permissions, and rooted plan/report/receipt evidence.
+
 ## Package-Manager Adapters
 
 Old ABV assumed JavaScript repositories with root version state and often
@@ -725,8 +828,11 @@ declare version-state files and lifecycle commands without pretending every
 project is a Node workspace. Supported version files include JSON, TOML, and
 regex-based files such as `CMakeLists.txt` or `conanfile.py`.
 
-The promotion action consumes `version.files`, optional anchored/manual
-`version.derived_files`, and `lifecycle.verify`.
+The promotion action consumes `version.files`, optional
+`version.derived_files`, and `lifecycle.verify`. Semver and anchored/manual
+repositories may both declare lifecycle-regenerated tracked outputs as derived
+files; anchored/manual repositories additionally bind them into their committed
+version witnesses.
 The verify stage runs after generated version-state changes are applied locally
 and before any release refs move. If `verification-command` is passed directly
 to the action, that explicit command overrides `lifecycle.verify`.
@@ -831,6 +937,13 @@ must be absent or already point at accepted release material. This preserves an
 immutable tag that represents a completed transaction while allowing a tag
 collision discovered after registry publication to recover without republishing.
 
+For package publish transactions, the immutable public version tag points to
+the transaction `source_sha`, so registry source metadata such as npm `gitHead`
+and the Git tag identify the same source commit. Protected branches and mutable
+channel tags continue to point to the generated `release_sha`. Recovery accepts
+older completed transactions whose exact tags already point to recorded release
+or release-material SHAs, but new tags are source-bound.
+
 Every Buildchain publish model that can run registry side effects must bind the
 publish entrypoint to an immutable `publish-gate/*` source lock. The reusable
 `release-candidate-promote.yml@v3` wrapper creates or updates that gate ref and
@@ -865,6 +978,12 @@ preserves an existing asset when its SHA-256 digest matches the regenerated
 bytes, uploads only missing assets, and fails with an immutable-release
 collision when a same-name asset has different bytes. It never deletes and
 replaces an existing asset during retry or duplicate workflow delivery.
+An explicit candidate recovery whose validated receipt records an already
+complete transaction instead verifies the existing public Release Passport
+bundle and preserves its Buildchain-owned evidence generation. Product payload
+bytes remain digest-bound to the restored candidate, and missing product assets
+alone may be filled from that sealed bundle. This exception is unavailable to
+ordinary reruns or receipts from earlier transaction states.
 
 Product payloads are included only through the explicit
 `github-release-payload-patterns` input. Patterns match basenames inside the

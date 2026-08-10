@@ -2,7 +2,7 @@ const DEFAULT_REPOSITORY = "kungfu-systems/buildchain";
 const MAJOR_GATE_REF = "publish-gate/major";
 const LEGACY_MAJOR_GATE_REF = "major-gate";
 const RELEASE_LINE_RECOVERY_PATHS = [
-  "actions/promote-buildchain-ref/",
+  ".github/workflows/buildchain-ref-promotion.yml", "actions/promote-buildchain-ref/",
   "packages/core/self-dogfood-version.js",
   "scripts/check-inventory.mjs",
   "scripts/release-line-policy.mjs",

@@ -1,5 +1,7 @@
 .DS_Store
 .kungfu/
+.xinfa/atlas/
+.xinfa/cache/
 node_modules/
 .buildchain/artifacts/
 .buildchain/diagnostics/
@@ -18,4 +20,5 @@ dist/*
 !actions/*/dist/
 !actions/*/dist/index.js
 coverage/
+__pycache__/
 *.log

@@ -80,6 +80,14 @@ publish npm packages. The GitHub action dry-run still calls GitHub APIs to
 resolve the current target SHA and concrete pending ref updates, but every
 write is reported as a dry-run update.
 
+When the requested version already matches every declared version-state file,
+dry-run planning still runs `lifecycle.version-state` and any explicit
+`verification-command` so it can discover declared derived material. It does
+not fall back to the repository-wide `lifecycle.verify` in that no-op case;
+full product verification can require candidate artifacts that are deliberately
+not present until the later admission phase. Non-dry-run version-state writes
+continue to require the configured verification lifecycle before any ref moves.
+
 Repositories whose package version is anchored to an explicitly selected
 upstream release can opt into manual next-anchor behavior:
 
@@ -320,6 +328,7 @@ BUILDCHAIN_SEALED_NPM_TARBALL
 BUILDCHAIN_SEALED_NPM_INTEGRITY
 BUILDCHAIN_SEALED_NPM_SHA256
 BUILDCHAIN_REQUIRED_ARTIFACTS
+BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH
 ```
 
 `BUILDCHAIN_REQUIRED_ARTIFACTS` is the normalized requirement array after the
@@ -329,6 +338,10 @@ declared provenance to the current release coordinate. Template expansion
 happens after exact version selection; ambiguous or unsupported templates fail
 before `lifecycle.publish`. Requirement descriptors may omit `digest`; final
 publish evidence may not.
+The action also writes that normalized array to
+`BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH`. To stay below operating-system
+process environment limits, large arrays are available through the file path
+only; small arrays retain the inline variable for compatibility.
 
 The action outputs `transaction-id`, `transaction-state`,
 `transaction-publication-state`, `transaction-sealed-bundle-root`,
@@ -452,7 +465,11 @@ it does not have to equal the original `source_sha` or the transaction
 `release_sha`. Reruns accept exact tags that already point at the transaction
 release/material SHA or the finalized channel head, and continue moving any
 missing floating tags or dev/alpha refs before marking the transaction
-`complete`.
+`complete`. An explicit recovery of an already `complete` transaction is also
+accepted when the requested source SHA, version, exact tag, channel, and target
+all match the durable record exactly. It returns the completed transaction
+without republishing package bytes; a source accepted only through later branch
+history is not sufficient for this terminal-state reuse.
 
 Normal reruns accept already-published artifacts only when evidence matches.
 Missing required artifacts can be published on the next run. Conflicting
@@ -482,6 +499,11 @@ governance semantics:
 - alpha promotion must come from a merged same-repository PR
   `dev/vN/vN.M -> alpha/vN/vN.M`, or from a strict same-line
   `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;
+  an immutable recovery receipt may instead admit the exact current alpha
+  channel SHA only when its sealed candidate tree is byte-equivalent and its
+  publication version is bound by that receipt; when administrative protection
+  details are hidden, the provider-visible protected head and required check
+  must still match that exact recovered SHA;
 - release promotion must come from a merged same-repository PR
   `alpha/vN/vN.M -> release/vN/vN.M`, or from a strict same-line
   `publish-gate/release/vN/vN.M/<version> -> release/vN/vN.M` source-lock PR;

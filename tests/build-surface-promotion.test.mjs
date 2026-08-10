@@ -72,7 +72,10 @@ import {
   contractForSelfDogfoodEvaluation,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
-import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
+import {
+  runLifecycle,
+  verifyBuildLifecycleCompilerCacheActivity,
+} from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import {
@@ -88,6 +91,7 @@ import {
   BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
   BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
 } from "../packages/core/diagnostics.js";
+import { materializeSelfReleaseCandidateVersion } from "../scripts/materialize-self-release-candidate-version.mjs";
 
 const root = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
@@ -109,9 +113,11 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(action, /publish-source-sha:/);
   assert.match(action, /publish-source-locked:/);
   assert.match(action, /expected-publication-version:/);
+  assert.match(action, /plan-before-target-advance:/);
   assert.match(action, /planned-publication-version:/);
   assert.match(action, /planned-release-candidate-version:/);
   assert.match(implementation, /expectedPublicationVersion/);
+  assert.match(implementation, /planBeforeTargetAdvance/);
   assert.match(implementation, /planned-publication-version/);
   assert.match(implementation, /planned-release-candidate-version/);
   assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
@@ -288,6 +294,14 @@ test("promotion commits consumer discovery authority only after public release a
   );
   assert.match(
     wrapper,
+    /BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: \$\{\{ steps\.rc\.outputs\.release-candidate-source-sha \|\| needs\.preflight\.outputs\.requested-sha \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /--candidate-source-sha "\$\{BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA\}"/,
+  );
+  assert.match(
+    wrapper,
     /publication-commit-command requires standalone-binary-distribution=false/,
   );
   assert.match(
@@ -313,6 +327,10 @@ test("promotion commits consumer discovery authority only after public release a
   assert.match(
     wrapper,
     /needs\.promote\.outputs\.finalization-needed == 'true' && 'partial'/,
+  );
+  assert.match(
+    wrapper,
+    /Enforce qualifying release-candidate-promotion controller receipt[\s\S]*?needs\.promote\.outputs\.finalization-needed != 'true'[\s\S]*?controller-receipt-qualifying != 'true'/,
   );
 });
 
@@ -442,7 +460,143 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
   assert.match(workflow, /checkout-cache-mode: auto/);
   assert.match(workflow, /checkout-cache-fallback: github/);
+  assert.match(
+    workflow,
+    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.result == 'success' && github\.event_name == 'pull_request' && \(startsWith\(github\.base_ref, 'alpha\/'\) \|\| startsWith\(github\.base_ref, 'release\/'\)\) \}\}/,
+  );
+  assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
+  assert.match(workflow, /merge-multiple: true/);
+  assert.match(workflow, /name: Plan the exact self-publication version before sealing product bytes/);
+  assert.match(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
+  assert.match(workflow, /plan-before-target-advance: "true"/);
+  assert.match(
+    workflow,
+    /corepack pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts[\s\S]*node scripts\/materialize-self-release-candidate-version\.mjs/,
+  );
+  assert.match(workflow, /publish-transaction: "true"/);
+  assert.match(workflow, /name: Materialize the planned version in the candidate workspace/);
+  assert.match(workflow, /node scripts\/materialize-self-release-candidate-version\.mjs/);
+  assert.match(workflow, /EXPECTED_VERSION: \$\{\{ steps\.publication-plan\.outputs\.planned-publication-version \}\}/);
+  assert.match(workflow, /sealed package version .* differs from planned publication/);
+  assert.ok(
+    workflow.indexOf("name: Materialize the planned version in the candidate workspace") <
+      workflow.indexOf("name: Download exact Release Candidate Passport"),
+    "version state must be materialized before untracked candidate evidence is downloaded",
+  );
+  assert.ok(
+    workflow.indexOf("name: Materialize the planned version in the candidate workspace") <
+      workflow.indexOf("name: Pack Buildchain product bytes once and bind them to the candidate"),
+    "the exact publication version must exist before product bytes are sealed",
+  );
+  assert.doesNotMatch(
+    workflow,
+    /needs\.libnode-shaped\.outputs\['release-candidate-artifact'\]/,
+  );
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
+});
+
+test("self-release candidate materialization applies complete declared version state", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-self-release-version-"));
+  fs.mkdirSync(path.join(cwd, ".buildchain"), { recursive: true });
+  fs.mkdirSync(path.join(cwd, "scripts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/buildchain.toml"),
+    `schema = 1
+
+[version]
+required = true
+derived_files = ["derived-audit.json"]
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "generated.json"
+key = "product.version"
+
+[lifecycle.version-state]
+command = "node scripts/derive.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "package.json"),
+    `${JSON.stringify({ name: "self-release-fixture", version: "1.0.0" }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "generated.json"),
+    `${JSON.stringify({ product: { version: "1.0.0" }, source: "" }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "derived-audit.json"),
+    `${JSON.stringify({ source: "" }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "scripts/derive.mjs"),
+    `import fs from "node:fs";
+const generated = JSON.parse(fs.readFileSync("generated.json", "utf8"));
+generated.product.version = process.env.BUILDCHAIN_VERSION;
+generated.source = process.env.BUILDCHAIN_SOURCE_SHA;
+fs.writeFileSync("generated.json", JSON.stringify(generated, null, 2) + "\\n");
+fs.writeFileSync("derived-audit.json", JSON.stringify({
+  source: process.env.BUILDCHAIN_SOURCE_SHA
+}, null, 2) + "\\n");
+`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "scripts/verify.mjs"),
+    `import fs from "node:fs";
+const generated = JSON.parse(fs.readFileSync("generated.json", "utf8"));
+const audit = JSON.parse(fs.readFileSync("derived-audit.json", "utf8"));
+if (generated.source !== audit.source) process.exit(1);
+`,
+  );
+  for (const args of [
+    ["init"],
+    ["config", "user.name", "Buildchain Test"],
+    ["config", "user.email", "buildchain-test@example.com"],
+    ["add", "."],
+    ["commit", "-m", "test: initial version"],
+  ]) {
+    const run = spawnSync("git", args, { cwd, encoding: "utf8" });
+    assert.equal(run.status, 0, run.stderr);
+  }
+
+  try {
+    const sourceSha = "a".repeat(40);
+    const result = materializeSelfReleaseCandidateVersion({
+      cwd,
+      version: "1.1.0-alpha.0",
+      channel: "alpha",
+      sourceSha,
+      generatedAt: "2026-08-07T00:00:00.000Z",
+    });
+    assert.equal(result.version, "1.1.0-alpha.0");
+    assert.deepEqual(result.files, ["derived-audit.json", "generated.json", "package.json"]);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.1.0-alpha.0");
+    assert.deepEqual(
+      JSON.parse(fs.readFileSync(path.join(cwd, "generated.json"), "utf8")),
+      { product: { version: "1.1.0-alpha.0" }, source: sourceSha },
+    );
+    assert.deepEqual(
+      JSON.parse(fs.readFileSync(path.join(cwd, "derived-audit.json"), "utf8")),
+      { source: sourceSha },
+    );
+    const status = spawnSync("git", ["status", "--short"], { cwd, encoding: "utf8" });
+    assert.equal(status.status, 0, status.stderr);
+    assert.deepEqual(status.stdout.trimEnd().split("\n").sort(), [
+      " M derived-audit.json",
+      " M generated.json",
+      " M package.json",
+    ]);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
 });
 
 test("report issue action exposes workflow-friction feedback mode", () => {
@@ -545,6 +699,9 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(action, /publish-rematerialize-on-resume:/);
   assert.match(action, /release-passport-github-artifact-attestation-policy-jsons:/);
+  assert.match(implementation, /import fs from "node:fs";/);
+  assert.match(implementation, /import path from "node:path";/);
+  assert.match(implementation, /fs\.readFileSync\(path\.resolve\(publishRequiredArtifactsPath\), "utf8"\)/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /releaseCandidateFamilyEvidenceRequired/);
   assert.match(implementation, /releaseCandidateFamilyEvidenceRoot/);
@@ -590,9 +747,9 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@769b221bad7a6b9104afad4c2628d9dca396ab0f\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
+  assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
@@ -600,7 +757,12 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+    /buildchain-ref: 769b221bad7a6b9104afad4c2628d9dca396ab0f/,
+  );
+  assert.match(workflow, /declarative-release-tail: true/);
+  assert.match(
+    workflow,
+    /route-parity:[\s\S]*if: \$\{\{ needs\.promote\.result == 'success' && needs\.promote\.outputs\.release-tail-transaction-state == 'complete' \}\}/,
   );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
@@ -630,15 +792,24 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     bootstrap.indexOf("name: Reconcile dev merge queue governance") <
       bootstrap.indexOf("name: Set default branch"),
   );
-  assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
+  assert.doesNotMatch(workflow, /publish-required-artifacts-json: "\[\]"/);
+  assert.match(
+    workflow,
+    /publish-required-artifacts-json: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'release\/'\) && '\[\{"group":"node","kind":"npm","name":"@kungfu-tech\/buildchain","ref_template":"\{version\}","role":"main","required":true\}\]' \|\| '' \}\}/,
+  );
+  assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/);
+  assert.doesNotMatch(
+    workflow,
+    /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != ''/,
+  );
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,
-    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
   );
   assert.match(
     workflow,
-    /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+    /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
   );
   assert.match(workflow, /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml/);
   assert.doesNotMatch(workflow, /Buildchain v2\.10 patch release/);
@@ -655,6 +826,11 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
     path.join(root, "actions/promote-buildchain-ref/index.js"),
     "utf8",
   );
+  const githubReleaseSource = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/github-release.js"),
+    "utf8",
+  );
+  const implementation = `${source}\n${githubReleaseSource}`;
 
   assert.match(action, /github-release:/);
   assert.match(action, /github-release-artifact-paths:/);
@@ -663,12 +839,13 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(action, /public-release-tag:/);
   assert.match(action, /github-release-url:/);
   assert.match(action, /github-release-action:/);
-  assert.match(source, /ensureGitHubRelease/);
-  assert.match(source, /publishGitHubReleaseEvidence/);
-  assert.match(source, /collectGitHubReleaseEvidenceAssets/);
-  assert.match(source, /duplicate asset basename/);
-  assert.match(source, /uploadReleaseAsset/);
-  assert.match(source, /transaction-state.*complete/s);
+  assert.match(implementation, /ensureGitHubRelease/);
+  assert.match(implementation, /publishGitHubReleaseEvidence/);
+  assert.match(implementation, /collectGitHubReleaseEvidenceAssets/);
+  assert.match(implementation, /duplicate asset basename/);
+  assert.match(implementation, /uploadReleaseAsset/);
+  assert.match(source, /publishTransaction\?\.state === "complete"/);
+  assert.match(source, /transaction-state=/);
   assert.match(source, /finalizationNeeded !== true/);
 });
 
@@ -722,6 +899,13 @@ test("runner presets resolve to explicit matrices", () => {
   assert.equal(hosted.nativePlatformCount, 3);
   assert.equal(hosted.containerPlatformCount, 0);
   assert.equal(hosted.platforms[0].id, "linux-x64");
+  assert.equal(hosted.githubHostedPlatformCount, 3);
+  assert.equal(hosted.relayPlatformCount, 0);
+  assert.deepEqual(JSON.parse(hosted.githubHostedPlatformIdsJson), [
+    "linux-x64",
+    "macos",
+    "windows-x64",
+  ]);
 
   const kungfu = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-self-hosted" });
   assert.equal(kungfu.runnerPreset, "kungfu-v4-self-hosted");
@@ -732,6 +916,8 @@ test("runner presets resolve to explicit matrices", () => {
     ["linux-x64", "macos-arm64", "windows-x64"],
   );
   assert.match(kungfu.platforms[0].runner, /kungfu-build-v4-linux-x64/);
+  assert.equal(kungfu.githubHostedPlatformCount, 0);
+  assert.equal(kungfu.relayPlatformCount, 3);
 
   const kungfuNative = resolveRunnerMatrix({ runnerPreset: "kungfu-v4-native" });
   assert.equal(kungfuNative.runnerPreset, "kungfu-v4-native");
@@ -742,6 +928,9 @@ test("runner presets resolve to explicit matrices", () => {
     ["linux-x64", "linux-arm64", "macos-arm64", "windows-x64"],
   );
   assert.equal(kungfuNative.platforms[1].runner, '["ubuntu-24.04-arm"]');
+  assert.equal(kungfuNative.platforms[1].githubHosted, true);
+  assert.equal(kungfuNative.githubHostedPlatformCount, 1);
+  assert.equal(kungfuNative.relayPlatformCount, 3);
 
   const codebuild = resolveRunnerMatrix({
     runnerPreset: "aws-us-codebuild-linux",
@@ -775,10 +964,40 @@ test("runner presets resolve to explicit matrices", () => {
 
   const custom = resolveRunnerMatrix({
     platformsJson:
-      '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]"}]',
+      '[{"id":"linux","name":"Linux","runner":"[\\"self-hosted\\",\\"Linux\\"]","environment":{"CXX":"g++-14","CC":"gcc-14","JOBS":4}}]',
   });
   assert.equal(custom.runnerPreset, "custom");
   assert.equal(custom.platformCount, 1);
+  assert.deepEqual(custom.platforms[0].environment, {
+    CXX: "g++-14",
+    CC: "gcc-14",
+    JOBS: 4,
+  });
+  assert.deepEqual(JSON.parse(custom.platformsJson)[0].environment, {
+    CXX: "g++-14",
+    CC: "gcc-14",
+    JOBS: 4,
+  });
+  assert.equal(custom.platforms[0].githubHosted, false);
+
+  const customHosted = resolveRunnerMatrix({
+    platformsJson:
+      '[{"id":"hosted","name":"Hosted","runner":"[\\"ubuntu-24.04\\"]"},{"id":"large","name":"Large hosted","runner":"[\\"custom-large-runner\\"]","githubHosted":true}]',
+  });
+  assert.equal(customHosted.githubHostedPlatformCount, 2);
+  assert.equal(customHosted.relayPlatformCount, 0);
+  assert.deepEqual(JSON.parse(customHosted.githubHostedPlatformIdsJson), [
+    "hosted",
+    "large",
+  ]);
+  assert.throws(
+    () =>
+      resolveRunnerMatrix({
+        platformsJson:
+          '[{"id":"invalid","name":"Invalid","runner":"[\\"ubuntu-24.04\\"]","githubHosted":"true"}]',
+      }),
+    /githubHosted must be a boolean/,
+  );
 });
 
 test("AWS CodeBuild runner preset fails closed without an exact project", () => {
@@ -1531,7 +1750,7 @@ test("generated release model publishes the generic major alpha channel contract
   assert.match(releaseModel.floatingTags, /highest minor in major X with a published alpha/);
 });
 
-test("Buildchain self-dogfoods the current major alpha without replacing exact-SHA promotion", () => {
+test("Buildchain self-dogfoods through the public alpha train without weakening exact runtime resolution", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-alpha-self-dogfood.yml"),
     "utf8",
@@ -1577,13 +1796,11 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.equal(stableLock.buildchain.ref, "v3");
-  assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
+  assert.equal(stableLock.buildchain.resolvedSha, "380b2d8c2a660b07ed785e71276f71dc6a9184f7");
   assert.equal(stableLock.buildchain.majorLine, "v3");
   assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
-  assert.equal(
-    alphaLock.buildchain.compatibilityDigest,
-    currentContract.compatibilityDigest,
-  );
+  assert.match(alphaLock.buildchain.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
+  assert.match(currentContract.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),
   ).version;
@@ -1633,9 +1850,10 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
 
   assert.match(
     promotion,
-    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(inputs\['recover-durable-transaction'\] == true && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@769b221bad7a6b9104afad4c2628d9dca396ab0f/,
   );
-  assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
+  assert.match(promotion, /buildchain-ref: 769b221bad7a6b9104afad4c2628d9dca396ab0f/);
+  assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
 });
 
 test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transition", () => {
@@ -1760,6 +1978,54 @@ test("libnode-shaped fixture declares the build lifecycle contract", () => {
   assert.deepEqual(
     summary.lifecycleStages.map((stage) => stage.name),
     ["install", "build", "verify", "publish"],
+  );
+});
+
+test("runLifecycle binds compiler-cache activity verification to the runtime action", () => {
+  const events = [];
+  let verificationOptions;
+  const activity = verifyBuildLifecycleCompilerCacheActivity({
+    stageName: "build",
+    executed: true,
+    cwd: "/consumer",
+    env: { BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true" },
+    verifier: (options) => {
+      verificationOptions = options;
+      return {
+        compileRequests: 12,
+        cacheHits: 7,
+        cacheMisses: 5,
+        cacheableRequests: 12,
+      };
+    },
+    frameworkLog: {
+      info: (event, payload) => events.push({ event, payload }),
+    },
+  });
+
+  assert.deepEqual(verificationOptions, {
+    cwd: "/consumer",
+    env: { BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true" },
+  });
+  assert.deepEqual(activity, {
+    compileRequests: 12,
+    cacheHits: 7,
+    cacheMisses: 5,
+    cacheableRequests: 12,
+  });
+  assert.deepEqual(events, [
+    {
+      event: "compiler-cache.activity",
+      payload: { attributes: activity },
+    },
+  ]);
+  assert.equal(
+    verifyBuildLifecycleCompilerCacheActivity({
+      stageName: "verify",
+      executed: true,
+      verifier: () => assert.fail("non-build lifecycle must not verify cache activity"),
+    }),
+    undefined,
   );
 });
 

@@ -1624,6 +1624,33 @@ test("web-surface health check default retry window absorbs extended transient H
   });
 });
 
+test("web-surface health check retries transient installer route failures", async () => {
+  await withFixtureAsync(async (fixture) => {
+    writeInstallerPublicationFixture(fixture);
+    const result = applyWebSurfaceDeploy({ cwd: fixture, channel: "preview", alias: "pr-29", sourceSha: "b".repeat(40), dryRun: true });
+    const contents = new Map([["install.sh", Buffer.from("#!/bin/sh\nexit 0\n")], ["install.ps1", Buffer.from("exit 0\r\n")]]);
+    let ps1Attempts = 0;
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture, result, httpRetryAttempts: 2, httpRetryIntervalMs: 0,
+      fetchImpl(url, options) {
+        const parsed = new URL(url);
+        const name = parsed.pathname.split("/").at(-1);
+        if (!contents.has(name)) return { status: 200, url, headers: new Headers(), text: async () => "<!doctype html>" };
+        assert.equal(options.redirect, "manual");
+        if (parsed.pathname === "/install.ps1" && ++ps1Attempts === 1) return { status: 403, url, headers: new Headers(), arrayBuffer: async () => Buffer.alloc(0) };
+        const immutable = parsed.pathname.includes("/installers/");
+        return { status: 200, url, headers: new Headers({
+          "content-type": name === "install.sh" ? "text/x-shellscript" : "text/plain",
+          "cache-control": immutable ? "public,max-age=31536000,immutable"
+            : "public,max-age=300,must-revalidate",
+        }), arrayBuffer: async () => contents.get(name) };
+      },
+    });
+    assert.equal(health.status, "passed");
+    assert.equal(ps1Attempts, 2);
+  });
+});
+
 test("web-surface health check verifies managed-network staging from deployment evidence", async () => {
   await withFixtureAsync(async (fixture) => {
     fs.mkdirSync(path.join(fixture, "dist", "buildchain", "docs"), { recursive: true });

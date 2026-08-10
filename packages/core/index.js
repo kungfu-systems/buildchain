@@ -59,6 +59,45 @@ export {
 } from "./publish-transaction.js";
 
 export {
+  RELEASE_TAIL_CAPABILITY_REGISTRY,
+  RELEASE_TAIL_DECLARATION_CONTRACT,
+  RELEASE_TAIL_EFFECT_SCHEMA,
+  RELEASE_TAIL_OBSERVATION_SCHEMA,
+  RELEASE_TAIL_RECEIPT_SCHEMA,
+  RELEASE_TAIL_STATES,
+  RELEASE_TAIL_TRANSACTION_POLICY,
+  RELEASE_TAIL_TRANSACTION_SCHEMA,
+  compileReleaseTailDeclaration,
+  createReleaseTailAdapterSet,
+  createReleaseTailTransaction,
+  executeReleaseTailTransaction,
+  parseReleaseTailDeclaration,
+  readReleaseTailTransaction,
+  releaseTailRetryPolicyFromDeclaration,
+  releaseTailRoot,
+  releaseTailStableJson,
+  validateReleaseTailEffectPlan,
+  validateReleaseTailTransaction,
+  writeReleaseTailTransaction,
+} from "./release-tail-provider-plane.js";
+
+export {
+  ReleaseTailProviderError,
+  createActivationReceiptProjectorAdapter,
+  createGitHubReleaseAssetsAdapter,
+  createHttpJsonReadback,
+  createSignedStaticChannelAdapter,
+  createSiteReleaseActivationAdapter,
+  githubReleaseAssetsTargetRoot,
+} from "./release-tail-provider-adapters.js";
+
+export {
+  RELEASE_TAIL_COMPATIBILITY_CONTRACT,
+  RELEASE_TAIL_LEGACY_HOOKS,
+  diagnoseLegacyReleaseTailHooks,
+} from "./release-tail-compatibility.js";
+
+export {
   createPortableDevCachePlan,
   createPortableDevCacheReceipt,
   verifyPortableDevCachePlan,
@@ -165,6 +204,13 @@ export {
 } from "./release-candidate.js";
 
 export {
+  RELEASE_CANDIDATE_RECOVERY_CONTRACT,
+  ReleaseCandidateRecoveryError,
+  recoveryFailure,
+  verifyReleaseCandidateRecovery,
+} from "./release-candidate-recovery.js";
+
+export {
   PUBLICATION_NPM_PACKAGE_CONTRACT,
   collectPublicationPackageFacts,
   preparePublicationNpmPackage,
@@ -240,6 +286,9 @@ export {
   resolveGithubGovernanceTargetPolicy,
   verifyGithubGovernanceReceipt,
 } from "./github-governance-authority.js";
+
+export * from "./engineering-housekeeper.js";
+export * from "./engineering-housekeeper-github.js";
 
 export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,

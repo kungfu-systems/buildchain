@@ -1725,12 +1725,13 @@ async function fetchWithRetry(url, {
   attempts = 3,
   intervalMs = 5000,
   shouldRetry = () => false,
+  requestOptions = { redirect: "follow" },
 } = {}) {
   const maxAttempts = Math.max(1, Number(attempts) || 1);
   let lastError = null;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      const response = await fetchImpl(url, { redirect: "follow" });
+      const response = await fetchImpl(url, requestOptions);
       if (attempt >= maxAttempts || !shouldRetry(response)) {
         return { response, attempts: attempt };
       }
@@ -1749,6 +1750,11 @@ async function fetchWithRetry(url, {
 
 function retryableHealthResponse(response) {
   return response.status === 403 || response.status === 404 || response.status >= 500;
+}
+
+function retryingHealthFetch(fetchImpl, attempts, intervalMs) {
+  return (url, requestOptions) => fetchWithRetry(url, { fetchImpl, attempts, intervalMs,
+    shouldRetry: retryableHealthResponse, requestOptions }).then(({ response }) => response);
 }
 
 const DEFAULT_HEALTH_HTTP_RETRY_ATTEMPTS = 12;
@@ -1984,7 +1990,7 @@ export async function checkWebSurfaceHealth({
       };
       const evidence = await verifyInstallerPublicReadback({
         publication: projected,
-        fetchImpl,
+        fetchImpl: retryingHealthFetch(fetchImpl, httpRetryAttempts, httpRetryIntervalMs),
       });
       checks.push({
         surface: "__installer__",

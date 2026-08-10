@@ -11,6 +11,10 @@ import {
   createWindowsJitLaunchPlan,
   windowsRunInstancesArgs,
 } from "./aws-windows-jit-controller-core.mjs";
+import {
+  windowsCampaignMarkLaunchedArgs,
+  windowsCampaignReservationItems,
+} from "./aws-windows-jit-campaign-core.mjs";
 import { renderWindowsJitBootstrap } from "./aws-windows-jit-core.mjs";
 
 function arg(name, fallback = "") {
@@ -75,6 +79,7 @@ function assertLivePreflight(plan, profile) {
   );
   if (
     run.event !== plan.github.event ||
+    run.display_title !== plan.github.displayTitle ||
     run.head_sha !== plan.source.sha ||
     run.head_repository?.full_name !== plan.repository ||
     !["queued", "in_progress"].includes(run.status)
@@ -159,6 +164,7 @@ function assertLivePreflight(plan, profile) {
     throw new Error("Windows AMI identity or availability mismatch");
   }
   return {
+    budgetGuard: jsonResult(commandResult("/bin/bash", ["scripts/aws-windows-jit-operator.sh", "launch-gate", "--region", plan.aws.region, ...(profile ? ["--aws-profile", profile] : [])]), "provider Budget launch gate"),
     runStatus: run.status,
     jobStatus: job.status,
     activeInstances: activeInstances.length,
@@ -267,6 +273,169 @@ function cleanupFailedLaunch(
   return failures;
 }
 
+function generateJitConfiguration(plan) {
+  const jit = ghJson(
+    [
+      "api",
+      "--method",
+      "POST",
+      `repos/${plan.repository}/actions/runners/generate-jitconfig`,
+      "--input",
+      "-",
+    ],
+    JSON.stringify({
+      name: plan.runner.name,
+      runner_group_id: 1,
+      labels: plan.runner.labels,
+      work_folder: "_work",
+    }),
+    "GitHub JIT configuration",
+  ).encoded_jit_config;
+  if (!jit || typeof jit !== "string") {
+    throw new Error("GitHub JIT configuration was empty");
+  }
+  return jit;
+}
+
+function createJitParameter(plan, profile, parameterInputPath, jit) {
+  fs.writeFileSync(
+    parameterInputPath,
+    JSON.stringify({
+      Name: plan.aws.jitParameterName,
+      Description: `One-shot GitHub Actions JIT config for ${plan.repository} run ${plan.github.runId} attempt ${plan.github.runAttempt}`,
+      Type: "SecureString",
+      Tier: "Advanced",
+      Value: jit,
+      Tags: [
+        { Key: "kungfu:owner", Value: "buildchain" },
+        { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" },
+        { Key: "kungfu:provider", Value: "windows-ec2-jit" },
+        { Key: "kungfu:campaign-id", Value: plan.campaign.id },
+        { Key: "kungfu:github-run-id", Value: plan.github.runId },
+        {
+          Key: "kungfu:qualification-id",
+          Value: plan.github.qualificationId,
+        },
+      ],
+    }),
+    { mode: 0o600 },
+  );
+  requireSuccess(
+    commandResult(
+      "aws",
+      awsArgs(plan, profile, [
+        "ssm",
+        "put-parameter",
+        "--cli-input-json",
+        `file://${parameterInputPath}`,
+        "--output",
+        "json",
+      ]),
+    ),
+    "SSM JIT parameter creation",
+  );
+}
+
+function writeBootstrap(plan, bootstrapPath) {
+  const template = fs.readFileSync(
+    path.resolve(
+      "infra/aws-us-elastic-runner-burst-plane/windows-jit-bootstrap.ps1",
+    ),
+    "utf8",
+  );
+  fs.writeFileSync(
+    bootstrapPath,
+    renderWindowsJitBootstrap(template, {
+      region: plan.aws.region,
+      campaignId: plan.campaign.id,
+      jitParameterName: plan.aws.jitParameterName,
+      evidenceBucket: plan.aws.evidenceBucket,
+      runnerLabel: plan.runner.label,
+      sourceSha: plan.source.sha,
+      githubRunId: plan.github.runId,
+      githubRunAttempt: plan.github.runAttempt,
+      amiId: plan.aws.amiId,
+      amiName: plan.aws.amiName,
+      instanceType: plan.aws.instanceType,
+      launchedAt: plan.aws.launchedAt,
+    }),
+    { mode: 0o600 },
+  );
+}
+
+function assertLaunchDryRun(plan, profile, bootstrapPath) {
+  const dryRun = commandResult(
+    "aws",
+    awsArgs(
+      plan,
+      profile,
+      windowsRunInstancesArgs(plan, { bootstrapPath, dryRun: true }),
+    ),
+  );
+  if (
+    dryRun.status === 0 ||
+    !/DryRunOperation/.test(`${dryRun.stdout}\n${dryRun.stderr}`)
+  ) {
+    throw new Error("EC2 RunInstances DryRun did not return DryRunOperation");
+  }
+}
+
+function reserveCampaign(plan, profile) {
+  requireSuccess(
+    commandResult(
+      "aws",
+      awsArgs(plan, profile, [
+        "dynamodb",
+        "transact-write-items",
+        "--transact-items",
+        JSON.stringify(
+          windowsCampaignReservationItems(plan, new Date().toISOString()),
+        ),
+        "--output",
+        "json",
+      ]),
+    ),
+    "Windows campaign atomic reservation",
+  );
+}
+
+function launchInstance(plan, profile, bootstrapPath) {
+  const launched = jsonResult(
+    commandResult(
+      "aws",
+      awsArgs(
+        plan,
+        profile,
+        windowsRunInstancesArgs(plan, { bootstrapPath, dryRun: false }),
+      ),
+    ),
+    "EC2 RunInstances",
+  );
+  const instance = launched.Instances?.[0];
+  if (!/^i-[0-9a-f]+$/.test(String(instance?.InstanceId || ""))) {
+    throw new Error("EC2 RunInstances returned no instance identity");
+  }
+  return instance;
+}
+
+function markCampaignLaunched(plan, profile, instanceId) {
+  requireSuccess(
+    commandResult(
+      "aws",
+      awsArgs(
+        plan,
+        profile,
+        windowsCampaignMarkLaunchedArgs(
+          plan,
+          instanceId,
+          new Date().toISOString(),
+        ),
+      ),
+    ),
+    "Windows campaign launch ledger update",
+  );
+}
+
 export function executeWindowsJitLaunch(plan, { profile = "" } = {}) {
   if (plan?.contract !== AWS_WINDOWS_JIT_CONTROLLER_CONTRACT) {
     throw new Error("Windows JIT launch plan contract is invalid");
@@ -285,124 +454,23 @@ export function executeWindowsJitLaunch(plan, { profile = "" } = {}) {
   let failure;
   const cleanupFailures = [];
   try {
-    const jit = ghJson(
-      [
-        "api",
-        "--method",
-        "POST",
-        `repos/${plan.repository}/actions/runners/generate-jitconfig`,
-        "--input",
-        "-",
-      ],
-      JSON.stringify({
-        name: plan.runner.name,
-        runner_group_id: 1,
-        labels: plan.runner.labels,
-        work_folder: "_work",
-      }),
-      "GitHub JIT configuration",
-    ).encoded_jit_config;
-    if (!jit || typeof jit !== "string") {
-      throw new Error("GitHub JIT configuration was empty");
-    }
-    fs.writeFileSync(
-      parameterInputPath,
-      JSON.stringify({
-        Name: plan.aws.jitParameterName,
-        Description: `One-shot GitHub Actions JIT config for ${plan.repository} run ${plan.github.runId} attempt ${plan.github.runAttempt}`,
-        Type: "SecureString",
-        Tier: "Advanced",
-        Value: jit,
-        Tags: [
-          { Key: "kungfu:owner", Value: "buildchain" },
-          { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" },
-          { Key: "kungfu:provider", Value: "windows-ec2-jit" },
-          { Key: "kungfu:github-run-id", Value: plan.github.runId },
-          {
-            Key: "kungfu:qualification-id",
-            Value: plan.github.qualificationId,
-          },
-        ],
-      }),
-      { mode: 0o600 },
-    );
-    requireSuccess(
-      commandResult(
-        "aws",
-        awsArgs(plan, profile, [
-          "ssm",
-          "put-parameter",
-          "--cli-input-json",
-          `file://${parameterInputPath}`,
-          "--output",
-          "json",
-        ]),
-      ),
-      "SSM JIT parameter creation",
-    );
+    const jit = generateJitConfiguration(plan);
+    createJitParameter(plan, profile, parameterInputPath, jit);
     parameterCreated = true;
-    fs.writeFileSync(
-      bootstrapPath,
-      renderWindowsJitBootstrap(
-        fs.readFileSync(
-          path.resolve(
-            "infra/aws-us-elastic-runner-burst-plane/windows-jit-bootstrap.ps1",
-          ),
-          "utf8",
-        ),
-        {
-          region: plan.aws.region,
-          jitParameterName: plan.aws.jitParameterName,
-          evidenceBucket: plan.aws.evidenceBucket,
-          runnerLabel: plan.runner.label,
-          sourceSha: plan.source.sha,
-          githubRunId: plan.github.runId,
-          githubRunAttempt: plan.github.runAttempt,
-          amiId: plan.aws.amiId,
-          amiName: plan.aws.amiName,
-          instanceType: plan.aws.instanceType,
-          launchedAt: plan.aws.launchedAt,
-        },
-      ),
-      { mode: 0o600 },
-    );
-    const dryRun = commandResult(
-      "aws",
-      awsArgs(
-        plan,
-        profile,
-        windowsRunInstancesArgs(plan, { bootstrapPath, dryRun: true }),
-      ),
-    );
-    if (
-      dryRun.status === 0 ||
-      !/DryRunOperation/.test(`${dryRun.stdout}\n${dryRun.stderr}`)
-    ) {
-      throw new Error("EC2 RunInstances DryRun did not return DryRunOperation");
-    }
+    writeBootstrap(plan, bootstrapPath);
+    assertLaunchDryRun(plan, profile, bootstrapPath);
+    reserveCampaign(plan, profile);
     launchAttempted = true;
-    const launched = jsonResult(
-      commandResult(
-        "aws",
-        awsArgs(
-          plan,
-          profile,
-          windowsRunInstancesArgs(plan, { bootstrapPath, dryRun: false }),
-        ),
-      ),
-      "EC2 RunInstances",
-    );
-    const instance = launched.Instances?.[0];
-    if (!/^i-[0-9a-f]+$/.test(String(instance?.InstanceId || ""))) {
-      throw new Error("EC2 RunInstances returned no instance identity");
-    }
+    const instance = launchInstance(plan, profile, bootstrapPath);
     launchSucceeded = true;
+    markCampaignLaunched(plan, profile, instance.InstanceId);
     result = {
       schemaVersion: 1,
       contract: AWS_WINDOWS_JIT_CONTROLLER_CONTRACT,
       kind: "launch-result",
       status: "launched",
       source: plan.source,
+      campaign: plan.campaign,
       github: plan.github,
       runner: plan.runner,
       aws: {
@@ -452,6 +520,7 @@ function planFromArgs(execute) {
     runAttempt: arg("run-attempt", "1"),
     jobId: arg("job-id"),
     qualificationId: arg("qualification-id"),
+    campaignId: arg("campaign-id"),
     runnerLabel: arg("runner-label"),
     runnerName: arg("runner-name"),
     sourceSha: arg("source-sha"),
@@ -464,6 +533,7 @@ function planFromArgs(execute) {
     securityGroupId: arg("security-group-id"),
     instanceProfileName: arg("instance-profile-name"),
     evidenceBucket: arg("evidence-bucket"),
+    stateTable: arg("state-table"),
     jitParameterName: arg("jit-parameter"),
     launchedAt: arg("launched-at", new Date().toISOString()),
   });
@@ -481,6 +551,12 @@ export function main() {
   }
   if (arg("confirm-run-id") !== plan.github.runId) {
     throw new Error("--confirm-run-id must equal the exact GitHub run id");
+  }
+  if (arg("confirm-campaign-id") !== plan.campaign.id) {
+    throw new Error("--confirm-campaign-id must equal the campaign id");
+  }
+  if (arg("confirm-state-table") !== plan.aws.stateTable) {
+    throw new Error("--confirm-state-table must equal the campaign state table");
   }
   const result = executeWindowsJitLaunch(plan, {
     profile: arg("aws-profile"),

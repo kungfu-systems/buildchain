@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/v4-capability-state-machine-manifest-v1.schema.json",
+  "title": "Buildchain v4 Capability and State Machine Manifest",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "contract",
+    "releaseLine",
+    "dependencyLayers",
+    "budgets",
+    "capabilities",
+    "stateMachines",
+    "exceptionLedger"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": {
+      "const": "kungfu-buildchain-v4-capability-state-machine-manifest"
+    },
+    "releaseLine": { "$ref": "#/$defs/releaseLine" },
+    "dependencyLayers": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "$ref": "#/$defs/dependencyLayer" }
+    },
+    "budgets": { "$ref": "#/$defs/budgets" },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/capability" }
+    },
+    "stateMachines": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/stateMachine" }
+    },
+    "exceptionLedger": { "const": "architecture/v4-exception-ledger.json" }
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "releaseLine": {
+      "type": "object",
+      "required": [
+        "branch",
+        "bootstrapAuthority",
+        "productionFallback",
+        "qualificationMode"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "branch": { "const": "dev/v4/v4.0" },
+        "bootstrapAuthority": {
+          "const": "architecture/v4-bootstrap-authority.json"
+        },
+        "productionFallback": { "const": "dev/v3/v3.0" },
+        "qualificationMode": { "const": "exact-n-minus-one-git-revision" }
+      }
+    },
+    "dependencyLayer": {
+      "type": "object",
+      "required": ["id", "mayDependOn", "providerSdkImports"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "mayDependOn": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "providerSdkImports": { "enum": ["forbidden", "adapter-only"] }
+      }
+    },
+    "budgetDimension": {
+      "type": "object",
+      "required": ["hardCeilings"],
+      "additionalProperties": false,
+      "properties": {
+        "hardCeilings": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "required": [
+        "authority",
+        "semanticState",
+        "boundary",
+        "structural",
+        "agentCognitive",
+        "recoveryFault"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "authority": { "$ref": "#/$defs/budgetDimension" },
+        "semanticState": { "$ref": "#/$defs/budgetDimension" },
+        "boundary": { "$ref": "#/$defs/budgetDimension" },
+        "structural": { "$ref": "#/$defs/budgetDimension" },
+        "agentCognitive": { "$ref": "#/$defs/budgetDimension" },
+        "recoveryFault": { "$ref": "#/$defs/budgetDimension" }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "required": [
+        "id",
+        "owner",
+        "sourceInventoryId",
+        "surfaces",
+        "migrationPhase"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "sourceInventoryId": { "type": "string", "minLength": 1 },
+        "surfaces": { "$ref": "#/$defs/stringArray" },
+        "migrationPhase": { "$ref": "#/$defs/migrationPhase" }
+      }
+    },
+    "migrationPhase": {
+      "enum": [
+        "legacy-authoritative",
+        "shadow",
+        "cutover-ready",
+        "rust-authoritative",
+        "legacy-retired"
+      ]
+    },
+    "stateMachine": {
+      "type": "object",
+      "required": [
+        "id",
+        "capabilityId",
+        "owner",
+        "writer",
+        "schemas",
+        "store",
+        "states",
+        "events",
+        "invariants",
+        "effects",
+        "adapters",
+        "tests",
+        "recovery",
+        "migrationPhase",
+        "budgets"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "capabilityId": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "writer": {
+          "type": "object",
+          "required": ["runtime", "authoritative", "secondWriterBudget"],
+          "additionalProperties": false,
+          "properties": {
+            "runtime": { "type": "string", "minLength": 1 },
+            "authoritative": { "const": true },
+            "secondWriterBudget": { "const": 0 }
+          }
+        },
+        "schemas": { "$ref": "#/$defs/stringArray" },
+        "store": { "type": "string", "minLength": 1 },
+        "states": { "$ref": "#/$defs/stringArray" },
+        "events": { "$ref": "#/$defs/stringArray" },
+        "invariants": { "$ref": "#/$defs/stringArray" },
+        "effects": { "$ref": "#/$defs/stringArray" },
+        "adapters": { "$ref": "#/$defs/stringArray" },
+        "tests": { "$ref": "#/$defs/stringArray" },
+        "recovery": { "$ref": "#/$defs/stringArray" },
+        "migrationPhase": { "$ref": "#/$defs/migrationPhase" },
+        "budgets": {
+          "type": "object",
+          "required": [
+            "undeclaredStates",
+            "undeclaredEvents",
+            "unboundedRetries"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "undeclaredStates": { "const": 0 },
+            "undeclaredEvents": { "const": 0 },
+            "unboundedRetries": { "const": 0 }
+          }
+        }
+      }
+    }
+  }
+}

@@ -77,7 +77,7 @@ function workCommands(executionProfile = null, repository = "", branch = "", bas
     stages: {
       materialize: profile.updateCommand || "<consumer update command from the exact execution profile>",
       "verify-release": profile.verifyCommand || "<consumer verification command from the exact execution profile>",
-      "push-branch": `git push --force-with-lease=<exact-expected-old> origin HEAD:refs/heads/${branch || "<managed-branch>"}`,
+      "push-branch": "buildchain release-propagation work push-branch --work <work.json> --expected-work-root <sha256:...> --cwd <downstream-worktree> --remote origin --execute --json",
       "pull-request": `gh pr create --repo ${repository || "<downstream-repository>"} --base ${baseRef || "<base-ref>"} --head ${branch || "<managed-branch>"}`,
       preview: `gh run list --repo ${repository || "<downstream-repository>"} --workflow ${workflow} --branch ${branch || "<managed-branch>"} --event pull_request --json databaseId,status,conclusion,url,headSha`,
       "independent-review": `gh pr review <pr-number> --repo ${repository || "<downstream-repository>"} --approve`,
@@ -317,8 +317,12 @@ function verifyWorkRelease(work) {
     downstream.executionProfile,
     "release propagation work downstream.executionProfile",
   );
-  if (!profile
-      || JSON.stringify(profile) !== JSON.stringify(downstream.releaseLock.downstream.executionProfile)) {
+  const lockedProfile = normalizeExecutionProfile(
+    downstream.releaseLock.downstream.executionProfile,
+    "release propagation work releaseLock.downstream.executionProfile",
+  );
+  if (!profile || !lockedProfile
+      || sha256Json(profile) !== sha256Json(lockedProfile)) {
     throw new Error("release propagation work execution profile disagrees with the exact release lock");
   }
   return { downstream, profile };
@@ -400,7 +404,7 @@ function verifyWorkPlanAndState(work, downstream, profile) {
     downstream.branch,
     downstream.baseRef,
   );
-  if (JSON.stringify(plan.commands) !== JSON.stringify(expectedCommands)) {
+  if (sha256Json(plan.commands) !== sha256Json(expectedCommands)) {
     throw new Error("release propagation work commands are not canonical");
   }
   const state = assertExactFields(

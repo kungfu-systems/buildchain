@@ -12,19 +12,24 @@ import {
   sha256Json,
   validateReleaseCandidatePassport,
 } from "../packages/core/release-candidate.js";
+import { writeGitHubOutputs } from "../scripts/build-contract-core.mjs";
 import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
 import {
   generatePublishRequiredArtifacts,
+  githubDownload,
   readNpmPackageArtifact,
   resolveReleaseCandidateArtifacts,
   releaseCandidateDownloadEnabled,
+  releaseCandidateRuntimeSha,
   selectReleaseAssetPaths,
   selectMergedChannelPullRequest,
   selectPayloadArtifacts,
   selectReleaseCandidateArtifacts,
   selectReleaseCandidateRun,
   selectReleaseCandidateRuns,
+  verifyArtifactArchive,
 } from "../scripts/release-candidate-resolver.mjs";
+import { createResolvedPublicationSealedBundle } from "../scripts/publication-candidate-sealer.mjs";
 import {
   buildWorkflowFrictionBody,
   classifyWorkflowFriction,
@@ -32,6 +37,39 @@ import {
 } from "../scripts/workflow-friction-report.mjs";
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
+
+test("GitHub artifact downloads stream to disk without materializing one Buffer", async () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-stream-download-"));
+  const outputPath = path.join(workspace, "artifact.zip");
+  try {
+    const chunks = [Buffer.alloc(5 * 1024 * 1024, 0x61), Buffer.alloc(5 * 1024 * 1024, 0x62)];
+    const body = new ReadableStream({ start(controller) { for (const chunk of chunks) controller.enqueue(chunk); controller.close(); } });
+    await githubDownload({
+      apiUrl: "https://api.example.test", token: "fixture", path: "/artifact", outputPath,
+      fetchImpl: async () => ({
+        ok: true, status: 200, body,
+        arrayBuffer: async () => { throw new Error("arrayBuffer must not be used for streamed artifacts"); },
+      }),
+    });
+    assert.equal(fs.statSync(outputPath).size, 10 * 1024 * 1024);
+    assert.equal(fs.readFileSync(outputPath).subarray(0, 1).toString(), "a");
+    assert.equal(fs.readFileSync(outputPath).subarray(-1).toString(), "b");
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("candidate archive verification hashes files larger than one digest chunk", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-chunked-digest-"));
+  const archivePath = path.join(workspace, "artifact.zip");
+  try {
+    fs.writeFileSync(archivePath, Buffer.alloc(9 * 1024 * 1024, 0x63));
+    const digest = `sha256:${crypto.createHash("sha256").update(fs.readFileSync(archivePath)).digest("hex")}`;
+    assert.deepEqual(verifyArtifactArchive({ artifact: { name: "large-fixture", size_in_bytes: fs.statSync(archivePath).size, digest }, archivePath }), { size: 9 * 1024 * 1024, digest });
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
 
 function root(character) {
   return `sha256:${character.repeat(64)}`;
@@ -962,8 +1000,9 @@ test("release candidate resolver selects payload artifacts and generates publish
   });
   assert.deepEqual(required, [
     {
+      group: "linux-x64",
       kind: "npm",
-      name: "libnode-linux-x64-22.22.3-kf.3-alpha.7",
+      name: "dist/@kungfu-tech/libnode-linux-x64-22.22.3-kf.3-alpha.7.tgz",
       ref: "22.22.3-kf.3-alpha.7",
       digest: `sha256:${"a".repeat(64)}`,
       role: "platform",
@@ -1071,6 +1110,57 @@ test("release candidate resolver generates npm package-set required artifacts fr
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("release candidate resolver seals the exact normal-path npm candidate bytes", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rc-sealed-normal-"));
+  try {
+    const payloadRoot = path.join(workspace, "payloads");
+    fs.mkdirSync(payloadRoot, { recursive: true });
+    const packedTarball = createNpmTarball(
+      workspace,
+      { name: "@kungfu-tech/buildchain", version: "3.0.6-alpha.4" },
+      "buildchain.tgz",
+    );
+    const tarball = path.join(payloadRoot, "buildchain.tgz");
+    fs.renameSync(packedTarball, tarball);
+    fs.writeFileSync(path.join(payloadRoot, "product-payload-manifest.json"), "{}\n");
+    const sealed = createResolvedPublicationSealedBundle({
+      bundleRoot: payloadRoot,
+      repository: "kungfu-systems/buildchain",
+      sourceSha: SOURCE_SHA,
+      sourceTreeSha: "2".repeat(40),
+      runtimeSha: "4".repeat(40),
+      releaseCandidateRoot: root("3"),
+      npmArtifacts: [{
+        path: tarball,
+        ...readNpmPackageArtifact({ tarballPath: tarball, mainPackage: "@kungfu-tech/buildchain" }),
+      }],
+    });
+    const expectedIntegrity = `sha512-${crypto.createHash("sha512").update(fs.readFileSync(tarball)).digest("base64")}`;
+    assert.equal(sealed.manifest.npm.integrity, expectedIntegrity);
+    assert.equal(sealed.manifest.npm.path, "buildchain.tgz");
+    assert.deepEqual(sealed.manifest.releaseAssets.map((asset) => asset.path), ["buildchain.tgz"]);
+    assert.deepEqual(
+      sealed.manifest.files.map((file) => file.path),
+      ["buildchain.tgz", "product-payload-manifest.json"],
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("release candidate resolver binds sealed identity to the Passport runtime", () => {
+  const candidateRuntimeSha = "4".repeat(40);
+  const currentToolingSha = "5".repeat(40);
+  const passport = { buildchain: { sha: candidateRuntimeSha } };
+
+  assert.equal(releaseCandidateRuntimeSha(passport), candidateRuntimeSha);
+  assert.notEqual(releaseCandidateRuntimeSha(passport), currentToolingSha);
+  assert.throws(
+    () => releaseCandidateRuntimeSha({ buildchain: { sha: "floating-runtime" } }),
+    /release candidate Passport Buildchain runtime SHA must be a 40-character Git SHA/,
+  );
 });
 
 test("workflow friction classifier prioritizes duplicate PRs, heavy builds, and late fail-fast", () => {
@@ -1232,5 +1322,27 @@ test("generateReleaseCandidatePassportCli writes GitHub outputs for workflow reu
     process.chdir(previousCwd);
     process.env = previousEnv;
     fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("GitHub outputs preserve multiline release asset paths", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-output-"));
+  const previousOutput = process.env.GITHUB_OUTPUT;
+  try {
+    process.env.GITHUB_OUTPUT = path.join(workspace, "outputs.txt");
+    writeGitHubOutputs({
+      "release-candidate-version": "4.0.0-alpha.1",
+      "release-candidate-github-release-artifact-paths": "linux.tar.gz\nwindows.zip",
+    });
+    assert.equal(
+      fs.readFileSync(process.env.GITHUB_OUTPUT, "utf8"),
+      "release-candidate-version=4.0.0-alpha.1\n" +
+        "release-candidate-github-release-artifact-paths<<BUILDCHAIN_OUTPUT\n" +
+        "linux.tar.gz\nwindows.zip\nBUILDCHAIN_OUTPUT\n",
+    );
+  } finally {
+    if (previousOutput === undefined) delete process.env.GITHUB_OUTPUT;
+    else process.env.GITHUB_OUTPUT = previousOutput;
+    fs.rmSync(workspace, { recursive: true, force: true });
   }
 });

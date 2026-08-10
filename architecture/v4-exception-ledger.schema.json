@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/v4-exception-ledger-v1.schema.json",
+  "title": "Buildchain v4 Architecture Exception Ledger",
+  "type": "object",
+  "required": ["schemaVersion", "contract", "exceptions"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": {
+      "const": "kungfu-buildchain-v4-architecture-exception-ledger"
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "owner",
+          "budgetDimension",
+          "scope",
+          "rationale",
+          "evidence",
+          "expiresAt",
+          "removalCondition"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["active", "closed"] },
+          "owner": { "type": "string", "minLength": 1 },
+          "budgetDimension": {
+            "enum": [
+              "authority",
+              "semanticState",
+              "boundary",
+              "structural",
+              "agentCognitive",
+              "recoveryFault"
+            ]
+          },
+          "scope": { "type": "string", "minLength": 1 },
+          "rationale": { "type": "string", "minLength": 1 },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "removalCondition": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

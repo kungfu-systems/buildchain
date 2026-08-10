@@ -944,26 +944,49 @@ export function normalizeKfd1ContractWorldWitness(witness, { metadata = resolveK
   };
 }
 
-function resolveArtifactFile({ cwd, artifactRoot, artifacts = [], artifactPath }) {
-  const candidates = [
-    path.resolve(cwd, artifactPath),
-    artifactRoot ? path.resolve(artifactRoot, artifactPath) : "",
-  ].filter(Boolean);
-  for (const artifact of artifacts) {
-    const sourcePath = artifact.sourcePath || artifact.path || "";
-    if (!sourcePath) {
-      continue;
-    }
-    const normalizedSource = sourcePath.replace(/\\/g, "/");
-    if (normalizedSource === artifactPath || normalizedSource.endsWith(`/${artifactPath}`)) {
-      candidates.push(path.resolve(sourcePath));
-    }
-    const name = artifact.name || artifact.filename || "";
-    if (name && name === artifactPath) {
-      candidates.push(path.resolve(sourcePath));
+function indexArtifactSearchRoots({ roots = [], artifactPaths = [] } = {}) {
+  const wanted = [...new Set(artifactPaths.filter(Boolean))];
+  const indexed = new Map();
+  const stack = roots.filter((root) => root && fs.existsSync(root) && fs.statSync(root).isDirectory());
+  while (stack.length > 0) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const candidate = path.join(current, entry.name);
+      if (entry.isDirectory()) { stack.push(candidate); continue; }
+      if (!entry.isFile()) continue;
+      const normalized = candidate.replace(/\\/g, "/");
+      for (const artifactPath of wanted) {
+        if (normalized === artifactPath || normalized.endsWith(`/${artifactPath}`)) {
+          const candidates = indexed.get(artifactPath) || [];
+          candidates.push(candidate);
+          indexed.set(artifactPath, candidates);
+        }
+      }
     }
   }
-  return candidates.find((candidate) => candidate && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) || "";
+  return indexed;
+}
+
+function resolveArtifactFile({ cwd, artifactRoot, artifactIndex = new Map(), artifacts = [], artifactPath, expectedSha256 = "" }) {
+  const candidates = artifactIndex.size > 0
+    ? [...(artifactIndex.get(artifactPath) || []), artifactRoot ? path.resolve(artifactRoot, artifactPath) : "", path.resolve(cwd, artifactPath)]
+    : [path.resolve(cwd, artifactPath), artifactRoot ? path.resolve(artifactRoot, artifactPath) : ""];
+  for (const artifact of artifacts) {
+    const sourcePath = artifact.sourcePath || artifact.path || "";
+    if (!sourcePath) continue;
+    const normalizedSource = sourcePath.replace(/\\/g, "/");
+    if (normalizedSource === artifactPath || normalizedSource.endsWith(`/${artifactPath}`)) candidates.push(path.resolve(sourcePath));
+    const name = artifact.name || artifact.filename || "";
+    if (name && name === artifactPath) candidates.push(path.resolve(sourcePath));
+  }
+  const existing = [...new Set(candidates)].filter(
+    (candidate) => candidate && fs.existsSync(candidate) && fs.statSync(candidate).isFile(),
+  );
+  if (expectedSha256) {
+    const exact = existing.find((candidate) => sha256File(candidate) === expectedSha256);
+    if (exact) return exact;
+  }
+  return existing[0] || "";
 }
 
 function resolveSourceFile({ cwd, sourcePath }) {
@@ -977,6 +1000,7 @@ function resolveSourceFile({ cwd, sourcePath }) {
 export function createKfd1ReleaseGateEvidence({
   cwd = process.cwd(),
   artifactRoot = "",
+  artifactSearchRoots = [],
   artifacts = [],
   witnesses = [],
   verifiedAt = new Date().toISOString(),
@@ -986,6 +1010,10 @@ export function createKfd1ReleaseGateEvidence({
   if (normalizedWitnesses.length === 0) {
     return undefined;
   }
+  const artifactIndex = indexArtifactSearchRoots({
+    roots: artifactSearchRoots,
+    artifactPaths: normalizedWitnesses.flatMap((witness) => witness.surfaces.map((surface) => surface.artifactPath)),
+  });
   const worlds = normalizedWitnesses.map((witness) => {
     const preBuildWitnessSha256 = sha256Json(witness);
     const sourceResults = witness.surfaces.map((surface) => {
@@ -1025,8 +1053,10 @@ export function createKfd1ReleaseGateEvidence({
       const filePath = resolveArtifactFile({
         cwd,
         artifactRoot,
+        artifactIndex,
         artifacts,
         artifactPath: surface.artifactPath,
+        expectedSha256: surface.expectedSha256,
       });
       if (!filePath) {
         return {

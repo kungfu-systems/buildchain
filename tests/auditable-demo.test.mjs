@@ -12,6 +12,7 @@ import {
   parseAdapterArguments,
   prepareSmoke,
   qualifyMediaFixture,
+  renditionInputRoots,
   runAdapter,
   sha256,
   stableJson,
@@ -22,15 +23,219 @@ import {
   verifyRendererOutput,
   writeChecksums,
 } from "../scripts/auditable-demo.mjs";
+import {
+  MAX_LONG_FORM_RENDERER_MANIFEST_BYTES,
+  readRendererManifest,
+  validateRendererComposition,
+} from "../scripts/auditable-demo-renditions.mjs";
 
 const RENDERER_IMAGE = `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"a".repeat(64)}`;
 const SOURCE_SHA = "b".repeat(40);
+
+const COMPOSITION_HELPERS = {
+  exactKeys(value, required, optional, label) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error(`${label} must be an object`);
+    }
+    const allowed = new Set([...required, ...optional]);
+    for (const key of required) {
+      if (!Object.hasOwn(value, key)) throw new Error(`${label}.${key} is required`);
+    }
+    for (const key of Object.keys(value)) {
+      if (!allowed.has(key)) throw new Error(`${label}.${key} is not allowed`);
+    }
+  },
+  invariant(condition, message) {
+    if (!condition) throw new Error(message);
+  },
+};
+
+function terminalFillEvidence(width, height, columns, rows) {
+  return {
+    mode: "terminal-fill",
+    contentViewport: { x: 0, y: 0, width, height, fillRatio: 1 },
+    terminalGeometry: {
+      columns,
+      rows,
+      cellWidth: Number((width / columns).toFixed(6)),
+      cellHeight: Number((height / rows).toFixed(6)),
+      fontSize: Number((Math.min((width / columns) * 1.6, (height / rows) * 0.8)).toFixed(6)),
+      lineHeight: Number((height / rows).toFixed(6)),
+      layout: "exact-grid",
+    },
+  };
+}
+
+function terminalFillManifest() {
+  const primary = terminalFillEvidence(1920, 1080, 150, 36);
+  const responsive = terminalFillEvidence(1280, 720, 150, 28);
+  return {
+    renderer: { contractVersion: "1.4.0" },
+    policy: { compositionMode: "terminal-fill" },
+    derivation: {
+      sourceFrames: { width: 1920, height: 1080, composition: structuredClone(primary) },
+      sourceFrameSets: [
+        { id: "1080p", role: "primary", width: 1920, height: 1080, composition: primary },
+        { id: "720p", role: "responsive", width: 1280, height: 720, composition: responsive },
+      ],
+    },
+  };
+}
+
+const TERMINAL_FILL_RENDITIONS = [
+  { id: "1080p", role: "primary", width: 1920, height: 1080, columns: 150, rows: 36, compositionMode: "terminal-fill" },
+  { id: "720p", role: "responsive", width: 1280, height: 720, columns: 150, rows: 28, compositionMode: "terminal-fill" },
+];
+
+test("renderer composition admission proves exact terminal-fill viewports and fails closed on drift", () => {
+  const admitted = validateRendererComposition(
+    terminalFillManifest(),
+    TERMINAL_FILL_RENDITIONS,
+    COMPOSITION_HELPERS,
+  );
+  assert.equal(admitted.mode, "terminal-fill");
+
+  const missing = terminalFillManifest();
+  delete missing.derivation.sourceFrameSets[0].composition.contentViewport;
+  assert.throws(
+    () => validateRendererComposition(missing, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /contentViewport is required/u,
+  );
+
+  const outOfBounds = terminalFillManifest();
+  outOfBounds.derivation.sourceFrameSets[1].composition.contentViewport.x = 1;
+  assert.throws(
+    () => validateRendererComposition(outOfBounds, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /out of bounds/u,
+  );
+
+  const nonFull = terminalFillManifest();
+  nonFull.derivation.sourceFrameSets[1].composition.contentViewport.width = 1279;
+  nonFull.derivation.sourceFrameSets[1].composition.contentViewport.fillRatio = Number((1279 / 1280).toFixed(6));
+  assert.throws(
+    () => validateRendererComposition(nonFull, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /full-frame terminal viewport/u,
+  );
+
+  const renditionMismatch = terminalFillManifest();
+  renditionMismatch.derivation.sourceFrameSets[0].composition.terminalGeometry.columns = 149;
+  assert.throws(
+    () => validateRendererComposition(renditionMismatch, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /rendition-mismatched/u,
+  );
+
+  const manifestDrift = terminalFillManifest();
+  manifestDrift.derivation.sourceFrames.composition.contentViewport.width = 1919;
+  assert.throws(
+    () => validateRendererComposition(manifestDrift, TERMINAL_FILL_RENDITIONS, COMPOSITION_HELPERS),
+    /drifted between sourceFrames and sourceFrameSets/u,
+  );
+
+  const legacyFramed = validateRendererComposition(
+    {
+      renderer: { contractVersion: "1.3.1" },
+      policy: {},
+      derivation: {
+        sourceFrames: { width: 1920, height: 1080 },
+        sourceFrameSets: [
+          { id: "1080p", role: "primary", width: 1920, height: 1080 },
+          { id: "720p", role: "responsive", width: 1280, height: 720 },
+        ],
+      },
+    },
+    TERMINAL_FILL_RENDITIONS.map(({ compositionMode: _compositionMode, ...entry }) => entry),
+    COMPOSITION_HELPERS,
+  );
+  assert.deepEqual(legacyFramed, {
+    mode: "presentation-framed",
+    frameSets: [],
+    evidence: "legacy-presentation-default",
+  });
+  assert.throws(
+    () => validateRendererComposition(
+      { renderer: { contractVersion: "1.3.1" }, policy: {}, derivation: {} },
+      TERMINAL_FILL_RENDITIONS,
+      COMPOSITION_HELPERS,
+    ),
+    /does not support composition evidence/u,
+  );
+});
+
+function longFormRendererRenditions() {
+  return [
+    { id: "1080p", role: "primary", width: 1920, height: 1080 },
+    { id: "720p", role: "responsive", width: 1280, height: 720 },
+  ].map((entry) => ({
+    id: entry.id,
+    role: entry.role,
+    scene: {
+      path: {
+        durationClass: "long-form",
+        durationMs: 120000,
+        fps: 10,
+        width: entry.width,
+        height: entry.height,
+      },
+    },
+    terminalCapture: {
+      schema: "kungfu.terminal-capture/v1",
+      root: `sha256:${(entry.id === "1080p" ? "c" : "d").repeat(64)}`,
+      durationMs: 119000,
+      events: 1000,
+      bytes: 1024 * 1024,
+      path: { normalizedReplay: "x".repeat(17 * 1024 * 1024) },
+    },
+  }));
+}
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-auditable-demo-test-"));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   return directory;
 }
+
+test("oversized renderer manifests remain limited to bounded long-form native renditions", (t) => {
+  const root = temporaryDirectory(t);
+  const manifestPath = path.join(root, "manifest.json");
+  const manifest = {
+    schema: "build-images.auditable-demo-render/v1",
+    renderer: { image: RENDERER_IMAGE },
+    inputs: { renditions: longFormRendererRenditions() },
+    outputs: {},
+  };
+  fs.writeFileSync(manifestPath, stableJson(manifest));
+  assert.ok(fs.statSync(manifestPath).size > 32 * 1024 * 1024);
+  assert.ok(fs.statSync(manifestPath).size < MAX_LONG_FORM_RENDERER_MANIFEST_BYTES);
+  const helpers = {
+    decodeUtf8: (bytes) => bytes.toString("utf8"),
+    digestPattern: /^sha256:[0-9a-f]{64}$/,
+    invariant: (condition, message) => { if (!condition) throw new Error(message); },
+    maxBytes: 4 * 1024 * 1024,
+    maxEvents: 10_000,
+    readRegular: (file, label, maximum) => {
+      const metadata = fs.statSync(file);
+      assert.ok(metadata.size <= maximum, `${label} exceeds ${maximum} bytes`);
+      return fs.readFileSync(file);
+    },
+  };
+  assert.equal(readRendererManifest(manifestPath, helpers).manifest.inputs.renditions.length, 2);
+  writeChecksums(root);
+  assert.throws(() => verifyChecksums(root), /manifest\.json exceeds 8388608 bytes/);
+  verifyChecksums(root, "checksums.sha256", { allowLongFormRendererManifest: true });
+
+  manifest.inputs.renditions[1].terminalCapture.events = 10_001;
+  fs.writeFileSync(manifestPath, stableJson(manifest));
+  assert.throws(
+    () => readRendererManifest(manifestPath, helpers),
+    /rendition 1 is not bounded long-form evidence/,
+  );
+
+  fs.truncateSync(manifestPath, MAX_LONG_FORM_RENDERER_MANIFEST_BYTES + 1);
+  assert.throws(
+    () => readRendererManifest(manifestPath, helpers),
+    /renderer manifest exceeds 67108864 bytes/,
+  );
+});
 
 function terminalCapture(
   durationMs = 2500,
@@ -120,6 +325,33 @@ function writeRendererOutput(directory, inputs) {
     ...projectionInput,
     cues: projectionInput.cues.map((cue) => ({ ...cue, annotation: cue.annotation ?? "" })),
   };
+  const terminalDimensions = inputs.terminalCapture
+    ? JSON.parse(fs.readFileSync(inputs.terminalCapture, "utf8")).dimensions
+    : null;
+  const contentViewport = {
+    x: 24,
+    y: 72,
+    width: scene.width - 48,
+    height: scene.height - 96,
+  };
+  contentViewport.fillRatio = Number((
+    (contentViewport.width * contentViewport.height) / (scene.width * scene.height)
+  ).toFixed(6));
+  const composition = {
+    mode: scene.compositionMode ?? "presentation-framed",
+    contentViewport,
+    terminalGeometry: terminalDimensions
+      ? {
+        columns: terminalDimensions.columns,
+        rows: terminalDimensions.rows,
+        cellWidth: 7.82,
+        cellHeight: 13.78,
+        fontSize: 13,
+        lineHeight: 13.78,
+        layout: "presentation-flow",
+      }
+      : null,
+  };
   fs.writeFileSync(path.join(directory, "complete-transcript.txt"), transcript);
   fs.writeFileSync(path.join(directory, "public-projection.json"), stableJson(projection));
   fs.writeFileSync(path.join(directory, "scene.json"), stableJson(scene));
@@ -153,7 +385,8 @@ function writeRendererOutput(directory, inputs) {
   );
   fs.writeFileSync(path.join(directory, "manifest.json"), stableJson({
     schema: "build-images.auditable-demo-render/v1",
-    renderer: { image: RENDERER_IMAGE },
+    renderer: { contractVersion: "1.4.0", image: RENDERER_IMAGE },
+    policy: { compositionMode: composition.mode },
     inputs: {
       scene: { root: sha256(fs.readFileSync(path.join(directory, "scene.json"))) },
       transcript: { root: sha256(fs.readFileSync(path.join(directory, "complete-transcript.txt"))) },
@@ -165,6 +398,13 @@ function writeRendererOutput(directory, inputs) {
           },
         }
         : {}),
+    },
+    derivation: {
+      sourceFrames: {
+        width: scene.width,
+        height: scene.height,
+        composition,
+      },
     },
     outputs,
   }));
@@ -396,6 +636,24 @@ test("adapter output is strict and smoke input is bounded", (t) => {
   assert.throws(() => validateAdapterOutput(adapter), /undeclared adapter output/);
 });
 
+test("adapter output requires an explicit bounded long-form scene", (t) => {
+  const root = temporaryDirectory(t);
+  writeAdapterOutput(root, 61_000, true);
+  assert.throws(() => validateAdapterOutput(root), /scene\.durationMs is out of range/u);
+
+  const scenePath = path.join(root, "scene.json");
+  const scene = JSON.parse(fs.readFileSync(scenePath, "utf8"));
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", fps: 10 }));
+  const validated = validateAdapterOutput(root);
+  assert.equal(validated.scene.durationClass, "long-form");
+  assert.equal(validated.terminalCapture.durationMs, 60_500);
+
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", durationMs: 180_001, fps: 1 }));
+  assert.throws(() => validateAdapterOutput(root), /scene\.durationMs is out of range/u);
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", fps: 11 }));
+  assert.throws(() => validateAdapterOutput(root), /scene\.fps is out of range/u);
+});
+
 test("optional terminal capture is bounded and grants no implicit authority", (t) => {
   const root = temporaryDirectory(t);
   writeAdapterOutput(root, 2500, true);
@@ -458,8 +716,8 @@ test("native rendition set binds distinct 1080p and 720p captures", (t) => {
     cues: [{ startMs: 0, endMs: 2500, transcriptLines: [1, 2], annotation: "compact output" }],
   }));
   const responsiveCapture = terminalCapture(2500);
-  responsiveCapture.dimensions = { columns: 100, rows: 28 };
-  responsiveCapture.events[0].data = Buffer.from("compact 100x28\r\n").toString("base64");
+  responsiveCapture.dimensions = { columns: 150, rows: 28 };
+  responsiveCapture.events[0].data = Buffer.from("compact 150x28\r\n").toString("base64");
   responsiveCapture.completion.reportRoot = `sha256:${"f".repeat(64)}`;
   fs.writeFileSync(path.join(root, "terminal-capture-720p.json"), stableJson(responsiveCapture));
 
@@ -501,6 +759,12 @@ test("native rendition set binds distinct 1080p and 720p captures", (t) => {
   const normalized = validateAdapterOutput(root);
   assert.equal(normalized.renditionSet.renditions[0].scene.width, 1920);
   assert.equal(normalized.renditionSet.renditions[1].scene.width, 1280);
+  assert.deepEqual(normalized.renditionSet.renditions.map(({ files }) => files.scene), ["scene.json", "scene-720p.json"]);
+  for (const rendition of normalized.renditionSet.renditions) {
+    ["scene", "transcript", "projection"].forEach((member) => assert.doesNotThrow(() => fs.readFileSync(path.join(root, rendition.files[member]))));
+  }
+  const inputRoots = renditionInputRoots(root, normalized.renditionSet.renditions);
+  assert.equal(stableJson(inputRoots), stableJson(JSON.parse(stableJson(inputRoots))));
   assert.notEqual(
     normalized.renditionSet.renditions[0].captureRoot,
     normalized.renditionSet.renditions[1].captureRoot,
@@ -858,7 +1122,12 @@ test("checked-in media evidence binds measured byte budgets", () => {
   assert.equal(evidenceRoot, sha256(Buffer.from(stableJson(body))));
   assert.equal(evidence.qualification.profile.catalogRoot, sha256(Buffer.from(stableJson(catalog))));
   const observed = new Map(evidence.qualification.renditions.map((entry) => [entry.path, entry.bytes]));
-  for (const profileId of ["web-delivery-v1", "responsive-web-delivery-v1", "site-hero-v1"]) {
+  for (const profileId of [
+    "web-delivery-v1",
+    "responsive-web-delivery-v1",
+    "responsive-long-form-web-delivery-v1",
+    "site-hero-v1",
+  ]) {
     for (const rendition of catalog.profiles[profileId].renditions) {
       assert.equal(rendition.budgetBasis.evidence, "contracts/evidence/auditable-demo-web-delivery-v1.json");
       assert.equal(rendition.budgetBasis.observedBytes, observed.get(rendition.budgetBasis.observedPath));

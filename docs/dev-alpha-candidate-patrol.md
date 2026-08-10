@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-07-29
+last_reviewed: 2026-08-04
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-29
-  visible_context: Existing Buildchain source locks, Kungfu exact-source Alpha preflight, Dev Patrol, repository release governance, and the consumer-owned settlement renderer threat model.
+  generated_at: 2026-08-04
+  visible_context: Existing Buildchain source locks, Kungfu exact-source Alpha preflight, Dev Patrol, cancelled duplicate runs, protected auto-merge policy, repository release governance, and the consumer-owned settlement renderer threat model.
   invisible_context_boundary: No credentials, private logs, or private configuration were used.
 ---
 
@@ -27,8 +27,10 @@ bounded development history from newest to oldest (stopping early at the Alpha
 head), and selects the newest commit that satisfies all of these conditions:
 
 - the source is strictly ahead of the recorded target head;
-- the latest completed Dev Patrol for that exact commit SHA succeeded;
-- the latest completed Alpha preflight for the same commit SHA succeeded; and
+- the latest completed, non-cancelled Dev Patrol for that exact commit SHA
+  succeeded;
+- the latest completed, non-cancelled Alpha preflight for the same commit SHA
+  succeeded; and
 - both runs are within the caller's evidence age limit.
 
 The selected commit can be behind the observed development head when newer
@@ -36,6 +38,12 @@ commits have not completed both workflows yet. The decision binds the observed
 head, selected SHA, and count of skipped newer commits. This makes a slow native
 verification lane live under continuous development without silently treating
 an unqualified head as releasable.
+
+A cancelled workflow run carries no qualification verdict, so a newer
+cancelled duplicate does not erase the prior completed verdict for the same
+workflow and source SHA. Other non-success conclusions remain authoritative:
+a newer failed, timed-out, skipped, or otherwise non-successful completed run
+still excludes that SHA and forces the controller to fall back or fail closed.
 
 History discovery is bounded to the newest 1000 development commits. The
 controller then compares the selected SHA to the exact Alpha head before it can
@@ -114,12 +122,21 @@ service. Once the active PR settles or is abandoned, the next execution
 recomputes current exact-SHA qualification and creates only the newest still
 fresh candidate. It never trusts a `workflow_run` trigger SHA as evidence.
 
+The caller may additionally set `auto-merge: true` and choose `merge-method`
+from `merge`, `squash`, or `rebase`. Buildchain only arms GitHub auto-merge for
+the single managed, open, exact-source candidate after the write-permission
+settlement has revalidated the observation. GitHub still owns every required
+review, required check, branch-protection, and merge-queue gate; Buildchain does
+not approve or directly merge the PR. Invalid merge methods and GraphQL
+refusals fail the patrol run.
+
 Consumers should invoke this workflow after relevant qualification workflow
 completion and from an offset periodic fallback. GitHub may delay scheduled
 runs, so the event path supplies low latency while the fallback supplies
 recovery. Workflow concurrency plus the server-side open-PR reconciliation
 makes duplicate or delayed events idempotent.
 
-The workflow never moves the Alpha ref directly, merges or auto-merges the pull
-request, publishes npm, creates a Git tag or GitHub Release, or changes branch
-protection. Those remain repository-owned protected settlement actions.
+The workflow never moves the Alpha ref directly, directly merges the pull
+request, approves it, publishes npm, creates a Git tag or GitHub Release, or
+changes branch protection. Optional auto-merge only registers repository-owned
+intent with GitHub; protected settlement remains authoritative.

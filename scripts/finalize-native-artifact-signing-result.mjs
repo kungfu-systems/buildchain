@@ -12,6 +12,7 @@ import {
   artifactSigningEvidenceDigest,
   createArtifactSigningResult,
 } from "../packages/core/artifact-signing-result.js";
+import { acceptedMacosCredentialEvidence } from "../actions/macos-credential-island/dmg-assembly.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 function required(value, label) {
@@ -32,15 +33,39 @@ function resolveBelow(root, relative, label) {
   return target;
 }
 
+function expectedCredentialExecution(
+  appBundleResult,
+  expectedRunId,
+  expectedRunAttempt,
+) {
+  if (!appBundleResult) return null;
+  return {
+    runId: required(expectedRunId, "credential execution run id"),
+    runAttempt: required(
+      expectedRunAttempt,
+      "credential execution run attempt",
+    ),
+  };
+}
+
+function acceptedProviderEvidence(evidence, request, expectedExecution) {
+  return expectedExecution
+    ? acceptedMacosCredentialEvidence(evidence, request, expectedExecution)
+    : evidence.status === "passed" &&
+        evidence.provider === request.signature.provider;
+}
+
 export function finalizeNativeArtifactSigningResult({
   requestRoot = process.env.BUILDCHAIN_SIGNING_REQUEST_ROOT,
   requestPath = process.env.BUILDCHAIN_SIGNING_REQUEST_PATH,
   signedPayload = process.env.BUILDCHAIN_SIGNED_PAYLOAD,
   evidencePath = process.env.BUILDCHAIN_SIGNING_EVIDENCE,
-  credentialArtifactRoot =
-    process.env.BUILDCHAIN_SIGNING_CREDENTIAL_ARTIFACT_ROOT,
+  credentialArtifactRoot = process.env
+    .BUILDCHAIN_SIGNING_CREDENTIAL_ARTIFACT_ROOT,
   outputRoot = process.env.BUILDCHAIN_SIGNING_RESULT_ROOT,
   checks = process.env.BUILDCHAIN_SIGNING_VERIFICATION_CHECKS,
+  expectedRunId = process.env.GITHUB_RUN_ID,
+  expectedRunAttempt = process.env.GITHUB_RUN_ATTEMPT,
 } = {}) {
   const requests = path.resolve(required(requestRoot, "signing request root"));
   const request = JSON.parse(
@@ -77,19 +102,16 @@ export function finalizeNativeArtifactSigningResult({
   fs.copyFileSync(evidenceSource, evidenceOutput, fs.constants.COPYFILE_EXCL);
   const evidenceDocument = JSON.parse(fs.readFileSync(evidenceOutput, "utf8"));
   const appBundleResult = request.artifact.kind === "app-bundle";
-  const providerEvidencePassed = appBundleResult
-    ? evidenceDocument.schema ===
-        "buildchain.macos-credential-island-evidence/v1" &&
-      evidenceDocument.status === "accepted" &&
-      evidenceDocument.source?.repository === request.source.repository &&
-      evidenceDocument.source?.sha === request.source.sha &&
-      evidenceDocument.source?.treeSha === request.source.treeSha &&
-      evidenceDocument.buildchain?.runtimeSha === request.runtime.sha &&
-      evidenceDocument.app?.architecture === request.artifact.arch &&
-      evidenceDocument.notarization?.application?.status === "Accepted" &&
-      evidenceDocument.notarization?.diskImage?.status === "Accepted"
-    : evidenceDocument.status === "passed" &&
-      evidenceDocument.provider === request.signature.provider;
+  const expectedExecution = expectedCredentialExecution(
+    appBundleResult,
+    expectedRunId,
+    expectedRunAttempt,
+  );
+  const providerEvidencePassed = acceptedProviderEvidence(
+    evidenceDocument,
+    request,
+    expectedExecution,
+  );
   if (!providerEvidencePassed) {
     throw new Error(
       "provider evidence does not prove the requested native signature",

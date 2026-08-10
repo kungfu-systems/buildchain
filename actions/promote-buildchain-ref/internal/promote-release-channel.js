@@ -81,22 +81,21 @@ async function selectReleaseState(context) {
 
 async function transactionContainedInRelease(context, transaction) {
   if (!transaction) return false;
-  return (
-    (await context.releaseCommitIncludesTransactionHead({
-      octokit: context.octokit,
-      owner: context.owner,
-      repo: context.repo,
-      releaseSha: context.sha,
-      transactionReleaseSha: transaction.release_sha,
-    })) ||
-    (await context.releaseCommitIncludesTransactionHead({
-      octokit: context.octokit,
-      owner: context.owner,
-      repo: context.repo,
-      releaseSha: context.sha,
-      transactionReleaseSha: transaction.release_material_sha,
-    }))
-  );
+  const currentChannelSha = context.advancedChannelSha || context.sha; const includes = (transactionReleaseSha) => context.releaseCommitIncludesTransactionHead({
+    octokit: context.octokit, owner: context.owner, repo: context.repo, releaseSha: currentChannelSha, transactionReleaseSha });
+  return (await includes(transaction.release_sha)) || (await includes(transaction.release_material_sha));
+}
+
+function containedReleaseCommit(context, state, releaseVersion) {
+  const transaction = context.advancedPublicationTransaction; if (!state.containsPublishedMaterial || !transaction) return undefined;
+  const releaseSha = transaction.release_material_sha || transaction.release_sha; if (!releaseSha) return undefined;
+  const discovered = context.discoverVersionStateFiles(context.cwd); const files = discovered.files.map((file) => file.path);
+  context.updates.push({ version: releaseVersion, action: "existing-contained-version-state", sha: releaseSha }); return {
+    sha: releaseSha, version: releaseVersion, action: "existing-contained", publishVersion: transaction.version || releaseVersion, files,
+    releaseTreeAllowedPaths: context.versionVerificationAllowedPathsForPromotion(context.rule.channel, files),
+    versionStrategy: context.getVersionStrategy(discovered.config), anchorManifest: context.loadConfiguredAnchorManifest(context.cwd, discovered.config),
+    derivedVersionMaterial: context.discoverConfiguredDerivedVersionMaterial(context.cwd, discovered.config),
+  };
 }
 
 async function resolveReleaseAlphaMaterial(context, state) {
@@ -260,19 +259,16 @@ async function collectPromotionVersionMaterial(
 }
 
 async function createReleasePromotionCommit(context, state) {
-  const releaseVersion = context.stripTagPrefix(
-    state.selectedReleaseCandidate.tag,
-  );
-  const releaseCommit = await context.createVersionStateCommit({
-    baseSha: context.sha,
-    version: releaseVersion,
-    message: `chore(release): release ${state.selectedReleaseCandidate.tag}`,
-    preserveExistingLifecycleIdentity: Boolean(
-      state.containsPublishedMaterial,
-    ),
-  });
+  const releaseVersion = context.stripTagPrefix(state.selectedReleaseCandidate.tag);
+  const releaseCommit =
+    containedReleaseCommit(context, state, releaseVersion) ||
+    (await context.createVersionStateCommit({
+      baseSha: context.sha, version: releaseVersion,
+      message: `chore(release): release ${state.selectedReleaseCandidate.tag}`,
+      preserveExistingLifecycleIdentity: Boolean(state.containsPublishedMaterial),
+    }));
   const releaseSha = releaseCommit.sha;
-  if (context.requireGovernance && !context.dryRun) {
+  if (context.requireGovernance && !context.dryRun && releaseCommit.action !== "existing-contained") {
     if (!state.sourceAlpha?.sha) {
       throw new Error(
         `Release promotion requires an existing ${context.rule.releasePrefix}.${state.selectedReleaseCandidate.patch}-alpha.N tag`,
@@ -321,20 +317,20 @@ async function createReleasePromotionCommit(context, state) {
 }
 
 async function finalizeReleasePublication(context, state) {
-  await context.executePublishTransaction({
-    version: state.releaseCommit.publishVersion || state.releaseVersion,
-    exactTag: state.selectedReleaseCandidate.tag,
-    channel: context.rule.channel,
-    line: context.rule.releasePrefix,
-    releaseSha: state.releaseSha,
-    releaseCandidateVersion: context.stripTagPrefix(
-      state.sourceAlphaMaterial?.exactTag ||
-        state.sourceAlphaMaterial?.tag ||
-        "",
-    ),
+  const containedTransaction = state.containsPublishedMaterial ? context.advancedPublicationTransaction : undefined; await context.executePublishTransaction({
+    version: containedTransaction?.version || state.releaseCommit.publishVersion || state.releaseVersion,
+    exactTag: containedTransaction?.exact_tag || state.selectedReleaseCandidate.tag,
+    channel: containedTransaction?.channel || context.rule.channel,
+    line: containedTransaction?.line || context.rule.releasePrefix,
+    releaseSha: containedTransaction?.release_sha || state.releaseSha,
+    releaseCandidateVersion: context.stripTagPrefix(state.sourceAlphaMaterial?.exactTag || state.sourceAlphaMaterial?.tag || ""),
+    sourceShaOverride: containedTransaction?.source_sha,
+    releaseMaterialShaOverride: containedTransaction?.release_material_sha || containedTransaction?.release_sha,
+    publishToolingShaOverride: containedTransaction?.publish_tooling_sha || containedTransaction?.release_sha,
+    durablePublicationMaterial: containedTransaction,
     allowVersionStateFinalization: state.releaseCommit.action === "existing",
   });
-  if (context.versionState) {
+  if (context.versionState && !containedTransaction) {
     await context.markFinalizing();
     const targetUpdate = await context.updateBranch(
       context.targetRef,
@@ -368,13 +364,14 @@ async function finalizeReleasePublication(context, state) {
   const transaction =
     context.getLatestPublishTransaction()?.transaction ||
     state.currentReleaseTransaction;
+  const exactTagSha = transaction?.source_sha || state.releaseSha;
   await context.ensureTag(
     state.selectedReleaseCandidate.tag,
-    state.releaseSha,
+    exactTagSha,
     {
       acceptedExistingShas: context.transactionAcceptedExactTagShas(
         transaction,
-        state.releaseSha,
+        exactTagSha,
       ),
       acceptedExistingMaterialShas: context.transactionAcceptedExactTagShas(
         transaction,
@@ -394,6 +391,11 @@ async function finalizeReleasePublication(context, state) {
     });
   }
   await context.markComplete();
+  if (containedTransaction) {
+    context.updates.push({ action: "finalized-contained-published-transaction", tag: containedTransaction.exact_tag,
+      sourceSha: containedTransaction.source_sha, releaseSha: containedTransaction.release_sha,
+      currentChannelSha: context.advancedChannelSha || context.sha, sha: containedTransaction.release_sha });
+  }
   return { ...state, ownsMajorFloatingTag };
 }
 

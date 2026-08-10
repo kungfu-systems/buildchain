@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/release-candidate-recovery-v1.schema.json",
+  "title": "Buildchain Release Candidate Recovery Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "action",
+    "createdAt",
+    "repository",
+    "recoveryRunId",
+    "originalCandidate",
+    "target",
+    "recovered",
+    "skippedBuildStages",
+    "payloadBytes",
+    "buildchainToolingSha",
+    "transaction",
+    "root"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": { "const": "kungfu-buildchain-release-candidate-recovery/v1" },
+    "action": { "const": "reused" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "repository": { "type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$" },
+    "recoveryRunId": { "type": "string" },
+    "originalCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "workflowFile", "workflowName", "pullRequest", "sourceSha", "mergeSha", "tree"],
+      "properties": {
+        "runId": { "type": "string", "pattern": "^[0-9]+$" },
+        "workflowFile": { "type": "string" },
+        "workflowName": { "type": "string" },
+        "pullRequest": { "type": "integer", "minimum": 1 },
+        "sourceSha": { "$ref": "#/$defs/gitSha" },
+        "mergeSha": { "type": "string", "pattern": "^(?:[0-9a-f]{40})?$" },
+        "tree": { "$ref": "#/$defs/gitSha" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "ref", "sha", "tree", "version"],
+      "properties": {
+        "channel": { "enum": ["alpha", "release", "major"] },
+        "ref": { "type": "string" },
+        "sha": { "$ref": "#/$defs/gitSha" },
+        "observedRefSha": { "$ref": "#/$defs/gitSha" },
+        "tree": { "$ref": "#/$defs/gitSha" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "recovered": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidateRoot", "buildSummaryRoot", "artifactRoot", "artifactArchiveRoot", "artifactCount", "artifacts"],
+      "properties": {
+        "candidateRoot": { "$ref": "#/$defs/sha256" },
+        "buildSummaryRoot": { "$ref": "#/$defs/sha256" },
+        "artifactRoot": { "$ref": "#/$defs/sha256" },
+        "artifactArchiveRoot": { "$ref": "#/$defs/sha256" },
+        "artifactCount": { "type": "integer", "minimum": 1 },
+        "artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "size", "digest"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "size": { "type": "integer", "minimum": 0 },
+              "digest": { "$ref": "#/$defs/sha256" }
+            }
+          }
+        }
+      }
+    },
+    "skippedBuildStages": {
+      "const": ["install", "build", "verify", "platform-matrix"]
+    },
+    "payloadBytes": { "const": "unchanged" },
+    "buildchainToolingSha": { "$ref": "#/$defs/gitSha" },
+    "transaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "state", "publicationState"],
+      "properties": {
+        "identity": { "type": "string" },
+        "state": { "enum": ["absent", "prepared", "sealed", "publishing", "publish_failed", "published", "finalizing", "complete", "repair_required", "abandoned", "failed_permanently"] },
+        "publicationState": { "type": "string", "minLength": 1 }
+      }
+    },
+    "root": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}

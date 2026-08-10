@@ -6,16 +6,20 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  RELEASE_PROPAGATION_FAILURE_MATRIX,
   RELEASE_PROPAGATION_WORK_STAGES,
+  classifyReleasePropagationCondition,
   claimReleasePropagationWork,
   completeReleasePropagationWork,
   createReleasePropagationReceipt,
   createReleasePropagationStageReceipt,
   createReleasePropagationWork,
+  createReleasePropagationPushPlan,
   createPackageReleasePropagationCapture,
   normalizePackageReleasePropagationConfig,
   normalizeReleasePropagationGraph,
   planReleasePropagation,
+  planSiteUpstreamAgentEntry,
   recordReleasePropagationStage,
   repairReleasePropagationWork,
   verifyReleasePropagationWork,
@@ -24,13 +28,17 @@ import {
 import { sha256Json } from "../packages/core/release-propagation-common.js";
 import { contentRoot } from "../packages/core/release-propagation-work-control.js";
 import { withWorkRoot } from "../packages/core/release-propagation-work.js";
-import { capturePackageReleasePropagation } from "../scripts/capture-package-release-propagation.mjs";
+import {
+  capturePackageReleasePropagation,
+  readConfigAtSource,
+} from "../scripts/capture-package-release-propagation.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
 const fixture = path.join(root, "fixtures", "release-propagation-shaped");
 const workflowPath = path.join(root, ".github", "workflows", "release-propagation.yml");
 const promotionWorkflowPath = path.join(root, ".github", "workflows", ".release-candidate-promote.yml");
+const publicPromotionWorkflowPath = path.join(root, ".github", "workflows", "release-candidate-promote.yml");
 
 function packageCaptureConfig() {
   return {
@@ -219,6 +227,31 @@ function stageReceipt(
       bytes: 0,
       claims,
     }];
+  } else if (stage === "push-branch") {
+    const claims = {
+      provider: "git",
+      repository: work.downstream.repository,
+      remoteName: "origin",
+      sourceRef: "HEAD",
+      sourceRevision: deployedRevision,
+      destinationRef: `refs/heads/${work.downstream.branch}`,
+      expectedBaseRevision: work.downstream.expectedBaseSha,
+      expectedOldRevision: "",
+      observedRevision: deployedRevision,
+      pushMode: "fast-forward-only-exact-refspec",
+      argv: ["push", "--porcelain", "origin", `HEAD:refs/heads/${work.downstream.branch}`],
+      mutation: true,
+    };
+    evidence = [{
+      kind: "git-branch-reconciliation",
+      root: contentRoot(claims),
+      locator: locators[stage],
+      repository: work.downstream.repository,
+      revision: deployedRevision,
+      httpStatus: null,
+      bytes: 0,
+      claims,
+    }];
   } else {
     evidence = [{
       kind: kinds[stage] || `${stage}-diagnostic`,
@@ -302,6 +335,150 @@ test("release propagation graph preserves stable release channel", () => {
 
   assert.equal(plan.targets[0].channel, "release");
   assert.equal(plan.targets[0].lock.upstream.package.version, "1.4.0");
+});
+
+test("site upstream entry preserves automatic content handoffs and manual code pickup", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  const captured = createReleasePropagationWork({
+    plan,
+    expectedDownstreamBaseSha: "a".repeat(40),
+  });
+  const kfd = planSiteUpstreamAgentEntry({ sourceId: "kfd", handoffWork: captured });
+  assert.equal(kfd.policy.mode, "automatic-release-handoff");
+  assert.equal(kfd.automaticTrigger, true);
+  assert.equal(kfd.status, "handoff-ready");
+  assert.equal(kfd.work.workRoot, captured.contentRoot);
+  assert.equal(kfd.exactRelease.package.name, "@kungfu-tech/kfd");
+
+  const paper = planSiteUpstreamAgentEntry({ sourceId: "papers" });
+  assert.equal(paper.sourceId, "paper");
+  assert.equal(paper.status, "handoff-required");
+  assert.equal(paper.nextAction.action, "consume-release-handoff");
+
+  const buildchain = planSiteUpstreamAgentEntry({ sourceId: "buildchain", channel: "release" });
+  assert.equal(buildchain.policy.mode, "downstream-manual");
+  assert.equal(buildchain.automaticTrigger, false);
+  assert.equal(buildchain.status, "manual-resolution-required");
+  assert.equal(buildchain.nextAction.action, "resolve-published-release");
+
+  const core = planSiteUpstreamAgentEntry({ sourceId: "kungfu" });
+  assert.equal(core.sourceId, "kungfu-core");
+  assert.equal(core.automaticTrigger, false);
+});
+
+test("site upstream entry exposes a deterministic bounded fault matrix", () => {
+  assert.deepEqual(RELEASE_PROPAGATION_FAILURE_MATRIX.rows.map((row) => row.condition), [
+    "current", "duplicate-work", "superseded-work", "stale-downstream-base",
+    "stale-expected-old", "package-schema-mismatch", "pull-request-conflict",
+    "verification-failure", "release-race", "deployment-failure",
+    "online-readback-failure",
+  ]);
+  assert.equal(
+    classifyReleasePropagationCondition("online-readback-failure").recovery,
+    "repair-same-work",
+  );
+  assert.equal(
+    classifyReleasePropagationCondition("package-schema-mismatch").disposition,
+    "hard-safety-gate",
+  );
+  assert.throws(
+    () => classifyReleasePropagationCondition("pretend-success"),
+    /unsupported release propagation condition/,
+  );
+});
+
+test("push planning cannot advance an unrelated repository or branch", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  let work = createReleasePropagationWork({
+    plan,
+    workContext: propagationWorkContext(),
+    expectedDownstreamBaseSha: "c".repeat(40),
+  });
+  for (const stage of ["materialize", "verify-release"]) {
+    assert.equal(work.state.currentStage, stage);
+    work = recordReleasePropagationStage({
+      work,
+      expectedWorkRoot: work.contentRoot,
+      receipt: stageReceipt(work),
+    });
+  }
+  const repositoryState = {
+    repository: work.downstream.repository,
+    remoteName: "origin",
+    currentBranch: work.downstream.branch,
+    sourceRevision: "d".repeat(40),
+    remoteBaseRevision: work.downstream.expectedBaseSha,
+    remoteBranchRevision: "",
+    expectedBaseIsAncestor: true,
+  };
+  const push = createReleasePropagationPushPlan({
+    work,
+    expectedWorkRoot: work.contentRoot,
+    repositoryState,
+  });
+  assert.deepEqual(push.argv, [
+    "push", "--porcelain", "origin", `HEAD:refs/heads/${work.downstream.branch}`,
+  ]);
+  assert.equal(push.sourceRef, "HEAD");
+  assert.equal(push.pushMode, "fast-forward-only-exact-refspec");
+  assert.equal(push.argv.some((value) => value.includes("force")), false);
+
+  for (const [state, error] of [
+    [{ ...repositoryState, repository: "kungfu-systems/unrelated" }, /remote repository disagrees/],
+    [{ ...repositoryState, currentBranch: "feature/unrelated" }, /current branch disagrees/],
+    [{ ...repositoryState, remoteBaseRevision: "e".repeat(40) }, /downstream base advanced/],
+    [{ ...repositoryState, expectedBaseIsAncestor: false }, /not based on the expected downstream base/],
+  ]) {
+    assert.throws(
+      () => createReleasePropagationPushPlan({
+        work,
+        expectedWorkRoot: work.contentRoot,
+        repositoryState: state,
+      }),
+      error,
+    );
+  }
+});
+
+test("push-branch receipt rejects a forged destination ref or force argv", () => {
+  const plan = planReleasePropagation({
+    graph: readJson("graph.json"),
+    upstreamRelease: readJson("upstream-alpha.json"),
+  });
+  let work = createReleasePropagationWork({
+    plan,
+    workContext: propagationWorkContext(),
+    expectedDownstreamBaseSha: "c".repeat(40),
+  });
+  for (const stage of ["materialize", "verify-release"]) {
+    work = recordReleasePropagationStage({
+      work,
+      expectedWorkRoot: work.contentRoot,
+      receipt: stageReceipt(work),
+    });
+  }
+  const forged = stageReceipt(work);
+  const reconciliation = forged.evidence[0];
+  reconciliation.claims.argv = [
+    "push", "--force-with-lease", "origin", "HEAD:refs/heads/unrelated",
+  ];
+  reconciliation.root = contentRoot(reconciliation.claims);
+  assert.throws(
+    () => createReleasePropagationStageReceipt({
+      work,
+      observedAt: forged.observedAt,
+      actor: forged.actor,
+      summary: forged.summary,
+      evidence: forged.evidence,
+    }),
+    /exact non-force refspec/,
+  );
 });
 
 test("release propagation rejects npm gitHead, exact tag, source SHA, and package version disagreement", () => {
@@ -824,6 +1001,33 @@ test("release propagation CLI plans and writes downstream locks", () => {
   assert.equal(receipt.propagationKey, plan.targets[0].propagationKey);
 });
 
+test("release propagation CLI exposes the unified Site entry and fault matrix", () => {
+  const entry = JSON.parse(execFileSync(process.execPath, [
+    bin,
+    "release-propagation",
+    "entry",
+    "plan",
+    "--source-id",
+    "buildchain",
+    "--channel",
+    "release",
+    "--json",
+  ], { cwd: root, encoding: "utf8" }));
+  assert.equal(entry.sourceId, "buildchain");
+  assert.equal(entry.policy.mode, "downstream-manual");
+  assert.equal(entry.nextAction.action, "resolve-published-release");
+
+  const matrix = JSON.parse(execFileSync(process.execPath, [
+    bin,
+    "release-propagation",
+    "entry",
+    "fault-matrix",
+    "--json",
+  ], { cwd: root, encoding: "utf8" }));
+  assert.equal(matrix.rows.length, RELEASE_PROPAGATION_FAILURE_MATRIX.rows.length);
+  assert.equal(matrix.rows.at(-1).condition, "online-readback-failure");
+});
+
 test("release propagation CLI fails fast when target is ambiguous", () => {
   const failure = spawnSync(process.execPath, [
     bin,
@@ -1057,7 +1261,45 @@ test("package release capture materializes a restart-safe artifact set", () => {
   const status = JSON.parse(fs.readFileSync(path.join(outputDir, "work", propagationKey, "status.json"), "utf8"));
   assert.equal(work.contentRoot, captured.works[0].work.contentRoot);
   assert.equal(status.nextAction.action, "claim");
+  assert.equal(verifyReleasePropagationWork(work).contentRoot, work.contentRoot);
   assert.equal(JSON.parse(fs.readFileSync(path.join(outputDir, "upstream-release.json"), "utf8")).tag, "v1.4.0-alpha.3");
+});
+
+test("package release capture recovers an exact source commit missing from a shallow checkout", () => {
+  const sandbox = tempDir("package-release-shallow-source");
+  const seed = path.join(sandbox, "seed");
+  const remote = path.join(sandbox, "remote.git");
+  const shallow = path.join(sandbox, "shallow");
+  execFileSync("git", ["init", "--initial-branch=main", seed], { stdio: "ignore" });
+  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd: seed });
+  execFileSync("git", ["config", "user.email", "buildchain@example.test"], { cwd: seed });
+  fs.writeFileSync(
+    path.join(seed, "buildchain.release-propagation.json"),
+    `${JSON.stringify(packageCaptureConfig())}\n`,
+  );
+  execFileSync("git", ["add", "buildchain.release-propagation.json"], { cwd: seed });
+  execFileSync("git", ["commit", "-m", "test: release source"], { cwd: seed, stdio: "ignore" });
+  const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: seed, encoding: "utf8" }).trim();
+  fs.writeFileSync(path.join(seed, "later.txt"), "later\n");
+  execFileSync("git", ["add", "later.txt"], { cwd: seed });
+  execFileSync("git", ["commit", "-m", "test: later checkout"], { cwd: seed, stdio: "ignore" });
+  execFileSync("git", ["clone", "--bare", seed, remote], { stdio: "ignore" });
+  execFileSync("git", ["clone", "--depth=1", `file://${remote}`, shallow], { stdio: "ignore" });
+
+  assert.notEqual(
+    spawnSync("git", ["cat-file", "-e", `${sourceSha}^{commit}`], { cwd: shallow }).status,
+    0,
+  );
+  const recovered = readConfigAtSource(
+    sourceSha,
+    "buildchain.release-propagation.json",
+    shallow,
+  );
+  assert.equal(recovered.normalized.sourceNode, "kfd");
+  assert.equal(
+    spawnSync("git", ["cat-file", "-e", `${sourceSha}^{commit}`], { cwd: shallow }).status,
+    0,
+  );
 });
 
 test("package release capture rejects the alpha.48 tag and npm source mismatch class", () => {
@@ -1096,4 +1338,15 @@ test("promotion finalization exposes generic package Work capture without downst
     workflow.indexOf("Bundle release-candidate-promotion controller evidence"),
   );
   assert.doesNotMatch(captureBlock, /git push|gh pr create|gh pr merge/);
+});
+
+test("alpha package propagation does not pass a new input into the older stable shell", () => {
+  const workflow = fs.readFileSync(publicPromotionWorkflowPath, "utf8");
+  const alphaBlock = workflow.slice(
+    workflow.indexOf("  alpha:"),
+    workflow.indexOf("  stable:"),
+  );
+  const stableBlock = workflow.slice(workflow.indexOf("  stable:"));
+  assert.match(alphaBlock, /release-propagation-config-path:/);
+  assert.doesNotMatch(stableBlock, /release-propagation-config-path:/);
 });

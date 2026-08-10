@@ -51,6 +51,13 @@
       "runtime": "node24",
       "build": "tsup",
       "bundle": "actions/github-artifact-attestation/dist/index.js"
+    },
+    {
+      "path": "actions/release-tail",
+      "disposition": "declarative-release-provider-transaction",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/release-tail/dist/index.js"
     }
   ],
   "retiredActionsExcluded": [

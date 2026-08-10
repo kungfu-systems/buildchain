@@ -37,10 +37,13 @@ const {
   generateReleaseEvidenceInputs,
   resolveProtectedStatusCheckContext,
   releasePassportArtifactFiles,
+  releasePassportAssetsFromSealedBundle,
+  sealedCandidateArtifactRootsFromPlatformManifests,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
+  sanitizedPublishProcessEnvironment,
 } = await import("../actions/promote-buildchain-ref/lib.js");
 const {
   loadBuildchainConfig,
@@ -53,6 +56,151 @@ const {
 const {
   transitionReleaseTransaction,
 } = await import("../packages/core/publish-transaction.js");
+
+test("release passport recovers assets from the durable sealed-bundle manifest", () => {
+  const cwd = path.join("/tmp", "buildchain-recovered-passport");
+  const assets = releasePassportAssetsFromSealedBundle({
+    cwd,
+    result: {
+      transaction: {
+        version: "4.0.0-alpha.1",
+        sealed_bundle: {
+          releaseAssets: [{
+            path: "release-assets/kungfu-episodes-cli-linux-x64.tar.gz",
+            size: 42,
+            sha256: "a".repeat(64),
+          }],
+        },
+      },
+    },
+  });
+  assert.deepEqual(assets, [{
+    name: "kungfu-episodes-cli-linux-x64.tar.gz",
+    path: path.join(
+      cwd,
+      ".buildchain",
+      "recovered-publication",
+      "4.0.0-alpha.1",
+      "release-assets",
+      "kungfu-episodes-cli-linux-x64.tar.gz",
+    ),
+    size: 42,
+    sha256: "a".repeat(64),
+  }]);
+});
+
+test("release passport recovers the live candidate release-asset paths", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-passport-assets-"));
+  const first = path.join(cwd, "candidate", "kungfu-episodes-cli-linux-x64.tar.gz");
+  const duplicate = path.join(cwd, "signing", "kungfu-episodes-cli-linux-x64.tar.gz");
+  fs.mkdirSync(path.dirname(first), { recursive: true });
+  fs.mkdirSync(path.dirname(duplicate), { recursive: true });
+  fs.writeFileSync(first, "sealed-candidate-bytes");
+  fs.copyFileSync(first, duplicate);
+  const assets = releasePassportAssetsFromSealedBundle({
+    cwd,
+    result: { transaction: { version: "4.0.0-alpha.1" } },
+    releaseCandidateValidation: {
+      releaseAssets: [
+        path.relative(cwd, first),
+        path.relative(cwd, duplicate),
+      ],
+    },
+  });
+  assert.equal(assets.length, 1);
+  assert.equal(assets[0].name, "kungfu-episodes-cli-linux-x64.tar.gz");
+  assert.equal(assets[0].path, first);
+  assert.equal(assets[0].size, 22);
+  assert.equal(
+    assets[0].sha256,
+    crypto.createHash("sha256").update("sealed-candidate-bytes").digest("hex"),
+  );
+});
+
+test("release passport searches the recovered payload artifact named by each platform manifest", () => {
+  const cwd = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-kfd-recovered-payload-"),
+  );
+  const artifactsRoot = path.join(cwd, "sealed-candidate", "artifacts");
+  const manifestRoot = path.join(
+    artifactsRoot,
+    "kungfu-manifest-linux-x64-source",
+  );
+  const payloadRoot = path.join(
+    artifactsRoot,
+    "kungfu-linux-x64-source",
+  );
+  fs.mkdirSync(manifestRoot, { recursive: true });
+  fs.mkdirSync(payloadRoot, { recursive: true });
+  const manifestPath = path.join(manifestRoot, "manifest.json");
+  fs.writeFileSync(
+    manifestPath,
+    `${JSON.stringify({ artifactName: "kungfu-linux-x64-source" })}\n`,
+  );
+
+  assert.deepEqual(
+    sealedCandidateArtifactRootsFromPlatformManifests([manifestPath]),
+    [manifestRoot, payloadRoot],
+  );
+});
+
+test("recovered platform manifests cannot escape the sealed artifact root", () => {
+  const cwd = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-kfd-recovered-escape-"),
+  );
+  const manifestRoot = path.join(
+    cwd,
+    "sealed-candidate",
+    "artifacts",
+    "kungfu-manifest-linux-x64-source",
+  );
+  fs.mkdirSync(manifestRoot, { recursive: true });
+  const manifestPath = path.join(manifestRoot, "manifest.json");
+  fs.writeFileSync(
+    manifestPath,
+    `${JSON.stringify({ artifactName: "../outside" })}\n`,
+  );
+
+  assert.throws(
+    () => sealedCandidateArtifactRootsFromPlatformManifests([manifestPath]),
+    /unsafe artifactName/u,
+  );
+});
+
+test("production action forwards recovered release assets into candidate validation", () => {
+  const source = fs.readFileSync(
+    fileURLToPath(new URL("../actions/promote-buildchain-ref/index.js", import.meta.url)),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /releaseCandidateReleaseAssetPaths:\s*githubReleaseArtifactPaths/,
+  );
+});
+
+test("publish subprocesses omit oversized inline variables", () => {
+  const name = "INPUT_RELEASE_PASSPORT_PLATFORM_MANIFEST_PATHS";
+  const previous = process.env[name];
+  process.env[name] = "x".repeat(256 * 1024);
+  try {
+    const env = sanitizedPublishProcessEnvironment({
+      BUILDCHAIN_VERSION: "4.0.0-alpha.1",
+      BUILDCHAIN_REQUIRED_ARTIFACTS: "y".repeat(256 * 1024),
+      BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH: "/tmp/publish-required-artifacts.json",
+    });
+    assert.equal(env[name], undefined);
+    assert.equal(env.BUILDCHAIN_REQUIRED_ARTIFACTS, undefined);
+    assert.equal(
+      env.BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH,
+      "/tmp/publish-required-artifacts.json",
+    );
+    assert.equal(env.BUILDCHAIN_VERSION, "4.0.0-alpha.1");
+    assert.equal(env.PATH, process.env.PATH);
+  } finally {
+    if (previous === undefined) delete process.env[name];
+    else process.env[name] = previous;
+  }
+});
 const {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   publicationArtifactCandidateDigest,
@@ -252,7 +400,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
   assert.equal(result.publishTransaction.releaseSha, OTHER_SHA);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), OTHER_SHA);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), OTHER_SHA);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
   assert.equal(
     fs.existsSync(path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.1.json")),
@@ -331,7 +479,7 @@ test("publish transaction finalizes current alpha version-state merge commits", 
   assert.equal(result.sha, mergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), mergeSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), oldAlphaSha);
   assert.equal(refs.get("tags/v1.0-alpha"), mergeSha);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
   assert.equal(
@@ -466,11 +614,22 @@ test("published alpha finalization stays bound to its exact transaction after th
   const channelMergeSha = "3".repeat(40);
   const version = "1.0.0-alpha.0";
   const exactTag = `v${version}`;
+  const durableTarballPath = ".buildchain/sealed/durable-alpha.tgz";
+  const requestedTarballPath = ".buildchain/sealed/version-state-rebuild.tgz";
+  const durableAssetPath = ".buildchain/sealed/durable-passport.json";
+  const requestedAssetPath = ".buildchain/sealed/version-state-passport.json";
+  const durableTarballBytes = Buffer.from("durable published alpha bytes", "utf8");
+  const requestedTarballBytes = Buffer.from("rebuilt version-state alpha bytes", "utf8");
+  const durableAssetBytes = Buffer.from('{"source":"durable"}\n', "utf8");
+  const requestedAssetBytes = Buffer.from('{"source":"version-state"}\n', "utf8");
+  const durableIntegrity =
+    `sha512-${crypto.createHash("sha512").update(durableTarballBytes).digest("base64")}`;
   const artifact = {
     kind: "npm",
     name: "@kungfu-tech/buildchain",
     ref: version,
-    digest: "sha512:alpha0",
+    digest: durableIntegrity,
+    integrity: durableIntegrity,
   };
   const cwd = makeTempWorkspace({
     "package.json": {
@@ -479,6 +638,105 @@ test("published alpha finalization stays bound to its exact transaction after th
       packageManager: "pnpm@11.7.0",
     },
   });
+  for (const [relativePath, bytes] of [
+    [durableTarballPath, durableTarballBytes],
+    [requestedTarballPath, requestedTarballBytes],
+    [durableAssetPath, durableAssetBytes],
+    [requestedAssetPath, requestedAssetBytes],
+  ]) {
+    const target = path.join(cwd, relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, bytes);
+  }
+  const createCandidate = ({ relativePath, bytes, assetPath, assetBytes, sourceSha }) => {
+    const payload = {
+      schemaVersion: 1,
+      contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+      repository: "kungfu-systems/buildchain",
+      sourceSha,
+      sourceTreeSha: crypto.createHash("sha1").update(bytes).digest("hex"),
+      runtimeSha: "4".repeat(40),
+      manifestDigest: "5".repeat(64),
+      passportDigest: "6".repeat(64),
+      controllerReceiptDigest: "7".repeat(64),
+      files: [
+        { path: relativePath, bytes },
+        { path: assetPath, bytes: assetBytes },
+      ]
+        .map((entry) => ({
+          path: entry.path,
+          size: entry.bytes.length,
+          sha256: crypto.createHash("sha256").update(entry.bytes).digest("hex"),
+        }))
+        .sort((left, right) => left.path.localeCompare(right.path)),
+    };
+    return {
+      ...payload,
+      candidateDigest: publicationArtifactCandidateDigest(payload),
+    };
+  };
+  const durableManifest = createPublicationSealedBundle({
+    candidate: createCandidate({
+      relativePath: durableTarballPath,
+      bytes: durableTarballBytes,
+      assetPath: durableAssetPath,
+      assetBytes: durableAssetBytes,
+      sourceSha: transactionSourceSha,
+    }),
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: version,
+    npmTarballPath: durableTarballPath,
+    npmIntegrity: durableIntegrity,
+    releaseAssetPaths: [durableAssetPath],
+  });
+  const requestedIntegrity =
+    `sha512-${crypto.createHash("sha512").update(requestedTarballBytes).digest("base64")}`;
+  const requestedManifest = createPublicationSealedBundle({
+    candidate: createCandidate({
+      relativePath: requestedTarballPath,
+      bytes: requestedTarballBytes,
+      assetPath: requestedAssetPath,
+      assetBytes: requestedAssetBytes,
+      sourceSha: channelMergeSha,
+    }),
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: version,
+    npmTarballPath: requestedTarballPath,
+    npmIntegrity: requestedIntegrity,
+    releaseAssetPaths: [requestedAssetPath],
+  });
+  const requestedManifestPath = path.join(
+    cwd,
+    ".buildchain/admitted/version-state-sealed-bundle.json",
+  );
+  fs.mkdirSync(path.dirname(requestedManifestPath), { recursive: true });
+  fs.writeFileSync(
+    requestedManifestPath,
+    `${JSON.stringify(requestedManifest, null, 2)}\n`,
+  );
+  const finalizationManifest = createPublicationSealedBundle({
+    candidate: createCandidate({
+      relativePath: durableTarballPath,
+      bytes: durableTarballBytes,
+      assetPath: durableAssetPath,
+      assetBytes: durableAssetBytes,
+      sourceSha: channelMergeSha,
+    }),
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: version,
+    npmTarballPath: durableTarballPath,
+    npmIntegrity: durableIntegrity,
+    releaseAssetPaths: [durableAssetPath],
+  });
+  assert.notEqual(finalizationManifest.root, durableManifest.root);
+  const finalizationManifestPath = path.join(
+    cwd,
+    ".buildchain/admitted/version-state-finalization-sealed-bundle.json",
+  );
+  fs.writeFileSync(
+    finalizationManifestPath,
+    `${JSON.stringify(finalizationManifest, null, 2)}\n`,
+  );
   const evidencePath = path.join(
     cwd,
     ".buildchain/release-evidence",
@@ -539,11 +797,68 @@ test("published alpha finalization stays bound to its exact transaction after th
       failure: "",
       artifacts: [artifact],
       evidence: [".buildchain/release-evidence/v1.0.0-alpha.0/evidence.json"],
+      sealed_bundle: durableManifest,
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
     },
     evidencePath,
+    extraFiles: durableManifest.files.map((entry) => ({
+      path: `${durableManifest.durablePath}/files/${entry.path}`,
+      sourcePath: entry.path,
+    })),
   });
+  await assert.rejects(
+    runPublishTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      cwd,
+      loadedConfig: loadBuildchainConfig(cwd),
+      targetRef: "alpha/v1/v1.0",
+      sourceSha: transactionSourceSha,
+      releaseSha: transactionReleaseSha,
+      releaseMaterialSha: transactionReleaseSha,
+      publishToolingSha: transactionReleaseSha,
+      version,
+      exactTag,
+      channel: "alpha",
+      line: "v1.0",
+      publishTransaction: true,
+      publishSealedBundleRoot: cwd,
+      publishSealedBundleManifest: finalizationManifestPath,
+      publishRequiredArtifactsJson: JSON.stringify([artifact]),
+      publishAuth: "trusted-publishing",
+      publishDistTag: "alpha",
+      publishPackageMain: "@kungfu-tech/buildchain",
+    }),
+    /sealed bundle root mismatch/,
+  );
+  const finalizationOnly = await runPublishTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    loadedConfig: loadBuildchainConfig(cwd),
+    targetRef: "alpha/v1/v1.0",
+    sourceSha: channelMergeSha,
+    releaseSha: channelMergeSha,
+    releaseMaterialSha: channelMergeSha,
+    publishToolingSha: channelMergeSha,
+    version,
+    exactTag,
+    channel: "alpha",
+    line: "v1.0",
+    publishTransaction: true,
+    publishSealedBundleRoot: cwd,
+    publishSealedBundleManifest: finalizationManifestPath,
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    publishAuth: "trusted-publishing",
+    publishDistTag: "alpha",
+    publishPackageMain: "@kungfu-tech/buildchain",
+    allowVersionStateFinalization: true,
+  });
+  assert.equal(finalizationOnly.transaction.state, "finalizing");
+  assert.equal(finalizationOnly.sealedBundle.root, durableManifest.root);
   fs.rmSync(path.join(cwd, ".buildchain/release-state"), {
     recursive: true,
     force: true,
@@ -584,7 +899,13 @@ test("published alpha finalization stays bound to its exact transaction after th
     targetRef: "alpha/v1/v1.0",
     cwd,
     publishTransaction: true,
-    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    publishSealedBundleRoot: cwd,
+    publishSealedBundleManifest: requestedManifestPath,
+    publishRequiredArtifactsJson: JSON.stringify([{
+      ...artifact,
+      digest: requestedIntegrity,
+      integrity: requestedIntegrity,
+    }]),
     requireVersionState: true,
     expectedPublicationVersion: version,
     releasePassport: false,
@@ -593,9 +914,19 @@ test("published alpha finalization stays bound to its exact transaction after th
   assert.equal(result.sha, channelMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
+  assert.equal(
+    result.publishTransaction.sealedBundleRoot,
+    durableManifest.root,
+  );
+  const finalizedTransaction = JSON.parse(
+    fs.readFileSync(path.join(cwd, result.publishTransaction.statePath), "utf8"),
+  );
+  assert.equal(finalizedTransaction.artifacts.length, 1);
+  assert.equal(finalizedTransaction.artifacts[0].digest, durableIntegrity);
+  assert.notEqual(finalizedTransaction.artifacts[0].digest, requestedIntegrity);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), channelMergeSha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), channelMergeSha);
-  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionSourceSha);
   assert.equal(refs.get("tags/v1.0-alpha"), transactionReleaseSha);
   assert.equal(refs.get("tags/v1-alpha"), transactionReleaseSha);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
@@ -828,7 +1159,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.notEqual(result.sha, mergeSha);
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.1");
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), previousFinalizedSha);
-  assert.equal(refs.get("tags/v1.0.0-alpha.1"), result.sha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.1"), mergeSha);
   assert.equal(refs.get("tags/v1.0-alpha"), result.sha);
 });
 
@@ -966,7 +1297,7 @@ test("publish transaction finalizes current release version-state merge commits"
   assert.equal(result.sha, toolingMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.equal(refs.get("tags/v1.0.0"), toolingMergeSha);
+  assert.equal(refs.get("tags/v1.0.0"), oldReleaseSha);
   assert.equal(refs.get("tags/v1.0"), toolingMergeSha);
   assert.equal(refs.get("tags/v1"), toolingMergeSha);
   assert.equal(refs.has("tags/v1.0.1"), false);
@@ -1165,7 +1496,7 @@ test("release finalization uses the transaction alpha source after next-alpha ad
 
   assert.equal(result.sha, finalMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
-  assert.equal(refs.get("tags/v1.0.0"), finalMergeSha);
+  assert.equal(refs.get("tags/v1.0.0"), releaseSourceSha);
 });
 
 test("release finalization merges generated next-alpha state into diverged dev", async () => {
@@ -1868,7 +2199,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   });
 
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.equal(refs.get("tags/v1.0.0"), result.sha);
+  assert.equal(refs.get("tags/v1.0.0"), releaseMergeSha);
 });
 
 test("complete release transaction converges after its protected version-state merge", async () => {
@@ -2209,6 +2540,84 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
   assert.equal(restored.id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshStatePath, "utf8")).id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshEvidencePath, "utf8")).artifacts[0].digest, "sha256:ok");
+});
+
+test("explicit override rematerializes malformed evidence for an unpublished failed transaction", async () => {
+  const cwd = makeTempWorkspace({
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+import path from "node:path";
+
+const required = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH, "utf8"));
+const repaired = fs.existsSync(path.join(process.cwd(), "repair.flag"));
+const artifacts = repaired
+  ? required
+  : required.map((artifact) => ({ ...artifact, group: "", name: "index.json" }));
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts,
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit } = createGitMock();
+  const requiredArtifacts = [
+    {
+      group: "linux-x64",
+      kind: "kungfu-product",
+      name: "agent/index.json",
+      ref: "4.0.0-alpha.1",
+      digest: `sha256:${"1".repeat(64)}`,
+    },
+    {
+      group: "linux-x64",
+      kind: "kungfu-product",
+      name: "context/index.json",
+      ref: "4.0.0-alpha.1",
+      digest: `sha256:${"2".repeat(64)}`,
+    },
+  ];
+  const options = {
+    octokit,
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    cwd,
+    loadedConfig: { config: {} },
+    targetRef: "alpha/v4/v4.0",
+    sourceSha: SHA,
+    releaseSha: OTHER_SHA,
+    version: "4.0.0-alpha.1",
+    exactTag: "v4.0.0-alpha.1",
+    channel: "alpha",
+    line: "v4.0",
+    publishTransaction: true,
+    publishCommand: "node scripts/publish.mjs",
+    publishRequiredArtifactsJson: JSON.stringify(requiredArtifacts),
+    releaseMaterialSha: OTHER_SHA,
+    publishToolingSha: OTHER_SHA,
+    actor: "codex",
+    runId: "malformed-evidence-recovery",
+  };
+
+  await assert.rejects(runPublishTransaction(options), /duplicate publish artifact/);
+  const statePath = path.join(cwd, ".buildchain/release-state/v4.0.0-alpha.1.json");
+  assert.equal(JSON.parse(fs.readFileSync(statePath, "utf8")).state, "repair_required");
+
+  fs.writeFileSync(path.join(cwd, "repair.flag"), "repair\n");
+  const recovered = await runPublishTransaction({ ...options, explicitOverride: true });
+
+  assert.equal(recovered.validation.valid, true);
+  assert.deepEqual(
+    recovered.validation.evidence.artifacts.map(({ group, name }) => ({ group, name })),
+    requiredArtifacts.map(({ group, name }) => ({ group, name })),
+  );
 });
 
 test("publish transaction can opt in to rematerialize ephemeral Passport inputs on resume", async () => {
@@ -2578,6 +2987,152 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       fs.readFileSync(path.join(freshCwd, "publish-input.json"), "utf8"),
     ).tarballPath,
     recoveredTarball,
+  );
+});
+
+test("stable publication rematerializes final package bytes instead of publishing the sealed alpha tarball", async () => {
+  const version = "0.1.0";
+  const candidateVersion = `${version}-alpha.4`;
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+fs.writeFileSync("publish-input.json", JSON.stringify({
+  sealedBundleRoot: process.env.BUILDCHAIN_SEALED_BUNDLE_ROOT,
+  sealedNpmTarball: process.env.BUILDCHAIN_SEALED_NPM_TARBALL
+}, null, 2) + "\\n");
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:stable"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const tarballPath = `.buildchain/publication/npm-tarball/buildchain-${candidateVersion}.tgz`;
+  const assetPath = "release-passport.json";
+  const tarballBytes = Buffer.from("sealed alpha package bytes", "utf8");
+  const assetBytes = Buffer.from("sealed candidate passport", "utf8");
+  for (const [relativePath, bytes] of [
+    [tarballPath, tarballBytes],
+    [assetPath, assetBytes],
+  ]) {
+    const target = path.join(cwd, relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, bytes);
+  }
+  const fileEntry = (relativePath) => {
+    const bytes = fs.readFileSync(path.join(cwd, relativePath));
+    return {
+      path: relativePath,
+      size: bytes.length,
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+    };
+  };
+  const candidatePayload = {
+    schemaVersion: 1,
+    contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+    repository: "kungfu-systems/buildchain",
+    sourceSha: SHA,
+    sourceTreeSha: "b".repeat(40),
+    runtimeSha: "c".repeat(40),
+    manifestDigest: "d".repeat(64),
+    passportDigest: "e".repeat(64),
+    controllerReceiptDigest: "f".repeat(64),
+    files: [fileEntry(tarballPath), fileEntry(assetPath)]
+      .sort((left, right) => left.path.localeCompare(right.path)),
+  };
+  const candidate = {
+    ...candidatePayload,
+    candidateDigest: publicationArtifactCandidateDigest(candidatePayload),
+  };
+  const manifest = createPublicationSealedBundle({
+    candidate,
+    packageName: "@kungfu-tech/buildchain",
+    packageVersion: candidateVersion,
+    npmTarballPath: tarballPath,
+    npmIntegrity:
+      `sha512-${crypto.createHash("sha512").update(tarballBytes).digest("base64")}`,
+    releaseAssetPaths: [assetPath],
+  });
+  const manifestPath = path.join(cwd, ".buildchain/admitted/sealed-bundle.json");
+  fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const { octokit } = createGitMock();
+  const result = await runPublishTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    loadedConfig: loadBuildchainConfig(cwd),
+    targetRef: "release/v0/v0.1",
+    sourceSha: SHA,
+    releaseSha: OTHER_SHA,
+    version,
+    exactTag: `v${version}`,
+    channel: "release",
+    line: "v0.1",
+    publishTransaction: true,
+    publishSealedBundleRoot: cwd,
+    publishSealedBundleManifest: manifestPath,
+    publishRequiredArtifactsJson: JSON.stringify([
+      { kind: "npm", name: "@kungfu-tech/buildchain", ref: version },
+    ]),
+    releaseMaterialSha: OTHER_SHA,
+    publishToolingSha: OTHER_SHA,
+  });
+
+  const publishInput = JSON.parse(
+    fs.readFileSync(path.join(cwd, "publish-input.json"), "utf8"),
+  );
+  assert.equal(publishInput.sealedBundleRoot, manifest.root);
+  assert.equal(publishInput.sealedNpmTarball, "");
+  assert.equal(result.transaction.state, "published");
+  assert.equal(result.transaction.artifacts[0].ref, version);
+  assert.equal(result.transaction.sealed_bundle.npm.version, candidateVersion);
+
+  await assert.rejects(
+    runPublishTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      cwd,
+      loadedConfig: loadBuildchainConfig(cwd),
+      targetRef: "release/v0/v0.2",
+      sourceSha: SHA,
+      releaseSha: OTHER_SHA,
+      version: "0.2.0",
+      exactTag: "v0.2.0",
+      channel: "release",
+      line: "v0.2",
+      publishTransaction: true,
+      publishSealedBundleRoot: cwd,
+      publishSealedBundleManifest: manifestPath,
+      publishRequiredArtifactsJson: JSON.stringify([
+        { kind: "npm", name: "@kungfu-tech/buildchain", ref: "0.2.0" },
+      ]),
+      releaseMaterialSha: OTHER_SHA,
+      publishToolingSha: OTHER_SHA,
+    }),
+    /publication sealed bundle npm version 0\.1\.0-alpha\.4 does not match 0\.2\.0/,
   );
 });
 
@@ -3562,7 +4117,7 @@ process.exitCode = 9;
   assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
   assert.equal(refs.get("heads/publish-gate/major"), channelMergeSha);
   assert.equal(refs.get("heads/release/v2/v2.0"), transactionReleaseSha);
-  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionSourceSha);
   assert.equal(refs.get("tags/v2.0"), transactionReleaseSha);
   assert.equal(refs.get("tags/v2"), transactionReleaseSha);
   assert.equal(refs.get("heads/dev/v2/v2.0"), nextAlphaSha);
@@ -4016,7 +4571,7 @@ test("release promotion rerun resumes durable stable transaction after alpha adv
     cwd,
   });
 
-  assert.equal(result.sha, refs.get("tags/v1.0.6"));
+  assert.equal(refs.get("tags/v1.0.6"), sourceSha);
   assert.equal(refs.get("heads/release/v1/v1.0"), result.sha);
   assert.equal(refs.get("tags/v1"), result.sha);
   assert.equal(refs.get("tags/v1.0"), result.sha);

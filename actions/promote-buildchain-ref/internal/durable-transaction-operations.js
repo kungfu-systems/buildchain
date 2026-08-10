@@ -25,6 +25,7 @@ function createDurableTransactionOperations(context) {
     publishCommand,
     publishEvidencePath,
     transactionStatePath,
+    expectedTransactionId,
     publishSealedBundleRoot,
     publishSealedBundleManifest,
     publishRequiredArtifactsJson,
@@ -123,6 +124,7 @@ function createDurableTransactionOperations(context) {
     releaseMaterialShaOverride = releaseMaterialSha,
     publishToolingShaOverride = publishToolingSha,
     publishDistTagOverride = publishDistTag,
+    durablePublicationMaterial,
     allowVersionStateFinalization = false,
   }) => {
     const transactionVersion = version;
@@ -164,9 +166,14 @@ function createDurableTransactionOperations(context) {
       publishCommand,
       publishEvidencePath,
       transactionStatePath,
+      expectedTransactionId,
       publishSealedBundleRoot,
-      publishSealedBundleManifest,
-      publishRequiredArtifactsJson,
+      publishSealedBundleManifest: durablePublicationMaterial
+        ? ""
+        : publishSealedBundleManifest,
+      publishRequiredArtifactsJson: durablePublicationMaterial
+        ? JSON.stringify(durablePublicationMaterial.artifacts || [])
+        : publishRequiredArtifactsJson,
       releaseMaterialSha: releaseMaterialShaOverride,
       publishToolingSha: publishToolingShaOverride,
       publishMode,
@@ -203,7 +210,6 @@ function createDurableTransactionOperations(context) {
     }
     return latestPublishTransaction;
   };
-
   const markFinalizing = async () => {
     latestPublishTransaction = await beginTransactionFinalization(
       latestPublishTransaction,
@@ -211,7 +217,6 @@ function createDurableTransactionOperations(context) {
       runId,
     );
   };
-
   const markComplete = async ({
     channel,
     line,
@@ -291,7 +296,7 @@ function createDurableTransactionOperations(context) {
       ) {
         await ensureTag(
           publicReleaseTag,
-          latestPublishTransaction.transaction.release_sha,
+          latestPublishTransaction.transaction.source_sha,
         );
       }
     }

@@ -407,6 +407,48 @@ command = "node scripts/verify.mjs"
   );
 });
 
+test("buildchain.toml admits declared semver lifecycle-derived material", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+derived_files = ["dist/site/audit.json"]
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.version-state]
+command = "node scripts/derive.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+`,
+      "package.json": '{ "name": "@example/semver", "version": "1.2.3" }\n',
+      "dist/site/audit.json": "{}\n",
+      "scripts/derive.mjs": "\n",
+      "scripts/verify.mjs": "\n",
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir, {
+        requireVersionState: true,
+      });
+      assert.deepEqual(summary.version, {
+        strategy: "semver",
+        next: "auto",
+        manifest: undefined,
+      });
+      assert.deepEqual(summary.derivedVersionMaterial, [
+        { path: "dist/site/audit.json" },
+      ]);
+    },
+  );
+});
+
 test("buildchain.toml rejects derived material without separate derivation and verification stages", () => {
   assert.throws(
     () => normalizeBuildchainConfig({
@@ -617,12 +659,50 @@ platforms = ["macos-arm64", "macos-x64"]
         id: "native-engine",
         path: "dist/kungfu-engine",
         profile: "auto",
+        entitlementsProfile: "none",
+        entitlementsPaths: [],
         kind: "mach-o",
         platforms: ["macos-arm64", "macos-x64"],
         required: true,
       }],
     });
   });
+});
+
+test("buildchain.toml accepts only a Buildchain-owned JIT profile for archives", () => {
+  withTempRepo({
+    "buildchain.toml": `
+schema = 1
+
+[[signing.artifacts]]
+path = "dist/runtime.tar.gz"
+kind = "archive"
+entitlements_profile = "jit-executable-v1"
+entitlements_paths = ["runtime/python/bin/python3"]
+`,
+  }, (dir) => {
+    const loaded = loadBuildchainConfig(dir);
+    assert.equal(
+      loaded.config.signing.artifacts[0].entitlementsProfile,
+      "jit-executable-v1",
+    );
+    assert.deepEqual(loaded.config.signing.artifacts[0].entitlementsPaths, [
+      "runtime/python/bin/python3",
+    ]);
+  });
+  assert.throws(
+    () => normalizeBuildchainConfig({
+      schema: 1,
+      signing: {
+        artifacts: [{
+          path: "dist/runtime",
+          kind: "mach-o",
+          entitlements_profile: "jit-executable-v1",
+        }],
+      },
+    }),
+    /requires kind = "archive"/,
+  );
 });
 
 test("buildchain.toml signing declarations reject credentials and authority config", () => {

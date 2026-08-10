@@ -258,6 +258,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "checkout-history-mode": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "compiler-cache-platforms-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -339,6 +343,14 @@
           "source": "workflow-call-input"
         },
         "platforms-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "pre-upload-transport-smoke-artifact-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "pre-upload-transport-smoke-scenario-path": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -446,6 +458,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "verify-substage-evidence-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "working-directory": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -463,6 +479,10 @@
           },
           {
             "id": "anchored-release-preflight",
+            "required": false
+          },
+          {
+            "id": "pre-build-contracts",
             "required": false
           },
           {
@@ -500,7 +520,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2e4c9e9af2162de2333c9b57bffcff77a76e9ed384b9f001ab8ef63d527197f9"
+      "digest": "sha256:f986e79241d831f027a0955a35c918f946989176c76555e20f156ed31fb10c94"
     },
     {
       "schemaVersion": 1,
@@ -696,6 +716,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "checkout-history-mode": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "compiler-cache-platforms-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -777,6 +801,14 @@
           "source": "workflow-call-input"
         },
         "platforms-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "pre-upload-transport-smoke-artifact-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "pre-upload-transport-smoke-scenario-path": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -884,6 +916,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "verify-substage-evidence-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "working-directory": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -914,7 +950,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:105eed3eb8f772d4ed93d43e7da404d849b92eafab1b461c7a9b7cb94a8a6b3b"
+      "digest": "sha256:48545554883888862984cdf1b6b4b56341531cdd6192600782a76b92ad22fd36"
     },
     {
       "schemaVersion": 1,
@@ -1739,6 +1775,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "declarative-release-tail": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "dry-run": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1827,6 +1867,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "publication-authority-workflow-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "publication-auto-admission": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1851,6 +1895,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "publication-consumer-qualification-controller-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "publication-control-plane-audit-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1861,6 +1909,14 @@
         },
         "publication-gate-aggregate-json": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-gate-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-gate-controller-sha": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "publication-package-name": {
@@ -1952,6 +2008,10 @@
           "source": "workflow-call-input"
         },
         "release-candidate-family-initiative-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-candidate-wait-seconds": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -2051,6 +2111,42 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "resume-buildchain-runtime-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-candidate-repository": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-candidate-run-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-expected-candidate-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-expected-candidate-runtime-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-expected-source-tree": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-expected-workflow-file": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-expected-workflow-name": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-transaction-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "runner-preset": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -2113,7 +2209,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:220710d81a41b50edb4dc65cea3e1e5d20805406eaaced65bc006718700696b9"
+      "digest": "sha256:83bc2f7d57ad3500e0b2983314aa5fdaa0dff1f78ef011af94cde760b86a010f"
     },
     {
       "schemaVersion": 1,
@@ -2306,5 +2402,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:56e91795341365ea7684caed8f2d6fd81b1d5bd669b004545caefdbe63c0f98d"
+  "digest": "sha256:e9f5716c5298730bcab51a9e2f2316df8b4a7cec7ce609a7a8808928a48edd1e"
 }

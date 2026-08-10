@@ -68,6 +68,11 @@ on:
         default: false
         type: boolean
         required: false
+      merge-method:
+        description: "GitHub auto-merge method: merge, squash, or rebase"
+        default: "merge"
+        type: string
+        required: false
       auto-approve:
         description: "Approve the generated PR with an independent approval token, or the caller github.token when repository policy permits"
         default: false
@@ -190,6 +195,7 @@ jobs:
           BUILDCHAIN_STABLE_PATROL_RELEASE_NOW: ${{ inputs.release-now }}
           BUILDCHAIN_STABLE_PATROL_AUTO_PROMOTE: ${{ inputs.auto-promote || steps.policy.outputs.auto-promote == 'true' }}
           BUILDCHAIN_STABLE_PATROL_AUTO_MERGE: ${{ inputs.auto-merge || steps.policy.outputs.auto-merge == 'true' }}
+          BUILDCHAIN_STABLE_PATROL_MERGE_METHOD: ${{ inputs.merge-method }}
           BUILDCHAIN_STABLE_PATROL_DRY_RUN: ${{ inputs.dry-run }}
           BUILDCHAIN_STABLE_PATROL_OUTPUT_PATH: .buildchain/patrol/stable-candidate.json
 
