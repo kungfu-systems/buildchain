@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "KFD-8",
-  "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss downgraded",
+  "message": "KFD-8 downgraded",
   "color": "bf8700",
   "logoPolicy": {
     "contract": "kungfu-buildchain-badge-logo-policy",
