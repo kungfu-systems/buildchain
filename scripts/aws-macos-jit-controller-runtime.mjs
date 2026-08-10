@@ -81,6 +81,57 @@ export function assertDryRun(result, label) {
   }
 }
 
+export function assertAllowedPolicySimulation(
+  plan,
+  profile,
+  principalArn,
+  actionName,
+) {
+  if (!/^arn:aws:iam::\d{12}:(?:user|role)\/.+/.test(principalArn || "")) {
+    throw new Error(
+      "AWS allocation policy simulation requires an IAM user or role principal ARN",
+    );
+  }
+  const contextEntries = [
+    `ContextKeyName=aws:RequestedRegion,ContextKeyValues=${plan.aws.region},ContextKeyType=string`,
+    ...plan.aws.hostTags.map(
+      ({ Key, Value }) =>
+        `ContextKeyName=aws:RequestTag/${Key},ContextKeyValues=${Value},ContextKeyType=string`,
+    ),
+  ];
+  const evaluation = awsJson(
+    plan,
+    profile,
+    [
+      "iam",
+      "simulate-principal-policy",
+      "--policy-source-arn",
+      principalArn,
+      "--action-names",
+      actionName,
+      "--resource-arns",
+      "*",
+      "--context-entries",
+      ...contextEntries,
+      "--output",
+      "json",
+    ],
+    `${actionName} IAM policy simulation`,
+  ).EvaluationResults?.[0];
+  if (
+    evaluation?.EvalActionName !== actionName ||
+    evaluation?.EvalDecision !== "allowed" ||
+    (evaluation.MissingContextValues || []).length !== 0
+  ) {
+    throw new Error(`${actionName} IAM policy simulation did not allow allocation`);
+  }
+  return {
+    actionName,
+    decision: evaluation.EvalDecision,
+    principalArn,
+  };
+}
+
 function sameJson(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
@@ -229,6 +280,7 @@ export function assertMacosBudgetLaunchGate(plan, profile) {
   }
   return {
     accountId: identity.Account,
+    principalArn: identity.Arn,
     workflowState: workflow.state,
     stackStatus: stack.StackStatus,
     budgetName: budget.BudgetName,

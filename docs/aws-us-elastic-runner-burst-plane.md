@@ -378,8 +378,10 @@ campaign. It has three explicit mutation modes:
   tagged Dedicated Host, and reusable instance. Before paid allocation it
   verifies the exact AWS account, disabled GitHub workflow, complete control
   plane stack, AWS-dimension-filtered USD 25 Budget, 80% and 95% SNS
-  subscribers, and zero pre-existing Mac capacity. It then requires successful
-  `AllocateHosts` and `RunInstances` DryRuns before either real call.
+  subscribers, and zero pre-existing Mac capacity. Because AWS does not expose
+  a DryRun parameter for `AllocateHosts`, it requires an allowed IAM policy
+  simulation for the exact tagged allocation before the real call, then a
+  successful `RunInstances` DryRun before launching the instance.
 - `run-job` binds one queued exact-source GitHub job to the existing campaign
   host and instance. It writes the repository JIT configuration through a
   mode-0600 temporary file into a distinct SSM SecureString, sends only the

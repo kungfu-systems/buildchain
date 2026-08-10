@@ -14,6 +14,7 @@ import {
 import { executeMacosJitJob } from "./aws-macos-jit-job-controller.mjs";
 import {
   assertDryRun,
+  assertAllowedPolicySimulation,
   assertMacosBudgetLaunchGate,
   assertOwnership,
   awsArgs,
@@ -139,12 +140,11 @@ export function executeMacosJitCampaignLaunch(plan, { profile = "" } = {}) {
     throw new Error("macOS JIT campaign launch plan contract is invalid");
   }
   const preflight = assertCampaignLaunchPreflight(plan, profile);
-  assertDryRun(
-    commandResult(
-      "aws",
-      awsArgs(plan, profile, macosAllocateHostsArgs(plan, { dryRun: true })),
-    ),
-    "EC2 AllocateHosts DryRun",
+  const allocationPermission = assertAllowedPolicySimulation(
+    plan,
+    profile,
+    preflight.principalArn,
+    "ec2:AllocateHosts",
   );
   const hostId = awsJson(
     plan,
@@ -226,8 +226,8 @@ export function executeMacosJitCampaignLaunch(plan, { profile = "" } = {}) {
       imageId: instance.ImageId,
       launchTime: new Date(instance.LaunchTime).toISOString(),
     },
-    preflight,
-    dryRuns: ["AllocateHosts:DryRunOperation", "RunInstances:DryRunOperation"],
+    preflight: { ...preflight, allocationPermission },
+    dryRuns: ["RunInstances:DryRunOperation"],
     planDigest: plan.digest,
   };
 }
