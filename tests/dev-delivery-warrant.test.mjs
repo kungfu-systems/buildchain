@@ -50,6 +50,7 @@ function candidate(number, overrides = {}) {
     toolchainRoot: ROOTS.toolchain,
     deliveryClass: "native-proof-required",
     priority: "ordinary",
+    sourceWorkflowRunId: 31000000000 + number,
     ...overrides,
   };
 }
@@ -73,6 +74,25 @@ test("queue identity and state roots fail closed on drift", () => {
   );
 });
 
+test("selected Warrant retains the exact source workflow run for immediate controller handoff", () => {
+  const submitted = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  assert.equal(selected.warrant.sourceWorkflowRunId, 31000000100);
+  assert.equal(selected.receipt.sourceWorkflowRunId, 31000000100);
+});
+
+test("legacy queue roots remain stable when source workflow identity is absent", () => {
+  const submitted = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const legacy = structuredClone(submitted.queue);
+  delete legacy.candidates[0].sourceWorkflowRunId;
+  delete legacy.stateRoot;
+  legacy.stateRoot = devDeliveryContentRoot(legacy);
+
+  const normalized = normalizeDevDeliveryQueue(legacy);
+  assert.equal(normalized.stateRoot, legacy.stateRoot);
+  assert.equal(Object.hasOwn(normalized.candidates[0], "sourceWorkflowRunId"), false);
+});
+
 test("duplicate submission is idempotent and safe head repair retains queue age", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const duplicate = submitDevDeliveryCandidate(first.queue, candidate(100), {
@@ -89,6 +109,42 @@ test("duplicate submission is idempotent and safe head repair retains queue age"
   assert.equal(repaired.queue.candidates[0].enqueuedAt, "2026-08-04T00:00:00.000Z");
   assert.equal(repaired.receipt.queueAgeSeconds, 600);
   assert.equal(repaired.receipt.sourceProofRoot, ROOTS.proof);
+});
+
+test("active exact-head Warrant ignores regenerated proof timestamps without rewriting proof", () => {
+  const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(first.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+  const replayed = submitDevDeliveryCandidate(
+    selected.queue,
+    candidate(100, { sourceProofRoot: ROOTS.context }),
+    { now: "2026-08-04T00:05:00Z" },
+  );
+
+  assert.equal(replayed.receipt.action, "active-warrant-retained-noop");
+  assert.equal(replayed.receipt.expectedOldStateRoot, selected.queue.stateRoot);
+  assert.equal(replayed.queue.activeWarrant.fencingToken, selected.warrant.fencingToken);
+  assert.equal(replayed.queue.candidates[0].sourceProofRoot, ROOTS.proof);
+  assert.equal(replayed.queue.candidates[0].attempts, 1);
+  assert.equal(replayed.queue.candidates[0].updatedAt, "2026-08-04T00:00:01.000Z");
+});
+
+test("active Warrant still rejects an exact semantic candidate head change", () => {
+  const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(first.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+
+  assert.throws(
+    () =>
+      submitDevDeliveryCandidate(
+        selected.queue,
+        candidate(100, { sourceHead: "f".repeat(40) }),
+        { now: "2026-08-04T00:05:00Z" },
+      ),
+    /selected candidate sourceHead cannot change/u,
+  );
 });
 
 test("a terminal semantic candidate opens a chained delivery attempt without rewriting history", () => {
@@ -259,6 +315,16 @@ test("heartbeat and terminal closeout bind the current fencing generation", () =
   assert.equal(closed.receipt.nextAction, "Select the next queued candidate, if any.");
 });
 
+test("late terminal evidence closes the exact expired Warrant without reviving execution authority", () => {
+  const submitted = submit(queue(), 145, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z", leaseSeconds: 60 });
+  assert.throws(() => heartbeatDevDeliveryWarrant(selected.queue, selected.warrant, { now: "2026-08-04T00:02:00Z" }), /lease expired/);
+  const closed = closeDevDeliveryWarrant(selected.queue, selected.warrant, { outcome: "merged", evidenceRoot: ROOTS.evidence, now: "2026-08-04T00:02:00Z" });
+  assert.equal(closed.queue.activeWarrant, null);
+  assert.equal(closed.queue.candidates[0].status, "merged");
+  assert.equal(closed.receipt.leaseGeneration, selected.warrant.generation);
+});
+
 test("terminal settlement is an explicit no-op when the PR never entered Warrant authority", () => {
   const settled = settleDevDeliveryTerminalEvent(queue(), {
     pullRequestNumber: 149,
@@ -352,6 +418,25 @@ test("queued cancellation binds recorded and observed heads without minting a Wa
     now: "2026-08-04T00:03:01Z",
   });
   assert.equal(selected.warrant.pullRequestNumber, 151);
+});
+
+test("queued cancellation accepts a protected synchronize event for stale head eviction", () => {
+  const submitted = submit(queue(), 150, "2026-08-04T00:00:00Z");
+  const queued = submitted.queue.candidates[0];
+  const cancelled = cancelQueuedDevDeliveryCandidate(submitted.queue, {
+    candidateId: queued.candidateId,
+    pullRequestNumber: queued.pullRequestNumber,
+    expectedSourceHead: queued.sourceHead,
+    observedSourceHead: "f".repeat(40),
+    eventAction: "synchronize",
+    outcome: "cancelled",
+    evidenceRoot: ROOTS.evidence,
+    reason: "protected pull request head changed",
+  }, { now: "2026-08-04T00:01:00Z" });
+
+  assert.equal(cancelled.receipt.action, "queued-candidate-cancelled");
+  assert.equal(cancelled.receipt.eventAction, "synchronize");
+  assert.equal(cancelled.queue.candidates[0].terminal.observedSourceHead, "f".repeat(40));
 });
 
 test("queued cancellation fails closed on identity, evidence, state, and event drift", () => {

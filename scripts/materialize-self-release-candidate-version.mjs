@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import {
   getVersionStrategy,
   loadConfiguredAnchorManifest,
+  discoverConfiguredDerivedVersionMaterial,
 } from "../packages/core/buildchain-config.js";
 import {
   alignMajorBootstrapReleaseImpact,
@@ -64,6 +65,10 @@ export function materializeSelfReleaseCandidateVersion({
     throw new Error("self-release candidate requires declared version state");
   }
   const discoveredPaths = discovered.files.map((file) => file.path);
+  const derivedPaths = discoverConfiguredDerivedVersionMaterial(
+    cwd,
+    discovered.config,
+  ).map((file) => file.path);
   const versionStrategy = getVersionStrategy(discovered.config);
   const anchorManifest = loadConfiguredAnchorManifest(cwd, discovered.config);
   const lifecycleEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
@@ -88,6 +93,7 @@ export function materializeSelfReleaseCandidateVersion({
     allowedPaths: versionVerificationAllowedPathsForPromotion(
       resolvedChannel,
       discoveredPaths,
+      derivedPaths,
     ),
     env: lifecycleEnv,
     runLifecycleVerify: false,

@@ -285,7 +285,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.equal(
     (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
-    9,
+    10,
   );
   assert.match(
     workflow,
@@ -1276,7 +1276,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-family-assignment-id:/);
   assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
   assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
-  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \|\| steps\.rc\.outputs\.publish-required-artifacts-json \}\}/);
+  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \}\}/);
+  assert.match(workflow, /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/);
   assert.match(workflow, /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/);
   assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
   assert.match(workflow, /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/);
@@ -1402,6 +1403,7 @@ test("self-publication admission assembly binds downloaded evidence without publ
   assert.match(script, /policyDigest: gateBindings\.policyDigest/);
   assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
   assert.match(script, /github-hosted-single-job/);
+  assert.match(script, /issuedAt\.getTime\(\) \+ 15 \* 60 \* 1000/);
   assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
 });
 
@@ -1430,6 +1432,7 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.match(script, /--allow-release-reconciliation/);
   assert.match(script, /evaluateBuildchainReleaseReconciliation/);
   assert.match(script, /release parent pull-request lineage/);
+  assert.match(script, /observedAt\.getTime\(\) \+ 15 \* 60 \* 1000/);
   assert.match(script, /commits\/\$\{pullRequestHeadSha\}\/check-runs/);
   assert.doesNotMatch(script, /commits\/\$\{sourceSha\}\/check-runs/);
   assert.doesNotMatch(script, /actions\/permissions\/workflow/);
@@ -1471,6 +1474,15 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /target-branch:/);
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
+  assert.match(workflow, /source-workflow-run-id:/);
+  assert.match(workflow, /handoff-workflow-id:/);
+  assert.match(workflow, /source-workflow-id:/);
+  assert.match(workflow, /Legacy active Warrant source recovery requires a successful/);
+  assert.match(workflow, /\.head_sha == \$head/);
+  assert.match(workflow, /sort_by\(\.id\)/);
+  assert.match(workflow, /last \| \.id/);
+  assert.match(workflow, /active-warrant-handoff-dispatched/);
+  assert.match(workflow, /gh workflow run "\$HANDOFF_WORKFLOW_ID"/);
   assert.match(workflow, /diagnostic-context:/);
   assert.match(workflow, /required-status-checks:/);
   assert.match(workflow, /queue-admission-context:/);
@@ -1493,6 +1505,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /Checkout Buildchain runtime/);
   assert.match(workflow, /dev-pr-auto-merge\.mjs/);
   assert.match(workflow, /contents: write/);
+  assert.match(workflow, /actions: write/);
   assert.match(workflow, /pull-requests: write/);
   assert.match(workflow, /checks: read/);
   assert.match(workflow, /statuses: write/);
@@ -1529,6 +1542,14 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
+test("terminal Warrant close ignores stale dequeue events after exact re-enqueue", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/dev-delivery-warrant-close.yml"), "utf8");
+  assert.match(workflow, /mode=stale-dequeued/);
+  assert.match(workflow, /The exact PR head is still queued/);
+  assert.match(workflow, /mergeQueue\(branch:\$branch\)/);
+  assert.match(workflow, /steps\.settlement\.outputs\.mode != 'stale-dequeued'/);
+});
+
 test("Buildchain self-delivery requires an exact Warrant before Merge Queue admission", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-dev-delivery.yml"),
@@ -1549,6 +1570,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /toolchain-root:/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /permissions:\n  actions: write/);
   assert.match(workflow, /delivery-warrant-mode: required/);
   assert.match(workflow, /delivery-class: native-proof-required/);
   assert.match(workflow, /delivery-priority: ordinary/);
@@ -1561,6 +1583,14 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /dry-run: false/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ inputs\.expected-pr-number \}\} · required Delivery Warrant"/);
+  const controller = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
+    "utf8",
+  );
+  assert.match(controller, /branches\/\$encoded_branch\/protection/);
+  assert.match(controller, /grep -q 'HTTP 404'/);
+  assert.match(controller, /rules\/branches\/\$encoded_branch/);
+  assert.match(controller, /\.type == "update"/);
   assert.doesNotMatch(workflow, /secrets: inherit/);
   assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
   assert.doesNotMatch(workflow.slice(workflow.indexOf("    with:")), /\$\{\{ inputs\./);

@@ -69,6 +69,7 @@ function normalizeCandidate(input, expected) {
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
     toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    ...(Object.hasOwn(input, "sourceWorkflowRunId") ? { sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0) } : {}),
     priority: priority(input.priority),
     enqueuedAt: timestamp(input.enqueuedAt, "candidate enqueuedAt"),
     updatedAt: timestamp(input.updatedAt || input.enqueuedAt, "candidate updatedAt"),
@@ -178,6 +179,7 @@ function submissionReceipt({ before, after, candidate, action, now }) {
     closureRoot: candidate.closureRoot,
     dependencyRoot: candidate.dependencyRoot,
     toolchainRoot: candidate.toolchainRoot,
+    sourceWorkflowRunId: candidate.sourceWorkflowRunId,
     deliveryClass: candidate.deliveryClass,
     priority: candidate.priority,
     retainedEnqueuedAt: candidate.enqueuedAt,
@@ -223,7 +225,12 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
           selected = existing;
         } else {
           if (before.activeWarrant?.candidateId === existing.candidateId) {
-            throw new Error("selected candidate sourceHead cannot change before terminal Warrant closeout");
+            if (existing.sourceHead !== attemptedCandidate.sourceHead) {
+              throw new Error("selected candidate sourceHead cannot change before terminal Warrant closeout");
+            }
+            action = "active-warrant-retained-noop";
+            selected = existing;
+            return { candidate: selected, action };
           }
           const headChanged = existing.sourceHead !== attemptedCandidate.sourceHead;
           existing.sourceHead = attemptedCandidate.sourceHead;
@@ -309,7 +316,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
       candidateId: queue.activeWarrant.candidateId,
       fencingToken: queue.activeWarrant.fencingToken,
       leaseGeneration: queue.activeWarrant.generation,
-      expectedOldStateRoot: queue.stateRoot,
+      expectedOldStateRoot: recoveryReceipt?.expectedOldStateRoot || queue.stateRoot,
       nextStateRoot: queue.stateRoot,
       nextAction: "Continue the active delivery attempt; later candidates remain visibly queued.",
     };
@@ -363,6 +370,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
         closureRoot: candidate.closureRoot,
         dependencyRoot: candidate.dependencyRoot,
         toolchainRoot: candidate.toolchainRoot,
+        sourceWorkflowRunId: candidate.sourceWorkflowRunId,
         deliveryClass: candidate.deliveryClass,
         generation: next.fencingCounter,
         expectedOldStateRoot: before.stateRoot,
@@ -397,6 +405,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
     closureRoot: transaction.result.candidate.closureRoot,
     dependencyRoot: transaction.result.candidate.dependencyRoot,
     toolchainRoot: transaction.result.candidate.toolchainRoot,
+    sourceWorkflowRunId: transaction.result.candidate.sourceWorkflowRunId,
     deliveryClass: transaction.result.candidate.deliveryClass,
     queueAgeSeconds: selected.priority.ageSeconds,
     basePriority: selected.priority.basePriority,
@@ -404,7 +413,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
     effectivePriority: selected.priority.score,
     fencingToken: transaction.result.warrant.fencingToken,
     leaseGeneration: transaction.result.warrant.generation,
-    expectedOldStateRoot: transaction.expectedOldStateRoot,
+    expectedOldStateRoot: recoveryReceipt?.expectedOldStateRoot || transaction.expectedOldStateRoot,
     nextStateRoot: transaction.after.stateRoot,
     nextAction: transaction.result.warrant.nextAction,
   };
@@ -417,12 +426,12 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
   };
 }
 
-function assertWarrantMutation(queue, warrant, now) {
+function assertWarrantMutation(queue, warrant, now, { allowExpired = false } = {}) {
   if (!queue.activeWarrant) throw new Error("no active Delivery Warrant");
   if (text(warrant?.fencingToken) !== queue.activeWarrant.fencingToken) throw new Error("stale fencing token");
   if (Number(warrant?.generation) !== queue.activeWarrant.generation) throw new Error("stale lease generation");
   if (text(warrant?.candidateId) !== queue.activeWarrant.candidateId) throw new Error("Warrant candidate mismatch");
-  if (Date.parse(queue.activeWarrant.expiresAt) <= Date.parse(now)) throw new Error("Delivery Warrant lease expired");
+  if (!allowExpired && Date.parse(queue.activeWarrant.expiresAt) <= Date.parse(now)) throw new Error("Delivery Warrant lease expired");
 }
 
 export function heartbeatDevDeliveryWarrant(queueInput, warrant, { now = new Date().toISOString(), leaseSeconds } = {}) {
@@ -517,7 +526,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
   const transaction = transition(
     queueInput,
     (queue, before) => {
-      assertWarrantMutation(before, warrant, currentTime);
+      assertWarrantMutation(before, warrant, currentTime, { allowExpired: true });
       const active = clone(queue.activeWarrant);
       const candidate = queue.candidates.find((entry) => entry.candidateId === active.candidateId);
       candidate.status = normalizedOutcome;

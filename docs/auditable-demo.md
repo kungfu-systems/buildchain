@@ -47,7 +47,7 @@ literal argv steps. Steps in one demo share a disposable workspace; separate
 demos and the two rendition captures do not. Commands are never accepted as a
 shell string. An omitted or explicit `standard` duration class remains bounded
 to 60 seconds. A reviewed `execution.durationClass: long-form` declaration may
-raise the scenario and literal step ceilings to 180 seconds; it does not change
+raise the scenario and literal step ceilings to 360 seconds; it does not change
 the default. Both classes retain 4 MiB per step, a clean Home/XDG environment,
 no inherited credentials, and a network-disabled read-only container with
 bounded tmpfs.
@@ -155,7 +155,7 @@ scene.json
 
 It may additionally emit one declared `terminal-capture.json` using
 `kungfu.terminal-capture/v1`. The optional capture is bounded to 60 seconds by
-default or 180 seconds only when its scene explicitly declares `long-form`,
+default or 360 seconds only when its scene explicitly declares `long-form`,
 fixed 80-200 by 24-80 terminal cells, 10,000 events, and 4 MiB of canonical
 base64 bytes. It must contain a qualified completion sentinel and an explicitly
 empty authority-grant list. Existing three-file adapters remain valid.

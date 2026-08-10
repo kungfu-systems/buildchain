@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
+import { planDevDeliveryWarrantShadow, qualifyDevDeliveryWarrantShadow } from "../packages/core/dev-delivery-warrant-shadow.js";
 
 const STATE_PATH = "queue.json";
 const STATE_REF_PREFIX = "buildchain/dev-delivery-warrant/";
@@ -189,6 +190,7 @@ function transitionFor(command, queue, options) {
         closureRoot: exactRoot(options.closureRoot, "closureRoot"),
         dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
         toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
+        sourceWorkflowRunId: options.sourceWorkflowRunId ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId") : 0,
         deliveryClass: options.deliveryClass,
         priority: options.priority || "ordinary",
       },
@@ -345,6 +347,23 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
   };
 }
 
+export function runDevDeliveryShadowCommand(options = {}) {
+  if (bool(options.execute, false)) {
+    throw new Error("shadow qualification is effect-disabled and rejects --execute");
+  }
+  if (!options.inputPath) throw new Error("shadow qualification requires --input FILE");
+  const input = JSON.parse(fs.readFileSync(options.inputPath, "utf8"));
+  if (options.command === "shadow-plan") {
+    return planDevDeliveryWarrantShadow(input, {
+      maxConcurrency: positiveInteger(options.maxConcurrency, "maxConcurrency", 2),
+    });
+  }
+  if (options.command === "shadow-qualify") {
+    return qualifyDevDeliveryWarrantShadow(input);
+  }
+  throw new Error(`unsupported shadow command ${options.command || "<empty>"}`);
+}
+
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);
   return index === -1 ? fallback : args[index + 1] || "";
@@ -386,6 +405,8 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
     evidenceRoot: flag(rest, "evidence-root", environment.BUILDCHAIN_DEV_DELIVERY_EVIDENCE_ROOT),
     reason: flag(rest, "reason", environment.BUILDCHAIN_DEV_DELIVERY_REASON),
     now: flag(rest, "now", environment.BUILDCHAIN_DEV_DELIVERY_NOW),
+    inputPath: flag(rest, "input", environment.BUILDCHAIN_DEV_DELIVERY_SHADOW_INPUT),
+    maxConcurrency: flag(rest, "max-concurrency", environment.BUILDCHAIN_DEV_DELIVERY_SHADOW_MAX_CONCURRENCY || "2"),
     outputPath: flag(rest, "output", environment.BUILDCHAIN_DEV_DELIVERY_OUTPUT || ".buildchain/dev-delivery/result.json"),
     execute: hasFlag(rest, "execute"),
     json: hasFlag(rest, "json"),
@@ -393,7 +414,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n  buildchain dev warrant <shadow-plan|shadow-qualify> --input FILE [--max-concurrency 1|2] [--output FILE] [--json]\n";
 }
 
 async function main() {
@@ -403,16 +424,22 @@ async function main() {
     return;
   }
   const options = devDeliveryCliOptions(args);
-  if (!["submit", "select", "heartbeat", "recover", "close", "settle", "cancel-queued", "observe"].includes(options.command)) {
+  if (!["submit", "select", "heartbeat", "recover", "close", "settle", "cancel-queued", "observe", "shadow-plan", "shadow-qualify"].includes(options.command)) {
     throw new Error(usage().trim());
   }
-  const result = await runDevDeliveryCommand(options);
+  const shadow = options.command.startsWith("shadow-");
+  const result = shadow ? runDevDeliveryShadowCommand(options) : await runDevDeliveryCommand(options);
   fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
   fs.writeFileSync(options.outputPath, `${JSON.stringify(result, null, 2)}\n`);
   if (options.json) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   else {
     process.stdout.write(`Buildchain dev delivery ${options.command}: ${result.receipt?.reason || result.mode}\n`);
-    process.stdout.write(`State root: ${result.after?.stateRoot || result.observation.stateRoot}\n`);
+    if (shadow) {
+      process.stdout.write(`Decision: ${result.decision}\n`);
+      process.stdout.write(`Evidence root: ${result.planRoot || result.qualificationRoot}\n`);
+    } else {
+      process.stdout.write(`State root: ${result.after?.stateRoot || result.observation.stateRoot}\n`);
+    }
     if (result.receiptRoot) process.stdout.write(`Receipt root: ${result.receiptRoot}\n`);
     process.stdout.write(`Result: ${options.outputPath}\n`);
   }

@@ -328,6 +328,7 @@ BUILDCHAIN_SEALED_NPM_TARBALL
 BUILDCHAIN_SEALED_NPM_INTEGRITY
 BUILDCHAIN_SEALED_NPM_SHA256
 BUILDCHAIN_REQUIRED_ARTIFACTS
+BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH
 ```
 
 `BUILDCHAIN_REQUIRED_ARTIFACTS` is the normalized requirement array after the
@@ -337,6 +338,10 @@ declared provenance to the current release coordinate. Template expansion
 happens after exact version selection; ambiguous or unsupported templates fail
 before `lifecycle.publish`. Requirement descriptors may omit `digest`; final
 publish evidence may not.
+The action also writes that normalized array to
+`BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH`. To stay below operating-system
+process environment limits, large arrays are available through the file path
+only; small arrays retain the inline variable for compatibility.
 
 The action outputs `transaction-id`, `transaction-state`,
 `transaction-publication-state`, `transaction-sealed-bundle-root`,
@@ -494,6 +499,11 @@ governance semantics:
 - alpha promotion must come from a merged same-repository PR
   `dev/vN/vN.M -> alpha/vN/vN.M`, or from a strict same-line
   `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;
+  an immutable recovery receipt may instead admit the exact current alpha
+  channel SHA only when its sealed candidate tree is byte-equivalent and its
+  publication version is bound by that receipt; when administrative protection
+  details are hidden, the provider-visible protected head and required check
+  must still match that exact recovered SHA;
 - release promotion must come from a merged same-repository PR
   `alpha/vN/vN.M -> release/vN/vN.M`, or from a strict same-line
   `publish-gate/release/vN/vN.M/<version> -> release/vN/vN.M` source-lock PR;

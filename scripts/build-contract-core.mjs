@@ -1209,9 +1209,14 @@ export function writeGitHubOutputs(outputs) {
     }
     return;
   }
-  const lines = Object.entries(outputs).map(
-    ([key, value]) => `${key}=${value}`,
-  );
+  const lines = Object.entries(outputs).map(([key, value]) => {
+    const text = String(value);
+    if (!/[\r\n]/.test(text)) return `${key}=${text}`;
+    const valueLines = new Set(text.split(/\r?\n/));
+    let delimiter = "BUILDCHAIN_OUTPUT";
+    while (valueLines.has(delimiter)) delimiter += "_";
+    return `${key}<<${delimiter}\n${text}\n${delimiter}`;
+  });
   fs.appendFileSync(outputPath, `${lines.join("\n")}\n`);
 }
 

@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { verifyProjectCutReplayProof } from "../packages/core/dev-delivery-warrant.js";
-import { admitExistingQueueEntry, createDevPrAdmissionReceipt, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission } from "./dev-pr-delivery-warrant.mjs";
+import { admitExistingQueueEntry, createDevPrAdmissionReceipt, enqueueAfterStatusPropagation, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission, verifyCurrentDeliveryWarrant } from "./dev-pr-delivery-warrant.mjs";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
 const DEFAULT_REQUIRED_CHECKS = ["check"];
@@ -70,6 +70,7 @@ function normalizeOptions(options = {}) {
     allowedHeadPrefixes: splitList(options.allowedHeadPrefixes, DEFAULT_ALLOWED_HEAD_PREFIXES),
     requiredChecks: splitList(options.requiredChecks, DEFAULT_REQUIRED_CHECKS),
     queueAdmissionContext: String(options.queueAdmissionContext || "").trim(),
+    activeLeaseContext: String(options.activeLeaseContext || "").trim(),
     requireApproval: boolOption(options.requireApproval, true),
     sameRepositoryOnly: boolOption(options.sameRepositoryOnly, true),
     maxMerges: intOption(options.maxMerges, 1),
@@ -215,6 +216,20 @@ async function projectCutQualification(pr, options, client) {
 async function setQueueAdmissionStatus(client, repository, sha, context, state) {
   if (!context) return null;
   await client.request("POST", `/repos/${repository.owner}/${repository.repo}/statuses/${sha}`, { body: { state, context, description: state === "success" ? "Buildchain admitted this exact PR head to the merge queue" : "Buildchain rejected merge queue admission for this exact PR head" } });
+  return { context, state, sha };
+}
+
+async function setActiveLeaseStatus(client, repository, sha, context, state) {
+  if (!context) return null;
+  await client.request("POST", `/repos/${repository.owner}/${repository.repo}/statuses/${sha}`, {
+    body: {
+      state,
+      context,
+      description: state === "pending"
+        ? "Buildchain reactivated this exact lease for merge-group qualification"
+        : "Buildchain released this exact lease after queue admission failed",
+    },
+  });
   return { context, state, sha };
 }
 
@@ -853,11 +868,15 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   let warrant = null;
   try {
     warrant = readDeliveryWarrantResult(options, pr);
+    await verifyCurrentDeliveryWarrant(client, options, pr, warrant);
   } catch (error) {
     return reject("blocked", error.code || "invalid-delivery-warrant");
   }
   const matchingEntry = initialQueue.entries.find((entry) =>
     entry.pullRequestNumber === pr.number && entry.pullRequestHeadSha === options.expectedHeadSha);
+  if (matchingEntry && !options.dryRun) {
+    await setActiveLeaseStatus(client, options.repository, options.expectedHeadSha, options.activeLeaseContext, "pending");
+  }
   const existing = await admitExistingQueueEntry({
     options, pullRequest: pr, readiness, client, entry: matchingEntry, warrant,
     createReceipt: createAdmissionReceipt,
@@ -893,6 +912,7 @@ async function reconcileEnqueueError({ client, options, pr, expectedHeadSha, ent
   const exactEntry = queueReadback?.entries?.find((candidate) =>
     candidate.pullRequestNumber === pr.number && candidate.pullRequestHeadSha === expectedHeadSha);
   if (exactEntry) {
+    entry.activeLeaseStatus = await setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, "pending");
     entry.action = "enqueued";
     entry.reason = "already-enqueued-exact-head";
     entry.queueEntry = exactEntry;
@@ -902,6 +922,7 @@ async function reconcileEnqueueError({ client, options, pr, expectedHeadSha, ent
     return;
   }
   entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "failure");
+  entry.activeLeaseStatus = await setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, "failure");
   entry.action = "skip";
   entry.reason = "enqueue-rejected";
   entry.enqueueError = {
@@ -1067,10 +1088,14 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
           result.skipped.push(entry);
         } else {
           try {
+            entry.activeLeaseStatus = await setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, "pending");
             entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "success");
-            const queueEntry = await client.enqueuePullRequest({
-              pullRequestId: decision.pullRequestId,
-              expectedHeadOid: expectedHeadSha,
+            const queueEntry = await enqueueAfterStatusPropagation({
+              enqueue: (input) => client.enqueuePullRequest(input),
+              input: { pullRequestId: decision.pullRequestId, expectedHeadOid: expectedHeadSha },
+              attempts: options.pollMergeableAttempts,
+              delayMs: options.pollMergeableDelayMs,
+              sleep: delay,
             });
             entry.action = "enqueued";
             entry.reason = "enqueued-with-expected-head";
@@ -1155,6 +1180,7 @@ export function cliOptions(args = [], environment = process.env) {
     allowedHeadPrefixes: cliValue(args, "allowed-head-prefixes", environment.BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES),
     requiredChecks: cliValue(args, "required-checks", environment.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS),
     queueAdmissionContext: cliValue(args, "queue-admission-context", environment.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT),
+    activeLeaseContext: cliValue(args, "active-lease-context", environment.BUILDCHAIN_DEV_PR_ACTIVE_LEASE_CONTEXT),
     diagnosticContext: cliValue(args, "diagnostic-context", environment.BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT),
     warrantMode: cliValue(args, "warrant-mode", environment.BUILDCHAIN_DEV_PR_WARRANT_MODE),
     warrantResultPath: cliValue(args, "warrant-result", environment.BUILDCHAIN_DEV_PR_WARRANT_RESULT_PATH),

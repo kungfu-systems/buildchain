@@ -71,7 +71,7 @@ jobs:
               ;;
           esac
           case "${EVENT_ACTION}:${OUTCOME}" in
-            closed:cancelled|cancelled:cancelled|dequeued:dequeued) ;;
+            closed:cancelled|cancelled:cancelled|synchronize:cancelled|dequeued:dequeued) ;;
             *)
               echo "::error::event-action and outcome do not form a supported queued cancellation"
               exit 1

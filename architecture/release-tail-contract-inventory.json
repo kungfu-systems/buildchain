@@ -197,7 +197,7 @@
     "productionCutover": false,
     "selfDogfoodCutover": {
       "status": "alpha-train",
-      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@9a0cdf8d84aacf8c7daaac82efa43d1b34696a03",
+      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b",
       "providerCapability": "artifact.publish",
       "stableCutover": false
     }
@@ -325,7 +325,7 @@
       "executionSites": [
         {
           "path": "packages/core/release-passport.js",
-          "marker": "function parseJsonCommandOutput({ command = \"\", cwd = process.cwd(), label = \"command\" } = {})"
+          "marker": "function parseJsonCommandOutput({"
         },
         {
           "path": "actions/promote-buildchain-ref/lib.js",

@@ -84,10 +84,14 @@ function fileStats(cwd, entries = []) {
   });
 }
 
-function commandVersion(command, args = ["--version"], cwd = process.cwd()) {
+const TOOL_VERSION_PROBE_CWD = path.parse(process.execPath).root;
+
+function commandVersion(command, args = ["--version"]) {
   try {
     return execFileSync(command, args, {
-      cwd,
+      // Package managers may walk every parent even for --version. Keep this
+      // bounded instead of scanning an arbitrary consumer or shared temp root.
+      cwd: TOOL_VERSION_PROBE_CWD,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
       timeout: 5000,
@@ -493,7 +497,8 @@ export function collectRunnerDiagnostics() {
 }
 
 export function collectToolDiagnostics({ cwd = process.cwd(), tools = ["node", "pnpm", "npm", "git", "cmake", "ninja", "ccache", "sccache"] } = {}) {
-  return Object.fromEntries(tools.map((tool) => [tool, { version: commandVersion(tool, ["--version"], cwd) }]));
+  void cwd;
+  return Object.fromEntries(tools.map((tool) => [tool, { version: commandVersion(tool) }]));
 }
 
 function parseJsonDiagnostics(value = "") {

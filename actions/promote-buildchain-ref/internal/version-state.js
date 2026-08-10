@@ -149,9 +149,14 @@ function uniquePaths(paths) {
   return [...new Set(paths.filter(Boolean))];
 }
 
-function versionVerificationAllowedPathsForPromotion(channel, discoveredPaths = []) {
+function versionVerificationAllowedPathsForPromotion(
+  channel,
+  discoveredPaths = [],
+  derivedPaths = [],
+) {
   return uniquePaths([
     ...discoveredPaths,
+    ...derivedPaths,
     ...(channel === "major" ? ["dist/site/kfd-claims.json"] : []),
   ]);
 }

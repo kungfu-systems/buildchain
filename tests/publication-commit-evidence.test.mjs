@@ -9,6 +9,7 @@ import {
 
 const SOURCE_SHA = "1".repeat(40);
 const RELEASE_SHA = "2".repeat(40);
+const CANDIDATE_SOURCE_SHA = "3".repeat(40);
 const ROOT = `sha256:${"a".repeat(64)}`;
 
 function canonical(value) {
@@ -60,7 +61,7 @@ const expected = {
   releaseTag: "v4.0.0-alpha.2",
 };
 
-function installerFixture() {
+function installerFixture(sourceCommit = CANDIDATE_SOURCE_SHA) {
   const releaseBase =
     "https://github.com/kungfu-systems/kungfu/releases/download/v4.0.0-alpha.2";
   const immutablePath = `installers/v1/alpha/4.0.0-alpha.2/${"9".repeat(64)}`;
@@ -124,7 +125,7 @@ function installerFixture() {
     identity: {
       channel: "alpha",
       version: "4.0.0-alpha.2",
-      sourceCommit: SOURCE_SHA,
+      sourceCommit,
       releaseSha: RELEASE_SHA,
       releaseTag: "v4.0.0-alpha.2",
       channelPayloadRoot: `sha256:${"3".repeat(64)}`,
@@ -152,6 +153,10 @@ function installerFixture() {
   const manifestBytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
   const evidence = {
     ...fixture(),
+    identity: {
+      ...fixture().identity,
+      candidateSourceSha: CANDIDATE_SOURCE_SHA,
+    },
     publication: {
       url: `${releaseBase}/kungfu-installer-publication-bundle.json`,
       payloadRoot: bundleRoot,
@@ -159,7 +164,7 @@ function installerFixture() {
         schema: unsigned.schema,
         bundleRoot,
         manifestDigest: digest(manifestBytes),
-        sourceCommit: SOURCE_SHA,
+        sourceCommit,
         channel: "alpha",
         channelPayloadRoot: unsigned.identity.channelPayloadRoot,
         channelFileDigest: unsigned.identity.channelFileDigest,
@@ -234,7 +239,104 @@ test("installer publication bundle is independently sealed from public bytes", a
     "kungfu-buildchain-installer-publication-bundle-seal/v1",
   );
   assert.equal(seal.bundleRoot, value.evidence.publication.payloadRoot);
+  assert.equal(seal.sourceCommit, CANDIDATE_SOURCE_SHA);
   assert.match(seal.sealRoot, /^sha256:[a-f0-9]{64}$/);
+});
+
+test("installer publication read-back follows bounded GitHub release redirects", async () => {
+  const value = installerFixture();
+  const result = validatePublicationCommitEvidence(value.evidence, expected);
+  const requests = [];
+  const fetchImpl = async (url, options) => {
+    requests.push({ url, options });
+    const parsed = new URL(url);
+    const assetName = parsed.pathname.split("/").at(-1);
+    if (parsed.hostname === "github.com") {
+      return {
+        status: 302,
+        headers: {
+          get(name) {
+            return name.toLowerCase() === "location"
+              ? `https://release-assets.githubusercontent.com/${assetName}?token=fixture`
+              : null;
+          },
+        },
+      };
+    }
+    const bytes =
+      assetName === "kungfu-installer-publication-bundle.json"
+        ? value.manifestBytes
+        : value.contents.get(assetName);
+    return {
+      status: bytes ? 200 : 404,
+      async arrayBuffer() {
+        return bytes || Buffer.alloc(0);
+      },
+    };
+  };
+
+  const seal = await verifyInstallerBundleReadback(result, fetchImpl);
+  assert.equal(seal.bundleRoot, value.evidence.publication.payloadRoot);
+  assert.ok(
+    requests.some(
+      ({ url }) =>
+        new URL(url).hostname === "release-assets.githubusercontent.com",
+    ),
+  );
+  assert.ok(requests.every(({ options }) => options.redirect === "manual"));
+});
+
+test("installer publication read-back rejects redirects outside GitHub storage", async () => {
+  const value = installerFixture();
+  const result = validatePublicationCommitEvidence(value.evidence, expected);
+  const fetchImpl = async () => ({
+    status: 302,
+    headers: {
+      get(name) {
+        return name.toLowerCase() === "location"
+          ? "https://example.com/untrusted"
+          : null;
+      },
+    },
+  });
+
+  await assert.rejects(
+    verifyInstallerBundleReadback(result, fetchImpl),
+    /outside trusted GitHub release storage/,
+  );
+});
+
+test("installer publication bundle rejects an unbound candidate source", () => {
+  const value = installerFixture();
+  delete value.evidence.identity.candidateSourceSha;
+  assert.throws(
+    () => validatePublicationCommitEvidence(value.evidence, expected),
+    /installer bundle release identity mismatch/,
+  );
+});
+
+test("sealed recovery binds installer bundle to its distinct candidate source", () => {
+  const value = installerFixture();
+  const recoveryExpected = {
+    ...expected,
+    candidateSourceSha: CANDIDATE_SOURCE_SHA,
+  };
+  const result = validatePublicationCommitEvidence(
+    value.evidence,
+    recoveryExpected,
+  );
+  assert.equal(result.identity.sourceSha, SOURCE_SHA);
+  assert.equal(result.identity.candidateSourceSha, CANDIDATE_SOURCE_SHA);
+  assert.equal(result.installerBundle.sourceCommit, CANDIDATE_SOURCE_SHA);
+
+  assert.throws(
+    () =>
+      validatePublicationCommitEvidence(value.evidence, {
+        ...expected,
+        candidateSourceSha: "4".repeat(40),
+      }),
+    /candidateSourceSha mismatch/,
+  );
 });
 
 test("installer publication bundle rejects transport and read-back drift", async () => {

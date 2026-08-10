@@ -23,6 +23,7 @@ import {
   collectNativeDiagnostics,
   collectProcessTreeSnapshot,
   collectRunnerDiagnostics,
+  collectToolDiagnostics,
   detectRequestedParallelism,
   detectRequestedParallelismFromProcessSamples,
   formatDiagnosticsSummaryTable,
@@ -950,6 +951,15 @@ test("logging and diagnostics SDK subpaths can be used from CommonJS scripts", (
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }
+});
+
+test("tool version probes never ascend through the consumer workspace", { skip: process.platform === "win32" }, () => {
+  const cwd = tempDir("tool-version-probe-cwd");
+  const probe = path.join(cwd, "report-cwd");
+  fs.writeFileSync(probe, "#!/bin/sh\npwd\n");
+  fs.chmodSync(probe, 0o755);
+  const diagnostics = collectToolDiagnostics({ cwd, tools: [probe] });
+  assert.equal(diagnostics[probe].version, path.parse(process.execPath).root);
 });
 
 test("diagnostics SDK validates anchored package release contracts", () => {

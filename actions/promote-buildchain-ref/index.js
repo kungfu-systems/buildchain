@@ -1,5 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+import fs from "node:fs";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseTags, promoteBuildchainRefs, recordGitHubReleaseTransactionCompletion } from "./lib.js";
 import { explainReleaseLineDryRun, formatReleaseLineDryRun } from "../../packages/core/release-line-dry-run.js";
@@ -179,6 +181,7 @@ async function publishReleaseTail({
       releasePassportOutputDir: releaseOptions.releasePassportOutputDir,
       additionalAssetPaths: releaseOptions.additionalAssetPaths,
       statePath: releaseTailStatePath,
+      targetRef,
     },
   });
   const completion = await recordGitHubReleaseTransactionCompletion({
@@ -230,7 +233,10 @@ async function main() {
   const transactionStatePath = core.getInput("transaction-state-path");
   const publishSealedBundleRoot = core.getInput("publish-sealed-bundle-root");
   const publishSealedBundleManifest = core.getInput("publish-sealed-bundle-manifest");
-  const publishRequiredArtifactsJson = core.getInput("publish-required-artifacts-json");
+  const publishRequiredArtifactsPath = core.getInput("publish-required-artifacts-path");
+  const publishRequiredArtifactsJson = publishRequiredArtifactsPath
+    ? fs.readFileSync(path.resolve(publishRequiredArtifactsPath), "utf8")
+    : core.getInput("publish-required-artifacts-json");
   const publishMode = core.getInput("publish-mode");
   const publishAuth = core.getInput("publish-auth");
   const publishDistTag = core.getInput("publish-dist-tag");
@@ -384,6 +390,7 @@ async function main() {
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath, releaseCandidateVersion,
     releaseCandidateRecoveryReceiptPath,
+    releaseCandidateReleaseAssetPaths: githubReleaseArtifactPaths,
     releaseCandidateFamilyEvidenceRequired,
     releaseCandidateFamilyEvidenceRoot,
     releaseCandidateFamilyInitiativeId,

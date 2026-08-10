@@ -150,16 +150,17 @@ function createVersionStateOperations(context) {
     }
 
     const discoveredPaths = discovered.files.map((file) => file.path);
-    const versionStateAllowedPaths =
-      versionVerificationAllowedPathsForPromotion(
-        rule.channel,
-        discoveredPaths,
-      );
     const derivedVersionMaterial = discoverConfiguredDerivedVersionMaterial(
       workspaceCwd,
       discovered.config,
     );
     const derivedPaths = derivedVersionMaterial.map((file) => file.path);
+    const versionStateAllowedPaths =
+      versionVerificationAllowedPathsForPromotion(
+        rule.channel,
+        discoveredPaths,
+        derivedPaths,
+      );
     const versionStrategy = getVersionStrategy(discovered.config);
     const anchorManifest = loadConfiguredAnchorManifest(
       workspaceCwd,

@@ -24,6 +24,7 @@ import {
   writeChecksums,
 } from "../scripts/auditable-demo.mjs";
 import {
+  MAX_LONG_FORM_RENDERER_MANIFEST_BYTES,
   readRendererManifest,
   validateRendererComposition,
 } from "../scripts/auditable-demo-renditions.mjs";
@@ -67,7 +68,7 @@ function terminalFillEvidence(width, height, columns, rows) {
 
 function terminalFillManifest() {
   const primary = terminalFillEvidence(1920, 1080, 150, 36);
-  const responsive = terminalFillEvidence(1280, 720, 100, 28);
+  const responsive = terminalFillEvidence(1280, 720, 150, 28);
   return {
     renderer: { contractVersion: "1.4.0" },
     policy: { compositionMode: "terminal-fill" },
@@ -83,7 +84,7 @@ function terminalFillManifest() {
 
 const TERMINAL_FILL_RENDITIONS = [
   { id: "1080p", role: "primary", width: 1920, height: 1080, columns: 150, rows: 36, compositionMode: "terminal-fill" },
-  { id: "720p", role: "responsive", width: 1280, height: 720, columns: 100, rows: 28, compositionMode: "terminal-fill" },
+  { id: "720p", role: "responsive", width: 1280, height: 720, columns: 150, rows: 28, compositionMode: "terminal-fill" },
 ];
 
 test("renderer composition admission proves exact terminal-fill viewports and fails closed on drift", () => {
@@ -182,7 +183,7 @@ function longFormRendererRenditions() {
       durationMs: 119000,
       events: 1000,
       bytes: 1024 * 1024,
-      path: { normalizedReplay: "x".repeat(4 * 1024 * 1024) },
+      path: { normalizedReplay: "x".repeat(17 * 1024 * 1024) },
     },
   }));
 }
@@ -203,7 +204,8 @@ test("oversized renderer manifests remain limited to bounded long-form native re
     outputs: {},
   };
   fs.writeFileSync(manifestPath, stableJson(manifest));
-  assert.ok(fs.statSync(manifestPath).size > 8 * 1024 * 1024);
+  assert.ok(fs.statSync(manifestPath).size > 32 * 1024 * 1024);
+  assert.ok(fs.statSync(manifestPath).size < MAX_LONG_FORM_RENDERER_MANIFEST_BYTES);
   const helpers = {
     decodeUtf8: (bytes) => bytes.toString("utf8"),
     digestPattern: /^sha256:[0-9a-f]{64}$/,
@@ -211,9 +213,9 @@ test("oversized renderer manifests remain limited to bounded long-form native re
     maxBytes: 4 * 1024 * 1024,
     maxEvents: 10_000,
     readRegular: (file, label, maximum) => {
-      const bytes = fs.readFileSync(file);
-      assert.ok(bytes.length <= maximum, `${label} exceeds ${maximum} bytes`);
-      return bytes;
+      const metadata = fs.statSync(file);
+      assert.ok(metadata.size <= maximum, `${label} exceeds ${maximum} bytes`);
+      return fs.readFileSync(file);
     },
   };
   assert.equal(readRendererManifest(manifestPath, helpers).manifest.inputs.renditions.length, 2);
@@ -226,6 +228,12 @@ test("oversized renderer manifests remain limited to bounded long-form native re
   assert.throws(
     () => readRendererManifest(manifestPath, helpers),
     /rendition 1 is not bounded long-form evidence/,
+  );
+
+  fs.truncateSync(manifestPath, MAX_LONG_FORM_RENDERER_MANIFEST_BYTES + 1);
+  assert.throws(
+    () => readRendererManifest(manifestPath, helpers),
+    /renderer manifest exceeds 67108864 bytes/,
   );
 });
 
@@ -708,8 +716,8 @@ test("native rendition set binds distinct 1080p and 720p captures", (t) => {
     cues: [{ startMs: 0, endMs: 2500, transcriptLines: [1, 2], annotation: "compact output" }],
   }));
   const responsiveCapture = terminalCapture(2500);
-  responsiveCapture.dimensions = { columns: 100, rows: 28 };
-  responsiveCapture.events[0].data = Buffer.from("compact 100x28\r\n").toString("base64");
+  responsiveCapture.dimensions = { columns: 150, rows: 28 };
+  responsiveCapture.events[0].data = Buffer.from("compact 150x28\r\n").toString("base64");
   responsiveCapture.completion.reportRoot = `sha256:${"f".repeat(64)}`;
   fs.writeFileSync(path.join(root, "terminal-capture-720p.json"), stableJson(responsiveCapture));
 

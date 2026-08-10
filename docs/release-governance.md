@@ -610,6 +610,12 @@ The reusable caller supports `off`, read-only `shadow`, and fail-closed
 `required` rollout modes. GitHub Merge Queue remains the final protected-ref
 authority in every mode.
 
+Bounded-concurrency experiments use the separate effect-disabled Warrant
+shadow planner. It may evaluate at most two fully bound lanes from one exact
+observation, but it cannot mint a second production Warrant or mutate GitHub.
+Its aggregate threshold decision is qualification evidence for a later rollout
+change, not authority to change the live single-flight policy.
+
 The canonical consumer required check context is `check / check`, matching the
 reusable workflow call plus its `check` job. Buildchain's own `Verify` workflow
 emits the repository-local context `check`, so Buildchain self-promotion,
@@ -785,6 +791,12 @@ active semver dev line, so consumers do not pin patrol to a stale minor branch.
 The separate workflow names keep consumer schedules readable and stable while
 Buildchain adds new checks behind the cadence wrappers.
 
+Branch and pull-request residue uses the separate
+[`Engineering Housekeeper`](engineering-housekeeper.md) contract. Its scheduled
+callers are report-only and read-only by default; apply requires a manual,
+explicit two-part gate, exact provider-state revalidation, scoped job
+permissions, and rooted plan/report/receipt evidence.
+
 ## Package-Manager Adapters
 
 Old ABV assumed JavaScript repositories with root version state and often
@@ -816,8 +828,11 @@ declare version-state files and lifecycle commands without pretending every
 project is a Node workspace. Supported version files include JSON, TOML, and
 regex-based files such as `CMakeLists.txt` or `conanfile.py`.
 
-The promotion action consumes `version.files`, optional anchored/manual
-`version.derived_files`, and `lifecycle.verify`.
+The promotion action consumes `version.files`, optional
+`version.derived_files`, and `lifecycle.verify`. Semver and anchored/manual
+repositories may both declare lifecycle-regenerated tracked outputs as derived
+files; anchored/manual repositories additionally bind them into their committed
+version witnesses.
 The verify stage runs after generated version-state changes are applied locally
 and before any release refs move. If `verification-command` is passed directly
 to the action, that explicit command overrides `lifecycle.verify`.

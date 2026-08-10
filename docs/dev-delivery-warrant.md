@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-09
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-04
+  generated_at: 2026-08-09
   invisible_context: not asserted
 ---
 
@@ -125,6 +125,39 @@ buildchain dev proof replay-proof \
 buildchain dev proof integration --warrant-result warrant.json ...
 ```
 
+## Bounded-concurrency shadow qualification
+
+The production queue remains single-flight. A separate effect-disabled shadow
+planner can replay the same deterministic candidate order with a bound of one
+or two lanes. It does not issue, renew, supersede, close, or persist a Warrant;
+it cannot enqueue a pull request; and its output explicitly carries no
+production or rollout authority.
+
+Each lane binds the exact queue root and generation, protected-base head,
+source head, projected-base root, Project Cut, approval, required checks,
+status, and lease evidence. An active production candidate must additionally
+match its current fencing token and lease generation. A queued shadow lane must
+not carry either. Stale evidence, an occupied native queue, cross-lane evidence
+aliasing, shared conflict keys, or an incompatible projected base fails closed.
+A failure in one lane remains visible without converting or concealing the
+other lane's result.
+
+The planner and aggregate qualification command consume immutable JSON files:
+
+```sh
+buildchain dev warrant shadow-plan --input observation.json \
+  --max-concurrency 2 --output shadow-plan.json
+
+buildchain dev warrant shadow-qualify --input qualification-input.json \
+  --output shadow-qualification.json
+```
+
+Both commands reject `--execute`. Qualification reports compare explicit
+thresholds for sample count, eligible overlap, projected queue-wait benefit,
+additional runner cost, ambiguity, and false positives. A `proceed` result is
+only evidence for a separate reviewed rollout decision; it never changes the
+live Warrant schema, queue state, merge-queue policy, or protected branch.
+
 ## Workflow rollout and rollback
 
 The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
@@ -133,7 +166,17 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
 - `shadow` qualifies the source and emits a read-only queue submission plan;
 - `required` persists the submission, selects the Warrant, and refuses GitHub
   enqueue unless the immutable queue commit, state root, active Warrant, and
-  selected candidate all pass exact readback validation.
+  selected candidate all pass exact readback validation. Immediately before
+  enqueue, the controller also rereads the current protected state ref and
+  verifies the active candidate, fencing token, generation, pull request, and
+  exact head. A previously valid result is not authority after terminal
+  closeout. Re-running qualification for the same selected head may regenerate
+  timestamped proof bytes, but it retains the immutable active Warrant and its
+  originally selected proof instead of rewriting or rejecting that attempt.
+  Each candidate also retains the exact successful source workflow run. If a
+  controller discovers that another candidate owns the active Warrant, a
+  configured consumer workflow is dispatched immediately for that exact PR,
+  head, and source run; the candidate is not left waiting for a patrol cron.
 
 Consumers should deploy `shadow` first, inspect receipts, then change their
 protected caller to `required`. Rollback is a reviewed caller change back to
@@ -143,7 +186,9 @@ merged candidate (or accepts explicit evidence for another terminal outcome),
 then closes only the current fencing generation. The separate queued
 cancellation reusable workflow cannot close an active generation; it advances
 the state ref only when the caller's complete terminal binding and expected-old
-root still match.
+root still match. A delayed `dequeued` event is ignored when GitHub readback
+shows the same exact PR head is already queued again, so an earlier queue event
+cannot close a newer active Warrant generation.
 
 Buildchain uses the same contract for its own protected dev line through
 `buildchain-dev-delivery.yml`. The manual caller requires the exact PR head and

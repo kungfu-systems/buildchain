@@ -1313,6 +1313,15 @@ jobs:
           clean: true
           persist-credentials: false
 
+      - name: Checkout exact consumer publication controller
+        if: ${{ inputs.resume-candidate-run-id != '' && inputs.publication-gate-controller-sha != '' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.publication-gate-controller-sha }}
+          path: .buildchain/publication-controller
+          clean: true
+          persist-credentials: false
+
       - name: Checkout selected promotion workflow shell
         if: ${{ inputs.promotion-shell-ref != '' }}
         uses: actions/checkout@v7.0.0
@@ -1454,10 +1463,17 @@ jobs:
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Bridge Buildchain self-runtime dependencies
-        if: ${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository }}
+        if: ${{ inputs.resume-candidate-run-id != '' }}
         shell: bash
         run: |
           test ! -e node_modules
+          mkdir -p .buildchain/runtime/node_modules/@kungfu-tech
+          test ! -e .buildchain/runtime/node_modules/@kungfu-tech/buildchain-alpha
+          test ! -e .buildchain/runtime/node_modules/@kungfu-tech/buildchain
+          test ! -e .buildchain/runtime/node_modules/@kungfu-tech/kfx
+          ln -s ../.. .buildchain/runtime/node_modules/@kungfu-tech/buildchain-alpha
+          ln -s ../.. .buildchain/runtime/node_modules/@kungfu-tech/buildchain
+          ln -s ../../../../framework/kfx .buildchain/runtime/node_modules/@kungfu-tech/kfx
           ln -s .buildchain/runtime/node_modules node_modules
 
       - name: Check Buildchain contract lock
@@ -1764,6 +1780,7 @@ jobs:
         env:
           BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
           BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
+          BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
           token: ${{ github.token }}
@@ -1787,7 +1804,8 @@ jobs:
           publish-sealed-bundle-manifest: ${{ steps.rc.outputs.publish-sealed-bundle-manifest }}
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
-          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
+          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
+          publish-required-artifacts-path: ${{ inputs.publish-required-artifacts-json == '' && steps.rc.outputs.publish-required-artifacts-path || '' }}
           publish-mode: ${{ inputs.publish-mode }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           publish-dist-tag: ${{ inputs.publish-dist-tag }}
@@ -1916,6 +1934,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_COMMIT_TOKEN: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_TOKEN }}
           BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY }}
           BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: ${{ steps.rc.outputs.release-candidate-source-sha || needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA: ${{ steps.promote.outputs.transaction-release-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
           GH_TOKEN: ${{ github.token }}
@@ -1943,6 +1962,7 @@ jobs:
               --evidence "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" \
               --version "${BUILDCHAIN_PUBLICATION_COMMIT_VERSION}" \
               --source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA}" \
+              --candidate-source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA}" \
               --release-sha "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA}" \
               --release-tag "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG}"
           )"

@@ -146,6 +146,15 @@ function invariantSemanticPreimage(passport) {
   return value;
 }
 
+function hasCompleteInvariantCoverage(value) {
+  const coverage = value?.coverage;
+  return Number.isInteger(coverage?.required)
+    && coverage.required > 0
+    && coverage.verified === coverage.required
+    && [coverage.missing, coverage.falsified, coverage.unqualified]
+      .every((items) => Array.isArray(items) && items.length === 0);
+}
+
 function normalizeInvariantPassport(meta, index = 0) {
   const value = meta?.value;
   const label = `invariantPassportJsons[${index}]`;
@@ -165,11 +174,18 @@ function normalizeInvariantPassport(meta, index = 0) {
   if (value.passportRoot !== expectedRoot) {
     throw new Error(`${label}.passportRoot mismatch: expected ${expectedRoot}, got ${value.passportRoot}`);
   }
-  if (value.verdict !== "verified") {
-    throw new Error(`${label}.verdict must be verified, got ${value.verdict}`);
-  }
-  if (value.coverage?.complete !== true) {
-    throw new Error(`${label}.coverage.complete must be true`);
+  const verifiedPassport = value.verdict === "verified" && value.coverage?.complete === true;
+  const scopedUnqualifiedClaim = value.verdict === "unqualified"
+    && value.coverage?.complete === false
+    && hasCompleteInvariantCoverage(value)
+    && value.releaseClaims?.verdict === "unqualified"
+    && /^sha256:[0-9a-f]{64}$/.test(optionalString(value.releaseClaims?.claimRoot))
+    && Array.isArray(value.releaseClaims?.diagnostics)
+    && value.releaseClaims.diagnostics.length > 0
+    && Array.isArray(value.diagnostics)
+    && value.diagnostics.length === 0;
+  if (!verifiedPassport && !scopedUnqualifiedClaim) {
+    throw new Error(`${label}.verdict must be verified, or unqualified only for complete invariant coverage with one explicit unqualified releaseClaims section`);
   }
   if (value.source?.dirty !== false) {
     throw new Error(`${label}.source.dirty must be false`);
@@ -182,6 +198,9 @@ function normalizeInvariantPassport(meta, index = 0) {
     : [];
   if (platforms.length === 0) throw new Error(`${label}.coverage.platforms must be non-empty`);
   if (!Array.isArray(value.residualRisk)) throw new Error(`${label}.residualRisk must be an array`);
+  const releaseClaimRisks = scopedUnqualifiedClaim
+    ? value.releaseClaims.diagnostics.map((entry) => `Exit/provider claim ${optionalString(entry?.code) || "unqualified"}: ${optionalString(entry?.message) || "consumer claim remains unqualified"}`)
+    : [];
   return {
     path: optionalString(meta.path),
     sha256: optionalString(meta.sha256),
@@ -194,7 +213,15 @@ function normalizeInvariantPassport(meta, index = 0) {
     source: structuredClone(value.source),
     coverage: structuredClone(value.coverage),
     platforms,
-    residualRisk: structuredClone(value.residualRisk),
+    admission: {
+      scope: "consumer-invariant-coverage",
+      result: "passed",
+      consumerVerdict: value.verdict,
+      releaseClaimsVerdict: optionalString(value.releaseClaims?.verdict),
+    },
+    releaseClaims: value.releaseClaims ? structuredClone(value.releaseClaims) : undefined,
+    diagnostics: Array.isArray(value.diagnostics) ? structuredClone(value.diagnostics) : [],
+    residualRisk: [...new Set([...value.residualRisk, ...releaseClaimRisks])].sort(),
   };
 }
 
@@ -533,7 +560,12 @@ function mergeAuthoritativeImpactBase(impact, basePassport = undefined) {
   return merged;
 }
 
-function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "command" } = {}) {
+function parseJsonCommandOutput({
+  command = "",
+  cwd = process.cwd(),
+  label = "command",
+  acceptNonzeroJson = undefined,
+} = {}) {
   const normalized = String(command || "").trim();
   if (!normalized) {
     return { value: undefined, path: "", sha256: "" };
@@ -547,7 +579,7 @@ function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "co
   if (result.error) {
     throw new Error(`${label} failed to start: ${result.error.message}`);
   }
-  if (result.status !== 0) {
+  if (result.status !== 0 && typeof acceptNonzeroJson !== "function") {
     const stderr = String(result.stderr || "").trim();
     throw new Error(`${label} exited with ${result.status}${stderr ? `: ${stderr.slice(-1000)}` : ""}`);
   }
@@ -561,10 +593,15 @@ function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "co
   } catch (error) {
     throw new Error(`${label} output must be valid JSON: ${error.message}`, { cause: error });
   }
+  if (result.status !== 0 && !acceptNonzeroJson({ status: result.status, value: parsed })) {
+    const stderr = String(result.stderr || "").trim();
+    throw new Error(`${label} exited with ${result.status}${stderr ? `: ${stderr.slice(-1000)}` : ""}`);
+  }
   return {
     value: parsed,
     path: "",
     sha256: sha256Text(stableJson(parsed)),
+    status: result.status,
   };
 }
 
@@ -879,6 +916,41 @@ function arrayOrSingleton(value) {
   return value && typeof value === "object" ? [value] : [];
 }
 
+const KFD2_RESIDUAL_RISK_SCHEMA = "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk";
+
+function normalizeKfd2ResidualRisk(entry, { claim = {}, claimIndex = 0, riskIndex = 0 } = {}) {
+  if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+    return entry;
+  }
+  const reason = optionalString(entry).trim();
+  if (!reason) {
+    return entry;
+  }
+  const claimId = optionalString(claim.id || `claim-${claimIndex + 1}`)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || `claim-${claimIndex + 1}`;
+  const responsibility = claim.responsibility && typeof claim.responsibility === "object" && !Array.isArray(claim.responsibility)
+    ? claim.responsibility
+    : {};
+  return {
+    id: `${claimId}-residual-risk-${riskIndex + 1}`,
+    definedBy: KFD2_RESIDUAL_RISK_SCHEMA,
+    riskType: "manual-review-risk",
+    trustImpact: "downgrade-warning",
+    machineProvability: "not-machine-verifiable",
+    agentAction: "request-maintainer-review",
+    reason,
+    owner: optionalString(
+      responsibility.releaseDecisionOwner
+      || responsibility.owner
+      || responsibility.sourceOwner
+      || responsibility.sourceContractOwner
+      || "release maintainer",
+    ),
+  };
+}
+
 function normalizeKfd2Claim(raw = {}, index = 0) {
   const claim = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
   const sourceBindings = arrayOrEmpty(claim.sourceBindings || claim.source_bindings || claim.sources || claim.declaredSources);
@@ -892,10 +964,13 @@ function normalizeKfd2Claim(raw = {}, index = 0) {
       ? claim.audit_boundary
       : {};
   const responsibility = claim.responsibility && typeof claim.responsibility === "object" && !Array.isArray(claim.responsibility) ? claim.responsibility : {};
-  const residualRisk = arrayOrSingleton(claim.residualRisk || claim.residual_risk).map((entry, riskIndex) => validateKfd2TrustTaxonomyEntry(entry, {
-    kind: "residualRisk",
-    label: `kfd-2.claims[${index}].residualRisk[${riskIndex}]`,
-  }));
+  const residualRisk = arrayOrSingleton(claim.residualRisk || claim.residual_risk).map((entry, riskIndex) => validateKfd2TrustTaxonomyEntry(
+    normalizeKfd2ResidualRisk(entry, { claim, claimIndex: index, riskIndex }),
+    {
+      kind: "residualRisk",
+      label: `kfd-2.claims[${index}].residualRisk[${riskIndex}]`,
+    },
+  ));
   const downgradeReasons = arrayOrSingleton(claim.downgradeReasons || claim.downgrade_reasons || claim.downgradeReason || claim.downgrade_reason)
     .map((entry, reasonIndex) => validateKfd2TrustTaxonomyEntry(entry, {
       kind: "downgradeReason",
@@ -1494,6 +1569,7 @@ export function collectGitHubReleasePassport({
   outputDir = ".buildchain/release-passport",
   assetsJson = "",
   assetsDir = "",
+  kfdArtifactSearchRoots = [],
   releaseJson = "",
   productName = "Buildchain",
   packageName = "@kungfu-tech/buildchain",
@@ -1568,6 +1644,11 @@ export function collectGitHubReleasePassport({
     .filter(Boolean)
     .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined, { cwd, label: "kfd3ArtifactWitnessJsons entry" }))
     .filter((meta) => meta.value);
+  const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
+    command: kfd3ArtifactVerifyCommand,
+    cwd,
+    label: "KFD-3 artifact verify command",
+  });
   const kfdSupportMatrixMeta = parseJsonInputWithMeta(
     kfdSupportMatrixJson,
     undefined,
@@ -1578,11 +1659,6 @@ export function collectGitHubReleasePassport({
     .map((gateJson) => parseJsonInputWithMeta(gateJson, undefined, { cwd, label: "kfdProductGateJsons entry" }))
     .filter((meta) => meta.value);
   const basePassportMeta = parseJsonInputWithMeta(basePassportJson, undefined, { cwd, label: "basePassportJson" });
-  const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
-    command: kfd3ArtifactVerifyCommand,
-    cwd,
-    label: "KFD-3 artifact verify command",
-  });
   const invariantPassportMetas = (invariantPassportJsons || [])
     .filter(Boolean)
     .map((passportJson) => parseJsonInputWithMeta(passportJson, undefined, { cwd, label: "invariantPassportJsons entry" }))
@@ -1591,6 +1667,22 @@ export function collectGitHubReleasePassport({
     command: invariantPassportCommand,
     cwd,
     label: "invariant passport command",
+    acceptNonzeroJson: ({ status, value }) => {
+      if (status !== 2) return false;
+      try {
+        const normalized = normalizeInvariantPassport(
+          { value, path: "", sha256: sha256Text(stableJson(value)) },
+          invariantPassportMetas.length,
+        );
+        return normalized.verdict === "unqualified"
+          && normalized.coverage?.complete === false
+          && normalized.releaseClaims?.verdict === "unqualified"
+          && normalized.admission?.scope === "consumer-invariant-coverage"
+          && normalized.admission?.result === "passed";
+      } catch {
+        return false;
+      }
+    },
   });
   if (invariantPassportCommandMeta.value) invariantPassportMetas.push(invariantPassportCommandMeta);
   const invariantPassports = createInvariantPassportGate(invariantPassportMetas);
@@ -1664,6 +1756,7 @@ export function collectGitHubReleasePassport({
   const kfd1 = createKfd1ReleaseGateEvidence({
     cwd,
     artifactRoot: assetsDir ? path.resolve(cwd, assetsDir) : "",
+    artifactSearchRoots: kfdArtifactSearchRoots.map((root) => path.resolve(cwd, root)),
     artifacts: assets,
     witnesses: kfd1WitnessMetas.map((meta) => meta.value),
   });
@@ -2092,7 +2185,17 @@ function validateReleaseEvidenceContracts({
   for (const [index, value] of (passport?.githubArtifactAttestations || []).entries()) {
     try {
       const policy = normalizeGitHubArtifactAttestationPolicy(value);
-      if (policy.caller.sourceSha !== String(passport?.release?.sourceSha || "").toLowerCase()) {
+      const release = passport?.release || {};
+      const acceptedSourceShas = new Set([String(release.sourceSha || "").toLowerCase()]);
+      if (
+        release.treeEquivalent === true
+        && release.builtSourceTreeSha
+        && release.builtSourceTreeSha === release.promotionChannelTreeSha
+        && release.builtSourceSha
+      ) {
+        acceptedSourceShas.add(String(release.builtSourceSha).toLowerCase());
+      }
+      if (!acceptedSourceShas.has(policy.caller.sourceSha)) {
         issues.push(issue(
           "error",
           `githubArtifactAttestations[${index}].caller.sourceSha`,
@@ -2490,8 +2593,15 @@ function validatePassportTrustSections({ passport, issues }) {
   ].filter(Boolean));
   for (const [index, entry] of (section.passports || []).entries()) {
     const prefix = `invariantPassports.passports[${index}]`;
-    if (entry.verdict !== "verified") issues.push(issue("error", `${prefix}.verdict`, `${prefix}.verdict must be verified`));
-    if (entry.coverage?.complete !== true) issues.push(issue("error", `${prefix}.coverage`, `${prefix}.coverage.complete must be true`));
+    if (entry.admission?.scope !== "consumer-invariant-coverage" || entry.admission?.result !== "passed") {
+      issues.push(issue("error", `${prefix}.admission`, `${prefix}.admission must record passed consumer invariant coverage`));
+    }
+    if (entry.verdict !== "verified" && !(entry.verdict === "unqualified" && entry.releaseClaims?.verdict === "unqualified")) {
+      issues.push(issue("error", `${prefix}.verdict`, `${prefix}.verdict must be verified or preserve one explicit unqualified releaseClaims verdict`));
+    }
+    if (entry.coverage?.complete !== true && !hasCompleteInvariantCoverage(entry)) {
+      issues.push(issue("error", `${prefix}.coverage`, `${prefix}.coverage must be complete or prove every required invariant coordinate verified`));
+    }
     if (entry.source?.dirty !== false) issues.push(issue("error", `${prefix}.source.dirty`, `${prefix}.source.dirty must be false`));
     if (acceptedSourceShas.size > 0 && !acceptedSourceShas.has(entry.source?.revision)) {
       issues.push(issue("error", `${prefix}.source.revision`, `${prefix}.source.revision must match a release source identity`));

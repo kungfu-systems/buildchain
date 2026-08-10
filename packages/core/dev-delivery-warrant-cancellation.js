@@ -6,6 +6,7 @@ const TERMINAL_STATES = new Set(["merged", "terminal-failure", "dequeued", "canc
 const QUEUED_CANCELLATION_EVENTS = new Map([
   ["closed", "cancelled"],
   ["cancelled", "cancelled"],
+  ["synchronize", "cancelled"],
   ["dequeued", "dequeued"],
 ]);
 

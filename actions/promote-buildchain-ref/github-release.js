@@ -47,19 +47,30 @@ export function collectGitHubReleaseEvidenceAssets({
       `github-release=true requires a release passport output directory, got '${releasePassportOutputDir || ""}'`,
     );
   }
-  const assets = [publishEvidencePath];
+  const assets = [];
+  const occupiedBasenames = new Map();
+  const addAsset = (assetPath) => {
+    const basename = path.basename(assetPath);
+    const existing = occupiedBasenames.get(basename);
+    if (existing) {
+      if (sha256(fs.readFileSync(existing)) !== sha256(fs.readFileSync(assetPath))) {
+        throw new Error(`github-release=true found duplicate asset basename '${basename}' with conflicting content`);
+      }
+      return;
+    }
+    occupiedBasenames.set(basename, assetPath);
+    assets.push(assetPath);
+  };
+  addAsset(publishEvidencePath);
   for (const entry of fs.readdirSync(releasePassportOutputDir).sort()) {
     const candidate = path.join(releasePassportOutputDir, entry);
-    if (fs.statSync(candidate).isFile()) assets.push(candidate);
+    if (fs.statSync(candidate).isFile()) addAsset(candidate);
   }
   if (assets.length < 2) {
     throw new Error(
       `github-release=true found no release passport assets under ${releasePassportOutputDir}`,
     );
   }
-  const occupiedBasenames = new Set(
-    assets.map((assetPath) => path.basename(assetPath)),
-  );
   for (const assetPath of additionalAssetPaths) {
     assertFile(assetPath, "a declared GitHub Release artifact");
     const basename = path.basename(assetPath);
@@ -68,8 +79,7 @@ export function collectGitHubReleaseEvidenceAssets({
         `github-release=true found duplicate asset basename '${basename}'`,
       );
     }
-    occupiedBasenames.add(basename);
-    assets.push(assetPath);
+    addAsset(assetPath);
   }
   return assets;
 }
@@ -328,17 +338,25 @@ export async function publishGitHubReleaseEvidence({
     channel,
   });
   if (reuseExistingCompleteEvidence) {
-    return reuseCompleteGitHubReleaseEvidence({
-      octokit,
+    const listed = await octokit.rest.repos.listReleaseAssets({
       owner,
       repo,
-      release: release.release,
-      tag,
-      target,
-      channel,
-      targetRef,
-      additionalAssetPaths,
+      release_id: release.release.id,
+      per_page: 100,
     });
+    if ((listed.data || []).some((asset) => asset?.name === "buildchain.release.json")) {
+      return reuseCompleteGitHubReleaseEvidence({
+        octokit,
+        owner,
+        repo,
+        release: release.release,
+        tag,
+        target,
+        channel,
+        targetRef,
+        additionalAssetPaths,
+      });
+    }
   }
   const assetResults = [];
   for (const assetPath of assets) {
@@ -386,13 +404,74 @@ export async function publishDeclarativeGitHubReleaseEvidence({
   additionalAssetPaths = [],
   statePath,
   declarationPath,
+  targetRef = "",
+  verifyPassport,
 } = {}) {
-  const assetPaths = collectGitHubReleaseEvidenceAssets({
+  const evidenceAssetPaths = collectGitHubReleaseEvidenceAssets({
+    publishEvidencePath,
+    releasePassportPath,
+    releasePassportOutputDir,
+  });
+  let assetPaths = collectGitHubReleaseEvidenceAssets({
     publishEvidencePath,
     releasePassportPath,
     releasePassportOutputDir,
     additionalAssetPaths,
   });
+  const [owner, repo] = repository.split("/");
+  let existingRelease = null;
+  try {
+    existingRelease = (await octokit.rest.repos.getReleaseByTag({ owner, repo, tag })).data;
+  } catch (error) {
+    if (Number(error?.status || error?.response?.status) !== 404) throw error;
+  }
+  if (existingRelease) {
+    await reuseCompleteGitHubReleaseEvidence({
+      octokit,
+      owner,
+      repo,
+      release: existingRelease,
+      tag,
+      target: sourceSha,
+      channel,
+      targetRef,
+      evidenceAssetPaths,
+      additionalAssetPaths,
+      verifyPassport,
+    });
+    const listed = await octokit.rest.repos.listReleaseAssets({
+      owner,
+      repo,
+      release_id: existingRelease.id,
+      per_page: 100,
+    });
+    const stagingDirectory = path.resolve(path.dirname(statePath), "observed-github-release-assets");
+    fs.mkdirSync(stagingDirectory, { recursive: true });
+    const names = new Set();
+    assetPaths = [];
+    for (const asset of listed.data || []) {
+      const name = String(asset.name || "");
+      if (!name || path.basename(name) !== name || names.has(name)) {
+        throw new Error(`immutable GitHub Release asset collision: '${name}' is unsafe or duplicated`);
+      }
+      names.add(name);
+      const response = await octokit.rest.repos.getReleaseAsset({
+        owner,
+        repo,
+        asset_id: asset.id,
+        headers: { accept: "application/octet-stream" },
+      });
+      const data = releaseAssetBytes(response.data);
+      const declared = String(asset.digest || "").toLowerCase();
+      const observed = `sha256:${sha256(data)}`;
+      if (declared && declared !== observed) {
+        throw new Error(`GitHub Release asset '${name}' digest does not match its public bytes`);
+      }
+      const stagedPath = path.join(stagingDirectory, name);
+      fs.writeFileSync(stagedPath, data);
+      assetPaths.push(stagedPath);
+    }
+  }
   const materialized = createDeclarativeGitHubReleasePlan({
     repository,
     sourceSha,
@@ -439,7 +518,6 @@ export async function publishDeclarativeGitHubReleaseEvidence({
       `declarative GitHub Release stopped in ${transaction.state}: ${transaction.failure?.code || "unknown"}`,
     );
   }
-  const [owner, repo] = repository.split("/");
   const release = (
     await octokit.rest.repos.getReleaseByTag({ owner, repo, tag })
   ).data;

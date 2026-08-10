@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 114,
-    "workflowCount": 65,
+    "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 69,
-    "docCommandRefCount": 922,
+    "sitePageCount": 70,
+    "docCommandRefCount": 924,
     "failureCount": 0
   },
   "enumerated": {
@@ -1988,6 +1988,7 @@
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
         "inputs": [
+          "active-lease-context",
           "affected-paths-json",
           "allowed-head-prefixes",
           "assignment-root",
@@ -2003,6 +2004,7 @@
           "dry-run",
           "expected-head-sha",
           "expected-pr-number",
+          "handoff-workflow-id",
           "initiative-root",
           "landing-mode",
           "max-merges",
@@ -2017,11 +2019,13 @@
           "shard-evidence-roots-json",
           "source-identity-root",
           "source-patch-root",
+          "source-workflow-id",
+          "source-workflow-run-id",
           "target-branch",
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 32,
+        "inputCount": 36,
         "secrets": [
           "github-token"
         ],
@@ -2074,6 +2078,78 @@
           "state"
         ],
         "outputCount": 7
+      },
+      {
+        "id": "engineering-housekeeper-daily",
+        "path": ".github/workflows/engineering-housekeeper-daily.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper-monthly",
+        "path": ".github/workflows/engineering-housekeeper-monthly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper-weekly",
+        "path": ".github/workflows/engineering-housekeeper-weekly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper",
+        "path": ".github/workflows/engineering-housekeeper.yml",
+        "reusable": true,
+        "inputs": [
+          "apply-enabled",
+          "artifact-prefix",
+          "artifact-retention-days",
+          "buildchain-ref",
+          "buildchain-repository",
+          "max-actions",
+          "mode",
+          "protected-patterns",
+          "repository",
+          "retained-patterns",
+          "stale-days",
+          "stale-pull-request-label",
+          "target-branch"
+        ],
+        "inputCount": 13,
+        "secrets": [
+          "github_app_id",
+          "github_app_private_key",
+          "github_token"
+        ],
+        "secretCount": 3,
+        "outputs": [
+          "action-count",
+          "branch-receipt-root",
+          "outcome",
+          "plan-artifact",
+          "plan-root",
+          "pull-request-receipt-root",
+          "receipt-artifact",
+          "report-artifact",
+          "report-receipt-root"
+        ],
+        "outputCount": 9
       },
       {
         "id": "github-artifact-attestation",
@@ -2844,6 +2920,7 @@
           "publish-package-set-order",
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
+          "publish-required-artifacts-path",
           "publish-sealed-bundle-manifest",
           "publish-sealed-bundle-root",
           "publish-source-locked",
@@ -2895,7 +2972,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 79
+        "inputCount": 80
       },
       {
         "id": "release-tail",
@@ -3128,6 +3205,10 @@
       },
       {
         "id": "manual:dev-qualification-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:engineering-housekeeper",
         "category": "manual"
       },
       {
@@ -4174,6 +4255,16 @@
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev proof integration"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant shadow-plan"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant shadow-qualify"
       },
       {
         "id": "dev",
@@ -7897,8 +7988,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "47cfb7dbfcdc13f9830c3bc10457cb4c794c4953a584afcf6996b94ed0a6adba",
-    "pageRegistryDigest": "f9d958e6261b25997c2c65c24f3cea8e846ef55091dfa1dbf39a69c6786a30c7"
+    "workflowRegistryDigest": "dbd9f89d3fb7b42e138b262b41a468252d5c44b8ddd2abef4b5acddb842da20d",
+    "pageRegistryDigest": "17c3cbf6eb8c5329dd0bd1435800d3b0a71e0110e959cc133aa5a69fc3fe65f5"
   },
   "comparison": {
     "missingCliRegistry": [],

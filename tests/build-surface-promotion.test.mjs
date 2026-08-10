@@ -294,6 +294,14 @@ test("promotion commits consumer discovery authority only after public release a
   );
   assert.match(
     wrapper,
+    /BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: \$\{\{ steps\.rc\.outputs\.release-candidate-source-sha \|\| needs\.preflight\.outputs\.requested-sha \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /--candidate-source-sha "\$\{BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA\}"/,
+  );
+  assert.match(
+    wrapper,
     /publication-commit-command requires standalone-binary-distribution=false/,
   );
   assert.match(
@@ -497,6 +505,7 @@ test("self-release candidate materialization applies complete declared version s
 
 [version]
 required = true
+derived_files = ["derived-audit.json"]
 
 [[version.files]]
 type = "json"
@@ -510,6 +519,9 @@ key = "product.version"
 
 [lifecycle.version-state]
 command = "node scripts/derive.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
 `,
   );
   fs.writeFileSync(
@@ -521,12 +533,27 @@ command = "node scripts/derive.mjs"
     `${JSON.stringify({ product: { version: "1.0.0" }, source: "" }, null, 2)}\n`,
   );
   fs.writeFileSync(
+    path.join(cwd, "derived-audit.json"),
+    `${JSON.stringify({ source: "" }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
     path.join(cwd, "scripts/derive.mjs"),
     `import fs from "node:fs";
 const generated = JSON.parse(fs.readFileSync("generated.json", "utf8"));
 generated.product.version = process.env.BUILDCHAIN_VERSION;
 generated.source = process.env.BUILDCHAIN_SOURCE_SHA;
 fs.writeFileSync("generated.json", JSON.stringify(generated, null, 2) + "\\n");
+fs.writeFileSync("derived-audit.json", JSON.stringify({
+  source: process.env.BUILDCHAIN_SOURCE_SHA
+}, null, 2) + "\\n");
+`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "scripts/verify.mjs"),
+    `import fs from "node:fs";
+const generated = JSON.parse(fs.readFileSync("generated.json", "utf8"));
+const audit = JSON.parse(fs.readFileSync("derived-audit.json", "utf8"));
+if (generated.source !== audit.source) process.exit(1);
 `,
   );
   for (const args of [
@@ -550,15 +577,23 @@ fs.writeFileSync("generated.json", JSON.stringify(generated, null, 2) + "\\n");
       generatedAt: "2026-08-07T00:00:00.000Z",
     });
     assert.equal(result.version, "1.1.0-alpha.0");
-    assert.deepEqual(result.files, ["generated.json", "package.json"]);
+    assert.deepEqual(result.files, ["derived-audit.json", "generated.json", "package.json"]);
     assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.1.0-alpha.0");
     assert.deepEqual(
       JSON.parse(fs.readFileSync(path.join(cwd, "generated.json"), "utf8")),
       { product: { version: "1.1.0-alpha.0" }, source: sourceSha },
     );
+    assert.deepEqual(
+      JSON.parse(fs.readFileSync(path.join(cwd, "derived-audit.json"), "utf8")),
+      { source: sourceSha },
+    );
     const status = spawnSync("git", ["status", "--short"], { cwd, encoding: "utf8" });
     assert.equal(status.status, 0, status.stderr);
-    assert.deepEqual(status.stdout.trimEnd().split("\n").sort(), [" M generated.json", " M package.json"]);
+    assert.deepEqual(status.stdout.trimEnd().split("\n").sort(), [
+      " M derived-audit.json",
+      " M generated.json",
+      " M package.json",
+    ]);
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }
@@ -664,6 +699,9 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(action, /publish-rematerialize-on-resume:/);
   assert.match(action, /release-passport-github-artifact-attestation-policy-jsons:/);
+  assert.match(implementation, /import fs from "node:fs";/);
+  assert.match(implementation, /import path from "node:path";/);
+  assert.match(implementation, /fs\.readFileSync\(path\.resolve\(publishRequiredArtifactsPath\), "utf8"\)/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /releaseCandidateFamilyEvidenceRequired/);
   assert.match(implementation, /releaseCandidateFamilyEvidenceRoot/);
@@ -709,7 +747,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@9a0cdf8d84aacf8c7daaac82efa43d1b34696a03\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
@@ -719,9 +757,13 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: 9a0cdf8d84aacf8c7daaac82efa43d1b34696a03/,
+    /buildchain-ref: 5a6a93ca1064a0df58bd2fa59ef8c523f832882b/,
   );
   assert.match(workflow, /declarative-release-tail: true/);
+  assert.match(
+    workflow,
+    /route-parity:[\s\S]*if: \$\{\{ needs\.promote\.result == 'success' && needs\.promote\.outputs\.release-tail-transaction-state == 'complete' \}\}/,
+  );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /package-manager: pnpm/);
@@ -1754,7 +1796,7 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
   assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.equal(stableLock.buildchain.ref, "v3");
-  assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
+  assert.equal(stableLock.buildchain.resolvedSha, "380b2d8c2a660b07ed785e71276f71dc6a9184f7");
   assert.equal(stableLock.buildchain.majorLine, "v3");
   assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.match(alphaLock.buildchain.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
@@ -1808,9 +1850,9 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@9a0cdf8d84aacf8c7daaac82efa43d1b34696a03/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b/,
   );
-  assert.match(promotion, /buildchain-ref: 9a0cdf8d84aacf8c7daaac82efa43d1b34696a03/);
+  assert.match(promotion, /buildchain-ref: 5a6a93ca1064a0df58bd2fa59ef8c523f832882b/);
   assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
 });
 

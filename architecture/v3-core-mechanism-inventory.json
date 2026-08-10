@@ -192,6 +192,7 @@
       "sourcePaths": [
         "packages/core/dev-delivery-proof.js",
         "packages/core/dev-delivery-warrant-cancellation.js",
+        "packages/core/dev-delivery-warrant-shadow.js",
         "packages/core/dev-delivery-warrant-settlement.js",
         "packages/core/dev-delivery-warrant.js",
         "scripts/dev-delivery-proof.mjs",
@@ -201,7 +202,8 @@
       ],
       "testPaths": [
         "tests/dev-delivery-warrant.test.mjs",
-        "tests/dev-delivery-warrant-command.test.mjs"
+        "tests/dev-delivery-warrant-command.test.mjs",
+        "tests/dev-delivery-warrant-shadow.test.mjs"
       ],
       "migrationDisposition": "rebuild-in-rust-with-compatibility-projection",
       "unresolved": [

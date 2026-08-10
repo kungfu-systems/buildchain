@@ -16,7 +16,7 @@ const NON_AUTHORITIES = [
 ];
 const RENDITIONS = [
   { id: "1080p", role: "primary", columns: 150, rows: 36, width: 1920, height: 1080 },
-  { id: "720p", role: "responsive", columns: 100, rows: 28, width: 1280, height: 720 },
+  { id: "720p", role: "responsive", columns: 150, rows: 28, width: 1280, height: 720 },
 ];
 
 function temporary(t) {
@@ -76,9 +76,9 @@ function scenario() {
 
 function declareLongForm(value) {
   value.execution.durationClass = "long-form";
-  value.execution.totalTimeoutSeconds = 180;
+  value.execution.totalTimeoutSeconds = 360;
   for (const demo of value.demos) {
-    for (const step of demo.steps) step.timeoutSeconds = 180;
+    for (const step of demo.steps) step.timeoutSeconds = 360;
   }
 }
 
@@ -227,6 +227,12 @@ test("scenario contract accepts multiple demos and rejects shell command authori
   const invalidComposition = structuredClone(scenario());
   invalidComposition.compositionMode = "cropped-terminal";
   assert.throws(() => validateScenario(invalidComposition), /composition mode/u);
+  const shrunkenResponsiveGrid = structuredClone(scenario());
+  shrunkenResponsiveGrid.renditions[1].columns = 100;
+  assert.throws(
+    () => validateScenario(shrunkenResponsiveGrid),
+    /native rendition profiles exactly/u,
+  );
 
   const readable = structuredClone(scenario());
   readable.playback = {
@@ -268,14 +274,14 @@ test("duration class keeps standard at 60 seconds and admits only bounded long-f
 
   const longForm = structuredClone(scenario());
   longForm.execution.durationClass = "long-form";
-  longForm.execution.totalTimeoutSeconds = 180;
-  longForm.demos[0].steps[0].timeoutSeconds = 180;
+  longForm.execution.totalTimeoutSeconds = 360;
+  longForm.demos[0].steps[0].timeoutSeconds = 360;
   assert.equal(validateScenario(longForm).execution.durationClass, "long-form");
 
-  longForm.execution.totalTimeoutSeconds = 181;
+  longForm.execution.totalTimeoutSeconds = 361;
   assert.throws(() => validateScenario(longForm), /total timeout/u);
-  longForm.execution.totalTimeoutSeconds = 180;
-  longForm.demos[0].steps[0].timeoutSeconds = 181;
+  longForm.execution.totalTimeoutSeconds = 360;
+  longForm.demos[0].steps[0].timeoutSeconds = 361;
   assert.throws(() => validateScenario(longForm), /timeoutSeconds/u);
 
   const unboundedSmoke = structuredClone(scenario());
@@ -344,7 +350,7 @@ test("capture shares ordered state within a demo and creates independent native 
   const manifest = JSON.parse(fs.readFileSync(path.join(output, "manifest.json"), "utf8"));
   assert.equal(manifest.status, "qualified");
   assert.equal(manifest.networkIsolation, "test-only");
-  assert.deepEqual(manifest.renditions.map(({ columns, rows }) => [columns, rows]), [[150, 36], [100, 28]]);
+  assert.deepEqual(manifest.renditions.map(({ columns, rows }) => [columns, rows]), [[150, 36], [150, 28]]);
   assert.notEqual(manifest.renditions[0].terminalCaptureRoot, manifest.renditions[1].terminalCaptureRoot);
   const captureValue = JSON.parse(fs.readFileSync(path.join(output, "renditions/1080p/terminal-capture.json"), "utf8"));
   assert.equal(captureValue.events.some((event) => Buffer.from(event.data, "base64").includes(Buffer.from("\u001b[38;5;42m"))), true, "ANSI color bytes remain in the capture");
@@ -681,6 +687,28 @@ test("reusable builds run the transport simulation before either artifact upload
     assert.match(block, /auditable-demo-transport-smoke\.mjs/u);
     assert.match(block, /name: Upload payload to S3 artifact relay/u);
   }
+});
+
+test("reusable builds validate the consumer scenario with the resolved runtime before building", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.build.yml"), "utf8");
+  const preflightStart = workflow.indexOf("\n  pre-build-contracts:");
+  const nativeStart = workflow.indexOf("\n  build-native:");
+  const containerStart = workflow.indexOf("\n  build-linux-container:");
+  const relayStart = workflow.indexOf("\n  relay-artifacts:");
+  assert.ok(preflightStart >= 0 && nativeStart > preflightStart);
+
+  const preflight = workflow.slice(preflightStart, nativeStart);
+  assert.match(preflight, /ref: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/u);
+  assert.match(preflight, /ref: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-sha \}\}/u);
+  assert.match(preflight, /auditable-demo-platform\.mjs[\s\S]*validate[\s\S]*--scenario/u);
+
+  for (const job of [
+    workflow.slice(nativeStart, containerStart),
+    workflow.slice(containerStart, relayStart),
+  ]) {
+    assert.match(job, /needs:[\s\S]*- pre-build-contracts/u);
+  }
+  assert.match(workflow, /"id":"pre-build-contracts","status":"\$\{\{ needs\.pre-build-contracts\.result \}\}"/u);
 });
 
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {

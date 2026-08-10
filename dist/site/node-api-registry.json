@@ -567,7 +567,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 60
+        "line": 61
       },
       "example": "import { artifactSigningDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -596,7 +596,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 313
+        "line": 374
       },
       "example": "import { createArtifactSigningReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -625,7 +625,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 167
+        "line": 226
       },
       "example": "import { createArtifactSigningRequest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -649,7 +649,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 103
+        "line": 162
       },
       "example": "import { listArtifactSigningProfiles } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -678,7 +678,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 111
+        "line": 170
       },
       "example": "import { resolveArtifactSigningProfile } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -711,7 +711,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 374
+        "line": 435
       },
       "example": "import { validateArtifactSigningReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -740,7 +740,7 @@
       ],
       "source": {
         "path": "packages/core/artifact-signing.js",
-        "line": 291
+        "line": 352
       },
       "example": "import { validateArtifactSigningRequest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1391,7 +1391,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1467
+        "line": 1527
       },
       "example": "import { discoverConfiguredDerivedVersionMaterial } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1424,7 +1424,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1428
+        "line": 1488
       },
       "example": "import { discoverConfiguredVersionStateFiles } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1457,7 +1457,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1372
+        "line": 1432
       },
       "example": "import { getLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1486,7 +1486,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 520
+        "line": 585
       },
       "example": "import { getNativeDiagnosticsProfile } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1515,7 +1515,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1376
+        "line": 1436
       },
       "example": "import { getPublishContract } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1544,7 +1544,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 328
+        "line": 353
       },
       "example": "import { getStableReleasePolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1573,7 +1573,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1500
+        "line": 1560
       },
       "example": "import { getVersionStrategy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1602,7 +1602,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 158
+        "line": 183
       },
       "example": "import { loadBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1635,7 +1635,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1509
+        "line": 1569
       },
       "example": "import { loadConfiguredAnchorManifest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1664,7 +1664,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 181
+        "line": 206
       },
       "example": "import { normalizeBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1701,7 +1701,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1333
+        "line": 1393
       },
       "example": "import { normalizeLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1730,7 +1730,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1380
+        "line": 1440
       },
       "example": "import { runLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1763,7 +1763,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1680
+        "line": 1740
       },
       "example": "import { updateConfiguredVersionStateContents } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1796,7 +1796,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1547
+        "line": 1607
       },
       "example": "import { validateBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3493,7 +3493,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 58
+        "line": 62
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3522,7 +3522,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 82
+        "line": 86
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3965,7 +3965,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 448
+        "line": 449
       },
       "example": "import { aggregateControllerReceipts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4090,7 +4090,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 150
+        "line": 151
       },
       "example": "import { controllerEvidenceDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4119,7 +4119,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 286
+        "line": 287
       },
       "example": "import { createControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4148,7 +4148,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 362
+        "line": 363
       },
       "example": "import { createControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4177,7 +4177,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 490
+        "line": 491
       },
       "example": "import { createControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4206,7 +4206,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 196
+        "line": 197
       },
       "example": "import { createControllerRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4235,7 +4235,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 531
+        "line": 532
       },
       "example": "import { normalizeControllerReceiptReferences } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4264,7 +4264,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 324
+        "line": 325
       },
       "example": "import { validateControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4297,7 +4297,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 422
+        "line": 423
       },
       "example": "import { validateControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4330,7 +4330,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 504
+        "line": 505
       },
       "example": "import { validateControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4794,7 +4794,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 559
+        "line": 568
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4831,7 +4831,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 511
+        "line": 520
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -4860,7 +4860,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 95
+        "line": 96
       },
       "example": "import { createDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5113,7 +5113,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 428
+        "line": 437
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5146,7 +5146,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 110
+        "line": 111
       },
       "example": "import { normalizeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5179,7 +5179,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 562
+        "line": 571
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5212,7 +5212,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 269
+        "line": 276
       },
       "example": "import { rankDevDeliveryCandidates } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5245,7 +5245,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 461
+        "line": 470
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5278,7 +5278,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 293
+        "line": 300
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5302,7 +5302,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 560
+        "line": 569
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5339,7 +5339,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 193
+        "line": 195
       },
       "example": "import { submitDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5560,7 +5560,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1085
+        "line": 1090
       },
       "example": "import { classifyProcessCommand } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5589,7 +5589,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 248
+        "line": 252
       },
       "example": "import { collectBuildchainDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5618,7 +5618,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 922
+        "line": 927
       },
       "example": "import { collectCacheDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5647,7 +5647,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 573
+        "line": 578
       },
       "example": "import { collectCompilerCacheDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5676,7 +5676,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 944
+        "line": 949
       },
       "example": "import { collectGitDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5705,7 +5705,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 295
+        "line": 299
       },
       "example": "import { collectNativeDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5734,7 +5734,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1029
+        "line": 1034
       },
       "example": "import { collectProcessTreeSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5758,7 +5758,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 468
+        "line": 472
       },
       "example": "import { collectRunnerDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5787,7 +5787,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 495
+        "line": 499
       },
       "example": "import { collectToolDiagnostics } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5816,7 +5816,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1408
+        "line": 1413
       },
       "example": "import { createDiagnosticsArtifact } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5845,7 +5845,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 722
+        "line": 727
       },
       "example": "import { createStructuredCacheEvidence } from \"@kungfu-tech/buildchain/diagnostics\";",
       "maturity": "stable",
@@ -5874,7 +5874,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1188
+        "line": 1193
       },
       "example": "import { detectRequestedParallelism } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5903,7 +5903,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1223
+        "line": 1228
       },
       "example": "import { detectRequestedParallelismFromProcessSamples } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5932,7 +5932,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1786
+        "line": 1791
       },
       "example": "import { formatDiagnosticsSummaryTable } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5961,7 +5961,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1468
+        "line": 1473
       },
       "example": "import { readDiagnosticsArtifact } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5998,7 +5998,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 953
+        "line": 958
       },
       "example": "import { redactDiagnosticsValue } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6027,7 +6027,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1362
+        "line": 1367
       },
       "example": "import { startProcessSampler } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6056,7 +6056,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1824
+        "line": 1829
       },
       "example": "import { summarizeDiagnosticsArtifacts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6085,7 +6085,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 219
+        "line": 223
       },
       "example": "import { summarizeLifecycleObservability } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6114,7 +6114,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1254
+        "line": 1259
       },
       "example": "import { summarizeProcessSamples } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6143,7 +6143,7 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 325
+        "line": 329
       },
       "example": "import { validateAnchoredPackageRelease } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6176,9 +6176,492 @@
       ],
       "source": {
         "path": "packages/core/diagnostics.js",
-        "line": 1459
+        "line": 1464
       },
       "example": "import { writeDiagnosticsArtifact } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
+      "name": "GitHubHousekeeperClient",
+      "kind": "class",
+      "signature": "class GitHubHousekeeperClient",
+      "parameters": [],
+      "returns": "GitHubHousekeeperClient",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github-client.js",
+        "line": 53
+      },
+      "example": "import { GitHubHousekeeperClient } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
+      "name": "GitHubHousekeeperProviderError",
+      "kind": "class",
+      "signature": "class GitHubHousekeeperProviderError",
+      "parameters": [],
+      "returns": "GitHubHousekeeperProviderError",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github-client.js",
+        "line": 36
+      },
+      "example": "import { GitHubHousekeeperProviderError } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github.js#applyGitHubHousekeeperPlan",
+      "name": "applyGitHubHousekeeperPlan",
+      "kind": "function",
+      "signature": "async function applyGitHubHousekeeperPlan({ client, plan, dryRun = true, priorReceipt, appliedAt = new Date().toISOString(), staleDays = DEFAULT_STALE_DAYS, maxActions = DEFAULT_MAX_ACTIONS, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ client, plan, dryRun = true, priorReceipt, appliedAt = new Date().toISOString(), staleDays = DEFAULT_STALE_DAYS, maxActions = DEFAULT_MAX_ACTIONS, }"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github.js",
+        "line": 409
+      },
+      "example": "import { applyGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github.js#collectGitHubHousekeeperInventory",
+      "name": "collectGitHubHousekeeperInventory",
+      "kind": "function",
+      "signature": "async function collectGitHubHousekeeperInventory({ client, repository, targetBranch, observedAt, staleDays = DEFAULT_STALE_DAYS, policy = {}, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ client, repository, targetBranch, observedAt, staleDays = DEFAULT_STALE_DAYS, policy = {}, }"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github.js",
+        "line": 110
+      },
+      "example": "import { collectGitHubHousekeeperInventory } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github.js#formatGitHubHousekeeperPlan",
+      "name": "formatGitHubHousekeeperPlan",
+      "kind": "function",
+      "signature": "function formatGitHubHousekeeperPlan(plan)",
+      "parameters": [
+        {
+          "name": "plan",
+          "signature": "plan"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github.js",
+        "line": 491
+      },
+      "example": "import { formatGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper-github.js#runGitHubHousekeeper",
+      "name": "runGitHubHousekeeper",
+      "kind": "function",
+      "signature": "async function runGitHubHousekeeper(options)",
+      "parameters": [
+        {
+          "name": "options",
+          "signature": "options"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper-github.js",
+        "line": 485
+      },
+      "example": "import { runGitHubHousekeeper } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
+      "name": "classifyHousekeeperBranch",
+      "kind": "function",
+      "signature": "function classifyHousekeeperBranch(branch, policyInput = {})",
+      "parameters": [
+        {
+          "name": "branch",
+          "signature": "branch"
+        },
+        {
+          "name": "policyInput",
+          "signature": "policyInput = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 92
+      },
+      "example": "import { classifyHousekeeperBranch } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
+      "name": "classifyHousekeeperPullRequest",
+      "kind": "function",
+      "signature": "function classifyHousekeeperPullRequest(pullRequest, policyInput = {})",
+      "parameters": [
+        {
+          "name": "pullRequest",
+          "signature": "pullRequest"
+        },
+        {
+          "name": "policyInput",
+          "signature": "policyInput = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 129
+      },
+      "example": "import { classifyHousekeeperPullRequest } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#classifyHousekeeperReplay",
+      "name": "classifyHousekeeperReplay",
+      "kind": "function",
+      "signature": "function classifyHousekeeperReplay(plan, priorReceipt)",
+      "parameters": [
+        {
+          "name": "plan",
+          "signature": "plan"
+        },
+        {
+          "name": "priorReceipt",
+          "signature": "priorReceipt"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 250
+      },
+      "example": "import { classifyHousekeeperReplay } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#createEngineeringHousekeeperPlan",
+      "name": "createEngineeringHousekeeperPlan",
+      "kind": "function",
+      "signature": "function createEngineeringHousekeeperPlan({ repository, target, branches = [], pullRequests = [], policy = {}, observedAt, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ repository, target, branches = [], pullRequests = [], policy = {}, observedAt, }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 155
+      },
+      "example": "import { createEngineeringHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#createEngineeringHousekeeperReceipt",
+      "name": "createEngineeringHousekeeperReceipt",
+      "kind": "function",
+      "signature": "function createEngineeringHousekeeperReceipt({ plan, outcomes, appliedAt, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ plan, outcomes, appliedAt, }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 231
+      },
+      "example": "import { createEngineeringHousekeeperReceipt } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#DEFAULT_HOUSEKEEPER_POLICY",
+      "name": "DEFAULT_HOUSEKEEPER_POLICY",
+      "kind": "constant",
+      "signature": "const DEFAULT_HOUSEKEEPER_POLICY",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 28
+      },
+      "example": "import { DEFAULT_HOUSEKEEPER_POLICY } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#ENGINEERING_HOUSEKEEPER_CONTRACT",
+      "name": "ENGINEERING_HOUSEKEEPER_CONTRACT",
+      "kind": "constant",
+      "signature": "const ENGINEERING_HOUSEKEEPER_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 3
+      },
+      "example": "import { ENGINEERING_HOUSEKEEPER_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#ENGINEERING_HOUSEKEEPER_SCHEMA_VERSION",
+      "name": "ENGINEERING_HOUSEKEEPER_SCHEMA_VERSION",
+      "kind": "constant",
+      "signature": "const ENGINEERING_HOUSEKEEPER_SCHEMA_VERSION",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 5
+      },
+      "example": "import { ENGINEERING_HOUSEKEEPER_SCHEMA_VERSION } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#engineeringHousekeeperRoot",
+      "name": "engineeringHousekeeperRoot",
+      "kind": "function",
+      "signature": "function engineeringHousekeeperRoot(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 49
+      },
+      "example": "import { engineeringHousekeeperRoot } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#HOUSEKEEPER_REASON_CODES",
+      "name": "HOUSEKEEPER_REASON_CODES",
+      "kind": "constant",
+      "signature": "const HOUSEKEEPER_REASON_CODES",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 7
+      },
+      "example": "import { HOUSEKEEPER_REASON_CODES } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction",
+      "name": "revalidateHousekeeperBranchAction",
+      "kind": "function",
+      "signature": "function revalidateHousekeeperBranchAction(action, current, policy = {})",
+      "parameters": [
+        {
+          "name": "action",
+          "signature": "action"
+        },
+        {
+          "name": "current",
+          "signature": "current"
+        },
+        {
+          "name": "policy",
+          "signature": "policy = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/engineering-housekeeper.js",
+        "line": 208
+      },
+      "example": "import { revalidateHousekeeperBranchAction } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -8236,11 +8719,11 @@
       "id": "packages/core/kfd-gate.js#createKfd1ReleaseGateEvidence",
       "name": "createKfd1ReleaseGateEvidence",
       "kind": "function",
-      "signature": "function createKfd1ReleaseGateEvidence({ cwd = process.cwd(), artifactRoot = \"\", artifacts = [], witnesses = [], verifiedAt = new Date().toISOString(), metadata = resolveKfd1Metadata(), } = {})",
+      "signature": "function createKfd1ReleaseGateEvidence({ cwd = process.cwd(), artifactRoot = \"\", artifactSearchRoots = [], artifacts = [], witnesses = [], verifiedAt = new Date().toISOString(), metadata = resolveKfd1Metadata(), } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), artifactRoot = \"\", artifacts = [], witnesses = [], verifiedAt = new Date().toISOString(), metadata = resolveKfd1Metadata(), } = {}"
+          "signature": "{ cwd = process.cwd(), artifactRoot = \"\", artifactSearchRoots = [], artifacts = [], witnesses = [], verifiedAt = new Date().toISOString(), metadata = resolveKfd1Metadata(), } = {}"
         }
       ],
       "returns": "unknown",
@@ -8252,7 +8735,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-gate.js",
-        "line": 977
+        "line": 1000
       },
       "example": "import { createKfd1ReleaseGateEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -8281,7 +8764,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-gate.js",
-        "line": 1132
+        "line": 1162
       },
       "example": "import { createKfd3CollaborationInterfaceReleaseGateEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -8702,7 +9185,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-gate.js",
-        "line": 1337
+        "line": 1367
       },
       "example": "import { validateKfd1ReleaseGateEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -8768,7 +9251,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-gate.js",
-        "line": 1470
+        "line": 1500
       },
       "example": "import { validateKfd3CollaborationInterfaceReleaseGateEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13862,7 +14345,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 380
+        "line": 392
       },
       "example": "import { createPublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -13891,7 +14374,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 821
+        "line": 833
       },
       "example": "import { executePublicationRehearsal } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -13920,7 +14403,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 410
+        "line": 422
       },
       "example": "import { normalizePublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -14045,7 +14528,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 787
+        "line": 799
       },
       "example": "import { publicationRehearsalBindingRoot } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -14078,7 +14561,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 801
+        "line": 813
       },
       "example": "import { publicationRehearsalDiagnostic } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -14187,7 +14670,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 898
+        "line": 910
       },
       "example": "import { resolvePublicationRehearsalFile } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -14216,7 +14699,7 @@
       ],
       "source": {
         "path": "packages/core/publication-rehearsal-runtime.js",
-        "line": 571
+        "line": 583
       },
       "example": "import { verifyPublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
@@ -16058,11 +16541,11 @@
       "id": "packages/core/release-passport.js#collectGitHubReleasePassport",
       "name": "collectGitHubReleasePassport",
       "kind": "function",
-      "signature": "function collectGitHubReleasePassport({ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {})",
+      "signature": "function collectGitHubReleasePassport({ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", kfdArtifactSearchRoots = [], releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {}"
+          "signature": "{ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", kfdArtifactSearchRoots = [], releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -16074,7 +16557,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1488
+        "line": 1563
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16103,7 +16586,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1158
+        "line": 1233
       },
       "example": "import { createArtifactEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16132,7 +16615,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 201
+        "line": 228
       },
       "example": "import { createInvariantPassportGate } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -16161,7 +16644,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2628
+        "line": 2738
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16190,7 +16673,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1214
+        "line": 1289
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16219,7 +16702,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2812
+        "line": 2922
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16368,7 +16851,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2841
+        "line": 2951
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16429,7 +16912,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2694
+        "line": 2804
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16531,7 +17014,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 216
+        "line": 243
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16584,7 +17067,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2853
+        "line": 2963
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16613,7 +17096,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2743
+        "line": 2853
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19188,14 +19671,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d1067d7b0678cd9b6a98f2f1b1ab39f18b13686c2d6fd28f40c83757d4f90881",
+      "digest": "sha256:ae7917ccdbbf268073bad5dac68e9af915d6e40ede628171f4e5241c4e5bc88a",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 592,
+      "symbolCount": 609,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -19203,6 +19686,7 @@
         "packages/core/controller-evidence.js#aggregateControllerReceipts",
         "packages/core/anchored-version-material.js#ANCHORED_VERSION_MATERIAL_CONTRACT",
         "packages/core/logging.js#appendBuildchainLogEvent",
+        "packages/core/engineering-housekeeper-github.js#applyGitHubHousekeeperPlan",
         "packages/core/surface-manifest.js#applySurfaceTimestampPolicy",
         "packages/core/release-passport.js#ARTIFACT_EVIDENCE_CONTRACT",
         "packages/core/artifact-passport.js#ARTIFACT_PASSPORT_LOCATOR_CONTRACT",
@@ -19294,6 +19778,9 @@
         "packages/core/kfd2-product-claims.js#checkKfd2ProductClaimOutputs",
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperReplay",
         "packages/core/diagnostics.js#classifyProcessCommand",
         "packages/core/release-propagation-agent-entry.js#classifyReleasePropagationCondition",
         "packages/core/github-governance-authority.js#codeownersForPath",
@@ -19302,6 +19789,7 @@
         "packages/core/diagnostics.js#collectCacheDiagnostics",
         "packages/core/diagnostics.js#collectCompilerCacheDiagnostics",
         "packages/core/diagnostics.js#collectGitDiagnostics",
+        "packages/core/engineering-housekeeper-github.js#collectGitHubHousekeeperInventory",
         "packages/core/release-passport.js#collectGitHubReleasePassport",
         "packages/core/build-facts.js#collectGitSourceFacts",
         "packages/core/homebrew.js#collectHomebrewTapFacts",
@@ -19358,6 +19846,8 @@
         "packages/core/controller-evidence.js#createControllerReceiptReference",
         "packages/core/controller-evidence.js#createControllerRegistry",
         "packages/core/diagnostics.js#createDiagnosticsArtifact",
+        "packages/core/engineering-housekeeper.js#createEngineeringHousekeeperPlan",
+        "packages/core/engineering-housekeeper.js#createEngineeringHousekeeperReceipt",
         "packages/core/github-artifact-attestation.js#createGitHubArtifactAttestationEvidence",
         "packages/core/github-artifact-attestation.js#createGitHubArtifactAttestationPolicy",
         "packages/core/github-artifact-attestation.js#createGitHubArtifactAttestationVerificationPlan",
@@ -19416,6 +19906,7 @@
         "packages/core/web-surface-publication-candidate.js#createWebSurfacePublicationCandidate",
         "packages/core/channel-candidate.js#decideChannelCandidate",
         "packages/core/issue-reporting.js#DEFAULT_BUILDCHAIN_ISSUE_REPOSITORY",
+        "packages/core/engineering-housekeeper.js#DEFAULT_HOUSEKEEPER_POLICY",
         "packages/core/logging.js#defaultBuildchainLogPath",
         "packages/core/publish-transaction.js#defaultPublishEvidencePath",
         "packages/core/publish-transaction.js#defaultReleaseStatePath",
@@ -19433,6 +19924,9 @@
         "packages/core/buildchain-config.js#discoverConfiguredVersionStateFiles",
         "packages/core/kfd.js#discoverKfdStandards",
         "packages/core/paper-fleet.js#discoverPaperFleet",
+        "packages/core/engineering-housekeeper.js#ENGINEERING_HOUSEKEEPER_CONTRACT",
+        "packages/core/engineering-housekeeper.js#ENGINEERING_HOUSEKEEPER_SCHEMA_VERSION",
+        "packages/core/engineering-housekeeper.js#engineeringHousekeeperRoot",
         "packages/core/public-surface-audit.js#enumerateActionInputs",
         "packages/core/public-surface-cli.js#enumerateCliCommandsFromBin",
         "packages/core/public-surface-audit.js#enumerateDocCommandRefs",
@@ -19456,6 +19950,7 @@
         "packages/core/buildchain-contract.js#finalizeBuildchainContractWorld",
         "packages/core/candidate-timeline.js#formatCandidateTimelineReport",
         "packages/core/diagnostics.js#formatDiagnosticsSummaryTable",
+        "packages/core/engineering-housekeeper-github.js#formatGitHubHousekeeperPlan",
         "packages/core/release-line-dry-run.js#formatReleaseLineDryRun",
         "packages/core/buildchain-config.js#getLifecycleStage",
         "packages/core/buildchain-config.js#getNativeDiagnosticsProfile",
@@ -19478,11 +19973,14 @@
         "packages/core/github-artifact-attestation.js#githubArtifactAttestationSha256Buffer",
         "packages/core/github-artifact-attestation.js#githubArtifactAttestationSha256File",
         "packages/core/github-governance-authority.js#githubGovernanceDigest",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
         "packages/core/issue-reporting.js#GitHubIssueRequestError",
         "packages/core/release-tail-provider-adapters.js#githubReleaseAssetsTargetRoot",
         "packages/core/homebrew.js#HOMEBREW_TAP_CHECK_CONTRACT",
         "packages/core/homebrew.js#HOMEBREW_TAP_FACTS_CONTRACT",
         "packages/core/homebrew.js#HOMEBREW_TAP_MANIFEST_CONTRACT",
+        "packages/core/engineering-housekeeper.js#HOUSEKEEPER_REASON_CODES",
         "packages/core/release-passport.js#IMPACT_LEDGER_CONTRACT",
         "packages/core/kfd-agent-hub.js#initKfdAgentHub",
         "packages/core/kfd-agent-hub.js#inspectKfdAgentHub",
@@ -19696,8 +20194,10 @@
         "packages/core/publication-artifact-candidate.js#resolvePublicationCandidateFile",
         "packages/core/buildchain-layout.js#resolveReleasePassportPath",
         "packages/core/release-propagation-work.js#resumeReleasePropagationWork",
+        "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction",
         "packages/core/stable-candidate-ledger.js#revokeStableCandidate",
         "packages/core/release-activation-transaction.js#rollbackReleaseActivationTransaction",
+        "packages/core/engineering-housekeeper-github.js#runGitHubHousekeeper",
         "packages/core/buildchain-config.js#runLifecycleStage",
         "packages/core/publication-authority.js#RUNNER_PROVENANCE_CLASSES",
         "packages/core/publication-authority.js#RUNNER_PROVENANCE_CONTRACT",
@@ -19878,14 +20378,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d1067d7b0678cd9b6a98f2f1b1ab39f18b13686c2d6fd28f40c83757d4f90881",
+      "digest": "sha256:ae7917ccdbbf268073bad5dac68e9af915d6e40ede628171f4e5241c4e5bc88a",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 592,
+      "symbolCount": 609,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -19893,6 +20393,7 @@
         "packages/core/controller-evidence.js#aggregateControllerReceipts",
         "packages/core/anchored-version-material.js#ANCHORED_VERSION_MATERIAL_CONTRACT",
         "packages/core/logging.js#appendBuildchainLogEvent",
+        "packages/core/engineering-housekeeper-github.js#applyGitHubHousekeeperPlan",
         "packages/core/surface-manifest.js#applySurfaceTimestampPolicy",
         "packages/core/release-passport.js#ARTIFACT_EVIDENCE_CONTRACT",
         "packages/core/artifact-passport.js#ARTIFACT_PASSPORT_LOCATOR_CONTRACT",
@@ -19984,6 +20485,9 @@
         "packages/core/kfd2-product-claims.js#checkKfd2ProductClaimOutputs",
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperReplay",
         "packages/core/diagnostics.js#classifyProcessCommand",
         "packages/core/release-propagation-agent-entry.js#classifyReleasePropagationCondition",
         "packages/core/github-governance-authority.js#codeownersForPath",
@@ -19992,6 +20496,7 @@
         "packages/core/diagnostics.js#collectCacheDiagnostics",
         "packages/core/diagnostics.js#collectCompilerCacheDiagnostics",
         "packages/core/diagnostics.js#collectGitDiagnostics",
+        "packages/core/engineering-housekeeper-github.js#collectGitHubHousekeeperInventory",
         "packages/core/release-passport.js#collectGitHubReleasePassport",
         "packages/core/build-facts.js#collectGitSourceFacts",
         "packages/core/homebrew.js#collectHomebrewTapFacts",
@@ -20048,6 +20553,8 @@
         "packages/core/controller-evidence.js#createControllerReceiptReference",
         "packages/core/controller-evidence.js#createControllerRegistry",
         "packages/core/diagnostics.js#createDiagnosticsArtifact",
+        "packages/core/engineering-housekeeper.js#createEngineeringHousekeeperPlan",
+        "packages/core/engineering-housekeeper.js#createEngineeringHousekeeperReceipt",
         "packages/core/github-artifact-attestation.js#createGitHubArtifactAttestationEvidence",
         "packages/core/github-artifact-attestation.js#createGitHubArtifactAttestationPolicy",
         "packages/core/github-artifact-attestation.js#createGitHubArtifactAttestationVerificationPlan",
@@ -20106,6 +20613,7 @@
         "packages/core/web-surface-publication-candidate.js#createWebSurfacePublicationCandidate",
         "packages/core/channel-candidate.js#decideChannelCandidate",
         "packages/core/issue-reporting.js#DEFAULT_BUILDCHAIN_ISSUE_REPOSITORY",
+        "packages/core/engineering-housekeeper.js#DEFAULT_HOUSEKEEPER_POLICY",
         "packages/core/logging.js#defaultBuildchainLogPath",
         "packages/core/publish-transaction.js#defaultPublishEvidencePath",
         "packages/core/publish-transaction.js#defaultReleaseStatePath",
@@ -20123,6 +20631,9 @@
         "packages/core/buildchain-config.js#discoverConfiguredVersionStateFiles",
         "packages/core/kfd.js#discoverKfdStandards",
         "packages/core/paper-fleet.js#discoverPaperFleet",
+        "packages/core/engineering-housekeeper.js#ENGINEERING_HOUSEKEEPER_CONTRACT",
+        "packages/core/engineering-housekeeper.js#ENGINEERING_HOUSEKEEPER_SCHEMA_VERSION",
+        "packages/core/engineering-housekeeper.js#engineeringHousekeeperRoot",
         "packages/core/public-surface-audit.js#enumerateActionInputs",
         "packages/core/public-surface-cli.js#enumerateCliCommandsFromBin",
         "packages/core/public-surface-audit.js#enumerateDocCommandRefs",
@@ -20146,6 +20657,7 @@
         "packages/core/buildchain-contract.js#finalizeBuildchainContractWorld",
         "packages/core/candidate-timeline.js#formatCandidateTimelineReport",
         "packages/core/diagnostics.js#formatDiagnosticsSummaryTable",
+        "packages/core/engineering-housekeeper-github.js#formatGitHubHousekeeperPlan",
         "packages/core/release-line-dry-run.js#formatReleaseLineDryRun",
         "packages/core/buildchain-config.js#getLifecycleStage",
         "packages/core/buildchain-config.js#getNativeDiagnosticsProfile",
@@ -20168,11 +20680,14 @@
         "packages/core/github-artifact-attestation.js#githubArtifactAttestationSha256Buffer",
         "packages/core/github-artifact-attestation.js#githubArtifactAttestationSha256File",
         "packages/core/github-governance-authority.js#githubGovernanceDigest",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
         "packages/core/issue-reporting.js#GitHubIssueRequestError",
         "packages/core/release-tail-provider-adapters.js#githubReleaseAssetsTargetRoot",
         "packages/core/homebrew.js#HOMEBREW_TAP_CHECK_CONTRACT",
         "packages/core/homebrew.js#HOMEBREW_TAP_FACTS_CONTRACT",
         "packages/core/homebrew.js#HOMEBREW_TAP_MANIFEST_CONTRACT",
+        "packages/core/engineering-housekeeper.js#HOUSEKEEPER_REASON_CODES",
         "packages/core/release-passport.js#IMPACT_LEDGER_CONTRACT",
         "packages/core/kfd-agent-hub.js#initKfdAgentHub",
         "packages/core/kfd-agent-hub.js#inspectKfdAgentHub",
@@ -20386,8 +20901,10 @@
         "packages/core/publication-artifact-candidate.js#resolvePublicationCandidateFile",
         "packages/core/buildchain-layout.js#resolveReleasePassportPath",
         "packages/core/release-propagation-work.js#resumeReleasePropagationWork",
+        "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction",
         "packages/core/stable-candidate-ledger.js#revokeStableCandidate",
         "packages/core/release-activation-transaction.js#rollbackReleaseActivationTransaction",
+        "packages/core/engineering-housekeeper-github.js#runGitHubHousekeeper",
         "packages/core/buildchain-config.js#runLifecycleStage",
         "packages/core/publication-authority.js#RUNNER_PROVENANCE_CLASSES",
         "packages/core/publication-authority.js#RUNNER_PROVENANCE_CONTRACT",
@@ -20593,7 +21110,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-signing",
       "export": "./artifact-signing",
       "target": "./packages/core/artifact-signing.js",
-      "digest": "sha256:7b4c88201125f08645092b121eeeab0390b4fdee665f0d6c949217cb6545d590",
+      "digest": "sha256:4b6f1675af2aff8205329421a4e158a0ce5e6d2c07945d2208832fb68ca5b8ad",
       "summary": "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -20816,7 +21333,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:8a5070254b58cf2ea4e4851b29de4edfcf618a7d6acfb2235e705246ce40e22a",
+      "digest": "sha256:482b124aefc9c829098f68967c6d942fa0731b77628e309767347a0aaaf8d456",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -20852,7 +21369,7 @@
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
-      "digest": "sha256:21d14194f9b876927c54b53cecf8265b23085b05f98d57c5526ef2a4a033962f",
+      "digest": "sha256:f1f9ded9dbb022c930d21fa408c2b0f19ff164b6fcf047f3ee644fd183ff4584",
       "summary": "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -20904,7 +21421,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:09a0b75d556d9722faab70a7e9113701f33edf51386d6c4d5f00c7a1d786e925",
+      "digest": "sha256:084b586e798779c324b5fb68b6d2e9a9e2cc397daba1bd9f78a34d584c51f445",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -21594,7 +22111,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:941c15fefd5ba161a5822c7e1de9e99cae4fc2768a610b2d2aa4a2a97b95705f",
+      "digest": "sha256:c340301fb115c81b6cb382b6a563d3d3cc4ed45f070a631699358975db03d1c5",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -21659,10 +22176,71 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/engineering-housekeeper",
+      "export": "./engineering-housekeeper",
+      "target": "./packages/core/engineering-housekeeper.js",
+      "digest": "sha256:8d2075a7a4836dc8b08bc72e3e08171e3f9bcdbc18e626db912e4048769c627b",
+      "summary": "Provider-neutral repository hygiene classification, deterministic plan and receipt, apply-time revalidation, and replay APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 11,
+      "symbolIds": [
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
+        "packages/core/engineering-housekeeper.js#classifyHousekeeperReplay",
+        "packages/core/engineering-housekeeper.js#createEngineeringHousekeeperPlan",
+        "packages/core/engineering-housekeeper.js#createEngineeringHousekeeperReceipt",
+        "packages/core/engineering-housekeeper.js#DEFAULT_HOUSEKEEPER_POLICY",
+        "packages/core/engineering-housekeeper.js#ENGINEERING_HOUSEKEEPER_CONTRACT",
+        "packages/core/engineering-housekeeper.js#ENGINEERING_HOUSEKEEPER_SCHEMA_VERSION",
+        "packages/core/engineering-housekeeper.js#engineeringHousekeeperRoot",
+        "packages/core/engineering-housekeeper.js#HOUSEKEEPER_REASON_CODES",
+        "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/engineering-housekeeper-github",
+      "export": "./engineering-housekeeper-github",
+      "target": "./packages/core/engineering-housekeeper-github.js",
+      "digest": "sha256:fb9a9d15b284236cd4e09aedb238927d6ccd900ff011ad85eb184cecf7105750",
+      "summary": "Paginated GitHub repository hygiene inventory, default-dry-run execution, exact-head mutation fences, and rooted provider receipts.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 6,
+      "symbolIds": [
+        "packages/core/engineering-housekeeper-github.js#applyGitHubHousekeeperPlan",
+        "packages/core/engineering-housekeeper-github.js#collectGitHubHousekeeperInventory",
+        "packages/core/engineering-housekeeper-github.js#formatGitHubHousekeeperPlan",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
+        "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
+        "packages/core/engineering-housekeeper-github.js#runGitHubHousekeeper"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/kfd-gate",
       "export": "./kfd-gate",
       "target": "./packages/core/kfd-gate.js",
-      "digest": "sha256:f31691f36f2a7930798805cb470aff7acd3503799cb72b954c7787b1d8b3eb31",
+      "digest": "sha256:0ee7f76d04f9b77a63ec2cc12cec8e804da47b8ef81075982feb351346ac3d5b",
       "summary": "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -21792,7 +22370,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:7d91592c518277646154ef5c7fde27d7101c87a0d7f69c90911ac0c7583c20ec",
+      "digest": "sha256:dfebb115f842e83a189868c3ef06fa72e5e8043327e5f1c7d5d918f87cd2c74e",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -22057,7 +22635,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-rehearsal-runtime",
       "export": "./publication-rehearsal-runtime",
       "target": "./packages/core/publication-rehearsal-runtime.js",
-      "digest": "sha256:9aa75e69b7635dddd5ce9ac89fa36fb6518f6a5cf336590eaca4ce6be472adbc",
+      "digest": "sha256:e972ed649ab45d079ed598cc94587d35ab608ecb9a39a715eec55ae0d260f0eb",
       "summary": "Content-addressed local, replay, and provider-recording publication rehearsal over the shared release-tail core.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -22188,7 +22766,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:6dd79b998f63cf996e5c76b4fe0c654d12ca603cd5db1277ef3347f489b96ef0"
+      "digest": "sha256:ed843753964193ecb59610a54f0f23d76578228ebe6d31d1d6edce526729910c"
     },
     {
       "id": "build-facts",

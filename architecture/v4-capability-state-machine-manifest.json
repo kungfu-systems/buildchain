@@ -218,7 +218,8 @@
       ],
       "invariants": [
         "one active fenced writer per protected base",
-        "expected-old queue root must match"
+        "expected-old queue root must match",
+        "bounded-concurrency shadow qualification has no effects or production authority"
       ],
       "effects": [
         "write Git-ref state commit",
@@ -227,7 +228,8 @@
       "adapters": ["Git ref adapter", "GitHub pull-request adapter"],
       "tests": [
         "tests/dev-delivery-warrant.test.mjs",
-        "tests/dev-delivery-warrant-command.test.mjs"
+        "tests/dev-delivery-warrant-command.test.mjs",
+        "tests/dev-delivery-warrant-shadow.test.mjs"
       ],
       "recovery": [
         "expired lease returns an eligible candidate without losing age"
