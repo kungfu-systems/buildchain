@@ -237,9 +237,8 @@ jobs:
     if: ${{ inputs.mode == 'apply' && inputs.apply-enabled && needs.plan.outputs.branch-action-count != '0' }}
     needs: plan
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      pull-requests: read
+    # Mutation authority is inherited from the caller. A report caller passes
+    # only read permissions, while apply callers explicitly pass the write ceiling.
     outputs:
       receipt-root: ${{ steps.housekeeper.outputs.receipt-root }}
     env:
@@ -317,9 +316,8 @@ jobs:
     if: ${{ inputs.mode == 'apply' && inputs.apply-enabled && inputs.stale-pull-request-label != '' && needs.plan.outputs.pull-request-action-count != '0' }}
     needs: plan
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      pull-requests: write
+    # See delete-branches: a reusable workflow cannot elevate the report
+    # caller's read-only GITHUB_TOKEN during startup validation.
     outputs:
       receipt-root: ${{ steps.housekeeper.outputs.receipt-root }}
     env:
