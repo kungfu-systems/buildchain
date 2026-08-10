@@ -74,7 +74,7 @@ on:
         type: string
         default: v4
     secrets:
-      github_token:
+      housekeeper_token:
         description: "Optional caller-owned token. Defaults to the caller-scoped github.token."
         required: false
       github_app_id:
@@ -194,7 +194,7 @@ jobs:
       - name: Create exact housekeeper plan and report receipt
         id: housekeeper
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.github_token || github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
           HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
           HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
           HOUSEKEEPER_MODE: ${{ inputs.mode }}
@@ -291,7 +291,7 @@ jobs:
       - name: Revalidate and apply branch actions
         id: housekeeper
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.github_token || github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
           HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
           HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
           HOUSEKEEPER_MODE: apply
@@ -371,7 +371,7 @@ jobs:
       - name: Revalidate and apply pull-request actions
         id: housekeeper
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.github_token || github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
           HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
           HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
           HOUSEKEEPER_MODE: apply

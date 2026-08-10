@@ -2015,7 +2015,7 @@
       "secrets": [
         "github_app_id",
         "github_app_private_key",
-        "github_token"
+        "housekeeper_token"
       ],
       "secretCount": 3,
       "outputs": [
