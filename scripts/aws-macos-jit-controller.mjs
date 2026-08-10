@@ -14,6 +14,7 @@ import {
 import { executeMacosJitJob } from "./aws-macos-jit-job-controller.mjs";
 import {
   assertDryRun,
+  assertMacosBudgetLaunchGate,
   assertOwnership,
   awsArgs,
   awsJson,
@@ -32,6 +33,7 @@ function flag(name) {
 }
 
 function assertCampaignLaunchPreflight(plan, profile) {
+  const launchGate = assertMacosBudgetLaunchGate(plan, profile);
   const commit = ghJson(
     ["api", `repos/${plan.repository}/commits/${plan.source.sha}`],
     undefined,
@@ -120,6 +122,7 @@ function assertCampaignLaunchPreflight(plan, profile) {
     );
   }
   return {
+    ...launchGate,
     exactCommit: plan.source.sha,
     activeHosts: activeHosts.length,
     activeInstances: instances.length,
@@ -462,6 +465,7 @@ export function executeMacosJitCampaignClose(plan, { profile = "" } = {}) {
 function commonValues(execute) {
   return {
     execute,
+    accountId: arg("account-id"),
     repository: arg("repository", "kungfu-systems/kungfu"),
     campaignId: arg("campaign-id"),
     sourceSha: arg("source-sha"),

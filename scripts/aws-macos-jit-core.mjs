@@ -6,9 +6,13 @@ export const MACOS_EC2_JIT = Object.freeze({
   phase: "macos-ec2-jit",
   region: "us-east-1",
   repository: "kungfu-systems/kungfu",
+  workflowId: "323846928",
   stack: "kungfu-buildchain-macos-jit",
+  budgetName: "kungfu-buildchain-macos-jit-actual-spend",
+  budgetUsageType: "HostUsage:mac2",
+  budgetOperation: "RunInstances",
   instanceType: "mac2.metal",
-  pricePerHourUsd: 0.6498,
+  pricePerHourUsd: 0.65,
   minimumHostAllocationHours: 24,
   maximumHostAllocationHours: 30,
   maxAcceptedHosts: 1,
@@ -323,8 +327,14 @@ export function verifyMacosEc2JitQualification({
   }
   let allocationHours = 0;
   try {
-    const allocatedAt = iso(hostLifecycle.allocatedAt, "hostLifecycle.allocatedAt");
-    const releasedAt = iso(hostLifecycle.releasedAt, "hostLifecycle.releasedAt");
+    const allocatedAt = iso(
+      hostLifecycle.allocatedAt,
+      "hostLifecycle.allocatedAt",
+    );
+    const releasedAt = iso(
+      hostLifecycle.releasedAt,
+      "hostLifecycle.releasedAt",
+    );
     allocationHours = elapsedHours(allocatedAt, releasedAt);
     if (
       hostLifecycle.status !== "passed" ||

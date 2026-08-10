@@ -424,9 +424,28 @@ Resources:
           Unit: USD
         BudgetType: COST
         TimeUnit: MONTHLY
-        CostFilters:
-          TagKeyValue:
-            - user:kungfu:provider$macos-ec2-jit
+        Metrics:
+          - UnblendedCost
+        FilterExpression:
+          And:
+            - Dimensions:
+                Key: USAGE_TYPE
+                Values:
+                  - HostUsage:mac2
+                MatchOptions:
+                  - EQUALS
+            - Dimensions:
+                Key: OPERATION
+                Values:
+                  - RunInstances
+                MatchOptions:
+                  - EQUALS
+            - Dimensions:
+                Key: REGION
+                Values:
+                  - us-east-1
+                MatchOptions:
+                  - EQUALS
       NotificationsWithSubscribers:
         - Notification:
             ComparisonOperator: GREATER_THAN
@@ -464,3 +483,5 @@ Outputs:
     Value: !Ref Reaper
   KillSwitchTopic:
     Value: !Ref KillSwitchTopic
+  BudgetDimensionFilter:
+    Value: USAGE_TYPE=HostUsage:mac2;OPERATION=RunInstances;REGION=us-east-1

@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 294,
-    "maxHandMaintainedSourceLines": 114633,
+    "maxHandMaintainedSourceLines": 114821,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
-    "latestTransition": "Release Train freezes one authorized Alpha candidate while compatibility acceptance is projected from immutable temporal proofs.",
-    "rationale": "Two bounded provider-neutral modules compose without sharing authority. Release Train adds rooted Release Cut identity, compare-and-swap transitions, idempotent Dev observations, enumerated supersession, and replay validation. Compatibility proof projection records five direct historical relations with exact direction, scope, protected authority, Git cut, and merge evidence; it derives legacy projections and emits proof-rooted positive and negative receipts. Generated public surfaces expose both contracts, and focused negative tests bind stale transition roots, tampering, orphan projections, compatible legacy consumers, and unknown breaking drift. Existing debt shrinks or remains fixed; these exact combined repository ceilings cannot grow implicitly."
+    "latestTransition": "Compatibility proof projection and the macOS paid-allocation controller compose without weakening either evidence or budget authority.",
+    "rationale": "Compatibility proof projection records direct historical relations and emits proof-rooted positive and negative receipts. The bounded macOS launch gate independently verifies the workload account, disabled workflow, complete stack, AWS-owned HostUsage:mac2 Budget dimensions, USD 25 identity, exact 80/95 percent thresholds, and SNS subscribers before AllocateHosts. The one-host, 24-hour minimum, 30-hour maximum, DryRun, ownership, JIT, and cleanup controls remain unchanged. Existing debt shrinks or remains fixed; these exact combined repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
