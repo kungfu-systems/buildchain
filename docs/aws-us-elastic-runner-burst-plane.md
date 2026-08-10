@@ -380,7 +380,7 @@ host, including at least one full run, plus proof that:
 ### Phase 3 lifecycle controller
 
 `scripts/aws-macos-jit-controller.mjs` is the operator boundary for the paid
-campaign. It has three explicit mutation modes:
+campaign. It has four explicit mutation modes:
 
 - `launch-campaign` binds the exact repository source, AMI, availability zone,
   tagged Dedicated Host, and reusable instance. Before paid allocation it
@@ -395,6 +395,16 @@ campaign. It has three explicit mutation modes:
   mode-0600 temporary file into a distinct SSM SecureString, sends only the
   credential-free bootstrap through SSM, and removes the parameter plus runner
   registration if command delivery fails.
+- `rebind-campaign` repairs the source of an allocated but unused campaign
+  without buying another host. It requires the workflow to remain manually
+  disabled, the replacement source to be a strict descendant on the same
+  campaign ref, and every prior matching run to contain zero jobs and zero
+  artifacts. It also requires no registered JIT runner, SSM parameter, or
+  bootstrap evidence and verifies the one exact host, instance, and encrypted
+  volume. The operation updates only those resources' source tags and the
+  existing GitHub ref, emits a zero-allocation receipt, and compensates back to
+  the prior source if the ref update or readback fails. It never calls
+  `AllocateHosts`, `RunInstances`, or workflow dispatch.
 - `close-campaign` refuses execution before the provider's 24-hour minimum,
   verifies the encrypted delete-on-termination root volume, removes scoped JIT
   residue, terminates the exact instance, and requires a `ReleaseHosts` DryRun
@@ -405,8 +415,10 @@ campaign. It has three explicit mutation modes:
 Every execute mode requires the exact source SHA and campaign id to be repeated
 through `--confirm-source-sha` and `--confirm-campaign-id`. `run-job` also
 requires `--confirm-run-id`; `launch-campaign` additionally requires the
-expected workload account through `--account-id`. Omitting `--execute` emits a
-deterministic plan without changing AWS or GitHub state.
+expected workload account through `--account-id`. `rebind-campaign`
+additionally repeats the prior source, host, and instance identities and
+requires `--confirm-zero-allocation`. Omitting `--execute` emits a deterministic
+plan without changing AWS or GitHub state.
 
 ## Provider lifecycle
 

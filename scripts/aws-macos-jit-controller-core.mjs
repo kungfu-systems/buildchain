@@ -56,6 +56,17 @@ function source(values) {
   };
 }
 
+function previousSource(values) {
+  return {
+    sha: exactSha(values.previousSourceSha),
+    ref: exact(
+      values.previousSourceRef || values.sourceRef,
+      /^refs\/heads\/[A-Za-z0-9._/-]+$/,
+      "previousSourceRef",
+    ),
+  };
+}
+
 function campaignId(value) {
   return exact(value, /^[a-z0-9][a-z0-9-]{2,47}$/, "campaignId");
 }
@@ -176,6 +187,71 @@ export function createMacosJitCampaignPlan(values = {}) {
       minimumHostAllocationHours: MACOS_EC2_JIT.minimumHostAllocationHours,
       maximumHostAllocationHours: MACOS_EC2_JIT.maximumHostAllocationHours,
       cleanupOwner: "scheduled-card-scoped-reaper",
+      budget: {
+        name: regionConfig.budgetName,
+        limitUsd: MACOS_EC2_JIT.budgetLimitUsd,
+        metrics: ["UnblendedCost"],
+        dimensionFilter: {
+          usageTypes: regionConfig.budgetUsageTypes,
+          operation: MACOS_EC2_JIT.budgetOperation,
+          regions: regionConfig.budgetRegions,
+        },
+        requiredActualThresholds: [80, 95],
+      },
+    },
+  };
+  return { ...plan, digest: digest(plan) };
+}
+
+export function createMacosJitSourceRebindPlan(values = {}) {
+  const id = campaignId(values.campaignId);
+  const boundSource = source(values);
+  const priorSource = previousSource(values);
+  if (boundSource.sha === priorSource.sha) {
+    throw new Error("sourceSha must differ from previousSourceSha");
+  }
+  if (boundSource.ref !== priorSource.ref) {
+    throw new Error("sourceRef must remain unchanged during campaign rebind");
+  }
+  const aws = commonAws(values);
+  const regionConfig = macosJitRegionConfig(aws.region);
+  const workflowId = exact(values.workflowId, /^\d+$/, "workflowId");
+  if (workflowId !== MACOS_EC2_JIT.workflowId) {
+    throw new Error(`workflowId must be ${MACOS_EC2_JIT.workflowId}`);
+  }
+  const plan = {
+    schemaVersion: 1,
+    contract: AWS_MACOS_JIT_CONTROLLER_CONTRACT,
+    kind: "campaign-source-rebind-plan",
+    repository: repository(values.repository),
+    account: {
+      id: exact(values.accountId, /^\d{12}$/, "accountId"),
+    },
+    campaign: { id },
+    previousSource: priorSource,
+    source: boundSource,
+    github: {
+      workflowId,
+      requiredState: "disabled_manually",
+    },
+    aws: {
+      ...aws,
+      hostId: exact(values.hostId, /^h-[0-9a-f]+$/, "hostId"),
+      instanceId: exact(values.instanceId, /^i-[0-9a-f]+$/, "instanceId"),
+    },
+    safety: {
+      applyMode: values.execute === true ? "execute" : "dry-run",
+      noAllocation: true,
+      noDispatch: true,
+      forwardOnlySource: true,
+      sameSourceRefRequired: true,
+      workflowDisabledRequired: true,
+      zeroPriorJobsRequired: true,
+      zeroPriorArtifactsRequired: true,
+      zeroJitResidueRequired: true,
+      zeroEvidenceRequired: true,
+      exactCampaignResourcesRequired: true,
+      compensatedRollbackRequired: true,
       budget: {
         name: regionConfig.budgetName,
         limitUsd: MACOS_EC2_JIT.budgetLimitUsd,
