@@ -103,6 +103,7 @@ test("an approved new-file transition requires an exact ceiling and rationale", 
   fixturePolicy.approvedNewFileTransitions = {
     "new.js": { maxLines: 2, rationale: "Bounded fixture transition." },
   };
+  fixturePolicy.selectedFunctionBudgets = {};
   const current = {
     files: {
       "new.js": analyzeJavaScript(
