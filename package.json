@@ -139,7 +139,7 @@
     "typescript": "^5.9.0"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.53",
+    "@kungfu-tech/kfd": "1.0.0-alpha.60",
     "ajv": "8.20.0",
     "smol-toml": "1.7.0"
   }
