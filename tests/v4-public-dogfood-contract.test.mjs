@@ -144,3 +144,16 @@ test("the gate rejects legacy profiles and removal from protected Verify", () =>
     /Verify is missing protected gate/u,
   );
 });
+
+test("the gate rejects a dogfood build that relies on a global pnpm shim", () => {
+  const implicitPnpm = mutate(".buildchain/buildchain.toml", (text) =>
+    text.replace(
+      'corepack pnpm@11.7.0 -r --filter \\"./actions/**\\" build',
+      "corepack pnpm@11.7.0 run build",
+    ),
+  );
+  assert.throws(
+    () => checkV4PublicDogfoodContract(implicitPnpm),
+    /tracked consumer lifecycle is missing/u,
+  );
+});

@@ -195,7 +195,7 @@ function assertConsumerLifecycle(root) {
   const lifecycle = read(root, ".buildchain/buildchain.toml");
   for (const declaration of [
     '[lifecycle.install]\ncommand = "corepack pnpm@11.7.0 install --frozen-lockfile"',
-    '[lifecycle.build]\ncommand = "corepack pnpm@11.7.0 run build"',
+    '[lifecycle.build]\ncommand = "corepack pnpm@11.7.0 -r --filter \\\"./actions/**\\\" build"',
     "[lifecycle.verify]\ncommands = [",
   ])
     if (!lifecycle.includes(declaration))

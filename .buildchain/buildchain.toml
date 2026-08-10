@@ -42,7 +42,7 @@ key = "product.version"
 command = "corepack pnpm@11.7.0 install --frozen-lockfile"
 
 [lifecycle.build]
-command = "corepack pnpm@11.7.0 run build"
+command = "corepack pnpm@11.7.0 -r --filter \"./actions/**\" build"
 
 [lifecycle.verify]
 commands = [
