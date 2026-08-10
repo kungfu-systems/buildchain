@@ -722,7 +722,9 @@
         "tests/engineering-housekeeper-workflow.test.mjs"
       ],
       "migrationDisposition": "preserve-v3-contract-and-typescript-writer-without-a-second-provider-authority",
-      "unresolved": []
+      "unresolved": [
+        "A future Rust migration would require a separately qualified writer cutover; v4 intentionally retains the TypeScript production authority."
+      ]
     },
     {
       "id": "release-passport-and-artifact-proof",
