@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "c3a9c28fdafb8427c55e239f1fc36dc42e3d8f0d766ce9a3fcc3c2f9d3969c06",
+    "sha256": "a3757ba371aa7ea5ba89c48e4cf11884fea55f0948db1fdfca58e13ceec3e6ca",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 70,
+      "sitePageCount": 71,
       "docCommandRefCount": 924,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "c3a9c28fdafb8427c55e239f1fc36dc42e3d8f0d766ce9a3fcc3c2f9d3969c06",
+      "sha256": "a3757ba371aa7ea5ba89c48e4cf11884fea55f0948db1fdfca58e13ceec3e6ca",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 70,
+        "sitePageCount": 71,
         "docCommandRefCount": 924,
         "failureCount": 0
       },
@@ -763,6 +763,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/release-train.md",
+          "name": "Release Train and Release Cut",
+          "kind": "documentation",
+          "sourcePath": "docs/release-train.md",
+          "evidencePath": "docs/release-train.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/reusable-build-surface.md",
@@ -1711,6 +1723,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-candidate-recovery"
+        },
+        {
+          "id": "export:./release-train",
+          "name": "@kungfu-tech/buildchain/release-train",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-train.js",
+          "evidencePath": "packages/core/release-train.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-train"
         },
         {
           "id": "export:./stable-candidate-ledger",
@@ -6417,6 +6441,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:release-train",
+          "name": "site-page:manual:release-train",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:reusable-build-surface",
           "name": "site-page:manual:reusable-build-surface",
           "kind": "site-page",
@@ -6695,6 +6731,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 425
+    "publicSurfaceCount": 428
   }
 }
