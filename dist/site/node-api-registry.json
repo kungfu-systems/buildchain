@@ -19084,6 +19084,414 @@
       ]
     },
     {
+      "id": "packages/core/release-train.js#createReleaseCut",
+      "name": "createReleaseCut",
+      "kind": "function",
+      "signature": "function createReleaseCut(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 179
+      },
+      "example": "import { createReleaseCut } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#createReleaseTrain",
+      "name": "createReleaseTrain",
+      "kind": "function",
+      "signature": "function createReleaseTrain(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 213
+      },
+      "example": "import { createReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#LEGACY_DEV_ALPHA_CANDIDATE_STATE_SCHEMA",
+      "name": "LEGACY_DEV_ALPHA_CANDIDATE_STATE_SCHEMA",
+      "kind": "constant",
+      "signature": "const LEGACY_DEV_ALPHA_CANDIDATE_STATE_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 11
+      },
+      "example": "import { LEGACY_DEV_ALPHA_CANDIDATE_STATE_SCHEMA } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#observeReleaseTrain",
+      "name": "observeReleaseTrain",
+      "kind": "function",
+      "signature": "function observeReleaseTrain(trainInput, input = {})",
+      "parameters": [
+        {
+          "name": "trainInput",
+          "signature": "trainInput"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 358
+      },
+      "example": "import { observeReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#readReleaseTrain",
+      "name": "readReleaseTrain",
+      "kind": "function",
+      "signature": "function readReleaseTrain(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 491
+      },
+      "example": "import { readReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#RELEASE_CUT_CONTRACT",
+      "name": "RELEASE_CUT_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_CUT_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 5
+      },
+      "example": "import { RELEASE_CUT_CONTRACT } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#RELEASE_TRAIN_CONTRACT",
+      "name": "RELEASE_TRAIN_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_TRAIN_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 6
+      },
+      "example": "import { RELEASE_TRAIN_CONTRACT } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#RELEASE_TRAIN_OBSERVATION_CONTRACT",
+      "name": "RELEASE_TRAIN_OBSERVATION_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_TRAIN_OBSERVATION_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 9
+      },
+      "example": "import { RELEASE_TRAIN_OBSERVATION_CONTRACT } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#RELEASE_TRAIN_STATES",
+      "name": "RELEASE_TRAIN_STATES",
+      "kind": "constant",
+      "signature": "const RELEASE_TRAIN_STATES",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 14
+      },
+      "example": "import { RELEASE_TRAIN_STATES } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#RELEASE_TRAIN_SUPERSESSION_CAUSES",
+      "name": "RELEASE_TRAIN_SUPERSESSION_CAUSES",
+      "kind": "constant",
+      "signature": "const RELEASE_TRAIN_SUPERSESSION_CAUSES",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 24
+      },
+      "example": "import { RELEASE_TRAIN_SUPERSESSION_CAUSES } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#RELEASE_TRAIN_TRANSITION_CONTRACT",
+      "name": "RELEASE_TRAIN_TRANSITION_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_TRAIN_TRANSITION_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 7
+      },
+      "example": "import { RELEASE_TRAIN_TRANSITION_CONTRACT } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#releaseTrainRoot",
+      "name": "releaseTrainRoot",
+      "kind": "function",
+      "signature": "function releaseTrainRoot(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 71
+      },
+      "example": "import { releaseTrainRoot } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#transitionReleaseTrain",
+      "name": "transitionReleaseTrain",
+      "kind": "function",
+      "signature": "function transitionReleaseTrain(trainInput, input = {})",
+      "parameters": [
+        {
+          "name": "trainInput",
+          "signature": "trainInput"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 336
+      },
+      "example": "import { transitionReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#validateReleaseCut",
+      "name": "validateReleaseCut",
+      "kind": "function",
+      "signature": "function validateReleaseCut(cut)",
+      "parameters": [
+        {
+          "name": "cut",
+          "signature": "cut"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 229
+      },
+      "example": "import { validateReleaseCut } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#validateReleaseTrain",
+      "name": "validateReleaseTrain",
+      "kind": "function",
+      "signature": "function validateReleaseTrain(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 362
+      },
+      "example": "import { validateReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/stable-candidate-ledger.js#createStableCandidateLedger",
       "name": "createStableCandidateLedger",
       "kind": "function",
@@ -22334,6 +22742,43 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/release-train",
+      "export": "./release-train",
+      "target": "./packages/core/release-train.js",
+      "digest": "sha256:16ea77f54dde016af95de9b2c18bfdb925f13fc3d263819eacd1100a111731c4",
+      "summary": "Frozen Release Cut identity, rooted Release Train transitions, Dev observations, supersession, replay, and legacy read compatibility APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 15,
+      "symbolIds": [
+        "packages/core/release-train.js#createReleaseCut",
+        "packages/core/release-train.js#createReleaseTrain",
+        "packages/core/release-train.js#LEGACY_DEV_ALPHA_CANDIDATE_STATE_SCHEMA",
+        "packages/core/release-train.js#observeReleaseTrain",
+        "packages/core/release-train.js#readReleaseTrain",
+        "packages/core/release-train.js#RELEASE_CUT_CONTRACT",
+        "packages/core/release-train.js#RELEASE_TRAIN_CONTRACT",
+        "packages/core/release-train.js#RELEASE_TRAIN_OBSERVATION_CONTRACT",
+        "packages/core/release-train.js#RELEASE_TRAIN_STATES",
+        "packages/core/release-train.js#RELEASE_TRAIN_SUPERSESSION_CAUSES",
+        "packages/core/release-train.js#RELEASE_TRAIN_TRANSITION_CONTRACT",
+        "packages/core/release-train.js#releaseTrainRoot",
+        "packages/core/release-train.js#transitionReleaseTrain",
+        "packages/core/release-train.js#validateReleaseCut",
+        "packages/core/release-train.js#validateReleaseTrain"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/stable-candidate-ledger",
       "export": "./stable-candidate-ledger",
       "target": "./packages/core/stable-candidate-ledger.js",
@@ -22766,7 +23211,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:51c1106f089e03a52d9e529fc607846f338b674414b0f29b5c4f51d1038c54ea"
+      "digest": "sha256:759d07aec4258f194eec861fc31b33e16c63bb2475fcb41af7843837f8db2f6d"
     },
     {
       "id": "build-facts",

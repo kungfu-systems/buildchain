@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113661,
+    "maxHandMaintainedSourceFiles": 293,
+    "maxHandMaintainedSourceLines": 114185,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
-    "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline with exact merged-PR association.",
-    "rationale": "Repository-wide protected-mainline discovery, a positive temporary-development branch allowlist, unattended scheduled apply, one paginated closed-PR inventory, exact association-only candidate selection, and fixed eight-way ancestry concurrency replace the single-v3-target report-only dogfood path and sequential per-branch provider lookups. Unassociated heads fail closed and remain report-only while exact-OID, active-PR, protection, deterministic ordering, and replay fences remain binding. Tests bind unknown-family and unassociated-head retention, cross-mainline ancestry, bounded association lookup, concurrency, and schedule policy; these exact source and workflow ceilings cannot grow implicitly."
+    "latestTransition": "Release Train freezes one authorized Alpha candidate independently from subsequent Dev movement.",
+    "rationale": "One provider-neutral Release Train module adds rooted Release Cut identity, compare-and-swap state transitions, idempotent Dev observations, enumerated supersession, full replay validation, and a non-authoritative legacy patrol read projection. Four registry wiring lines expose its package subpath and manual through existing generated public surfaces. The prior Engineering Housekeeper sources remain unchanged; this exact one-file and 524-line increase is covered by focused negative tests and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

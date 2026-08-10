@@ -37,7 +37,7 @@
       {
         "mechanismId": "release-candidate-passport",
         "root": "packages/core",
-        "pattern": "^release-candidate\\.js$"
+        "pattern": "^release-(?:candidate|train)\\.js$"
       },
       {
         "mechanismId": "release-candidate-recovery",
@@ -214,59 +214,100 @@
       "id": "release-candidate-passport",
       "owner": "Buildchain candidate evidence plane",
       "writers": [
+        "packages/core/release-train.js",
         "scripts/generate-release-candidate-passport.mjs",
         "actions/promote-buildchain-ref/lib.js"
       ],
       "schemas": [
         "kungfu-buildchain-release-candidate-passport",
-        "kungfu-buildchain-initiative-family-release-evidence/v1"
+        "kungfu-buildchain-initiative-family-release-evidence/v1",
+        "kungfu-buildchain-release-cut/v1",
+        "kungfu-buildchain-release-train/v1",
+        "kungfu-buildchain-release-train-transition/v1"
       ],
       "stores": [
         "candidate workflow artifacts",
-        "Passport JSON bound by sha256 root"
+        "Passport JSON bound by sha256 root",
+        "rooted Release Cut and append-only Release Train projection"
       ],
-      "states": ["assembled", "validated", "qualified", "invalidated"],
+      "states": [
+        "assembled",
+        "validated",
+        "qualified",
+        "invalidated",
+        "preparing",
+        "building",
+        "repair-required",
+        "publication-blocked",
+        "publishable",
+        "superseded",
+        "terminal"
+      ],
       "events": [
         "build-summary-complete",
         "gate-pass",
         "controller-receipts-attached",
-        "promotion-read"
+        "promotion-read",
+        "release-cut-created",
+        "release-train-transitioned",
+        "dev-head-observed"
       ],
-      "transitions": ["evidence assembly to immutable validated Passport"],
+      "transitions": [
+        "evidence assembly to immutable validated Passport",
+        "rooted compare-and-swap Release Train state transition",
+        "enumerated-cause supersession to a new Release Cut generation"
+      ],
       "recovery": [
-        "never rebuild from recovery; delegate to candidate-run recovery"
+        "never rebuild from recovery; delegate to candidate-run recovery",
+        "replay the exact rooted transition chain from the frozen Release Cut"
       ],
-      "effects": ["candidate artifact upload", "promotion admission"],
-      "retry": ["regenerate only from the same immutable build evidence"],
+      "effects": [
+        "candidate artifact upload",
+        "promotion admission",
+        "Release Train state projection"
+      ],
+      "retry": [
+        "regenerate only from the same immutable build evidence",
+        "repeat an identical transition request idempotently"
+      ],
       "invalidation": [
         "source/runtime/root mismatch",
         "failed gate",
-        "invalidated family evidence"
+        "invalidated family evidence",
+        "invalid state-chain root or unenumerated supersession cause"
       ],
       "providerReadback": [
         "GitHub Actions run and artifact metadata",
-        "candidate PR ancestry"
+        "candidate PR ancestry",
+        "exact dev, alpha and runtime Git refs"
       ],
       "publicSurfaces": [
         "export:./release-candidate",
+        "export:./release-train",
         "cli:candidate",
         "workflow:release-candidate-promote",
         "workflow:buildchain-stable-candidate-qualification"
       ],
       "compatibilityCallers": [
         "actions/promote-buildchain-ref/lib.js",
-        "scripts/stable-candidate-qualification.mjs"
+        "scripts/stable-candidate-qualification.mjs",
+        "scripts/dev-alpha-candidate-patrol.mjs"
       ],
       "sourcePaths": [
         "packages/core/release-candidate.js",
+        "packages/core/release-train.js",
         "scripts/generate-release-candidate-passport.mjs"
       ],
       "testPaths": [
         "tests/release-candidate.test.mjs",
+        "tests/release-train.test.mjs",
         "tests/build-surface-promotion.test.mjs"
       ],
-      "migrationDisposition": "preserve-schema-and-byte-semantics-behind-rust-authority",
-      "unresolved": ["v4 canonical serialization boundary is not yet selected"]
+      "migrationDisposition": "preserve-schema-byte-and-root-semantics-behind-rust-authority",
+      "unresolved": [
+        "v4 canonical serialization boundary is not yet selected",
+        "v4 Release Train authority remains deferred to the parity wave"
+      ]
     },
     {
       "id": "release-candidate-recovery",
