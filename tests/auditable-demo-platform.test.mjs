@@ -689,6 +689,28 @@ test("reusable builds run the transport simulation before either artifact upload
   }
 });
 
+test("reusable builds validate the consumer scenario with the resolved runtime before building", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.build.yml"), "utf8");
+  const preflightStart = workflow.indexOf("\n  pre-build-contracts:");
+  const nativeStart = workflow.indexOf("\n  build-native:");
+  const containerStart = workflow.indexOf("\n  build-linux-container:");
+  const relayStart = workflow.indexOf("\n  relay-artifacts:");
+  assert.ok(preflightStart >= 0 && nativeStart > preflightStart);
+
+  const preflight = workflow.slice(preflightStart, nativeStart);
+  assert.match(preflight, /ref: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/u);
+  assert.match(preflight, /ref: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-sha \}\}/u);
+  assert.match(preflight, /auditable-demo-platform\.mjs[\s\S]*validate[\s\S]*--scenario/u);
+
+  for (const job of [
+    workflow.slice(nativeStart, containerStart),
+    workflow.slice(containerStart, relayStart),
+  ]) {
+    assert.match(job, /needs:[\s\S]*- pre-build-contracts/u);
+  }
+  assert.match(workflow, /"id":"pre-build-contracts","status":"\$\{\{ needs\.pre-build-contracts\.result \}\}"/u);
+});
+
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {
   const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/auditable-demo.yml"), "utf8");
   assert.match(

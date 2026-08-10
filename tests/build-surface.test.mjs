@@ -285,7 +285,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.equal(
     (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
-    9,
+    10,
   );
   assert.match(
     workflow,

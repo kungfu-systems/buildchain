@@ -152,6 +152,7 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
     stages: [
       { id: "resolve-runtime", status: "passed" },
       { id: "resolve-source", status: "passed" },
+      { id: "pre-build-contracts", status: "passed" },
       { id: "build", status: "passed", evidence: [{ kind: "artifact", digest: `sha256:${"d".repeat(64)}` }] },
       { id: "signing-finalization", status: "passed" },
       { id: "verify", status: "passed" },
