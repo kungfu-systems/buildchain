@@ -64,7 +64,19 @@ class FakeClient {
   }
 
   async listClosedPullRequests() {
-    return [];
+    return [
+      {
+        number: 6,
+        state: "closed",
+        merged_at: "2026-08-01T00:00:00.000Z",
+        head: {
+          ref: "feature/merged",
+          sha: mergedOid,
+          repo: { full_name: repository },
+        },
+        base: { ref: targetBranch },
+      },
+    ];
   }
 
   async getBranch(_repository, name) {

@@ -61,12 +61,12 @@ engine paginates closed pull requests once, indexes merged associations by the
 exact source branch and OID, and then prioritizes the matching base without a
 per-branch association request. Exact ancestry comparisons run with a fixed
 maximum of eight concurrent requests while preserving deterministic branch
-ordering. When no such association exists, the engine checks the primary
-target and protected `dev/**` mainlines only. It never treats a pull request
-association as proof by itself: the selected source OID must still be an
-ancestor of the selected mainline OID. A direct merge found only on another
-release family is retained unless its merged pull request supplies that exact
-base.
+ordering. A temporary branch without an exact same-repository, same-name,
+same-OID merged pull request association is retained and reported without
+ancestry requests. The association is only a candidate selector: the source
+OID must still be an ancestor of the selected mainline OID. This matches the
+protected-mainline delivery contract and keeps ambiguous or direct historical
+refs fail-closed.
 
 ## Apply mode
 

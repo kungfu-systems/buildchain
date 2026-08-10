@@ -222,12 +222,7 @@ async function branchCandidateTargets({
       .filter(Boolean),
   );
   return targets
-    .filter(
-      (target, index) =>
-        mergedTargetNames.has(target.name) ||
-        index === 0 ||
-        target.name.startsWith("dev/"),
-    )
+    .filter((target) => mergedTargetNames.has(target.name))
     .sort((left, right) => {
       const associated = (target) =>
         mergedTargetNames.has(target.name) ? 0 : 1;
