@@ -501,7 +501,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   );
   assert.equal(
     architecture.publicConsumerDogfood.validationRef,
-    "train/v4/v4.0/public-consumer-self-dogfood",
+    "4178776bf635d0738cb1917e449076d64883218c",
   );
   assert.equal(
     architecture.publicConsumerDogfood.reusableWorkflow,
