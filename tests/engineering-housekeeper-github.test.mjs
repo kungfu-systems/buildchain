@@ -60,8 +60,26 @@ class FakeGitHubClient {
     this.pullRequests = pullRequests.map(clone);
     this.ancestors = new Set(ancestors || [oid("a"), oid("b")]);
     this.ancestorPairs = new Set(ancestorPairs || []);
+    const defaultAssociatedPullRequests = {
+      [oid("a")]: [
+        pullRequest({
+          state: "closed",
+          merged_at: observedAt,
+          head: {
+            ref: "feature/merged",
+            sha: oid("a"),
+            repo: { full_name: repository },
+          },
+          base: { ref: targetBranch },
+        }),
+      ],
+    };
     this.associatedPullRequests = new Map(
-      Object.entries(associatedPullRequests || {}),
+      Object.entries(
+        associatedPullRequests === undefined
+          ? defaultAssociatedPullRequests
+          : associatedPullRequests,
+      ),
     );
     this.associatedLookups = [];
     this.closedPullRequestLookups = 0;
@@ -308,6 +326,12 @@ test("inventory is deterministic for the same observation and retains unsafe ref
       .map((entry) => entry.name),
     ["feature/merged"],
   );
+  assert.deepEqual(first.comparisons, [`${oid("a")}:${oid("b")}`]);
+  assert.ok(
+    left.inventory
+      .find((entry) => entry.name === "feature/unmerged")
+      .reasonCodes.includes("branch.not-merged"),
+  );
   assert.match(formatGitHubHousekeeperPlan(left), /feature\/merged/);
 });
 
@@ -365,6 +389,24 @@ test("repository-wide ancestry inventory uses bounded concurrency and stable out
       ...featureOids.map((sha, index) => branch(`feature/${index}`, sha)),
     ],
     ancestors: featureOids,
+    associatedPullRequests: Object.fromEntries(
+      featureOids.map((sha, index) => [
+        sha,
+        [
+          pullRequest({
+            number: 100 + index,
+            state: "closed",
+            merged_at: observedAt,
+            head: {
+              ref: `feature/${index}`,
+              sha,
+              repo: { full_name: repository },
+            },
+            base: { ref: targetBranch },
+          }),
+        ],
+      ]),
+    ),
     comparisonDelayMs: 5,
   });
   const plan = await planWith(client, { targetBranch: "" });

@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113666,
+    "maxHandMaintainedSourceLines": 113661,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
-    "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline with batched merged-PR inventory.",
-    "rationale": "Repository-wide protected-mainline discovery, a positive temporary-development branch allowlist, unattended scheduled apply, one paginated closed-PR inventory, and fixed eight-way ancestry concurrency replace the single-v3-target report-only dogfood path and sequential per-branch provider lookups while preserving exact-OID, active-PR, protection, deterministic ordering, and replay fences. Tests bind unknown-family retention, cross-mainline ancestry, bounded association lookup, concurrency, and schedule policy; these exact source and workflow ceilings cannot grow implicitly."
+    "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline with exact merged-PR association.",
+    "rationale": "Repository-wide protected-mainline discovery, a positive temporary-development branch allowlist, unattended scheduled apply, one paginated closed-PR inventory, exact association-only candidate selection, and fixed eight-way ancestry concurrency replace the single-v3-target report-only dogfood path and sequential per-branch provider lookups. Unassociated heads fail closed and remain report-only while exact-OID, active-PR, protection, deterministic ordering, and replay fences remain binding. Tests bind unknown-family and unassociated-head retention, cross-mainline ancestry, bounded association lookup, concurrency, and schedule policy; these exact source and workflow ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -20,8 +20,8 @@
   },
   "approvedNewFileTransitions": {
     "packages/core/engineering-housekeeper-github.js": {
-      "maxLines": 712,
-      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory and fixed eight-way ancestry concurrency for merged-PR-base-first target selection, exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior in one public provider surface; this exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 707,
+      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/publication-rehearsal-runtime.js": {
       "maxLines": 921,
