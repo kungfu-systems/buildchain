@@ -8,6 +8,7 @@ export const HOUSEKEEPER_REASON_CODES = Object.freeze({
   ELIGIBLE_MERGED_BRANCH: "eligible.merged-branch",
   PROTECTED_BRANCH: "branch.protected",
   RETAINED_BRANCH: "branch.retained",
+  NOT_TEMPORARY_DEVELOPMENT: "branch.not-temporary-development",
   DEFAULT_BRANCH: "branch.default",
   TARGET_BRANCH: "branch.target",
   OPEN_PR_HEAD: "branch.open-pr-head",
@@ -28,6 +29,14 @@ export const HOUSEKEEPER_REASON_CODES = Object.freeze({
 export const DEFAULT_HOUSEKEEPER_POLICY = Object.freeze({
   protectedPatterns: ["dev/**", "alpha/**", "release/**", "publish-gate/**"],
   retainedPatterns: ["train/**", "authority/**"],
+  temporaryBranchPatterns: [
+    "feature/**",
+    "fix/**",
+    "chore/**",
+    "docs/**",
+    "ci/**",
+    "refactor/**",
+  ],
   pullRequests: Object.freeze({
     reportStale: true,
     label: "",
@@ -77,6 +86,10 @@ function normalizePolicy(policy = {}) {
       ...(policy.retainedPatterns ||
         DEFAULT_HOUSEKEEPER_POLICY.retainedPatterns),
     ].sort(),
+    temporaryBranchPatterns: [
+      ...(policy.temporaryBranchPatterns ||
+        DEFAULT_HOUSEKEEPER_POLICY.temporaryBranchPatterns),
+    ].sort(),
     pullRequests: {
       reportStale: policy.pullRequests?.reportStale !== false,
       label: String(policy.pullRequests?.label || ""),
@@ -102,6 +115,8 @@ export function classifyHousekeeperBranch(branch, policyInput = {}) {
     reasons.push(HOUSEKEEPER_REASON_CODES.PROTECTED_BRANCH);
   if (matchesAny(policy.retainedPatterns, branch.name))
     reasons.push(HOUSEKEEPER_REASON_CODES.RETAINED_BRANCH);
+  if (!matchesAny(policy.temporaryBranchPatterns, branch.name))
+    reasons.push(HOUSEKEEPER_REASON_CODES.NOT_TEMPORARY_DEVELOPMENT);
   if (branch.sourceRepository && branch.sourceRepository !== branch.repository)
     reasons.push(HOUSEKEEPER_REASON_CODES.CROSS_REPOSITORY);
   if ((branch.openPullRequestNumbers || []).length > 0)

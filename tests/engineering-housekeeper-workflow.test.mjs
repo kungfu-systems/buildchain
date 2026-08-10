@@ -63,6 +63,22 @@ class FakeClient {
       .map(clone);
   }
 
+  async listClosedPullRequests() {
+    return [
+      {
+        number: 6,
+        state: "closed",
+        merged_at: "2026-08-01T00:00:00.000Z",
+        head: {
+          ref: "feature/merged",
+          sha: mergedOid,
+          repo: { full_name: repository },
+        },
+        base: { ref: targetBranch },
+      },
+    ];
+  }
+
   async getBranch(_repository, name) {
     return clone(this.branches.get(name));
   }
@@ -120,6 +136,18 @@ test("workflow options require an explicit positive apply gate", () => {
     ).mode,
     "apply",
   );
+  const repositoryWide = normalizeHousekeeperWorkflowOptions(
+    options({ targetBranch: "" }),
+  );
+  assert.equal(repositoryWide.targetBranch, "");
+  assert.deepEqual(repositoryWide.temporaryBranchPatterns, [
+    "feature/**",
+    "fix/**",
+    "chore/**",
+    "docs/**",
+    "ci/**",
+    "refactor/**",
+  ]);
 });
 
 test("report plan is exact, rooted, default dry-run, and secret-free", async () => {
@@ -209,6 +237,11 @@ test("reusable workflow exposes typed evidence outputs and separated job permiss
     workflow,
     /mode:\n[\s\S]*?type: string\n[\s\S]*?default: report/,
   );
+  assert.match(workflow, /temporary-branch-patterns:/);
+  assert.match(
+    workflow,
+    /feature\/\*\*,fix\/\*\*,chore\/\*\*,docs\/\*\*,ci\/\*\*,refactor\/\*\*/,
+  );
   assert.match(
     workflow,
     /apply-enabled:\n[\s\S]*?type: boolean\n[\s\S]*?default: false/,
@@ -253,6 +286,16 @@ test("daily, weekly, and monthly callers remain thin reusable workflow policy", 
     assert.match(caller, /mode: report/);
     assert.match(caller, /mode: apply/);
     assert.match(caller, /apply-enabled: true/);
+    assert.match(caller, /github\.event_name == 'schedule'/);
+    assert.match(
+      caller,
+      /stale-pull-request-label: engineering-housekeeper:stale/,
+    );
+    assert.match(
+      caller,
+      /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| github\.sha \}\}/,
+    );
+    assert.doesNotMatch(caller, /target-branch: dev\/v3\/v3\.0/);
     assert.doesNotMatch(caller, /engineering-housekeeper-workflow\.mjs/);
   }
 });

@@ -2018,9 +2018,10 @@
         "retained-patterns",
         "stale-days",
         "stale-pull-request-label",
-        "target-branch"
+        "target-branch",
+        "temporary-branch-patterns"
       ],
-      "inputCount": 13,
+      "inputCount": 14,
       "secrets": [
         "github_app_id",
         "github_app_private_key",
