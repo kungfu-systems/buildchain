@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 76,
+  "generation": 77,
   "fencingCounter": 25,
   "policy": {
     "agingSeconds": 900,
@@ -838,8 +838,32 @@
       "recoveries": 0,
       "status": "selected",
       "terminal": null
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 2500,
+      "assignmentRoot": "sha256:56c82b7c756bbd1970f6b8c9d13204df201ead2a86e808a52e138fbb5d57123a",
+      "initiativeRoot": "sha256:bf6c01c70a327c87ed99880571a938c3eb9f8c3c66f5bd9f89f5f39791b5a1c5",
+      "sourceIdentityRoot": "sha256:61cac9d87ac350e6f4251ff4427f9918908103d58526e52ea842db55c00d0c8c",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:67628c32249c70bc1ba4473835f4ae16fcb3cea883bf77e0937e1fc72e9cce2c",
+      "sourceHead": "6b6c218978f2dc3d445259bcd18009baee8025a1",
+      "sourcePatchRoot": "sha256:dbfe7925c6f11a1e5407ee4d7c2cc05dc31a857360e7afdeb22d2d65dcf96aed",
+      "sourceProofRoot": "sha256:b0879a32afd78a353d9e00161260939a9986a6ce039c478265600e27d8237b39",
+      "planRoot": "sha256:6a11a271f43c3322661ebee5acb23c32635f0e6a49c4f256087e282a42c9ab61",
+      "closureRoot": "sha256:eb660f0208f3a8190317069dcf1171269bd0af25fc333f70b63704586fadaa54",
+      "dependencyRoot": "sha256:8cbd4e0a0d126c794f58f83c28cebbaacbaad9c3feb08f2cd7fb9bb98749c4d2",
+      "toolchainRoot": "sha256:02710d56cb27059f834a1e453267d2c2aaf31fd24d43fcf045739812744952ce",
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-10T02:07:34.011Z",
+      "updatedAt": "2026-08-10T02:07:34.011Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null
     }
   ],
-  "updatedAt": "2026-08-10T01:15:52.158Z",
-  "stateRoot": "sha256:e82584976828454d58ee01919267eb4370f015ec0fdcdd1caa833281a35da12c"
+  "updatedAt": "2026-08-10T02:07:34.011Z",
+  "stateRoot": "sha256:5360b175018b02e54c43c708f6196f5bb1bfc0fed3b20d2b9c8ace939161d106"
 }
