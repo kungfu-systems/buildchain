@@ -91,17 +91,32 @@ TypeScript projection pure and byte-identical; explicit provider/release-tail
 effects always require readback and never become Capsule reuse.
 
 Stage Capsule qualification and Wave 2 reconciliation are governed by
-`architecture/v4-stage-capsule-qualification.json`. Both Buildchain
-self-dogfood and the exact-source Kungfu shadow consumer must pass the complete
-three-platform, clean-process fault campaign. Qualification remains shadow-only:
-it cannot enable production reuse, change v3 authority, perform provider or
-release effects, or destroy retained state during rollback.
+`architecture/v4-stage-capsule-qualification.json`. Buildchain v4 dogfood is a
+repository invariant, not an implementation convenience: this repository must
+consume `kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml`
+through the same public reusable-workflow contract as every other consumer.
+The caller must remain a thin workflow with no steps or local orchestration,
+and `.buildchain/buildchain.toml` must declare the same real `install`, `build`,
+and `verify` lifecycle. The public workflow binds the exact called-workflow SHA,
+consumer source SHA, platform, commands, manifests, summaries, dependencies,
+and output roots on Linux, macOS, and Windows.
 
-Buildchain self-dogfood must execute only the real `install` and `verify`
-lifecycle declared in `.buildchain/buildchain.toml`, then bind its exact
-manifest, summary, command, and output roots into the campaign profile.
-Mutation stages such as `version-state` and `publish` remain excluded and must
-never be invoked by Stage Capsule qualification.
+No agent may add or restore a relative/self reusable-workflow call, direct
+qualification job, local action, candidate-branch runtime override,
+Buildchain-only consumer identity/profile, environment-variable escape hatch,
+or any other private self-dogfood path. Generic Stage Capsule internals may be
+called only by the public reusable workflow and tests. `version-state`,
+`publish`, provider, signing, release, credential, AWS, and production-reuse
+effects remain excluded.
+
+If public workflow recursion prevents candidate validation, publish the exact
+candidate at `train/v4/v4.0/<capability>` and make the thin caller consume that
+fully qualified public train ref. Fix failures in the train/public contract;
+never solve recursion with an internal exception. After qualification and
+protected merge, repin the durable caller to the exact protected commit when
+the delivery plan requires it. `pnpm run check` and protected Verify run
+`scripts/check-v4-public-dogfood-contract.mjs`; changing this rule, its gate, or
+the protected caller requires independent `@kungfu-origin` review.
 
 `pnpm run check` validates inventory data, generated public references and site
 bundle drift, lints root workflows, runs unit tests, and rebuilds every action

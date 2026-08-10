@@ -39,7 +39,10 @@ path = "dist/site/kfd-upstream-aggregate.json"
 key = "product.version"
 
 [lifecycle.install]
-command = "corepack pnpm@11.7.0 install --frozen-lockfile"
+command = "corepack enable pnpm && corepack pnpm@11.7.0 install --frozen-lockfile"
+
+[lifecycle.build]
+command = "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:site"
 
 [lifecycle.verify]
 commands = [

@@ -27,16 +27,6 @@ export const V4_STAGE_CAPSULE_CAMPAIGN_DEPENDENCIES = Object.freeze({
 
 const ZERO_ROOT = `sha256:${"0".repeat(64)}`;
 const RETAIN_UNTIL = "2026-09-08T00:00:00.000Z";
-const SELF_DOGFOOD_CONSUMER = "buildchain-self-dogfood";
-const SELF_DOGFOOD_STAGES = Object.freeze(["install", "verify"]);
-const SELF_DOGFOOD_DEPENDENCIES = Object.freeze({
-  install: [],
-  verify: ["install"],
-});
-const SELF_DOGFOOD_EXCLUSIONS = Object.freeze({
-  publish: "provider-mutation",
-  "version-state": "generated-output-mutation",
-});
 const EXTERNAL_CONSUMER_STAGES = Object.freeze(["install", "build", "verify"]);
 const EXTERNAL_CONSUMER_DEPENDENCIES = Object.freeze({
   install: [],
@@ -44,6 +34,7 @@ const EXTERNAL_CONSUMER_DEPENDENCIES = Object.freeze({
   verify: ["build"],
 });
 const EXTERNAL_CONSUMER_EXCLUSIONS = Object.freeze({
+  "version-state": "source-mutation",
   publish: "provider-mutation",
 });
 
@@ -167,36 +158,16 @@ function lifecycleStageEvidence({ stageId, manifest, summary, command }) {
 }
 
 export function createV4StageCapsuleCampaignProfile(context) {
-  if (!context.lifecycleConfig) {
-    const body = {
-      schema: "buildchain-v4-stage-capsule-campaign-profile/v1",
-      kind: "consumer-equivalent-fixture",
-      stages: V4_STAGE_CAPSULE_CAMPAIGN_STAGES,
-      dependencies: V4_STAGE_CAPSULE_CAMPAIGN_DEPENDENCIES,
-    };
-    return {
-      ...body,
-      profileRoot: rootOf(body),
-    };
-  }
-
   const loaded = context.lifecycleConfig;
-  const selfDogfood = context.consumer === SELF_DOGFOOD_CONSUMER;
-  const executableStages = selfDogfood
-    ? SELF_DOGFOOD_STAGES
-    : EXTERNAL_CONSUMER_STAGES;
-  const dependencies = selfDogfood
-    ? SELF_DOGFOOD_DEPENDENCIES
-    : EXTERNAL_CONSUMER_DEPENDENCIES;
-  const exclusions = selfDogfood
-    ? SELF_DOGFOOD_EXCLUSIONS
-    : EXTERNAL_CONSUMER_EXCLUSIONS;
   if (!loaded?.filePath || !loaded?.config)
     campaignFault(
       "missing-stage-capsule-lifecycle-config",
       "$/lifecycleConfig",
-      "Buildchain self-dogfood requires an explicitly loaded lifecycle config",
+      "public consumer qualification requires an explicitly loaded lifecycle config",
     );
+  const executableStages = EXTERNAL_CONSUMER_STAGES;
+  const dependencies = EXTERNAL_CONSUMER_DEPENDENCIES;
+  const exclusions = EXTERNAL_CONSUMER_EXCLUSIONS;
   const lifecycle = loaded?.config?.lifecycle || {};
   const stageNames = Object.keys(lifecycle).filter(
     (name) => !["env", "shell"].includes(name),
@@ -270,9 +241,7 @@ export function createV4StageCapsuleCampaignProfile(context) {
   }));
   const body = {
     schema: "buildchain-v4-stage-capsule-campaign-profile/v1",
-    kind: selfDogfood
-      ? "real-buildchain-lifecycle"
-      : "real-external-consumer-lifecycle",
+    kind: "real-public-consumer-lifecycle",
     configPath: loaded.path,
     configRoot: rootOf(configBytes),
     stages: executableStages,

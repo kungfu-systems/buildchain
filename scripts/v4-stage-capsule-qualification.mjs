@@ -91,13 +91,11 @@ function contextFromArgs() {
 }
 
 function prepareContext(context) {
-  if (context.consumer !== "kungfu-shadow") {
-    if (!buildchainConfigModule)
-      throw new Error("real lifecycle config loader is unavailable");
-    context.lifecycleConfig = buildchainConfigModule.loadBuildchainConfig(
-      context.consumerRoot,
-    );
-  }
+  if (!buildchainConfigModule)
+    throw new Error("real lifecycle config loader is unavailable");
+  context.lifecycleConfig = buildchainConfigModule.loadBuildchainConfig(
+    context.consumerRoot,
+  );
   context.campaignProfile = createV4StageCapsuleCampaignProfile(context);
   return context;
 }
@@ -508,10 +506,9 @@ function reconcile() {
 }
 
 const action = process.argv[2] || "";
-const buildchainConfigModule =
-  option("consumer") && option("consumer") !== "kungfu-shadow"
-    ? await import("../packages/core/buildchain-config.js")
-    : null;
+const buildchainConfigModule = option("consumer")
+  ? await import("../packages/core/buildchain-config.js")
+  : null;
 if (action === "seed") seed(contextFromArgs());
 else if (action === "resume") resume(contextFromArgs());
 else if (action === "campaign") campaign(contextFromArgs());
