@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e591af5aa73198a592a8e467cffa9e0eb70a77f553a9c82a799f18c071517887",
+    "sha256": "6d02538331ba5b7cffea6acb6ab6215434cb92b82d9e29ce868f4323ab2d8d6b",
     "summary": {
       "cliCommandCount": 113,
       "workflowCount": 66,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e591af5aa73198a592a8e467cffa9e0eb70a77f553a9c82a799f18c071517887",
+      "sha256": "6d02538331ba5b7cffea6acb6ab6215434cb92b82d9e29ce868f4323ab2d8d6b",
       "summary": {
         "cliCommandCount": 113,
         "workflowCount": 66,
@@ -5170,10 +5170,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 6,
           "inputs": [
             "build-artifact-path",
             "consumer",
+            "go-version",
             "install-artifact-path",
             "node-version",
             "verify-artifact-path"

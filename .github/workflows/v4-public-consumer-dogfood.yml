@@ -13,6 +13,7 @@ jobs:
     with:
       consumer: buildchain
       node-version: "24"
+      go-version: "1.25.x"
       install-artifact-path: node_modules/.modules.yaml
       build-artifact-path: actions/run-lifecycle/dist/index.js
       verify-artifact-path: dist/site

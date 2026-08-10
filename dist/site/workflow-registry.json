@@ -2789,11 +2789,12 @@
       "inputs": [
         "build-artifact-path",
         "consumer",
+        "go-version",
         "install-artifact-path",
         "node-version",
         "verify-artifact-path"
       ],
-      "inputCount": 5,
+      "inputCount": 6,
       "secrets": [],
       "secretCount": 0,
       "outputs": [],

@@ -2725,11 +2725,12 @@
         "inputs": [
           "build-artifact-path",
           "consumer",
+          "go-version",
           "install-artifact-path",
           "node-version",
           "verify-artifact-path"
         ],
-        "inputCount": 5,
+        "inputCount": 6,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -7744,7 +7745,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "8a27fc9ffb5d0567a78c2f0811b77332f1493d07ecbb56cbab411e8ef4eb7b07",
-    "workflowRegistryDigest": "220d4fa8b8c49bfd9ce7adf6a902f8d4770a49340c4d4583ffc517ce405c872b",
+    "workflowRegistryDigest": "49bae010c78b759f11e708338fb5e5fa96dd9eb20ee7272e5d7b68aa34896823",
     "pageRegistryDigest": "17e7a24208f927865eb6c52572b60763dd5f08a65ecbeffc6246de7149fe39e2"
   },
   "comparison": {

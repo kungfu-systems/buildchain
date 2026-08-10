@@ -32,6 +32,7 @@ jobs:
     with:
       consumer: buildchain
       node-version: "24"
+      go-version: "1.25.x"
       install-artifact-path: node_modules/.modules.yaml
       build-artifact-path: actions/run-lifecycle/dist/index.js
       verify-artifact-path: dist/site
@@ -73,6 +74,8 @@ function assertReusableWorkflow(root) {
     "workflow_call:",
     "BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}",
     "CONSUMER_SOURCE_SHA: ${{ github.sha }}",
+    "- uses: actions/setup-go@v6.5.0",
+    "if: inputs.go-version != ''",
   ])
     if (!reusable.includes(binding))
       fail(`${REUSABLE_PATH} is missing exact binding ${binding}`);

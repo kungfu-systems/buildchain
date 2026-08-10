@@ -112,10 +112,14 @@ export function createReleaseEvidenceBundle({
 
   fs.mkdirSync(resolvedOutputDir, { recursive: true });
   const archivePath = path.join(resolvedOutputDir, `${BUNDLE_BASE}.tar.gz`);
-  const tar = spawnSync("tar", ["-czf", archivePath, "-C", tempDir, BUNDLE_BASE], {
-    cwd,
-    stdio: "inherit",
-  });
+  const tar = spawnSync(
+    "tar",
+    ["-czf", path.basename(archivePath), "-C", tempDir, BUNDLE_BASE],
+    {
+      cwd: resolvedOutputDir,
+      stdio: "inherit",
+    },
+  );
   if (tar.error) {
     throw tar.error;
   }
