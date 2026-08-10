@@ -994,6 +994,77 @@ test("strict alpha promotion uses provider transaction evidence when protection 
   );
 });
 
+test("provider transaction accepts a configured check on the merged source when the PR head has none", async () => {
+  const pullRequestHeadSha = "b".repeat(40);
+  const checkedRefs = [];
+  const octokit = {
+    rest: {
+      repos: {
+        getBranchProtection: async () => {
+          const error = new Error("Resource not accessible by integration");
+          error.status = 403;
+          throw error;
+        },
+        getBranch: async () => ({
+          data: {
+            protected: true,
+            commit: { sha: SHA },
+            protection: {
+              required_status_checks: {
+                enforcement_level: "everyone",
+                contexts: ["check"],
+                checks: [{ context: "check", app_id: 15368 }],
+              },
+            },
+          },
+        }),
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [{
+            number: 42,
+            merged_at: "2026-08-10T00:00:00Z",
+            user: { login: "author" },
+            base: { ref: "alpha/v1/v1.0" },
+            head: {
+              ref: "dev/v1/v1.0",
+              sha: pullRequestHeadSha,
+              repo: { full_name: "kungfu-systems/buildchain" },
+            },
+          }],
+        }),
+      },
+      pulls: {
+        listReviews: async () => ({ data: [
+          { state: "APPROVED", user: { login: "reviewer" } },
+        ] }),
+      },
+      checks: {
+        listForRef: async ({ ref }) => {
+          checkedRefs.push(ref);
+          return {
+            data: {
+              check_runs: ref === SHA
+                ? [{ name: "check", conclusion: "success", app: { id: 15368 } }]
+                : [],
+            },
+          };
+        },
+      },
+    },
+  };
+
+  const resolvedStatusCheck = await assertProtectedChannel({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sourceSha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    requiredStatusCheck: "check",
+  });
+
+  assert.equal(resolvedStatusCheck, "check");
+  assert.deepEqual(checkedRefs, [pullRequestHeadSha, SHA]);
+});
+
 test("provider-hidden protection accepts only an exact receipt-bound alpha recovery", async () => {
   const checkedRefs = [];
   const recoveryPullRequestHeadSha = "c".repeat(40);
