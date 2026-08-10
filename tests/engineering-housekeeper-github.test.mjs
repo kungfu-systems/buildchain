@@ -44,7 +44,10 @@ class FakeGitHubClient {
     branches,
     pullRequests = [],
     ancestors,
+    ancestorPairs,
+    associatedPullRequests,
     defaultBranch = targetBranch,
+    comparisonDelayMs = 0,
   } = {}) {
     this.branches = new Map(
       (
@@ -56,6 +59,34 @@ class FakeGitHubClient {
     );
     this.pullRequests = pullRequests.map(clone);
     this.ancestors = new Set(ancestors || [oid("a"), oid("b")]);
+    this.ancestorPairs = new Set(ancestorPairs || []);
+    const defaultAssociatedPullRequests = {
+      [oid("a")]: [
+        pullRequest({
+          state: "closed",
+          merged_at: observedAt,
+          head: {
+            ref: "feature/merged",
+            sha: oid("a"),
+            repo: { full_name: repository },
+          },
+          base: { ref: targetBranch },
+        }),
+      ],
+    };
+    this.associatedPullRequests = new Map(
+      Object.entries(
+        associatedPullRequests === undefined
+          ? defaultAssociatedPullRequests
+          : associatedPullRequests,
+      ),
+    );
+    this.associatedLookups = [];
+    this.closedPullRequestLookups = 0;
+    this.comparisons = [];
+    this.comparisonDelayMs = comparisonDelayMs;
+    this.activeComparisons = 0;
+    this.maxActiveComparisons = 0;
     this.defaultBranch = defaultBranch;
     this.deleted = [];
     this.labelsAdded = [];
@@ -76,6 +107,11 @@ class FakeGitHubClient {
       .map(clone);
   }
 
+  async listClosedPullRequests() {
+    this.closedPullRequestLookups += 1;
+    return [...this.associatedPullRequests.values()].flat().map(clone);
+  }
+
   async getBranch(_repository, name) {
     const current = this.branches.get(name);
     if (!current) {
@@ -93,12 +129,36 @@ class FakeGitHubClient {
     return clone(current);
   }
 
-  async compareCommits(_repository, baseOid) {
-    return {
-      merge_base_commit: {
-        sha: this.ancestors.has(baseOid) ? baseOid : oid("f"),
-      },
-    };
+  async listPullRequestsForCommit(_repository, commitOid) {
+    this.associatedLookups.push(commitOid);
+    return clone(this.associatedPullRequests.get(commitOid) || []);
+  }
+
+  async compareCommits(_repository, baseOid, targetOid) {
+    this.comparisons.push(`${baseOid}:${targetOid}`);
+    this.activeComparisons += 1;
+    this.maxActiveComparisons = Math.max(
+      this.maxActiveComparisons,
+      this.activeComparisons,
+    );
+    try {
+      if (this.comparisonDelayMs > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, this.comparisonDelayMs),
+        );
+      }
+      return {
+        merge_base_commit: {
+          sha:
+            this.ancestors.has(baseOid) ||
+            this.ancestorPairs.has(`${baseOid}:${targetOid}`)
+              ? baseOid
+              : oid("f"),
+        },
+      };
+    } finally {
+      this.activeComparisons -= 1;
+    }
   }
 
   async deleteBranch(_repository, name) {
@@ -149,6 +209,20 @@ test("GitHub client paginates every branch and pull-request page", async () => {
       "https://api.github.test/pulls?page=2",
       { body: [pullRequest({ number: 2 })] },
     ],
+    [
+      `https://api.github.test/repos/kungfu-systems/buildchain/commits/${oid(
+        "a",
+      )}/pulls?per_page=100`,
+      { body: [pullRequest({ number: 3, merged_at: observedAt })] },
+    ],
+    [
+      `https://api.github.test/repos/kungfu-systems/buildchain/pulls?state=closed&sort=updated&direction=asc&per_page=100`,
+      {
+        body: [
+          pullRequest({ number: 4, state: "closed", merged_at: observedAt }),
+        ],
+      },
+    ],
   ]);
   const client = new GitHubHousekeeperClient({
     token: "test-token",
@@ -173,7 +247,19 @@ test("GitHub client paginates every branch and pull-request page", async () => {
     ),
     [1, 2],
   );
-  assert.equal(requests.length, 4);
+  assert.deepEqual(
+    (await client.listPullRequestsForCommit(repository, oid("a"))).map(
+      (entry) => entry.number,
+    ),
+    [3],
+  );
+  assert.deepEqual(
+    (await client.listClosedPullRequests(repository)).map(
+      (entry) => entry.number,
+    ),
+    [4],
+  );
+  assert.equal(requests.length, 6);
   assert.ok(requests.every((entry) => entry.method === "GET"));
 });
 
@@ -240,7 +326,95 @@ test("inventory is deterministic for the same observation and retains unsafe ref
       .map((entry) => entry.name),
     ["feature/merged"],
   );
+  assert.deepEqual(first.comparisons, [`${oid("a")}:${oid("b")}`]);
+  assert.ok(
+    left.inventory
+      .find((entry) => entry.name === "feature/unmerged")
+      .reasonCodes.includes("branch.not-merged"),
+  );
   assert.match(formatGitHubHousekeeperPlan(left), /feature\/merged/);
+});
+
+test("empty target discovers every protected mainline but mutates only allowlisted temporary families", async () => {
+  const v4Branch = "dev/v4/v4.0";
+  const client = new FakeGitHubClient({
+    branches: [
+      branch(targetBranch, oid("b")),
+      branch(v4Branch, oid("e")),
+      branch("feature/v4-merged", oid("a")),
+      branch("experiment/v4-merged", oid("c")),
+    ],
+    ancestors: [],
+    ancestorPairs: [`${oid("a")}:${oid("e")}`, `${oid("c")}:${oid("e")}`],
+    associatedPullRequests: {
+      [oid("a")]: [
+        pullRequest({
+          number: 11,
+          merged_at: observedAt,
+          head: {
+            ref: "feature/v4-merged",
+            sha: oid("a"),
+            repo: { full_name: repository },
+          },
+          base: { ref: v4Branch },
+        }),
+      ],
+    },
+  });
+  const plan = await planWith(client, { targetBranch: "" });
+  assert.equal(plan.target.name, targetBranch);
+  assert.deepEqual(
+    plan.actions
+      .filter((entry) => entry.kind === "delete-branch")
+      .map((entry) => ({ name: entry.name, target: entry.targetName })),
+    [{ name: "feature/v4-merged", target: v4Branch }],
+  );
+  const unknown = plan.inventory.find(
+    (entry) => entry.name === "experiment/v4-merged",
+  );
+  assert.equal(unknown.decision, "retain");
+  assert.ok(unknown.reasonCodes.includes("branch.not-temporary-development"));
+  assert.equal(client.closedPullRequestLookups, 1);
+  assert.deepEqual(client.associatedLookups, []);
+  assert.deepEqual(client.comparisons, [`${oid("a")}:${oid("e")}`]);
+});
+
+test("repository-wide ancestry inventory uses bounded concurrency and stable output order", async () => {
+  const featureOids = Array.from({ length: 20 }, (_, index) =>
+    String(index + 1).padStart(40, "0"),
+  );
+  const client = new FakeGitHubClient({
+    branches: [
+      branch(targetBranch, oid("b")),
+      ...featureOids.map((sha, index) => branch(`feature/${index}`, sha)),
+    ],
+    ancestors: featureOids,
+    associatedPullRequests: Object.fromEntries(
+      featureOids.map((sha, index) => [
+        sha,
+        [
+          pullRequest({
+            number: 100 + index,
+            state: "closed",
+            merged_at: observedAt,
+            head: {
+              ref: `feature/${index}`,
+              sha,
+              repo: { full_name: repository },
+            },
+            base: { ref: targetBranch },
+          }),
+        ],
+      ]),
+    ),
+    comparisonDelayMs: 5,
+  });
+  const plan = await planWith(client, { targetBranch: "" });
+  assert.equal(client.maxActiveComparisons, 8);
+  assert.deepEqual(
+    plan.actions.map((entry) => entry.name),
+    Array.from({ length: 20 }, (_, index) => `feature/${index}`).sort(),
+  );
 });
 
 test("run defaults to dry-run and never mutates the repository", async () => {

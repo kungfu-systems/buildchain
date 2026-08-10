@@ -352,12 +352,20 @@ job must exercise the full native lifecycle.
 
 AWS imposes a 24-hour minimum Dedicated Host allocation. The contract therefore
 keeps the one host for at least 24 hours even if all three jobs finish earlier.
-At the recorded USD 0.6498 hourly rate, the minimum commitment rounds to USD
-15.60. A 30-hour fail-closed ceiling rounds to USD 19.49, below the dedicated
+At the recorded USD 0.65 hourly rate, the minimum commitment is USD 15.60. A
+30-hour fail-closed ceiling is USD 19.50, below the dedicated
 USD 25 budget. A ten-minute reaper terminates an expired campaign instance and
 retries host release after the minimum allocation and Apple scrub constraints
 allow it. Budget notifications at 80% and 95% invoke the same card-scoped kill
 switch.
+
+The launch controller defaults to `us-east-1` and admits only `us-east-2` as a
+capacity fallback. The regions use mutually exclusive control-plane stacks and
+one shared USD 25 Budget covering Virginia `HostUsage:mac2` and the AWS catalog
+identity `USE2-HostUsage:mac2` for Ohio. A requested region, availability zone,
+stack, and Budget must agree before allocation, and the controller checks both
+regions against one global Host and instance ceiling; no other region is
+accepted.
 
 Qualification requires three trusted exact-source one-job JIT runs on the one
 host, including at least one full run, plus proof that:
@@ -375,9 +383,13 @@ host, including at least one full run, plus proof that:
 campaign. It has three explicit mutation modes:
 
 - `launch-campaign` binds the exact repository source, AMI, availability zone,
-  tagged Dedicated Host, and reusable instance. It rejects pre-existing Mac
-  capacity and requires successful `AllocateHosts` and `RunInstances` DryRuns
-  before either real call.
+  tagged Dedicated Host, and reusable instance. Before paid allocation it
+  verifies the exact AWS account, disabled GitHub workflow, complete control
+  plane stack, AWS-dimension-filtered USD 25 Budget, 80% and 95% SNS
+  subscribers, and zero pre-existing Mac capacity. Because AWS does not expose
+  a DryRun parameter for `AllocateHosts`, it requires an allowed IAM policy
+  simulation for the exact tagged allocation before the real call, then a
+  successful `RunInstances` DryRun before launching the instance.
 - `run-job` binds one queued exact-source GitHub job to the existing campaign
   host and instance. It writes the repository JIT configuration through a
   mode-0600 temporary file into a distinct SSM SecureString, sends only the
@@ -392,8 +404,9 @@ campaign. It has three explicit mutation modes:
 
 Every execute mode requires the exact source SHA and campaign id to be repeated
 through `--confirm-source-sha` and `--confirm-campaign-id`. `run-job` also
-requires `--confirm-run-id`. Omitting `--execute` emits a deterministic plan
-without changing AWS or GitHub state.
+requires `--confirm-run-id`; `launch-campaign` additionally requires the
+expected workload account through `--account-id`. Omitting `--execute` emits a
+deterministic plan without changing AWS or GitHub state.
 
 ## Provider lifecycle
 

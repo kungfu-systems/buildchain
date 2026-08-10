@@ -6,7 +6,7 @@
     "cliCommandCount": 114,
     "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 70,
+    "sitePageCount": 71,
     "docCommandRefCount": 924,
     "failureCount": 0
   },
@@ -2129,13 +2129,14 @@
           "retained-patterns",
           "stale-days",
           "stale-pull-request-label",
-          "target-branch"
+          "target-branch",
+          "temporary-branch-patterns"
         ],
-        "inputCount": 13,
+        "inputCount": 14,
         "secrets": [
-          "github_app_id",
-          "github_app_private_key",
-          "github_token"
+          "housekeeper_app_id",
+          "housekeeper_app_private_key",
+          "housekeeper_token"
         ],
         "secretCount": 3,
         "outputs": [
@@ -3321,6 +3322,10 @@
       },
       {
         "id": "manual:release-tail-provider-plane",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-train",
         "category": "manual"
       },
       {
@@ -7988,8 +7993,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "13a26d906880692e55594677ef0ede5f5858f3923910c62925961780b01ccde3",
-    "pageRegistryDigest": "504454df002494e1bc5cdf37679c28a3914f2df43cf4a70524019d2d97b6c320"
+    "workflowRegistryDigest": "80f511f968d4ef6556002d8316fa340bd01c95048dc55bdf8921f58a2da8e8f1",
+    "pageRegistryDigest": "83e4701148132712b684efb1f474943752ad8371e60f598f162b553f504e987f"
   },
   "comparison": {
     "missingCliRegistry": [],

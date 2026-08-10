@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113416,
+    "maxHandMaintainedSourceFiles": 294,
+    "maxHandMaintainedSourceLines": 114911,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23294,
-    "latestTransition": "Resolved-runtime scenario validation precedes every consumer build.",
-    "rationale": "One bounded controller job validates an optional consumer auditable-demo scenario against the exact resolved Buildchain runtime and source SHA before any native or container lifecycle starts, records the gate in controller receipts, and prevents late contract-drift discovery after expensive builds. Static workflow coverage binds both build jobs and receipt paths to this gate; this exact control-plane ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23298,
+    "latestTransition": "The macOS paid-allocation controller admits one explicit Ohio capacity fallback without weakening regional Budget identity or the one-host ceiling.",
+    "rationale": "The bounded macOS launch gate accepts only us-east-1 and us-east-2, binds each region to its own complete control-plane stack, and requires one shared USD 25 Budget covering both AWS-owned Dedicated Host usage types and regions. It rejects availability-zone drift and counts active hosts and instances across both regions. The workload account, disabled workflow, exact 80/95 percent thresholds, SNS subscribers, one-host ceiling, 24-hour minimum, 30-hour maximum, DryRun, ownership, JIT, and cleanup controls remain unchanged. Existing debt shrinks or remains fixed; these exact combined repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/engineering-housekeeper-github.js": {
+      "maxLines": 707,
+      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/publication-rehearsal-runtime.js": {
       "maxLines": 921,
       "rationale": "The public audit surface keeps strict capsule normalization, path and streaming file verification including artifacts larger than the Node Buffer limit, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."

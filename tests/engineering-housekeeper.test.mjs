@@ -40,6 +40,7 @@ test("fixtures cover all required safety classes", () => {
       "active",
       "merged",
       "stale",
+      "unknown-family",
       "advanced",
       "renamed",
       "protected",
@@ -72,6 +73,15 @@ test("branch deletion requires exact ancestry, no open PR, and no protected or r
   assert.equal(
     classifyHousekeeperBranch(branch({ openPullRequestNumbers: [3] })).eligible,
     false,
+  );
+  const unknownFamily = classifyHousekeeperBranch(
+    branch({ name: "experiment/merged" }),
+  );
+  assert.equal(unknownFamily.eligible, false);
+  assert.ok(
+    unknownFamily.reasonCodes.includes(
+      HOUSEKEEPER_REASON_CODES.NOT_TEMPORARY_DEVELOPMENT,
+    ),
   );
 });
 

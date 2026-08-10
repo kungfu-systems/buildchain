@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:08cfae94c78776694736e81142e2d64480fdc3e67341b415340c03d3539531e7"
+      "digest": "sha256:5292461118df2ec99a15411b6ed50c288abeb05d992677e3500b9bd46255a001"
     },
     {
       "id": "getting-started",
@@ -128,6 +128,14 @@
       "digest": "sha256:d76bbd75aab3c4dd94756c1c64562a125e74369c7c8b97342dbcacc5d7561602"
     },
     {
+      "id": "release-train",
+      "title": "Release Train and Release Cut",
+      "path": "docs/release-train.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:550e50726ff479730bee1abe7839776308396bb01613e31a3ed6e898297619fa"
+    },
+    {
       "id": "release-propagation",
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
@@ -189,7 +197,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:36a4e60e91f500ea1dcdbef97cd0250a2c26562b98d8d3622e8e0f9df2aad23b"
+      "digest": "sha256:371030eda56d7a968d037e8b9a348e0211038506b8c0b14c539ec790ce884945"
     },
     {
       "id": "migration-inventory",
@@ -237,7 +245,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ed843753964193ecb59610a54f0f23d76578228ebe6d31d1d6edce526729910c"
+      "digest": "sha256:34f39632494c0f4d4961fd79fc8ac94466da56c29f04f09e706f402d98ef125c"
     },
     {
       "id": "build-facts",
@@ -277,7 +285,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:4741dc7661d40e14df8203d88a709b9becb08edc4313f5ad308c7e80bf672085"
+      "digest": "sha256:7f69bf3faf8c86b4af268f8e79d511f73de745e146a23809394074f816a372d7"
     },
     {
       "id": "publish-transaction",
@@ -317,7 +325,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:b37d4de1f1cf9155c0e3f42c8c20a0280a263f50173eb0cad2c5f1961954822e"
+      "digest": "sha256:150a6ceb40636838ed157abe11ae1dfe43f6447f01462a0238d343b9cf89fcb4"
     },
     {
       "id": "release-flow",
@@ -341,7 +349,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:793db9414d11aeb314ff2d37a52481826ca5f636d08eaf93772d37962a51484f"
+      "digest": "sha256:6af44926f8138932aeb606bb264b19a40a273ce7bea7bad9b021bb9aa542d61b"
     },
     {
       "id": "web-surface-deployments",

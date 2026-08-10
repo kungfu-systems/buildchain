@@ -320,8 +320,8 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
     nowImpl: () => Date.parse("2026-08-03T00:00:10.000Z"),
     delayImpl: async () => {},
     requestImpl: async (url, options) => {
-      if (url.includes("/git/ref/heads/")) {
-        return { object: { type: "commit", sha: authorityRuntimeSha } };
+      if (url.includes("/commits/")) {
+        return { sha: authorityRuntimeSha };
       }
       if (options.method === "POST") {
         dispatches += 1;
@@ -423,8 +423,8 @@ test("dispatch rejects duplicate exact correlations instead of choosing a run", 
         nowImpl: () => Date.parse("2026-08-03T00:00:10.000Z"),
         delayImpl: async () => {},
         requestImpl: async (url, options) => {
-          if (url.includes("/git/ref/heads/")) {
-            return { object: { type: "commit", sha: authorityRuntimeSha } };
+          if (url.includes("/commits/")) {
+            return { sha: authorityRuntimeSha };
           }
           return options.method === "POST"
             ? {}
