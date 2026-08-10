@@ -828,8 +828,11 @@ declare version-state files and lifecycle commands without pretending every
 project is a Node workspace. Supported version files include JSON, TOML, and
 regex-based files such as `CMakeLists.txt` or `conanfile.py`.
 
-The promotion action consumes `version.files`, optional anchored/manual
-`version.derived_files`, and `lifecycle.verify`.
+The promotion action consumes `version.files`, optional
+`version.derived_files`, and `lifecycle.verify`. Semver and anchored/manual
+repositories may both declare lifecycle-regenerated tracked outputs as derived
+files; anchored/manual repositories additionally bind them into their committed
+version witnesses.
 The verify stage runs after generated version-state changes are applied locally
 and before any release refs move. If `verification-command` is passed directly
 to the action, that explicit command overrides `lifecycle.verify`.

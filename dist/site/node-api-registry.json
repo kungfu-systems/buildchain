@@ -1391,7 +1391,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1532
+        "line": 1527
       },
       "example": "import { discoverConfiguredDerivedVersionMaterial } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1424,7 +1424,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1493
+        "line": 1488
       },
       "example": "import { discoverConfiguredVersionStateFiles } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1457,7 +1457,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1437
+        "line": 1432
       },
       "example": "import { getLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1515,7 +1515,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1441
+        "line": 1436
       },
       "example": "import { getPublishContract } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1573,7 +1573,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1565
+        "line": 1560
       },
       "example": "import { getVersionStrategy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1635,7 +1635,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1574
+        "line": 1569
       },
       "example": "import { loadConfiguredAnchorManifest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1701,7 +1701,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1398
+        "line": 1393
       },
       "example": "import { normalizeLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1730,7 +1730,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1445
+        "line": 1440
       },
       "example": "import { runLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1763,7 +1763,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1745
+        "line": 1740
       },
       "example": "import { updateConfiguredVersionStateContents } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1796,7 +1796,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1612
+        "line": 1607
       },
       "example": "import { validateBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22766,7 +22766,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:9f909694fb8df1e1369e5b424d198b02947f2207415e70d301ea81f999b932f9"
+      "digest": "sha256:ed843753964193ecb59610a54f0f23d76578228ebe6d31d1d6edce526729910c"
     },
     {
       "id": "build-facts",

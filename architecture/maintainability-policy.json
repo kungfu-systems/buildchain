@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113410,
+    "maxHandMaintainedSourceLines": 113416,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23294,
     "latestTransition": "Resolved-runtime scenario validation precedes every consumer build.",
