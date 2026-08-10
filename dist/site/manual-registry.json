@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:be15db5754b2ae0e0d8bbe853e3f6300d2ec99b9103eaeee6d5d1fe9b97a77fc",
+      "digest": "sha256:c2e74efe04bdd37c7fb33edf26d5b951cb716dab14cb8b7651b0deabaed4f5e2",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:10151cdc17aa4e88b014f68693fd2726006802aa0d298e28989a2ebd0b789d42",
+      "digest": "sha256:103b4892c7240647bab1ee0c791b4136e7b7cdd2e6a153ebecc99e949a49240b",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -445,7 +445,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:34fb81d1dd9f913cbed6ee76ac9f0bdb095669e55c1bee67389601fd494470cf",
+      "digest": "sha256:6dfe8a9b974040fc1465b0da696519b4e97b0b901e30d852ffacda0d193810af",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -522,6 +522,7 @@
     "docs/dev-qualification-patrol.md",
     "docs/dev-alpha-candidate-patrol.md",
     "docs/observed-evidence-patrol.md",
+    "docs/engineering-housekeeper.md",
     "docs/release-governance.md",
     "docs/release-passport.md",
     "docs/controller-evidence.md",

@@ -85,6 +85,16 @@
         "pattern": "^github-governance-authority\\.js$"
       },
       {
+        "mechanismId": "engineering-housekeeper",
+        "root": "packages/core",
+        "pattern": "^engineering-housekeeper(?:-github(?:-client)?)?\\.js$"
+      },
+      {
+        "mechanismId": "engineering-housekeeper",
+        "root": "scripts",
+        "pattern": "^engineering-housekeeper-workflow\\.mjs$"
+      },
+      {
         "mechanismId": "release-passport-and-artifact-proof",
         "root": "packages/core",
         "pattern": "^(?:release-passport(?:-contract)?|artifact-passport|github-artifact-attestation|publication-artifact|publication-sealed-bundle)\\.js$"
@@ -646,6 +656,79 @@
       "unresolved": [
         "v4 policy ownership boundary between core and GitHub adapter is not yet selected"
       ]
+    },
+    {
+      "id": "engineering-housekeeper",
+      "owner": "Buildchain engineering hygiene plane",
+      "writers": [
+        "Engineering Housekeeper reusable workflow under an explicit bounded apply gate"
+      ],
+      "schemas": [
+        "kungfu-buildchain-engineering-housekeeper/v1"
+      ],
+      "stores": [
+        "immutable rooted plan, report, and apply receipts"
+      ],
+      "states": [
+        "observed",
+        "report-only",
+        "apply-eligible",
+        "applied",
+        "retained"
+      ],
+      "events": [
+        "inventory",
+        "classify",
+        "plan",
+        "revalidate",
+        "delete-branch",
+        "label-stale-pull-request"
+      ],
+      "transitions": [
+        "exact provider inventory to deterministic plan and rooted receipt"
+      ],
+      "recovery": [
+        "re-read provider state and fail closed on any OID, ancestry, protection, or active-PR drift"
+      ],
+      "effects": [
+        "delete an exact merged allowlisted temporary branch",
+        "optionally label but never close a stale pull request"
+      ],
+      "retry": [
+        "provider failure or drift requires a fresh plan"
+      ],
+      "invalidation": [
+        "source or target OID drift",
+        "active pull request",
+        "unknown branch family",
+        "protection or ancestry ambiguity"
+      ],
+      "providerReadback": [
+        "GitHub refs, protected branches, pull requests, and commit ancestry"
+      ],
+      "publicSurfaces": [
+        "export:./engineering-housekeeper",
+        "export:./engineering-housekeeper-github",
+        "workflow:engineering-housekeeper"
+      ],
+      "compatibilityCallers": [
+        "engineering-housekeeper-daily",
+        "engineering-housekeeper-weekly",
+        "engineering-housekeeper-monthly"
+      ],
+      "sourcePaths": [
+        "packages/core/engineering-housekeeper.js",
+        "packages/core/engineering-housekeeper-github-client.js",
+        "packages/core/engineering-housekeeper-github.js",
+        "scripts/engineering-housekeeper-workflow.mjs"
+      ],
+      "testPaths": [
+        "tests/engineering-housekeeper.test.mjs",
+        "tests/engineering-housekeeper-github.test.mjs",
+        "tests/engineering-housekeeper-workflow.test.mjs"
+      ],
+      "migrationDisposition": "preserve-v3-contract-and-typescript-writer-without-a-second-provider-authority",
+      "unresolved": []
     },
     {
       "id": "release-passport-and-artifact-proof",

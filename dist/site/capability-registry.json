@@ -252,10 +252,10 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 8,
-        "pageCount": 13,
+        "pageCount": 14,
         "cliCommandCount": 12,
         "nodeApiCount": 8,
-        "workflowCount": 16,
+        "workflowCount": 20,
         "actionCount": 0
       },
       "manuals": [

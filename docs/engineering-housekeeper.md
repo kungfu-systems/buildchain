@@ -29,7 +29,7 @@ their heads are already ancestors of a mainline.
 The reusable entrypoint is:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v3
+uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
 ```
 
 ## Report mode
@@ -40,7 +40,7 @@ separate plan, Markdown report, and dry-run receipt artifacts:
 ```yaml
 jobs:
   housekeeper:
-    uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
     permissions:
       contents: read
       pull-requests: read
@@ -81,7 +81,7 @@ An unattended scheduled caller can set both values in committed policy.
 ```yaml
 jobs:
   housekeeper:
-    uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
     permissions:
       contents: write
       pull-requests: write
@@ -120,7 +120,7 @@ continue.
 | `max-actions`               | number  | `20`                        | Positive global apply limit.                                                      |
 | `artifact-retention-days`   | number  | `30`                        | Retention for plan, report, and receipts.                                         |
 | `buildchain-repository`     | string  | `kungfu-systems/buildchain` | Runtime source repository.                                                        |
-| `buildchain-ref`            | string  | `v3`                        | Runtime ref; trusted manual qualification may pass a train or exact SHA.          |
+| `buildchain-ref`            | string  | `v4`                        | Runtime ref; trusted qualification may pass a train or exact SHA.                 |
 
 Stable outputs are `plan-root`, `report-receipt-root`, optional
 `branch-receipt-root` and `pull-request-receipt-root`, `action-count`,

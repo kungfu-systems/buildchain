@@ -22,7 +22,7 @@ test("v4 architecture contract validates with zero production writer migrations"
     contract: "kungfu-buildchain-v4-architecture-validation",
     ok: true,
     releaseLine: "dev/v4/v4.0",
-    capabilities: 10,
+    capabilities: 11,
     stateMachines: 5,
     dependencyLayers: 6,
     dependencyCycles: 0,
@@ -33,11 +33,20 @@ test("v4 architecture contract validates with zero production writer migrations"
 
 test("architecture list and show are generated from the validated manifest", () => {
   const list = architectureList(root);
-  assert.equal(list.capabilities.length, 10);
+  assert.equal(list.capabilities.length, 11);
   assert.equal(
     list.capabilities.find((entry) => entry.id === "publish-transaction")
       .stateMachine,
     true,
+  );
+  assert.equal(
+    list.capabilities.find((entry) => entry.id === "engineering-housekeeper")
+      .stateMachine,
+    false,
+  );
+  assert.equal(
+    architectureShow("engineering-housekeeper", root).capability.migrationPhase,
+    "legacy-authoritative",
   );
   const shown = architectureShow("publish-transaction", root);
   assert.equal(

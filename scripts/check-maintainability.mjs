@@ -282,9 +282,16 @@ function evaluateMaintainability({ current, baselineFiles, policy }) {
   for (const [file, metrics] of Object.entries(current.files)) {
     const baseline = baselineFiles[file];
     if (!baseline) {
-      if (metrics.lines > budgets.newFileLines) {
+      const transition = policy.approvedNewFileTransitions?.[file];
+      if (transition && !String(transition.rationale || "").trim()) {
         issues.push(
-          `${file}: new file has ${metrics.lines} lines; budget is ${budgets.newFileLines}`,
+          `${file}: approved new-file transition requires a rationale`,
+        );
+      }
+      const allowedFileLines = transition?.maxLines ?? budgets.newFileLines;
+      if (metrics.lines > allowedFileLines) {
+        issues.push(
+          `${file}: new file has ${metrics.lines} lines; budget is ${allowedFileLines}`,
         );
       }
       for (const entry of metrics.functions) {

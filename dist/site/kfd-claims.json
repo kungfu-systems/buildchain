@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6d02538331ba5b7cffea6acb6ab6215434cb92b82d9e29ce868f4323ab2d8d6b",
+    "sha256": "3af32b9ae4c3b21315c6f0974e6c89aa5631ddb265f008e91024f03b15165ced",
     "summary": {
       "cliCommandCount": 113,
-      "workflowCount": 66,
+      "workflowCount": 70,
       "actionCount": 6,
-      "sitePageCount": 70,
+      "sitePageCount": 71,
       "docCommandRefCount": 897,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6d02538331ba5b7cffea6acb6ab6215434cb92b82d9e29ce868f4323ab2d8d6b",
+      "sha256": "3af32b9ae4c3b21315c6f0974e6c89aa5631ddb265f008e91024f03b15165ced",
       "summary": {
         "cliCommandCount": 113,
-        "workflowCount": 66,
+        "workflowCount": 70,
         "actionCount": 6,
-        "sitePageCount": 70,
+        "sitePageCount": 71,
         "docCommandRefCount": 897,
         "failureCount": 0
       },
@@ -1615,6 +1615,30 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./github-governance-authority"
+        },
+        {
+          "id": "export:./engineering-housekeeper",
+          "name": "@kungfu-tech/buildchain/engineering-housekeeper",
+          "kind": "package-export",
+          "sourcePath": "packages/core/engineering-housekeeper.js",
+          "evidencePath": "packages/core/engineering-housekeeper.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./engineering-housekeeper"
+        },
+        {
+          "id": "export:./engineering-housekeeper-github",
+          "name": "@kungfu-tech/buildchain/engineering-housekeeper-github",
+          "kind": "package-export",
+          "sourcePath": "packages/core/engineering-housekeeper-github.js",
+          "evidencePath": "packages/core/engineering-housekeeper-github.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./engineering-housekeeper-github"
         },
         {
           "id": "export:./kfd-gate",
@@ -4599,6 +4623,77 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:engineering-housekeeper-daily",
+          "name": "workflow:engineering-housekeeper-daily",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-daily.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-daily.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper-monthly",
+          "name": "workflow:engineering-housekeeper-monthly",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-monthly.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-monthly.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper-weekly",
+          "name": "workflow:engineering-housekeeper-weekly",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-weekly.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-weekly.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper",
+          "name": "workflow:engineering-housekeeper",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 14,
+          "inputs": [
+            "apply-enabled",
+            "artifact-prefix",
+            "artifact-retention-days",
+            "buildchain-ref",
+            "buildchain-repository",
+            "max-actions",
+            "mode",
+            "protected-patterns",
+            "repository",
+            "retained-patterns",
+            "stale-days",
+            "stale-pull-request-label",
+            "target-branch",
+            "temporary-branch-patterns"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:github-artifact-attestation",
           "name": "workflow:github-artifact-attestation",
           "kind": "workflow",
@@ -5836,6 +5931,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:engineering-housekeeper",
+          "name": "site-page:manual:engineering-housekeeper",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:getting-started",
           "name": "site-page:manual:getting-started",
           "kind": "site-page",
@@ -6474,6 +6581,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 410
+    "publicSurfaceCount": 417
   }
 }

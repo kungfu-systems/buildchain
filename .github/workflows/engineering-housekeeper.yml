@@ -72,7 +72,7 @@ on:
         description: "Exact or floating Buildchain runtime ref."
         required: false
         type: string
-        default: v3
+        default: v4
     secrets:
       github_token:
         description: "Optional caller-owned token. Defaults to the caller-scoped github.token."

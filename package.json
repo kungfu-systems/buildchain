@@ -137,6 +137,7 @@
     "bridge:v4:evidence": "node scripts/v4-bridge-evidence.mjs"
   },
   "devDependencies": {
+    "ajv": "8.17.1",
     "prettier": "^3.9.0",
     "tsup": "^8.5.0",
     "typescript": "^5.9.0"

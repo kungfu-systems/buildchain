@@ -165,6 +165,17 @@
       "migrationPhase": "legacy-authoritative"
     },
     {
+      "id": "engineering-housekeeper",
+      "owner": "Buildchain engineering hygiene plane",
+      "sourceInventoryId": "engineering-housekeeper",
+      "surfaces": [
+        "export:./engineering-housekeeper",
+        "export:./engineering-housekeeper-github",
+        "workflow:engineering-housekeeper"
+      ],
+      "migrationPhase": "legacy-authoritative"
+    },
+    {
       "id": "release-propagation-work-control",
       "owner": "Buildchain downstream release propagation plane",
       "sourceInventoryId": "release-propagation-work-control",
