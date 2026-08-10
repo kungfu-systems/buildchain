@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113552,
+    "maxHandMaintainedSourceLines": 113619,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
     "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline.",
@@ -20,8 +20,8 @@
   },
   "approvedNewFileTransitions": {
     "packages/core/engineering-housekeeper-github.js": {
-      "maxLines": 615,
-      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, deterministic per-branch target selection, exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior in one public provider surface; this exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 672,
+      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, merged-PR-base-first target selection that bounds provider calls, exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior in one public provider surface; this exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/publication-rehearsal-runtime.js": {
       "maxLines": 921,

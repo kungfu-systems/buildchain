@@ -6200,7 +6200,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github-client.js",
-        "line": 53
+        "line": 54
       },
       "example": "import { GitHubHousekeeperClient } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6224,7 +6224,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github-client.js",
-        "line": 36
+        "line": 37
       },
       "example": "import { GitHubHousekeeperProviderError } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6253,7 +6253,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 523
+        "line": 580
       },
       "example": "import { applyGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6282,7 +6282,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 187
+        "line": 237
       },
       "example": "import { collectGitHubHousekeeperInventory } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6311,7 +6311,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 605
+        "line": 662
       },
       "example": "import { formatGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6340,7 +6340,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 599
+        "line": 656
       },
       "example": "import { runGitHubHousekeeper } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22212,7 +22212,7 @@
       "specifier": "@kungfu-tech/buildchain/engineering-housekeeper-github",
       "export": "./engineering-housekeeper-github",
       "target": "./packages/core/engineering-housekeeper-github.js",
-      "digest": "sha256:4b07a173c861626d4e74bfc83e3ba7e93548e1855d21a006d71010438ab3f5a7",
+      "digest": "sha256:ed72b4ffff1a74c53db339ef3f429ccea0a339c2456f1a0c570c997a0db36d6c",
       "summary": "Paginated GitHub repository hygiene inventory, default-dry-run execution, exact-head mutation fences, and rooted provider receipts.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -22766,7 +22766,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:17747925a7d42640fbfac849a3cec3755d9a8dafcff53576189de721da6ab9af"
+      "digest": "sha256:a8cc7af5cf1027aeb327cdb4c4a6a394e966cee58ea98532f46e9801ce50c46e"
     },
     {
       "id": "build-facts",

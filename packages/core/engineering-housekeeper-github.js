@@ -166,9 +166,59 @@ function mainlineTargetNames({
         ? 0
         : name === repositoryState.default_branch
           ? 1
-          : 2;
+          : name.startsWith("dev/")
+            ? 2
+            : name.startsWith("alpha/")
+              ? 3
+              : name.startsWith("release/")
+                ? 4
+                : name.startsWith("publish-gate/")
+                  ? 5
+                  : 6;
     return priority(left) - priority(right) || left.localeCompare(right);
   });
+}
+
+async function branchCandidateTargets({
+  client,
+  repository,
+  branchName,
+  branchOid,
+  targets,
+}) {
+  const associatedPullRequests =
+    typeof client.listPullRequestsForCommit === "function"
+      ? await client.listPullRequestsForCommit(repository, branchOid)
+      : [];
+  const mergedTargetNames = new Set(
+    associatedPullRequests
+      .filter(
+        (pullRequest) =>
+          Boolean(pullRequest.merged_at || pullRequest.mergedAt) &&
+          pullRequestHeadRepository(pullRequest) === repository &&
+          String(pullRequest?.head?.ref || pullRequest.headRef || "") ===
+            branchName &&
+          String(
+            pullRequest?.head?.sha || pullRequest.headOid || "",
+          ).toLowerCase() === branchOid,
+      )
+      .map((pullRequest) =>
+        String(pullRequest?.base?.ref || pullRequest.baseRef || ""),
+      )
+      .filter(Boolean),
+  );
+  return targets
+    .filter(
+      (target, index) =>
+        mergedTargetNames.has(target.name) ||
+        index === 0 ||
+        target.name.startsWith("dev/"),
+    )
+    .sort((left, right) => {
+      const associated = (target) =>
+        mergedTargetNames.has(target.name) ? 0 : 1;
+      return associated(left) - associated(right);
+    });
 }
 
 async function branchAncestry(client, repository, branchOid, targetOid) {
@@ -264,7 +314,14 @@ export async function collectGitHubHousekeeperInventory({
       let selectedTarget = target;
       let ancestry = "ambiguous";
       if (staticallyEligible) {
-        for (const candidateTarget of targets) {
+        const candidateTargets = await branchCandidateTargets({
+          client,
+          repository: coordinate.fullName,
+          branchName: String(branchState.name),
+          branchOid,
+          targets,
+        });
+        for (const candidateTarget of candidateTargets) {
           if (String(branchState.name) === candidateTarget.name) continue;
           const candidateAncestry = await branchAncestry(
             client,
