@@ -95,7 +95,7 @@ Buildchain self-release calls the same public reusable workflow coordinate as a
 consumer:
 
 ```text
-kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@5a6a93ca1064a0df58bd2fa59ef8c523f832882b
+kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@769b221bad7a6b9104afad4c2628d9dca396ab0f
 ```
 
 The caller pins the public router and runtime to the same exact implementation
