@@ -45,6 +45,7 @@ class FakeGitHubClient {
     pullRequests = [],
     ancestors,
     ancestorPairs,
+    associatedPullRequests,
     defaultBranch = targetBranch,
   } = {}) {
     this.branches = new Map(
@@ -58,6 +59,11 @@ class FakeGitHubClient {
     this.pullRequests = pullRequests.map(clone);
     this.ancestors = new Set(ancestors || [oid("a"), oid("b")]);
     this.ancestorPairs = new Set(ancestorPairs || []);
+    this.associatedPullRequests = new Map(
+      Object.entries(associatedPullRequests || {}),
+    );
+    this.associatedLookups = [];
+    this.comparisons = [];
     this.defaultBranch = defaultBranch;
     this.deleted = [];
     this.labelsAdded = [];
@@ -95,7 +101,13 @@ class FakeGitHubClient {
     return clone(current);
   }
 
+  async listPullRequestsForCommit(_repository, commitOid) {
+    this.associatedLookups.push(commitOid);
+    return clone(this.associatedPullRequests.get(commitOid) || []);
+  }
+
   async compareCommits(_repository, baseOid, targetOid) {
+    this.comparisons.push(`${baseOid}:${targetOid}`);
     return {
       merge_base_commit: {
         sha:
@@ -155,6 +167,12 @@ test("GitHub client paginates every branch and pull-request page", async () => {
       "https://api.github.test/pulls?page=2",
       { body: [pullRequest({ number: 2 })] },
     ],
+    [
+      `https://api.github.test/repos/kungfu-systems/buildchain/commits/${oid(
+        "a",
+      )}/pulls?per_page=100`,
+      { body: [pullRequest({ number: 3, merged_at: observedAt })] },
+    ],
   ]);
   const client = new GitHubHousekeeperClient({
     token: "test-token",
@@ -179,7 +197,13 @@ test("GitHub client paginates every branch and pull-request page", async () => {
     ),
     [1, 2],
   );
-  assert.equal(requests.length, 4);
+  assert.deepEqual(
+    (await client.listPullRequestsForCommit(repository, oid("a"))).map(
+      (entry) => entry.number,
+    ),
+    [3],
+  );
+  assert.equal(requests.length, 5);
   assert.ok(requests.every((entry) => entry.method === "GET"));
 });
 
@@ -260,6 +284,20 @@ test("empty target discovers every protected mainline but mutates only allowlist
     ],
     ancestors: [],
     ancestorPairs: [`${oid("a")}:${oid("e")}`, `${oid("c")}:${oid("e")}`],
+    associatedPullRequests: {
+      [oid("a")]: [
+        pullRequest({
+          number: 11,
+          merged_at: observedAt,
+          head: {
+            ref: "feature/v4-merged",
+            sha: oid("a"),
+            repo: { full_name: repository },
+          },
+          base: { ref: v4Branch },
+        }),
+      ],
+    },
   });
   const plan = await planWith(client, { targetBranch: "" });
   assert.equal(plan.target.name, targetBranch);
@@ -274,6 +312,8 @@ test("empty target discovers every protected mainline but mutates only allowlist
   );
   assert.equal(unknown.decision, "retain");
   assert.ok(unknown.reasonCodes.includes("branch.not-temporary-development"));
+  assert.deepEqual(client.associatedLookups, [oid("a")]);
+  assert.deepEqual(client.comparisons, [`${oid("a")}:${oid("e")}`]);
 });
 
 test("run defaults to dry-run and never mutates the repository", async () => {
