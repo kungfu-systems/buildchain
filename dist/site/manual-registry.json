@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:524ecea1c2ba61ec61079c05b27b40decbbdd4bbf5b4982d7edcd618af622542",
+      "digest": "sha256:9f909694fb8df1e1369e5b424d198b02947f2207415e70d301ea81f999b932f9",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

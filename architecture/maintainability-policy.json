@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113408,
+    "maxHandMaintainedSourceLines": 113410,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23243,
-    "latestTransition": "Publication evidence follows bounded GitHub Release asset redirects.",
-    "rationale": "The existing publication evidence verifier follows at most three HTTPS redirects from canonical Kungfu Release URLs to an explicit GitHub-owned storage host set while retaining manual redirect inspection, exact byte digests, and fail-closed rejection of every other destination. Two regression cases cover the live 302 transport and untrusted redirect rejection; this exact recovery ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23294,
+    "latestTransition": "Resolved-runtime scenario validation precedes every consumer build.",
+    "rationale": "One bounded controller job validates an optional consumer auditable-demo scenario against the exact resolved Buildchain runtime and source SHA before any native or container lifecycle starts, records the gate in controller receipts, and prevents late contract-drift discovery after expensive builds. Static workflow coverage binds both build jobs and receipt paths to this gate; this exact control-plane ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

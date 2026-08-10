@@ -3965,7 +3965,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 448
+        "line": 449
       },
       "example": "import { aggregateControllerReceipts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4090,7 +4090,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 150
+        "line": 151
       },
       "example": "import { controllerEvidenceDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4119,7 +4119,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 286
+        "line": 287
       },
       "example": "import { createControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4148,7 +4148,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 362
+        "line": 363
       },
       "example": "import { createControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4177,7 +4177,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 490
+        "line": 491
       },
       "example": "import { createControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4206,7 +4206,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 196
+        "line": 197
       },
       "example": "import { createControllerRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4235,7 +4235,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 531
+        "line": 532
       },
       "example": "import { normalizeControllerReceiptReferences } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4264,7 +4264,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 324
+        "line": 325
       },
       "example": "import { validateControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4297,7 +4297,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 422
+        "line": 423
       },
       "example": "import { validateControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4330,7 +4330,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 504
+        "line": 505
       },
       "example": "import { validateControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21333,7 +21333,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:8a5070254b58cf2ea4e4851b29de4edfcf618a7d6acfb2235e705246ce40e22a",
+      "digest": "sha256:482b124aefc9c829098f68967c6d942fa0731b77628e309767347a0aaaf8d456",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -22766,7 +22766,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:524ecea1c2ba61ec61079c05b27b40decbbdd4bbf5b4982d7edcd618af622542"
+      "digest": "sha256:9f909694fb8df1e1369e5b424d198b02947f2207415e70d301ea81f999b932f9"
     },
     {
       "id": "build-facts",
