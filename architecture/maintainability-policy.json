@@ -5,18 +5,24 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 322,
-    "maxHandMaintainedSourceLines": 123771,
-    "maxWorkflowFiles": 66,
-    "maxWorkflowLines": 22619,
-    "latestTransition": "Buildchain v4 dogfoods the exact public consumer workflow through one thin PR caller, with train-only recursion recovery and a protected anti-bypass contract gate.",
-    "rationale": "This successor ceiling adds exactly one thin Buildchain consumer caller and one hand-maintained anti-bypass gate while deleting the larger direct Buildchain/Kungfu qualification jobs from Verify. The gate freezes the public reusable workflow, exact train or protected-SHA binding, tracked install/build/verify lifecycle, optional declared Go setup, deterministic LF checkout, three GitHub-hosted platforms, private-path absence, AGENTS.md invariant, and protected Verify participation. Its regression tests reject copied orchestration, relative calls, direct qualification jobs, incomplete public-script builds, platform-dependent checkout, feature refs, legacy profiles, and gate removal. Windows tar outputs are created from a local cwd so drive-letter paths cannot become remote archive coordinates. Provider mutation, AWS, self-hosted runners, credential reads, publication, signing, production reuse, production stage skipping, production authority changes, and v3 behavior changes remain hard-zero; per-file, per-function, workflow-line, and no-widening budgets remain unchanged."
+    "maxHandMaintainedSourceFiles": 326,
+    "maxHandMaintainedSourceLines": 125427,
+    "maxWorkflowFiles": 70,
+    "maxWorkflowLines": 23187,
+    "latestTransition": "Buildchain v4 preserves the exact autonomous Engineering Housekeeper contract and provider boundary from the protected v3 delivery.",
+    "rationale": "The v4 line adds the exact provider-neutral contract, bounded GitHub adapter, reusable workflow, and thin daily, weekly, and monthly unattended callers already protected on v3. The v4 architecture inventory records one legacy-authoritative TypeScript capability without a second contract, provider authority, or production writer. Unknown branch families and unassociated heads remain report-only; exact OID, merged-PR association, ancestry, active-PR, protection, bounded concurrency, deterministic ordering, and replay fences remain binding. These exact source and workflow ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
     "newFunctionLines": 180,
     "newFunctionComplexity": 25,
     "existingDebtPolicy": "no-widening"
+  },
+  "approvedNewFileTransitions": {
+    "packages/core/engineering-housekeeper-github.js": {
+      "maxLines": 707,
+      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."
+    }
   },
   "approvedExistingDebtTransitions": {
     "actions/promote-buildchain-ref/lib.js": {
@@ -39,6 +45,10 @@
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
       "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly."
+    },
+    "scripts/check-maintainability.mjs": {
+      "maxFunctionComplexity": 29,
+      "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and every existing no-widening check remain unchanged."
     },
     "scripts/check-inventory.mjs": {
       "maxLines": 1478,

@@ -20,6 +20,9 @@
     "packages/core/release-propagation-push.js",
     "packages/core/release-propagation-stage-evidence.js",
     "packages/core/release-propagation-work.js",
+    "packages/core/engineering-housekeeper.js",
+    "packages/core/engineering-housekeeper-github-client.js",
+    "packages/core/engineering-housekeeper-github.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
     "scripts/buildchain-cli-help.mjs",
@@ -29,6 +32,7 @@
     "scripts/run-lifecycle-core.mjs",
     "scripts/resolve-artifact-transfer-mode.mjs",
     "scripts/release-propagation.mjs",
+    "scripts/engineering-housekeeper-workflow.mjs",
     "scripts/web-surface-core.mjs",
     "scripts/web-surface-routing.mjs",
     "scripts/web-surface.mjs",
@@ -361,6 +365,26 @@
         "docs/release-propagation.md",
         "dist/site/cli-registry.json",
         "dist/site/node-api-registry.json"
+      ]
+    },
+    {
+      "id": "engineering-housekeeper",
+      "owner": "Buildchain engineering hygiene maintainers",
+      "implementation": [
+        "packages/core/engineering-housekeeper.js",
+        "packages/core/engineering-housekeeper-github-client.js",
+        "packages/core/engineering-housekeeper-github.js",
+        "scripts/engineering-housekeeper-workflow.mjs"
+      ],
+      "tests": [
+        "tests/engineering-housekeeper.test.mjs",
+        "tests/engineering-housekeeper-github.test.mjs",
+        "tests/engineering-housekeeper-workflow.test.mjs"
+      ],
+      "contracts": [
+        "contracts/engineering-housekeeper-v1.schema.json",
+        "contracts/fixtures/engineering-housekeeper-v1/cases.json",
+        "docs/engineering-housekeeper.md"
       ]
     },
     {

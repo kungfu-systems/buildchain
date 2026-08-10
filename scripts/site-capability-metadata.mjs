@@ -187,6 +187,8 @@ export function nodeApiMeta(exportName) {
     "./publication-control-plane-audit": { group: "release-passport-trust", summary: "Read-only publication control-plane snapshot evaluation APIs." },
     "./buildchain-publication-authority": { group: "release-passport-trust", summary: "Buildchain-owned closed-world publication authority descriptor registry." },
     "./github-governance-authority": { group: "governance-versioning", summary: "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs." },
+    "./engineering-housekeeper": { group: "governance-versioning", summary: "Provider-neutral repository hygiene classification, deterministic plan and receipt, apply-time revalidation, and replay APIs." },
+    "./engineering-housekeeper-github": { group: "governance-versioning", summary: "Paginated GitHub repository hygiene inventory, default-dry-run execution, exact-head mutation fences, and rooted provider receipts." },
     "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
     "./artifact-verification-envelope": { group: "release-passport-trust", summary: "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission." },
     "./artifact-signing": { group: "reusable-build", summary: "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs." },

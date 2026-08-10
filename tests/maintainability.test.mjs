@@ -97,6 +97,40 @@ test("repository-wide source and workflow growth require an explicit ceiling", (
   assert.equal(issues.length, 4);
 });
 
+test("an approved new-file transition requires an exact ceiling and rationale", () => {
+  const fixturePolicy = structuredClone(policy);
+  fixturePolicy.sourceBudgets.newFileLines = 1;
+  fixturePolicy.approvedNewFileTransitions = {
+    "new.js": { maxLines: 2, rationale: "Bounded fixture transition." },
+  };
+  fixturePolicy.selectedFunctionBudgets = {};
+  const current = {
+    files: {
+      "new.js": analyzeJavaScript(
+        "new.js",
+        "export const one = 1;\nexport const two = 2;\n",
+      ),
+    },
+  };
+  assert.deepEqual(
+    evaluateMaintainability({
+      current,
+      baselineFiles: {},
+      policy: fixturePolicy,
+    }),
+    [],
+  );
+  fixturePolicy.approvedNewFileTransitions["new.js"].rationale = "";
+  assert.match(
+    evaluateMaintainability({
+      current,
+      baselineFiles: {},
+      policy: fixturePolicy,
+    })[0],
+    /approved new-file transition requires a rationale/u,
+  );
+});
+
 test("Rust domain sources participate in the repository source budget", () => {
   assert.equal(
     isHandMaintainedSource("crates/buildchain-v4-bridge/src/main.rs"),
