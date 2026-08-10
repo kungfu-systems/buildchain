@@ -12,7 +12,7 @@
   "campaign": {
     "platforms": ["linux-x64", "macos-arm64", "windows-x64"],
     "processRuns": ["seed", "resume"],
-    "consumers": ["buildchain-self-dogfood", "kungfu-shadow"],
+    "consumers": ["buildchain"],
     "requiredComparisons": [
       "artifact-manifest-root",
       "content-root",
@@ -23,28 +23,10 @@
       "rollback"
     ]
   },
-  "selfDogfood": {
-    "configPath": ".buildchain/buildchain.toml",
-    "evidenceRoot": ".buildchain/artifacts/v4-stage-capsule-self-dogfood",
-    "executableStages": ["install", "verify"],
-    "dependencies": {
-      "install": [],
-      "verify": ["install"]
-    },
-    "excludedStages": {
-      "version-state": "generated-output-mutation",
-      "publish": "provider-mutation"
-    },
-    "requiredBindings": [
-      "config-root",
-      "command",
-      "manifest-root",
-      "summary-root",
-      "output-roots"
-    ]
-  },
-  "externalConsumerCanary": {
-    "workflow": ".github/workflows/v4-stage-capsule-canary.yml",
+  "publicConsumerDogfood": {
+    "callerWorkflow": ".github/workflows/v4-public-consumer-dogfood.yml",
+    "reusableWorkflow": "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml",
+    "validationRef": "train/v4/v4.0/public-consumer-self-dogfood",
     "invocation": "workflow_call",
     "runtimeBinding": "job.workflow_sha",
     "consumerSourceBinding": "github.sha",
@@ -56,17 +38,15 @@
       "verify": ["build"]
     },
     "excludedStages": {
+      "version-state": "source-mutation",
       "publish": "provider-mutation"
     },
     "runners": ["ubuntu-24.04", "macos-15", "windows-2025"],
-    "consumerOrchestrationCopied": false
-  },
-  "kungfuShadow": {
-    "sourceRevision": "9ca8f445fd5d7921f480c47b059addb2f84f40db",
-    "dispatchWorkflow": ".github/workflows/build.yml",
-    "runtimeOverrideInput": "buildchain-ref",
-    "committedRefChanged": false,
-    "productionAlphaAuthorityChanged": false
+    "consumerOrchestrationCopied": false,
+    "relativeOrSelfInvocationAllowed": false,
+    "directQualificationInvocationAllowed": false,
+    "candidateBranchOverrideAllowed": false,
+    "recursionRecovery": "public-train-ref-only"
   },
   "faultCampaign": [
     "corrupt",
@@ -114,6 +94,6 @@
     "productionStageSkippingChanges": 0,
     "productionWriteAuthorityChanges": 0,
     "v3ConsumerBehaviorChanges": 0,
-    "externalConsumerCanaryWorkflows": 1
+    "publicConsumerDogfoodWorkflows": 1
   }
 }

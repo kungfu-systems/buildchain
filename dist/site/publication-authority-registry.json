@@ -1079,6 +1079,11 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/v4-public-consumer-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/v4-stage-capsule-canary.yml",
       "signals": [],
       "classified": false
@@ -1089,5 +1094,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "b485fc72bb946552325b81a79a47130e28646a5c4afb21907f490b134694cef3"
+  "registryDigest": "d247fd07aad61e34302489a07343466b7319f76480343318f4b8a6c5363c61d7"
 }

@@ -134,25 +134,18 @@ shadow-only: it does not skip a v3 production stage or move v3 authority.
 ## Three-platform qualification and Wave reconciliation
 
 `architecture/v4-stage-capsule-qualification.json` closes the Wave 2
-qualification boundary. The protected workflow runs Buildchain's real declared
-`install` and `verify` lifecycle on macOS arm64, Linux x64, and Windows x64. Its
-self-dogfood profile is derived from `.buildchain/buildchain.toml` and binds the
-configuration, command, lifecycle manifest, summary, and actual output roots.
-`version-state` and `publish` are rooted as excluded mutation stages and are
-never executed by the shadow lane. A seed process retains the successful
-`install` Capsule before an intentional late `verify` failure; a separate
-process re-reads the lifecycle evidence and retained store, restores `install`,
-and rebuilds only `verify`. Any configuration, evidence, source, platform, or
-output drift fails closed.
+qualification boundary. Buildchain and external repositories use the same
+Buildchain-owned public reusable workflow,
+`.github/workflows/v4-stage-capsule-canary.yml`. Buildchain's caller is the thin
+`.github/workflows/v4-public-consumer-dogfood.yml`; it has no steps, copied
+orchestration, local action, direct qualification invocation, or private
+consumer profile. Candidate recursion is resolved only by publishing the exact
+candidate at `train/v4/v4.0/<capability>` and calling that fully qualified
+public ref. After successful qualification and protected merge, the caller can
+be pinned to the exact protected commit. An internal exception is never a
+permitted recursion mechanism.
 
-The exact-source Kungfu lane retains the consumer-equivalent four-stage fault
-campaign: successful `install` and `build` Capsules precede the late `verify`
-failure, then the clean resume restores `build` and rebuilds `verify` plus
-`package`. Both profiles remain under the same closed qualification root.
-
-External consumers use the Buildchain-owned reusable workflow
-`.github/workflows/v4-stage-capsule-canary.yml` at an exact commit. The called
-workflow checks out that same commit as its runtime, reads the consumer's
+The called workflow checks out that same commit as its runtime, reads the consumer's
 tracked `.buildchain/buildchain.toml`, and executes only `install`, `build`,
 and `verify` on GitHub-hosted Linux x64, macOS arm64, and Windows x64 runners.
 Each stage binds its declared command, dependency edge, exact consumer source,
@@ -172,10 +165,10 @@ roots from a fresh full build with the roots assembled from retained and rebuilt
 Capsules. It fails closed on missing, expired, corrupt, partial, cross-platform,
 cross-stage, source/toolchain/policy drift, stale-writer, and root-mismatch
 campaigns. The rooted report records retained bytes, restore overhead, planner
-accuracy, false reuse, and false rebuild counts. The protected self-dogfood
-campaign requires all six Buildchain/Kungfu reports. An external invocation
-instead declares one exact consumer and requires its three platform reports
-before emitting a separate qualification root.
+accuracy, false reuse, and false rebuild counts. Every invocation declares one
+exact public consumer identity and requires its Linux, macOS, and Windows
+reports before emitting a qualification root. Buildchain declares `buildchain`
+and receives no additional profile or authority.
 
 The post-merge reconciliation interface accepts that qualification root only
 with all five Wave 2 children in native terminal state, exact source and
@@ -192,8 +185,9 @@ Focused local rehearsal:
 node scripts/v4-stage-capsule-qualification.mjs campaign \
   --work-root /tmp/buildchain-v4-stage-qualification \
   --platform linux-x64 \
-  --consumer buildchain-self-dogfood \
+  --consumer buildchain \
   --runtime-ref <exact-buildchain-commit> \
   --consumer-source-revision <exact-consumer-commit> \
-  --lifecycle-evidence-root .buildchain/artifacts/v4-stage-capsule-self-dogfood
+  --consumer-root . \
+  --lifecycle-evidence-root .buildchain/artifacts/v4-stage-capsule-canary
 ```

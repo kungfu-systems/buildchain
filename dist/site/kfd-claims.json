@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "658a8dc3347e45c09bccc9f112d5c2091f7b7cc1ddab3bb02400da85a18f914e",
+    "sha256": "e591af5aa73198a592a8e467cffa9e0eb70a77f553a9c82a799f18c071517887",
     "summary": {
       "cliCommandCount": 113,
-      "workflowCount": 65,
+      "workflowCount": 66,
       "actionCount": 6,
       "sitePageCount": 70,
       "docCommandRefCount": 897,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "658a8dc3347e45c09bccc9f112d5c2091f7b7cc1ddab3bb02400da85a18f914e",
+      "sha256": "e591af5aa73198a592a8e467cffa9e0eb70a77f553a9c82a799f18c071517887",
       "summary": {
         "cliCommandCount": 113,
-        "workflowCount": 65,
+        "workflowCount": 66,
         "actionCount": 6,
         "sitePageCount": 70,
         "docCommandRefCount": 897,
@@ -5147,6 +5147,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:v4-public-consumer-dogfood",
+          "name": "workflow:v4-public-consumer-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-public-consumer-dogfood.yml",
+          "evidencePath": ".github/workflows/v4-public-consumer-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:v4-stage-capsule-canary",
           "name": "workflow:v4-stage-capsule-canary",
           "kind": "workflow",
@@ -6459,6 +6473,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 409
+    "publicSurfaceCount": 410
   }
 }

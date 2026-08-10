@@ -2762,6 +2762,27 @@
       "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
+      "id": "v4-public-consumer-dogfood",
+      "path": ".github/workflows/v4-public-consumer-dogfood.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
       "id": "v4-stage-capsule-canary",
       "path": ".github/workflows/v4-stage-capsule-canary.yml",
       "reusable": true,

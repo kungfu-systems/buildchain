@@ -12,7 +12,7 @@ export const V4_STAGE_CAPSULE_WAVE_RECONCILIATION_CONTRACT =
   "buildchain-v4-stage-capsule-wave-reconciliation/v1";
 
 const PLATFORMS = ["linux-x64", "macos-arm64", "windows-x64"];
-const CONSUMERS = ["buildchain-self-dogfood", "kungfu-shadow"];
+const CONSUMERS = ["buildchain"];
 const FAULTS = [
   "corrupt",
   "cross-platform",

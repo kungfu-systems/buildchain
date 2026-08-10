@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 321,
-    "maxHandMaintainedSourceLines": 123526,
-    "maxWorkflowFiles": 65,
+    "maxHandMaintainedSourceFiles": 322,
+    "maxHandMaintainedSourceLines": 123756,
+    "maxWorkflowFiles": 66,
     "maxWorkflowLines": 22619,
-    "latestTransition": "Buildchain v4 exposes one exact-ref reusable external-consumer Stage Capsule canary that executes tracked install, build, and verify lifecycles on GitHub-hosted Linux, macOS, and Windows while v3 remains the sole production authority.",
-    "rationale": "This successor ceiling adds exactly one Buildchain-owned reusable workflow, 194 workflow lines, and 55 hand-maintained source lines for the bounded external-consumer Stage Capsule canary authorized by the architecture budget. The surface centralizes exact called-workflow runtime binding, quoted consumer inputs, real lifecycle manifests and summaries, three-platform retained-failure resume evidence, typed drift rejection, and aggregate qualification so consumers do not copy orchestration. Provider mutation, AWS, self-hosted runners, credential reads, publication, signing, production reuse, production stage skipping, production authority changes, and v3 behavior changes remain hard-zero. Existing source-file, per-file, per-function, and no-widening budgets remain unchanged."
+    "latestTransition": "Buildchain v4 dogfoods the exact public consumer workflow through one thin PR caller, with train-only recursion recovery and a protected anti-bypass contract gate.",
+    "rationale": "This successor ceiling adds exactly one thin Buildchain consumer caller and one hand-maintained anti-bypass gate while deleting the larger direct Buildchain/Kungfu qualification jobs from Verify. The gate freezes the public reusable workflow, exact train or protected-SHA binding, tracked install/build/verify lifecycle, three GitHub-hosted platforms, private-path absence, AGENTS.md invariant, and protected Verify participation. Its regression tests reject copied orchestration, relative calls, direct qualification jobs, feature refs, legacy profiles, and gate removal. Provider mutation, AWS, self-hosted runners, credential reads, publication, signing, production reuse, production stage skipping, production authority changes, and v3 behavior changes remain hard-zero; per-file, per-function, workflow-line, and no-widening budgets remain unchanged."
   },
   "sourceBudgets": {
     "newFileLines": 600,

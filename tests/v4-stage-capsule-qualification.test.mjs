@@ -16,9 +16,8 @@ import {
 
 const root = path.resolve(import.meta.dirname, "..");
 const runtimeRef = "8ccd88c43fa2f5d78a641b66c8e7fecccdb7b49f";
-const kungfuRevision = "9ca8f445fd5d7921f480c47b059addb2f84f40db";
 const platforms = ["linux-x64", "macos-arm64", "windows-x64"];
-const consumers = ["buildchain-self-dogfood", "kungfu-shadow"];
+const consumers = ["buildchain"];
 const sha = (digit) => `sha256:${digit.repeat(64)}`;
 
 function temp(name) {
@@ -28,7 +27,7 @@ function temp(name) {
 function lifecycleEvidence(
   platform,
   sourceRevision,
-  stages = ["install", "verify"],
+  stages = ["install", "build", "verify"],
 ) {
   const evidenceRoot = temp(`real-lifecycle-${platform}`);
   for (const [index, stage] of stages.entries()) {
@@ -144,12 +143,8 @@ function allExternalCampaigns() {
 
 function campaign(platform, consumer) {
   const workRoot = temp(`qualification-${consumer}-${platform}`);
-  const sourceRevision =
-    consumer === "kungfu-shadow" ? kungfuRevision : runtimeRef;
-  const evidenceRoot =
-    consumer === "buildchain-self-dogfood"
-      ? lifecycleEvidence(platform, sourceRevision)
-      : "";
+  const sourceRevision = runtimeRef;
+  const evidenceRoot = lifecycleEvidence(platform, sourceRevision);
   const result = spawnSync(
     process.execPath,
     [
@@ -165,7 +160,10 @@ function campaign(platform, consumer) {
       runtimeRef,
       "--consumer-source-revision",
       sourceRevision,
-      ...(evidenceRoot ? ["--lifecycle-evidence-root", evidenceRoot] : []),
+      "--consumer-root",
+      root,
+      "--lifecycle-evidence-root",
+      evidenceRoot,
     ],
     { cwd: root, encoding: "utf8" },
   );
@@ -184,20 +182,13 @@ function allCampaigns() {
 test("clean-process campaigns retain exact stages and rebuild only the missing closure", () => {
   for (const { report } of allCampaigns()) {
     assert.equal(validateV4StageCapsulePlatformQualification(report), report);
-    const realLifecycle = report.consumer === "buildchain-self-dogfood";
-    assert.deepEqual(
-      report.resumePlan.requiredRestores,
-      realLifecycle ? ["install"] : ["build"],
-    );
-    assert.deepEqual(
-      report.resumePlan.requiredStages,
-      realLifecycle ? ["verify"] : ["verify", "package"],
-    );
+    assert.deepEqual(report.resumePlan.requiredRestores, ["build"]);
+    assert.deepEqual(report.resumePlan.requiredStages, ["verify"]);
     assert.deepEqual(report.freshBuild, report.resumedBuild);
-    assert.equal(report.metrics.fullStageCount, realLifecycle ? 2 : 4);
-    assert.equal(report.metrics.retainedStageCount, realLifecycle ? 1 : 2);
+    assert.equal(report.metrics.fullStageCount, 3);
+    assert.equal(report.metrics.retainedStageCount, 2);
     assert.equal(report.metrics.restoredStageCount, 1);
-    assert.equal(report.metrics.rebuiltStageCount, realLifecycle ? 1 : 2);
+    assert.equal(report.metrics.rebuiltStageCount, 1);
     assert.equal(report.metrics.falseReuseCount, 0);
     assert.equal(report.metrics.falseRebuildCount, 0);
     assert.equal(report.metrics.plannerAccurate, true);
@@ -228,7 +219,7 @@ test("the fault campaign fails closed across every declared invalidation", () =>
   }
 });
 
-test("Buildchain self-dogfood requires exact real lifecycle evidence", () => {
+test("public consumer qualification requires exact real lifecycle evidence", () => {
   const workRoot = temp("qualification-missing-lifecycle");
   const result = spawnSync(
     process.execPath,
@@ -240,7 +231,7 @@ test("Buildchain self-dogfood requires exact real lifecycle evidence", () => {
       "--platform",
       "linux-x64",
       "--consumer",
-      "buildchain-self-dogfood",
+      "buildchain",
       "--runtime-ref",
       runtimeRef,
       "--consumer-source-revision",
@@ -252,7 +243,7 @@ test("Buildchain self-dogfood requires exact real lifecycle evidence", () => {
   assert.match(result.stderr, /missing-stage-capsule-lifecycle-evidence/u);
 });
 
-test("six reports qualify Buildchain and Kungfu on three real runner identities", () => {
+test("three reports qualify Buildchain through the public consumer identity", () => {
   const reports = allCampaigns().map(({ report }) => report);
   const result = qualifyV4StageCapsuleCampaign(reports);
   assert.equal(result.qualified, true);
@@ -263,7 +254,7 @@ test("six reports qualify Buildchain and Kungfu on three real runner identities"
   assert.deepEqual(result.consumers, consumers);
   assert.deepEqual(
     result.platforms.map(({ platform }) => platform),
-    [...platforms, ...platforms],
+    platforms,
   );
 });
 
@@ -405,7 +396,7 @@ test("output drift, a failed fault, and incomplete consumer evidence are rejecte
       error.code === "failed-stage-capsule-fault-campaign",
   );
   assert.throws(
-    () => qualifyV4StageCapsuleCampaign(reports.slice(0, 3)),
+    () => qualifyV4StageCapsuleCampaign(reports.slice(0, 2)),
     (error) =>
       error instanceof V4ContractFault &&
       error.code === "incomplete-stage-capsule-platform-campaign",
@@ -424,7 +415,7 @@ test("one explicit v3 switch rolls back without destroying retained state", () =
       "--platform",
       "linux-x64",
       "--consumer",
-      "buildchain-self-dogfood",
+      "buildchain",
       "--runtime-ref",
       runtimeRef,
       "--consumer-source-revision",
@@ -484,7 +475,7 @@ test("Wave reconciliation requires five native-terminal protected deliveries", (
   }
 });
 
-test("architecture freezes the shadow consumer, rollback, and authority ceilings", () => {
+test("architecture freezes the public consumer path, rollback, and authority ceilings", () => {
   const architecture = JSON.parse(
     fs.readFileSync(
       path.join(root, "architecture/v4-stage-capsule-qualification.json"),
@@ -495,32 +486,46 @@ test("architecture freezes the shadow consumer, rollback, and authority ceilings
   assert.equal(architecture.productionAuthority, "v3");
   assert.deepEqual(architecture.campaign.platforms, platforms);
   assert.deepEqual(architecture.campaign.consumers, consumers);
-  assert.deepEqual(architecture.selfDogfood.executableStages, [
-    "install",
-    "verify",
-  ]);
-  assert.equal(
-    architecture.selfDogfood.excludedStages.publish,
-    "provider-mutation",
-  );
-  assert.equal(architecture.kungfuShadow.sourceRevision, kungfuRevision);
-  assert.equal(
-    architecture.kungfuShadow.runtimeOverrideInput,
-    "buildchain-ref",
-  );
-  assert.equal(architecture.kungfuShadow.committedRefChanged, false);
-  assert.equal(
-    architecture.externalConsumerCanary.workflow,
-    ".github/workflows/v4-stage-capsule-canary.yml",
-  );
-  assert.deepEqual(architecture.externalConsumerCanary.executableStages, [
+  assert.deepEqual(architecture.publicConsumerDogfood.executableStages, [
     "install",
     "build",
     "verify",
   ]);
   assert.equal(
-    architecture.externalConsumerCanary.excludedStages.publish,
+    architecture.publicConsumerDogfood.excludedStages["version-state"],
+    "source-mutation",
+  );
+  assert.equal(
+    architecture.publicConsumerDogfood.excludedStages.publish,
     "provider-mutation",
+  );
+  assert.equal(
+    architecture.publicConsumerDogfood.validationRef,
+    "train/v4/v4.0/public-consumer-self-dogfood",
+  );
+  assert.equal(
+    architecture.publicConsumerDogfood.reusableWorkflow,
+    "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml",
+  );
+  assert.equal(
+    architecture.publicConsumerDogfood.recursionRecovery,
+    "public-train-ref-only",
+  );
+  assert.equal(
+    architecture.publicConsumerDogfood.consumerOrchestrationCopied,
+    false,
+  );
+  assert.equal(
+    architecture.publicConsumerDogfood.relativeOrSelfInvocationAllowed,
+    false,
+  );
+  assert.equal(
+    architecture.publicConsumerDogfood.directQualificationInvocationAllowed,
+    false,
+  );
+  assert.equal(
+    architecture.publicConsumerDogfood.candidateBranchOverrideAllowed,
+    false,
   );
   assert.equal(architecture.authority.providerEffects, false);
   assert.equal(architecture.authority.productionWrites, false);
@@ -534,15 +539,13 @@ test("architecture freezes the shadow consumer, rollback, and authority ceilings
     path.join(root, ".github/workflows/verify.yml"),
     "utf8",
   );
-  const qualificationWorkflow = workflow.slice(
-    workflow.indexOf("  stage-capsule-qualification:"),
-    workflow.indexOf("  stage-capsule-qualification-reconciliation:"),
-  );
+  assert.doesNotMatch(workflow, /stage-capsule-qualification:/u);
+  assert.doesNotMatch(workflow, /v4-stage-capsule-qualification\.mjs/u);
+  assert.match(workflow, /needs: stage-capsule-checkpoints/u);
   assert.match(
-    qualificationWorkflow,
-    /fetch-depth: \$\{\{ matrix\.consumer == 'buildchain-self-dogfood' && '0' \|\| '1' \}\}/u,
+    workflow,
+    /run: node scripts\/check-v4-public-dogfood-contract\.mjs/u,
   );
-  assert.match(qualificationWorkflow, /persist-credentials: false/u);
 
   const canaryWorkflow = fs.readFileSync(
     path.join(root, ".github/workflows/v4-stage-capsule-canary.yml"),

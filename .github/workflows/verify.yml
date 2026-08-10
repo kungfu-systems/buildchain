@@ -55,125 +55,8 @@ jobs:
           name: v4-stage-checkpoint-${{ matrix.platform }}-${{ github.sha }}
           path: .buildchain/v4-stage-checkpoint/evidence.json
           if-no-files-found: error
-  # Qualification authority: architecture/v4-stage-capsule-qualification.json
-  stage-capsule-qualification:
-    name: Stage Capsule qualification (${{ matrix.consumer }}, ${{ matrix.platform }})
-    needs: stage-capsule-checkpoints
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux-x64
-            runner: ubuntu-24.04
-            consumer: buildchain-self-dogfood
-          - platform: macos-arm64
-            runner: macos-15
-            consumer: buildchain-self-dogfood
-          - platform: windows-x64
-            runner: windows-2025
-            consumer: buildchain-self-dogfood
-          - platform: linux-x64
-            runner: ubuntu-24.04
-            consumer: kungfu-shadow
-          - platform: macos-arm64
-            runner: macos-15
-            consumer: kungfu-shadow
-          - platform: windows-x64
-            runner: windows-2025
-            consumer: kungfu-shadow
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - uses: actions/checkout@v7.0.0
-        with:
-          fetch-depth: ${{ matrix.consumer == 'buildchain-self-dogfood' && '0' || '1' }}
-          persist-credentials: false
-      - uses: actions/setup-node@v6.4.0
-        with:
-          node-version: "24"
-      - uses: actions/setup-go@v6.5.0
-        if: matrix.consumer == 'buildchain-self-dogfood'
-        with:
-          go-version: "1.25.x"
-      - name: Enable package manager shims for real lifecycle dogfood
-        if: matrix.consumer == 'buildchain-self-dogfood'
-        run: |
-          corepack prepare pnpm@11.7.0 --activate
-          corepack enable
-      - name: Bootstrap Buildchain runtime dependencies
-        if: matrix.consumer == 'buildchain-self-dogfood'
-        run: corepack pnpm@11.7.0 install --prod --frozen-lockfile --ignore-scripts
-      - name: Run real declared install lifecycle
-        if: matrix.consumer == 'buildchain-self-dogfood'
-        run: >-
-          node bin/buildchain.mjs lifecycle run install
-          --cwd .
-          --required
-          --platform-id ${{ matrix.platform }}
-          --artifact-name buildchain-v4-self-dogfood-install
-          --artifact-path node_modules/.modules.yaml
-          --manifest-path .buildchain/artifacts/v4-stage-capsule-self-dogfood/install-manifest.json
-          --summary-path .buildchain/artifacts/v4-stage-capsule-self-dogfood/install-summary.json
-      - name: Restore exact commit bytes for real lifecycle dogfood
-        if: matrix.consumer == 'buildchain-self-dogfood' && runner.os == 'Windows'
-        shell: bash
-        run: git config --local core.autocrlf false && git config --local core.eol lf && git ls-files -z | xargs -0 rm -f && git checkout-index --all --force
-      - name: Run real declared verify lifecycle
-        if: matrix.consumer == 'buildchain-self-dogfood'
-        run: >-
-          node bin/buildchain.mjs lifecycle run verify
-          --cwd .
-          --required
-          --platform-id ${{ matrix.platform }}
-          --artifact-name buildchain-v4-self-dogfood-verify
-          --artifact-path dist/site
-          --manifest-path .buildchain/artifacts/v4-stage-capsule-self-dogfood/verify-manifest.json
-          --summary-path .buildchain/artifacts/v4-stage-capsule-self-dogfood/verify-summary.json
-      - name: Run retained failure and clean-process resume campaign
-        run: >-
-          node scripts/v4-stage-capsule-qualification.mjs campaign
-          --work-root .buildchain/v4-stage-qualification/${{ matrix.consumer }}-${{ matrix.platform }}
-          --platform ${{ matrix.platform }}
-          --consumer ${{ matrix.consumer }}
-          --runtime-ref ${{ github.sha }}
-          --consumer-source-revision ${{ matrix.consumer == 'kungfu-shadow' && '9ca8f445fd5d7921f480c47b059addb2f84f40db' || github.sha }}
-          ${{ matrix.consumer == 'buildchain-self-dogfood' && '--lifecycle-evidence-root .buildchain/artifacts/v4-stage-capsule-self-dogfood' || '' }}
-      - name: Upload exact Stage Capsule qualification evidence
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: v4-stage-qualification-${{ matrix.consumer }}-${{ matrix.platform }}-${{ github.sha }}
-          path: .buildchain/v4-stage-qualification/${{ matrix.consumer }}-${{ matrix.platform }}/*.json
-          if-no-files-found: error
-
-  stage-capsule-qualification-reconciliation:
-    name: Stage Capsule qualification reconciliation
-    needs: stage-capsule-qualification
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7.0.0
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v6.4.0
-        with:
-          node-version: "24"
-      - name: Download exact platform and consumer qualification evidence
-        uses: actions/download-artifact@v7.0.0
-        with:
-          pattern: v4-stage-qualification-*-${{ github.sha }}
-          path: .buildchain/v4-stage-qualification-inputs
-      - name: Reconcile the complete three-platform consumer campaign
-        run: >-
-          node scripts/v4-stage-capsule-qualification.mjs aggregate
-          --input-dir .buildchain/v4-stage-qualification-inputs
-          --output .buildchain/v4-stage-qualification.json
-      - name: Upload exact Stage Capsule qualification root
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: v4-stage-qualification-${{ github.sha }}
-          path: .buildchain/v4-stage-qualification.json
-          if-no-files-found: error
-
   check:
-    needs: stage-capsule-qualification-reconciliation
+    needs: stage-capsule-checkpoints
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.0
@@ -189,6 +72,8 @@ jobs:
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+      - name: Enforce public consumer-only v4 dogfood
+        run: node scripts/check-v4-public-dogfood-contract.mjs
       - uses: actions/setup-go@v6.5.0
         with:
           go-version: "1.25.x"
