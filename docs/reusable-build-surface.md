@@ -338,7 +338,8 @@ ref is not blind trust. Each released Buildchain ref carries a package-owned
 runtime contract world in `dist/site/buildchain-contract.json`. Consumers may
 keep a small lock file, `.buildchain/contract-lock.json`, recording the
 Buildchain ref, resolved SHA, contract digest, compatibility digest, accepted
-major line, and compatibility policy they reviewed.
+major line, compatibility proof registry root, per-surface proof roots, and the
+compatibility policy they reviewed.
 
 The reusable build trust gate checks this lock before any heavy matrix job:
 
@@ -354,6 +355,14 @@ required input is removed, a required output disappears, a protected behavior
 promise changes, or the major line changes. Additive changes such as optional
 inputs, optional outputs, diagnostics, or documentation updates continue under
 the default `major-compatible` policy.
+
+A changed breaking digest is never accepted because it appears in a handwritten
+allowlist. Each historical digest must resolve to exactly one immutable,
+directed compatibility proof for the current surface digest. The proof binds
+the operation scope, protected authority, exact Git cut, and protected-merge
+evidence. The legacy `compatibleBreakingDigests` arrays remain in the site
+contract only as deterministic, parity-checked projections of those proofs;
+an orphan digest or ambiguous proof fails source acceptance.
 
 ```yaml
 jobs:
@@ -371,11 +380,12 @@ jobs:
 
 When compatible drift is detected, the build continues and Buildchain opens or
 updates a low-priority issue in the consumer repository. The issue records the
-old SHA/digest, new SHA/digest, compatibility result, workflow run, and the next
-action: review the Buildchain release notes and update the lock. When breaking
-drift is detected, the same issue path is used, but the trust gate fails before
-matrix build or publish work starts. If the workflow token cannot write issues,
-Buildchain writes a copyable issue body into the job summary.
+old SHA/digest, new SHA/digest, compatibility result, workflow run, exact proof
+root, direction, scope, evidence, authority, cut, and rooted verification
+receipt. When breaking drift is detected, the same issue path is used, but the
+trust gate fails before matrix build or publish work starts. If the workflow
+token cannot write issues, Buildchain writes a copyable issue body into the job
+summary.
 
 The lock is intentionally small. It does not copy the full contract. The full
 contract remains in the Buildchain ref and package; the consumer records only

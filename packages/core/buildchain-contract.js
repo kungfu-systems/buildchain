@@ -1,14 +1,34 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  assertBuildchainCompatibilityProjection,
+  createBuildchainCompatibilityProofRegistry,
+  createHistoricalBuildchainCompatibilityProofs,
+} from "./buildchain-compatibility-proof.js";
 import { createControllerRegistry } from "./controller-evidence.js";
 import { enumerateWorkflowInputs } from "./public-surface-audit.js";
+
+export {
+  BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA,
+  assertBuildchainCompatibilityProjection,
+  contractSummary,
+  createBuildchainCompatibilityProof,
+  createBuildchainCompatibilityProofRegistry,
+  createBuildchainCompatibilityVerificationReceipt,
+  createHistoricalBuildchainCompatibilityProofs,
+  evaluateBuildchainContractLock,
+  renderBuildchainContractDriftIssueBody,
+  verifyBuildchainCompatibilityProof,
+  verifyBuildchainCompatibilityVerificationReceipt,
+} from "./buildchain-compatibility-proof.js";
 
 export const BUILDCHAIN_RUNTIME_CONTRACT_WORLD = "kungfu-buildchain-runtime-contract-world";
 export const BUILDCHAIN_CONTRACT_LOCK = "kungfu-buildchain-contract-lock";
 
 const DEFAULT_POLICY = "major-compatible";
-const FLOATING_CLASSES = new Set(["stable", "alpha"]);
 
 function optionalString(value) {
   return value === undefined || value === null ? "" : String(value);
@@ -284,9 +304,6 @@ export function createBuildchainContractWorld({
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes",
       ],
-      compatibleBreakingDigests: [
-        "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
-      ],
     }),
     surface(root, {
       id: "advanced-release-candidate-promote",
@@ -327,9 +344,6 @@ export function createBuildchainContractWorld({
         "advanced promotion verifies routed shell, runtime, lock, publication channel, and target bindings before candidate resolution",
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix",
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph",
-      ],
-      compatibleBreakingDigests: [
-        "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
       ],
     }),
     surface(root, {
@@ -476,9 +490,6 @@ export function createBuildchainContractWorld({
         "release passport finalization is idempotent after publish side effects",
         "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers",
-      ],
-      compatibleBreakingDigests: [
-        "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
       ],
     }),
     surface(root, {
@@ -755,14 +766,6 @@ export function createBuildchainContractWorld({
         registryDigest: resolvedControllerRegistry.digest,
         inputClassifications: descriptor.inputs,
       },
-      ...(descriptor.id === "build-lifecycle"
-        ? {
-            compatibleBreakingDigests: [
-              "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
-              "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
-            ],
-          }
-        : {}),
       guarantees: [
         "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
         "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
@@ -782,24 +785,45 @@ export function createBuildchainContractWorld({
     },
     majorLine,
     compatibilityPolicy: DEFAULT_POLICY,
+    compatibilityProofs: createHistoricalBuildchainCompatibilityProofs(),
     surfaces,
   };
   return finalizeBuildchainContractWorld(base);
 }
 
 export function finalizeBuildchainContractWorld(contractWorld) {
+  const sourceSurfaces = (contractWorld.surfaces || []).map((entry) => ({ ...entry }));
+  const proofRegistry = createBuildchainCompatibilityProofRegistry({
+    proofs: contractWorld.compatibilityProofs || createHistoricalBuildchainCompatibilityProofs(),
+    surfaces: sourceSurfaces,
+    majorLine: contractWorld.majorLine,
+  });
   const world = {
     ...contractWorld,
-    surfaces: (contractWorld.surfaces || []).map((entry) => ({ ...entry })),
+    compatibilityProofs: proofRegistry.proofs,
+    compatibilityProofRegistryRoot: proofRegistry.registryRoot,
+    surfaces: sourceSurfaces.map((entry) => {
+      const surfaceEntry = { ...entry };
+      delete surfaceEntry.compatibleBreakingDigests;
+      delete surfaceEntry.compatibilityProofRoots;
+      const projection = proofRegistry.projections[entry.id] || [];
+      if (projection.length > 0) {
+        surfaceEntry.compatibleBreakingDigests = projection.map((item) => item.breakingDigest);
+        surfaceEntry.compatibilityProofRoots = projection.map((item) => item.proofRoot);
+      }
+      return surfaceEntry;
+    }),
   };
   const compatibilityModel = {
     schemaVersion: world.schemaVersion,
     contract: world.contract,
     majorLine: world.majorLine,
+    compatibilityProofRegistryRoot: world.compatibilityProofRegistryRoot,
     surfaces: world.surfaces.map((entry) => ({
       id: entry.id,
       kind: entry.kind,
       breakingDigest: entry.breakingDigest,
+      compatibilityProofRoots: entry.compatibilityProofRoots || [],
     })),
   };
   const digestModel = {
@@ -831,6 +855,7 @@ export function createBuildchainContractLock({
       contract: contractWorld.contract,
       contractDigest: contractWorld.contractDigest,
       compatibilityDigest: contractWorld.compatibilityDigest,
+      compatibilityProofRegistryRoot: contractWorld.compatibilityProofRegistryRoot,
       majorLine: contractWorld.majorLine,
       compatibilityPolicy,
       acceptedAt,
@@ -838,6 +863,7 @@ export function createBuildchainContractLock({
         id: entry.id,
         kind: entry.kind,
         breakingDigest: entry.breakingDigest,
+        compatibilityProofRoots: entry.compatibilityProofRoots || [],
       })),
     },
   };
@@ -848,6 +874,7 @@ export function readBuildchainContractWorld(filePath) {
   if (!value || value.contract !== BUILDCHAIN_RUNTIME_CONTRACT_WORLD) {
     throw new Error(`Buildchain contract world is missing or invalid: ${filePath}`);
   }
+  assertBuildchainCompatibilityProjection(value);
   const computed = finalizeBuildchainContractWorld(value);
   for (const digestName of ["compatibilityDigest", "contractDigest"]) {
     const published = String(value[digestName] || "").trim();
@@ -872,166 +899,4 @@ export function readBuildchainContractLock(filePath) {
     throw new Error(`Buildchain contract lock is missing or invalid: ${filePath}`);
   }
   return value;
-}
-
-function surfaceMap(surfaces = []) {
-  return new Map(surfaces.map((entry) => [entry.id, entry]));
-}
-
-export function evaluateBuildchainContractLock({
-  lock,
-  current,
-  runtimeRef = "",
-  runtimeSha = "",
-  runtimeClass = "",
-  compatibilityPolicy = "",
-} = {}) {
-  if (!current || current.contract !== BUILDCHAIN_RUNTIME_CONTRACT_WORLD) {
-    throw new Error("current must be a Buildchain runtime contract world");
-  }
-  const floatingRuntime = FLOATING_CLASSES.has(runtimeClass);
-  if (!floatingRuntime) {
-    return {
-      ok: true,
-      status: "non-floating-runtime",
-      drift: false,
-      compatible: true,
-      issueRecommended: false,
-      reason: `runtime class ${runtimeClass || "unknown"} is not a stable floating ref`,
-    };
-  }
-  if (!lock) {
-    return {
-      ok: true,
-      status: "missing-lock",
-      drift: false,
-      compatible: true,
-      issueRecommended: false,
-      reason: "consumer repository has no Buildchain contract lock",
-    };
-  }
-  const accepted = lock.buildchain || {};
-  const policy = compatibilityPolicy || accepted.compatibilityPolicy || DEFAULT_POLICY;
-  const shaDrift = !!accepted.resolvedSha && !!runtimeSha && accepted.resolvedSha !== runtimeSha;
-  const contractDrift = !!accepted.contractDigest && accepted.contractDigest !== current.contractDigest;
-  if (!shaDrift && !contractDrift) {
-    return {
-      ok: true,
-      status: "unchanged",
-      drift: false,
-      compatible: true,
-      issueRecommended: false,
-      policy,
-      accepted,
-      current: contractSummary(current, runtimeRef, runtimeSha),
-    };
-  }
-  const reasons = [];
-  if (accepted.contract !== current.contract) {
-    reasons.push(`contract changed from ${accepted.contract || "(unknown)"} to ${current.contract}`);
-  }
-  if (accepted.majorLine && accepted.majorLine !== current.majorLine) {
-    reasons.push(`major line changed from ${accepted.majorLine} to ${current.majorLine}`);
-  }
-  if (policy === "exact" && accepted.contractDigest !== current.contractDigest) {
-    reasons.push("exact policy requires the contract digest to remain unchanged");
-  }
-  if (!["major-compatible", "allow-additive", "exact"].includes(policy)) {
-    reasons.push(`unsupported compatibility policy: ${policy}`);
-  }
-  const currentSurfaces = surfaceMap(current.surfaces);
-  for (const oldSurface of accepted.surfaces || []) {
-    const nextSurface = currentSurfaces.get(oldSurface.id);
-    if (!nextSurface) {
-      reasons.push(`surface removed: ${oldSurface.id}`);
-      continue;
-    }
-    const compatibleBreakingDigests = new Set(nextSurface.compatibleBreakingDigests || []);
-    if (
-      nextSurface.breakingDigest !== oldSurface.breakingDigest
-      && !compatibleBreakingDigests.has(oldSurface.breakingDigest)
-    ) {
-      reasons.push(`surface breaking digest changed: ${oldSurface.id}`);
-    }
-  }
-  const compatible = reasons.length === 0;
-  return {
-    ok: compatible,
-    status: compatible ? "compatible-drift" : "breaking-drift",
-    drift: shaDrift || contractDrift,
-    shaDrift,
-    contractDrift,
-    compatible,
-    issueRecommended: true,
-    policy,
-    reasons,
-    accepted,
-    current: contractSummary(current, runtimeRef, runtimeSha),
-  };
-}
-
-export function contractSummary(contractWorld, runtimeRef = "", runtimeSha = "") {
-  return {
-    ref: runtimeRef,
-    resolvedSha: runtimeSha,
-    contract: contractWorld.contract,
-    contractDigest: contractWorld.contractDigest,
-    compatibilityDigest: contractWorld.compatibilityDigest,
-    majorLine: contractWorld.majorLine,
-    surfaceCount: Array.isArray(contractWorld.surfaces) ? contractWorld.surfaces.length : 0,
-  };
-}
-
-export function renderBuildchainContractDriftIssueBody({
-  repository = "",
-  workflow = "",
-  runUrl = "",
-  lockPath = "",
-  evaluation,
-} = {}) {
-  const accepted = evaluation.accepted || {};
-  const current = evaluation.current || {};
-  const severity = evaluation.compatible ? "compatible" : "breaking";
-  return [
-    "# Buildchain contract drift",
-    "",
-    "## Summary",
-    "",
-    `Buildchain detected ${severity} contract drift for a floating runtime ref before expensive Buildchain work continued.`,
-    "",
-    "## Consumer",
-    "",
-    `- Repository: ${repository || "(unknown)"}`,
-    `- Workflow: ${workflow || "(unknown)"}`,
-    `- Run: ${runUrl || "(unknown)"}`,
-    `- Lock path: ${lockPath || "(unknown)"}`,
-    "",
-    "## Accepted Buildchain contract",
-    "",
-    `- Ref: ${accepted.ref || "(unknown)"}`,
-    `- SHA: ${accepted.resolvedSha || "(unknown)"}`,
-    `- Contract digest: ${accepted.contractDigest || "(unknown)"}`,
-    `- Compatibility digest: ${accepted.compatibilityDigest || "(unknown)"}`,
-    `- Policy: ${evaluation.policy || accepted.compatibilityPolicy || "(unknown)"}`,
-    "",
-    "## Current Buildchain contract",
-    "",
-    `- Ref: ${current.ref || "(unknown)"}`,
-    `- SHA: ${current.resolvedSha || "(unknown)"}`,
-    `- Contract digest: ${current.contractDigest || "(unknown)"}`,
-    `- Compatibility digest: ${current.compatibilityDigest || "(unknown)"}`,
-    `- Major line: ${current.majorLine || "(unknown)"}`,
-    "",
-    "## Compatibility",
-    "",
-    `- Status: ${evaluation.status || "(unknown)"}`,
-    `- Compatible: ${evaluation.compatible ? "yes" : "no"}`,
-    evaluation.reasons?.length ? evaluation.reasons.map((reason) => `- ${reason}`).join("\n") : "- No breaking drift detected.",
-    "",
-    "## Suggested next action",
-    "",
-    evaluation.compatible
-      ? "Review the Buildchain release notes, then update the consumer contract lock to the current SHA and contract digest."
-      : "Failing before heavy build is intentional. Review the Buildchain contract change, update the consumer workflow/configuration, or pin the previous Buildchain SHA.",
-  ].join("\n");
 }
