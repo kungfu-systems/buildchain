@@ -248,7 +248,7 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:36a4e60e91f500ea1dcdbef97cd0250a2c26562b98d8d3622e8e0f9df2aad23b",
+      "digest": "sha256:371030eda56d7a968d037e8b9a348e0211038506b8c0b14c539ec790ce884945",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:51c1106f089e03a52d9e529fc607846f338b674414b0f29b5c4f51d1038c54ea",
+      "digest": "sha256:45202d4cfb656fad387d7ebd03b1843d9c4579bbe2b65b045b1e372fc202f6d3",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -403,7 +403,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:4741dc7661d40e14df8203d88a709b9becb08edc4313f5ad308c7e80bf672085",
+      "digest": "sha256:7f69bf3faf8c86b4af268f8e79d511f73de745e146a23809394074f816a372d7",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",

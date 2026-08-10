@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113661,
+    "maxHandMaintainedSourceFiles": 293,
+    "maxHandMaintainedSourceLines": 114109,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
-    "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline with exact merged-PR association.",
-    "rationale": "Repository-wide protected-mainline discovery, a positive temporary-development branch allowlist, unattended scheduled apply, one paginated closed-PR inventory, exact association-only candidate selection, and fixed eight-way ancestry concurrency replace the single-v3-target report-only dogfood path and sequential per-branch provider lookups. Unassociated heads fail closed and remain report-only while exact-OID, active-PR, protection, deterministic ordering, and replay fences remain binding. Tests bind unknown-family and unassociated-head retention, cross-mainline ancestry, bounded association lookup, concurrency, and schedule policy; these exact source and workflow ceilings cannot grow implicitly."
+    "latestTransition": "Buildchain compatibility acceptance is projected from immutable temporal proofs instead of handwritten digest membership.",
+    "rationale": "One bounded proof module records five direct historical compatibility relations with exact direction, scope, protected authority, Git cut, and merge evidence; it also owns proof verification, deterministic legacy projection, proof-rooted positive and negative receipts, and fail-closed evaluation. Contract locks and diagnostics bind the registry and used proof roots, while focused tests cover tampering, orphan projections, compatible legacy consumers, and unknown breaking drift. Existing contract and root-index debt shrink or remain fixed; these exact repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
