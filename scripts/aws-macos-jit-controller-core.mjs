@@ -130,6 +130,13 @@ export function createMacosJitCampaignPlan(values = {}) {
     contract: AWS_MACOS_JIT_CONTROLLER_CONTRACT,
     kind: "campaign-launch-plan",
     repository: repository(values.repository),
+    account: {
+      id: exact(values.accountId, /^\d{12}$/, "accountId"),
+    },
+    github: {
+      workflowId: MACOS_EC2_JIT.workflowId,
+      requiredState: "disabled_manually",
+    },
     campaign: { id, createdAt },
     source: boundSource,
     aws: {
@@ -164,6 +171,17 @@ export function createMacosJitCampaignPlan(values = {}) {
       minimumHostAllocationHours: MACOS_EC2_JIT.minimumHostAllocationHours,
       maximumHostAllocationHours: MACOS_EC2_JIT.maximumHostAllocationHours,
       cleanupOwner: "scheduled-card-scoped-reaper",
+      budget: {
+        name: MACOS_EC2_JIT.budgetName,
+        limitUsd: MACOS_EC2_JIT.budgetLimitUsd,
+        metrics: ["UnblendedCost"],
+        dimensionFilter: {
+          usageType: MACOS_EC2_JIT.budgetUsageType,
+          operation: MACOS_EC2_JIT.budgetOperation,
+          region: MACOS_EC2_JIT.region,
+        },
+        requiredActualThresholds: [80, 95],
+      },
     },
   };
   return { ...plan, digest: digest(plan) };

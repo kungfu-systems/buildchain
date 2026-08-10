@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113661,
+    "maxHandMaintainedSourceLines": 113849,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
-    "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline with exact merged-PR association.",
-    "rationale": "Repository-wide protected-mainline discovery, a positive temporary-development branch allowlist, unattended scheduled apply, one paginated closed-PR inventory, exact association-only candidate selection, and fixed eight-way ancestry concurrency replace the single-v3-target report-only dogfood path and sequential per-branch provider lookups. Unassociated heads fail closed and remain report-only while exact-OID, active-PR, protection, deterministic ordering, and replay fences remain binding. Tests bind unknown-family and unassociated-head retention, cross-mainline ancestry, bounded association lookup, concurrency, and schedule policy; these exact source and workflow ceilings cannot grow implicitly."
+    "latestTransition": "The macOS paid-allocation controller fails closed on AWS account, workflow, stack, Budget dimensions, thresholds, and SNS subscriber drift.",
+    "rationale": "The bounded macOS launch gate adds exact workload-account identity, disabled-workflow state, complete-stack readback, AWS-owned HostUsage:mac2 billing dimensions, USD 25 Budget identity, and exact 80/95 percent SNS subscriber checks before AllocateHosts. The existing one-host, 24-hour minimum, 30-hour maximum, DryRun, ownership, JIT, and cleanup controls remain unchanged. Tests prove Budget drift prevents any allocation; this exact source ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
