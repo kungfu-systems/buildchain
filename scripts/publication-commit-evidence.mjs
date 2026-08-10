@@ -7,6 +7,12 @@ import { pathToFileURL } from "node:url";
 
 const SCHEMA = "kungfu-buildchain-publication-commit-evidence/v1";
 const INSTALLER_BUNDLE_SCHEMA = "kungfu.installer-publication-bundle/v1";
+const RELEASE_REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const RELEASE_REDIRECT_HOSTS = new Set([
+  "github.com",
+  "release-assets.githubusercontent.com",
+  "objects.githubusercontent.com",
+]);
 
 function requiredString(value, label) {
   if (typeof value !== "string" || value.trim() === "") {
@@ -90,7 +96,10 @@ function validateInstallerBundle(evidence, expected) {
       `installer bundle schema must be ${INSTALLER_BUNDLE_SCHEMA}`,
     );
   }
-  const bundleRoot = sha256Root(bundle.bundleRoot, "installerBundle.bundleRoot");
+  const bundleRoot = sha256Root(
+    bundle.bundleRoot,
+    "installerBundle.bundleRoot",
+  );
   if (
     bundleRoot !== evidence.publication.payloadRoot ||
     bundleRoot !== evidence.readback?.payloadRoot
@@ -321,15 +330,47 @@ export async function verifyInstallerBundleReadback(
   if (typeof fetchImpl !== "function") {
     throw new Error("installer bundle read-back requires fetch");
   }
-  const manifestResponse = await fetchImpl(result.publicUrl, {
-    redirect: "manual",
-    cache: "no-store",
-  });
-  if (manifestResponse.status !== 200) {
-    throw new Error(
-      `installer bundle manifest read-back failed: HTTP ${manifestResponse.status}`,
-    );
-  }
+  const fetchReleaseReadback = async (url, label) => {
+    let current = url;
+    for (let hop = 0; hop <= 3; hop += 1) {
+      const response = await fetchImpl(current, {
+        redirect: "manual",
+        cache: "no-store",
+      });
+      if (response.status === 200) return response;
+      if (!RELEASE_REDIRECT_STATUSES.has(response.status)) {
+        throw new Error(`${label} failed: HTTP ${response.status}`);
+      }
+      if (hop === 3) {
+        throw new Error(`${label} exceeded the bounded redirect limit`);
+      }
+      const location = response.headers?.get?.("location");
+      if (!location) {
+        throw new Error(`${label} redirect omitted Location`);
+      }
+      const redirect = new URL(location, current);
+      if (
+        redirect.protocol !== "https:" ||
+        redirect.username ||
+        redirect.password ||
+        !RELEASE_REDIRECT_HOSTS.has(redirect.hostname) ||
+        (redirect.hostname === "github.com" &&
+          !redirect.pathname.startsWith(
+            "/kungfu-systems/kungfu/releases/download/",
+          ))
+      ) {
+        throw new Error(
+          `${label} redirected outside trusted GitHub release storage`,
+        );
+      }
+      current = redirect.href;
+    }
+    throw new Error(`${label} failed without a terminal response`);
+  };
+  const manifestResponse = await fetchReleaseReadback(
+    result.publicUrl,
+    "installer bundle manifest read-back",
+  );
   const manifestBytes = Buffer.from(await manifestResponse.arrayBuffer());
   if (digest(manifestBytes) !== bundle.manifestDigest) {
     throw new Error("installer bundle manifest digest mismatch");
@@ -373,15 +414,10 @@ export async function verifyInstallerBundleReadback(
   for (const asset of bundle.assets) {
     let observation = byUrl.get(asset.releaseUrl);
     if (!observation) {
-      const response = await fetchImpl(asset.releaseUrl, {
-        redirect: "manual",
-        cache: "no-store",
-      });
-      if (response.status !== 200) {
-        throw new Error(
-          `installer bundle asset read-back failed: HTTP ${response.status}`,
-        );
-      }
+      const response = await fetchReleaseReadback(
+        asset.releaseUrl,
+        "installer bundle asset read-back",
+      );
       const bytes = Buffer.from(await response.arrayBuffer());
       observation = {
         releaseUrl: asset.releaseUrl,

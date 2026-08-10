@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113373,
+    "maxHandMaintainedSourceLines": 113408,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23243,
-    "latestTransition": "Engineering Housekeeper publishes its reusable workflow and thin scheduled callers.",
-    "rationale": "One bounded workflow runtime exposes the existing provider-neutral and GitHub Engineering Housekeeper engines through a default-report reusable contract. Four declarative workflows separate inventory, exact branch deletion, optional pull-request labeling, and daily, weekly, and monthly caller policy; explicit apply gates, caller-owned credentials, rooted artifacts, and exact-head revalidation prevent a second policy or mutation authority. This exact v3 capability ceiling cannot grow implicitly."
+    "latestTransition": "Publication evidence follows bounded GitHub Release asset redirects.",
+    "rationale": "The existing publication evidence verifier follows at most three HTTPS redirects from canonical Kungfu Release URLs to an explicit GitHub-owned storage host set while retaining manual redirect inspection, exact byte digests, and fail-closed rejection of every other destination. Two regression cases cover the live 302 transport and untrusted redirect rejection; this exact recovery ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

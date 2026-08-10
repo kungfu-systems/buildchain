@@ -243,6 +243,69 @@ test("installer publication bundle is independently sealed from public bytes", a
   assert.match(seal.sealRoot, /^sha256:[a-f0-9]{64}$/);
 });
 
+test("installer publication read-back follows bounded GitHub release redirects", async () => {
+  const value = installerFixture();
+  const result = validatePublicationCommitEvidence(value.evidence, expected);
+  const requests = [];
+  const fetchImpl = async (url, options) => {
+    requests.push({ url, options });
+    const parsed = new URL(url);
+    const assetName = parsed.pathname.split("/").at(-1);
+    if (parsed.hostname === "github.com") {
+      return {
+        status: 302,
+        headers: {
+          get(name) {
+            return name.toLowerCase() === "location"
+              ? `https://release-assets.githubusercontent.com/${assetName}?token=fixture`
+              : null;
+          },
+        },
+      };
+    }
+    const bytes =
+      assetName === "kungfu-installer-publication-bundle.json"
+        ? value.manifestBytes
+        : value.contents.get(assetName);
+    return {
+      status: bytes ? 200 : 404,
+      async arrayBuffer() {
+        return bytes || Buffer.alloc(0);
+      },
+    };
+  };
+
+  const seal = await verifyInstallerBundleReadback(result, fetchImpl);
+  assert.equal(seal.bundleRoot, value.evidence.publication.payloadRoot);
+  assert.ok(
+    requests.some(
+      ({ url }) =>
+        new URL(url).hostname === "release-assets.githubusercontent.com",
+    ),
+  );
+  assert.ok(requests.every(({ options }) => options.redirect === "manual"));
+});
+
+test("installer publication read-back rejects redirects outside GitHub storage", async () => {
+  const value = installerFixture();
+  const result = validatePublicationCommitEvidence(value.evidence, expected);
+  const fetchImpl = async () => ({
+    status: 302,
+    headers: {
+      get(name) {
+        return name.toLowerCase() === "location"
+          ? "https://example.com/untrusted"
+          : null;
+      },
+    },
+  });
+
+  await assert.rejects(
+    verifyInstallerBundleReadback(result, fetchImpl),
+    /outside trusted GitHub release storage/,
+  );
+});
+
 test("installer publication bundle rejects an unbound candidate source", () => {
   const value = installerFixture();
   delete value.evidence.identity.candidateSourceSha;
