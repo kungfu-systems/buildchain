@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:08cfae94c78776694736e81142e2d64480fdc3e67341b415340c03d3539531e7",
+      "digest": "sha256:5292461118df2ec99a15411b6ed50c288abeb05d992677e3500b9bd46255a001",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -144,6 +144,21 @@
       ],
       "maturity": "stable",
       "order": 130
+    },
+    {
+      "id": "release-train",
+      "title": "Release Train and Release Cut",
+      "path": "docs/release-train.md",
+      "plane": "verify",
+      "digest": "sha256:550e50726ff479730bee1abe7839776308396bb01613e31a3ed6e898297619fa",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "release-operator",
+        "consumer",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 132
     },
     {
       "id": "release-propagation",
@@ -332,7 +347,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:45202d4cfb656fad387d7ebd03b1843d9c4579bbe2b65b045b1e372fc202f6d3",
+      "digest": "sha256:34f39632494c0f4d4961fd79fc8ac94466da56c29f04f09e706f402d98ef125c",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -517,7 +532,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:793db9414d11aeb314ff2d37a52481826ca5f636d08eaf93772d37962a51484f",
+      "digest": "sha256:6af44926f8138932aeb606bb264b19a40a273ce7bea7bad9b021bb9aa542d61b",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
@@ -548,6 +563,7 @@
     "docs/kfd-support.md",
     "docs/reusable-build-surface.md",
     "docs/release-candidate.md",
+    "docs/release-train.md",
     "docs/stable-candidate-patrol.md",
     "docs/dev-qualification-patrol.md",
     "docs/dev-alpha-candidate-patrol.md",

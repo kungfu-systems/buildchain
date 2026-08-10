@@ -6,7 +6,7 @@
     "cliCommandCount": 114,
     "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 70,
+    "sitePageCount": 71,
     "docCommandRefCount": 924,
     "failureCount": 0
   },
@@ -3322,6 +3322,10 @@
       },
       {
         "id": "manual:release-tail-provider-plane",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-train",
         "category": "manual"
       },
       {
@@ -7990,7 +7994,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
     "workflowRegistryDigest": "d2308df11c17085438e9f36c20b04859991e5ab7e9e91d20057c9bc2316eaf9f",
-    "pageRegistryDigest": "971f052ea6fae89c61350e2c127525bd6c3b12e1cb911b110bc45de69e88a05c"
+    "pageRegistryDigest": "2064b52b0c7f250701ea34a4b9e2a90f315e08b8a1c9dff53b1439ba22867daf"
   },
   "comparison": {
     "missingCliRegistry": [],

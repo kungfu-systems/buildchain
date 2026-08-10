@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 293,
-    "maxHandMaintainedSourceLines": 114109,
+    "maxHandMaintainedSourceFiles": 294,
+    "maxHandMaintainedSourceLines": 114633,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
-    "latestTransition": "Buildchain compatibility acceptance is projected from immutable temporal proofs instead of handwritten digest membership.",
-    "rationale": "One bounded proof module records five direct historical compatibility relations with exact direction, scope, protected authority, Git cut, and merge evidence; it also owns proof verification, deterministic legacy projection, proof-rooted positive and negative receipts, and fail-closed evaluation. Contract locks and diagnostics bind the registry and used proof roots, while focused tests cover tampering, orphan projections, compatible legacy consumers, and unknown breaking drift. Existing contract and root-index debt shrink or remain fixed; these exact repository ceilings cannot grow implicitly."
+    "latestTransition": "Release Train freezes one authorized Alpha candidate while compatibility acceptance is projected from immutable temporal proofs.",
+    "rationale": "Two bounded provider-neutral modules compose without sharing authority. Release Train adds rooted Release Cut identity, compare-and-swap transitions, idempotent Dev observations, enumerated supersession, and replay validation. Compatibility proof projection records five direct historical relations with exact direction, scope, protected authority, Git cut, and merge evidence; it derives legacy projections and emits proof-rooted positive and negative receipts. Generated public surfaces expose both contracts, and focused negative tests bind stale transition roots, tampering, orphan projections, compatible legacy consumers, and unknown breaking drift. Existing debt shrinks or remains fixed; these exact combined repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
