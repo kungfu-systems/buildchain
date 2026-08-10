@@ -663,12 +663,8 @@
       "writers": [
         "Engineering Housekeeper reusable workflow under an explicit bounded apply gate"
       ],
-      "schemas": [
-        "kungfu-buildchain-engineering-housekeeper/v1"
-      ],
-      "stores": [
-        "immutable rooted plan, report, and apply receipts"
-      ],
+      "schemas": ["kungfu-buildchain-engineering-housekeeper/v1"],
+      "stores": ["immutable rooted plan, report, and apply receipts"],
       "states": [
         "observed",
         "report-only",
@@ -694,9 +690,7 @@
         "delete an exact merged allowlisted temporary branch",
         "optionally label but never close a stale pull request"
       ],
-      "retry": [
-        "provider failure or drift requires a fresh plan"
-      ],
+      "retry": ["provider failure or drift requires a fresh plan"],
       "invalidation": [
         "source or target OID drift",
         "active pull request",

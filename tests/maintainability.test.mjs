@@ -105,16 +105,27 @@ test("an approved new-file transition requires an exact ceiling and rationale", 
   };
   const current = {
     files: {
-      "new.js": analyzeJavaScript("new.js", "export const one = 1;\nexport const two = 2;\n"),
+      "new.js": analyzeJavaScript(
+        "new.js",
+        "export const one = 1;\nexport const two = 2;\n",
+      ),
     },
   };
   assert.deepEqual(
-    evaluateMaintainability({ current, baselineFiles: {}, policy: fixturePolicy }),
+    evaluateMaintainability({
+      current,
+      baselineFiles: {},
+      policy: fixturePolicy,
+    }),
     [],
   );
   fixturePolicy.approvedNewFileTransitions["new.js"].rationale = "";
   assert.match(
-    evaluateMaintainability({ current, baselineFiles: {}, policy: fixturePolicy })[0],
+    evaluateMaintainability({
+      current,
+      baselineFiles: {},
+      policy: fixturePolicy,
+    })[0],
     /approved new-file transition requires a rationale/u,
   );
 });
