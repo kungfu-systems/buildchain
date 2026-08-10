@@ -73,6 +73,36 @@ test("macOS controller binds one campaign host and one reusable instance", () =>
   );
 });
 
+test("macOS controller binds the Ohio fallback to its own stack and Budget", () => {
+  const plan = campaignPlan({
+    region: "us-east-2",
+    availabilityZone: "us-east-2a",
+    amiId: "ami-0621afa68ae41e7d4",
+    subnetId: "subnet-9af441f1",
+  });
+  assert.equal(
+    plan.aws.controlPlaneStack,
+    "kungfu-buildchain-macos-jit-us-east-2",
+  );
+  assert.equal(
+    plan.safety.budget.name,
+    "kungfu-buildchain-macos-jit-actual-spend",
+  );
+  assert.deepEqual(plan.safety.budget.dimensionFilter, {
+    usageTypes: ["HostUsage:mac2", "USE2-HostUsage:mac2"],
+    operation: "RunInstances",
+    regions: ["us-east-1", "us-east-2"],
+  });
+  assert.throws(
+    () => campaignPlan({ region: "us-west-2" }),
+    /region must be one of us-east-1, us-east-2/,
+  );
+  assert.throws(
+    () => campaignPlan({ region: "us-east-2" }),
+    /availabilityZone must belong to us-east-2/,
+  );
+});
+
 test("macOS controller requires a unique exact qualification label per job", () => {
   const plan = jobPlan();
   assert.equal(
@@ -198,8 +228,8 @@ if (joined.includes("sts get-caller-identity")) {
 } else if (joined.includes("cloudformation describe-stacks")) {
   process.stdout.write(JSON.stringify({ Stacks: [{ StackStatus: "CREATE_COMPLETE", Outputs: [{ OutputKey: "KillSwitchTopic", OutputValue: "arn:aws:sns:us-east-1:727884401362:mac-kill" }] }] }));
 } else if (joined.includes("budgets describe-budget")) {
-  const usageType = process.env.FAKE_BUDGET_INVALID === "true" ? "HostUsage:mac1" : "HostUsage:mac2";
-  process.stdout.write(JSON.stringify({ Budget: { BudgetName: "kungfu-buildchain-macos-jit-actual-spend", BudgetLimit: { Amount: "25", Unit: "USD" }, BudgetType: "COST", Metrics: ["UnblendedCost"], FilterExpression: { And: [{ Dimensions: { Key: "USAGE_TYPE", Values: [usageType], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "OPERATION", Values: ["RunInstances"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "REGION", Values: ["us-east-1"], MatchOptions: ["EQUALS"] } }] } } }));
+  const usageTypes = process.env.FAKE_BUDGET_INVALID === "true" ? ["HostUsage:mac1"] : ["HostUsage:mac2", "USE2-HostUsage:mac2"];
+  process.stdout.write(JSON.stringify({ Budget: { BudgetName: "kungfu-buildchain-macos-jit-actual-spend", BudgetLimit: { Amount: "25", Unit: "USD" }, BudgetType: "COST", Metrics: ["UnblendedCost"], FilterExpression: { And: [{ Dimensions: { Key: "USAGE_TYPE", Values: usageTypes, MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "OPERATION", Values: ["RunInstances"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "REGION", Values: ["us-east-1", "us-east-2"], MatchOptions: ["EQUALS"] } }] } } }));
 } else if (joined.includes("budgets describe-notifications-for-budget")) {
   process.stdout.write(JSON.stringify({ Notifications: [{ NotificationType: "ACTUAL", ComparisonOperator: "GREATER_THAN", Threshold: 80, ThresholdType: "PERCENTAGE" }, { NotificationType: "ACTUAL", ComparisonOperator: "GREATER_THAN", Threshold: 95, ThresholdType: "PERCENTAGE" }] }));
 } else if (joined.includes("budgets describe-subscribers-for-notification")) {

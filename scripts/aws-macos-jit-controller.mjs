@@ -11,6 +11,7 @@ import {
   macosReleaseHostsArgs,
   macosRunInstancesArgs,
 } from "./aws-macos-jit-controller-core.mjs";
+import { MACOS_EC2_JIT_REGIONS } from "./aws-macos-jit-core.mjs";
 import { executeMacosJitJob } from "./aws-macos-jit-job-controller.mjs";
 import {
   assertDryRun,
@@ -43,43 +44,51 @@ function assertCampaignLaunchPreflight(plan, profile) {
   if (String(commit.sha || "").toLowerCase() !== plan.source.sha) {
     throw new Error("GitHub did not resolve the exact campaign source SHA");
   }
-  const activeHosts =
-    awsJson(
-      plan,
-      profile,
-      [
-        "ec2",
-        "describe-hosts",
-        "--filter",
-        "Name=tag:kungfu:plane,Values=aws-us-elastic-runner-burst",
-        "Name=tag:kungfu:provider,Values=macos-ec2-jit",
-        "Name=state,Values=available,pending,under-assessment",
-        "--output",
-        "json",
-      ],
-      "active macOS JIT host preflight",
-    ).Hosts || [];
+  const regionalPlans = Object.keys(MACOS_EC2_JIT_REGIONS).map((region) => ({
+    ...plan,
+    aws: { ...plan.aws, region },
+  }));
+  const activeHosts = regionalPlans.flatMap(
+    (regionalPlan) =>
+      awsJson(
+        regionalPlan,
+        profile,
+        [
+          "ec2",
+          "describe-hosts",
+          "--filter",
+          "Name=tag:kungfu:plane,Values=aws-us-elastic-runner-burst",
+          "Name=tag:kungfu:provider,Values=macos-ec2-jit",
+          "Name=state,Values=available,pending,under-assessment",
+          "--output",
+          "json",
+        ],
+        `active macOS JIT host preflight in ${regionalPlan.aws.region}`,
+      ).Hosts || [],
+  );
   if (activeHosts.length >= plan.safety.activeHostCeiling) {
     throw new Error("macOS JIT active Dedicated Host ceiling is reached");
   }
-  const active = awsJson(
-    plan,
-    profile,
-    [
-      "ec2",
-      "describe-instances",
-      "--filters",
-      "Name=tag:kungfu:plane,Values=aws-us-elastic-runner-burst",
-      "Name=tag:kungfu:provider,Values=macos-ec2-jit",
-      "Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down",
-      "--output",
-      "json",
-    ],
-    "active macOS JIT instance preflight",
-  );
-  const instances = (active.Reservations || []).flatMap(
-    (reservation) => reservation.Instances || [],
-  );
+  const instances = regionalPlans.flatMap((regionalPlan) => {
+    const active = awsJson(
+      regionalPlan,
+      profile,
+      [
+        "ec2",
+        "describe-instances",
+        "--filters",
+        "Name=tag:kungfu:plane,Values=aws-us-elastic-runner-burst",
+        "Name=tag:kungfu:provider,Values=macos-ec2-jit",
+        "Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down",
+        "--output",
+        "json",
+      ],
+      `active macOS JIT instance preflight in ${regionalPlan.aws.region}`,
+    );
+    return (active.Reservations || []).flatMap(
+      (reservation) => reservation.Instances || [],
+    );
+  });
   if (instances.length >= plan.safety.activeInstanceCeiling) {
     throw new Error("macOS JIT active instance ceiling is reached");
   }
