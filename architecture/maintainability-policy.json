@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113849,
+    "maxHandMaintainedSourceFiles": 293,
+    "maxHandMaintainedSourceLines": 114373,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
     "latestTransition": "The macOS paid-allocation controller fails closed on AWS account, workflow, stack, Budget dimensions, thresholds, and SNS subscriber drift.",
-    "rationale": "The bounded macOS launch gate adds exact workload-account identity, disabled-workflow state, complete-stack readback, AWS-owned HostUsage:mac2 billing dimensions, USD 25 Budget identity, and exact 80/95 percent SNS subscriber checks before AllocateHosts. The existing one-host, 24-hour minimum, 30-hour maximum, DryRun, ownership, JIT, and cleanup controls remain unchanged. Tests prove Budget drift prevents any allocation; this exact source ceiling cannot grow implicitly."
+    "rationale": "The bounded macOS launch gate adds exact workload-account identity, disabled-workflow state, complete-stack readback, AWS-owned HostUsage:mac2 billing dimensions, USD 25 Budget identity, and exact 80/95 percent SNS subscriber checks before AllocateHosts. The one-host, 24-hour minimum, 30-hour maximum, DryRun, ownership, JIT, and cleanup controls remain unchanged, and the merged Release Train contract remains intact. Tests prove Budget drift prevents any allocation; this exact source ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

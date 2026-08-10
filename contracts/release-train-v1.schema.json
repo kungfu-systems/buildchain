@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/release-train-v1.schema.json",
+  "title": "Buildchain Release Train v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "releaseCut",
+    "trainRoot",
+    "state",
+    "transitions",
+    "observations"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": { "const": "kungfu-buildchain-release-train/v1" },
+    "releaseCut": { "$ref": "release-cut-v1.schema.json" },
+    "trainRoot": { "$ref": "#/$defs/root" },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "generation",
+        "priorStateRoot",
+        "transitionRoot",
+        "stateRoot"
+      ],
+      "properties": {
+        "status": { "$ref": "#/$defs/state" },
+        "generation": { "type": "integer", "minimum": 1 },
+        "priorStateRoot": { "$ref": "#/$defs/root" },
+        "transitionRoot": { "$ref": "#/$defs/root" },
+        "stateRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "items": { "$ref": "release-train-transition-v1.schema.json" }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "trainRoot",
+          "observedDevSha",
+          "observedAt",
+          "observationRoot"
+        ],
+        "properties": {
+          "contract": {
+            "const": "kungfu-buildchain-release-train-observation/v1"
+          },
+          "trainRoot": { "$ref": "#/$defs/root" },
+          "observedDevSha": { "$ref": "#/$defs/gitSha" },
+          "observedAt": { "type": "string", "format": "date-time" },
+          "observationRoot": { "$ref": "#/$defs/root" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "state": {
+      "enum": [
+        "preparing",
+        "building",
+        "repair-required",
+        "publication-blocked",
+        "publishable",
+        "superseded",
+        "terminal"
+      ]
+    }
+  }
+}
