@@ -6253,7 +6253,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 580
+        "line": 600
       },
       "example": "import { applyGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6282,7 +6282,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 237
+        "line": 233
       },
       "example": "import { collectGitHubHousekeeperInventory } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6311,7 +6311,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 662
+        "line": 682
       },
       "example": "import { formatGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6340,7 +6340,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 656
+        "line": 676
       },
       "example": "import { runGitHubHousekeeper } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22212,7 +22212,7 @@
       "specifier": "@kungfu-tech/buildchain/engineering-housekeeper-github",
       "export": "./engineering-housekeeper-github",
       "target": "./packages/core/engineering-housekeeper-github.js",
-      "digest": "sha256:ed72b4ffff1a74c53db339ef3f429ccea0a339c2456f1a0c570c997a0db36d6c",
+      "digest": "sha256:601aa5b6ded1692f2dad1628c6aca3a38256b59033a496b8958fec76e4856f9a",
       "summary": "Paginated GitHub repository hygiene inventory, default-dry-run execution, exact-head mutation fences, and rooted provider receipts.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -22766,7 +22766,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:a8cc7af5cf1027aeb327cdb4c4a6a394e966cee58ea98532f46e9801ce50c46e"
+      "digest": "sha256:46196a7830a916cc4b0727b21811751f82e1a9a734d8a3e31e2cd5b8212e0c64"
     },
     {
       "id": "build-facts",

@@ -180,16 +180,12 @@ function mainlineTargetNames({
 }
 
 async function branchCandidateTargets({
-  client,
   repository,
   branchName,
   branchOid,
   targets,
+  associatedPullRequests,
 }) {
-  const associatedPullRequests =
-    typeof client.listPullRequestsForCommit === "function"
-      ? await client.listPullRequestsForCommit(repository, branchOid)
-      : [];
   const mergedTargetNames = new Set(
     associatedPullRequests
       .filter(
@@ -251,12 +247,17 @@ export async function collectGitHubHousekeeperInventory({
     "staleDays",
   );
   try {
-    const [repositoryState, branchStates, pullRequestStates] =
-      await Promise.all([
-        client.getRepository(coordinate.fullName),
-        client.listBranches(coordinate.fullName),
-        client.listOpenPullRequests(coordinate.fullName),
-      ]);
+    const [
+      repositoryState,
+      branchStates,
+      pullRequestStates,
+      closedPullRequestStates,
+    ] = await Promise.all([
+      client.getRepository(coordinate.fullName),
+      client.listBranches(coordinate.fullName),
+      client.listOpenPullRequests(coordinate.fullName),
+      client.listClosedPullRequests(coordinate.fullName),
+    ]);
     const branchStatesByName = new Map(
       branchStates.map((branchState) => [
         String(branchState.name),
@@ -292,6 +293,22 @@ export async function collectGitHubHousekeeperInventory({
         ),
       )
       .sort((left, right) => left.number - right.number);
+    const mergedPullRequestsByExactHead = new Map();
+    for (const pullRequest of closedPullRequestStates) {
+      if (
+        !Boolean(pullRequest.merged_at || pullRequest.mergedAt) ||
+        pullRequestHeadRepository(pullRequest) !== coordinate.fullName
+      )
+        continue;
+      const key = `${String(
+        pullRequest?.head?.ref || pullRequest.headRef || "",
+      )}\0${String(
+        pullRequest?.head?.sha || pullRequest.headOid || "",
+      ).toLowerCase()}`;
+      const existing = mergedPullRequestsByExactHead.get(key) || [];
+      existing.push(pullRequest);
+      mergedPullRequestsByExactHead.set(key, existing);
+    }
     const branches = [];
     for (const branchState of [...branchStates].sort((left, right) =>
       String(left.name).localeCompare(String(right.name)),
@@ -315,11 +332,14 @@ export async function collectGitHubHousekeeperInventory({
       let ancestry = "ambiguous";
       if (staticallyEligible) {
         const candidateTargets = await branchCandidateTargets({
-          client,
           repository: coordinate.fullName,
           branchName: String(branchState.name),
           branchOid,
           targets,
+          associatedPullRequests:
+            mergedPullRequestsByExactHead.get(
+              `${String(branchState.name)}\0${branchOid}`,
+            ) || [],
         });
         for (const candidateTarget of candidateTargets) {
           if (String(branchState.name) === candidateTarget.name) continue;

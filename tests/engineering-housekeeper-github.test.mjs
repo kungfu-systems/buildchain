@@ -63,6 +63,7 @@ class FakeGitHubClient {
       Object.entries(associatedPullRequests || {}),
     );
     this.associatedLookups = [];
+    this.closedPullRequestLookups = 0;
     this.comparisons = [];
     this.defaultBranch = defaultBranch;
     this.deleted = [];
@@ -82,6 +83,11 @@ class FakeGitHubClient {
     return this.pullRequests
       .filter((entry) => entry.state === "open")
       .map(clone);
+  }
+
+  async listClosedPullRequests() {
+    this.closedPullRequestLookups += 1;
+    return [...this.associatedPullRequests.values()].flat().map(clone);
   }
 
   async getBranch(_repository, name) {
@@ -173,6 +179,14 @@ test("GitHub client paginates every branch and pull-request page", async () => {
       )}/pulls?per_page=100`,
       { body: [pullRequest({ number: 3, merged_at: observedAt })] },
     ],
+    [
+      `https://api.github.test/repos/kungfu-systems/buildchain/pulls?state=closed&sort=updated&direction=asc&per_page=100`,
+      {
+        body: [
+          pullRequest({ number: 4, state: "closed", merged_at: observedAt }),
+        ],
+      },
+    ],
   ]);
   const client = new GitHubHousekeeperClient({
     token: "test-token",
@@ -203,7 +217,13 @@ test("GitHub client paginates every branch and pull-request page", async () => {
     ),
     [3],
   );
-  assert.equal(requests.length, 5);
+  assert.deepEqual(
+    (await client.listClosedPullRequests(repository)).map(
+      (entry) => entry.number,
+    ),
+    [4],
+  );
+  assert.equal(requests.length, 6);
   assert.ok(requests.every((entry) => entry.method === "GET"));
 });
 
@@ -312,7 +332,8 @@ test("empty target discovers every protected mainline but mutates only allowlist
   );
   assert.equal(unknown.decision, "retain");
   assert.ok(unknown.reasonCodes.includes("branch.not-temporary-development"));
-  assert.deepEqual(client.associatedLookups, [oid("a")]);
+  assert.equal(client.closedPullRequestLookups, 1);
+  assert.deepEqual(client.associatedLookups, []);
   assert.deepEqual(client.comparisons, [`${oid("a")}:${oid("e")}`]);
 });
 

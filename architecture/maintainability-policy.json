@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113619,
+    "maxHandMaintainedSourceLines": 113646,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
-    "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline.",
-    "rationale": "Repository-wide protected-mainline discovery, a positive temporary-development branch allowlist, and unattended scheduled apply replace the single-v3-target report-only dogfood path while preserving exact-OID, active-PR, protection, and replay fences. Tests bind unknown-family retention, cross-mainline ancestry, and schedule policy; these exact source and workflow ceilings cannot grow implicitly."
+    "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline with batched merged-PR inventory.",
+    "rationale": "Repository-wide protected-mainline discovery, a positive temporary-development branch allowlist, unattended scheduled apply, and one paginated closed-PR inventory replace the single-v3-target report-only dogfood path and per-branch provider lookups while preserving exact-OID, active-PR, protection, and replay fences. Tests bind unknown-family retention, cross-mainline ancestry, batched association lookup, and schedule policy; these exact source and workflow ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -20,8 +20,8 @@
   },
   "approvedNewFileTransitions": {
     "packages/core/engineering-housekeeper-github.js": {
-      "maxLines": 672,
-      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, merged-PR-base-first target selection that bounds provider calls, exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior in one public provider surface; this exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 692,
+      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory for merged-PR-base-first target selection, exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior in one public provider surface; this exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/publication-rehearsal-runtime.js": {
       "maxLines": 921,
