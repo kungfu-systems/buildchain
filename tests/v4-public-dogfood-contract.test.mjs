@@ -13,6 +13,7 @@ import {
 const root = path.resolve(import.meta.dirname, "..");
 const fixturePaths = [
   ".buildchain/buildchain.toml",
+  ".gitattributes",
   ".github/workflows",
   "AGENTS.md",
   "architecture/v4-stage-capsule-qualification.json",
@@ -145,19 +146,18 @@ test("the gate rejects legacy profiles and removal from protected Verify", () =>
   );
 });
 
-test("the gate rejects a dogfood build that relies on a global pnpm shim", () => {
-  const implicitPnpm = mutate(".buildchain/buildchain.toml", (text) =>
+test("the gate requires build to use public scripts and refresh verify outputs", () => {
+  const incompleteBuild = mutate(".buildchain/buildchain.toml", (text) =>
     text.replace(
-      'corepack pnpm@11.7.0 -r --filter \\"./actions/**\\" build',
-      "corepack pnpm@11.7.0 run build",
+      "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:site",
+      'corepack pnpm@11.7.0 -r --filter "./actions/**" build',
     ),
   );
   assert.throws(
-    () => checkV4PublicDogfoodContract(implicitPnpm),
+    () => checkV4PublicDogfoodContract(incompleteBuild),
     /tracked consumer lifecycle is missing/u,
   );
 });
-
 test("the gate requires install to expose the pinned Corepack pnpm shim", () => {
   const hiddenPnpm = mutate(".buildchain/buildchain.toml", (text) =>
     text.replace(
@@ -168,5 +168,15 @@ test("the gate requires install to expose the pinned Corepack pnpm shim", () => 
   assert.throws(
     () => checkV4PublicDogfoodContract(hiddenPnpm),
     /tracked consumer lifecycle is missing/u,
+  );
+});
+
+test("the gate requires deterministic text checkout on every platform", () => {
+  const platformDrift = mutate(".gitattributes", (text) =>
+    text.replace("* text=auto eol=lf", "* text=auto"),
+  );
+  assert.throws(
+    () => checkV4PublicDogfoodContract(platformDrift),
+    /cross-platform LF contract/u,
   );
 });

@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 322,
-    "maxHandMaintainedSourceLines": 123756,
+    "maxHandMaintainedSourceLines": 123759,
     "maxWorkflowFiles": 66,
     "maxWorkflowLines": 22619,
     "latestTransition": "Buildchain v4 dogfoods the exact public consumer workflow through one thin PR caller, with train-only recursion recovery and a protected anti-bypass contract gate.",
-    "rationale": "This successor ceiling adds exactly one thin Buildchain consumer caller and one hand-maintained anti-bypass gate while deleting the larger direct Buildchain/Kungfu qualification jobs from Verify. The gate freezes the public reusable workflow, exact train or protected-SHA binding, tracked install/build/verify lifecycle, three GitHub-hosted platforms, private-path absence, AGENTS.md invariant, and protected Verify participation. Its regression tests reject copied orchestration, relative calls, direct qualification jobs, feature refs, legacy profiles, and gate removal. Provider mutation, AWS, self-hosted runners, credential reads, publication, signing, production reuse, production stage skipping, production authority changes, and v3 behavior changes remain hard-zero; per-file, per-function, workflow-line, and no-widening budgets remain unchanged."
+    "rationale": "This successor ceiling adds exactly one thin Buildchain consumer caller and one hand-maintained anti-bypass gate while deleting the larger direct Buildchain/Kungfu qualification jobs from Verify. The gate freezes the public reusable workflow, exact train or protected-SHA binding, tracked install/build/verify lifecycle, deterministic LF checkout, three GitHub-hosted platforms, private-path absence, AGENTS.md invariant, and protected Verify participation. Its regression tests reject copied orchestration, relative calls, direct qualification jobs, incomplete public-script builds, platform-dependent checkout, feature refs, legacy profiles, and gate removal. Provider mutation, AWS, self-hosted runners, credential reads, publication, signing, production reuse, production stage skipping, production authority changes, and v3 behavior changes remain hard-zero; per-file, per-function, workflow-line, and no-widening budgets remain unchanged."
   },
   "sourceBudgets": {
     "newFileLines": 600,

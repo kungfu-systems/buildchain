@@ -195,13 +195,16 @@ function assertConsumerLifecycle(root) {
   const lifecycle = read(root, ".buildchain/buildchain.toml");
   for (const declaration of [
     '[lifecycle.install]\ncommand = "corepack enable pnpm && corepack pnpm@11.7.0 install --frozen-lockfile"',
-    '[lifecycle.build]\ncommand = "corepack pnpm@11.7.0 -r --filter \\\"./actions/**\\\" build"',
+    '[lifecycle.build]\ncommand = "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:site"',
     "[lifecycle.verify]\ncommands = [",
   ])
     if (!lifecycle.includes(declaration))
       fail(
         `tracked consumer lifecycle is missing ${declaration.split("\n")[0]}`,
       );
+  const attributes = read(root, ".gitattributes");
+  if (!attributes.split("\n").includes("* text=auto eol=lf"))
+    fail("consumer checkout is missing the cross-platform LF contract");
 }
 
 function assertPolicySources(root) {
