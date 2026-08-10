@@ -1019,9 +1019,7 @@
     },
     {
       "path": ".github/workflows/engineering-housekeeper.yml",
-      "signals": [
-        "write-permission"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1174,5 +1172,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "9af2e1b975738f8a473648cd8495115449ec49a4a24166bd1c7191b3d7141151"
+  "registryDigest": "7338e31a43be707cf8f176c46c386f2c27079fbaa75ad832f19a80949247c3e2"
 }
