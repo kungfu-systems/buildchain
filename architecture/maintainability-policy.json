@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
     "maxHandMaintainedSourceFiles": 292,
-    "maxHandMaintainedSourceLines": 113416,
+    "maxHandMaintainedSourceLines": 113552,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23294,
-    "latestTransition": "Resolved-runtime scenario validation precedes every consumer build.",
-    "rationale": "One bounded controller job validates an optional consumer auditable-demo scenario against the exact resolved Buildchain runtime and source SHA before any native or container lifecycle starts, records the gate in controller receipts, and prevents late contract-drift discovery after expensive builds. Static workflow coverage binds both build jobs and receipt paths to this gate; this exact control-plane ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23298,
+    "latestTransition": "Engineering Housekeeper autonomously covers every protected repository mainline.",
+    "rationale": "Repository-wide protected-mainline discovery, a positive temporary-development branch allowlist, and unattended scheduled apply replace the single-v3-target report-only dogfood path while preserving exact-OID, active-PR, protection, and replay fences. Tests bind unknown-family retention, cross-mainline ancestry, and schedule policy; these exact source and workflow ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/engineering-housekeeper-github.js": {
+      "maxLines": 615,
+      "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, deterministic per-branch target selection, exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior in one public provider surface; this exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/publication-rehearsal-runtime.js": {
       "maxLines": 921,
       "rationale": "The public audit surface keeps strict capsule normalization, path and streaming file verification including artifacts larger than the Node Buffer limit, environment and external-effect closure, deterministic simulation and replay adapters, provider recording, shared release-tail execution, diagnostics, and evidence rooting together so local and hosted binding behavior cannot drift; this exact preview ceiling cannot grow implicitly."

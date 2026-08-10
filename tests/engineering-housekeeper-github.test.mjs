@@ -44,6 +44,7 @@ class FakeGitHubClient {
     branches,
     pullRequests = [],
     ancestors,
+    ancestorPairs,
     defaultBranch = targetBranch,
   } = {}) {
     this.branches = new Map(
@@ -56,6 +57,7 @@ class FakeGitHubClient {
     );
     this.pullRequests = pullRequests.map(clone);
     this.ancestors = new Set(ancestors || [oid("a"), oid("b")]);
+    this.ancestorPairs = new Set(ancestorPairs || []);
     this.defaultBranch = defaultBranch;
     this.deleted = [];
     this.labelsAdded = [];
@@ -93,10 +95,14 @@ class FakeGitHubClient {
     return clone(current);
   }
 
-  async compareCommits(_repository, baseOid) {
+  async compareCommits(_repository, baseOid, targetOid) {
     return {
       merge_base_commit: {
-        sha: this.ancestors.has(baseOid) ? baseOid : oid("f"),
+        sha:
+          this.ancestors.has(baseOid) ||
+          this.ancestorPairs.has(`${baseOid}:${targetOid}`)
+            ? baseOid
+            : oid("f"),
       },
     };
   }
@@ -241,6 +247,33 @@ test("inventory is deterministic for the same observation and retains unsafe ref
     ["feature/merged"],
   );
   assert.match(formatGitHubHousekeeperPlan(left), /feature\/merged/);
+});
+
+test("empty target discovers every protected mainline but mutates only allowlisted temporary families", async () => {
+  const v4Branch = "dev/v4/v4.0";
+  const client = new FakeGitHubClient({
+    branches: [
+      branch(targetBranch, oid("b")),
+      branch(v4Branch, oid("e")),
+      branch("feature/v4-merged", oid("a")),
+      branch("experiment/v4-merged", oid("c")),
+    ],
+    ancestors: [],
+    ancestorPairs: [`${oid("a")}:${oid("e")}`, `${oid("c")}:${oid("e")}`],
+  });
+  const plan = await planWith(client, { targetBranch: "" });
+  assert.equal(plan.target.name, targetBranch);
+  assert.deepEqual(
+    plan.actions
+      .filter((entry) => entry.kind === "delete-branch")
+      .map((entry) => ({ name: entry.name, target: entry.targetName })),
+    [{ name: "feature/v4-merged", target: v4Branch }],
+  );
+  const unknown = plan.inventory.find(
+    (entry) => entry.name === "experiment/v4-merged",
+  );
+  assert.equal(unknown.decision, "retain");
+  assert.ok(unknown.reasonCodes.includes("branch.not-temporary-development"));
 });
 
 test("run defaults to dry-run and never mutates the repository", async () => {

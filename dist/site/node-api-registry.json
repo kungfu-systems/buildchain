@@ -6253,7 +6253,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 409
+        "line": 523
       },
       "example": "import { applyGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6282,7 +6282,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 110
+        "line": 187
       },
       "example": "import { collectGitHubHousekeeperInventory } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6311,7 +6311,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 491
+        "line": 605
       },
       "example": "import { formatGitHubHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6340,7 +6340,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper-github.js",
-        "line": 485
+        "line": 599
       },
       "example": "import { runGitHubHousekeeper } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6373,7 +6373,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 92
+        "line": 105
       },
       "example": "import { classifyHousekeeperBranch } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6406,7 +6406,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 129
+        "line": 144
       },
       "example": "import { classifyHousekeeperPullRequest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6439,7 +6439,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 250
+        "line": 265
       },
       "example": "import { classifyHousekeeperReplay } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6468,7 +6468,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 155
+        "line": 170
       },
       "example": "import { createEngineeringHousekeeperPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6497,7 +6497,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 231
+        "line": 246
       },
       "example": "import { createEngineeringHousekeeperReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6521,7 +6521,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 28
+        "line": 29
       },
       "example": "import { DEFAULT_HOUSEKEEPER_POLICY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6598,7 +6598,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 49
+        "line": 58
       },
       "example": "import { engineeringHousekeeperRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6659,7 +6659,7 @@
       ],
       "source": {
         "path": "packages/core/engineering-housekeeper.js",
-        "line": 208
+        "line": 223
       },
       "example": "import { revalidateHousekeeperBranchAction } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22179,7 +22179,7 @@
       "specifier": "@kungfu-tech/buildchain/engineering-housekeeper",
       "export": "./engineering-housekeeper",
       "target": "./packages/core/engineering-housekeeper.js",
-      "digest": "sha256:8d2075a7a4836dc8b08bc72e3e08171e3f9bcdbc18e626db912e4048769c627b",
+      "digest": "sha256:702ebe01406f6cecf03b9d5bdd0cd22c1b396c455e769c03d741dcb7a0c29048",
       "summary": "Provider-neutral repository hygiene classification, deterministic plan and receipt, apply-time revalidation, and replay APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -22212,7 +22212,7 @@
       "specifier": "@kungfu-tech/buildchain/engineering-housekeeper-github",
       "export": "./engineering-housekeeper-github",
       "target": "./packages/core/engineering-housekeeper-github.js",
-      "digest": "sha256:fb9a9d15b284236cd4e09aedb238927d6ccd900ff011ad85eb184cecf7105750",
+      "digest": "sha256:4b07a173c861626d4e74bfc83e3ba7e93548e1855d21a006d71010438ab3f5a7",
       "summary": "Paginated GitHub repository hygiene inventory, default-dry-run execution, exact-head mutation fences, and rooted provider receipts.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -22766,7 +22766,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:ed843753964193ecb59610a54f0f23d76578228ebe6d31d1d6edce526729910c"
+      "digest": "sha256:17747925a7d42640fbfac849a3cec3755d9a8dafcff53576189de721da6ab9af"
     },
     {
       "id": "build-facts",

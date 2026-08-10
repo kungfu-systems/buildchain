@@ -86,10 +86,11 @@ export function normalizeHousekeeperWorkflowOptions(options = {}) {
         process.env.HOUSEKEEPER_REPOSITORY ||
         process.env.GITHUB_REPOSITORY,
     ),
-    targetBranch: requiredString(
-      options.targetBranch || process.env.HOUSEKEEPER_TARGET_BRANCH,
-      "target-branch",
-    ).replace(/^refs\/heads\//, ""),
+    targetBranch: String(
+      options.targetBranch || process.env.HOUSEKEEPER_TARGET_BRANCH || "",
+    )
+      .trim()
+      .replace(/^refs\/heads\//, ""),
     staleDays: positiveInteger(
       options.staleDays ?? process.env.HOUSEKEEPER_STALE_DAYS,
       30,
@@ -107,6 +108,11 @@ export function normalizeHousekeeperWorkflowOptions(options = {}) {
     retainedPatterns: splitPatterns(
       options.retainedPatterns ?? process.env.HOUSEKEEPER_RETAINED_PATTERNS,
       ["train/**", "authority/**"],
+    ),
+    temporaryBranchPatterns: splitPatterns(
+      options.temporaryBranchPatterns ??
+        process.env.HOUSEKEEPER_TEMPORARY_BRANCH_PATTERNS,
+      ["feature/**", "fix/**", "chore/**", "docs/**", "ci/**", "refactor/**"],
     ),
     stalePullRequestLabel: String(
       options.stalePullRequestLabel ??
@@ -137,6 +143,7 @@ function workflowPolicy(options) {
   return {
     protectedPatterns: options.protectedPatterns,
     retainedPatterns: options.retainedPatterns,
+    temporaryBranchPatterns: options.temporaryBranchPatterns,
     pullRequests: {
       reportStale: true,
       label: options.stalePullRequestLabel,
@@ -167,7 +174,7 @@ export function renderHousekeeperWorkflowReport(
     `Mode: \`${mode || "report"}\``,
     `Scope: \`${scope}\``,
     `Repository: \`${plan.repository}\``,
-    `Target ref: \`${plan.target.name}@${plan.target.headOid}\``,
+    `Primary mainline: \`${plan.target.name}@${plan.target.headOid}\``,
     `Observed at: \`${plan.observedAt}\``,
     `Plan root: \`${plan.planRoot}\``,
     `Receipt root: \`${receipt.receiptRoot}\``,
@@ -284,7 +291,7 @@ export async function applyHousekeeperWorkflowScope({
   }
   if (
     plan.repository !== options.repository ||
-    plan.target.name !== options.targetBranch
+    (options.targetBranch && plan.target.name !== options.targetBranch)
   ) {
     throw new Error(
       "plan repository or target branch does not match current workflow inputs",

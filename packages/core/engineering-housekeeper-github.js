@@ -1,5 +1,6 @@
 import {
   HOUSEKEEPER_REASON_CODES,
+  classifyHousekeeperBranch,
   classifyHousekeeperReplay,
   createEngineeringHousekeeperPlan,
   createEngineeringHousekeeperReceipt,
@@ -94,6 +95,82 @@ function openPullRequestNumbers(pullRequests, repository, branchName) {
     .sort((left, right) => left - right);
 }
 
+function normalizeOptionalBranchName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^refs\/heads\//, "");
+}
+
+function branchObservation({
+  branchState,
+  repository,
+  repositoryState,
+  pullRequests,
+  target,
+  ancestry,
+}) {
+  return {
+    repository,
+    sourceRepository: repository,
+    name: String(branchState.name),
+    headOid: headOid(branchState),
+    target,
+    isDefault:
+      String(repositoryState.default_branch) === String(branchState.name),
+    isProtected: branchState.protected === true,
+    ancestry,
+    openPullRequestNumbers: openPullRequestNumbers(
+      pullRequests,
+      repository,
+      String(branchState.name),
+    ),
+  };
+}
+
+function mainlineTargetNames({
+  branchStates,
+  repository,
+  repositoryState,
+  requestedTarget,
+  policy,
+}) {
+  const protectedTargets = branchStates
+    .filter((branchState) => {
+      const classification = classifyHousekeeperBranch(
+        branchObservation({
+          branchState,
+          repository,
+          repositoryState,
+          pullRequests: [],
+          target: { name: "__housekeeper_target__", headOid: "0".repeat(40) },
+          ancestry: "ancestor",
+        }),
+        policy,
+      );
+      return classification.reasonCodes.includes(
+        HOUSEKEEPER_REASON_CODES.PROTECTED_BRANCH,
+      );
+    })
+    .map((branchState) => String(branchState.name));
+  return [
+    ...new Set(
+      [
+        requestedTarget,
+        repositoryState.default_branch,
+        ...protectedTargets,
+      ].filter(Boolean),
+    ),
+  ].sort((left, right) => {
+    const priority = (name) =>
+      name === requestedTarget
+        ? 0
+        : name === repositoryState.default_branch
+          ? 1
+          : 2;
+    return priority(left) - priority(right) || left.localeCompare(right);
+  });
+}
+
 async function branchAncestry(client, repository, branchOid, targetOid) {
   if (branchOid === targetOid) return "ancestor";
   const comparison = await client.compareCommits(
@@ -116,10 +193,7 @@ export async function collectGitHubHousekeeperInventory({
   policy = {},
 }) {
   const coordinate = normalizeRepository(repository);
-  const targetName = requiredString(targetBranch, "targetBranch").replace(
-    /^refs\/heads\//,
-    "",
-  );
+  const requestedTarget = normalizeOptionalBranchName(targetBranch);
   const observation = normalizeDate(observedAt, "observedAt");
   const staleWindow = normalizePositiveInteger(
     staleDays,
@@ -127,16 +201,37 @@ export async function collectGitHubHousekeeperInventory({
     "staleDays",
   );
   try {
-    const [repositoryState, branchStates, pullRequestStates, targetState] =
+    const [repositoryState, branchStates, pullRequestStates] =
       await Promise.all([
         client.getRepository(coordinate.fullName),
         client.listBranches(coordinate.fullName),
         client.listOpenPullRequests(coordinate.fullName),
-        client.getBranch(coordinate.fullName, targetName),
       ]);
-    const target = { name: targetName, headOid: headOid(targetState) };
-    if (!target.headOid)
-      throw new Error(`target branch ${targetName} has no head OID`);
+    const branchStatesByName = new Map(
+      branchStates.map((branchState) => [
+        String(branchState.name),
+        branchState,
+      ]),
+    );
+    const targetNames = mainlineTargetNames({
+      branchStates,
+      repository: coordinate.fullName,
+      repositoryState,
+      requestedTarget,
+      policy,
+    });
+    const targets = targetNames.map((name) => {
+      const state = branchStatesByName.get(name);
+      if (!state)
+        throw new Error(`mainline target branch ${name} was not found`);
+      const target = { name, headOid: headOid(state) };
+      if (!target.headOid)
+        throw new Error(`mainline target branch ${name} has no head OID`);
+      return target;
+    });
+    const target = targets[0];
+    if (!target)
+      throw new Error("repository has no discoverable mainline target");
     const pullRequests = pullRequestStates
       .map((entry) =>
         normalizePullRequest(
@@ -154,27 +249,46 @@ export async function collectGitHubHousekeeperInventory({
       const branchOid = headOid(branchState);
       if (!branchOid)
         throw new Error(`branch ${branchState.name} has no head OID`);
-      branches.push({
+      const staticObservation = branchObservation({
+        branchState,
         repository: coordinate.fullName,
-        sourceRepository: coordinate.fullName,
-        name: String(branchState.name),
-        headOid: branchOid,
+        repositoryState,
+        pullRequests,
         target,
-        isDefault:
-          String(repositoryState.default_branch) === String(branchState.name),
-        isProtected: branchState.protected === true,
-        ancestry: await branchAncestry(
-          client,
-          coordinate.fullName,
-          branchOid,
-          target.headOid,
-        ),
-        openPullRequestNumbers: openPullRequestNumbers(
-          pullRequests,
-          coordinate.fullName,
-          String(branchState.name),
-        ),
+        ancestry: "ancestor",
       });
+      const staticallyEligible = classifyHousekeeperBranch(
+        staticObservation,
+        policy,
+      ).eligible;
+      let selectedTarget = target;
+      let ancestry = "ambiguous";
+      if (staticallyEligible) {
+        for (const candidateTarget of targets) {
+          if (String(branchState.name) === candidateTarget.name) continue;
+          const candidateAncestry = await branchAncestry(
+            client,
+            coordinate.fullName,
+            branchOid,
+            candidateTarget.headOid,
+          );
+          if (candidateAncestry === "ancestor") {
+            selectedTarget = candidateTarget;
+            ancestry = candidateAncestry;
+            break;
+          }
+        }
+      }
+      branches.push(
+        branchObservation({
+          branchState,
+          repository: coordinate.fullName,
+          repositoryState,
+          pullRequests,
+          target: selectedTarget,
+          ancestry,
+        }),
+      );
     }
     return createEngineeringHousekeeperPlan({
       repository: coordinate.fullName,

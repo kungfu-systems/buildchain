@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "d58cfd6959a1f2050783c4016e09af44da0759fc1b6575082304818faf3aa3f7",
+    "sha256": "eb145717c024b1e10ca7a85c2068b65fcb6b66fcc817181fa706d28cb86065c4",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "d58cfd6959a1f2050783c4016e09af44da0759fc1b6575082304818faf3aa3f7",
+      "sha256": "eb145717c024b1e10ca7a85c2068b65fcb6b66fcc817181fa706d28cb86065c4",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -4787,7 +4787,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "apply-enabled",
             "artifact-prefix",
@@ -4801,7 +4801,8 @@
             "retained-patterns",
             "stale-days",
             "stale-pull-request-label",
-            "target-branch"
+            "target-branch",
+            "temporary-branch-patterns"
           ],
           "reverseAuditSource": ".github/workflows"
         },

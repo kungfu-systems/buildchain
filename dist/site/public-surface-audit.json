@@ -2129,9 +2129,10 @@
           "retained-patterns",
           "stale-days",
           "stale-pull-request-label",
-          "target-branch"
+          "target-branch",
+          "temporary-branch-patterns"
         ],
-        "inputCount": 13,
+        "inputCount": 14,
         "secrets": [
           "github_app_id",
           "github_app_private_key",
@@ -7988,8 +7989,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "dbd9f89d3fb7b42e138b262b41a468252d5c44b8ddd2abef4b5acddb842da20d",
-    "pageRegistryDigest": "504454df002494e1bc5cdf37679c28a3914f2df43cf4a70524019d2d97b6c320"
+    "workflowRegistryDigest": "9412e82a445f63520d6d88f3c6dc57d3bf7c5764e8a8e5c7c169298d6b89b2c0",
+    "pageRegistryDigest": "2856f53469c350b8e890fd045211255c9a2f42c69200adeb1b4b6ba65a8cfab7"
   },
   "comparison": {
     "missingCliRegistry": [],

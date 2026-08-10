@@ -9,9 +9,10 @@ on:
         type: string
         default: ""
       target-branch:
-        description: "Exact branch whose current head is the cleanup ancestry target."
-        required: true
+        description: "Optional primary ancestry target. Empty discovers the default and all protected mainline families repository-wide."
+        required: false
         type: string
+        default: ""
       mode:
         description: "Execution mode: report or apply."
         required: false
@@ -32,6 +33,11 @@ on:
         required: false
         type: string
         default: "train/**,authority/**"
+      temporary-branch-patterns:
+        description: "Positive allowlist of temporary development branch globs eligible for deletion."
+        required: false
+        type: string
+        default: "feature/**,fix/**,chore/**,docs/**,ci/**,refactor/**"
       stale-days:
         description: "Age threshold for stale pull-request reporting and optional labeling."
         required: false
@@ -109,7 +115,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: engineering-housekeeper-${{ inputs.repository || github.repository }}-${{ inputs.target-branch }}
+  group: engineering-housekeeper-${{ inputs.repository || github.repository }}-${{ inputs.target-branch || 'all-mainlines' }}
   cancel-in-progress: false
 
 jobs:
@@ -195,6 +201,7 @@ jobs:
           HOUSEKEEPER_APPLY_ENABLED: ${{ inputs.apply-enabled }}
           HOUSEKEEPER_PROTECTED_PATTERNS: ${{ inputs.protected-patterns }}
           HOUSEKEEPER_RETAINED_PATTERNS: ${{ inputs.retained-patterns }}
+          HOUSEKEEPER_TEMPORARY_BRANCH_PATTERNS: ${{ inputs.temporary-branch-patterns }}
           HOUSEKEEPER_STALE_DAYS: ${{ inputs.stale-days }}
           HOUSEKEEPER_STALE_PR_LABEL: ${{ inputs.stale-pull-request-label }}
           HOUSEKEEPER_MAX_ACTIONS: ${{ inputs.max-actions }}

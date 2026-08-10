@@ -15,9 +15,16 @@ last_reviewed: 2026-08-10
 
 Engineering Housekeeper is a reusable GitHub workflow for evidence-backed
 branch and pull-request hygiene. It inventories the complete GitHub branch and
-open pull-request surfaces, produces a rooted plan, and defaults to report-only
-execution. It never closes pull requests and never deletes a branch from its
-name alone.
+open pull-request surfaces, discovers the repository default branch and all
+protected version/release mainlines, and produces a rooted plan. The reusable
+workflow defaults to report-only execution; a repository may opt its scheduled
+callers into unattended apply. It never closes pull requests and never deletes
+a branch from its name alone.
+
+Branch deletion uses a positive allowlist. Only `feature/**`, `fix/**`,
+`chore/**`, `docs/**`, `ci/**`, and `refactor/**` are temporary development
+families by default. Unknown families are inventoried and retained, even when
+their heads are already ancestors of a mainline.
 
 The reusable entrypoint is:
 
@@ -38,14 +45,16 @@ jobs:
       contents: read
       pull-requests: read
     with:
-      target-branch: dev/v3/v3.0
       mode: report
 ```
 
-The plan records the exact repository, target branch and target OID, every
-observed branch and open pull request, each retain/delete/report/label decision,
-and stable reason codes. The report receipt records dry-run outcomes and binds
-them to the plan root.
+With no `target-branch`, the plan uses the repository default as its primary
+target and discovers every provider-protected or protected-pattern-matching
+mainline repository-wide. Each eligible temporary branch is bound to the exact
+mainline OID that proves it merged. The plan also records every observed branch
+and open pull request, each retain/delete/report/label decision, and stable
+reason codes. The report receipt records dry-run outcomes and binds them to the
+plan root.
 
 ## Apply mode
 
@@ -54,6 +63,8 @@ and `apply-enabled: true`; either value alone fails closed. Apply jobs consume
 the uploaded exact plan, re-read provider state, and revalidate exact branch
 and target OIDs, ancestry, protection, retention, active pull requests, rename
 state, pull-request state, and staleness before each mutation.
+These are reusable-workflow contract inputs, not an interactive approval step.
+An unattended scheduled caller can set both values in committed policy.
 
 ```yaml
 jobs:
@@ -63,7 +74,6 @@ jobs:
       contents: write
       pull-requests: write
     with:
-      target-branch: dev/v3/v3.0
       mode: apply
       apply-enabled: true
       stale-pull-request-label: stale-housekeeping
@@ -84,20 +94,21 @@ continue.
 
 ## Inputs and outputs
 
-| Input                      | Type    | Default                     | Contract                                                                          |
-| -------------------------- | ------- | --------------------------- | --------------------------------------------------------------------------------- |
-| `repository`               | string  | caller repository           | Exact `owner/repo` target.                                                        |
-| `target-branch`            | string  | required                    | Exact ancestry target; the observed OID is recorded in the plan.                  |
-| `mode`                     | string  | `report`                    | `report` or `apply`. Other values fail.                                           |
-| `apply-enabled`            | boolean | `false`                     | Required positive gate for `apply`. Invalid with `report`.                        |
-| `protected-patterns`       | string  | version/release families    | Comma or newline separated branch globs.                                          |
-| `retained-patterns`        | string  | train/authority families    | Comma or newline separated retention globs.                                       |
-| `stale-days`               | number  | `30`                        | Positive stale pull-request age.                                                  |
-| `stale-pull-request-label` | string  | empty                       | Empty keeps pull requests report-only; non-empty permits labeling, never closure. |
-| `max-actions`              | number  | `20`                        | Positive global apply limit.                                                      |
-| `artifact-retention-days`  | number  | `30`                        | Retention for plan, report, and receipts.                                         |
-| `buildchain-repository`    | string  | `kungfu-systems/buildchain` | Runtime source repository.                                                        |
-| `buildchain-ref`           | string  | `v3`                        | Runtime ref; trusted manual qualification may pass a train or exact SHA.          |
+| Input                       | Type    | Default                     | Contract                                                                          |
+| --------------------------- | ------- | --------------------------- | --------------------------------------------------------------------------------- |
+| `repository`                | string  | caller repository           | Exact `owner/repo` target.                                                        |
+| `target-branch`             | string  | empty                       | Optional primary target; empty discovers all protected mainlines repository-wide. |
+| `mode`                      | string  | `report`                    | `report` or `apply`. Other values fail.                                           |
+| `apply-enabled`             | boolean | `false`                     | Required positive gate for `apply`. Invalid with `report`.                        |
+| `protected-patterns`        | string  | version/release families    | Comma or newline separated branch globs.                                          |
+| `retained-patterns`         | string  | train/authority families    | Comma or newline separated retention globs.                                       |
+| `temporary-branch-patterns` | string  | six development families    | Positive allowlist; unmatched branch families are always retained.                |
+| `stale-days`                | number  | `30`                        | Positive stale pull-request age.                                                  |
+| `stale-pull-request-label`  | string  | empty                       | Empty keeps pull requests report-only; non-empty permits labeling, never closure. |
+| `max-actions`               | number  | `20`                        | Positive global apply limit.                                                      |
+| `artifact-retention-days`   | number  | `30`                        | Retention for plan, report, and receipts.                                         |
+| `buildchain-repository`     | string  | `kungfu-systems/buildchain` | Runtime source repository.                                                        |
+| `buildchain-ref`            | string  | `v3`                        | Runtime ref; trusted manual qualification may pass a train or exact SHA.          |
 
 Stable outputs are `plan-root`, `report-receipt-root`, optional
 `branch-receipt-root` and `pull-request-receipt-root`, `action-count`,
@@ -131,8 +142,18 @@ Buildchain dogfoods the reusable contract through three thin callers:
 - `engineering-housekeeper-weekly.yml` uses a 45-day window and a 20-action cap;
 - `engineering-housekeeper-monthly.yml` uses a 60-day window and a 50-action cap.
 
-Schedules are report-only and read-only. Apply is available only through a
-manual dispatch that selects `apply` and positively enables the apply gate.
-The callers contain schedules and policy values only; inventory, planning,
-revalidation, mutation, evidence, and authentication stay in the reusable
-workflow and its runtime.
+All three schedules run unattended apply with repository-wide mainline
+discovery. They delete only exact merged heads from the positive temporary
+branch allowlist and automatically add `engineering-housekeeper:stale` to stale
+open pull requests; they never close a pull request. Manual dispatch remains a
+diagnostic interface, not a prerequisite for scheduled execution. Each caller
+uses the exact scheduling commit as its runtime, so activation never waits for a
+floating runtime ref to catch up. The callers contain schedules and policy
+values only; inventory, planning, revalidation, mutation, evidence, and
+authentication stay in the reusable workflow and its runtime.
+
+If a deleted merged branch must be restored during artifact retention, use the
+recorded `expectedHeadOid` and branch name from the rooted plan to recreate the
+ref with a normal non-force push. A rejected or provider-error receipt means no
+successful deletion should be inferred; re-run report mode against current
+provider state before taking recovery action.
