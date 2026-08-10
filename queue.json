@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 235,
-  "fencingCounter": 76,
+  "generation": 237,
+  "fencingCounter": 77,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -29,11 +29,11 @@
     "toolchainRoot": "sha256:84573ad7000d17745607c9b20a29c5afdc060df4dd38880029f729fb82648fc8",
     "sourceWorkflowRunId": 0,
     "deliveryClass": "native-proof-required",
-    "generation": 76,
-    "expectedOldStateRoot": "sha256:87cf94b96876faf4560de3a543e8706772fb1d89ab53d5a49c6e5e0bde56af4c",
-    "issuedAt": "2026-08-10T17:17:59.491Z",
-    "expiresAt": "2026-08-10T18:17:59.491Z",
-    "fencingToken": "sha256:c09446c02cf508dc524152d672996b64855f913a612bab4ca6716c8a285e1a54",
+    "generation": 77,
+    "expectedOldStateRoot": "sha256:cde1c687fe71df4ad3948a3986dc10dbfa0e71dc8358cd2c8b86b6eb4d2fb473",
+    "issuedAt": "2026-08-10T23:30:03.966Z",
+    "expiresAt": "2026-08-11T01:00:03.966Z",
+    "fencingToken": "sha256:0f970f35c31c8ddab8f25561669a96ce4d68b192a4fe4b2d9c04146f89837ced",
     "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
   },
   "candidates": [
@@ -2255,13 +2255,13 @@
       "sourceWorkflowRunId": 0,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-10T17:17:55.568Z",
-      "updatedAt": "2026-08-10T17:17:59.491Z",
-      "attempts": 1,
-      "recoveries": 0,
+      "updatedAt": "2026-08-10T23:30:03.966Z",
+      "attempts": 2,
+      "recoveries": 1,
       "status": "selected",
       "terminal": null
     }
   ],
-  "updatedAt": "2026-08-10T17:17:59.491Z",
-  "stateRoot": "sha256:bb91a3fba108f3a12e20c109b65c28c3654bde77b05030b73c69f4ef0b3993e4"
+  "updatedAt": "2026-08-10T23:30:03.966Z",
+  "stateRoot": "sha256:fd87357ee4a37920cfbbd4b4cda85bb5fde48fddd63ef9de8302da321bf51534"
 }
