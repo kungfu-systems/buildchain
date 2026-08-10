@@ -2410,19 +2410,19 @@ async function assertProviderEnforcedChannelTransaction({
     );
   const pullRequestHeadSha = String(pullRequest?.head?.sha || "").trim();
   const validPullRequestHeadSha = /^[0-9a-f]{40}$/i.test(pullRequestHeadSha);
-  const { data: checkRuns } = validPullRequestHeadSha
-    ? await octokit.rest.checks.listForRef({
-        owner,
-        repo,
-        ref: pullRequestHeadSha,
-        per_page: 100,
-      })
-    : { data: { check_runs: [] } };
-  const requiredCheckPassed = (checkRuns.check_runs || []).some((entry) =>
-    entry.name === resolvedStatusCheck &&
-    entry.conclusion === "success" &&
-    (!requiredCheck?.app_id || entry.app?.id === requiredCheck.app_id),
-  );
+  const providerCheckRefs = [...new Set([pullRequestHeadSha, sourceSha])].filter((ref) => /^[0-9a-f]{40}$/i.test(ref));
+  let requiredCheckPassed = false;
+  for (const ref of providerCheckRefs) {
+    const { data: checkRuns } = await octokit.rest.checks.listForRef(
+      { owner, repo, ref, per_page: 100 },
+    );
+    requiredCheckPassed = (checkRuns.check_runs || []).some((entry) =>
+      entry.name === resolvedStatusCheck &&
+      entry.conclusion === "success" &&
+      (!requiredCheck?.app_id || entry.app?.id === requiredCheck.app_id),
+    );
+    if (requiredCheckPassed) break;
+  }
   const missing = [];
   if (branch.protected !== true) missing.push("must be provider-protected");
   if (branch.commit?.sha !== expectedChannelSha) missing.push("must still point at the exact admitted channel head");
