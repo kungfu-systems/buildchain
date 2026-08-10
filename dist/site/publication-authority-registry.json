@@ -1079,10 +1079,15 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/v4-stage-capsule-canary.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/verify.yml",
       "signals": [],
       "classified": false
     }
   ],
-  "registryDigest": "fd4b5def78f58e64badfd6d9d4cce801cab3c15ae81aa89357ef02d15f7ad99d"
+  "registryDigest": "b485fc72bb946552325b81a79a47130e28646a5c4afb21907f490b134694cef3"
 }

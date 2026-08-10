@@ -37,6 +37,15 @@ const SELF_DOGFOOD_EXCLUSIONS = Object.freeze({
   publish: "provider-mutation",
   "version-state": "generated-output-mutation",
 });
+const EXTERNAL_CONSUMER_STAGES = Object.freeze(["install", "build", "verify"]);
+const EXTERNAL_CONSUMER_DEPENDENCIES = Object.freeze({
+  install: [],
+  build: ["install"],
+  verify: ["build"],
+});
+const EXTERNAL_CONSUMER_EXCLUSIONS = Object.freeze({
+  publish: "provider-mutation",
+});
 
 function rootOf(label) {
   return v4StageCapsuleBlobRoot(
@@ -158,7 +167,7 @@ function lifecycleStageEvidence({ stageId, manifest, summary, command }) {
 }
 
 export function createV4StageCapsuleCampaignProfile(context) {
-  if (context.consumer !== SELF_DOGFOOD_CONSUMER) {
+  if (!context.lifecycleConfig) {
     const body = {
       schema: "buildchain-v4-stage-capsule-campaign-profile/v1",
       kind: "consumer-equivalent-fixture",
@@ -172,6 +181,16 @@ export function createV4StageCapsuleCampaignProfile(context) {
   }
 
   const loaded = context.lifecycleConfig;
+  const selfDogfood = context.consumer === SELF_DOGFOOD_CONSUMER;
+  const executableStages = selfDogfood
+    ? SELF_DOGFOOD_STAGES
+    : EXTERNAL_CONSUMER_STAGES;
+  const dependencies = selfDogfood
+    ? SELF_DOGFOOD_DEPENDENCIES
+    : EXTERNAL_CONSUMER_DEPENDENCIES;
+  const exclusions = selfDogfood
+    ? SELF_DOGFOOD_EXCLUSIONS
+    : EXTERNAL_CONSUMER_EXCLUSIONS;
   if (!loaded?.filePath || !loaded?.config)
     campaignFault(
       "missing-stage-capsule-lifecycle-config",
@@ -183,27 +202,26 @@ export function createV4StageCapsuleCampaignProfile(context) {
     (name) => !["env", "shell"].includes(name),
   );
   const unexpected = stageNames.filter(
-    (name) =>
-      !SELF_DOGFOOD_STAGES.includes(name) && !SELF_DOGFOOD_EXCLUSIONS[name],
+    (name) => !executableStages.includes(name) && !exclusions[name],
   );
   if (
-    SELF_DOGFOOD_STAGES.some((name) => !stageNames.includes(name)) ||
+    executableStages.some((name) => !stageNames.includes(name)) ||
     unexpected.length > 0
   )
     campaignFault(
       "unsupported-stage-capsule-lifecycle-graph",
       "$/lifecycle",
-      "real lifecycle stages differ from the fail-closed self-dogfood policy",
+      "real lifecycle stages differ from the fail-closed canary policy",
     );
   if (!context.lifecycleEvidenceRoot)
     campaignFault(
       "missing-stage-capsule-lifecycle-evidence",
       "$/lifecycleEvidenceRoot",
-      "Buildchain self-dogfood requires real lifecycle evidence",
+      "real lifecycle canary requires lifecycle evidence",
     );
 
   const stageEvidence = Object.fromEntries(
-    SELF_DOGFOOD_STAGES.map((stageId) => {
+    executableStages.map((stageId) => {
       const manifest = readJson(
         path.join(context.lifecycleEvidenceRoot, `${stageId}-manifest.json`),
         `$/lifecycle/${stageId}/manifest`,
@@ -214,8 +232,7 @@ export function createV4StageCapsuleCampaignProfile(context) {
       );
       if (
         manifest.platform?.id !== context.platform ||
-        (manifest.git?.sha &&
-          manifest.git.sha !== context.consumerSourceRevision)
+        manifest.git?.sha !== context.consumerSourceRevision
       )
         campaignFault(
           "stage-capsule-lifecycle-source-mismatch",
@@ -234,9 +251,6 @@ export function createV4StageCapsuleCampaignProfile(context) {
     }),
   );
   const configBytes = fs.readFileSync(loaded.filePath);
-  const lockfileBytes = fs.readFileSync(
-    path.join(context.repoRoot, "pnpm-lock.yaml"),
-  );
   const sourceRoot = rootOf({
     configRoot: rootOf(configBytes),
     sourceRevision: context.consumerSourceRevision,
@@ -244,20 +258,25 @@ export function createV4StageCapsuleCampaignProfile(context) {
   const installOutputRoot = v4StageCapsuleBlobRoot(
     v4CanonicalBytes(stageEvidence.install),
   );
+  const buildOutputRoot = stageEvidence.build
+    ? v4StageCapsuleBlobRoot(v4CanonicalBytes(stageEvidence.build))
+    : installOutputRoot;
   const lifecycleDeclarations = stageNames.map((name) => ({
     name,
     commands: lifecycle[name].commands || [lifecycle[name].script],
-    disposition: SELF_DOGFOOD_STAGES.includes(name)
+    disposition: executableStages.includes(name)
       ? "shadow-executed"
-      : SELF_DOGFOOD_EXCLUSIONS[name],
+      : exclusions[name],
   }));
   const body = {
     schema: "buildchain-v4-stage-capsule-campaign-profile/v1",
-    kind: "real-buildchain-lifecycle",
+    kind: selfDogfood
+      ? "real-buildchain-lifecycle"
+      : "real-external-consumer-lifecycle",
     configPath: loaded.path,
     configRoot: rootOf(configBytes),
-    stages: SELF_DOGFOOD_STAGES,
-    dependencies: SELF_DOGFOOD_DEPENDENCIES,
+    stages: executableStages,
+    dependencies,
     lifecycleDeclarations,
     stageEvidence,
     productionAuthority: "v3",
@@ -267,11 +286,19 @@ export function createV4StageCapsuleCampaignProfile(context) {
     ...body,
     inputRoots: {
       install: {
-        lockfile: rootOf(lockfileBytes),
+        lockfile: installOutputRoot,
         "source-tree": sourceRoot,
       },
+      ...(stageEvidence.build
+        ? {
+            build: {
+              "dependency-layout": installOutputRoot,
+              "source-tree": sourceRoot,
+            },
+          }
+        : {}),
       verify: {
-        "build-output": installOutputRoot,
+        "build-output": buildOutputRoot,
         "source-tree": sourceRoot,
       },
     },
@@ -339,10 +366,9 @@ export function createV4StageCapsuleCampaignCheckpointRequest(
       campaignProfileRoot: context.campaignProfile.profileRoot,
     },
     transformation: {
-      interface:
-        context.campaignProfile.kind === "real-buildchain-lifecycle"
-          ? "real-buildchain-lifecycle"
-          : "consumer-equivalent",
+      interface: context.campaignProfile.kind.startsWith("real-")
+        ? context.campaignProfile.kind
+        : "consumer-equivalent",
       providerEffects: false,
       stage: stageId,
       lifecycleEvidenceRoot:

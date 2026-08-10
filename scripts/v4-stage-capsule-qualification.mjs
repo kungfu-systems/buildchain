@@ -7,6 +7,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import {
+  V4ContractFault,
   v4CanonicalBytes,
   v4ContentRoot,
 } from "../packages/core/v4-canonical-contracts.js";
@@ -76,6 +77,9 @@ function contextFromArgs() {
     lifecycleEvidenceRoot: option("lifecycle-evidence-root")
       ? path.resolve(option("lifecycle-evidence-root"))
       : "",
+    consumerRoot: option("consumer-root")
+      ? path.resolve(option("consumer-root"))
+      : repoRoot,
     repoRoot,
     declaration: declaration(),
   };
@@ -87,11 +91,11 @@ function contextFromArgs() {
 }
 
 function prepareContext(context) {
-  if (context.consumer === "buildchain-self-dogfood") {
+  if (context.consumer !== "kungfu-shadow") {
     if (!buildchainConfigModule)
       throw new Error("real lifecycle config loader is unavailable");
     context.lifecycleConfig = buildchainConfigModule.loadBuildchainConfig(
-      context.repoRoot,
+      context.consumerRoot,
     );
   }
   context.campaignProfile = createV4StageCapsuleCampaignProfile(context);
@@ -116,7 +120,7 @@ function seed(context) {
   const campaignStages = v4StageCapsuleCampaignStages(context);
   const retainedStages = campaignStages.slice(
     0,
-    context.consumer === "buildchain-self-dogfood" ? 1 : 2,
+    Math.max(1, campaignStages.indexOf("verify")),
   );
   const failedStage = "verify";
   const targetStage = campaignStages.at(-1);
@@ -244,16 +248,20 @@ function emitMissing(context, state, store, stageId) {
 function resume(context) {
   prepareContext(context);
   const state = readJson(path.join(context.workRoot, "campaign-state.json"));
-  for (const name of [
-    "consumer",
-    "platform",
-    "runtimeRef",
-    "consumerSourceRevision",
+  for (const [name, code] of [
+    ["consumer", "stage-capsule-campaign-consumer-drift"],
+    ["platform", "stage-capsule-campaign-platform-drift"],
+    ["runtimeRef", "stage-capsule-campaign-runtime-ref-drift"],
+    ["consumerSourceRevision", "stage-capsule-campaign-source-revision-drift"],
   ])
     if (state[name] !== context[name])
-      throw new Error(`campaign ${name} mismatch`);
+      throw new V4ContractFault(code, `$/campaign/${name}`, `${name} differs`);
   if (state.campaignProfileRoot !== context.campaignProfile.profileRoot)
-    throw new Error("campaign lifecycle profile mismatch");
+    throw new V4ContractFault(
+      "stage-capsule-campaign-lifecycle-profile-drift",
+      "$/campaign/campaignProfileRoot",
+      "campaign lifecycle profile differs",
+    );
   const store = new V4StageCapsuleLocalStore(
     path.join(context.workRoot, "retained-store"),
   );
@@ -417,6 +425,9 @@ function child(action, context) {
       ...(context.lifecycleEvidenceRoot
         ? ["--lifecycle-evidence-root", context.lifecycleEvidenceRoot]
         : []),
+      ...(context.consumerRoot
+        ? ["--consumer-root", context.consumerRoot]
+        : []),
     ],
     { cwd: repoRoot, encoding: "utf8" },
   );
@@ -470,7 +481,16 @@ function aggregate() {
         "en",
       ),
     );
-  const qualification = qualifyV4StageCapsuleCampaign(reports);
+  const expectedConsumers = option("expected-consumers")
+    ? option("expected-consumers")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    : undefined;
+  const qualification = qualifyV4StageCapsuleCampaign(
+    reports,
+    expectedConsumers,
+  );
   const output = option("output");
   if (output) writeJson(path.resolve(output), qualification);
   process.stdout.write(v4CanonicalBytes(qualification));
@@ -489,7 +509,7 @@ function reconcile() {
 
 const action = process.argv[2] || "";
 const buildchainConfigModule =
-  option("consumer") === "buildchain-self-dogfood"
+  option("consumer") && option("consumer") !== "kungfu-shadow"
     ? await import("../packages/core/buildchain-config.js")
     : null;
 if (action === "seed") seed(contextFromArgs());

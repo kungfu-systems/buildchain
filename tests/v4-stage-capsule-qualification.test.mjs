@@ -25,9 +25,13 @@ function temp(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
 }
 
-function lifecycleEvidence(platform, sourceRevision) {
+function lifecycleEvidence(
+  platform,
+  sourceRevision,
+  stages = ["install", "verify"],
+) {
   const evidenceRoot = temp(`real-lifecycle-${platform}`);
-  for (const [index, stage] of ["install", "verify"].entries()) {
+  for (const [index, stage] of stages.entries()) {
     const artifactName = `buildchain-${stage}-${platform}`;
     const summary = {
       contract: "kungfu-buildchain-artifact-summary",
@@ -50,10 +54,7 @@ function lifecycleEvidence(platform, sourceRevision) {
       summary,
       files: [
         {
-          path:
-            stage === "install"
-              ? "node_modules/.modules.yaml"
-              : "dist/site/buildchain-contract.json",
+          path: stage === "install" ? "node_modules/.modules.yaml" : "dist",
           size: index + 1,
           sha256: String(index + 1).repeat(64),
         },
@@ -69,6 +70,76 @@ function lifecycleEvidence(platform, sourceRevision) {
     );
   }
   return evidenceRoot;
+}
+
+function externalConsumer() {
+  const consumerRoot = temp("external-consumer");
+  fs.mkdirSync(path.join(consumerRoot, ".buildchain"));
+  fs.writeFileSync(
+    path.join(consumerRoot, ".buildchain/buildchain.toml"),
+    `schema = 1
+
+[lifecycle.install]
+command = "npm ci"
+
+[lifecycle.build]
+command = "npm run build"
+
+[lifecycle.verify]
+command = "npm run check"
+
+[lifecycle.publish]
+command = "npm publish"
+`,
+  );
+  return consumerRoot;
+}
+
+function externalCampaign(platform, consumerRoot = externalConsumer()) {
+  const workRoot = temp(`qualification-agent-hub-demo-${platform}`);
+  const evidenceRoot = lifecycleEvidence(platform, runtimeRef, [
+    "install",
+    "build",
+    "verify",
+  ]);
+  const args = [
+    "scripts/v4-stage-capsule-qualification.mjs",
+    "campaign",
+    "--work-root",
+    workRoot,
+    "--platform",
+    platform,
+    "--consumer",
+    "agent-hub-demo",
+    "--runtime-ref",
+    runtimeRef,
+    "--consumer-source-revision",
+    runtimeRef,
+    "--consumer-root",
+    consumerRoot,
+    "--lifecycle-evidence-root",
+    evidenceRoot,
+  ];
+  const result = spawnSync(process.execPath, args, {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  return {
+    args,
+    consumerRoot,
+    evidenceRoot,
+    workRoot,
+    report: JSON.parse(result.stdout),
+  };
+}
+
+let externalCampaignCache = null;
+function allExternalCampaigns() {
+  externalCampaignCache ??= platforms.map((platform) =>
+    externalCampaign(platform),
+  );
+  return externalCampaignCache;
 }
 
 function campaign(platform, consumer) {
@@ -193,6 +264,97 @@ test("six reports qualify Buildchain and Kungfu on three real runner identities"
   assert.deepEqual(
     result.platforms.map(({ platform }) => platform),
     [...platforms, ...platforms],
+  );
+});
+
+test("a generic external consumer qualifies its real three-stage lifecycle", () => {
+  const reports = allExternalCampaigns().map(({ report }) => report);
+  for (const report of reports) {
+    assert.equal(validateV4StageCapsulePlatformQualification(report), report);
+    assert.deepEqual(report.resumePlan.requiredRestores, ["build"]);
+    assert.deepEqual(report.resumePlan.requiredStages, ["verify"]);
+    assert.deepEqual(report.freshBuild, report.resumedBuild);
+    assert.equal(report.metrics.fullStageCount, 3);
+    assert.equal(report.metrics.retainedStageCount, 2);
+    assert.equal(report.metrics.rebuiltStageCount, 1);
+  }
+  const qualification = qualifyV4StageCapsuleCampaign(reports, [
+    "agent-hub-demo",
+  ]);
+  assert.equal(qualification.qualified, true);
+  assert.deepEqual(qualification.consumers, ["agent-hub-demo"]);
+  assert.equal(qualification.productionAuthority, "v3");
+  assert.equal(qualification.productionWrites, false);
+});
+
+test("external lifecycle and clean-process binding drift fail closed with typed diagnostics", () => {
+  for (const [mutate, expected] of [
+    [
+      (manifest) => (manifest.lifecycle.commandSource = "workflow-input"),
+      "invalid-stage-capsule-lifecycle-evidence",
+    ],
+    [
+      (manifest) => (manifest.git.sha = "0".repeat(40)),
+      "stage-capsule-lifecycle-source-mismatch",
+    ],
+    [
+      (manifest) => (manifest.files = []),
+      "invalid-stage-capsule-lifecycle-output",
+    ],
+    [
+      (manifest) => (manifest.summary.totalBytes += 1),
+      "stage-capsule-lifecycle-summary-mismatch",
+    ],
+  ]) {
+    const consumerRoot = externalConsumer();
+    const evidenceRoot = lifecycleEvidence("linux-x64", runtimeRef, [
+      "install",
+      "build",
+      "verify",
+    ]);
+    const manifestPath = path.join(evidenceRoot, "build-manifest.json");
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    mutate(manifest);
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    const result = spawnSync(
+      process.execPath,
+      [
+        "scripts/v4-stage-capsule-qualification.mjs",
+        "campaign",
+        "--work-root",
+        temp("external-drift"),
+        "--platform",
+        "linux-x64",
+        "--consumer",
+        "agent-hub-demo",
+        "--runtime-ref",
+        runtimeRef,
+        "--consumer-source-revision",
+        runtimeRef,
+        "--consumer-root",
+        consumerRoot,
+        "--lifecycle-evidence-root",
+        evidenceRoot,
+      ],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(expected, "u"));
+  }
+
+  const seeded = externalCampaign("linux-x64");
+  const resumeArgs = seeded.args.slice();
+  resumeArgs[1] = "resume";
+  const runtimeIndex = resumeArgs.indexOf("--runtime-ref") + 1;
+  resumeArgs[runtimeIndex] = "f".repeat(40);
+  const runtimeDrift = spawnSync(process.execPath, resumeArgs, {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.notEqual(runtimeDrift.status, 0);
+  assert.match(
+    runtimeDrift.stderr,
+    /stage-capsule-campaign-runtime-ref-drift/u,
   );
 });
 
@@ -347,9 +509,24 @@ test("architecture freezes the shadow consumer, rollback, and authority ceilings
     "buildchain-ref",
   );
   assert.equal(architecture.kungfuShadow.committedRefChanged, false);
+  assert.equal(
+    architecture.externalConsumerCanary.workflow,
+    ".github/workflows/v4-stage-capsule-canary.yml",
+  );
+  assert.deepEqual(architecture.externalConsumerCanary.executableStages, [
+    "install",
+    "build",
+    "verify",
+  ]);
+  assert.equal(
+    architecture.externalConsumerCanary.excludedStages.publish,
+    "provider-mutation",
+  );
   assert.equal(architecture.authority.providerEffects, false);
   assert.equal(architecture.authority.productionWrites, false);
   assert.equal(architecture.authority.productionReuse, false);
+  assert.equal(architecture.authority.aws, false);
+  assert.equal(architecture.authority.selfHostedRunners, false);
   assert.equal(architecture.budgets.providerSdkImports, 0);
   assert.equal(architecture.budgets.productionWriteAuthorityChanges, 0);
 
@@ -366,4 +543,28 @@ test("architecture freezes the shadow consumer, rollback, and authority ceilings
     /fetch-depth: \$\{\{ matrix\.consumer == 'buildchain-self-dogfood' && '0' \|\| '1' \}\}/u,
   );
   assert.match(qualificationWorkflow, /persist-credentials: false/u);
+
+  const canaryWorkflow = fs.readFileSync(
+    path.join(root, ".github/workflows/v4-stage-capsule-canary.yml"),
+    "utf8",
+  );
+  assert.match(canaryWorkflow, /workflow_call:/u);
+  assert.match(
+    canaryWorkflow,
+    /BUILDCHAIN_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/u,
+  );
+  assert.match(
+    canaryWorkflow,
+    /BUILDCHAIN_RUNTIME_SHA: \$\{\{ steps\.runtime\.outputs\.sha \}\}/u,
+  );
+  assert.match(canaryWorkflow, /CONSUMER_SOURCE_SHA: \$\{\{ github\.sha \}\}/u);
+  assert.match(canaryWorkflow, /--runtime-ref "\$\{BUILDCHAIN_RUNTIME_SHA\}"/u);
+  assert.match(
+    canaryWorkflow,
+    /--consumer-source-revision "\$\{CONSUMER_SOURCE_SHA\}"/u,
+  );
+  for (const stage of ["install", "build", "verify"])
+    assert.match(canaryWorkflow, new RegExp(`lifecycle run ${stage}`, "u"));
+  assert.doesNotMatch(canaryWorkflow, /lifecycle run publish/u);
+  assert.doesNotMatch(canaryWorkflow, /self-hosted|aws/i);
 });

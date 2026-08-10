@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-10
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-09
+  generated_at: 2026-08-10
   invisible_context: not asserted
 ---
 
@@ -150,13 +150,32 @@ campaign: successful `install` and `build` Capsules precede the late `verify`
 failure, then the clean resume restores `build` and rebuilds `verify` plus
 `package`. Both profiles remain under the same closed qualification root.
 
+External consumers use the Buildchain-owned reusable workflow
+`.github/workflows/v4-stage-capsule-canary.yml` at an exact commit. The called
+workflow checks out that same commit as its runtime, reads the consumer's
+tracked `.buildchain/buildchain.toml`, and executes only `install`, `build`,
+and `verify` on GitHub-hosted Linux x64, macOS arm64, and Windows x64 runners.
+Each stage binds its declared command, dependency edge, exact consumer source,
+platform, lifecycle manifest, summary, and real output roots into the campaign
+profile. `publish` is explicitly classified as a provider mutation and is not
+executed. The caller supplies only its stable consumer name and the real output
+paths; it does not copy the campaign orchestration.
+
+The external seed retains `install` and `build` before an intentional late
+`verify` failure. A clean process reads the retained store, restores only the
+exact `build` root, rebuilds `verify`, and compares the result with the fresh
+three-stage aggregate. Runtime-ref, source, command/profile, manifest, summary,
+output, platform, and Capsule-root drift all stop with typed diagnostics.
+
 Qualification compares the declared artifact-manifest and aggregate content
 roots from a fresh full build with the roots assembled from retained and rebuilt
 Capsules. It fails closed on missing, expired, corrupt, partial, cross-platform,
 cross-stage, source/toolchain/policy drift, stale-writer, and root-mismatch
 campaigns. The rooted report records retained bytes, restore overhead, planner
-accuracy, false reuse, and false rebuild counts. All six consumer/platform
-reports are required before one qualification root is emitted.
+accuracy, false reuse, and false rebuild counts. The protected self-dogfood
+campaign requires all six Buildchain/Kungfu reports. An external invocation
+instead declares one exact consumer and requires its three platform reports
+before emitting a separate qualification root.
 
 The post-merge reconciliation interface accepts that qualification root only
 with all five Wave 2 children in native terminal state, exact source and

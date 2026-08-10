@@ -134,12 +134,7 @@ function validateAuthorityAndRuns(value) {
       "$",
       "qualification cannot move v3 authority or enable effects",
     );
-  if (!CONSUMERS.includes(value.consumer))
-    fault(
-      "invalid-stage-capsule-qualification-consumer",
-      "$/consumer",
-      "unknown consumer",
-    );
+  token(value.consumer, "$/consumer");
   if (!PLATFORMS.includes(value.platform))
     fault(
       "invalid-stage-capsule-qualification-platform",
@@ -301,20 +296,36 @@ export function validateV4StageCapsulePlatformQualification(value) {
   return value;
 }
 
-export function qualifyV4StageCapsuleCampaign(platformEvidence) {
+export function qualifyV4StageCapsuleCampaign(
+  platformEvidence,
+  expectedConsumers = CONSUMERS,
+) {
+  if (
+    !Array.isArray(expectedConsumers) ||
+    expectedConsumers.length === 0 ||
+    new Set(expectedConsumers).size !== expectedConsumers.length
+  )
+    fault(
+      "invalid-stage-capsule-qualification-consumers",
+      "$/expectedConsumers",
+      "one or more unique consumers are required",
+    );
+  const requiredConsumers = [...expectedConsumers].sort();
+  for (const consumer of requiredConsumers)
+    token(consumer, "$/expectedConsumers");
   if (
     !Array.isArray(platformEvidence) ||
-    platformEvidence.length !== PLATFORMS.length * CONSUMERS.length
+    platformEvidence.length !== PLATFORMS.length * requiredConsumers.length
   )
     fault(
       "incomplete-stage-capsule-platform-campaign",
       "$/platformEvidence",
-      "both consumers must qualify on all three platforms",
+      "every expected consumer must qualify on all three platforms",
     );
   const evidence = platformEvidence.map((entry) =>
     structuredClone(validateV4StageCapsulePlatformQualification(entry)),
   );
-  const expectedPairs = CONSUMERS.flatMap((consumer) =>
+  const expectedPairs = requiredConsumers.flatMap((consumer) =>
     PLATFORMS.map((platform) => `${consumer}/${platform}`),
   );
   if (
@@ -331,11 +342,11 @@ export function qualifyV4StageCapsuleCampaign(platformEvidence) {
   const consumers = [
     ...new Set(evidence.map(({ consumer }) => consumer)),
   ].sort();
-  if (JSON.stringify(consumers) !== JSON.stringify(CONSUMERS))
+  if (JSON.stringify(consumers) !== JSON.stringify(requiredConsumers))
     fault(
       "incomplete-stage-capsule-consumer-campaign",
       "$/platformEvidence",
-      "Buildchain self-dogfood and Kungfu shadow evidence are required",
+      "the exact expected consumer set is required",
     );
   const body = {
     schema: V4_STAGE_CAPSULE_QUALIFICATION_CONTRACT,
