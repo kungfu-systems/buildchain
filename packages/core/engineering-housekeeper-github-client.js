@@ -163,6 +163,13 @@ export class GitHubHousekeeperClient {
     );
   }
 
+  async listClosedPullRequests(repository) {
+    const coordinate = normalizeRepository(repository);
+    return this.paginate(
+      `/repos/${coordinate.owner}/${coordinate.repo}/pulls?state=closed&sort=updated&direction=asc&per_page=100`,
+    );
+  }
+
   async listPullRequestsForCommit(repository, commitOid) {
     const coordinate = normalizeRepository(repository);
     return this.paginate(

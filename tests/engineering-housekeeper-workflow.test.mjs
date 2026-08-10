@@ -63,6 +63,10 @@ class FakeClient {
       .map(clone);
   }
 
+  async listClosedPullRequests() {
+    return [];
+  }
+
   async getBranch(_repository, name) {
     return clone(this.branches.get(name));
   }
