@@ -32,6 +32,14 @@ The reusable entrypoint is:
 uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
 ```
 
+The v4 surface is a traceable forward-port of protected v3 merge
+`c9d53c69e90393b2178ad7cdbf00f17e403e17f9` and exact source
+`518990c4118a12562eb9847cb2e1b704983909a0`. It preserves the same `v1`
+contract, temporary-family allowlist, provider adapter, mutation fences, and
+evidence roots. The v4 manifest records that TypeScript remains the sole
+legacy-authoritative writer; the forward-port does not create another contract
+or provider authority. Existing v3 callers retain their original interface.
+
 ## Report mode
 
 `report` is the default. The caller grants only read permissions and receives

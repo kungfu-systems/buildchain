@@ -240,6 +240,10 @@ test("reusable workflow exposes typed evidence outputs and separated job permiss
   assert.match(workflow, /temporary-branch-patterns:/);
   assert.match(
     workflow,
+    /buildchain-ref:\n[\s\S]*?type: string\n[\s\S]*?default: v4/,
+  );
+  assert.match(
+    workflow,
     /feature\/\*\*,fix\/\*\*,chore\/\*\*,docs\/\*\*,ci\/\*\*,refactor\/\*\*/,
   );
   assert.match(
