@@ -77,11 +77,11 @@ on:
       housekeeper_token:
         description: "Optional caller-owned token. Defaults to the caller-scoped github.token."
         required: false
-      github_app_id:
-        description: "Optional caller-owned GitHub App id; must be paired with github_app_private_key."
+      housekeeper_app_id:
+        description: "Optional caller-owned GitHub App id; must be paired with housekeeper_app_private_key."
         required: false
-      github_app_private_key:
-        description: "Optional caller-owned GitHub App private key; must be paired with github_app_id."
+      housekeeper_app_private_key:
+        description: "Optional caller-owned GitHub App private key; must be paired with housekeeper_app_id."
         required: false
     outputs:
       plan-root:
@@ -136,8 +136,8 @@ jobs:
       report-artifact: ${{ inputs.artifact-prefix }}-report-${{ github.run_id }}
       receipt-artifact: ${{ inputs.artifact-prefix }}-receipt-${{ github.run_id }}
     env:
-      HOUSEKEEPER_APP_ID: ${{ secrets.github_app_id }}
-      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.github_app_private_key }}
+      HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
+      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
       - name: Resolve target repository
         id: target
@@ -165,7 +165,7 @@ jobs:
           set -euo pipefail
           if [[ -n "${HOUSEKEEPER_APP_ID}" && -z "${HOUSEKEEPER_APP_PRIVATE_KEY}" ]] || \
              [[ -z "${HOUSEKEEPER_APP_ID}" && -n "${HOUSEKEEPER_APP_PRIVATE_KEY}" ]]; then
-            echo "::error::github_app_id and github_app_private_key must be provided together"
+            echo "::error::housekeeper_app_id and housekeeper_app_private_key must be provided together"
             exit 1
           fi
 
@@ -174,8 +174,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3.1.1
         with:
-          app-id: ${{ secrets.github_app_id }}
-          private-key: ${{ secrets.github_app_private_key }}
+          app-id: ${{ secrets.housekeeper_app_id }}
+          private-key: ${{ secrets.housekeeper_app_private_key }}
           owner: ${{ steps.target.outputs.owner }}
           repositories: ${{ steps.target.outputs.name }}
 
@@ -243,8 +243,8 @@ jobs:
     outputs:
       receipt-root: ${{ steps.housekeeper.outputs.receipt-root }}
     env:
-      HOUSEKEEPER_APP_ID: ${{ secrets.github_app_id }}
-      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.github_app_private_key }}
+      HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
+      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
       - name: Resolve target repository
         id: target
@@ -265,8 +265,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3.1.1
         with:
-          app-id: ${{ secrets.github_app_id }}
-          private-key: ${{ secrets.github_app_private_key }}
+          app-id: ${{ secrets.housekeeper_app_id }}
+          private-key: ${{ secrets.housekeeper_app_private_key }}
           owner: ${{ steps.target.outputs.owner }}
           repositories: ${{ steps.target.outputs.name }}
 
@@ -323,8 +323,8 @@ jobs:
     outputs:
       receipt-root: ${{ steps.housekeeper.outputs.receipt-root }}
     env:
-      HOUSEKEEPER_APP_ID: ${{ secrets.github_app_id }}
-      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.github_app_private_key }}
+      HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
+      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
       - name: Resolve target repository
         id: target
@@ -345,8 +345,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3.1.1
         with:
-          app-id: ${{ secrets.github_app_id }}
-          private-key: ${{ secrets.github_app_private_key }}
+          app-id: ${{ secrets.housekeeper_app_id }}
+          private-key: ${{ secrets.housekeeper_app_private_key }}
           owner: ${{ steps.target.outputs.owner }}
           repositories: ${{ steps.target.outputs.name }}
 

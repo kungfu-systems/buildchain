@@ -2023,8 +2023,8 @@
       ],
       "inputCount": 14,
       "secrets": [
-        "github_app_id",
-        "github_app_private_key",
+        "housekeeper_app_id",
+        "housekeeper_app_private_key",
         "housekeeper_token"
       ],
       "secretCount": 3,
