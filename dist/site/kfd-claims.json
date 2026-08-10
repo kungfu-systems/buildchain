@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e4ae016337ad1efdb5f835e8f0dc77665b1fff92fc616d53fa2824558ad6ddeb",
+    "sha256": "658a8dc3347e45c09bccc9f112d5c2091f7b7cc1ddab3bb02400da85a18f914e",
     "summary": {
       "cliCommandCount": 113,
-      "workflowCount": 64,
+      "workflowCount": 65,
       "actionCount": 6,
       "sitePageCount": 70,
       "docCommandRefCount": 897,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e4ae016337ad1efdb5f835e8f0dc77665b1fff92fc616d53fa2824558ad6ddeb",
+      "sha256": "658a8dc3347e45c09bccc9f112d5c2091f7b7cc1ddab3bb02400da85a18f914e",
       "summary": {
         "cliCommandCount": 113,
-        "workflowCount": 64,
+        "workflowCount": 65,
         "actionCount": 6,
         "sitePageCount": 70,
         "docCommandRefCount": 897,
@@ -5147,6 +5147,26 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:v4-stage-capsule-canary",
+          "name": "workflow:v4-stage-capsule-canary",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-stage-capsule-canary.yml",
+          "evidencePath": ".github/workflows/v4-stage-capsule-canary.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 5,
+          "inputs": [
+            "build-artifact-path",
+            "consumer",
+            "install-artifact-path",
+            "node-version",
+            "verify-artifact-path"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:verify",
           "name": "workflow:verify",
           "kind": "workflow",
@@ -6439,6 +6459,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 408
+    "publicSurfaceCount": 409
   }
 }

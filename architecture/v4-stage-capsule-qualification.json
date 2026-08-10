@@ -43,6 +43,24 @@
       "output-roots"
     ]
   },
+  "externalConsumerCanary": {
+    "workflow": ".github/workflows/v4-stage-capsule-canary.yml",
+    "invocation": "workflow_call",
+    "runtimeBinding": "job.workflow_sha",
+    "consumerSourceBinding": "github.sha",
+    "configPath": ".buildchain/buildchain.toml",
+    "executableStages": ["install", "build", "verify"],
+    "dependencies": {
+      "install": [],
+      "build": ["install"],
+      "verify": ["build"]
+    },
+    "excludedStages": {
+      "publish": "provider-mutation"
+    },
+    "runners": ["ubuntu-24.04", "macos-15", "windows-2025"],
+    "consumerOrchestrationCopied": false
+  },
   "kungfuShadow": {
     "sourceRevision": "9ca8f445fd5d7921f480c47b059addb2f84f40db",
     "dispatchWorkflow": ".github/workflows/build.yml",
@@ -83,6 +101,8 @@
     "productionReuse": false,
     "releaseEffects": false,
     "credentials": false,
+    "aws": false,
+    "selfHostedRunners": false,
     "ambientEnvironment": false,
     "ambientClock": false,
     "v3BehaviorChange": false
@@ -93,6 +113,7 @@
     "providerSdkImports": 0,
     "productionStageSkippingChanges": 0,
     "productionWriteAuthorityChanges": 0,
-    "v3ConsumerBehaviorChanges": 0
+    "v3ConsumerBehaviorChanges": 0,
+    "externalConsumerCanaryWorkflows": 1
   }
 }
