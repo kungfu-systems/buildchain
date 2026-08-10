@@ -47,6 +47,7 @@ class FakeGitHubClient {
     ancestorPairs,
     associatedPullRequests,
     defaultBranch = targetBranch,
+    comparisonDelayMs = 0,
   } = {}) {
     this.branches = new Map(
       (
@@ -65,6 +66,9 @@ class FakeGitHubClient {
     this.associatedLookups = [];
     this.closedPullRequestLookups = 0;
     this.comparisons = [];
+    this.comparisonDelayMs = comparisonDelayMs;
+    this.activeComparisons = 0;
+    this.maxActiveComparisons = 0;
     this.defaultBranch = defaultBranch;
     this.deleted = [];
     this.labelsAdded = [];
@@ -114,15 +118,29 @@ class FakeGitHubClient {
 
   async compareCommits(_repository, baseOid, targetOid) {
     this.comparisons.push(`${baseOid}:${targetOid}`);
-    return {
-      merge_base_commit: {
-        sha:
-          this.ancestors.has(baseOid) ||
-          this.ancestorPairs.has(`${baseOid}:${targetOid}`)
-            ? baseOid
-            : oid("f"),
-      },
-    };
+    this.activeComparisons += 1;
+    this.maxActiveComparisons = Math.max(
+      this.maxActiveComparisons,
+      this.activeComparisons,
+    );
+    try {
+      if (this.comparisonDelayMs > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, this.comparisonDelayMs),
+        );
+      }
+      return {
+        merge_base_commit: {
+          sha:
+            this.ancestors.has(baseOid) ||
+            this.ancestorPairs.has(`${baseOid}:${targetOid}`)
+              ? baseOid
+              : oid("f"),
+        },
+      };
+    } finally {
+      this.activeComparisons -= 1;
+    }
   }
 
   async deleteBranch(_repository, name) {
@@ -335,6 +353,26 @@ test("empty target discovers every protected mainline but mutates only allowlist
   assert.equal(client.closedPullRequestLookups, 1);
   assert.deepEqual(client.associatedLookups, []);
   assert.deepEqual(client.comparisons, [`${oid("a")}:${oid("e")}`]);
+});
+
+test("repository-wide ancestry inventory uses bounded concurrency and stable output order", async () => {
+  const featureOids = Array.from({ length: 20 }, (_, index) =>
+    String(index + 1).padStart(40, "0"),
+  );
+  const client = new FakeGitHubClient({
+    branches: [
+      branch(targetBranch, oid("b")),
+      ...featureOids.map((sha, index) => branch(`feature/${index}`, sha)),
+    ],
+    ancestors: featureOids,
+    comparisonDelayMs: 5,
+  });
+  const plan = await planWith(client, { targetBranch: "" });
+  assert.equal(client.maxActiveComparisons, 8);
+  assert.deepEqual(
+    plan.actions.map((entry) => entry.name),
+    Array.from({ length: 20 }, (_, index) => `feature/${index}`).sort(),
+  );
 });
 
 test("run defaults to dry-run and never mutates the repository", async () => {

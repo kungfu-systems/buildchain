@@ -59,10 +59,12 @@ plan root.
 To keep complete-repository patrols within normal GitHub API budgets, the
 engine paginates closed pull requests once, indexes merged associations by the
 exact source branch and OID, and then prioritizes the matching base without a
-per-branch association request. When no such association exists, it checks the
-primary target and protected `dev/**` mainlines only. It never treats a pull
-request association as proof by itself: the selected source OID must still be
-an ancestor of the selected mainline OID. A direct merge found only on another
+per-branch association request. Exact ancestry comparisons run with a fixed
+maximum of eight concurrent requests while preserving deterministic branch
+ordering. When no such association exists, the engine checks the primary
+target and protected `dev/**` mainlines only. It never treats a pull request
+association as proof by itself: the selected source OID must still be an
+ancestor of the selected mainline OID. A direct merge found only on another
 release family is retained unless its merged pull request supplies that exact
 base.
 
