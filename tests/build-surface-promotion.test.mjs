@@ -505,6 +505,7 @@ test("self-release candidate materialization applies complete declared version s
 
 [version]
 required = true
+derived_files = ["derived-audit.json"]
 
 [[version.files]]
 type = "json"
@@ -518,6 +519,9 @@ key = "product.version"
 
 [lifecycle.version-state]
 command = "node scripts/derive.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
 `,
   );
   fs.writeFileSync(
@@ -529,12 +533,27 @@ command = "node scripts/derive.mjs"
     `${JSON.stringify({ product: { version: "1.0.0" }, source: "" }, null, 2)}\n`,
   );
   fs.writeFileSync(
+    path.join(cwd, "derived-audit.json"),
+    `${JSON.stringify({ source: "" }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
     path.join(cwd, "scripts/derive.mjs"),
     `import fs from "node:fs";
 const generated = JSON.parse(fs.readFileSync("generated.json", "utf8"));
 generated.product.version = process.env.BUILDCHAIN_VERSION;
 generated.source = process.env.BUILDCHAIN_SOURCE_SHA;
 fs.writeFileSync("generated.json", JSON.stringify(generated, null, 2) + "\\n");
+fs.writeFileSync("derived-audit.json", JSON.stringify({
+  source: process.env.BUILDCHAIN_SOURCE_SHA
+}, null, 2) + "\\n");
+`,
+  );
+  fs.writeFileSync(
+    path.join(cwd, "scripts/verify.mjs"),
+    `import fs from "node:fs";
+const generated = JSON.parse(fs.readFileSync("generated.json", "utf8"));
+const audit = JSON.parse(fs.readFileSync("derived-audit.json", "utf8"));
+if (generated.source !== audit.source) process.exit(1);
 `,
   );
   for (const args of [
@@ -558,15 +577,23 @@ fs.writeFileSync("generated.json", JSON.stringify(generated, null, 2) + "\\n");
       generatedAt: "2026-08-07T00:00:00.000Z",
     });
     assert.equal(result.version, "1.1.0-alpha.0");
-    assert.deepEqual(result.files, ["generated.json", "package.json"]);
+    assert.deepEqual(result.files, ["derived-audit.json", "generated.json", "package.json"]);
     assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.1.0-alpha.0");
     assert.deepEqual(
       JSON.parse(fs.readFileSync(path.join(cwd, "generated.json"), "utf8")),
       { product: { version: "1.1.0-alpha.0" }, source: sourceSha },
     );
+    assert.deepEqual(
+      JSON.parse(fs.readFileSync(path.join(cwd, "derived-audit.json"), "utf8")),
+      { source: sourceSha },
+    );
     const status = spawnSync("git", ["status", "--short"], { cwd, encoding: "utf8" });
     assert.equal(status.status, 0, status.stderr);
-    assert.deepEqual(status.stdout.trimEnd().split("\n").sort(), [" M generated.json", " M package.json"]);
+    assert.deepEqual(status.stdout.trimEnd().split("\n").sort(), [
+      " M derived-audit.json",
+      " M generated.json",
+      " M package.json",
+    ]);
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }

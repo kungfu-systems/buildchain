@@ -332,7 +332,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:9f909694fb8df1e1369e5b424d198b02947f2207415e70d301ea81f999b932f9",
+      "digest": "sha256:ed843753964193ecb59610a54f0f23d76578228ebe6d31d1d6edce526729910c",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -389,7 +389,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:4b7a8efe1d22751ded069f46a23490db70cda9e9e14641acab600ab781245b19",
+      "digest": "sha256:9fdab92b63eae0085d460a4ec78511fbb63999a311cd7693c669705bd9897eb2",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -475,7 +475,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:e03d5beb2a2e241339426e0389dfcc4ada0c4476b9990cce1d51358da8bdf86d",
+      "digest": "sha256:b37d4de1f1cf9155c0e3f42c8c20a0280a263f50173eb0cad2c5f1961954822e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

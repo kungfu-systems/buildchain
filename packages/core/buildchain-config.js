@@ -1258,11 +1258,6 @@ function validateAnchoredDerivedVersionMaterialConfig(config) {
   if (derivedFiles.length === 0) {
     return;
   }
-  if (config.version.strategy !== "anchored" || config.version.next !== "manual") {
-    throw new Error(
-      "version.derived_files requires version.strategy = \"anchored\" and version.next = \"manual\"",
-    );
-  }
   const versionState =
     config.lifecycle?.["version-state"] ||
     config.lifecycle?.version_state;
