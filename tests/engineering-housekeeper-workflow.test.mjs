@@ -262,8 +262,12 @@ test("reusable workflow exposes typed evidence outputs and separated job permiss
   assert.match(workflow, /github\.token/);
   assert.match(workflow, /housekeeper_token:/);
   assert.match(workflow, /secrets\.housekeeper_token/);
-  assert.doesNotMatch(workflow, /^\s+github_token:/m);
-  assert.doesNotMatch(workflow, /secrets\.github_token/);
+  assert.match(workflow, /housekeeper_app_id:/);
+  assert.match(workflow, /housekeeper_app_private_key:/);
+  assert.match(workflow, /secrets\.housekeeper_app_id/);
+  assert.match(workflow, /secrets\.housekeeper_app_private_key/);
+  assert.doesNotMatch(workflow, /^\s+github_[a-z0-9_]+:/m);
+  assert.doesNotMatch(workflow, /secrets\.github_[a-z0-9_]+/);
   assert.match(workflow, /actions\/create-github-app-token@/);
   assert.match(workflow, /plan-root:/);
   assert.match(workflow, /report-receipt-root:/);
