@@ -359,6 +359,14 @@ retries host release after the minimum allocation and Apple scrub constraints
 allow it. Budget notifications at 80% and 95% invoke the same card-scoped kill
 switch.
 
+The launch controller defaults to `us-east-1` and admits only `us-east-2` as a
+capacity fallback. The regions use mutually exclusive control-plane stacks and
+one shared USD 25 Budget covering Virginia `HostUsage:mac2` and the AWS catalog
+identity `USE2-HostUsage:mac2` for Ohio. A requested region, availability zone,
+stack, and Budget must agree before allocation, and the controller checks both
+regions against one global Host and instance ceiling; no other region is
+accepted.
+
 Qualification requires three trusted exact-source one-job JIT runs on the one
 host, including at least one full run, plus proof that:
 

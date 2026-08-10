@@ -187,10 +187,11 @@ test("macOS stack and bootstrap enforce one-host JIT cleanup and no ingress", ()
   assert.match(stack, /Metrics:\n\s+- UnblendedCost/);
   assert.match(stack, /Key: USAGE_TYPE/);
   assert.match(stack, /HostUsage:mac2/);
+  assert.match(stack, /USE2-HostUsage:mac2/);
   assert.match(stack, /Key: OPERATION/);
   assert.match(stack, /- RunInstances/);
   assert.match(stack, /Key: REGION/);
-  assert.match(stack, /- us-east-1/);
+  assert.match(stack, /- us-east-1\n\s+- us-east-2/);
   assert.doesNotMatch(stack, /CostFilters:|TagKeyValue:/);
   assert.match(
     stack,

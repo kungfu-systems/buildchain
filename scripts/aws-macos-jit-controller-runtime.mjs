@@ -176,7 +176,7 @@ export function assertMacosBudgetLaunchGate(plan, profile) {
       "cloudformation",
       "describe-stacks",
       "--stack-name",
-      "kungfu-buildchain-macos-jit",
+      plan.aws.controlPlaneStack,
       "--output",
       "json",
     ],
@@ -208,11 +208,11 @@ export function assertMacosBudgetLaunchGate(plan, profile) {
     "macOS Budget preflight",
   ).Budget;
   const expectedDimensions = [
-    ["USAGE_TYPE", plan.safety.budget.dimensionFilter.usageType],
-    ["OPERATION", plan.safety.budget.dimensionFilter.operation],
-    ["REGION", plan.safety.budget.dimensionFilter.region],
-  ].map(([Key, value]) => ({
-    Dimensions: { Key, Values: [value], MatchOptions: ["EQUALS"] },
+    ["USAGE_TYPE", plan.safety.budget.dimensionFilter.usageTypes],
+    ["OPERATION", [plan.safety.budget.dimensionFilter.operation]],
+    ["REGION", plan.safety.budget.dimensionFilter.regions],
+  ].map(([Key, Values]) => ({
+    Dimensions: { Key, Values, MatchOptions: ["EQUALS"] },
   }));
   if (
     !budget ||

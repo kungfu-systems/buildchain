@@ -2,6 +2,15 @@ import { digest } from "./aws-runner-burst-core.mjs";
 
 export const AWS_MACOS_JIT_CONTRACT = "kungfu-buildchain-aws-macos-jit/v1";
 
+export const MACOS_EC2_JIT_REGIONS = Object.freeze({
+  "us-east-1": Object.freeze({
+    stack: "kungfu-buildchain-macos-jit",
+  }),
+  "us-east-2": Object.freeze({
+    stack: "kungfu-buildchain-macos-jit-us-east-2",
+  }),
+});
+
 export const MACOS_EC2_JIT = Object.freeze({
   phase: "macos-ec2-jit",
   region: "us-east-1",
@@ -9,7 +18,10 @@ export const MACOS_EC2_JIT = Object.freeze({
   workflowId: "323846928",
   stack: "kungfu-buildchain-macos-jit",
   budgetName: "kungfu-buildchain-macos-jit-actual-spend",
-  budgetUsageType: "HostUsage:mac2",
+  budgetUsageTypes: Object.freeze([
+    "HostUsage:mac2",
+    "USE2-HostUsage:mac2",
+  ]),
   budgetOperation: "RunInstances",
   instanceType: "mac2.metal",
   pricePerHourUsd: 0.65,
@@ -26,6 +38,22 @@ export const MACOS_EC2_JIT = Object.freeze({
   labelPrefix: "aws-us-ec2-macos-jit-",
   jitParameterPrefix: "/kungfu/burst/macos/",
 });
+
+export function macosJitRegionConfig(region) {
+  const resolved = String(region || MACOS_EC2_JIT.region).trim();
+  const config = MACOS_EC2_JIT_REGIONS[resolved];
+  if (!config) {
+    throw new Error(
+      `region must be one of ${Object.keys(MACOS_EC2_JIT_REGIONS).join(", ")}`,
+    );
+  }
+  return {
+    ...config,
+    budgetName: MACOS_EC2_JIT.budgetName,
+    budgetUsageTypes: MACOS_EC2_JIT.budgetUsageTypes,
+    budgetRegions: Object.keys(MACOS_EC2_JIT_REGIONS),
+  };
+}
 
 function exactSha(value, label) {
   const normalized = String(value || "")
