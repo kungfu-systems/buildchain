@@ -74,14 +74,14 @@ on:
         type: string
         default: v4
     secrets:
-      github_token:
+      housekeeper_token:
         description: "Optional caller-owned token. Defaults to the caller-scoped github.token."
         required: false
-      github_app_id:
-        description: "Optional caller-owned GitHub App id; must be paired with github_app_private_key."
+      housekeeper_app_id:
+        description: "Optional caller-owned GitHub App id; must be paired with housekeeper_app_private_key."
         required: false
-      github_app_private_key:
-        description: "Optional caller-owned GitHub App private key; must be paired with github_app_id."
+      housekeeper_app_private_key:
+        description: "Optional caller-owned GitHub App private key; must be paired with housekeeper_app_id."
         required: false
     outputs:
       plan-root:
@@ -136,8 +136,8 @@ jobs:
       report-artifact: ${{ inputs.artifact-prefix }}-report-${{ github.run_id }}
       receipt-artifact: ${{ inputs.artifact-prefix }}-receipt-${{ github.run_id }}
     env:
-      HOUSEKEEPER_APP_ID: ${{ secrets.github_app_id }}
-      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.github_app_private_key }}
+      HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
+      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
       - name: Resolve target repository
         id: target
@@ -165,7 +165,7 @@ jobs:
           set -euo pipefail
           if [[ -n "${HOUSEKEEPER_APP_ID}" && -z "${HOUSEKEEPER_APP_PRIVATE_KEY}" ]] || \
              [[ -z "${HOUSEKEEPER_APP_ID}" && -n "${HOUSEKEEPER_APP_PRIVATE_KEY}" ]]; then
-            echo "::error::github_app_id and github_app_private_key must be provided together"
+            echo "::error::housekeeper_app_id and housekeeper_app_private_key must be provided together"
             exit 1
           fi
 
@@ -174,8 +174,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3.1.1
         with:
-          app-id: ${{ secrets.github_app_id }}
-          private-key: ${{ secrets.github_app_private_key }}
+          app-id: ${{ secrets.housekeeper_app_id }}
+          private-key: ${{ secrets.housekeeper_app_private_key }}
           owner: ${{ steps.target.outputs.owner }}
           repositories: ${{ steps.target.outputs.name }}
 
@@ -194,7 +194,7 @@ jobs:
       - name: Create exact housekeeper plan and report receipt
         id: housekeeper
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.github_token || github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
           HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
           HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
           HOUSEKEEPER_MODE: ${{ inputs.mode }}
@@ -237,14 +237,13 @@ jobs:
     if: ${{ inputs.mode == 'apply' && inputs.apply-enabled && needs.plan.outputs.branch-action-count != '0' }}
     needs: plan
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      pull-requests: read
+    # Mutation authority is inherited from the caller. A report caller passes
+    # only read permissions, while apply callers explicitly pass the write ceiling.
     outputs:
       receipt-root: ${{ steps.housekeeper.outputs.receipt-root }}
     env:
-      HOUSEKEEPER_APP_ID: ${{ secrets.github_app_id }}
-      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.github_app_private_key }}
+      HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
+      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
       - name: Resolve target repository
         id: target
@@ -265,8 +264,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3.1.1
         with:
-          app-id: ${{ secrets.github_app_id }}
-          private-key: ${{ secrets.github_app_private_key }}
+          app-id: ${{ secrets.housekeeper_app_id }}
+          private-key: ${{ secrets.housekeeper_app_private_key }}
           owner: ${{ steps.target.outputs.owner }}
           repositories: ${{ steps.target.outputs.name }}
 
@@ -291,7 +290,7 @@ jobs:
       - name: Revalidate and apply branch actions
         id: housekeeper
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.github_token || github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
           HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
           HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
           HOUSEKEEPER_MODE: apply
@@ -317,14 +316,13 @@ jobs:
     if: ${{ inputs.mode == 'apply' && inputs.apply-enabled && inputs.stale-pull-request-label != '' && needs.plan.outputs.pull-request-action-count != '0' }}
     needs: plan
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      pull-requests: write
+    # See delete-branches: a reusable workflow cannot elevate the report
+    # caller's read-only GITHUB_TOKEN during startup validation.
     outputs:
       receipt-root: ${{ steps.housekeeper.outputs.receipt-root }}
     env:
-      HOUSEKEEPER_APP_ID: ${{ secrets.github_app_id }}
-      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.github_app_private_key }}
+      HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
+      HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
       - name: Resolve target repository
         id: target
@@ -345,8 +343,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3.1.1
         with:
-          app-id: ${{ secrets.github_app_id }}
-          private-key: ${{ secrets.github_app_private_key }}
+          app-id: ${{ secrets.housekeeper_app_id }}
+          private-key: ${{ secrets.housekeeper_app_private_key }}
           owner: ${{ steps.target.outputs.owner }}
           repositories: ${{ steps.target.outputs.name }}
 
@@ -371,7 +369,7 @@ jobs:
       - name: Revalidate and apply pull-request actions
         id: housekeeper
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.github_token || github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
           HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
           HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
           HOUSEKEEPER_MODE: apply

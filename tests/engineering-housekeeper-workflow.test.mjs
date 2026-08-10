@@ -255,15 +255,24 @@ test("reusable workflow exposes typed evidence outputs and separated job permiss
     workflow,
     /name: Inventory and plan[\s\S]*?permissions:\n      contents: read\n      pull-requests: read/,
   );
-  assert.match(
+  assert.doesNotMatch(
     workflow,
-    /name: Apply exact branch deletions[\s\S]*?permissions:\n      contents: write\n      pull-requests: read/,
+    /name: Apply exact branch deletions[\s\S]*?permissions:\n      contents: write/,
   );
-  assert.match(
+  assert.doesNotMatch(
     workflow,
-    /name: Apply stale pull-request labels[\s\S]*?permissions:\n      contents: read\n      pull-requests: write/,
+    /name: Apply stale pull-request labels[\s\S]*?permissions:\n(?:      .*\n)*?      pull-requests: write/,
   );
+  assert.match(workflow, /Mutation authority is inherited from the caller/);
   assert.match(workflow, /github\.token/);
+  assert.match(workflow, /housekeeper_token:/);
+  assert.match(workflow, /secrets\.housekeeper_token/);
+  assert.match(workflow, /housekeeper_app_id:/);
+  assert.match(workflow, /housekeeper_app_private_key:/);
+  assert.match(workflow, /secrets\.housekeeper_app_id/);
+  assert.match(workflow, /secrets\.housekeeper_app_private_key/);
+  assert.doesNotMatch(workflow, /^\s+github_[a-z0-9_]+:/m);
+  assert.doesNotMatch(workflow, /secrets\.github_[a-z0-9_]+/);
   assert.match(workflow, /actions\/create-github-app-token@/);
   assert.match(workflow, /plan-root:/);
   assert.match(workflow, /report-receipt-root:/);
@@ -291,6 +300,14 @@ test("daily, weekly, and monthly callers remain thin reusable workflow policy", 
     assert.match(caller, /mode: apply/);
     assert.match(caller, /apply-enabled: true/);
     assert.match(caller, /github\.event_name == 'schedule'/);
+    assert.match(
+      caller,
+      /report:[\s\S]*?permissions:\n      contents: read\n      pull-requests: read/,
+    );
+    assert.match(
+      caller,
+      /apply:[\s\S]*?permissions:\n      contents: write\n      pull-requests: write/,
+    );
     assert.match(
       caller,
       /stale-pull-request-label: engineering-housekeeper:stale/,
