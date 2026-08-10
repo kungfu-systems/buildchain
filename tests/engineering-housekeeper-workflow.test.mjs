@@ -260,6 +260,10 @@ test("reusable workflow exposes typed evidence outputs and separated job permiss
     /name: Apply stale pull-request labels[\s\S]*?permissions:\n      contents: read\n      pull-requests: write/,
   );
   assert.match(workflow, /github\.token/);
+  assert.match(workflow, /housekeeper_token:/);
+  assert.match(workflow, /secrets\.housekeeper_token/);
+  assert.doesNotMatch(workflow, /^\s+github_token:/m);
+  assert.doesNotMatch(workflow, /secrets\.github_token/);
   assert.match(workflow, /actions\/create-github-app-token@/);
   assert.match(workflow, /plan-root:/);
   assert.match(workflow, /report-receipt-root:/);

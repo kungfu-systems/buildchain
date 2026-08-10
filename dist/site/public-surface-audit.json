@@ -2136,7 +2136,7 @@
         "secrets": [
           "github_app_id",
           "github_app_private_key",
-          "github_token"
+          "housekeeper_token"
         ],
         "secretCount": 3,
         "outputs": [
@@ -7989,7 +7989,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "9412e82a445f63520d6d88f3c6dc57d3bf7c5764e8a8e5c7c169298d6b89b2c0",
+    "workflowRegistryDigest": "f014120e2b4299a43772f709acc908dd85b4fcac1551b8f2b1196f8357020ccf",
     "pageRegistryDigest": "c68639ebcf9ef9f55be091dc93ad9f90b4e1bae552d604824562886958fecaea"
   },
   "comparison": {
