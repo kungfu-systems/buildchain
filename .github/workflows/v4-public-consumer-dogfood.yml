@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   dogfood:
-    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@train/v4/v4.0/public-consumer-self-dogfood
+    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@4178776bf635d0738cb1917e449076d64883218c
     with:
       consumer: buildchain
       node-version: "24"
