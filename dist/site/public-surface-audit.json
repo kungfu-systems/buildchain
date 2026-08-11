@@ -7840,7 +7840,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "8a27fc9ffb5d0567a78c2f0811b77332f1493d07ecbb56cbab411e8ef4eb7b07",
     "workflowRegistryDigest": "a044c60984a7f4ac90c9f4a695fa0372fae7206f5a099f2ade595e029f34105c",
-    "pageRegistryDigest": "44a2388ead07bf9ae025c03a76065682f9835d7d38c43b6379de5f348a81f7bb"
+    "pageRegistryDigest": "7d9146101f56b4c3fa7962e26e2c8fbd92b65df702ebde7fbd52ea5f8bacad7f"
   },
   "comparison": {
     "missingCliRegistry": [],
