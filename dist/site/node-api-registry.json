@@ -25177,7 +25177,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport-contract",
       "export": "./release-passport-contract",
       "target": "./packages/core/release-passport-contract.js",
-      "digest": "sha256:2ab3962c8aea07e0f0e48ff07cb247235a8310344ea750b37e1cf7beb24a8352",
+      "digest": "sha256:028d755bda8e510b0e443eb0c899e4ebfa1d124b4a6d38234dcdf63b6ab4b59b",
       "summary": "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

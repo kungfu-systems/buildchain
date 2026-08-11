@@ -31,6 +31,7 @@ import {
   collectGitHubReleasePassport,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
+import { collectKfdAdopterReleaseEvidence } from "../packages/core/release-passport-contract.js";
 
 const require = createRequire(import.meta.url);
 const kfdRoot = path.dirname(require.resolve("@kungfu-tech/kfd/package.json"));
@@ -390,6 +391,18 @@ test("Buildchain self release emits one exact full-cut adopter authority", async
   assert.equal(validateKfdAdopterManifestGate(gate, { expectedSourceSha: sourceSha, checkedAt }).valid, true);
   assert.equal(validateKfdLegacySupportMatrixProjection(support, { manifest, manifestGate: gate }).valid, true);
   assert.deepEqual(gate.gateResults.map((entry) => entry.standard), ["kfd-4", "kfd-5", "kfd-7"]);
+
+  const releaseEvidence = collectKfdAdopterReleaseEvidence({
+    manifest,
+    gateResults: generated.outputs["kfd-product-gate-jsons"]
+      .split(",")
+      .map((filePath) => JSON.parse(fs.readFileSync(path.resolve(filePath), "utf8"))),
+    comparisonMatrix: support,
+    sourceSha,
+    checkedAt,
+  });
+  assert.equal(releaseEvidence.manifestGate.authority.path, "kfd-adopter-manifest.json");
+  assert.equal(releaseEvidence.legacyProjection.authority.root, gate.authority.manifestRoot);
 });
 
 test("adopter manifest gate fails closed on package, row, gate, and Warrant witness substitution", async () => {
