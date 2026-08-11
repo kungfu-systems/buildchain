@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "c25b7cde87f61911c4ef6c8a6c8567d0679c54e2",
-    "maxHandMaintainedSourceFiles": 300,
-    "maxHandMaintainedSourceLines": 117481,
+    "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
+    "maxHandMaintainedSourceFiles": 301,
+    "maxHandMaintainedSourceLines": 117702,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23346,
-    "latestTransition": "Buildchain v3 self-dogfood composes moving-dev, repair, publication and Warrant authority into one protected replayable campaign.",
-    "rationale": "The self-dogfood campaign is one bounded orchestration file over existing Release Train, Candidate Patrol and Delivery Warrant authorities. It requires exact protected PR, review, merge-group CI, tree, artifact and installed-product readback; deterministic negative cases prove restart replay, duplicate idempotence, invalid authority, unrelated priority and non-preemption. Train/repair and queue transactions are independently bounded helpers. This exact 300-file and 117481-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23477,
+    "latestTransition": "Buildchain v3 self-dogfood composes moving-dev, repair, publication and Warrant authority over the major-independent channel identity.",
+    "rationale": "The latest Dev channel-identity transition remains intact: stable and alpha use one major-independent shell, runtime and lock identity, and the reusable surfaces keep both lanes explicit and fail closed. The self-dogfood campaign adds one bounded orchestration file over the existing Release Train, Candidate Patrol and Delivery Warrant authorities. It requires exact protected PR, review, merge-group CI, tree, artifact and installed-product readback; deterministic negative cases prove restart replay, duplicate idempotence, invalid authority, unrelated priority and non-preemption. Train/repair and queue transactions are independently bounded helpers. This exact 301-file, 117702-source-line and 23477-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -30,6 +30,10 @@
     "packages/core/release-train.js": {
       "maxLines": 740,
       "rationale": "The Release Train contract adds one rooted successor-repair lifecycle with compare-and-swap, frozen origin provenance, exact cut and Dev patch identity, independent candidate-build eligibility, publication gating and deterministic validation; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/buildchain-compatibility-proof.js": {
+      "maxLines": 609,
+      "rationale": "The compatibility authority now performs channel binding before all legacy early exits while retaining rooted additive and breaking-drift proofs in the existing single evaluator module. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/kfd-adopter-manifest.js": {
       "maxLines": 390,
