@@ -1900,17 +1900,24 @@
         "secretCount": 1,
         "outputs": [
           "active-candidate-pr",
+          "candidate-generation",
+          "candidate-tree-sha",
           "controller-state",
+          "cut-root",
+          "drift-root",
           "eligible",
+          "hold-root",
           "next-candidate-sha",
           "prior-state-root",
           "promotion-pr",
           "result-path",
+          "runtime-sha",
           "selected-sha",
           "settlement-action",
-          "source-lock-ref"
+          "source-lock-ref",
+          "train-root"
         ],
-        "outputCount": 10
+        "outputCount": 17
       },
       {
         "id": "dev-delivery-warrant-cancel",
@@ -7996,8 +8003,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "099c0db9c5346942aee236af2cb7b6a7a91fbb2c54ebb17b7a2544a339c00d40",
-    "workflowRegistryDigest": "17130c1d1740c3432ac78024f4b84dbc7ded066b1ea9de7abb89d44399265d24",
-    "pageRegistryDigest": "1727a08908f3e35ff3b6479de8604b6c5adcb8c7367297fd33e40969facf4038"
+    "workflowRegistryDigest": "9742372099b3e98f8352915892cfaaabc0227393ff9468f2133cdc6a46cde346",
+    "pageRegistryDigest": "e3b142a9012a80b0478a48431fd2a3d5290301b667ceb565fb7314ef7f693214"
   },
   "comparison": {
     "missingCliRegistry": [],

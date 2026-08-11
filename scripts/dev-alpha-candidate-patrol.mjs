@@ -9,6 +9,19 @@ import {
   resolveManagedPromotionBaseline,
   resolvePatrolSourceInputs,
 } from "../packages/core/channel-promotion-baseline.js";
+import {
+  cutInitialReleaseTrain,
+  reconcileActiveReleaseTrain,
+  resolveManagedCandidate,
+  runActiveReleaseTrain,
+} from "../packages/core/dev-alpha-active-release-train.js";
+import {
+  blockedCandidateDecision,
+  candidateFromDecision,
+  selectLatestQualifiedSource,
+} from "../packages/core/dev-alpha-candidate-selection.js";
+
+export { reconcileActiveReleaseTrain, selectLatestQualifiedSource };
 
 export const DEV_ALPHA_CANDIDATE_STATE_SCHEMA =
   "kungfu-buildchain-dev-alpha-candidate-state/v1";
@@ -191,6 +204,8 @@ export function managedCandidateFromPullRequest(pullRequest, targetBranch) {
       sourceLockRef: headRef,
       decisionRoot: text(marker.activeCandidate?.decisionRoot),
       nextCandidate: marker.nextCandidate || null,
+      releaseTrain: marker.releaseTrain || null,
+      hold: marker.hold || null,
       state: marker,
     };
   }
@@ -215,6 +230,8 @@ export function managedCandidateFromPullRequest(pullRequest, targetBranch) {
     sourceLockRef: headRef,
     decisionRoot: "",
     nextCandidate: null,
+    releaseTrain: null,
+    hold: null,
     state: null,
   };
 }
@@ -274,6 +291,25 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
         process.env.BUILDCHAIN_CHANNEL_PATROL_EXPECTED_PRIOR_STATE_ROOT,
       "expectedPriorStateRoot",
     ),
+    expectedCutRoot: optionalStateRoot(
+      options.expectedCutRoot ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_EXPECTED_CUT_ROOT,
+      "expectedCutRoot",
+    ),
+    cutCreatedAt: text(
+      options.cutCreatedAt ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_CUT_CREATED_AT,
+    ),
+    requireActiveReleaseTrain: bool(
+      options.requireActiveReleaseTrain ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_REQUIRE_ACTIVE_TRAIN,
+      true,
+    ),
+    buildchainRuntimeSha: optionalExactSha(
+      options.buildchainRuntimeSha ??
+        process.env.BUILDCHAIN_CHANNEL_PATROL_RUNTIME_SHA,
+      "buildchainRuntimeSha",
+    ),
     reactivationAuthorized: bool(
       options.reactivationAuthorized ??
         process.env.BUILDCHAIN_CHANNEL_PATROL_REACTIVATION_AUTHORIZED,
@@ -321,157 +357,6 @@ export function normalizeDevAlphaPatrolOptions(options = {}) {
   };
 }
 
-function latestWorkflowEvidence(runs, workflowPathValue, sourceSha) {
-  const matching = runs
-    .filter(
-      (run) =>
-        run.conclusion !== "cancelled" &&
-        run.path === workflowPathValue &&
-        run.head_sha === sourceSha,
-    )
-    .sort((left, right) => Number(right.id) - Number(left.id));
-  if (matching.length === 0)
-    throw new Error(
-      `missing completed same-SHA workflow run: ${workflowPathValue}`,
-    );
-  const run = matching[0];
-  return {
-    workflowPath: workflowPathValue,
-    workflowName: run.name,
-    runId: run.id,
-    runAttempt: run.run_attempt,
-    headSha: run.head_sha,
-    status: run.status,
-    conclusion: run.conclusion,
-    completedAt: run.updated_at,
-    url: run.html_url,
-  };
-}
-
-function workflowEvidenceIsFreshAndSuccessful(run, { now, maxAgeSeconds }) {
-  const completedAt = Date.parse(run.updated_at);
-  const ageSeconds = (Date.parse(now) - completedAt) / 1000;
-  return (
-    run.status === "completed" &&
-    run.conclusion === "success" &&
-    Number.isFinite(ageSeconds) &&
-    ageSeconds >= 0 &&
-    ageSeconds <= maxAgeSeconds
-  );
-}
-
-function latestRunsBySha(runs, workflowPathValue) {
-  const latest = new Map();
-  for (const run of runs.filter(
-    (row) => row.path === workflowPathValue && row.conclusion !== "cancelled",
-  )) {
-    const current = latest.get(run.head_sha);
-    if (!current || Number(run.id) > Number(current.id))
-      latest.set(run.head_sha, run);
-  }
-  return latest;
-}
-
-export function selectLatestQualifiedSource({
-  sourceHistory,
-  workflowRunsByPath,
-  requiredWorkflowPaths,
-  now,
-  maxAgeSeconds,
-}) {
-  const latestByPath = new Map(
-    requiredWorkflowPaths.map((workflow) => [
-      workflow,
-      latestRunsBySha(workflowRunsByPath.get(workflow) || [], workflow),
-    ]),
-  );
-  for (let index = 0; index < sourceHistory.length; index += 1) {
-    const sourceSha = sourceHistory[index];
-    const rows = requiredWorkflowPaths.map((workflow) =>
-      latestByPath.get(workflow).get(sourceSha),
-    );
-    if (
-      rows.every((run) =>
-        workflowEvidenceIsFreshAndSuccessful(run || {}, { now, maxAgeSeconds }),
-      )
-    ) {
-      return {
-        sourceSha,
-        skippedNewerCommitCount: index,
-        workflowEvidence: requiredWorkflowPaths.map((workflow) =>
-          latestWorkflowEvidence(
-            workflowRunsByPath.get(workflow) || [],
-            workflow,
-            sourceSha,
-          ),
-        ),
-      };
-    }
-  }
-  const staleSuccessfulPair = sourceHistory.some((sourceSha) => {
-    const rows = requiredWorkflowPaths.map((workflow) =>
-      latestByPath.get(workflow).get(sourceSha),
-    );
-    return (
-      rows.every(
-        (run) =>
-          run?.status === "completed" &&
-          run?.conclusion === "success" &&
-          run?.head_sha === sourceSha,
-      ) &&
-      rows.some(
-        (run) =>
-          !workflowEvidenceIsFreshAndSuccessful(run, { now, maxAgeSeconds }),
-      )
-    );
-  });
-  if (staleSuccessfulPair)
-    throw new Error(
-      "same-SHA workflow evidence is stale for every qualified source commit",
-    );
-  throw new Error(
-    "no source commit ahead of target has fresh completed successful same-SHA workflow evidence",
-  );
-}
-
-function blockedCandidateDecision({
-  options,
-  sourceSha,
-  targetSha,
-  comparison,
-  reason,
-}) {
-  const body = {
-    schema: "kungfu-buildchain-channel-candidate-decision/v1",
-    eligible: false,
-    reason: "qualification-evidence-blocked",
-    repository: options.repository,
-    source: { branch: options.sourceBranch, sha: sourceSha },
-    target: { branch: options.targetBranch, sha: targetSha },
-    comparison: {
-      status: text(comparison.status || "unknown"),
-      aheadBy: Number(comparison.ahead_by || 0),
-    },
-    blockReason: text(reason),
-    decidedAt: options.now,
-  };
-  return { ...body, decisionRoot: evidenceRoot(body) };
-}
-
-function candidateFromDecision(decision) {
-  if (!decision.eligible) return null;
-  return {
-    sourceSha: decision.source.sha,
-    sourceLockRef: decision.sourceLockRef,
-    decisionRoot: decision.decisionRoot,
-    workflowEvidence: decision.workflowEvidence,
-    qualificationRoot: evidenceRoot({
-      sourceSha: decision.source.sha,
-      workflowEvidence: decision.workflowEvidence,
-    }),
-  };
-}
-
 function candidateStateBody({
   options,
   targetSha,
@@ -482,6 +367,8 @@ function candidateStateBody({
   priorStateRoot = ABSENT_STATE_ROOT,
   generation = 1,
   tombstones = [],
+  releaseTrain = null,
+  hold = null,
 }) {
   const body = {
     schema: DEV_ALPHA_CANDIDATE_STATE_SCHEMA,
@@ -494,6 +381,8 @@ function candidateStateBody({
     activeCandidate,
     nextCandidate,
     tombstones,
+    ...(releaseTrain ? { releaseTrain } : {}),
+    ...(hold ? { hold } : {}),
     observationDecisionRoot: decision.decisionRoot || null,
     observedAt: options.now,
     ...(supersededCandidate ? { supersededCandidate } : {}),
@@ -615,6 +504,80 @@ function activePullRequest(candidate) {
   };
 }
 
+async function resumeActiveTrainIfPresent(options, client, candidate) {
+  if (!options.requireActiveReleaseTrain || !candidate) return null;
+  if (!candidate.releaseTrain) {
+    throw new Error(
+      `candidate PR #${candidate.number} has no authoritative active Release Train`,
+    );
+  }
+  return runActiveReleaseTrain({
+    options,
+    client,
+    activeCandidate: candidate,
+    adapters: {
+      stateSchema: DEV_ALPHA_CANDIDATE_STATE_SCHEMA,
+      persistedStateRoot,
+      candidateStateBody,
+      replaceCandidateStateMarker,
+      activePullRequest,
+      armCandidateAutoMerge,
+    },
+  });
+}
+
+function assertExpectedSelection(options, decision) {
+  if (
+    options.expectedSelectedSha &&
+    decision.source.sha !== options.expectedSelectedSha
+  ) {
+    throw new Error(
+      `selected source changed between observation and settlement: expected ${options.expectedSelectedSha}, observed ${decision.source.sha}`,
+    );
+  }
+}
+
+function assertExpectedStateRoot(options, priorStateRoot) {
+  if (
+    options.expectedPriorStateRoot &&
+    options.expectedPriorStateRoot !== priorStateRoot
+  ) {
+    throw new Error(
+      `candidate controller compare-and-swap failed: expected prior state root ${options.expectedPriorStateRoot}, observed ${priorStateRoot}`,
+    );
+  }
+}
+
+async function maybeCutReleaseTrain({
+  options,
+  client,
+  activeCandidate,
+  decision,
+  observedCandidate,
+  sourceSha,
+  targetSha,
+  observedSourceHeadSha,
+}) {
+  if (!options.requireActiveReleaseTrain || activeCandidate) {
+    return activeCandidate?.releaseTrain || null;
+  }
+  return cutInitialReleaseTrain({
+    options,
+    client,
+    decision,
+    candidate: observedCandidate,
+    sourceSha,
+    targetSha,
+    observedSourceHeadSha,
+  });
+}
+
+function initialControllerState(decision, qualificationError) {
+  if (decision.eligible) return "eligible-for-settlement";
+  if (!qualificationError) return "observed";
+  return /stale/u.test(qualificationError.message) ? "stale" : "blocked";
+}
+
 export async function runDevAlphaCandidatePatrol(
   optionsInput = {},
   clientInput,
@@ -632,6 +595,19 @@ export async function runDevAlphaCandidatePatrol(
     options.devWorkflowPath,
     options.alphaWorkflowPath,
   ];
+  const persistedCandidate = await resolveManagedCandidate({
+    client,
+    targetBranch: options.targetBranch,
+    repository: options.repository,
+    sourceBranch: options.sourceBranch,
+    parseCandidate: managedCandidateFromPullRequest,
+  });
+  const resumed = await resumeActiveTrainIfPresent(
+    options,
+    client,
+    persistedCandidate,
+  );
+  if (resumed) return resumed;
   const {
     observedSourceHeadSha,
     targetSha,
@@ -676,66 +652,31 @@ export async function runDevAlphaCandidatePatrol(
         maxAgeSeconds: options.maxAgeSeconds,
         now: options.now,
       });
-  if (
-    options.expectedSelectedSha &&
-    decision.source.sha !== options.expectedSelectedSha
-  ) {
-    throw new Error(
-      `selected source changed between observation and settlement: expected ${options.expectedSelectedSha}, observed ${decision.source.sha}`,
-    );
-  }
-  const openPullRequests = await client.listOpenPullRequests(
-    options.targetBranch,
-  );
-  const managedCandidates = openPullRequests
-    .map((pullRequest) =>
-      managedCandidateFromPullRequest(pullRequest, options.targetBranch),
-    )
-    .filter(Boolean);
-  for (const candidate of managedCandidates) {
-    if (
-      candidate.state &&
-      (candidate.state.repository !== options.repository ||
-        candidate.state.sourceBranch !== options.sourceBranch)
-    ) {
-      throw new Error(
-        `candidate PR #${candidate.number} state does not bind ${options.repository} ${options.sourceBranch}`,
-      );
-    }
-  }
-  if (managedCandidates.length > 1) {
-    throw new Error(
-      `multiple open Buildchain candidate PRs target ${options.targetBranch}: ${managedCandidates
-        .map((candidate) => `#${candidate.number}`)
-        .join(", ")}`,
-    );
-  }
-  let activeCandidate = managedCandidates[0] || null;
+  assertExpectedSelection(options, decision);
+  let activeCandidate = persistedCandidate;
   const priorStateRoot = persistedStateRoot(activeCandidate);
-  if (
-    options.expectedPriorStateRoot &&
-    options.expectedPriorStateRoot !== priorStateRoot
-  ) {
-    throw new Error(
-      `candidate controller compare-and-swap failed: expected prior state root ${options.expectedPriorStateRoot}, observed ${priorStateRoot}`,
-    );
-  }
+  assertExpectedStateRoot(options, priorStateRoot);
   const priorGeneration = Number(activeCandidate?.state?.generation || 0);
   let generation = Math.max(priorGeneration, 1);
   const priorTombstones = Array.isArray(activeCandidate?.state?.tombstones)
     ? activeCandidate.state.tombstones
     : [];
   const observedCandidate = candidateFromDecision(decision);
+  const releaseTrain = await maybeCutReleaseTrain({
+    options,
+    client,
+    activeCandidate,
+    decision,
+    observedCandidate,
+    sourceSha,
+    targetSha,
+    observedSourceHeadSha,
+  });
+  generation = releaseTrain?.releaseCut.generation || generation;
   let nextCandidate = null;
   let supersededCandidate = null;
   let tombstones = [...priorTombstones];
-  let controllerState = decision.eligible
-    ? "eligible-for-settlement"
-    : qualificationError
-      ? /stale/u.test(qualificationError.message)
-        ? "stale"
-        : "blocked"
-      : "observed";
+  let controllerState = initialControllerState(decision, qualificationError);
   if (activeCandidate) {
     controllerState = "active";
     nextCandidate = activeCandidate.nextCandidate || null;
@@ -820,6 +761,7 @@ export async function runDevAlphaCandidatePatrol(
           priorStateRoot,
           generation,
           tombstones,
+          releaseTrain,
         });
   let pullRequest;
   let settlementAction = "none";
@@ -848,6 +790,8 @@ export async function runDevAlphaCandidatePatrol(
         activeCandidate: observedCandidate,
         nextCandidate: null,
         supersededCandidate: null,
+        generation,
+        releaseTrain,
       });
       pullRequest = await client.ensurePullRequest({
         head: decision.sourceLockRef,
@@ -885,6 +829,7 @@ export async function runDevAlphaCandidatePatrol(
           priorStateRoot,
           generation,
           tombstones,
+          releaseTrain,
         });
         const nextBody = replaceCandidateStateMarker(pullRequest.body, state);
         await client.updatePullRequestBody(
@@ -925,6 +870,20 @@ export async function runDevAlphaCandidatePatrol(
     settlementAuthorized: options.settlementAuthorized,
     autoMerge,
     decision,
+    releaseTrain,
+    drift: releaseTrain
+      ? {
+          observedDevSha: observedSourceHeadSha,
+          originDevSha: releaseTrain.releaseCut.originDevSha,
+          moved: observedSourceHeadSha !== releaseTrain.releaseCut.originDevSha,
+          observationRoot:
+            releaseTrain.observations.find(
+              (observation) =>
+                observation.observedDevSha === observedSourceHeadSha,
+            )?.observationRoot || null,
+        }
+      : null,
+    hold: null,
     controller: {
       schema: DEV_ALPHA_CANDIDATE_STATE_SCHEMA,
       state: controllerState,
@@ -935,6 +894,16 @@ export async function runDevAlphaCandidatePatrol(
       stateRoot: state.stateRoot,
       priorStateRoot,
       generation: state.generation,
+      trainRoot: releaseTrain?.trainRoot || null,
+      cutRoot: releaseTrain?.releaseCut.cutRoot || null,
+      candidateTreeSha: releaseTrain?.releaseCut.candidateTreeSha || null,
+      buildchainRuntimeSha:
+        releaseTrain?.releaseCut.buildchainRuntimeSha ||
+        options.buildchainRuntimeSha ||
+        null,
+      cutCreatedAt: releaseTrain?.releaseCut.createdAt || null,
+      observedAt: options.now,
+      holdRoot: null,
       tombstones: state.tombstones || [],
     },
     pullRequest: pullRequest || null,
@@ -1001,6 +970,17 @@ export function createGitHubChannelCandidateClient({
         `/repos/${owner}/${repo}/git/ref/heads/${encodeRef(ref)}`,
       );
       return text(payload.object?.sha);
+    },
+    async resolveCommitTreeSha(commitSha) {
+      const payload = await api(
+        `/repos/${owner}/${repo}/git/commits/${encodeURIComponent(commitSha)}`,
+      );
+      if (text(payload.sha) !== commitSha) {
+        throw new Error(
+          `candidate commit readback returned ${payload.sha || "<empty>"}, not ${commitSha}`,
+        );
+      }
+      return optionalExactSha(payload.tree?.sha, "candidateTreeSha");
     },
     async compare(baseSha, headSha) {
       return api(`/repos/${owner}/${repo}/compare/${baseSha}...${headSha}`);
@@ -1133,6 +1113,12 @@ function markdown(result) {
     `Source: \`${result.decision.source.branch}@${result.decision.source.sha}\``,
     `Target: \`${result.decision.target.branch}@${result.decision.target.sha}\``,
     `Controller state: \`${result.controller.state}\``,
+    `Release Train: \`${result.controller.trainRoot || "none"}\``,
+    `Candidate generation: \`${result.controller.generation}\``,
+    `Candidate tree: \`${result.controller.candidateTreeSha || "none"}\``,
+    `Buildchain runtime: \`${result.controller.buildchainRuntimeSha || "none"}\``,
+    `Drift observation: \`${result.drift?.observationRoot || "none"}\``,
+    `Hold: \`${result.controller.holdRoot || "none"}\``,
     `Active candidate: ${result.controller.activeCandidate?.url || "none"}`,
     `Next candidate: \`${result.controller.nextCandidate?.sourceSha || "none"}\``,
     `Settlement action: \`${result.controller.settlementAction}\``,
@@ -1163,6 +1149,15 @@ async function main() {
       "next-candidate-sha": result.controller.nextCandidate?.sourceSha || "",
       "settlement-action": result.controller.settlementAction,
       "prior-state-root": result.controller.priorStateRoot,
+      "train-root": result.controller.trainRoot || "",
+      "cut-root": result.controller.cutRoot || "",
+      "candidate-generation": String(result.controller.generation),
+      "candidate-tree-sha": result.controller.candidateTreeSha || "",
+      "runtime-sha": result.controller.buildchainRuntimeSha || "",
+      "cut-created-at": result.controller.cutCreatedAt || "",
+      "observed-at": result.controller.observedAt || "",
+      "drift-root": result.drift?.observationRoot || "",
+      "hold-root": result.controller.holdRoot || "",
     };
     fs.appendFileSync(
       process.env.GITHUB_OUTPUT,

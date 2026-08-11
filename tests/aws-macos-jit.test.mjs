@@ -198,6 +198,19 @@ test("macOS stack and bootstrap enforce one-host JIT cleanup and no ingress", ()
     /BudgetLimitUsd:\n\s+Type: Number\n\s+Default: 25\n\s+MinValue: 1\n\s+MaxValue: 25/,
   );
   assert.match(bootstrap, /latest\/api\/token/);
+  assert.match(
+    bootstrap,
+    /RunnerPath="\/opt\/homebrew\/bin:\/usr\/local\/bin:\/usr\/bin:\/bin:\/usr\/sbin:\/sbin"/,
+  );
+  assert.match(bootstrap, /export PATH="\$RunnerPath"/);
+  assert.match(
+    bootstrap,
+    /install -d -o "\$RunnerUser" -g staff -m 700 "\$RunnerBase"/,
+  );
+  assert.match(
+    bootstrap,
+    /sudo -u "\$RunnerUser" -H env \\\n\s+PATH="\$RunnerPath"/,
+  );
   assert.match(bootstrap, /aws ssm get-parameter/);
   assert.match(bootstrap, /aws ssm delete-parameter/);
   assert.match(bootstrap, /run\.sh" --jitconfig "\$JitConfig"/);

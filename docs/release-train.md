@@ -74,6 +74,14 @@ an invalid transition fails closed.
 changing `trainRoot`, `cutRoot`, candidate identity, generation, or state. The
 same exact observation is idempotent.
 
+Buildchain v3 Candidate Patrol resolves the open managed candidate's persisted
+train before it considers a new qualified development head. It reads back the
+candidate ref and tree, Alpha base, and exact Buildchain runtime. Matching
+coordinates resume the frozen candidate; a newer development head becomes a
+single rooted observation. Candidate, tree, base, runtime, or route drift emits
+a rooted hold and stops settlement. Only a validated train already carrying an
+enumerated `superseded` transition is reported as superseded.
+
 ## Readback and legacy state
 
 `validateReleaseCut()` checks the standalone immutable cut and its canonical

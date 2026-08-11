@@ -347,7 +347,6 @@ on:
         description: "Standard full-cut adopter conformance manifest JSON path"
         default: ""
         type: string
-        required: false
       release-passport-kfd-support-matrix-json:
         description: "Legacy KFD support projection JSON path accepted only for exact manifest comparison"
         default: ""

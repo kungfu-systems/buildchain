@@ -101,6 +101,20 @@ on:
         value: ${{ jobs.settle.outputs.settlement-action || 'none' }}
       prior-state-root:
         value: ${{ jobs.settle.outputs.prior-state-root || jobs.observe.outputs.prior-state-root }}
+      train-root:
+        value: ${{ jobs.settle.outputs.train-root || jobs.observe.outputs.train-root }}
+      cut-root:
+        value: ${{ jobs.settle.outputs.cut-root || jobs.observe.outputs.cut-root }}
+      candidate-generation:
+        value: ${{ jobs.settle.outputs.candidate-generation || jobs.observe.outputs.candidate-generation }}
+      candidate-tree-sha:
+        value: ${{ jobs.settle.outputs.candidate-tree-sha || jobs.observe.outputs.candidate-tree-sha }}
+      runtime-sha:
+        value: ${{ jobs.observe.outputs.runtime-sha }}
+      drift-root:
+        value: ${{ jobs.settle.outputs.drift-root || jobs.observe.outputs.drift-root }}
+      hold-root:
+        value: ${{ jobs.settle.outputs.hold-root || jobs.observe.outputs.hold-root }}
 
 permissions:
   actions: read
@@ -128,6 +142,15 @@ jobs:
       next-candidate-sha: ${{ steps.observe.outputs.next-candidate-sha }}
       pull-request-body-prefix: ${{ steps.render-body-prefix.outputs.pull-request-body-prefix || inputs.pull-request-body-prefix }}
       prior-state-root: ${{ steps.observe.outputs.prior-state-root }}
+      train-root: ${{ steps.observe.outputs.train-root }}
+      cut-root: ${{ steps.observe.outputs.cut-root }}
+      candidate-generation: ${{ steps.observe.outputs.candidate-generation }}
+      candidate-tree-sha: ${{ steps.observe.outputs.candidate-tree-sha }}
+      runtime-sha: ${{ steps.runtime.outputs.sha }}
+      cut-created-at: ${{ steps.observe.outputs.cut-created-at }}
+      observed-at: ${{ steps.observe.outputs.observed-at }}
+      drift-root: ${{ steps.observe.outputs.drift-root }}
+      hold-root: ${{ steps.observe.outputs.hold-root }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -140,6 +163,11 @@ jobs:
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+
+      - name: Bind exact Buildchain runtime
+        id: runtime
+        shell: bash
+        run: echo "sha=$(git -C .buildchain/runtime rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Install Buildchain runtime
         run: |
@@ -157,6 +185,8 @@ jobs:
           BUILDCHAIN_CHANNEL_PATROL_DEV_WORKFLOW: ${{ inputs.dev-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_ALPHA_WORKFLOW: ${{ inputs.alpha-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS: ${{ inputs.max-age-seconds }}
+          BUILDCHAIN_CHANNEL_PATROL_REQUIRE_ACTIVE_TRAIN: "true"
+          BUILDCHAIN_CHANNEL_PATROL_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: ${{ inputs.pull-request-body-prefix }}
           BUILDCHAIN_CHANNEL_PATROL_CREATE_PR: "false"
           BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED: "false"
@@ -208,6 +238,8 @@ jobs:
       !inputs.dry-run &&
       (needs.observe.outputs.controller-state == 'eligible-for-settlement' ||
        needs.observe.outputs.controller-state == 'active' ||
+       needs.observe.outputs.controller-state == 'held' ||
+       needs.observe.outputs.controller-state == 'superseded' ||
        needs.observe.outputs.controller-state == 'retained-next')
     runs-on: ubuntu-24.04
     permissions:
@@ -221,18 +253,31 @@ jobs:
       next-candidate-sha: ${{ steps.settle.outputs.next-candidate-sha }}
       settlement-action: ${{ steps.settle.outputs.settlement-action }}
       prior-state-root: ${{ steps.settle.outputs.prior-state-root }}
+      train-root: ${{ steps.settle.outputs.train-root }}
+      cut-root: ${{ steps.settle.outputs.cut-root }}
+      candidate-generation: ${{ steps.settle.outputs.candidate-generation }}
+      candidate-tree-sha: ${{ steps.settle.outputs.candidate-tree-sha }}
+      runtime-sha: ${{ steps.runtime.outputs.sha }}
+      cut-created-at: ${{ steps.settle.outputs.cut-created-at }}
+      drift-root: ${{ steps.settle.outputs.drift-root }}
+      hold-root: ${{ steps.settle.outputs.hold-root }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+          ref: ${{ needs.observe.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+
+      - name: Bind exact Buildchain runtime
+        id: runtime
+        shell: bash
+        run: echo "sha=$(git -C .buildchain/runtime rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Install Buildchain runtime
         run: |
@@ -250,9 +295,14 @@ jobs:
           BUILDCHAIN_CHANNEL_PATROL_DEV_WORKFLOW: ${{ inputs.dev-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_ALPHA_WORKFLOW: ${{ inputs.alpha-workflow-path }}
           BUILDCHAIN_CHANNEL_PATROL_MAX_AGE_SECONDS: ${{ inputs.max-age-seconds }}
+          BUILDCHAIN_CHANNEL_PATROL_REQUIRE_ACTIVE_TRAIN: "true"
+          BUILDCHAIN_CHANNEL_PATROL_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: ${{ needs.observe.outputs.pull-request-body-prefix }}
           BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA: ${{ needs.observe.outputs.selected-sha }}
           BUILDCHAIN_CHANNEL_PATROL_EXPECTED_PRIOR_STATE_ROOT: ${{ needs.observe.outputs.prior-state-root }}
+          BUILDCHAIN_CHANNEL_PATROL_EXPECTED_CUT_ROOT: ${{ needs.observe.outputs.cut-root }}
+          BUILDCHAIN_CHANNEL_PATROL_CUT_CREATED_AT: ${{ needs.observe.outputs.cut-created-at }}
+          BUILDCHAIN_CHANNEL_PATROL_NOW: ${{ needs.observe.outputs.observed-at }}
           BUILDCHAIN_CHANNEL_PATROL_REACTIVATION_AUTHORIZED: ${{ inputs.reactivation-authorized }}
           BUILDCHAIN_CHANNEL_PATROL_CREATE_PR: "true"
           BUILDCHAIN_CHANNEL_PATROL_SETTLEMENT_AUTHORIZED: "true"

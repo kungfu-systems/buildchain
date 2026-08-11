@@ -187,6 +187,25 @@ def timed_public_chunks(raw: bytes, timed_chunks: list[tuple[int, bytes]],
     return public, mapped
 
 
+def line_stable_timed_chunks(timed_chunks: list[tuple[int, bytes]]) -> list[tuple[int, bytes]]:
+    stable: list[tuple[int, bytes]] = []
+    pending = bytearray()
+    last_at_ms = 0
+    for at_ms, chunk in timed_chunks:
+        last_at_ms = at_ms
+        pending.extend(chunk)
+        while True:
+            newline = pending.find(b"\n")
+            if newline < 0:
+                break
+            end = newline + 1
+            stable.append((at_ms, bytes(pending[:end])))
+            del pending[:end]
+    if pending:
+        stable.append((last_at_ms, bytes(pending)))
+    return stable
+
+
 def dotted(value: Any, expression: str) -> Any:
     current = value
     for part in expression.split("."):
@@ -415,6 +434,8 @@ def capture_rendition(binary: Path, demo: dict[str, Any], rendition: dict[str, A
                 str(home): "<isolated-home>",
             }
             public_bytes, public_chunks = timed_public_chunks(raw, raw_chunks, replacements)
+            if scenario.get("playback") is not None:
+                public_chunks = line_stable_timed_chunks(public_chunks)
             text = safe_text(raw, replacements)
             require(exit_code in step["expectedExitCodes"], f"step {step['id']} exited with {exit_code}")
             for expected in step["stdoutIncludes"]:

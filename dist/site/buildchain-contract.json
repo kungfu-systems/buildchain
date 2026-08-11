@@ -462,7 +462,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:e60642aa298933d2c103284794921a6c340a50aa91ee528b06e58892a2a006bf",
-      "auditDigest": "sha256:519d0b0f86fa3b0835238b0375832d68cf72ca637485d417914ef8cd4620e4a3",
+      "auditDigest": "sha256:e35e3aeac79be887ae67b630af274d08581920e686f5124c65fc7ac288519721",
       "compatibleBreakingDigests": [
         "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf"
       ],
@@ -521,7 +521,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:adb3bb7b8f2e44fe115c39c28dd0d1f95289196406d6b43b31570adaf37716e0",
+      "auditDigest": "sha256:4ccecb9f859b986563354eab682d803b8da790d35a90d60d53b8c93927c60899",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1071,7 +1071,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:968d22fb10bee40a9b38c4d3cdd64e8666208222d6edd1caefd1ae88cd6e1725"
+      "auditDigest": "sha256:988b82406567bca506d6f35b8b205a6b2d937d304d7224caf3d4d7732e2ebcc1"
     },
     {
       "contractVersion": 1,
@@ -3810,7 +3810,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:adb3bb7b8f2e44fe115c39c28dd0d1f95289196406d6b43b31570adaf37716e0"
+      "auditDigest": "sha256:4ccecb9f859b986563354eab682d803b8da790d35a90d60d53b8c93927c60899"
     },
     {
       "contractVersion": 1,
@@ -4025,5 +4025,5 @@
   ],
   "compatibilityProofRegistryRoot": "sha256:f11b62ce69cfb0ff25b66861474b99a75148192c0474c9d1cc2067e347b05abd",
   "compatibilityDigest": "sha256:c74d76789e49291503292e0a5c38fffc5e3ef420ad85eeb8a2480d287fccfed7",
-  "contractDigest": "sha256:5c549950118c09eeb248c9e60480e357b45d37cc76daaf6223033da43946bee6"
+  "contractDigest": "sha256:851f4a6fca74adc82d139ed23d391105d17f57dedb348114a52ecf59cdc0b34c"
 }
