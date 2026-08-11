@@ -250,6 +250,20 @@ test("macOS failed source rebind binds the exact terminal run inventory", () => 
     historicalPlan.safety.historicalTerminalFailureEvidencePreserved,
     true,
   );
+  const historicalPreflightPlan = sourceRebindPlan({
+    priorRunPolicy: "terminal-failure",
+    terminalFailureRunIds: ["30720000001"],
+    historicalPreflightFailureRuns: [
+      {
+        runId: "30718000001",
+        sourceSha: "c60591b3565b3b75f1b9cfe402ab025e6beeb675",
+      },
+    ],
+  });
+  assert.equal(
+    historicalPreflightPlan.safety.historicalPreflightFailureEvidencePreserved,
+    true,
+  );
   const preflightPlan = sourceRebindPlan({
     priorRunPolicy: "preflight-failure",
     preflightFailureRunIds: ["30720000001"],
@@ -342,6 +356,7 @@ if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
     const workflow_runs = [{ id: 30720000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: process.env.FAKE_TERMINAL_FAILURE === "true" || process.env.FAKE_PREFLIGHT_FAILURE === "true" ? "failure" : "startup_failure" }];
     if (process.env.FAKE_STARTUP_FAILURE === "true") workflow_runs.push({ id: 30710000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "e60591b3565b3b75f1b9cfe402ab025e6beeb677", status: "completed", conclusion: "startup_failure" });
     if (process.env.FAKE_HISTORICAL_TERMINAL_FAILURE === "true") workflow_runs.push({ id: 30719000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "d60591b3565b3b75f1b9cfe402ab025e6beeb676", status: "completed", conclusion: "failure" });
+    if (process.env.FAKE_HISTORICAL_PREFLIGHT_FAILURE === "true") workflow_runs.push({ id: 30718000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "c60591b3565b3b75f1b9cfe402ab025e6beeb675", status: "completed", conclusion: "failure" });
     if (process.env.FAKE_SUCCESSFUL_RUN === "true") workflow_runs.push({ id: 30721000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: "success" });
     process.stdout.write(JSON.stringify({ total_count: workflow_runs.length, workflow_runs }));
   } else {
@@ -367,6 +382,14 @@ if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
   process.stdout.write(JSON.stringify({ total_count: 1, jobs: [{ id: 2, status: "completed", conclusion: "failure" }] }));
 } else if (joined.includes("actions/runs/30719000001/artifacts")) {
   process.stdout.write(JSON.stringify({ total_count: 1, artifacts: [{ id: 12, name: "historical-macos-failure-evidence", size_in_bytes: 128, digest: "sha256:def", expired: false }] }));
+} else if (joined.includes("actions/runs/30718000001/jobs")) {
+  process.stdout.write(JSON.stringify({ total_count: 3, jobs: [
+    { id: 4, name: "Build / Trust gate", status: "completed", conclusion: "failure", labels: ["ubuntu-latest"] },
+    { id: 5, name: "Build / macOS arm64", status: "completed", conclusion: "skipped", labels: ["self-hosted", "macOS", "ARM64"] },
+    { id: 6, name: "Build / Linux x64", status: "completed", conclusion: "skipped", labels: ["ubuntu-latest"] }
+  ] }));
+} else if (joined.includes("actions/runs/30718000001/artifacts")) {
+  process.stdout.write(JSON.stringify({ total_count: 1, artifacts: [{ id: 15, name: "historical-buildchain-runtime-bootstrap", size_in_bytes: 128, digest: "sha256:mno", expired: false }] }));
 } else if (joined.includes("actions/runs/30721000001/jobs")) {
   process.stdout.write(JSON.stringify({ total_count: 1, jobs: [{ id: 3, status: "completed", conclusion: "success" }] }));
 } else if (joined.includes("actions/runs/30721000001/artifacts")) {
@@ -713,6 +736,14 @@ function runRebindWithFakes(extraEnv = {}, afterFailure = false) {
                   '[{"runId":"30719000001","sourceSha":"d60591b3565b3b75f1b9cfe402ab025e6beeb676"}]',
                 ]
               : []),
+            ...(extraEnv.FAKE_HISTORICAL_PREFLIGHT_FAILURE === "true"
+              ? [
+                  "--historical-preflight-failure-runs-json",
+                  '[{"runId":"30718000001","sourceSha":"c60591b3565b3b75f1b9cfe402ab025e6beeb675"}]',
+                  "--confirm-historical-preflight-failure-runs-json",
+                  '[{"runId":"30718000001","sourceSha":"c60591b3565b3b75f1b9cfe402ab025e6beeb675"}]',
+                ]
+              : []),
             ...(extraEnv.FAKE_SUCCESSFUL_RUN === "true"
               ? [
                   "--successful-run-ids-json",
@@ -869,6 +900,38 @@ test("macOS controller preserves exact historical terminal failure evidence", ()
         "d60591b3565b3b75f1b9cfe402ab025e6beeb676"
       ].length,
       1,
+    );
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS controller preserves an exact historical preflight failure without AWS evidence", () => {
+  const { tempRoot, result, commands } = runRebindWithFakes(
+    {
+      FAKE_TERMINAL_FAILURE: "true",
+      FAKE_HISTORICAL_PREFLIGHT_FAILURE: "true",
+    },
+    true,
+  );
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    const output = JSON.parse(result.stdout);
+    const historical = output.preflight.priorRuns.find(
+      ({ classification }) => classification === "historical-preflight-failure",
+    );
+    assert.equal(historical.runId, "30718000001");
+    assert.equal(historical.jobCount, 3);
+    assert.equal(historical.artifactCount, 1);
+    assert.deepEqual(
+      output.preflight.evidenceObjects[
+        "c60591b3565b3b75f1b9cfe402ab025e6beeb675"
+      ],
+      [],
     );
     assert.equal(
       commands.some((entry) => entry.args.includes("allocate-hosts")),
