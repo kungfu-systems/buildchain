@@ -245,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:9b3b7425b5a487afa81520cfac215466c71265915c1465bf6f185cb42b1c340e"
+      "digest": "sha256:f77310bb6cbfca2aefbf25c02c5ee01a6c093548e5cc4d1db6b44e742e5d30d8"
     },
     {
       "id": "node-api-reference",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:59eca91b679a4f645a2ffca59510e21eb6347b9260823cd29aed5fc511d1ad10"
+      "digest": "sha256:4663cf32a0116a8605e7b8a475fc4b38e02b81ca21af59e49be0043f3eb99a02"
     },
     {
       "id": "build-facts",
@@ -333,7 +333,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:b810461f8e688ea5a4fb3ec927a95e945cac3460c3997bbcbca417e6beb6198e"
+      "digest": "sha256:889955042854bb95bc5dd58d2bdd26bdc8259c096e15c0a8d479289ff51448b8"
     },
     {
       "id": "release-flow",
@@ -357,7 +357,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:948957c9170437e2a383efba01d99d9b137ef56ce71ae8036545daaed625d09c"
+      "digest": "sha256:0b1485e9e87a5f185041746e6ce8068373b3a6483fa7d1123f60702de471849b"
     },
     {
       "id": "web-surface-deployments",

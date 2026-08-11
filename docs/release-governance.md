@@ -493,10 +493,11 @@ GitHub Merge Queue does not by itself decide which candidate may spend a long
 native proof before enqueue. Repositories with that workload use the
 [Dev Delivery Warrant Queue](dev-delivery-warrant.md) as the durable,
 FIFO-aging scheduling and fencing authority before native queue admission. A
-selected Warrant owns one complete delivery attempt and later candidates remain
-visibly queued; GitHub still owns the exact `merge_group` proof and final ref
-mutation. Workflow concurrency remains only a process critical section and is
-not fairness or ownership authority.
+provisional Warrant reserves the landing order before native shards, while only
+its atomic qualified upgrade can authorize enqueue. Later candidates remain
+visibly queued and continue source/CI work; GitHub still owns the exact
+`merge_group` proof and final ref mutation. Workflow concurrency remains only a
+process critical section and is not fairness or ownership authority.
 
 Every required workflow must handle both `pull_request` and `merge_group`
 before the queue is enabled. Queue runs do not provide

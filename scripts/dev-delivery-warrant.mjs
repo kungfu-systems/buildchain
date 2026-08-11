@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
+import { cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, heartbeatDevDeliveryWarrant, observeDevDeliveryQueue, qualifyDevDeliveryWarrant, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
 import { planDevDeliveryWarrantShadow, qualifyDevDeliveryWarrantShadow } from "../packages/core/dev-delivery-warrant-shadow.js";
 
 const STATE_PATH = "queue.json";
@@ -174,6 +174,22 @@ function warrantIdentity(queue, options) {
   return { candidateId: active.candidateId, fencingToken, generation };
 }
 
+function jsonFile(file, label) {
+  if (!file) throw new Error(`${label} is required`);
+  return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
+function jsonList(value, label) {
+  let parsed;
+  try {
+    parsed = JSON.parse(value || "[]");
+  } catch (cause) {
+    throw new Error(`${label} must be a JSON array: ${cause.message}`);
+  }
+  if (!Array.isArray(parsed)) throw new Error(`${label} must be a JSON array`);
+  return parsed;
+}
+
 function transitionFor(command, queue, options) {
   if (command === "submit") {
     return submitDevDeliveryCandidate(
@@ -190,6 +206,7 @@ function transitionFor(command, queue, options) {
         closureRoot: exactRoot(options.closureRoot, "closureRoot"),
         dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
         toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
+        affectedPaths: jsonList(options.affectedPaths, "affected paths"),
         sourceWorkflowRunId: options.sourceWorkflowRunId ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId") : 0,
         deliveryClass: options.deliveryClass,
         priority: options.priority || "ordinary",
@@ -207,6 +224,18 @@ function transitionFor(command, queue, options) {
     return heartbeatDevDeliveryWarrant(queue, warrantIdentity(queue, options), {
       now: options.now,
       leaseSeconds: options.leaseSeconds,
+    });
+  }
+  if (command === "qualify") {
+    return qualifyDevDeliveryWarrant(queue, warrantIdentity(queue, options), {
+      nativeProof: jsonFile(options.nativeProofPath, "native proof"),
+      reuseDecision: jsonFile(options.nativeReuseDecisionPath, "native reuse decision"),
+      current: {
+        currentBase: options.currentBase,
+        graphKnown: options.graphKnown,
+        changedPaths: jsonList(options.changedPaths, "changed paths"),
+      },
+      now: options.now,
     });
   }
   if (command === "recover") return recoverExpiredDevDeliveryWarrant(queue, { now: options.now });
@@ -391,6 +420,12 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
     sourceIdentityRoot: flag(rest, "source-identity-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_IDENTITY_ROOT),
     sourcePatchRoot: flag(rest, "source-patch-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PATCH_ROOT),
     sourceProofRoot: flag(rest, "source-proof-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PROOF_ROOT),
+    affectedPaths: flag(rest, "affected-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_AFFECTED_PATHS || "[]"),
+    nativeProofPath: flag(rest, "native-proof", environment.BUILDCHAIN_DEV_DELIVERY_NATIVE_PROOF),
+    nativeReuseDecisionPath: flag(rest, "native-reuse-decision", environment.BUILDCHAIN_DEV_DELIVERY_NATIVE_REUSE_DECISION),
+    currentBase: flag(rest, "current-base", environment.BUILDCHAIN_DEV_DELIVERY_CURRENT_BASE),
+    changedPaths: flag(rest, "changed-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_CHANGED_PATHS || "[]"),
+    graphKnown: ["1", "true", "yes", "on"].includes(flag(rest, "graph-known", environment.BUILDCHAIN_DEV_DELIVERY_GRAPH_KNOWN).trim().toLowerCase()),
     planRoot: flag(rest, "plan-root", environment.BUILDCHAIN_DEV_DELIVERY_PLAN_ROOT),
     closureRoot: flag(rest, "closure-root", environment.BUILDCHAIN_DEV_DELIVERY_CLOSURE_ROOT),
     dependencyRoot: flag(rest, "dependency-root", environment.BUILDCHAIN_DEV_DELIVERY_DEPENDENCY_ROOT),
@@ -414,7 +449,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n  buildchain dev warrant <shadow-plan|shadow-qualify> --input FILE [--max-concurrency 1|2] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n  buildchain dev warrant <shadow-plan|shadow-qualify> --input FILE [--max-concurrency 1|2] [--output FILE] [--json]\n";
 }
 
 async function main() {
@@ -424,7 +459,7 @@ async function main() {
     return;
   }
   const options = devDeliveryCliOptions(args);
-  if (!["submit", "select", "heartbeat", "recover", "close", "settle", "cancel-queued", "observe", "shadow-plan", "shadow-qualify"].includes(options.command)) {
+  if (!["submit", "select", "heartbeat", "qualify", "recover", "close", "settle", "cancel-queued", "observe", "shadow-plan", "shadow-qualify"].includes(options.command)) {
     throw new Error(usage().trim());
   }
   const shadow = options.command.startsWith("shadow-");

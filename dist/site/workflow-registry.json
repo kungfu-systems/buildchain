@@ -1856,6 +1856,9 @@
         "landing-mode",
         "max-merges",
         "merge-method",
+        "native-command",
+        "native-heartbeat-seconds",
+        "native-proof-json",
         "plan-root",
         "project-cut-proof-json",
         "queue-admission-context",
@@ -1872,7 +1875,7 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 36,
+      "inputCount": 39,
       "secrets": [
         "github-token"
       ],
@@ -1885,14 +1888,17 @@
         "evaluated-count",
         "final-base-sha",
         "merged-count",
+        "native-proof-root",
+        "native-reuse-decision-root",
         "project-cut-proof-root",
+        "qualified-warrant-receipt-root",
         "skipped-count",
         "source-proof-root",
         "warrant-receipt-root",
         "warrant-state-commit",
         "warrant-state-root"
       ],
-      "outputCount": 13,
+      "outputCount": 16,
       "surface": "dev-governance",
       "capabilityGroup": "governance-versioning",
       "status": "active",

@@ -777,7 +777,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /release-manifest-json:/);
   assert.equal(
     (workflow.match(/artifact-summary-json: \$\{\{ steps\.summary\.outputs\.artifact-summary-json \}\}/g) || []).length,
-    1,
+    2,
   );
   assert.match(
     workflow,
@@ -1567,21 +1567,24 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
   assert.match(workflow, /native-roots-json:/);
-  assert.match(workflow, /expected-pr-number: \$\{\{ fromJSON\(github\.event\.inputs\.expected-pr-number\) \}\}/);
-  assert.match(workflow, /assignment-root: \$\{\{ fromJSON\(github\.event\.inputs\.native-roots-json\)\.assignmentRoot \}\}/);
-  assert.match(workflow, /initiative-root: \$\{\{ fromJSON\(github\.event\.inputs\.native-roots-json\)\.initiativeRoot \}\}/);
+  assert.match(workflow, /github\.event\.client_payload\.pullRequestNumber/u);
+  assert.match(workflow, /github\.event\.client_payload\.assignmentRoot/u);
+  assert.match(workflow, /github\.event\.client_payload\.initiativeRoot/u);
   assert.match(workflow, /source-identity-root:/);
   assert.match(workflow, /source-patch-root:/);
   assert.match(workflow, /plan-root:/);
   assert.match(workflow, /closure-root:/);
   assert.match(workflow, /dependency-root:/);
   assert.match(workflow, /toolchain-root:/);
+  assert.match(workflow, /native-proof-json:/);
+  assert.match(workflow, /native-command:/);
+  assert.match(workflow, /native-heartbeat-seconds:/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /permissions:\n  actions: write/);
   assert.match(workflow, /delivery-warrant-mode: required/);
-  assert.match(workflow, /delivery-class: native-proof-required/);
-  assert.match(workflow, /delivery-priority: ordinary/);
+  assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.deliveryClass \|\| 'native-proof-required' \}\}/u);
+  assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.priority \|\| 'ordinary' \}\}/u);
   assert.match(workflow, /required-status-checks: check/);
   assert.match(
     workflow,
@@ -1590,7 +1593,9 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /landing-mode: queue/);
   assert.match(workflow, /dry-run: false/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
-  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ inputs\.expected-pr-number \}\} · required Delivery Warrant"/);
+  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ github\.event\.client_payload\.pullRequestNumber \|\| inputs\.expected-pr-number \}\} · two-phase Delivery Warrant"/u);
+  assert.match(workflow, /repository_dispatch:/u);
+  assert.match(workflow, /buildchain-dev-delivery-wake/u);
   const controller = fs.readFileSync(
     path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
     "utf8",
@@ -1605,7 +1610,15 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   const dispatchInputs = workflow
     .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
     .match(/^      [a-z][a-z0-9-]+:$/gmu);
-  assert.equal(dispatchInputs?.length, 10);
+  assert.equal(dispatchInputs?.length, 13);
+  assert.match(controller, /activeWarrant\.phase == \$phase/);
+  assert.match(controller, /provisional\)\s+echo "already-qualified=false"/u);
+  assert.match(controller, /dev-delivery-two-phase\.mjs/);
+  assert.match(controller, /Run or reuse native proof and atomically qualify Warrant/);
+  assert.match(controller, /already-qualified=true/);
+  assert.match(controller, /activeCandidate\.status == "qualified"/);
+  assert.match(controller, /steps\.warrant\.outputs\.already-qualified == 'true'/);
+  assert.match(controller, /steps\.native-final\.outcome == 'success'/);
 });
 
 test("declared merge queue governance reconciles automatically on dev changes", () => {

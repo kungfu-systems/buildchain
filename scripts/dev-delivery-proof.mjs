@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import { classifyDevDeliveryDelta, createIntegrationDeliveryProof, createNativeProofReuseDecision, createNativeQualificationProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyNativeProofReuseDecision, verifyNativeQualificationProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);
@@ -52,6 +52,7 @@ export function devDeliveryProofCliOptions(args = [], environment = process.env)
     affectedPaths: flag(rest, "affected-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_AFFECTED_PATHS || "[]"),
     shardEvidenceRoots: flag(rest, "shard-evidence-roots-json", environment.BUILDCHAIN_DEV_DELIVERY_SHARD_EVIDENCE_ROOTS || "[]"),
     qualifiedAt: flag(rest, "qualified-at", environment.BUILDCHAIN_DEV_DELIVERY_QUALIFIED_AT),
+    qualifiedBase: flag(rest, "qualified-base", environment.BUILDCHAIN_DEV_DELIVERY_QUALIFIED_BASE),
     sourceProofPath: flag(rest, "source-proof", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PROOF),
     sourceProofRoot: flag(rest, "source-proof-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PROOF_ROOT),
     warrantResultPath: flag(rest, "warrant-result", environment.BUILDCHAIN_DEV_DELIVERY_WARRANT_RESULT),
@@ -117,6 +118,57 @@ export function runDevDeliveryProofCommand(options) {
       },
     });
   }
+  if (options.command === "native") {
+    return createNativeQualificationProof({
+      repository: options.repository,
+      protectedBase: options.protectedBase,
+      sourceIdentityRoot: options.sourceIdentityRoot,
+      sourcePatchRoot: options.sourcePatchRoot,
+      planRoot: options.planRoot,
+      closureRoot: options.closureRoot,
+      dependencyRoot: options.dependencyRoot,
+      toolchainRoot: options.toolchainRoot,
+      qualifiedBase: options.qualifiedBase,
+      affectedPaths: jsonList(options.affectedPaths, "affected paths"),
+      shardEvidenceRoots: jsonList(options.shardEvidenceRoots, "shard evidence roots", { required: true }),
+      qualifiedAt: options.qualifiedAt,
+    });
+  }
+  if (options.command === "verify-native") {
+    return verifyNativeQualificationProof(jsonFile(options.sourceProofPath, "native proof"));
+  }
+  if (options.command === "classify-native") {
+    return createNativeProofReuseDecision({
+      proof: jsonFile(options.sourceProofPath, "native proof"),
+      current: {
+        sourceIdentityRoot: options.sourceIdentityRoot,
+        sourcePatchRoot: options.sourcePatchRoot,
+        planRoot: options.planRoot,
+        closureRoot: options.closureRoot,
+        dependencyRoot: options.dependencyRoot,
+        toolchainRoot: options.toolchainRoot,
+        currentBase: options.currentBase,
+        graphKnown: options.graphKnown,
+        changedPaths: jsonList(options.changedPaths, "changed paths"),
+      },
+    });
+  }
+  if (options.command === "verify-native-reuse") {
+    return verifyNativeProofReuseDecision(jsonFile(options.qualificationReceiptPath, "native reuse decision"), {
+      proof: jsonFile(options.sourceProofPath, "native proof"),
+      current: {
+        sourceIdentityRoot: options.sourceIdentityRoot,
+        sourcePatchRoot: options.sourcePatchRoot,
+        planRoot: options.planRoot,
+        closureRoot: options.closureRoot,
+        dependencyRoot: options.dependencyRoot,
+        toolchainRoot: options.toolchainRoot,
+        currentBase: options.currentBase,
+        graphKnown: options.graphKnown,
+        changedPaths: jsonList(options.changedPaths, "changed paths"),
+      },
+    });
+  }
   if (options.command === "replay") {
     return createProjectCutReplayPlan({
       repository: options.repository,
@@ -168,7 +220,7 @@ export function runDevDeliveryProofCommand(options) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev proof <source|verify-source|classify|replay|replay-proof|verify-replay|integration|verify-integration> [options] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|replay-proof|verify-replay|integration|verify-integration> [options] [--output FILE] [--json]\n";
 }
 
 async function main() {

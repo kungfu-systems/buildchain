@@ -33,7 +33,11 @@ export function createDevDeliveryTerminalSettler({ normalizeQueue, closeWarrant,
     };
     if (!terminalStates.has(identity.outcome)) throw new Error(`outcome must be one of ${[...terminalStates].join(", ")}`);
     const samePullRequest = queue.candidates.filter((entry) => entry.pullRequestNumber === identity.pullRequestNumber);
-    const candidate = samePullRequest.find((entry) => entry.sourceHead === identity.sourceHead) || null;
+    const matchingHead = samePullRequest.filter((entry) => entry.sourceHead === identity.sourceHead);
+    const activeCandidate = queue.activeWarrant
+      ? matchingHead.find((entry) => entry.candidateId === queue.activeWarrant.candidateId)
+      : null;
+    const candidate = activeCandidate || matchingHead.at(-1) || null;
     if (!candidate && samePullRequest.length > 0) throw new Error("terminal event sourceHead does not match the recorded candidate");
 
     if (candidate && terminalStates.has(candidate.status)) {
