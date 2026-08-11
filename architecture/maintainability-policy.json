@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 300,
-    "maxHandMaintainedSourceLines": 117123,
+    "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
+    "maxHandMaintainedSourceFiles": 301,
+    "maxHandMaintainedSourceLines": 117702,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23477,
-    "latestTransition": "Stable and alpha Buildchain channels enforce one major-independent shell, runtime, and lock identity.",
-    "rationale": "The existing rooted release-blocker repair and bounded non-preemptive Warrant priority remain intact. One additional bounded channel-identity module classifies official, release, train, authority, and exact-SHA refs without major-specific branches. The contract-lock evaluator applies the triad before unchanged or compatibility exits, while five reusable surfaces remove the legacy unavailable-runtime success fallback. The generated public build router adds static alpha and stable advanced-workflow jobs so runtime selection cannot dynamically change shell class, and its controller descriptor declares both lane stages plus the selected-lane aggregate. This exact one-file, 153-source-line and 131-workflow-line increase is covered by cross-major permutation tests and Buildchain self-dogfood and cannot grow implicitly."
+    "latestTransition": "Buildchain v3 self-dogfood composes moving-dev, repair, publication and Warrant authority over the major-independent channel identity.",
+    "rationale": "The latest Dev channel-identity transition remains intact: stable and alpha use one major-independent shell, runtime and lock identity, and the reusable surfaces keep both lanes explicit and fail closed. The self-dogfood campaign adds one bounded orchestration file over the existing Release Train, Candidate Patrol and Delivery Warrant authorities. It requires exact protected PR, review, merge-group CI, tree, artifact and installed-product readback; deterministic negative cases prove restart replay, duplicate idempotence, invalid authority, unrelated priority and non-preemption. Train/repair and queue transactions are independently bounded helpers. This exact 301-file, 117702-source-line and 23477-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

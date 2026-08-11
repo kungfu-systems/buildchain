@@ -150,7 +150,7 @@
       "title": "Release Train and Release Cut",
       "path": "docs/release-train.md",
       "plane": "verify",
-      "digest": "sha256:dccd34936e68f9fdfdcc30729634bbc38341c587211c1a20c3de70d649ba1619",
+      "digest": "sha256:5ec5534ee48790df09c71a2578e1ca364a14dadf6ba662685ee66f78ae2589e7",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
