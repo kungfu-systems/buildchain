@@ -54,29 +54,29 @@ test("explicit channel and runtime overrides take precedence with conflict check
   assert.equal(resolveBuildchainChannel({ ...base, requestedRef: "v2.12-alpha" }).channel, "alpha");
   assert.equal(
     resolveBuildchainChannel({ ...base, requestedRef: "train/v2/v2.3/channel-router" }).channel,
-    "override",
+    "alpha",
   );
   assert.deepEqual(
     resolveBuildchainChannel({ ...base, requestedRef: "authority/v2/v2.3/artifact-signing" }),
     {
-      channel: "override",
+      channel: "alpha",
       major: 2,
       buildchainRef: "authority/v2/v2.3/artifact-signing",
-      selectionSource: "explicit-buildchain-ref",
-      reason: "explicit Buildchain runtime ref authority/v2/v2.3/artifact-signing",
+      selectionSource: "explicit-buildchain-ref+channel-evidence",
+      reason: "trusted runtime override authority/v2/v2.3/artifact-signing bound to alpha",
     },
   );
   assert.throws(
     () => resolveBuildchainChannel({ ...base, requestedChannel: "stable", requestedRef: "v2-alpha" }),
     /conflicts/,
   );
-  assert.throws(
-    () => resolveBuildchainChannel({ ...base, requestedChannel: "alpha", requestedRef: "a".repeat(40) }),
-    /require buildchain-channel=auto/,
+  assert.equal(
+    resolveBuildchainChannel({ ...base, requestedChannel: "alpha", requestedRef: "a".repeat(40) }).channel,
+    "alpha",
   );
-  assert.throws(
-    () => resolveBuildchainChannel({ ...base, requestedChannel: "stable", requestedRef: "authority/v2/v2.3/artifact-signing" }),
-    /require buildchain-channel=auto/,
+  assert.equal(
+    resolveBuildchainChannel({ ...base, requestedChannel: "stable", requestedRef: "authority/v2/v2.3/artifact-signing" }).channel,
+    "stable",
   );
 });
 
@@ -106,7 +106,9 @@ test("generated channel workflow mirrors the advanced build surface", () => {
   const expected = generateChannelBuildWorkflow(source);
   const current = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
   assert.equal(current, expected);
-  assert.match(current, /uses: \.\/\.github\/workflows\/\.build\.yml/);
+  assert.match(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@v3-alpha/);
+  assert.match(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@v3\n/);
+  assert.doesNotMatch(current, /uses: \.\/\.github\/workflows\/\.build\.yml/);
   assert.match(current, /buildchain-ref: \$\{\{ needs\.resolve-channel\.outputs\.buildchain-ref \}\}/);
   assert.match(current, /buildchain-contract-lock-path: \$\{\{ needs\.resolve-channel\.outputs\.contract-lock-path \}\}/);
   assert.match(current, /BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY: \$\{\{ job\.workflow_repository \}\}/);
