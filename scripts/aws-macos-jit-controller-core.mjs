@@ -101,6 +101,20 @@ function preflightFailureRunIds(value) {
   return [...normalized].sort((left, right) => Number(left) - Number(right));
 }
 
+function successfulRunIds(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    throw new Error("successfulRunIds must be an array");
+  }
+  const normalized = value.map((entry) =>
+    exact(entry, /^[1-9]\d*$/, "successfulRunId"),
+  );
+  if (new Set(normalized).size !== normalized.length) {
+    throw new Error("successfulRunIds must be unique");
+  }
+  return [...normalized].sort((left, right) => Number(left) - Number(right));
+}
+
 function startupFailureRuns(value) {
   if (value === undefined) return [];
   if (!Array.isArray(value)) {
@@ -386,6 +400,7 @@ export function createMacosJitSourceRebindPlan(values = {}) {
   const historicalTerminalRuns = historicalTerminalFailureRuns(
     values.historicalTerminalFailureRuns,
   );
+  const successfulRuns = successfulRunIds(values.successfulRunIds);
   if (priorRunPolicy === "unused" && startupRuns.length !== 0) {
     throw new Error("startupFailureRuns require a failed priorRunPolicy");
   }
@@ -393,6 +408,9 @@ export function createMacosJitSourceRebindPlan(values = {}) {
     throw new Error(
       "historicalTerminalFailureRuns require a failed priorRunPolicy",
     );
+  }
+  if (priorRunPolicy === "unused" && successfulRuns.length !== 0) {
+    throw new Error("successfulRunIds require a failed priorRunPolicy");
   }
   const plan = {
     schemaVersion: 1,
@@ -413,6 +431,7 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       preflightFailureRunIds: preflightRunIds,
       startupFailureRuns: startupRuns,
       historicalTerminalFailureRuns: historicalTerminalRuns,
+      successfulRunIds: successfulRuns,
     },
     aws: {
       ...aws,
@@ -433,6 +452,7 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       startupFailureEvidencePreserved: startupRuns.length !== 0,
       historicalTerminalFailureEvidencePreserved:
         historicalTerminalRuns.length !== 0,
+      successfulRunEvidencePreserved: successfulRuns.length !== 0,
       zeroJitResidueRequired: true,
       zeroEvidenceRequired: true,
       exactCampaignResourcesRequired: true,

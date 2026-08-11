@@ -566,6 +566,17 @@ function confirm(plan) {
           "--confirm-historical-terminal-failure-runs-json must equal the exact historical terminal failure inventory",
         );
       }
+      const confirmedSuccessfulRuns = flag("confirm-successful-run-ids-json")
+        ? jsonArrayArg("confirm-successful-run-ids-json").map(String)
+        : [];
+      if (
+        JSON.stringify(confirmedSuccessfulRuns) !==
+        JSON.stringify(plan.github.successfulRunIds)
+      ) {
+        throw new Error(
+          "--confirm-successful-run-ids-json must equal the exact successful run inventory",
+        );
+      }
     } else if (plan.github.priorRunPolicy === "preflight-failure") {
       const confirmed = jsonArrayArg(
         "confirm-preflight-failure-run-ids-json",
@@ -600,6 +611,17 @@ function confirm(plan) {
       ) {
         throw new Error(
           "--confirm-historical-terminal-failure-runs-json must equal the exact historical terminal failure inventory",
+        );
+      }
+      const confirmedSuccessfulRuns = flag("confirm-successful-run-ids-json")
+        ? jsonArrayArg("confirm-successful-run-ids-json").map(String)
+        : [];
+      if (
+        JSON.stringify(confirmedSuccessfulRuns) !==
+        JSON.stringify(plan.github.successfulRunIds)
+      ) {
+        throw new Error(
+          "--confirm-successful-run-ids-json must equal the exact successful run inventory",
         );
       }
     }
@@ -695,6 +717,11 @@ export function main() {
         (afterFailure || afterPreflightFailure) &&
         flag("historical-terminal-failure-runs-json")
           ? jsonArrayArg("historical-terminal-failure-runs-json")
+          : [],
+      successfulRunIds:
+        (afterFailure || afterPreflightFailure) &&
+        flag("successful-run-ids-json")
+          ? jsonArrayArg("successful-run-ids-json")
           : [],
     });
     return emit(plan, mode, execute, () =>

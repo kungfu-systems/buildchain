@@ -229,6 +229,13 @@ test("macOS failed source rebind binds the exact terminal run inventory", () => 
     },
   ]);
   assert.equal(startupPlan.safety.startupFailureEvidencePreserved, true);
+  const mixedPlan = sourceRebindPlan({
+    priorRunPolicy: "terminal-failure",
+    terminalFailureRunIds: ["30720000001"],
+    successfulRunIds: ["30721000001"],
+  });
+  assert.deepEqual(mixedPlan.github.successfulRunIds, ["30721000001"]);
+  assert.equal(mixedPlan.safety.successfulRunEvidencePreserved, true);
   const historicalPlan = sourceRebindPlan({
     priorRunPolicy: "terminal-failure",
     terminalFailureRunIds: ["30720000001"],
@@ -335,6 +342,7 @@ if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
     const workflow_runs = [{ id: 30720000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: process.env.FAKE_TERMINAL_FAILURE === "true" || process.env.FAKE_PREFLIGHT_FAILURE === "true" ? "failure" : "startup_failure" }];
     if (process.env.FAKE_STARTUP_FAILURE === "true") workflow_runs.push({ id: 30710000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "e60591b3565b3b75f1b9cfe402ab025e6beeb677", status: "completed", conclusion: "startup_failure" });
     if (process.env.FAKE_HISTORICAL_TERMINAL_FAILURE === "true") workflow_runs.push({ id: 30719000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "d60591b3565b3b75f1b9cfe402ab025e6beeb676", status: "completed", conclusion: "failure" });
+    if (process.env.FAKE_SUCCESSFUL_RUN === "true") workflow_runs.push({ id: 30721000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: "success" });
     process.stdout.write(JSON.stringify({ total_count: workflow_runs.length, workflow_runs }));
   } else {
     process.stdout.write(JSON.stringify({ id: 323846928, state: process.env.FAKE_WORKFLOW_ENABLED === "true" ? "active" : "disabled_manually" }));
@@ -359,6 +367,10 @@ if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
   process.stdout.write(JSON.stringify({ total_count: 1, jobs: [{ id: 2, status: "completed", conclusion: "failure" }] }));
 } else if (joined.includes("actions/runs/30719000001/artifacts")) {
   process.stdout.write(JSON.stringify({ total_count: 1, artifacts: [{ id: 12, name: "historical-macos-failure-evidence", size_in_bytes: 128, digest: "sha256:def", expired: false }] }));
+} else if (joined.includes("actions/runs/30721000001/jobs")) {
+  process.stdout.write(JSON.stringify({ total_count: 1, jobs: [{ id: 3, status: "completed", conclusion: "success" }] }));
+} else if (joined.includes("actions/runs/30721000001/artifacts")) {
+  process.stdout.write(JSON.stringify({ total_count: 1, artifacts: [{ id: 14, name: "macos-success-evidence", size_in_bytes: 128, digest: "sha256:jkl", expired: false }] }));
 } else if (joined.includes("actions/runs/30730000001")) {
   process.stdout.write(JSON.stringify({ event: "workflow_dispatch", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
 } else if (joined.includes("actions/jobs/91450000001")) {
@@ -701,6 +713,14 @@ function runRebindWithFakes(extraEnv = {}, afterFailure = false) {
                   '[{"runId":"30719000001","sourceSha":"d60591b3565b3b75f1b9cfe402ab025e6beeb676"}]',
                 ]
               : []),
+            ...(extraEnv.FAKE_SUCCESSFUL_RUN === "true"
+              ? [
+                  "--successful-run-ids-json",
+                  '["30721000001"]',
+                  "--confirm-successful-run-ids-json",
+                  '["30721000001"]',
+                ]
+              : []),
           ]
         : []),
       ...cliArgs,
@@ -850,6 +870,30 @@ test("macOS controller preserves exact historical terminal failure evidence", ()
       ].length,
       1,
     );
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS controller preserves an explicitly bound successful run during failed-source rebind", () => {
+  const { tempRoot, result, commands } = runRebindWithFakes(
+    { FAKE_TERMINAL_FAILURE: "true", FAKE_SUCCESSFUL_RUN: "true" },
+    true,
+  );
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    const output = JSON.parse(result.stdout);
+    const successful = output.preflight.priorRuns.find(
+      ({ classification }) => classification === "successful-run",
+    );
+    assert.equal(successful.runId, "30721000001");
+    assert.equal(successful.conclusion, "success");
+    assert.equal(successful.jobCount, 1);
+    assert.equal(successful.artifactCount, 1);
     assert.equal(
       commands.some((entry) => entry.args.includes("allocate-hosts")),
       false,
