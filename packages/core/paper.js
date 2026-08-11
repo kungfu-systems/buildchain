@@ -51,6 +51,11 @@ import {
   projectPublicationRehearsalToml,
   publicationRehearsalWorkflow,
 } from "./publication-rehearsal-projection.js";
+import {
+  appendNextDevelopmentToml,
+  nextDevelopmentWorkflowHeader,
+  projectNextDevelopmentToml,
+} from "./next-development-projection.js";
 
 export { PAPER_PATHS, resolvePaperRepository } from "./paper-repository.js";
 export {
@@ -356,7 +361,7 @@ immutable_base_url = ${tomlString(joinUrl(siteBaseUrl, "archive").replace(/\/$/,
 registry_path = ".buildchain/publication/publication-registry.json"
 `
     : "";
-  return appendPublicationRehearsalToml(`schema = 1
+  return appendNextDevelopmentToml(appendPublicationRehearsalToml(`schema = 1
 
 [project]
 type = "publication-artifact"
@@ -390,14 +395,14 @@ command = "make pdf"
 
 [lifecycle.verify]
 command = "make check"
-`);
+`));
 }
 
 function scaffoldBuildWorkflow(
   buildchainSha,
   { artifactName = "paper-publication" } = {},
 ) {
-  return `name: Build
+  return `${nextDevelopmentWorkflowHeader()}name: Build
 
 on:
   workflow_dispatch:
@@ -425,7 +430,7 @@ jobs:
 }
 
 function scaffoldVerifyWorkflow(buildchainSha) {
-  return `name: Verify
+  return `${nextDevelopmentWorkflowHeader()}name: Verify
 
 on:
   pull_request:
@@ -456,7 +461,7 @@ function scaffoldReleaseWorkflow(
   const passportInput = releasePassportProductName
     ? `      release-passport-product-name: ${JSON.stringify(releasePassportProductName)}\n`
     : "";
-  return `name: Paper Release
+  return `${nextDevelopmentWorkflowHeader()}name: Paper Release
 
 on:
   workflow_dispatch:
@@ -1017,8 +1022,10 @@ function migrationFiles({
   const files = new Map([
     [
       PAPER_PATHS.config,
-      projectPublicationRehearsalToml(
-        fs.readFileSync(path.resolve(cwd, PAPER_PATHS.config), "utf8"),
+      projectNextDevelopmentToml(
+        projectPublicationRehearsalToml(
+          fs.readFileSync(path.resolve(cwd, PAPER_PATHS.config), "utf8"),
+        ),
       ),
     ],
     [PAPER_PATHS.contractLock, contractLockText],

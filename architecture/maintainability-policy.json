@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
-    "maxHandMaintainedSourceFiles": 301,
-    "maxHandMaintainedSourceLines": 117702,
+    "maxHandMaintainedSourceFiles": 305,
+    "maxHandMaintainedSourceLines": 118797,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23477,
-    "latestTransition": "Buildchain v3 self-dogfood composes moving-dev, repair, publication and Warrant authority over the major-independent channel identity.",
-    "rationale": "The latest Dev channel-identity transition remains intact: stable and alpha use one major-independent shell, runtime and lock identity, and the reusable surfaces keep both lanes explicit and fail closed. The self-dogfood campaign adds one bounded orchestration file over the existing Release Train, Candidate Patrol and Delivery Warrant authorities. It requires exact protected PR, review, merge-group CI, tree, artifact and installed-product readback; deterministic negative cases prove restart replay, duplicate idempotence, invalid authority, unrelated priority and non-preemption. Train/repair and queue transactions are independently bounded helpers. This exact 301-file, 117702-source-line and 23477-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "Buildchain v3 separates completed Alpha truth from the rooted next-development contract and reference adapter.",
+    "rationale": "The next-development contract adds one provider-neutral state machine, one generated projection, one local adapter CLI, and one guidance generator. It roots the completed Alpha, exact legal version model, source, derived and read-only path roles, BUILDCHAIN_VERSION input, lifecycle derivation and verification stages, and a zero-ref-update effect boundary. Positive and negative fixtures prove Alpha sequence continuity, immutable publication truth, compare-and-swap replay, write-before-validation safety, symlink rejection, generated workflow projection and derived-file fail-closed behavior. This exact 305-file, 118797-source-line and 23477-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/next-development-transition.js": {
+      "maxLines": 688,
+      "rationale": "The single versioned authority keeps completed-Alpha identity, legal successor models, role-separated adapter bounds, materialization roots, compare-and-swap transitions and deterministic replay validation together so local and hosted projections cannot drift; this exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/dev-delivery-warrant.js": {
       "maxLines": 611,
       "rationale": "The existing durable queue adds only the narrow release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."
@@ -101,8 +105,8 @@
       "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and all existing no-widening checks remain unchanged."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1470,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, bounded Buildchain self-runtime dependency bridge, and contained durable-finalization helper; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1477,
+      "rationale": "Inventory retains the complete recovery and publication authority set and additionally requires the next-development contract, schemas, fixtures, adapter, generated guidance and public documentation; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
       "maxFunctionLines": 288,

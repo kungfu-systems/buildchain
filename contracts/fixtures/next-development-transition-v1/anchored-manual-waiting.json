@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-next-development-transition/v1",
+  "idempotencyKey": "sha256:cf805c1933cbc3e571c21af3ae030139bebafb08e2436b3c479c411b2cd2d22c",
+  "repository": "example/widget",
+  "completedAlpha": {
+    "outcome": "succeeded",
+    "version": "1.4.2-alpha.7",
+    "exactTag": "v1.4.2-alpha.7",
+    "releaseSha": "1111111111111111111111111111111111111111",
+    "treeSha": "2222222222222222222222222222222222222222",
+    "publicationRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "completedAt": "2026-08-11T01:00:00.000Z"
+  },
+  "completedAlphaRoot": "sha256:18e65c63aba0df789e0b0e68903733825d87e292b82bcb8fd3793ca45dca6266",
+  "alphaOutcome": "preserved-success",
+  "model": {
+    "strategy": "anchored",
+    "next": "manual"
+  },
+  "target": {
+    "version": null,
+    "anchor": null
+  },
+  "declaredPaths": ["package.json", "release.json"],
+  "adapter": {
+    "environmentVariable": "BUILDCHAIN_VERSION",
+    "sourcePaths": ["package.json"],
+    "derivedPaths": [],
+    "allowedChangePaths": ["package.json"],
+    "readOnlyPaths": ["release.json"],
+    "derivationStage": null,
+    "verificationStage": "lifecycle.verify"
+  },
+  "effectBounds": {
+    "allowedPaths": ["package.json"],
+    "refUpdates": [],
+    "forbiddenRefNamespaces": ["refs/heads/alpha/", "refs/tags/"]
+  },
+  "state": {
+    "status": "waiting-anchor",
+    "generation": 1,
+    "stateRoot": "sha256:4bbca86f960a7c1a10d76d01736422e3129f3f16d3e69e0800a0829201122dd4"
+  },
+  "materialization": null,
+  "transitions": []
+}

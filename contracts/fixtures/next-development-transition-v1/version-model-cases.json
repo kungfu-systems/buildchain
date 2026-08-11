@@ -1,0 +1,40 @@
+{
+  "contract": "kungfu-buildchain-next-development-version-model-fixtures/v1",
+  "positive": [
+    {
+      "name": "semver-auto",
+      "model": { "strategy": "semver", "next": "auto" }
+    },
+    {
+      "name": "anchored-manual",
+      "model": { "strategy": "anchored", "next": "manual" }
+    }
+  ],
+  "negative": [
+    {
+      "name": "semver-manual",
+      "model": { "strategy": "semver", "next": "manual" },
+      "error": "version model must be semver/auto or anchored/manual"
+    },
+    {
+      "name": "anchored-auto",
+      "model": { "strategy": "anchored", "next": "auto" },
+      "error": "version model must be semver/auto or anchored/manual"
+    },
+    {
+      "name": "semver-auto-with-anchor",
+      "model": { "strategy": "semver", "next": "auto" },
+      "anchor": {
+        "manifestPath": "release.json",
+        "manifestRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "error": "semver/auto must not declare an anchor"
+    },
+    {
+      "name": "anchored-manual-target-without-anchor",
+      "model": { "strategy": "anchored", "next": "manual" },
+      "targetVersion": "22.1.0",
+      "error": "anchored/manual targetVersion requires an anchor"
+    }
+  ]
+}
