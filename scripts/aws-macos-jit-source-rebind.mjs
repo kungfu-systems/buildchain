@@ -111,6 +111,10 @@ function classifyCampaignRun(plan, run) {
     plan.github.historicalTerminalFailureRuns.find(
       ({ runId }) => runId === String(run.id),
     );
+  const historicalPreflightFailure =
+    plan.github.historicalPreflightFailureRuns.find(
+      ({ runId }) => runId === String(run.id),
+    );
   const preflightFailure = plan.github.preflightFailureRunIds.includes(
     String(run.id),
   );
@@ -118,20 +122,24 @@ function classifyCampaignRun(plan, run) {
   return {
     startupFailure,
     historicalTerminalFailure,
+    historicalPreflightFailure,
     successfulRun,
     expectedSourceSha:
       startupFailure?.sourceSha ||
       historicalTerminalFailure?.sourceSha ||
+      historicalPreflightFailure?.sourceSha ||
       plan.previousSource.sha,
     classification: startupFailure
       ? "startup-failure"
       : historicalTerminalFailure
         ? "historical-terminal-failure"
-        : successfulRun
-          ? "successful-run"
-          : preflightFailure
-            ? "preflight-failure"
-            : plan.github.priorRunPolicy,
+        : historicalPreflightFailure
+          ? "historical-preflight-failure"
+          : successfulRun
+            ? "successful-run"
+            : preflightFailure
+              ? "preflight-failure"
+              : plan.github.priorRunPolicy,
   };
 }
 
@@ -160,6 +168,11 @@ function assertExactReceiptInventories(plan, receipts) {
     [
       "historical-terminal-failure",
       plan.github.historicalTerminalFailureRuns,
+      true,
+    ],
+    [
+      "historical-preflight-failure",
+      plan.github.historicalPreflightFailureRuns,
       true,
     ],
   ];
@@ -226,7 +239,9 @@ function campaignRunReceipts(plan) {
       assertRunMatchesPolicy(
         classification.historicalTerminalFailure
           ? "terminal-failure"
-          : plan.github.priorRunPolicy,
+          : classification.historicalPreflightFailure
+            ? "preflight-failure"
+            : plan.github.priorRunPolicy,
         run,
         jobs,
         jobCount,
@@ -459,10 +474,15 @@ function assertZeroCampaignResidue(plan, profile) {
   const evidenceObjects = {};
   const historicalTerminalSources =
     plan.github.historicalTerminalFailureRuns.map(({ sourceSha }) => sourceSha);
+  const historicalPreflightSources =
+    plan.github.historicalPreflightFailureRuns.map(
+      ({ sourceSha }) => sourceSha,
+    );
   const evidenceSources = [
     ...new Set([
       plan.previousSource.sha,
       ...historicalTerminalSources,
+      ...historicalPreflightSources,
       plan.source.sha,
     ]),
   ];

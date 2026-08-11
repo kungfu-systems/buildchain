@@ -153,6 +153,25 @@ function historicalTerminalFailureRuns(value) {
   );
 }
 
+function historicalPreflightFailureRuns(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    throw new Error("historicalPreflightFailureRuns must be an array");
+  }
+  const normalized = value.map((entry) => ({
+    runId: exact(entry?.runId, /^[1-9]\d*$/, "historicalPreflightFailureRunId"),
+    sourceSha: exactSha(entry?.sourceSha),
+  }));
+  if (
+    new Set(normalized.map(({ runId }) => runId)).size !== normalized.length
+  ) {
+    throw new Error("historicalPreflightFailureRuns must use unique run ids");
+  }
+  return [...normalized].sort(
+    (left, right) => Number(left.runId) - Number(right.runId),
+  );
+}
+
 function commonAws(values) {
   const region = exact(
     values.region || MACOS_EC2_JIT.region,
@@ -400,6 +419,9 @@ export function createMacosJitSourceRebindPlan(values = {}) {
   const historicalTerminalRuns = historicalTerminalFailureRuns(
     values.historicalTerminalFailureRuns,
   );
+  const historicalPreflightRuns = historicalPreflightFailureRuns(
+    values.historicalPreflightFailureRuns,
+  );
   const successfulRuns = successfulRunIds(values.successfulRunIds);
   if (priorRunPolicy === "unused" && startupRuns.length !== 0) {
     throw new Error("startupFailureRuns require a failed priorRunPolicy");
@@ -407,6 +429,11 @@ export function createMacosJitSourceRebindPlan(values = {}) {
   if (priorRunPolicy === "unused" && historicalTerminalRuns.length !== 0) {
     throw new Error(
       "historicalTerminalFailureRuns require a failed priorRunPolicy",
+    );
+  }
+  if (priorRunPolicy === "unused" && historicalPreflightRuns.length !== 0) {
+    throw new Error(
+      "historicalPreflightFailureRuns require a failed priorRunPolicy",
     );
   }
   if (priorRunPolicy === "unused" && successfulRuns.length !== 0) {
@@ -431,6 +458,7 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       preflightFailureRunIds: preflightRunIds,
       startupFailureRuns: startupRuns,
       historicalTerminalFailureRuns: historicalTerminalRuns,
+      historicalPreflightFailureRuns: historicalPreflightRuns,
       successfulRunIds: successfulRuns,
     },
     aws: {
@@ -452,6 +480,8 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       startupFailureEvidencePreserved: startupRuns.length !== 0,
       historicalTerminalFailureEvidencePreserved:
         historicalTerminalRuns.length !== 0,
+      historicalPreflightFailureEvidencePreserved:
+        historicalPreflightRuns.length !== 0,
       successfulRunEvidencePreserved: successfulRuns.length !== 0,
       zeroJitResidueRequired: true,
       zeroEvidenceRequired: true,

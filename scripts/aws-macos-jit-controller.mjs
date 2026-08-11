@@ -508,6 +508,20 @@ function commonValues(execute) {
   };
 }
 
+function confirmHistoricalPreflightFailures(plan) {
+  const confirmed = flag("confirm-historical-preflight-failure-runs-json")
+    ? jsonArrayArg("confirm-historical-preflight-failure-runs-json")
+    : [];
+  if (
+    JSON.stringify(confirmed) !==
+    JSON.stringify(plan.github.historicalPreflightFailureRuns)
+  ) {
+    throw new Error(
+      "--confirm-historical-preflight-failure-runs-json must equal the exact historical preflight failure inventory",
+    );
+  }
+}
+
 function confirm(plan) {
   if (arg("confirm-source-sha") !== plan.source.sha) {
     throw new Error("--confirm-source-sha must equal the exact source SHA");
@@ -625,6 +639,7 @@ function confirm(plan) {
         );
       }
     }
+    confirmHistoricalPreflightFailures(plan);
   }
   if (plan.kind === "instance-rehydrate-plan") {
     if (arg("confirm-host-id") !== plan.aws.hostId) {
@@ -717,6 +732,11 @@ export function main() {
         (afterFailure || afterPreflightFailure) &&
         flag("historical-terminal-failure-runs-json")
           ? jsonArrayArg("historical-terminal-failure-runs-json")
+          : [],
+      historicalPreflightFailureRuns:
+        (afterFailure || afterPreflightFailure) &&
+        flag("historical-preflight-failure-runs-json")
+          ? jsonArrayArg("historical-preflight-failure-runs-json")
           : [],
       successfulRunIds:
         (afterFailure || afterPreflightFailure) &&
