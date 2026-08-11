@@ -19,7 +19,8 @@ RunnerVersion="2.336.0"
 RunnerArchive="actions-runner-osx-arm64-${RunnerVersion}.tar.gz"
 RunnerArchiveSha256="8e8839c49b7060b6b2154f4931f815df330c27f167d53ef2239ee3dfce28b079"
 RunnerUser="ec2-user"
-RunnerRoot="/Users/${RunnerUser}/kungfu-actions-runner/${RunnerLabel}"
+RunnerBase="/Users/${RunnerUser}/kungfu-actions-runner"
+RunnerRoot="${RunnerBase}/${RunnerLabel}"
 RunnerArchivePath="/private/tmp/${RunnerArchive}"
 RunnerPath="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -60,6 +61,7 @@ if [[ -z "$JitConfig" || "$JitConfig" == "None" ]]; then
   exit 1
 fi
 
+install -d -o "$RunnerUser" -g staff -m 700 "$RunnerBase"
 install -d -o "$RunnerUser" -g staff -m 700 "$RunnerRoot"
 curl --fail --location --silent --show-error \
   --output "$RunnerArchivePath" \
