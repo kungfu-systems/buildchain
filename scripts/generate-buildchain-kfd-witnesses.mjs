@@ -85,7 +85,7 @@ export async function generateBuildchainKfdAdopterRelease({ cwd = process.cwd(),
   const packageArtifactRoot = installedKfdPackageArtifactRoot(), gates = [];
   for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) gates.push(await generateProductGate(root, outDir, standard, sourceSha, checkedAt));
   const sourceRoot = kfdProductGateDigest({ repository: REPOSITORY, sourceSha, files: [...new Set(Object.values(evidenceSources))].sort().map((sourcePath) => ({ path: sourcePath, sha256: fileDigest(path.join(root, sourcePath)) })) });
-  let manifest = initAdopterManifest({ manifestId: "buildchain-v3-full-cut", adopterId: REPOSITORY, artifactKind: "git-commit", artifactCoordinate: `${REPOSITORY}@${sourceSha}`, artifactRoot: sourceRoot, scope: "Buildchain v3 release and protected delivery authority", packageArtifactRoot, verifiedAt: checkedAt, maxAgeSeconds: 86400 });
+  let manifest = initAdopterManifest({ manifestId: "buildchain-v3-full-cut", adopterId: REPOSITORY, artifactKind: "git-commit", artifactCoordinate: `${REPOSITORY}@${sourceSha}`, artifactRoot: sourceRoot, scope: "Buildchain v3 release and protected delivery authority", packageArtifactRoot, verifiedAt: checkedAt, maxAgeSeconds: 86400, packageRoot: kfdRoot });
   const gateById = new Map(gates.map((gate) => [gate.standard.toUpperCase(), gate]));
   for (const id of ["KFD-1", "KFD-2", "KFD-3", "KFD-4", "KFD-5", "KFD-7"]) {
     const row = manifest.decisions.find((entry) => entry.id === id);
@@ -95,7 +95,7 @@ export async function generateBuildchainKfdAdopterRelease({ cwd = process.cwd(),
   }
   const kfd6 = manifest.decisions.find((entry) => entry.id === "KFD-6");
   kfd6.state = "unsupported"; kfd6.usage = "unused"; kfd6.gaps = ["Buildchain does not claim KFD-6 support in this cut."];
-  manifest = addAdopterWitness(manifest, { decisionId: "KFD-10", profileId: "kfd-warrant-evidence", witnessCoordinate: `git+https://github.com/${REPOSITORY}@${sourceSha}#${evidenceSources["KFD-10"]}`, witnessRoot: fileDigest(path.join(root, evidenceSources["KFD-10"])), packageArtifactRoot, verifiedAt: checkedAt, maxAgeSeconds: 86400 });
+  manifest = addAdopterWitness(manifest, { decisionId: "KFD-10", profileId: "kfd-warrant-evidence", witnessCoordinate: `git+https://github.com/${REPOSITORY}@${sourceSha}#${evidenceSources["KFD-10"]}`, witnessRoot: fileDigest(path.join(root, evidenceSources["KFD-10"])), packageArtifactRoot, verifiedAt: checkedAt, maxAgeSeconds: 86400, packageRoot: kfdRoot });
   const manifestPath = writeJson(outDir, "kfd-adopter-manifest.json", manifest).filePath, manifestGate = createKfdAdopterManifestGate({ manifest, packageArtifactRoot, gateResults: gates, authorityPath: "kfd-adopter-manifest.json", expectedSourceSha: sourceSha, checkedAt });
   if (!validateKfdAdopterManifestGate(manifestGate, { expectedSourceSha: sourceSha, checkedAt }).valid) throw new Error(`generated adopter manifest gate failed: ${JSON.stringify(manifestGate.issues)}`);
   const gatePath = writeJson(outDir, "kfd-adopter-manifest-gate.json", manifestGate).filePath, support = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
