@@ -3,21 +3,35 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { BUILDCHAIN_CONFIG_PATH } from "../packages/core/buildchain-layout.js";
-import { detectPackageManager, assertPackageManager } from "../packages/core/package-manager.js";
+import {
+  detectPackageManager,
+  assertPackageManager,
+} from "../packages/core/package-manager.js";
 import {
   PUBLICATION_REHEARSAL_WORKFLOW_PATH,
   appendPublicationRehearsalToml,
   mergePublicationRehearsalAgentInstructions,
   publicationRehearsalWorkflow,
 } from "../packages/core/publication-rehearsal-projection.js";
+import {
+  appendNextDevelopmentToml,
+  mergeNextDevelopmentAgentInstructions,
+  nextDevelopmentWorkflowHeader,
+} from "../packages/core/next-development-projection.js";
 
-const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v3";
-const DEFAULT_PUBLICATION_LATEX_IMAGE = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder";
-const DEFAULT_PUBLICATION_LATEX_DIGEST = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8";
-const DEFAULT_PUBLICATION_LATEX_COMMAND = "latexmk -pdf -outdir=_build paper/main.tex";
+const BUILDCHAIN_WORKFLOW_REF =
+  "kungfu-systems/buildchain/.github/workflows/.build.yml@v3";
+const DEFAULT_PUBLICATION_LATEX_IMAGE =
+  "ghcr.io/kungfu-systems/build-images/latex-pdf-builder";
+const DEFAULT_PUBLICATION_LATEX_DIGEST =
+  "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8";
+const DEFAULT_PUBLICATION_LATEX_COMMAND =
+  "latexmk -pdf -outdir=_build paper/main.tex";
 
 function posixPath(value) {
-  return String(value || "").split(path.sep).join("/");
+  return String(value || "")
+    .split(path.sep)
+    .join("/");
 }
 
 function repoName(cwd) {
@@ -282,34 +296,42 @@ command = "make check"
 }
 
 function infraContractDesiredJson(cwd) {
-  return `${JSON.stringify({
-    service: repoName(cwd),
-    environment: "staging",
-    resources: [
-      {
-        kind: "static-site",
-        name: repoName(cwd),
-        desiredState: {
-          hostname: "staging.example.com",
-          accessControl: "managed-network",
-          owner: "platform",
+  return `${JSON.stringify(
+    {
+      service: repoName(cwd),
+      environment: "staging",
+      resources: [
+        {
+          kind: "static-site",
+          name: repoName(cwd),
+          desiredState: {
+            hostname: "staging.example.com",
+            accessControl: "managed-network",
+            owner: "platform",
+          },
         },
-      },
-    ],
-  }, null, 2)}\n`;
+      ],
+    },
+    null,
+    2,
+  )}\n`;
 }
 
 function infraContractOutputsJson(cwd) {
-  return `${JSON.stringify({
-    service: repoName(cwd),
-    environment: "staging",
-    observedMode: "manual-observed",
-    outputs: {
-      hostname: "staging.example.com",
-      distributionId: "observed-distribution-id",
-      bucket: "observed-bucket-name",
+  return `${JSON.stringify(
+    {
+      service: repoName(cwd),
+      environment: "staging",
+      observedMode: "manual-observed",
+      outputs: {
+        hostname: "staging.example.com",
+        distributionId: "observed-distribution-id",
+        bucket: "observed-bucket-name",
+      },
     },
-  }, null, 2)}\n`;
+    null,
+    2,
+  )}\n`;
 }
 
 function workflowArtifactPaths(type) {
@@ -333,7 +355,7 @@ function workflowArtifactPaths(type) {
 }
 
 function publicationWorkflowYaml() {
-  return `name: Build
+  return `${nextDevelopmentWorkflowHeader()}name: Build
 
 on:
   workflow_dispatch:
@@ -365,7 +387,7 @@ jobs:
 }
 
 function workflowYaml({ type, runnerPreset, artifactName }) {
-  return `name: Build
+  return `${nextDevelopmentWorkflowHeader()}name: Build
 
 on:
   workflow_dispatch:
@@ -400,7 +422,9 @@ jobs:
 
 function writeIfAllowed(filePath, content, { force }) {
   if (fs.existsSync(filePath) && !force) {
-    throw new Error(`${posixPath(filePath)} already exists; pass --force to overwrite`);
+    throw new Error(
+      `${posixPath(filePath)} already exists; pass --force to overwrite`,
+    );
   }
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, content);
@@ -408,7 +432,9 @@ function writeIfAllowed(filePath, content, { force }) {
 }
 
 function writeManagedAgentEntry(filePath, current) {
-  const content = mergePublicationRehearsalAgentInstructions(current);
+  const content = mergeNextDevelopmentAgentInstructions(
+    mergePublicationRehearsalAgentInstructions(current),
+  );
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, content);
   return filePath;
@@ -424,27 +450,33 @@ export function initBuildchainRepo({
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const manager = detectOrDefaultPackageManager(resolvedCwd, packageManager);
-  const toml = appendPublicationRehearsalToml((() => {
-    if (type === "package") {
-      return packageToml(resolvedCwd, manager);
-    }
-    if (type === "native") {
-      return nativeToml(resolvedCwd);
-    }
-    if (type === "web-surface") {
-      return webSurfaceToml(resolvedCwd);
-    }
-    if (type === "infra-contract") {
-      return infraContractToml(resolvedCwd);
-    }
-    if (type === "publication-artifact") {
-      return publicationArtifactToml(resolvedCwd);
-    }
-    if (type === "anchored-package") {
-      return anchoredPackageToml(resolvedCwd, manager);
-    }
-    throw new Error("init --type must be one of package, native, web-surface, infra-contract, publication-artifact, or anchored-package");
-  })());
+  const toml = appendNextDevelopmentToml(
+    appendPublicationRehearsalToml(
+      (() => {
+        if (type === "package") {
+          return packageToml(resolvedCwd, manager);
+        }
+        if (type === "native") {
+          return nativeToml(resolvedCwd);
+        }
+        if (type === "web-surface") {
+          return webSurfaceToml(resolvedCwd);
+        }
+        if (type === "infra-contract") {
+          return infraContractToml(resolvedCwd);
+        }
+        if (type === "publication-artifact") {
+          return publicationArtifactToml(resolvedCwd);
+        }
+        if (type === "anchored-package") {
+          return anchoredPackageToml(resolvedCwd, manager);
+        }
+        throw new Error(
+          "init --type must be one of package, native, web-surface, infra-contract, publication-artifact, or anchored-package",
+        );
+      })(),
+    ),
+  );
 
   const agentsPath = path.join(resolvedCwd, "AGENTS.md");
   const currentAgents = fs.existsSync(agentsPath)
@@ -452,7 +484,9 @@ export function initBuildchainRepo({
     : "";
 
   const written = [
-    writeIfAllowed(path.join(resolvedCwd, BUILDCHAIN_CONFIG_PATH), toml, { force }),
+    writeIfAllowed(path.join(resolvedCwd, BUILDCHAIN_CONFIG_PATH), toml, {
+      force,
+    }),
     writeIfAllowed(
       path.join(resolvedCwd, ".github", "workflows", "build.yml"),
       type === "publication-artifact"
@@ -472,14 +506,31 @@ export function initBuildchainRepo({
     writeManagedAgentEntry(agentsPath, currentAgents),
   ];
 
-  if (type === "anchored-package" && !fs.existsSync(path.join(resolvedCwd, "release.json"))) {
-    written.push(writeIfAllowed(path.join(resolvedCwd, "release.json"), "{\n  \"upstream\": \"\",\n  \"version\": \"0.0.0\"\n}\n", { force }));
+  if (
+    type === "anchored-package" &&
+    !fs.existsSync(path.join(resolvedCwd, "release.json"))
+  ) {
+    written.push(
+      writeIfAllowed(
+        path.join(resolvedCwd, "release.json"),
+        '{\n  "upstream": "",\n  "version": "0.0.0"\n}\n',
+        { force },
+      ),
+    );
   }
 
   if (type === "infra-contract") {
     written.push(
-      writeIfAllowed(path.join(resolvedCwd, "infra", "desired.json"), infraContractDesiredJson(resolvedCwd), { force }),
-      writeIfAllowed(path.join(resolvedCwd, "infra", "outputs.json"), infraContractOutputsJson(resolvedCwd), { force }),
+      writeIfAllowed(
+        path.join(resolvedCwd, "infra", "desired.json"),
+        infraContractDesiredJson(resolvedCwd),
+        { force },
+      ),
+      writeIfAllowed(
+        path.join(resolvedCwd, "infra", "outputs.json"),
+        infraContractOutputsJson(resolvedCwd),
+        { force },
+      ),
     );
   }
 
@@ -489,7 +540,9 @@ export function initBuildchainRepo({
     cwd: resolvedCwd,
     packageManager: manager,
     workflowRef: BUILDCHAIN_WORKFLOW_REF,
-    written: written.map((filePath) => posixPath(path.relative(resolvedCwd, filePath))),
+    written: written.map((filePath) =>
+      posixPath(path.relative(resolvedCwd, filePath)),
+    ),
   };
 }
 
@@ -501,7 +554,11 @@ function readArg(name, fallback = "") {
   return process.argv[index + 1] || "";
 }
 
-if (!process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT && process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  !process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT &&
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   try {
     const result = initBuildchainRepo({
       cwd: readArg("cwd", process.cwd()),

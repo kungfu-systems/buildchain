@@ -65,14 +65,112 @@ jobs:
       require-verify: true
       artifact-retention-days: 7
 
+  next-development-fault:
+    name: Checkpoint post-Alpha fault
+    needs: alpha-consumer
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install exact self-dogfood runtime dependencies
+        run: corepack pnpm@11.7.0 install --frozen-lockfile
+
+      - name: Inject fault after durable materialization
+        run: >-
+          node scripts/next-development-self-dogfood.mjs checkpoint
+          --repository "${{ github.repository }}"
+          --runtime-ref "${{ needs.alpha-consumer.outputs.buildchain-runtime-ref }}"
+          --runtime-sha "${{ needs.alpha-consumer.outputs.buildchain-runtime-sha }}"
+          --contract-root "${{ needs.alpha-consumer.outputs.buildchain-contract-digest }}"
+          --runner-id "${{ github.run_id }}:${{ github.run_attempt }}:${{ github.job }}"
+          --output .buildchain/next-development/checkpoint.json
+
+      - name: Retain durable post-Alpha checkpoint
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v3-next-development-checkpoint-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/next-development/checkpoint.json
+          if-no-files-found: error
+          retention-days: 14
+
+  next-development-resume:
+    name: Resume post-Alpha work on fresh runner
+    needs: next-development-fault
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      transaction-root: ${{ steps.resume.outputs.transaction-root }}
+      protected-dev-readback-root: ${{ steps.resume.outputs.protected-dev-readback-root }}
+      evidence-root: ${{ steps.resume.outputs.evidence-root }}
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install exact self-dogfood runtime dependencies
+        run: corepack pnpm@11.7.0 install --frozen-lockfile
+
+      - name: Restore durable post-Alpha checkpoint
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-v3-next-development-checkpoint-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/next-development
+
+      - name: Resume both legal version models
+        id: resume
+        run: >-
+          node scripts/next-development-self-dogfood.mjs resume
+          --input .buildchain/next-development/checkpoint.json
+          --runner-id "${{ github.run_id }}:${{ github.run_attempt }}:${{ github.job }}"
+          --output .buildchain/next-development/evidence.json
+
+      - name: Retain fresh-runner recovery evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v3-next-development-self-dogfood-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/next-development/evidence.json
+          if-no-files-found: error
+          retention-days: 14
+
   verify-floating-refs:
     name: Verify floating refs
     needs:
       - alpha-consumer
       - stable-consumer
+      - next-development-resume
     runs-on: ubuntu-24.04
     steps:
-      - name: Verify resolved runtime SHAs
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install exact self-dogfood runtime dependencies
+        run: corepack pnpm@11.7.0 install --frozen-lockfile
+
+      - name: Download fresh-runner recovery evidence
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-v3-next-development-self-dogfood-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/next-development
+
+      - name: Read exact hosted refs and protected Dev state
         uses: actions/github-script@v8
         env:
           ALPHA_RUNTIME_REF: ${{ needs.alpha-consumer.outputs.buildchain-runtime-ref }}
@@ -96,6 +194,45 @@ jobs:
             };
             const expectedAlphaSha = await resolveTag(alphaRef);
             const expectedStableSha = await resolveTag(stableRef);
+            const protectedDevBranch = "dev/v3/v3.0";
+            const protectedDevRef = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `heads/${protectedDevBranch}`,
+            });
+            const protectedDevSha = protectedDevRef.data.object.sha;
+            const protectedDevCommit = await github.rest.git.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: protectedDevSha,
+            });
+            const protectedDevTreeSha = protectedDevCommit.data.tree.sha;
+            const protectedVersionPaths = [
+              ".buildchain/release-impact.json",
+              "dist/site/buildchain-contract.json",
+              "package.json",
+            ];
+            const protectedVersionRoots = await Promise.all(
+              protectedVersionPaths.map(async (path) => {
+                const response = await github.rest.repos.getContent({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  path,
+                  ref: protectedDevSha,
+                });
+                if (Array.isArray(response.data) || response.data.type !== "file") {
+                  throw new Error(`protected Dev path is not an exact file: ${path}`);
+                }
+                return { path, gitBlobSha: response.data.sha };
+              }),
+            );
+            const protectedDevReadback = {
+              repository: context.repo.owner + "/" + context.repo.repo,
+              branch: protectedDevBranch,
+              commitSha: protectedDevSha,
+              treeSha: protectedDevTreeSha,
+              versionRoots: protectedVersionRoots,
+            };
             const observed = {
               alpha: {
                 ref: process.env.ALPHA_RUNTIME_REF,
@@ -110,37 +247,30 @@ jobs:
                 expectedSha: expectedStableSha,
               },
             };
-            const failures = [];
-            if (observed.alpha.ref !== alphaRef) failures.push(`alpha runtime ref: ${observed.alpha.ref}`);
-            if (observed.alpha.class !== "alpha") failures.push(`alpha runtime class: ${observed.alpha.class}`);
-            if (observed.alpha.sha !== expectedAlphaSha) failures.push(`alpha runtime sha: ${observed.alpha.sha}`);
-            if (observed.stable.ref !== stableRef) failures.push(`stable runtime ref: ${observed.stable.ref}`);
-            if (observed.stable.class !== "stable") failures.push(`stable runtime class: ${observed.stable.class}`);
-            if (observed.stable.sha !== expectedStableSha) failures.push(`stable runtime sha: ${observed.stable.sha}`);
-            const evidence = {
-              schemaVersion: 1,
-              contract: "kungfu-buildchain-alpha-self-dogfood",
+            const observation = {
               repository: context.repo.owner + "/" + context.repo.repo,
               callerSha: context.sha,
               checkedAt: new Date().toISOString(),
-              status: failures.length === 0 ? "passed" : "failed",
               observed,
-              failures,
+              protectedDevReadback,
             };
             fs.mkdirSync(".buildchain/self-dogfood", { recursive: true });
             fs.writeFileSync(
-              ".buildchain/self-dogfood/evidence.json",
-              JSON.stringify(evidence, null, 2) + "\n",
+              ".buildchain/self-dogfood/hosted-observation.json",
+              JSON.stringify(observation, null, 2) + "\n",
             );
-            await core.summary
-              .addHeading("Buildchain floating ref self-dogfood")
-              .addRaw(`- v3-alpha: \`${observed.alpha.sha}\` (${observed.alpha.class})\n`)
-              .addRaw(`- v3: \`${observed.stable.sha}\` (${observed.stable.class})\n`)
-              .addRaw(`- status: \`${evidence.status}\`\n`)
-              .write();
-            if (failures.length > 0) {
-              core.setFailed(`floating ref self-dogfood failed: ${failures.join(", ")}`);
-            }
+
+      - name: Root hosted observation with controller evidence
+        run: >-
+          node scripts/next-development-self-dogfood.mjs attest-hosted
+          --input .buildchain/next-development/evidence.json
+          --observation .buildchain/self-dogfood/hosted-observation.json
+          --output .buildchain/self-dogfood/evidence.json
+
+      - name: Verify complete rooted self-dogfood evidence
+        run: >-
+          node scripts/next-development-self-dogfood.mjs verify-hosted
+          --input .buildchain/self-dogfood/evidence.json
 
       - name: Upload self-dogfood evidence
         if: ${{ always() }}

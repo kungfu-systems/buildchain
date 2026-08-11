@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:5292461118df2ec99a15411b6ed50c288abeb05d992677e3500b9bd46255a001"
+      "digest": "sha256:a1c408b13658f225113ede0ee4f4309cbae466178e8f248f4290a616ce39194c"
     },
     {
       "id": "getting-started",
@@ -134,6 +134,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:5ec5534ee48790df09c71a2578e1ca364a14dadf6ba662685ee66f78ae2589e7"
+    },
+    {
+      "id": "next-development-transition",
+      "title": "Next-development transition",
+      "path": "docs/next-development-transition.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:93b2687be0e36744cb7b0b9d0d76588d89569120ffdb577f13c8c0827988ba28"
     },
     {
       "id": "release-propagation",
@@ -245,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:bbef23e4f489376f759e5678d61e2f07c69dfa5542f5538e14c68a0714233ea3"
+      "digest": "sha256:cf2137143bb567a11430cf35c3faaff7e16861af4e68554af5cbea1b3a0a1077"
     },
     {
       "id": "build-facts",
@@ -349,7 +357,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:68934ebe8330a13376d1b71d1a875d67d2970b1036e0f185a923175ca2a257fe"
+      "digest": "sha256:948957c9170437e2a383efba01d99d9b137ef56ce71ae8036545daaed625d09c"
     },
     {
       "id": "web-surface-deployments",

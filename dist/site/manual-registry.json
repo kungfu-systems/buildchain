@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:5292461118df2ec99a15411b6ed50c288abeb05d992677e3500b9bd46255a001",
+      "digest": "sha256:a1c408b13658f225113ede0ee4f4309cbae466178e8f248f4290a616ce39194c",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -159,6 +159,21 @@
       ],
       "maturity": "preview",
       "order": 132
+    },
+    {
+      "id": "next-development-transition",
+      "title": "Next-development transition",
+      "path": "docs/next-development-transition.md",
+      "plane": "verify",
+      "digest": "sha256:93b2687be0e36744cb7b0b9d0d76588d89569120ffdb577f13c8c0827988ba28",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "release-operator",
+        "consumer",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 133
     },
     {
       "id": "release-propagation",
@@ -347,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:bbef23e4f489376f759e5678d61e2f07c69dfa5542f5538e14c68a0714233ea3",
+      "digest": "sha256:cf2137143bb567a11430cf35c3faaff7e16861af4e68554af5cbea1b3a0a1077",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -532,7 +547,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:68934ebe8330a13376d1b71d1a875d67d2970b1036e0f185a923175ca2a257fe",
+      "digest": "sha256:948957c9170437e2a383efba01d99d9b137ef56ce71ae8036545daaed625d09c",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
@@ -564,6 +579,7 @@
     "docs/reusable-build-surface.md",
     "docs/release-candidate.md",
     "docs/release-train.md",
+    "docs/next-development-transition.md",
     "docs/stable-candidate-patrol.md",
     "docs/dev-qualification-patrol.md",
     "docs/dev-alpha-candidate-patrol.md",

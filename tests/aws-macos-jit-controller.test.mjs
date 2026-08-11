@@ -10,6 +10,7 @@ import {
   AWS_MACOS_JIT_CONTROLLER_CONTRACT,
   createMacosJitCampaignPlan,
   createMacosJitClosePlan,
+  createMacosJitInstanceRehydratePlan,
   createMacosJitJobPlan,
   createMacosJitSourceRebindPlan,
   macosAllocateHostsArgs,
@@ -59,6 +60,17 @@ function jobPlan(overrides = {}) {
   });
 }
 
+function rehydratePlan(overrides = {}) {
+  return createMacosJitInstanceRehydratePlan({
+    ...values,
+    hostId: "h-0123456789abcdef0",
+    hostAllocatedAt: "2026-08-02T01:05:00Z",
+    replacesInstanceId: "i-0fedcba9876543210",
+    rehydrationId: "r1",
+    ...overrides,
+  });
+}
+
 function sourceRebindPlan(overrides = {}) {
   return createMacosJitSourceRebindPlan({
     ...values,
@@ -84,6 +96,24 @@ test("macOS controller binds one campaign host and one reusable instance", () =>
         entry.Key === "kungfu:campaign-id" &&
         entry.Value === "mac-20260802-f60591b3",
     ),
+  );
+});
+
+test("macOS rehydration binds a replacement instance to the existing host only", () => {
+  const plan = rehydratePlan();
+  assert.equal(plan.kind, "instance-rehydrate-plan");
+  assert.equal(plan.aws.hostId, "h-0123456789abcdef0");
+  assert.equal(plan.aws.replacesInstanceId, "i-0fedcba9876543210");
+  assert.equal(plan.aws.rehydrationId, "r1");
+  assert.equal(
+    plan.aws.instanceClientToken,
+    "kungfu-mac-rehydrate-mac-20260802-f60591b3-r1",
+  );
+  assert.equal(plan.safety.existingCampaignHostRequired, true);
+  assert.equal(plan.safety.noHostAllocation, true);
+  assert.throws(
+    () => rehydratePlan({ rehydrationId: "retry-1" }),
+    /rehydrationId is invalid/,
   );
 });
 
@@ -312,7 +342,7 @@ if (joined.includes("sts get-caller-identity")) {
 } else if (joined.includes("ec2 describe-hosts")) {
   process.stdout.write(JSON.stringify({ Hosts: [] }));
 } else if (joined.includes("ec2 describe-instances") && joined.includes("--instance-ids")) {
-  process.stdout.write(JSON.stringify({ Reservations: [{ Instances: [{ InstanceId: "i-0123456789abcdef0", State: { Name: "running" }, Placement: { HostId: "h-0123456789abcdef0" }, ImageId: "ami-0a337ecd4cb8e307f", InstanceType: "mac2.metal", BlockDeviceMappings: [{ DeviceName: "/dev/sda1", Ebs: { VolumeId: "vol-0123456789abcdef0", DeleteOnTermination: true } }], Tags: [
+  process.stdout.write(JSON.stringify({ Reservations: [{ Instances: [{ InstanceId: "i-0123456789abcdef0", State: { Name: "running" }, Placement: { HostId: "h-0123456789abcdef0" }, ImageId: "ami-0a337ecd4cb8e307f", InstanceType: "mac2.metal", LaunchTime: "2026-08-02T01:06:00Z", BlockDeviceMappings: [{ DeviceName: "/dev/sda1", Ebs: { VolumeId: "vol-0123456789abcdef0", DeleteOnTermination: true } }], Tags: [
     { Key: "kungfu:owner", Value: "buildchain" }, { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" }, { Key: "kungfu:provider", Value: "macos-ec2-jit" }, { Key: "kungfu:campaign-id", Value: "mac-20260802-f60591b3" }, { Key: "kungfu:source-sha", Value: resourceSourceSha }
   ] }] }] }));
 } else if (joined.includes("ec2 describe-instances") && joined.includes("tag:kungfu:campaign-id")) {
@@ -447,6 +477,73 @@ test("macOS controller launches only after exact-source preflight, IAM simulatio
     assert.equal(simulationIndex < allocateIndexes[0].index, true);
     assert.equal(runIndexes[0].entry.args.includes("--dry-run"), true);
     assert.equal(runIndexes[1].entry.args.includes("--dry-run"), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS controller rehydrates the same host without allocating another host", () => {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "mac-jit-rehydrate-test-"),
+  );
+  const commandLog = path.join(tempRoot, "commands.jsonl");
+  installFakes(tempRoot);
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "scripts/aws-macos-jit-controller.mjs",
+        "rehydrate-instance",
+        "--execute",
+        "--host-id",
+        "h-0123456789abcdef0",
+        "--host-allocated-at",
+        "2026-08-02T01:05:00Z",
+        "--replaces-instance-id",
+        "i-0fedcba9876543210",
+        "--rehydration-id",
+        "r1",
+        "--confirm-source-sha",
+        values.sourceSha,
+        "--confirm-campaign-id",
+        values.campaignId,
+        "--confirm-host-id",
+        "h-0123456789abcdef0",
+        "--confirm-replaces-instance-id",
+        "i-0fedcba9876543210",
+        "--confirm-no-host-allocation",
+        ...commonCliArgs(),
+      ],
+      {
+        cwd: path.resolve(import.meta.dirname, ".."),
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${tempRoot}:${process.env.PATH}`,
+          FAKE_COMMAND_LOG: commandLog,
+        },
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.status, "rehydrated");
+    assert.equal(output.aws.hostId, "h-0123456789abcdef0");
+    assert.equal(output.hostAllocated, false);
+    const commands = fs
+      .readFileSync(commandLog, "utf8")
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
+    const runInstances = commands.filter((entry) =>
+      entry.args.includes("run-instances"),
+    );
+    assert.equal(runInstances.length, 2);
+    assert.equal(runInstances[0].args.includes("--dry-run"), true);
+    assert.equal(runInstances[1].args.includes("--dry-run"), false);
   } finally {
     fs.rmSync(tempRoot, { recursive: true });
   }

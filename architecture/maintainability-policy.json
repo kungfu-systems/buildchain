@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
-    "maxHandMaintainedSourceFiles": 301,
-    "maxHandMaintainedSourceLines": 117702,
+    "baselineRevision": "7f4c81e824f761271b90c3cf12ce3bc351da7937",
+    "maxHandMaintainedSourceFiles": 310,
+    "maxHandMaintainedSourceLines": 121227,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23477,
-    "latestTransition": "Buildchain v3 self-dogfood composes moving-dev, repair, publication and Warrant authority over the major-independent channel identity.",
-    "rationale": "The latest Dev channel-identity transition remains intact: stable and alpha use one major-independent shell, runtime and lock identity, and the reusable surfaces keep both lanes explicit and fail closed. The self-dogfood campaign adds one bounded orchestration file over the existing Release Train, Candidate Patrol and Delivery Warrant authorities. It requires exact protected PR, review, merge-group CI, tree, artifact and installed-product readback; deterministic negative cases prove restart replay, duplicate idempotence, invalid authority, unrelated priority and non-preemption. Train/repair and queue transactions are independently bounded helpers. This exact 301-file, 117702-source-line and 23477-workflow-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23607,
+    "latestTransition": "Buildchain v3 composes bounded macOS JIT rehydration with hosted next-development self-dogfood.",
+    "rationale": "The protected next-development controller and bounded same-host macOS JIT rehydration remain intact while the self-dogfood slice adds one scenario harness and one evidence command. It calls the real version-state adapter, injects transient durable-state failure, restores the operation on a fresh runner, exercises protected Dev movement and protected PR delay, proves both legal models, and roots exact hosted readback before stable qualification. This exact 310-file, 121227-source-line and 23607-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,26 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/aws-macos-jit-controller.mjs": {
+      "maxLines": 631,
+      "rationale": "The existing operator entrypoint adds only the rehydration plan dispatch and explicit exact-host, replaced-instance and no-host-allocation confirmations; provider checks and execution remain in the separately budgeted rehydration module. This exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/next-development-transition.js": {
+      "maxLines": 738,
+      "rationale": "The single versioned authority keeps completed-Alpha identity, legal successor models, role-separated adapter bounds, materialization roots, compare-and-swap transitions and deterministic replay validation together. The bounded increase makes anchored/manual initial state persist as waiting-anchor even after reviewed input and exposes rooted anchor binding plus controller materialization recording; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/next-development-controller.js": {
+      "maxLines": 726,
+      "rationale": "The durable controller keeps atomic child identity, rooted checkpoints, idempotent materialization operations, latest protected Dev revalidation, PR settlement and exact source and derived root readback in one provider-neutral authority. It exposes no Alpha publication effect and resumes only through injected atomic store and executor boundaries; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/next-development-candidate-reservation.js": {
+      "maxLines": 186,
+      "rationale": "The bounded provider adapter recognizes generated preparation identity, excludes pure preparation integrations, validates exact candidate blob preservation, and roots the remote readback without adding candidate settlement authority; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "actions/promote-buildchain-ref/internal/promote-alpha-channel.js": {
+      "maxLines": 599,
+      "rationale": "The extracted Alpha promotion stage replaces the former non-fast-forward skip with the existing exact-current-Dev regeneration contract, protected PR fallback, and fail-closed workspace binding; this exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/dev-delivery-warrant.js": {
       "maxLines": 611,
       "rationale": "The existing durable queue adds only the narrow release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."
@@ -101,8 +121,8 @@
       "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and all existing no-widening checks remain unchanged."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1470,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, bounded Buildchain self-runtime dependency bridge, and contained durable-finalization helper; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1481,
+      "rationale": "Inventory retains the complete recovery and publication authority set and additionally requires both bounded next-development self-dogfood command and harness files beside the contract, controller, schemas, fixtures, adapter, generated guidance and public documentation; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
       "maxFunctionLines": 288,
@@ -119,8 +139,8 @@
       "rationale": "The existing Gate validator admits an explicit bounded long-form duration class while preserving the standard 60-second default and exact capture-to-scene binding; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/dev-alpha-candidate-patrol.mjs": {
-      "maxLines": 1184,
-      "rationale": "The existing single-flight exact-source Alpha controller now idempotently registers repository-selected GitHub auto-merge intent only after settlement revalidation, with explicit merge-method validation and no direct merge or approval path; this exact ceiling cannot grow implicitly."
+      "maxLines": 1197,
+      "rationale": "The existing single-flight exact-source Alpha controller delegates next-development reservation validation to the bounded core reader, carries the rooted result into selection, and retains the no-publication boundary; this exact ceiling cannot grow implicitly."
     },
     "scripts/build-contract-core.mjs": {
       "maxLines": 1234,

@@ -5,7 +5,7 @@ import { checkCoreMechanismInventory } from "../scripts/check-core-mechanism-inv
 
 test("v3 core mechanism inventory closes every required evidence dimension", () => {
   const report = checkCoreMechanismInventory();
-  assert.equal(report.mechanisms, 11);
+  assert.equal(report.mechanisms, 12);
   assert.equal(report.dependencyCycles, 0);
   assert(report.sourceCoordinates >= 55);
   assert(report.authorityCoordinates >= 41);
@@ -32,14 +32,18 @@ test("reverse-discovered orphaned or ambiguously owned mechanism coordinates fai
   );
   inventory.mechanisms[1].sourcePaths.pop();
   const settlement = "packages/core/dev-delivery-warrant-settlement.js";
-  inventory.mechanisms[0].sourcePaths =
-    inventory.mechanisms[0].sourcePaths.filter((file) => file !== settlement);
+  const deliveryWarrant = inventory.mechanisms.find(
+    (mechanism) => mechanism.id === "dev-delivery-warrant",
+  );
+  deliveryWarrant.sourcePaths = deliveryWarrant.sourcePaths.filter(
+    (file) => file !== settlement,
+  );
   assert.throws(
     () => checkCoreMechanismInventory({ inventory }),
     /orphan authority coordinate/u,
   );
-  inventory.mechanisms[0].sourcePaths.push(settlement);
-  inventory.mechanisms[0].testPaths = [];
+  deliveryWarrant.sourcePaths.push(settlement);
+  deliveryWarrant.testPaths = [];
   assert.throws(
     () => checkCoreMechanismInventory({ inventory }),
     /testPaths is empty/u,

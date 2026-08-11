@@ -494,25 +494,23 @@ function summarizeReleasePassportIssues(report) {
     .join("; ");
 }
 
-async function verifyCollectedReleasePassport({ collected, cwd, phase = "generated",
-}) {
-  const passportPath = path.join(collected.outputDir, "buildchain.release.json",
-  );
+async function verifyCollectedReleasePassport({ collected, cwd, phase = "generated", requireBuildchainSelfKfd = false }) {
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
   const relativePassportPath = path.relative(cwd, passportPath).split(path.sep).join("/");
+  if (requireBuildchainSelfKfd) {
+    const passport = collected?.passport, files = new Set(Array.isArray(collected?.files) ? collected.files : []);
+    const required = [["passport.kfdAdopter", passport?.kfdAdopter], ["passport.kfdSupport", passport?.kfdSupport], ["artifactEvidence.kfdAdopter", collected?.artifactEvidence?.kfdAdopter], ["passport.evidence.kfdAdopterManifest", passport?.evidence?.kfdAdopterManifest === "kfd-adopter-manifest.json"], ["passport.evidence.kfdAdopterGate", passport?.evidence?.kfdAdopterGate === "kfd-adopter-manifest-gate.json"], ["passport.evidence.kfdSupport", passport?.evidence?.kfdSupport === "kfd-support.json"], ...["kfd-adopter-manifest.json", "kfd-adopter-manifest-gate.json", "kfd-support.json"].map((name) => [`files.${name}`, files.has(name)])];
+    const missing = required.filter(([, present]) => !present).map(([label]) => label);
+    if (missing.length > 0) throw new Error(`Buildchain self-KFD release requires the exact adopter manifest closure; missing ${missing.join(", ")}`);
+  }
   if (collected.checkReport?.ok !== true) {
     const issues = summarizeReleasePassportIssues(collected.checkReport);
-    throw new Error(
-      `Release passport ${phase} check failed for ${relativePassportPath}${issues ? `: ${issues}` : ""}`,
-    );
+    throw new Error(`Release passport ${phase} check failed for ${relativePassportPath}${issues ? `: ${issues}` : ""}`);
   }
-  const report = await verifyReleasePassport({
-    passportLocation: passportPath,
-  });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
   if (report.ok !== true) {
     const issues = summarizeReleasePassportIssues(report);
-    throw new Error(
-      `Release passport ${phase} verification failed for ${relativePassportPath}${issues ? `: ${issues}` : ""}`,
-    );
+    throw new Error(`Release passport ${phase} verification failed for ${relativePassportPath}${issues ? `: ${issues}` : ""}`);
   }
   return report;
 }
@@ -2138,7 +2136,7 @@ async function collectAndPersistReleasePassport({
       runnerImage: process.env.ImageOS || "",
     },
   });
-  await verifyCollectedReleasePassport({ collected, cwd, phase: "generated" });
+  await verifyCollectedReleasePassport({ collected, cwd, phase: "generated", requireBuildchainSelfKfd: buildchainSelfKfd });
   const durable = await persistDurableReleaseTransaction({
     octokit: result.octokit,
     owner: result.owner,
@@ -3711,6 +3709,11 @@ function createRefMutationOperations(context) {
       if (!allowedPaths.length) {
         return undefined;
       }
+      if (protectedUpdate?.reconciliationVersion && !reconciliationWorkspace) {
+        throw new Error(
+          `Version-state reconciliation for current ${branch} requires an exact checkout workspace`,
+        );
+      }
       const { data: generatedCommit } = await getGitCommitWithRetry({
         octokit,
         owner,
@@ -3727,7 +3730,7 @@ function createRefMutationOperations(context) {
         headSha: branchSha,
         allowedPaths,
       });
-      if (protectedUpdate?.reconciliationVersion && reconciliationWorkspace) {
+      if (protectedUpdate?.reconciliationVersion) {
         const workspaceCwd = path.resolve(cwd, reconciliationWorkspace);
         if (!fs.existsSync(workspaceCwd)) {
           throw new Error(`Version-state reconciliation workspace does not exist: ${workspaceCwd}`);
@@ -5152,8 +5155,8 @@ export {
   createTreeEquivalentReleaseImpact,
   createDurableTransactionOperations,
   createRefMutationOperations,
-  releasePassportArtifactFiles,
-  releasePassportAssetsFromSealedBundle,
+  releasePassportArtifactFiles, releasePassportAssetsFromSealedBundle,
+  verifyCollectedReleasePassport,
   validatePromotionReleaseCandidate,
   sanitizedPublishProcessEnvironment,
 };
