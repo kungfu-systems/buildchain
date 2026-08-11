@@ -190,6 +190,29 @@ test("macOS source rebind is forward-only, same-ref, and zero-allocation", () =>
   );
 });
 
+test("macOS failed source rebind binds the exact terminal run inventory", () => {
+  const plan = sourceRebindPlan({
+    priorRunPolicy: "terminal-failure",
+    terminalFailureRunIds: ["30720000001", "30720000002"],
+  });
+  assert.equal(plan.github.priorRunPolicy, "terminal-failure");
+  assert.deepEqual(plan.github.terminalFailureRunIds, [
+    "30720000001",
+    "30720000002",
+  ]);
+  assert.equal(plan.safety.zeroPriorJobsRequired, false);
+  assert.equal(plan.safety.zeroPriorArtifactsRequired, false);
+  assert.equal(plan.safety.terminalFailureEvidencePreserved, true);
+  assert.throws(
+    () =>
+      sourceRebindPlan({
+        priorRunPolicy: "terminal-failure",
+        terminalFailureRunIds: [],
+      }),
+    /terminalFailureRunIds must be a non-empty array/,
+  );
+});
+
 test("macOS AllocateHosts binds one host while RunInstances enforces DryRun and stop reuse", () => {
   const plan = campaignPlan();
   const allocate = macosAllocateHostsArgs(plan);
@@ -269,15 +292,16 @@ if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
   process.stdout.write(JSON.stringify({ object: { sha: refWasUpdated ? "a60591b3565b3b75f1b9cfe402ab025e6beeb679" : "f60591b3565b3b75f1b9cfe402ab025e6beeb678" } }));
 } else if (joined.includes("actions/workflows/323846928")) {
   if (joined.includes("/runs?")) {
-    process.stdout.write(JSON.stringify({ workflow_runs: [{ id: 30720000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: "startup_failure" }] }));
+    process.stdout.write(JSON.stringify({ workflow_runs: [{ id: 30720000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: process.env.FAKE_TERMINAL_FAILURE === "true" ? "failure" : "startup_failure" }] }));
   } else {
     process.stdout.write(JSON.stringify({ id: 323846928, state: process.env.FAKE_WORKFLOW_ENABLED === "true" ? "active" : "disabled_manually" }));
   }
 } else if (joined.includes("actions/runs/30720000001/jobs")) {
-  const count = process.env.FAKE_PRIOR_JOB === "true" ? 1 : 0;
-  process.stdout.write(JSON.stringify({ total_count: count, jobs: count ? [{ id: 1 }] : [] }));
+  const count = process.env.FAKE_PRIOR_JOB === "true" || process.env.FAKE_TERMINAL_FAILURE === "true" ? 1 : 0;
+  process.stdout.write(JSON.stringify({ total_count: count, jobs: count ? [{ id: 1, status: "completed", conclusion: "failure" }] : [] }));
 } else if (joined.includes("actions/runs/30720000001/artifacts")) {
-  process.stdout.write(JSON.stringify({ total_count: 0, artifacts: [] }));
+  const artifacts = process.env.FAKE_TERMINAL_FAILURE === "true" ? [{ id: 11, name: "macos-failure-evidence", size_in_bytes: 128, digest: "sha256:abc", expired: false }] : [];
+  process.stdout.write(JSON.stringify({ total_count: artifacts.length, artifacts }));
 } else if (joined.includes("actions/runs/30730000001")) {
   process.stdout.write(JSON.stringify({ event: "workflow_dispatch", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
 } else if (joined.includes("actions/jobs/91450000001")) {
@@ -370,7 +394,9 @@ if (joined.includes("sts get-caller-identity")) {
 } else if (joined.includes("ssm describe-parameters")) {
   process.stdout.write(JSON.stringify({ Parameters: [] }));
 } else if (joined.includes("s3api list-objects-v2")) {
-  process.stdout.write(JSON.stringify({ KeyCount: 0, Contents: [] }));
+  const terminalEvidence = (process.env.FAKE_TERMINAL_FAILURE === "true" || process.env.FAKE_TERMINAL_EVIDENCE === "true") && joined.includes("macos/f60591b3565b3b75f1b9cfe402ab025e6beeb678/");
+  const contents = terminalEvidence ? [{ Key: "macos/f60591b3565b3b75f1b9cfe402ab025e6beeb678/30720000001/evidence.json", Size: 256, ETag: "etag-1" }] : [];
+  process.stdout.write(JSON.stringify({ KeyCount: contents.length, IsTruncated: false, Contents: contents }));
 } else if (joined.includes("ssm put-parameter")) {
   process.stdout.write(JSON.stringify({ Version: 1, Tier: "Advanced" }));
 } else if (joined.includes("ssm describe-instance-information")) {
@@ -549,7 +575,7 @@ test("macOS controller rehydrates the same host without allocating another host"
   }
 });
 
-function runRebindWithFakes(extraEnv = {}) {
+function runRebindWithFakes(extraEnv = {}, afterFailure = false) {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "mac-jit-source-rebind-test-"),
   );
@@ -561,7 +587,7 @@ function runRebindWithFakes(extraEnv = {}) {
     process.execPath,
     [
       "scripts/aws-macos-jit-controller.mjs",
-      "rebind-campaign",
+      afterFailure ? "rebind-campaign-after-failure" : "rebind-campaign",
       "--execute",
       "--previous-source-sha",
       values.sourceSha,
@@ -582,6 +608,14 @@ function runRebindWithFakes(extraEnv = {}) {
       "--confirm-instance-id",
       "i-0123456789abcdef0",
       "--confirm-zero-allocation",
+      ...(afterFailure
+        ? [
+            "--terminal-failure-run-ids-json",
+            '["30720000001"]',
+            "--confirm-terminal-failure-run-ids-json",
+            '["30720000001"]',
+          ]
+        : []),
       ...cliArgs,
     ],
     {
@@ -642,6 +676,61 @@ test("macOS controller rebinds an unused campaign without allocating or dispatch
     );
     assert.ok(refUpdate);
     assert.ok(refUpdate.args.includes("force=false"));
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS controller rebinds only after the exact terminal failed run evidence is retained", () => {
+  const { tempRoot, result, commands } = runRebindWithFakes(
+    { FAKE_TERMINAL_FAILURE: "true" },
+    true,
+  );
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    const output = JSON.parse(result.stdout);
+    assert.equal(
+      output.status,
+      "rebound-after-terminal-failure-zero-allocation",
+    );
+    assert.equal(output.preflight.priorRuns[0].conclusion, "failure");
+    assert.equal(output.preflight.priorRuns[0].jobCount, 1);
+    assert.equal(output.preflight.priorRuns[0].artifactCount, 1);
+    assert.equal(output.preflight.evidenceObjects[values.sourceSha].length, 1);
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
+    assert.equal(
+      commands.some((entry) => entry.args.includes("run-instances")),
+      false,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS failed source rebind rejects non-terminal or unconfirmed run evidence before mutation", () => {
+  const { tempRoot, result, commands } = runRebindWithFakes(
+    { FAKE_TERMINAL_EVIDENCE: "true" },
+    true,
+  );
+  try {
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /not a terminal failed run with retained evidence/,
+    );
+    assert.equal(
+      commands.some((entry) => entry.args.includes("create-tags")),
+      false,
+    );
+    assert.equal(
+      commands.some(
+        (entry) => entry.command === "gh" && entry.args.includes("PATCH"),
+      ),
+      false,
+    );
   } finally {
     fs.rmSync(tempRoot, { recursive: true });
   }

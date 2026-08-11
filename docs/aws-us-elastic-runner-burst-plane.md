@@ -411,6 +411,16 @@ campaign. It has five explicit mutation modes:
   existing GitHub ref, emits a zero-allocation receipt, and compensates back to
   the prior source if the ref update or readback fails. It never calls
   `AllocateHosts`, `RunInstances`, or workflow dispatch.
+- `rebind-campaign-after-failure` advances that same host and instance only
+  after the operator confirms the complete prior run-id inventory. Every named
+  run must be terminal with conclusion `failure`, all of its jobs must be
+  complete, and both GitHub artifacts and S3 bootstrap evidence must still be
+  present. The replacement source must remain a strict descendant on the same
+  ref, the workflow must be disabled, the next-source evidence prefix must be
+  empty, and runner plus SSM residue must be zero. The old evidence is retained
+  and included in the rebind receipt; the operation changes only the existing
+  source ref and resource tags, with the same compensated rollback and zero
+  allocation boundary as an unused-campaign rebind.
 - `close-campaign` refuses execution before the provider's 24-hour minimum,
   verifies the encrypted delete-on-termination root volume, removes scoped JIT
   residue, terminates the exact instance, and requires a `ReleaseHosts` DryRun
@@ -427,6 +437,10 @@ requires `--confirm-zero-allocation`. `rehydrate-instance` additionally repeats
 the existing host and replaced instance identities and requires
 `--confirm-no-host-allocation`. Omitting `--execute` emits a deterministic plan
 without changing AWS or GitHub state.
+`rebind-campaign-after-failure` additionally requires matching
+`--terminal-failure-run-ids-json` and
+`--confirm-terminal-failure-run-ids-json` arrays so an unobserved or newly
+created run fails closed before any tag or ref mutation.
 
 ## Provider lifecycle
 

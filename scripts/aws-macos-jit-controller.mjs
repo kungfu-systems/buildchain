@@ -38,6 +38,19 @@ function flag(name) {
   return process.argv.includes(`--${name}`);
 }
 
+function jsonArrayArg(name) {
+  let parsed;
+  try {
+    parsed = JSON.parse(arg(name));
+  } catch {
+    throw new Error(`--${name} must be valid JSON`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error(`--${name} must be a JSON array`);
+  }
+  return parsed;
+}
+
 function assertCampaignLaunchPreflight(plan, profile) {
   const launchGate = assertMacosBudgetLaunchGate(plan, profile);
   const commit = ghJson(
@@ -517,6 +530,19 @@ function confirm(plan) {
     if (!flag("confirm-zero-allocation")) {
       throw new Error("--confirm-zero-allocation is required");
     }
+    if (plan.github.priorRunPolicy === "terminal-failure") {
+      const confirmed = jsonArrayArg(
+        "confirm-terminal-failure-run-ids-json",
+      ).map(String);
+      if (
+        JSON.stringify(confirmed) !==
+        JSON.stringify(plan.github.terminalFailureRunIds)
+      ) {
+        throw new Error(
+          "--confirm-terminal-failure-run-ids-json must equal the exact failed run inventory",
+        );
+      }
+    }
   }
   if (plan.kind === "instance-rehydrate-plan") {
     if (arg("confirm-host-id") !== plan.aws.hostId) {
@@ -570,7 +596,15 @@ export function main() {
       }),
     );
   }
-  if (["plan-rebind", "rebind-campaign"].includes(mode)) {
+  if (
+    [
+      "plan-rebind",
+      "rebind-campaign",
+      "plan-rebind-after-failure",
+      "rebind-campaign-after-failure",
+    ].includes(mode)
+  ) {
+    const afterFailure = mode.endsWith("after-failure");
     const plan = createMacosJitSourceRebindPlan({
       ...commonValues(execute),
       previousSourceSha: arg("previous-source-sha"),
@@ -578,6 +612,10 @@ export function main() {
       workflowId: arg("workflow-id"),
       hostId: arg("host-id"),
       instanceId: arg("instance-id"),
+      priorRunPolicy: afterFailure ? "terminal-failure" : "unused",
+      terminalFailureRunIds: afterFailure
+        ? jsonArrayArg("terminal-failure-run-ids-json")
+        : [],
     });
     return emit(plan, mode, execute, () =>
       executeMacosJitSourceRebind(plan, { profile: arg("aws-profile") }),
