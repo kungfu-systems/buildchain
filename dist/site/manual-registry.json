@@ -64,7 +64,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:b95c4e0ae152113f2aedb5ec6c6edfc8a86162abd796d15578fd3aac41bc92c1",
+      "digest": "sha256:70bf29e974b190b249fbbcfd9a5de1e33a9b069de5d7811a25e147b860137629",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:2c23b0818367cce3a15198ec91c6827cb6db6d53442c3883e7e3d4d854cce0c6",
+      "digest": "sha256:4663cf32a0116a8605e7b8a475fc4b38e02b81ca21af59e49be0043f3eb99a02",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -390,7 +390,7 @@
       "title": "KFD support and KFD-3 surface registration",
       "path": "docs/kfd-support.md",
       "plane": "verify",
-      "digest": "sha256:4efc8fb6f94293b75606aa0631dfa122edccc970c2cfc00c7e35f81817ea8335",
+      "digest": "sha256:f849c3b69c8c716a5ae4e917e43a9a3ab8de977e7672b49697ba242fd320a014",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
