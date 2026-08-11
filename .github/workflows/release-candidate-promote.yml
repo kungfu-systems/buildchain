@@ -347,9 +347,13 @@ on:
         description: "Product-owned command that emits KFD-3 artifact-side collaboration-interface witness JSON"
         default: ""
         type: string
+      release-passport-kfd-adopter-manifest-json:
+        description: "Standard full-cut adopter conformance manifest JSON path"
+        default: ""
+        type: string
         required: false
       release-passport-kfd-support-matrix-json:
-        description: "KFD-1..13 support matrix JSON path projected into the release passport"
+        description: "Legacy KFD support projection JSON path accepted only for exact manifest comparison"
         default: ""
         type: string
         required: false
@@ -957,6 +961,7 @@ jobs:
       release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
       release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+      release-passport-kfd-adopter-manifest-json: ${{ inputs.release-passport-kfd-adopter-manifest-json }}
       release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}
       release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
       release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}

@@ -442,9 +442,8 @@ buildchain kfd migrate-layout --write
 buildchain kfd 4 gate --input-json kfd-4-gate-input.json --output kfd-4-gate.json
 buildchain kfd 5 gate --input-json kfd-5-gate-input.json --output kfd-5-gate.json
 buildchain kfd 7 gate --input-json kfd-7-gate-input.json --output kfd-7-gate.json
-buildchain kfd support project --matrix-json support-matrix.json \
-  --gate-json kfd-4-gate.json --gate-json kfd-5-gate.json \
-  --gate-json kfd-7-gate.json --output kfd-support.json
+buildchain kfd support project --manifest-json adopter-manifest.json \
+  --manifest-gate-json adopter-manifest-gate.json --output kfd-support.json
 ```
 
 KFD-1 commands generate and validate contract-world release evidence:

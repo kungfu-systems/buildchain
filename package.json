@@ -33,6 +33,8 @@
     "./issue-reporting": "./packages/core/issue-reporting.js",
     "./kfd": "./packages/core/kfd.js",
     "./kfd-product-gates": "./packages/core/kfd-product-gates.js",
+    "./kfd-adopter-manifest": "./packages/core/kfd-adopter-manifest.js",
+    "./kfd-adopter-release-binding": "./packages/core/artifact-verification-envelope.js",
     "./kfd-agent-hub": "./packages/core/kfd-agent-hub.js",
     "./buildchain-layout": "./packages/core/buildchain-layout.js",
     "./release-line-bootstrap": "./packages/core/release-line-bootstrap.js",
@@ -147,7 +149,7 @@
     "typescript": "^5.9.0"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.53",
+    "@kungfu-tech/kfd": "1.0.0-alpha.60",
     "smol-toml": "1.7.0"
   }
 }

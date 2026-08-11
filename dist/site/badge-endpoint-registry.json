@@ -1138,7 +1138,7 @@
     {
       "id": "kfd-8",
       "label": "KFD-8",
-      "messageTemplate": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss {state}",
+      "messageTemplate": "KFD-8 {state}",
       "linkRole": "repository-release-passport",
       "states": [
         {
@@ -1148,7 +1148,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-8",
-            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss passed",
+            "message": "KFD-8 passed",
             "color": "2ea44f",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1167,7 +1167,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-8",
-            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss aligned",
+            "message": "KFD-8 aligned",
             "color": "0969da",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1186,7 +1186,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-8",
-            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss declared",
+            "message": "KFD-8 declared",
             "color": "6e7781",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1205,7 +1205,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-8",
-            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss planned",
+            "message": "KFD-8 planned",
             "color": "bf8700",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1224,7 +1224,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-8",
-            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss draft",
+            "message": "KFD-8 draft",
             "color": "8250df",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1243,7 +1243,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-8",
-            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss downgraded",
+            "message": "KFD-8 downgraded",
             "color": "bf8700",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1262,7 +1262,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-8",
-            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss failed",
+            "message": "KFD-8 failed",
             "color": "cf222e",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1281,7 +1281,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-8",
-            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss missing",
+            "message": "KFD-8 missing",
             "color": "6e7781",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",

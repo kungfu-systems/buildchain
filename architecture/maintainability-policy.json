@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "cea5491f3a0729015ec1992e8b18f90081f71e57",
-    "maxHandMaintainedSourceFiles": 338,
-    "maxHandMaintainedSourceLines": 130491,
+    "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
+    "maxHandMaintainedSourceFiles": 339,
+    "maxHandMaintainedSourceLines": 130821,
     "maxWorkflowFiles": 71,
-    "maxWorkflowLines": 23579,
-    "latestTransition": "The reviewed v3 declarative release-tail provider plane and consumer-equivalent action path are forward-ported into v4 authority without changing v4 channel routing or contract-lock identity.",
-    "rationale": "The exact transition adds one closed-world provider transaction, fixed adapters, a packaged release-tail Action/workflow, and the promote-buildchain-ref declarative GitHub Release coordinator required by the existing v3 alpha recovery shell. V4 keeps its own v4-alpha and v4 stable routes, dual-channel contract-lock binding, provider journals, and zero-second-writer state-machine invariants. The new ceilings are the measured source and workflow totals for this bounded compatibility port and cannot grow implicitly."
+    "maxWorkflowLines": 23590,
+    "latestTransition": "The protected v3 KFD adopter-manifest provider inputs and exact public KFD package dependency are forward-ported into the v4 release-tail action without changing v4 routing or publication authority.",
+    "rationale": "The bounded compatibility port adds one package-only adopter manifest authority, forwards recovered artifacts by path, and binds release-passport evidence to the exact standard adopter closure already required by the protected v3 alpha recovery shell. The KFD dependency remains exact and lockfile-integrity pinned at the public adopter-conformance release. V4 keeps its own channel routing, contract-lock identity, provider journals, and zero-second-writer invariants. The new ceilings are the measured source and workflow totals for this reviewed transition and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -30,6 +30,10 @@
     "packages/core/release-blocker-priority.js": {
       "maxLines": 193,
       "rationale": "The v4 parity adapter preserves the reviewed v3 exact dual-landing priority claim, repair-contract parsing and unrelated-work rejection outside the durable Warrant state machine; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/kfd-adopter-manifest.js": {
+      "maxLines": 390,
+      "rationale": "The package-only adapter keeps published KFD verification, Buildchain-specific evidence constraints, decision and gate roots, and the one-way legacy projection in one bounded public authority seam. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/release-train.js": {
       "maxLines": 740,
@@ -154,6 +158,7 @@
           "publish-package-set-order",
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
+          "publish-required-artifacts-path",
           "publish-sealed-bundle-manifest",
           "publish-sealed-bundle-root",
           "publish-source-locked",
@@ -186,6 +191,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -217,6 +223,14 @@
         "usage": "buildchain architecture validate [--cwd <dir>] [--json]"
       },
       "rationale": "Add a read-only generated list/show/validate surface plus exact Git N-1 qualification; the manifest remains the single authority and the commands do not migrate or write production state."
+    },
+    "cli:kfd-support": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "kfd-support",
+        "usage": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>"
+      },
+      "rationale": "Replace the product-owned support-matrix declaration authority with a read-only compatibility projection derived from one exact standard adopter manifest and its passing gate; verification now requires the same authority closure and cannot widen adopter claims."
     },
     "cli:dev": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -978,6 +992,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -1132,6 +1147,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",

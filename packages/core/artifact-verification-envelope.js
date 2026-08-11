@@ -1,4 +1,11 @@
 import crypto from "node:crypto";
+import kfdPackageJson from "@kungfu-tech/kfd/package.json" with { type: "json" };
+import kfdSelfAdopterManifest from "@kungfu-tech/kfd/adopter-conformance/adopters/kfd/manifest.json" with { type: "json" };
+import {
+  validateKfdAdopterManifestGate,
+  validateKfdLegacySupportMatrixProjection,
+} from "./kfd-adopter-manifest.js";
+import { kfdProductGateDigest } from "./kfd-product-gates.js";
 
 export const ARTIFACT_VERIFICATION_ENVELOPE_CONTRACT =
   "kungfu-buildchain-artifact-verification-envelope";
@@ -6,6 +13,8 @@ export const ARTIFACT_VERIFICATION_ENVELOPE_CHECK_CONTRACT =
   "kungfu-buildchain-artifact-verification-envelope-check";
 export const KFX_ADMISSION_INPUTS_CONTRACT =
   "kungfu-buildchain-kfx-admission-inputs";
+export const KFD_ADOPTER_RELEASE_BINDING_CONTRACT =
+  "kungfu-buildchain-kfd-adopter-release-binding";
 
 const ARTIFACT_VERIFICATION_CONTRACT =
   "kungfu-buildchain-artifact-verification";
@@ -383,4 +392,109 @@ export function projectArtifactVerificationEnvelopeToKfx({
     trustInputs: jsonClone(envelope.bindings),
     kfdAssessment: jsonClone(envelope.kfdAssessment),
   };
+}
+
+export function installedKfdPackageArtifactRoot() {
+  const cut = kfdSelfAdopterManifest?.kfdCut?.package;
+  if (cut?.name !== kfdPackageJson.name || cut?.version !== kfdPackageJson.version
+    || !SHA256_PATTERN.test(String(cut?.artifactRoot || ""))) {
+    throw new Error("installed KFD package does not expose a matching rooted self-adopter package cut");
+  }
+  return cut.artifactRoot;
+}
+
+function kfdBindingBody({ manifest, manifestGate, legacyProjection, paths }) {
+  return {
+    schemaVersion: 1,
+    contract: KFD_ADOPTER_RELEASE_BINDING_CONTRACT,
+    status: "passed",
+    qualifying: false,
+    selfCertified: false,
+    authority: {
+      manifestPath: paths.manifest,
+      manifestContract: manifest.contract,
+      manifestRoot: manifestGate.authority.manifestRoot,
+      gatePath: paths.gate,
+      gateRoot: manifestGate.gateRoot,
+    },
+    source: jsonClone(manifestGate.source),
+    standardPackage: jsonClone(manifestGate.standardPackage),
+    witness: {
+      decisionRoot: manifestGate.decisionWitness.root,
+      verificationReportRoot: manifestGate.manifestVerificationReportRoot,
+      bundleRoot: manifestGate.manifestBundleRoot,
+    },
+    legacyProjection: {
+      path: paths.legacy,
+      contract: legacyProjection.contract,
+      root: kfdProductGateDigest(legacyProjection),
+      authorityRoot: legacyProjection.authority.root,
+      gateRoot: legacyProjection.authority.gateRoot,
+    },
+    nonClaims: [
+      "This binding proves exact release-envelope consumption, not KFD certification or release authorization.",
+      "The legacy support matrix remains a projection of the standard adopter manifest authority.",
+    ],
+  };
+}
+
+export function createKfdAdopterReleaseBinding({
+  manifest,
+  manifestGate,
+  legacyProjection,
+  manifestPath = "kfd-adopter-manifest.json",
+  gatePath = "kfd-adopter-manifest-gate.json",
+  legacyProjectionPath = "kfd-support.json",
+  expectedSourceSha = "",
+} = {}) {
+  const gate = validateKfdAdopterManifestGate(manifestGate, {
+    expectedSourceSha,
+    checkedAt: manifestGate?.checkedAt,
+  });
+  const legacy = validateKfdLegacySupportMatrixProjection(legacyProjection, { manifest, manifestGate });
+  if (!gate.valid || !legacy.valid) {
+    throw new Error(`KFD adopter release binding inputs are invalid: ${JSON.stringify([...gate.issues, ...legacy.issues])}`);
+  }
+  const body = kfdBindingBody({
+    manifest,
+    manifestGate,
+    legacyProjection,
+    paths: { manifest: manifestPath, gate: gatePath, legacy: legacyProjectionPath },
+  });
+  return { ...body, bindingRoot: kfdProductGateDigest(body) };
+}
+
+export function validateKfdAdopterReleaseBinding(binding, {
+  manifest,
+  manifestGate,
+  legacyProjection,
+  expectedSourceSha = "",
+} = {}) {
+  const issues = [];
+  if (!binding || binding.schemaVersion !== 1 || binding.contract !== KFD_ADOPTER_RELEASE_BINDING_CONTRACT) {
+    return { valid: false, issues: [{ code: "adopter-release-binding-contract", path: "", message: `binding must use ${KFD_ADOPTER_RELEASE_BINDING_CONTRACT} v1` }] };
+  }
+  const copy = jsonClone(binding);
+  const bindingRoot = copy.bindingRoot;
+  delete copy.bindingRoot;
+  if (bindingRoot !== kfdProductGateDigest(copy)) {
+    issues.push({ code: "adopter-release-binding-root", path: "bindingRoot", message: "release binding root does not match its content" });
+  }
+  try {
+    const expected = createKfdAdopterReleaseBinding({
+      manifest,
+      manifestGate,
+      legacyProjection,
+      manifestPath: binding.authority?.manifestPath,
+      gatePath: binding.authority?.gatePath,
+      legacyProjectionPath: binding.legacyProjection?.path,
+      expectedSourceSha,
+    });
+    if (stableJson(binding) !== stableJson(expected)) {
+      issues.push({ code: "adopter-release-binding-drift", path: "", message: "release binding differs from the exact manifest, gate, or legacy projection closure" });
+    }
+  } catch (error) {
+    issues.push({ code: "adopter-release-binding-authority", path: "", message: error.message });
+  }
+  return { valid: issues.length === 0, issues };
 }

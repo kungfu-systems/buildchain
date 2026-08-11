@@ -229,7 +229,10 @@ async function main() {
   const transactionStatePath = core.getInput("transaction-state-path");
   const publishSealedBundleRoot = core.getInput("publish-sealed-bundle-root");
   const publishSealedBundleManifest = core.getInput("publish-sealed-bundle-manifest");
-  const publishRequiredArtifactsJson = core.getInput("publish-required-artifacts-json");
+  const publishRequiredArtifactsPath = core.getInput("publish-required-artifacts-path");
+  const publishRequiredArtifactsJson = publishRequiredArtifactsPath
+    ? fs.readFileSync(path.resolve(publishRequiredArtifactsPath), "utf8")
+    : core.getInput("publish-required-artifacts-json");
   const publishMode = core.getInput("publish-mode");
   const publishAuth = core.getInput("publish-auth");
   const publishDistTag = core.getInput("publish-dist-tag");
@@ -261,6 +264,7 @@ async function main() {
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
   const releasePassportKfd3ArtifactWitnessJsons = core.getInput("release-passport-kfd-3-artifact-witness-jsons");
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
+  const releasePassportKfdAdopterManifestJson = core.getInput("release-passport-kfd-adopter-manifest-json");
   const releasePassportKfdSupportMatrixJson = core.getInput("release-passport-kfd-support-matrix-json");
   const releasePassportKfdProductGateJsons = core.getInput("release-passport-kfd-product-gate-jsons");
   const releasePassportInvariantPassportJsons = core.getInput("release-passport-invariant-passport-jsons");
@@ -370,6 +374,7 @@ async function main() {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,

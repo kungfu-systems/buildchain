@@ -74,6 +74,9 @@ inputs:
   publish-required-artifacts-json:
     description: "JSON array of required artifacts whose post-publish evidence must exist before refs move; digest and ref may be omitted, or ref_template may contain one {version} placeholder"
     default: ""
+  publish-required-artifacts-path:
+    description: "Path to the required-artifacts JSON array; used instead of the inline input when present to keep large recovered candidates out of the action environment"
+    default: ""
   publish-mode:
     description: "Publish mode: publish-final-version or promote-existing-version"
     default: ""
@@ -167,11 +170,14 @@ inputs:
   release-passport-kfd-3-artifact-verify-command:
     description: "Product-owned command that emits a KFD-3 artifact-side collaboration-interface witness JSON document"
     default: ""
+  release-passport-kfd-adopter-manifest-json:
+    description: "Standard full-cut adopter conformance manifest JSON path bound into the release passport"
+    default: ""
   release-passport-kfd-support-matrix-json:
-    description: "KFD-1..13 support matrix JSON path to project into the release passport"
+    description: "Legacy KFD support projection JSON path accepted only for exact comparison with the adopter manifest"
     default: ""
   release-passport-kfd-product-gate-jsons:
-    description: "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths to bind into the support projection"
+    description: "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths bound by the adopter manifest gate"
     default: ""
   release-passport-invariant-passport-jsons:
     description: "Newline- or comma-separated invariant Passport JSON paths required by the release gate"
