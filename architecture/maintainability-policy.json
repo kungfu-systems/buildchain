@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 298,
-    "maxHandMaintainedSourceLines": 116567,
+    "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
+    "maxHandMaintainedSourceFiles": 301,
+    "maxHandMaintainedSourceLines": 117702,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23346,
-    "latestTransition": "Candidate Patrol resumes the active Release Train before considering later Dev movement.",
-    "rationale": "Two bounded controller modules separate exact-SHA qualification from active Release Train reconciliation. They add candidate-tree, Alpha-base, runtime and route readback, rooted hold evidence, duplicate-observation idempotence, frozen-candidate resume, and line-stable deterministic playback without widening the pre-existing patrol script's debt. The reusable workflow adds exact runtime checkout plus Release Cut, generation, tree, drift and hold outputs. The concurrently landed standard KFD adopter-manifest authority and macOS Ohio capacity fallback remain intact. This exact combined two-file, 657-source-line and 48-workflow-line increase over the refreshed base is covered by focused negative tests and cannot grow implicitly."
+    "maxWorkflowLines": 23477,
+    "latestTransition": "Buildchain v3 self-dogfood composes moving-dev, repair, publication and Warrant authority over the major-independent channel identity.",
+    "rationale": "The latest Dev channel-identity transition remains intact: stable and alpha use one major-independent shell, runtime and lock identity, and the reusable surfaces keep both lanes explicit and fail closed. The self-dogfood campaign adds one bounded orchestration file over the existing Release Train, Candidate Patrol and Delivery Warrant authorities. It requires exact protected PR, review, merge-group CI, tree, artifact and installed-product readback; deterministic negative cases prove restart replay, duplicate idempotence, invalid authority, unrelated priority and non-preemption. Train/repair and queue transactions are independently bounded helpers. This exact 301-file, 117702-source-line and 23477-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,22 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/dev-delivery-warrant.js": {
+      "maxLines": 611,
+      "rationale": "The existing durable queue adds only the narrow release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/release-blocker-priority.js": {
+      "maxLines": 193,
+      "rationale": "The bounded adapter creates and validates one exact dual-landing priority claim, keeping repair-contract parsing and unrelated-work rejection outside the durable Warrant state machine; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/release-train.js": {
+      "maxLines": 740,
+      "rationale": "The Release Train contract adds one rooted successor-repair lifecycle with compare-and-swap, frozen origin provenance, exact cut and Dev patch identity, independent candidate-build eligibility, publication gating and deterministic validation; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/buildchain-compatibility-proof.js": {
+      "maxLines": 609,
+      "rationale": "The compatibility authority now performs channel binding before all legacy early exits while retaining rooted additive and breaking-drift proofs in the existing single evaluator module. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/kfd-adopter-manifest.js": {
       "maxLines": 390,
       "rationale": "The package-only adapter keeps published KFD verification, Buildchain-specific evidence constraints, decision and gate roots, and the one-way legacy projection in one bounded public authority seam. This exact reviewed ceiling cannot grow implicitly."
