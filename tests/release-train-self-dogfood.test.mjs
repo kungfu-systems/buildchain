@@ -14,8 +14,8 @@ const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 function fixture(overrides = {}) {
   return {
     repository: "kungfu-systems/buildchain",
-    sourceBranch: "dev/v3/v3.0",
-    targetBranch: "alpha/v3/v3.0",
+    sourceBranch: "dev/v4/v4.0",
+    targetBranch: "alpha/v4/v4.0",
     assignmentRoot: ROOT("1"),
     initiativeRoot: ROOT("2"),
     dependencyProofRoot: ROOT("3"),
@@ -38,7 +38,7 @@ function fixture(overrides = {}) {
     recordedAt: "2026-08-11T03:30:00.000Z",
     delivery: {
       pullRequestNumber: 2550,
-      baseBranch: "dev/v3/v3.0",
+      baseBranch: "dev/v4/v4.0",
       headSha: SHA("7"),
       headTreeSha: SHA("8"),
       state: "MERGED",
@@ -58,7 +58,7 @@ function fixture(overrides = {}) {
   };
 }
 
-test("Buildchain self-dogfood composes the complete protected v3 campaign", () => {
+test("Buildchain self-dogfood composes the complete protected v4 parity campaign", () => {
   const report = runReleaseTrainSelfDogfoodCampaign(fixture());
   assert.equal(report.status, "passed");
   assert.equal(report.train.candidateSha, SHA("2"));

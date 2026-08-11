@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:c2e74efe04bdd37c7fb33edf26d5b951cb716dab14cb8b7651b0deabaed4f5e2"
+      "digest": "sha256:98faca339bbb9029113af82edeb9d0f5b1e91aedb4c59f9e04454b7ef2b36750"
     },
     {
       "id": "getting-started",
@@ -126,6 +126,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:d76bbd75aab3c4dd94756c1c64562a125e74369c7c8b97342dbcacc5d7561602"
+    },
+    {
+      "id": "release-train",
+      "title": "Release Train and Release Cut",
+      "path": "docs/release-train.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:6989ada03d381e68fdec55b26b76b2070fb37969826eadc0a989844a732ba557"
     },
     {
       "id": "release-propagation",
@@ -237,7 +245,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:103b4892c7240647bab1ee0c791b4136e7b7cdd2e6a153ebecc99e949a49240b"
+      "digest": "sha256:2e4f9e2b5a374e5c5e2b69e0adc27d3659716afafa3532c75459a33419fa9a5b"
     },
     {
       "id": "build-facts",
@@ -325,7 +333,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:8e01add2eac4e1376a7644cadc02bd156ad93d8914e687b6e7226d58b5846eba"
+      "digest": "sha256:7f6e377abf976e9eb9c5f0fd2baec96922ca44d9ab7dd08178608657fa858978"
     },
     {
       "id": "web-surface-deployments",

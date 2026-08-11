@@ -37,8 +37,8 @@ const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 function cutInput(overrides = {}) {
   return {
     repository: "kungfu-systems/buildchain",
-    sourceBranch: "dev/v3/v3.0",
-    targetBranch: "alpha/v3/v3.0",
+    sourceBranch: "dev/v4/v4.0",
+    targetBranch: "alpha/v4/v4.0",
     originDevSha: SHA.origin,
     candidateSha: SHA.candidate,
     candidateTreeSha: SHA.tree,

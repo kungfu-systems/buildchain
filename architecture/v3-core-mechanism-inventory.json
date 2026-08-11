@@ -210,7 +210,6 @@
       "testPaths": [
         "tests/dev-delivery-warrant.test.mjs",
         "tests/dev-delivery-warrant-command.test.mjs",
-        "tests/dev-delivery-warrant-shadow.test.mjs",
         "tests/release-blocker-priority.test.mjs"
       ],
       "migrationDisposition": "rebuild-in-rust-with-compatibility-projection",

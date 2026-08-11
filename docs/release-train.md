@@ -13,13 +13,13 @@ ai_provenance:
   model_family: GPT-5
   product: Codex
   generated_at: 2026-08-11
-  visible_context: Buildchain v3 release candidate, recovery, Dev to Alpha Candidate Patrol, rooted blocker repair, Warrant, publication transaction, and release governance sources.
+  visible_context: Buildchain v4 parity of the v3 release candidate, recovery, Dev to Alpha Candidate Patrol, rooted blocker repair, Warrant, publication transaction, and release governance sources.
   invisible_context_boundary: Live provider state and credentials were not read.
 ---
 
 # Release Train and Release Cut
 
-Buildchain v3 exposes a pure, provider-neutral Release Train contract for
+Buildchain v4 exposes the same pure, provider-neutral Release Train contract proven on v3 for
 retaining one authorized Alpha candidate while the development branch keeps
 moving. The contract does not select a candidate, write a Git ref, open a pull
 request, publish a package, or replace any existing provider gate. Controllers
@@ -92,7 +92,7 @@ and records a Dev landing with the same patch root. A landed but different Dev
 patch produces a rooted `cut-dev-patch-root-mismatch` gate rather than
 publication authority.
 
-Buildchain v3 Candidate Patrol resolves the open managed candidate's persisted
+Buildchain v4 Candidate Patrol resolves the open managed candidate's persisted
 train before it considers a new qualified development head. It reads back the
 candidate ref and tree, Alpha base, and exact Buildchain runtime. Matching
 coordinates resume the frozen candidate; a newer development head becomes a
@@ -102,7 +102,7 @@ enumerated `superseded` transition is reported as superseded.
 
 ## Buildchain self-dogfood campaign
 
-Buildchain qualifies the complete v3 mechanism with
+Buildchain qualifies the complete v4 parity mechanism with
 `scripts/release-train-self-dogfood.mjs`. The campaign composes one frozen
 Release Cut, moving-dev observation, deterministic failed build, successor
 repair, cut/dev patch-root settlement, publication gate, and bounded Delivery

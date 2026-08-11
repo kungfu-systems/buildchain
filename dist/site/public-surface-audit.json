@@ -6,7 +6,7 @@
     "cliCommandCount": 113,
     "workflowCount": 70,
     "actionCount": 6,
-    "sitePageCount": 71,
+    "sitePageCount": 72,
     "docCommandRefCount": 897,
     "failureCount": 0
   },
@@ -1888,17 +1888,24 @@
         "secretCount": 1,
         "outputs": [
           "active-candidate-pr",
+          "candidate-generation",
+          "candidate-tree-sha",
           "controller-state",
+          "cut-root",
+          "drift-root",
           "eligible",
+          "hold-root",
           "next-candidate-sha",
           "prior-state-root",
           "promotion-pr",
           "result-path",
+          "runtime-sha",
           "selected-sha",
           "settlement-action",
-          "source-lock-ref"
+          "source-lock-ref",
+          "train-root"
         ],
-        "outputCount": 10
+        "outputCount": 17
       },
       {
         "id": "dev-delivery-warrant-cancel",
@@ -3274,6 +3281,10 @@
       },
       {
         "id": "manual:release-tail-contract",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-train",
         "category": "manual"
       },
       {
@@ -7822,8 +7833,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "8a27fc9ffb5d0567a78c2f0811b77332f1493d07ecbb56cbab411e8ef4eb7b07",
-    "workflowRegistryDigest": "14cdfbba8cb90c512377b24488500c19b86df63f9cd515176d843b94982a843e",
-    "pageRegistryDigest": "5a37761214e5aecdf2e7d4b56cd0ffd242012f170404b444e8f9539e0f593d78"
+    "workflowRegistryDigest": "4f8bb811e6581c1087b251bf07c465f76731040557fd38dd465ca6c46cd97078",
+    "pageRegistryDigest": "2d8b1d78e4d1ef733ba0b8ae5703807925d9752c668eb1be8115720258cdd09b"
   },
   "comparison": {
     "missingCliRegistry": [],

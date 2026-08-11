@@ -39,8 +39,8 @@ const ROOTS = Object.fromEntries(
 function settledReleaseBlockerRepair() {
   let train = createReleaseTrain({
     repository: "kungfu-systems/buildchain",
-    sourceBranch: "dev/v3/v3.0",
-    targetBranch: "alpha/v3/v3.0",
+    sourceBranch: "dev/v4/v4.0",
+    targetBranch: "alpha/v4/v4.0",
     originDevSha: "1".repeat(40),
     candidateSha: "2".repeat(40),
     candidateTreeSha: "3".repeat(40),
@@ -94,7 +94,7 @@ function releaseBlockerPriorityClaim(repair = settledReleaseBlockerRepair()) {
 function queue() {
   return createDevDeliveryQueue({
     repository: "kungfu-systems/buildchain",
-    protectedBase: "dev/v3/v3.0",
+    protectedBase: "dev/v4/v4.0",
     policy: { agingSeconds: 300, leaseSeconds: 600 },
     now: "2026-08-10T00:00:00Z",
   });

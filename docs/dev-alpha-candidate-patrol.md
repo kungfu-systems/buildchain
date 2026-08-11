@@ -13,7 +13,7 @@ ai_provenance:
   model_family: GPT-5
   product: Codex
   generated_at: 2026-08-11
-  visible_context: Buildchain v3 Release Train and Release Cut contracts, existing source locks, exact-source Alpha preflight, Dev Patrol, cancelled duplicate runs, protected auto-merge policy, repository release governance, and the consumer-owned settlement renderer threat model.
+  visible_context: Buildchain v4 parity of the proven v3 Release Train and Release Cut contracts, existing source locks, exact-source Alpha preflight, Dev Patrol, cancelled duplicate runs, protected auto-merge policy, repository release governance, and the consumer-owned settlement renderer threat model.
   invisible_context_boundary: No credentials, private logs, or private configuration were used.
 ---
 
@@ -39,7 +39,7 @@ head, selected SHA, and count of skipped newer commits. This makes a slow native
 verification lane live under continuous development without silently treating
 an unqualified head as releasable.
 
-Before any new selection, the v3 controller now resolves the open managed PR and
+Before any new selection, the v4 controller now resolves the open managed PR and
 validates its embedded authoritative Release Train. If one exists, the frozen
 Release Cut wins: Candidate Patrol does not scan for or retain a newer qualified
 candidate. It returns the cut's exact candidate commit, candidate tree,
@@ -80,7 +80,7 @@ The companion state is
 - `stale`: the available exact-SHA evidence pair is outside policy age; or
 - `blocked`: qualification or reconciliation failed closed.
 
-New v3 states embed the complete `kungfu-buildchain-release-train/v1` record.
+New v4 states embed the complete `kungfu-buildchain-release-train/v1` record.
 `held` states include a rooted `kungfu-buildchain-release-train-hold/v1`
 receipt with the expected cut and observed coordinates. Dev movement alone is
 not an allowed supersession cause. Legacy markers remain readable by the core
