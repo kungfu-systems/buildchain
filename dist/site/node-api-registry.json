@@ -830,11 +830,11 @@
       "id": "packages/core/artifact-verification-envelope.js#createKfdAdopterReleaseBinding",
       "name": "createKfdAdopterReleaseBinding",
       "kind": "function",
-      "signature": "function createKfdAdopterReleaseBinding({ manifest, manifestGate, legacyProjection, manifestPath = \"kfd-adopter-manifest.json\", gatePath = \"kfd-adopter-manifest-gate.json\", legacyProjectionPath = \"kfd-support.json\", expectedSourceSha = \"\", } = {})",
+      "signature": "function createKfdAdopterReleaseBinding({ manifest, manifestGate, legacyProjection, manifestPath = \"kfd-adopter-manifest.json\", gatePath = \"kfd-adopter-manifest-gate.json\", legacyProjectionPath = \"kfd-support.json\", expectedAdopterId = \"kungfu-systems/buildchain\", expectedSourceRepository = \"\", expectedSourceSha = \"\", } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ manifest, manifestGate, legacyProjection, manifestPath = \"kfd-adopter-manifest.json\", gatePath = \"kfd-adopter-manifest-gate.json\", legacyProjectionPath = \"kfd-support.json\", expectedSourceSha = \"\", } = {}"
+          "signature": "{ manifest, manifestGate, legacyProjection, manifestPath = \"kfd-adopter-manifest.json\", gatePath = \"kfd-adopter-manifest-gate.json\", legacyProjectionPath = \"kfd-support.json\", expectedAdopterId = \"kungfu-systems/buildchain\", expectedSourceRepository = \"\", expectedSourceSha = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -989,7 +989,7 @@
       "id": "packages/core/artifact-verification-envelope.js#validateKfdAdopterReleaseBinding",
       "name": "validateKfdAdopterReleaseBinding",
       "kind": "function",
-      "signature": "function validateKfdAdopterReleaseBinding(binding, { manifest, manifestGate, legacyProjection, expectedSourceSha = \"\", } = {})",
+      "signature": "function validateKfdAdopterReleaseBinding(binding, { manifest, manifestGate, legacyProjection, expectedAdopterId = \"kungfu-systems/buildchain\", expectedSourceRepository = \"\", expectedSourceSha = \"\", } = {})",
       "parameters": [
         {
           "name": "binding",
@@ -997,7 +997,7 @@
         },
         {
           "name": "parameter2",
-          "signature": "{ manifest, manifestGate, legacyProjection, expectedSourceSha = \"\", } = {}"
+          "signature": "{ manifest, manifestGate, legacyProjection, expectedAdopterId = \"kungfu-systems/buildchain\", expectedSourceRepository = \"\", expectedSourceSha = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -9163,11 +9163,11 @@
       "id": "packages/core/kfd-adopter-manifest.js#createKfdAdopterManifestGate",
       "name": "createKfdAdopterManifestGate",
       "kind": "function",
-      "signature": "function createKfdAdopterManifestGate({ manifest, packageArtifactRoot = \"\", gateResults = [], authorityPath = \".buildchain/kfd/adopter-manifest.json\", expectedSourceSha = \"\", checkedAt = new Date().toISOString(), maxAgeSeconds = 86400, } = {})",
+      "signature": "function createKfdAdopterManifestGate({ manifest, packageArtifactRoot = \"\", gateResults = [], authorityPath = \".buildchain/kfd/adopter-manifest.json\", expectedAdopterId = BUILDCHAIN_ADOPTER_ID, expectedSourceRepository = \"\", expectedSourceSha = \"\", checkedAt = new Date().toISOString(), maxAgeSeconds = 86400, } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ manifest, packageArtifactRoot = \"\", gateResults = [], authorityPath = \".buildchain/kfd/adopter-manifest.json\", expectedSourceSha = \"\", checkedAt = new Date().toISOString(), maxAgeSeconds = 86400, } = {}"
+          "signature": "{ manifest, packageArtifactRoot = \"\", gateResults = [], authorityPath = \".buildchain/kfd/adopter-manifest.json\", expectedAdopterId = BUILDCHAIN_ADOPTER_ID, expectedSourceRepository = \"\", expectedSourceSha = \"\", checkedAt = new Date().toISOString(), maxAgeSeconds = 86400, } = {}"
         }
       ],
       "returns": "unknown",
@@ -9179,7 +9179,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-adopter-manifest.js",
-        "line": 209
+        "line": 206
       },
       "example": "import { createKfdAdopterManifestGate } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
       "maturity": "stable",
@@ -9208,7 +9208,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-adopter-manifest.js",
-        "line": 327
+        "line": 325
       },
       "example": "import { createKfdLegacySupportMatrixProjection } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
       "maturity": "stable",
@@ -9269,7 +9269,7 @@
       "id": "packages/core/kfd-adopter-manifest.js#validateKfdAdopterManifestGate",
       "name": "validateKfdAdopterManifestGate",
       "kind": "function",
-      "signature": "function validateKfdAdopterManifestGate(gate, { expectedSourceSha = \"\", checkedAt = gate?.checkedAt || new Date().toISOString(), } = {})",
+      "signature": "function validateKfdAdopterManifestGate(gate, { expectedAdopterId = BUILDCHAIN_ADOPTER_ID, expectedSourceRepository = \"\", expectedSourceSha = \"\", checkedAt = gate?.checkedAt || new Date().toISOString(), } = {})",
       "parameters": [
         {
           "name": "gate",
@@ -9277,7 +9277,7 @@
         },
         {
           "name": "parameter2",
-          "signature": "{ expectedSourceSha = \"\", checkedAt = gate?.checkedAt || new Date().toISOString(), } = {}"
+          "signature": "{ expectedAdopterId = BUILDCHAIN_ADOPTER_ID, expectedSourceRepository = \"\", expectedSourceSha = \"\", checkedAt = gate?.checkedAt || new Date().toISOString(), } = {}"
         }
       ],
       "returns": "unknown",
@@ -9289,7 +9289,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-adopter-manifest.js",
-        "line": 279
+        "line": 277
       },
       "example": "import { validateKfdAdopterManifestGate } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
       "maturity": "stable",
@@ -9322,7 +9322,7 @@
       ],
       "source": {
         "path": "packages/core/kfd-adopter-manifest.js",
-        "line": 381
+        "line": 380
       },
       "example": "import { validateKfdLegacySupportMatrixProjection } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
       "maturity": "stable",
@@ -18097,11 +18097,11 @@
       "id": "packages/core/release-passport-contract.js#collectKfdAdopterReleaseEvidence",
       "name": "collectKfdAdopterReleaseEvidence",
       "kind": "function",
-      "signature": "function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], comparisonMatrix, sourceSha = \"\", checkedAt } = {})",
+      "signature": "function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], comparisonMatrix, expectedAdopterId = \"kungfu-systems/buildchain\", expectedSourceRepository = \"\", sourceSha = \"\", checkedAt } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ manifest, gateResults = [], comparisonMatrix, sourceSha = \"\", checkedAt } = {}"
+          "signature": "{ manifest, gateResults = [], comparisonMatrix, expectedAdopterId = \"kungfu-systems/buildchain\", expectedSourceRepository = \"\", sourceSha = \"\", checkedAt } = {}"
         }
       ],
       "returns": "unknown",
@@ -18449,11 +18449,11 @@
       "id": "packages/core/release-passport-contract.js#validateKfdAdopterReleaseEvidence",
       "name": "validateKfdAdopterReleaseEvidence",
       "kind": "function",
-      "signature": "function validateKfdAdopterReleaseEvidence({ binding, artifactBinding, manifest, manifestGate, legacyProjection, passportLegacyProjection, expectedSourceSha = \"\" } = {})",
+      "signature": "function validateKfdAdopterReleaseEvidence({ binding, artifactBinding, manifest, manifestGate, legacyProjection, passportLegacyProjection, expectedAdopterId = \"kungfu-systems/buildchain\", expectedSourceRepository = \"\", expectedSourceSha = \"\" } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ binding, artifactBinding, manifest, manifestGate, legacyProjection, passportLegacyProjection, expectedSourceSha = \"\" } = {}"
+          "signature": "{ binding, artifactBinding, manifest, manifestGate, legacyProjection, passportLegacyProjection, expectedAdopterId = \"kungfu-systems/buildchain\", expectedSourceRepository = \"\", expectedSourceSha = \"\" } = {}"
         }
       ],
       "returns": "unknown",
@@ -18658,7 +18658,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2665
+        "line": 2666
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18716,7 +18716,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2819
+        "line": 2820
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18865,7 +18865,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2848
+        "line": 2849
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18926,7 +18926,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2735
+        "line": 2736
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19081,7 +19081,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2860
+        "line": 2861
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19110,7 +19110,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2784
+        "line": 2785
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23580,7 +23580,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-verification-envelope",
       "export": "./artifact-verification-envelope",
       "target": "./packages/core/artifact-verification-envelope.js",
-      "digest": "sha256:8e96b81f67c49b3249a0c7e5dab176f01713da896956ee536284db3d509dd67a",
+      "digest": "sha256:c917dac2f636fa7e078500c53639e958b1d94e46eb1a2c1a31f0e4ee57e10416",
       "summary": "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -24180,7 +24180,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd-adopter-manifest",
       "export": "./kfd-adopter-manifest",
       "target": "./packages/core/kfd-adopter-manifest.js",
-      "digest": "sha256:9300bf0531cd9bb6a0cce50363765cb5dd22cdf1bd0c9075d0eb36b80cea9943",
+      "digest": "sha256:71ab52ffc71e12b0d985daa5e4ef518fbaf0fb5a2cad248fecc361d0eb875626",
       "summary": "Exact-cut KFD adopter manifest verification, Buildchain evidence binding, and one-way legacy support-matrix projection APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -24208,7 +24208,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd-adopter-release-binding",
       "export": "./kfd-adopter-release-binding",
       "target": "./packages/core/artifact-verification-envelope.js",
-      "digest": "sha256:8e96b81f67c49b3249a0c7e5dab176f01713da896956ee536284db3d509dd67a",
+      "digest": "sha256:c917dac2f636fa7e078500c53639e958b1d94e46eb1a2c1a31f0e4ee57e10416",
       "summary": "Release Passport and artifact-evidence binding for one exact standard adopter manifest closure.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -25132,7 +25132,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:3118f2de735ad98e4d9d70d3b62f905709292c0c7989175f9332bef3ac58aacd",
+      "digest": "sha256:485c55c362476de980eb35c32c1f58b780520f96c924ac316eb515de60696243",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -25177,7 +25177,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport-contract",
       "export": "./release-passport-contract",
       "target": "./packages/core/release-passport-contract.js",
-      "digest": "sha256:028d755bda8e510b0e443eb0c899e4ebfa1d124b4a6d38234dcdf63b6ab4b59b",
+      "digest": "sha256:a0d1beb5ac8849ddd79e8da7c2862a9d3bec9e2d6ebd8f1b653b7f6bde6b2e97",
       "summary": "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -25539,7 +25539,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:2c23b0818367cce3a15198ec91c6827cb6db6d53442c3883e7e3d4d854cce0c6"
+      "digest": "sha256:4663cf32a0116a8605e7b8a475fc4b38e02b81ca21af59e49be0043f3eb99a02"
     },
     {
       "id": "build-facts",
@@ -25549,7 +25549,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:4efc8fb6f94293b75606aa0631dfa122edccc970c2cfc00c7e35f81817ea8335"
+      "digest": "sha256:f849c3b69c8c716a5ae4e917e43a9a3ab8de977e7672b49697ba242fd320a014"
     },
     {
       "id": "readme-badges",
