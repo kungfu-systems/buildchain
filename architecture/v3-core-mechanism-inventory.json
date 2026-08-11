@@ -217,7 +217,9 @@
       "id": "release-candidate-passport",
       "owner": "Buildchain candidate evidence plane",
       "writers": [
+        "packages/core/dev-alpha-active-release-train.js",
         "packages/core/release-train.js",
+        "scripts/dev-alpha-candidate-patrol.mjs",
         "scripts/generate-release-candidate-passport.mjs",
         "actions/promote-buildchain-ref/lib.js"
       ],
@@ -225,6 +227,7 @@
         "kungfu-buildchain-release-candidate-passport",
         "kungfu-buildchain-initiative-family-release-evidence/v1",
         "kungfu-buildchain-release-cut/v1",
+        "kungfu-buildchain-release-train-hold/v1",
         "kungfu-buildchain-release-train/v1",
         "kungfu-buildchain-release-train-transition/v1"
       ],
@@ -240,6 +243,7 @@
         "invalidated",
         "preparing",
         "building",
+        "held",
         "repair-required",
         "publication-blocked",
         "publishable",
@@ -252,12 +256,14 @@
         "controller-receipts-attached",
         "promotion-read",
         "release-cut-created",
+        "release-train-held",
         "release-train-transitioned",
         "dev-head-observed"
       ],
       "transitions": [
         "evidence assembly to immutable validated Passport",
         "rooted compare-and-swap Release Train state transition",
+        "active-train resolution before new candidate selection",
         "enumerated-cause supersession to a new Release Cut generation"
       ],
       "recovery": [
@@ -267,6 +273,7 @@
       "effects": [
         "candidate artifact upload",
         "promotion admission",
+        "rooted candidate hold projection",
         "Release Train state projection"
       ],
       "retry": [
@@ -275,6 +282,7 @@
       ],
       "invalidation": [
         "source/runtime/root mismatch",
+        "candidate tree, Alpha base, runtime or route readback mismatch",
         "failed gate",
         "invalidated family evidence",
         "invalid state-chain root or unenumerated supersession cause"
@@ -298,11 +306,15 @@
       ],
       "sourcePaths": [
         "packages/core/release-candidate.js",
+        "packages/core/dev-alpha-active-release-train.js",
+        "packages/core/dev-alpha-candidate-selection.js",
         "packages/core/release-train.js",
+        "scripts/dev-alpha-candidate-patrol.mjs",
         "scripts/generate-release-candidate-passport.mjs"
       ],
       "testPaths": [
         "tests/release-candidate.test.mjs",
+        "tests/dev-alpha-candidate-patrol.test.mjs",
         "tests/release-train.test.mjs",
         "tests/build-surface-promotion.test.mjs"
       ],
