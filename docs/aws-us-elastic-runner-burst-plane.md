@@ -343,6 +343,11 @@ JIT SecureString under `/kungfu/burst/macos/`, then runs GitHub Actions Runner
 2.336.0 for exactly one job. The runner archive is pinned to the official
 macOS ARM64 SHA256. No GitHub, signing, notarization, publication, SSH, or
 static AWS credential is admitted to the instance.
+The provider provenance step explicitly disables artifact-signing request
+sealing for these qualification jobs, so consumer signing declarations cannot
+turn a runner-profile smoke or full qualification into a signing-authority
+dispatch. All other Buildchain lanes retain the default fail-closed signing
+declaration behavior.
 
 The instance uses the exact retained Amazon EC2 macOS AMI, IMDSv2, an encrypted
 delete-on-termination root volume, no inbound security-group rule, and the

@@ -25,6 +25,17 @@ function writeJson(file, value) {
   return resolved;
 }
 
+export function writeMacosJitQualificationEnvironment(
+  githubEnv = process.env.GITHUB_ENV,
+) {
+  if (!githubEnv) return false;
+  fs.appendFileSync(
+    path.resolve(githubEnv),
+    "BUILDCHAIN_SIGNING_REQUESTS_ENABLED=false\n",
+  );
+  return true;
+}
+
 export function main() {
   const mode = process.argv[2] || "plan";
   if (mode === "plan") {
@@ -64,6 +75,7 @@ export function main() {
         ".buildchain/aws-macos-jit.json",
       result,
     );
+    writeMacosJitQualificationEnvironment();
     process.stdout.write(`${output}\n`);
     return result;
   }

@@ -166,6 +166,39 @@ kind = "archive"
   }
 });
 
+test("explicit qualification mode emits an empty signing request index", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-signing-disabled-qualification-"),
+  );
+  try {
+    fs.writeFileSync(
+      path.join(workspace, "buildchain.toml"),
+      `schema = 1
+
+[[signing.artifacts]]
+id = "missing-release-artifact"
+path = "dist/missing-release-artifact.tar.gz"
+kind = "archive"
+required = true
+`,
+    );
+    const outputRoot = path.join(workspace, ".buildchain", "signing");
+    const index = sealArtifactSigningRequests({
+      workspace,
+      outputRoot,
+      platformId: "macos-arm64",
+      requestsEnabled: false,
+    });
+    assert.deepEqual(index.requests, []);
+    assert.deepEqual(
+      JSON.parse(fs.readFileSync(path.join(outputRoot, "index.json"), "utf8")),
+      index,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("signing request seals Buildchain-owned JIT intent without entitlement files", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-signing-jit-profile-"),
