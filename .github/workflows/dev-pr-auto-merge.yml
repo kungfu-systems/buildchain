@@ -559,6 +559,7 @@ jobs:
             --output .buildchain/dev-delivery/warrant.json
           selected_pr="$(jq -er '.observation.activeWarrant.pullRequestNumber' .buildchain/dev-delivery/warrant.json)"
           selected_head="$(jq -er '.observation.activeWarrant.sourceHead' .buildchain/dev-delivery/warrant.json)"
+          selected_phase="$(jq -er '.observation.activeWarrant.phase' .buildchain/dev-delivery/warrant.json)"
           if [ "$selected_pr" != "$EXPECTED_PR" ] || [ "$selected_head" != "$EXPECTED_HEAD" ]; then
             if [ -z "$HANDOFF_WORKFLOW_ID" ]; then
               echo "::error::Active Warrant belongs to PR #$selected_pr, but no immediate handoff workflow was configured"
@@ -608,20 +609,37 @@ jobs:
             exit 0
           fi
           echo "handoff-required=false" >> "$GITHUB_OUTPUT"
+          case "$selected_phase" in
+            provisional)
+              echo "already-qualified=false" >> "$GITHUB_OUTPUT"
+              ;;
+            qualified)
+              echo "already-qualified=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Active Warrant has unsupported phase $selected_phase"
+              exit 1
+              ;;
+          esac
           jq -e \
             --argjson pr "${EXPECTED_PR}" \
             --arg head "${EXPECTED_HEAD}" \
+            --arg phase "$selected_phase" \
             '.schema == "kungfu.buildchain.dev-delivery-command-result/v1"
              and .mode == "execute"
              and (.after.commitSha | test("^[0-9a-f]{40}$"))
              and (.after.stateRoot == .observation.stateRoot)
              and (.warrant == .observation.activeWarrant)
-             and (.observation.activeWarrant.phase == "provisional")
+             and (.observation.activeWarrant.phase == $phase)
              and (.observation.activeWarrant.pullRequestNumber == $pr)
              and (.observation.activeWarrant.sourceHead == $head)
              and (.observation.activeCandidate.pullRequestNumber == $pr)
              and (.observation.activeCandidate.sourceHead == $head)
-             and (.observation.activeCandidate.candidateId == .observation.activeWarrant.candidateId)' \
+             and (.observation.activeCandidate.candidateId == .observation.activeWarrant.candidateId)
+             and ($phase != "qualified" or
+               ((.observation.activeWarrant.nativeProofRoot | test("^sha256:[0-9a-f]{64}$"))
+                and (.observation.activeWarrant.nativeProofReuseRoot | test("^sha256:[0-9a-f]{64}$"))
+                and .observation.activeCandidate.status == "qualified"))' \
             .buildchain/dev-delivery/warrant.json >/dev/null
           {
             echo "warrant-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/warrant.json)"
@@ -638,7 +656,7 @@ jobs:
           SOURCE_WORKFLOW_ID: ${{ inputs.source-workflow-id }}
 
       - name: Checkout exact candidate for native qualification
-        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true'
+        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true' && steps.warrant.outputs.already-qualified != 'true'
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ inputs.expected-head-sha }}
@@ -648,7 +666,7 @@ jobs:
 
       - name: Materialize optional reusable native proof
         id: native-input
-        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true' && inputs.native-proof-json != ''
+        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true' && steps.warrant.outputs.already-qualified != 'true' && inputs.native-proof-json != ''
         shell: bash
         run: |
           printf '%s\n' "${NATIVE_PROOF_JSON}" > .buildchain/dev-delivery/reusable-native-proof.json
@@ -663,7 +681,7 @@ jobs:
 
       - name: Run or reuse native proof and atomically qualify Warrant
         id: native-final
-        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true'
+        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true' && steps.warrant.outputs.already-qualified != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -728,7 +746,7 @@ jobs:
 
       - name: Run Buildchain dev PR auto-merge
         id: merge
-        if: steps.warrant.outputs.handoff-required != 'true' && (inputs.delivery-warrant-mode != 'required' || steps.native-final.outcome == 'success')
+        if: steps.warrant.outputs.handoff-required != 'true' && (inputs.delivery-warrant-mode != 'required' || steps.warrant.outputs.already-qualified == 'true' || steps.native-final.outcome == 'success')
         continue-on-error: true
         run: node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs
         env:
@@ -802,7 +820,7 @@ jobs:
             echo "::error::Exact Delivery Warrant selection failed"
             exit 1
           fi
-          if [ "${WARRANT_MODE}" = "required" ] && [ "${NATIVE_OUTCOME}" != "success" ]; then
+          if [ "${WARRANT_MODE}" = "required" ] && [ "${ALREADY_QUALIFIED}" != "true" ] && [ "${NATIVE_OUTCOME}" != "success" ]; then
             echo "::error::Provisional Warrant did not atomically upgrade with an exact native proof"
             exit 1
           fi
@@ -819,5 +837,6 @@ jobs:
           SUBMIT_OUTCOME: ${{ steps.submit.outcome }}
           WARRANT_OUTCOME: ${{ steps.warrant.outcome }}
           NATIVE_OUTCOME: ${{ steps.native-final.outcome }}
+          ALREADY_QUALIFIED: ${{ steps.warrant.outputs.already-qualified }}
           HANDOFF_REQUIRED: ${{ steps.warrant.outputs.handoff-required }}
           HANDOFF_DISPATCHED: ${{ steps.warrant.outputs.handoff-dispatched }}

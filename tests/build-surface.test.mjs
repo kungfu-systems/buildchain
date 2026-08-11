@@ -1611,9 +1611,13 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
     .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
     .match(/^      [a-z][a-z0-9-]+:$/gmu);
   assert.equal(dispatchInputs?.length, 13);
-  assert.match(controller, /activeWarrant\.phase == "provisional"/);
+  assert.match(controller, /activeWarrant\.phase == \$phase/);
+  assert.match(controller, /provisional\)\s+echo "already-qualified=false"/u);
   assert.match(controller, /dev-delivery-two-phase\.mjs/);
   assert.match(controller, /Run or reuse native proof and atomically qualify Warrant/);
+  assert.match(controller, /already-qualified=true/);
+  assert.match(controller, /activeCandidate\.status == "qualified"/);
+  assert.match(controller, /steps\.warrant\.outputs\.already-qualified == 'true'/);
   assert.match(controller, /steps\.native-final\.outcome == 'success'/);
 });
 

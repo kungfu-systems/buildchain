@@ -8,9 +8,9 @@
     "maxHandMaintainedSourceFiles": 313,
     "maxHandMaintainedSourceLines": 122604,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23756,
-    "latestTransition": "Buildchain v3 makes protected Dev delivery a two-phase, fenced Warrant transaction with semantic native-proof reuse.",
-    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. This exact 313-file, 122604-source-line and 23756-workflow-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23775,
+    "latestTransition": "Buildchain v3 makes qualified Delivery Warrant retries idempotent after native proof and before Merge Queue settlement.",
+    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run now accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. This exact 313-file, 122604-source-line and 23775-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
