@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "0de402c3877e4c55dbd07b2f4891facce5be8ba8",
-    "maxHandMaintainedSourceFiles": 313,
-    "maxHandMaintainedSourceLines": 122686,
+    "maxHandMaintainedSourceFiles": 314,
+    "maxHandMaintainedSourceLines": 123116,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23775,
-    "latestTransition": "The macOS JIT source rebind preserves explicitly confirmed non-counting startup failures without weakening terminal-failure evidence.",
-    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. The macOS JIT rebind now additionally binds each earlier non-counting startup failure to an exact run and source SHA while requiring completed startup_failure state with zero jobs and artifacts. This exact 313-file, 122686-source-line and 23775-workflow-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 24247,
+    "latestTransition": "The v3 Alpha tail reseal reuses one exact retained four-platform candidate and reruns only its failed macOS finalization boundary.",
+    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. The macOS JIT rebind additionally binds each earlier non-counting startup failure to an exact run and source SHA while requiring completed startup_failure state with zero jobs and artifacts. The opt-in Alpha tail reseal binds one exact failed consumer run, source tree, floating v3-alpha contract resolution, retained artifact digests, signing authority result, and reviewed consumer controller; it skips all product build jobs, revalidates every retained platform, reruns only macOS signing finalization, and emits a standard rooted candidate Passport for existing recovery. The generated channel router collapses the advanced workflow's normal-or-reseal output fallback back to the existing alpha-or-stable public contract. This exact 314-file, 123116-source-line and 24247-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

@@ -462,7 +462,7 @@ on:
         value: ${{ jobs.resolve-contract.outputs.linux-container-image }}
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
-        value: ${{ jobs.summarize.outputs.summary-artifact-name }}
+        value: ${{ jobs.summarize.outputs.summary-artifact-name || jobs.tail-reseal-summarize.outputs.summary-artifact-name }}
       credential-island-macos-artifact:
         description: "Uploaded signed macOS payload artifact name when the credential island is enabled"
         value: ${{ jobs.credential-island-macos.outputs.artifact-name }}
@@ -474,19 +474,19 @@ on:
         value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
       release-candidate-passport-artifact:
         description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
-        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name || jobs.tail-reseal-summarize.outputs.release-candidate-passport-artifact-name }}
       release-candidate-artifact:
         description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
-        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name || jobs.tail-reseal-summarize.outputs.release-candidate-passport-artifact-name }}
       release-candidate-passport-json:
         description: "Compact release-candidate passport JSON when release-candidate is enabled"
-        value: ${{ jobs.summarize.outputs.release-candidate-passport-json }}
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-json || jobs.tail-reseal-summarize.outputs.release-candidate-passport-json }}
       build-summary-json:
         description: "Compact aggregate build summary JSON"
-        value: ${{ jobs.summarize.outputs.artifact-summary-json }}
+        value: ${{ jobs.summarize.outputs.artifact-summary-json || jobs.tail-reseal-summarize.outputs.artifact-summary-json }}
       artifact-coordinates-json:
         description: "Producer-owned exact GitHub Artifact coordinates for every resolved build platform"
-        value: ${{ jobs.summarize.outputs.artifact-coordinates-json }}
+        value: ${{ jobs.summarize.outputs.artifact-coordinates-json || jobs.tail-reseal-summarize.outputs.artifact-coordinates-json }}
       build-diagnostics-summary-json:
         description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
         value: ${{ jobs.summarize.outputs.diagnostics-summary-json }}
@@ -1336,7 +1336,7 @@ jobs:
       - anchored-release-preflight
       - artifact-transfer
       - pre-build-contracts
-    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0' }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0' && fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha != github.event.pull_request.head.sha }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -1937,7 +1937,7 @@ jobs:
       - anchored-release-preflight
       - artifact-transfer
       - pre-build-contracts
-    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0' }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0' && fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha != github.event.pull_request.head.sha }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -2945,6 +2945,478 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
+  tail-reseal-plan:
+    name: Validate retained candidate tail reseal
+    needs:
+      - trust-gate
+      - resolve-source
+      - resolve-contract
+      - anchored-release-preflight
+    if: ${{ fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha == github.event.pull_request.head.sha }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      request-artifact: ${{ steps.names.outputs.request-artifact }}
+      request-root: ${{ steps.plan.outputs.request-root }}
+      platforms-json: ${{ steps.plan.outputs.platforms-json }}
+      source-run-id: ${{ steps.plan.outputs.source-run-id }}
+      source-run-attempt: ${{ steps.plan.outputs.source-run-attempt }}
+      source-sha: ${{ steps.plan.outputs.source-sha }}
+      source-tree: ${{ steps.plan.outputs.source-tree }}
+      target-channel: ${{ steps.plan.outputs.target-channel }}
+      target-ref: ${{ steps.plan.outputs.target-ref }}
+      target-version: ${{ steps.plan.outputs.target-version }}
+      candidate-runtime-ref: ${{ steps.plan.outputs.candidate-runtime-ref }}
+      candidate-runtime-sha: ${{ steps.plan.outputs.candidate-runtime-sha }}
+      candidate-runtime-contract-digest: ${{ steps.plan.outputs.candidate-runtime-contract-digest }}
+      consumer-controller-sha: ${{ steps.plan.outputs.consumer-controller-sha }}
+      authority-run-id: ${{ steps.plan.outputs.authority-run-id }}
+      authority-result-artifact: ${{ steps.plan.outputs.authority-result-artifact }}
+      controller-plan-artifact: ${{ steps.plan.outputs.controller-plan-artifact }}
+    steps:
+      - name: Check out the floating v3 recovery tooling
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/recovery-runtime
+          persist-credentials: false
+
+      - name: Validate exact failed-run and artifact identity
+        id: plan
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_JSON: ${{ vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON }}
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+
+      - name: Resolve tail reseal request artifact
+        id: names
+        run: echo "request-artifact=${ARTIFACT_NAME}-tail-reseal-request-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ steps.plan.outputs.source-sha }}
+
+      - name: Retain exact tail reseal request
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.request-artifact }}
+          path: .buildchain/tail-reseal/request.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  tail-reseal-platforms:
+    name: Reseal retained artifact ${{ matrix.platform.name }}
+    needs:
+      - trust-gate
+      - tail-reseal-plan
+    if: ${{ needs.tail-reseal-plan.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.tail-reseal-plan.outputs.platforms-json) }}
+    runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out exact candidate source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+          persist-credentials: false
+
+      - name: Check out the floating v3 recovery tooling
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/recovery-runtime
+          persist-credentials: false
+
+      - name: Download exact tail reseal request
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ needs.tail-reseal-plan.outputs.request-artifact }}
+          path: .buildchain/tail-reseal
+
+      - name: Download retained platform payload
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
+          name: ${{ matrix.platform.artifactName }}
+          path: .
+
+      - name: Download retained platform manifest evidence
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
+          name: ${{ matrix.platform.manifestArtifactName }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}
+
+      - name: Check out exact candidate Buildchain runtime
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-sha }}
+          path: .buildchain/candidate-runtime
+          persist-credentials: false
+
+      - name: Check out exact consumer finalization controller
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ needs.tail-reseal-plan.outputs.consumer-controller-sha }}
+          path: .buildchain/consumer-controller
+          persist-credentials: false
+
+      - name: Install exact candidate runtime dependencies
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        run: corepack pnpm@11.7.0 install --dir .buildchain/candidate-runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Download macOS signing finalization delegation
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
+          name: ${{ inputs.artifact-name }}-signing-delegation-macos-arm64-${{ needs.tail-reseal-plan.outputs.source-sha }}-${{ needs.tail-reseal-plan.outputs.source-run-id }}-${{ needs.tail-reseal-plan.outputs.source-run-attempt }}
+          path: .buildchain/signing/delegations/macos-arm64
+
+      - name: Download macOS signing control request
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
+          name: ${{ inputs.artifact-name }}-signing-control-request-macos-arm64-${{ needs.tail-reseal-plan.outputs.source-sha }}-${{ needs.tail-reseal-plan.outputs.source-run-id }}-${{ needs.tail-reseal-plan.outputs.source-run-attempt }}
+          path: .buildchain/signing/control-requests/macos-arm64
+
+      - name: Download macOS signing controller receipt
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
+          name: ${{ inputs.artifact-name }}-signing-controller-receipt-macos-arm64-${{ needs.tail-reseal-plan.outputs.source-sha }}-${{ needs.tail-reseal-plan.outputs.source-run-id }}-${{ needs.tail-reseal-plan.outputs.source-run-attempt }}
+          path: .buildchain/signing/controller-receipts/macos-arm64
+
+      - name: Verify macOS signing finalization delegation
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        id: delegation
+        run: node .buildchain/candidate-runtime/scripts/artifact-signing-controller.mjs verify
+        env:
+          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/macos-arm64/request.json
+          BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/controller-receipts/macos-arm64/receipt.json
+          BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/macos-arm64/delegation.json
+          BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_EXPECTED_SOURCE_RUN_ID: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
+          BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ needs.tail-reseal-plan.outputs.source-run-attempt }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+          BUILDCHAIN_EXPECTED_SOURCE_TREE_SHA: ${{ needs.tail-reseal-plan.outputs.source-tree }}
+          BUILDCHAIN_EXPECTED_RUNTIME_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-sha }}
+          BUILDCHAIN_EXPECTED_PLATFORM_ID: macos-arm64
+
+      - name: Download immutable macOS signing request
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
+          name: ${{ steps.delegation.outputs.request-artifact }}
+          path: .buildchain/signing/requests/macos-arm64
+
+      - name: Download immutable signed macOS result
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          repository: ${{ inputs.buildchain-repository }}
+          run-id: ${{ needs.tail-reseal-plan.outputs.authority-run-id }}
+          name: ${{ needs.tail-reseal-plan.outputs.authority-result-artifact }}
+          path: .buildchain/signing/results/macos-arm64
+
+      - name: Preserve pre-signing macOS manifest
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        run: cp .buildchain/artifacts/macos-arm64/manifest.json .buildchain/artifacts/macos-arm64/manifest-pre-signing.json
+
+      - name: Verify and import authoritative signed macOS bytes
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        run: node .buildchain/candidate-runtime/scripts/import-artifact-signing-results.mjs
+        env:
+          BUILDCHAIN_SIGNING_CWD: ${{ steps.delegation.outputs.working-directory }}
+          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/signing/requests/macos-arm64
+          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/signing/results/macos-arm64
+          BUILDCHAIN_SIGNING_IMPORTED_EVIDENCE_ROOT: .buildchain/artifacts/signing/macos-arm64
+
+      - name: Recompute manifest with the reviewed consumer PAX repair
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        run: >-
+          node .buildchain/candidate-runtime/scripts/run-lifecycle.mjs
+          --cwd "${{ steps.delegation.outputs.working-directory }}"
+          --stage signing-finalization
+          --required false
+          --manifest-path ".buildchain/artifacts/macos-arm64/manifest.json"
+          --summary-path ".buildchain/artifacts/macos-arm64/summary.json"
+          --artifact-name "${{ matrix.platform.artifactName }}"
+          --manifest-artifact-name "${{ matrix.platform.manifestArtifactName }}"
+          --diagnostics-artifact-name "${{ inputs.artifact-name }}-diagnostics-macos-arm64-${{ needs.tail-reseal-plan.outputs.source-sha }}"
+          --platform-id macos-arm64
+          --platform-name "macOS ARM64"
+          --process-summary-required false
+        env:
+          BUILDCHAIN_COMMAND: >-
+            node "$GITHUB_WORKSPACE/.buildchain/consumer-controller/product/scripts/verify-cli-surface-qualification.mjs"
+            --qualification product/release/cli/kungfu-episodes-cli-darwin-arm64.qualification.json
+            --archive product/release/cli/kungfu-episodes-cli-darwin-arm64.tar.gz
+            --platform darwin-arm64
+            --signing-result .buildchain/artifacts/signing/macos-arm64/kungfu-cli-macos-arm64/result.json
+            --signing-receipt .buildchain/artifacts/signing/macos-arm64/kungfu-cli-macos-arm64/receipt.json
+            --signing-provider-evidence .buildchain/artifacts/signing/macos-arm64/kungfu-cli-macos-arm64/provider-evidence.json
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.tail-reseal-plan.outputs.source-tree }}
+          BUILDCHAIN_SOURCE_REF: ${{ github.event.pull_request.head.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-sha }}
+          BUILDCHAIN_ARTIFACT_PATHS: ${{ matrix.platform.artifactPaths }}
+          BUILDCHAIN_EXPECTED_ARTIFACTS_JSON: ${{ inputs.expected-artifacts-json }}
+
+      - name: Verify exact platform files before resealing
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs verify-platform
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
+
+      - name: Upload resealed platform payload
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ matrix.platform.artifactName }}
+          path: ${{ matrix.platform.artifactPaths }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+
+      - name: Upload resealed platform manifest
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ matrix.platform.manifestArtifactName }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest-pre-signing.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  tail-reseal-summarize:
+    name: Seal retained release candidate
+    needs:
+      - trust-gate
+      - resolve-source
+      - resolve-contract
+      - tail-reseal-plan
+      - tail-reseal-platforms
+    if: ${{ always() && needs.tail-reseal-plan.result == 'success' && needs.tail-reseal-platforms.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
+      release-candidate-passport-artifact-name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
+      release-candidate-passport-json: ${{ steps.passport.outputs.release-candidate-passport-json }}
+      artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
+      artifact-coordinates-json: ${{ steps.artifact-coordinates.outputs.artifact-coordinates-json }}
+      tail-reseal-receipt-root: ${{ steps.tail-receipt.outputs.receipt-root }}
+    steps:
+      - name: Check out the floating v3 recovery tooling
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Download exact tail reseal request
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ needs.tail-reseal-plan.outputs.request-artifact }}
+          path: .buildchain/tail-reseal
+
+      - name: Download resealed platform manifests
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          pattern: ${{ inputs.artifact-name }}-manifest-*-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          path: .buildchain/downloaded-manifests
+          merge-multiple: false
+
+      - name: Download original controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
+          name: ${{ needs.tail-reseal-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Seal exact tail-reuse receipt
+        id: tail-receipt
+        run: node .buildchain/runtime/scripts/release-candidate-tail-reseal.mjs seal
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_TAIL_RESEAL_MANIFESTS_ROOT: .buildchain/downloaded-manifests
+          BUILDCHAIN_TAIL_RESEAL_TOOLING_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_TAIL_RESEAL_TOOLING_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_TAIL_RESEAL_RECEIPT_PATH: .buildchain/tail-reseal/receipt.json
+
+      - name: Aggregate retained platform summary
+        id: summary
+        run: node .buildchain/runtime/scripts/aggregate-build-summary.mjs
+        env:
+          BUILDCHAIN_SUMMARY_INPUT: .buildchain/downloaded-manifests
+          BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_PLATFORM_COUNT: 4
+          BUILDCHAIN_EXPECTED_PLATFORMS_JSON: ${{ needs.tail-reseal-plan.outputs.platforms-json }}
+          BUILDCHAIN_TRUSTED_EVENT: "true"
+          BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.tail-reseal-plan.outputs.target-channel }}
+          BUILDCHAIN_PUBLISH_ALLOWED: "true"
+          BUILDCHAIN_PUBLISH_REASON: exact-tail-reseal
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ github.event.pull_request.head.ref }}
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+          BUILDCHAIN_PUBLISH_SOURCE_LOCKED: "true"
+          BUILDCHAIN_PUBLISH_SOURCE_CHANNEL: ${{ needs.tail-reseal-plan.outputs.target-channel }}
+          BUILDCHAIN_PUBLISH_SOURCE_LINE: ${{ needs.tail-reseal-plan.outputs.target-ref }}
+          BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION: ${{ needs.tail-reseal-plan.outputs.target-version }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.tail-reseal-plan.outputs.source-tree }}
+          BUILDCHAIN_SOURCE_REF: ${{ github.event.pull_request.head.ref }}
+          BUILDCHAIN_RUNTIME_REQUESTED_REF: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-ref }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-sha }}
+          BUILDCHAIN_RUNTIME_CLASS: alpha
+          BUILDCHAIN_RUNTIME_OVERRIDE: "false"
+          BUILDCHAIN_RUNTIME_TRUST_DECISION: retained-candidate-runtime
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-ref }}
+
+      - name: Create qualifying tail-reseal controller receipt
+        id: controller-receipt
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"success"},{"id":"resolve-source","status":"success"},{"id":"anchored-release-preflight","status":"success"},{"id":"pre-build-contracts","status":"success"},{"id":"build","status":"success"},{"id":"signing-finalization","status":"success"},{"id":"credential-island","status":"skipped"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: >-
+            [{"kind":"tail-reseal-receipt","path":".buildchain/tail-reseal/receipt.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/release-candidate-receipt.json
+
+      - name: Generate standard release candidate Passport
+        id: passport
+        run: node .buildchain/runtime/scripts/generate-release-candidate-passport.mjs
+        env:
+          BUILDCHAIN_BUILD_SUMMARY_PATH: .buildchain/artifacts/build-summary.json
+          BUILDCHAIN_RC_PASSPORT_PATH: .buildchain/artifacts/release-candidate-passport.json
+          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ needs.tail-reseal-plan.outputs.target-channel }}
+          BUILDCHAIN_RC_VERSION: ${{ needs.tail-reseal-plan.outputs.target-version }}
+          BUILDCHAIN_RC_SOURCE_HEAD_SHA: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+          BUILDCHAIN_RC_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BUILDCHAIN_RC_MERGE_REF_SHA: ${{ github.sha }}
+          BUILDCHAIN_RC_SOURCE_TREE_HASH: ${{ needs.tail-reseal-plan.outputs.source-tree }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-sha }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-ref }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ inputs.gate-profile-aggregate-json }}
+          BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON: ${{ inputs.release-candidate-family-evidence-json }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_JSON: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+          BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
+          BUILDCHAIN_PULL_REQUEST_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BUILDCHAIN_PULL_REQUEST_BASE_REF: ${{ github.event.pull_request.base.ref }}
+
+      - name: Discover same-run resealed artifacts
+        uses: actions/github-script@v8.0.0
+        with:
+          script: |
+            const fs = require("fs");
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              { owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId, per_page: 100 },
+            );
+            fs.writeFileSync(".buildchain/artifacts/github-artifacts.json", JSON.stringify(artifacts, null, 2) + "\n");
+
+      - name: Bind exact resealed artifact coordinates
+        id: artifact-coordinates
+        run: node .buildchain/runtime/scripts/resolve-artifact-coordinates.mjs
+        env:
+          BUILDCHAIN_ARTIFACT_LIST_PATH: .buildchain/artifacts/github-artifacts.json
+          BUILDCHAIN_ARTIFACT_COORDINATES_PATH: .buildchain/artifacts/artifact-coordinates.json
+          BUILDCHAIN_PLATFORMS_JSON: ${{ needs.tail-reseal-plan.outputs.platforms-json }}
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+
+      - name: Resolve standard tail artifact names
+        id: names
+        run: |
+          {
+            echo "summary-artifact-name=${ARTIFACT_NAME}-summary-${SOURCE_SHA}"
+            echo "release-candidate-passport-artifact-name=${ARTIFACT_NAME}-release-candidate-${SOURCE_SHA}"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+
+      - name: Upload aggregate build summary
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.summary-artifact-name }}
+          path: .buildchain/artifacts/build-summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload tail reseal controller receipt
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          path: .buildchain/controller/release-candidate-receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload tail reseal receipt
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-tail-reseal-receipt-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          path: .buildchain/tail-reseal/receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload release candidate Passport
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
+          path: .buildchain/artifacts/release-candidate-passport.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
   summarize:
     name: Summarize build contract
     needs:
@@ -3237,7 +3709,7 @@ jobs:
       - finalize-artifact-signing
       - credential-island-macos
       - summarize
-    if: ${{ always() && needs.controller-plan.result == 'success' }}
+    if: ${{ always() && needs.controller-plan.result == 'success' && fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha != github.event.pull_request.head.sha }}
     outputs:
       controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
       controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}
