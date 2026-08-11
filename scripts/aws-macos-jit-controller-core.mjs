@@ -88,6 +88,19 @@ function terminalFailureRunIds(value) {
   return [...normalized].sort((left, right) => Number(left) - Number(right));
 }
 
+function preflightFailureRunIds(value) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error("preflightFailureRunIds must be a non-empty array");
+  }
+  const normalized = value.map((entry) =>
+    exact(entry, /^[1-9]\d*$/, "preflightFailureRunId"),
+  );
+  if (new Set(normalized).size !== normalized.length) {
+    throw new Error("preflightFailureRunIds must be unique");
+  }
+  return [...normalized].sort((left, right) => Number(left) - Number(right));
+}
+
 function startupFailureRuns(value) {
   if (value === undefined) return [];
   if (!Array.isArray(value)) {
@@ -101,6 +114,25 @@ function startupFailureRuns(value) {
     new Set(normalized.map(({ runId }) => runId)).size !== normalized.length
   ) {
     throw new Error("startupFailureRuns must use unique run ids");
+  }
+  return [...normalized].sort(
+    (left, right) => Number(left.runId) - Number(right.runId),
+  );
+}
+
+function historicalTerminalFailureRuns(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    throw new Error("historicalTerminalFailureRuns must be an array");
+  }
+  const normalized = value.map((entry) => ({
+    runId: exact(entry?.runId, /^[1-9]\d*$/, "historicalTerminalFailureRunId"),
+    sourceSha: exactSha(entry?.sourceSha),
+  }));
+  if (
+    new Set(normalized.map(({ runId }) => runId)).size !== normalized.length
+  ) {
+    throw new Error("historicalTerminalFailureRuns must use unique run ids");
   }
   return [...normalized].sort(
     (left, right) => Number(left.runId) - Number(right.runId),
@@ -333,17 +365,33 @@ export function createMacosJitSourceRebindPlan(values = {}) {
     throw new Error(`workflowId must be ${MACOS_EC2_JIT.workflowId}`);
   }
   const priorRunPolicy = values.priorRunPolicy || "unused";
-  if (!["unused", "terminal-failure"].includes(priorRunPolicy)) {
-    throw new Error("priorRunPolicy must be unused or terminal-failure");
+  if (
+    !["unused", "terminal-failure", "preflight-failure"].includes(
+      priorRunPolicy,
+    )
+  ) {
+    throw new Error(
+      "priorRunPolicy must be unused, terminal-failure, or preflight-failure",
+    );
   }
   const terminalRunIds =
     priorRunPolicy === "terminal-failure"
       ? terminalFailureRunIds(values.terminalFailureRunIds)
       : [];
+  const preflightRunIds =
+    priorRunPolicy === "preflight-failure"
+      ? preflightFailureRunIds(values.preflightFailureRunIds)
+      : [];
   const startupRuns = startupFailureRuns(values.startupFailureRuns);
-  if (priorRunPolicy !== "terminal-failure" && startupRuns.length !== 0) {
+  const historicalTerminalRuns = historicalTerminalFailureRuns(
+    values.historicalTerminalFailureRuns,
+  );
+  if (priorRunPolicy === "unused" && startupRuns.length !== 0) {
+    throw new Error("startupFailureRuns require a failed priorRunPolicy");
+  }
+  if (priorRunPolicy === "unused" && historicalTerminalRuns.length !== 0) {
     throw new Error(
-      "startupFailureRuns require priorRunPolicy terminal-failure",
+      "historicalTerminalFailureRuns require a failed priorRunPolicy",
     );
   }
   const plan = {
@@ -362,7 +410,9 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       requiredState: "disabled_manually",
       priorRunPolicy,
       terminalFailureRunIds: terminalRunIds,
+      preflightFailureRunIds: preflightRunIds,
       startupFailureRuns: startupRuns,
+      historicalTerminalFailureRuns: historicalTerminalRuns,
     },
     aws: {
       ...aws,
@@ -379,7 +429,10 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       zeroPriorJobsRequired: priorRunPolicy === "unused",
       zeroPriorArtifactsRequired: priorRunPolicy === "unused",
       terminalFailureEvidencePreserved: priorRunPolicy === "terminal-failure",
+      preflightFailureEvidencePreserved: priorRunPolicy === "preflight-failure",
       startupFailureEvidencePreserved: startupRuns.length !== 0,
+      historicalTerminalFailureEvidencePreserved:
+        historicalTerminalRuns.length !== 0,
       zeroJitResidueRequired: true,
       zeroEvidenceRequired: true,
       exactCampaignResourcesRequired: true,

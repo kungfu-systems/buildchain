@@ -553,6 +553,55 @@ function confirm(plan) {
           "--confirm-startup-failure-runs-json must equal the exact startup failure inventory",
         );
       }
+      const confirmedHistoricalTerminalFailures = flag(
+        "confirm-historical-terminal-failure-runs-json",
+      )
+        ? jsonArrayArg("confirm-historical-terminal-failure-runs-json")
+        : [];
+      if (
+        JSON.stringify(confirmedHistoricalTerminalFailures) !==
+        JSON.stringify(plan.github.historicalTerminalFailureRuns)
+      ) {
+        throw new Error(
+          "--confirm-historical-terminal-failure-runs-json must equal the exact historical terminal failure inventory",
+        );
+      }
+    } else if (plan.github.priorRunPolicy === "preflight-failure") {
+      const confirmed = jsonArrayArg(
+        "confirm-preflight-failure-run-ids-json",
+      ).map(String);
+      if (
+        JSON.stringify(confirmed) !==
+        JSON.stringify(plan.github.preflightFailureRunIds)
+      ) {
+        throw new Error(
+          "--confirm-preflight-failure-run-ids-json must equal the exact preflight failure inventory",
+        );
+      }
+      const confirmedStartupFailures = flag("confirm-startup-failure-runs-json")
+        ? jsonArrayArg("confirm-startup-failure-runs-json")
+        : [];
+      if (
+        JSON.stringify(confirmedStartupFailures) !==
+        JSON.stringify(plan.github.startupFailureRuns)
+      ) {
+        throw new Error(
+          "--confirm-startup-failure-runs-json must equal the exact startup failure inventory",
+        );
+      }
+      const confirmedHistoricalTerminalFailures = flag(
+        "confirm-historical-terminal-failure-runs-json",
+      )
+        ? jsonArrayArg("confirm-historical-terminal-failure-runs-json")
+        : [];
+      if (
+        JSON.stringify(confirmedHistoricalTerminalFailures) !==
+        JSON.stringify(plan.github.historicalTerminalFailureRuns)
+      ) {
+        throw new Error(
+          "--confirm-historical-terminal-failure-runs-json must equal the exact historical terminal failure inventory",
+        );
+      }
     }
   }
   if (plan.kind === "instance-rehydrate-plan") {
@@ -613,9 +662,12 @@ export function main() {
       "rebind-campaign",
       "plan-rebind-after-failure",
       "rebind-campaign-after-failure",
+      "plan-rebind-after-preflight-failure",
+      "rebind-campaign-after-preflight-failure",
     ].includes(mode)
   ) {
     const afterFailure = mode.endsWith("after-failure");
+    const afterPreflightFailure = mode.endsWith("after-preflight-failure");
     const plan = createMacosJitSourceRebindPlan({
       ...commonValues(execute),
       previousSourceSha: arg("previous-source-sha"),
@@ -623,13 +675,26 @@ export function main() {
       workflowId: arg("workflow-id"),
       hostId: arg("host-id"),
       instanceId: arg("instance-id"),
-      priorRunPolicy: afterFailure ? "terminal-failure" : "unused",
+      priorRunPolicy: afterPreflightFailure
+        ? "preflight-failure"
+        : afterFailure
+          ? "terminal-failure"
+          : "unused",
       terminalFailureRunIds: afterFailure
         ? jsonArrayArg("terminal-failure-run-ids-json")
         : [],
+      preflightFailureRunIds: afterPreflightFailure
+        ? jsonArrayArg("preflight-failure-run-ids-json")
+        : [],
       startupFailureRuns:
-        afterFailure && flag("startup-failure-runs-json")
+        (afterFailure || afterPreflightFailure) &&
+        flag("startup-failure-runs-json")
           ? jsonArrayArg("startup-failure-runs-json")
+          : [],
+      historicalTerminalFailureRuns:
+        (afterFailure || afterPreflightFailure) &&
+        flag("historical-terminal-failure-runs-json")
+          ? jsonArrayArg("historical-terminal-failure-runs-json")
           : [],
     });
     return emit(plan, mode, execute, () =>

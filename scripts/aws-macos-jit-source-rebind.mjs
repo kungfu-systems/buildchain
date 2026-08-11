@@ -28,11 +28,37 @@ function priorOwnershipPlan(plan) {
   };
 }
 
-function assertRunMatchesPolicy(plan, run, jobs, jobCount, artifactCount) {
-  if (plan.github.priorRunPolicy === "unused") {
+function assertRunMatchesPolicy(policy, run, jobs, jobCount, artifactCount) {
+  if (policy === "unused") {
     if (jobCount !== 0 || artifactCount !== 0) {
       throw new Error(
         `macOS campaign run ${run.id} already has jobs or artifacts`,
+      );
+    }
+    return;
+  }
+  if (policy === "preflight-failure") {
+    const jobList = jobs.jobs || [];
+    const failedJobs = jobList.filter((job) => job.conclusion === "failure");
+    const nonFailedJobs = jobList.filter((job) => job.conclusion !== "failure");
+    const hasJitLabel = jobList.some((job) =>
+      (job.labels || []).some((label) =>
+        String(label.name || label).startsWith(MACOS_JIT_RUNNER_LABEL_PREFIX),
+      ),
+    );
+    if (
+      run.status !== "completed" ||
+      run.conclusion !== "failure" ||
+      jobCount === 0 ||
+      artifactCount === 0 ||
+      jobList.some((job) => job.status !== "completed") ||
+      failedJobs.length !== 1 ||
+      !String(failedJobs[0].name || "").endsWith(" / Trust gate") ||
+      nonFailedJobs.some((job) => job.conclusion !== "skipped") ||
+      hasJitLabel
+    ) {
+      throw new Error(
+        `macOS campaign run ${run.id} is not an exact preflight Trust gate failure`,
       );
     }
     return;
@@ -63,6 +89,75 @@ function assertExactStartupFailure(run, jobCount, artifactCount) {
   }
 }
 
+function classifyCampaignRun(plan, run) {
+  const startupFailure = plan.github.startupFailureRuns.find(
+    ({ runId }) => runId === String(run.id),
+  );
+  const historicalTerminalFailure =
+    plan.github.historicalTerminalFailureRuns.find(
+      ({ runId }) => runId === String(run.id),
+    );
+  const preflightFailure = plan.github.preflightFailureRunIds.includes(
+    String(run.id),
+  );
+  return {
+    startupFailure,
+    historicalTerminalFailure,
+    expectedSourceSha:
+      startupFailure?.sourceSha ||
+      historicalTerminalFailure?.sourceSha ||
+      plan.previousSource.sha,
+    classification: startupFailure
+      ? "startup-failure"
+      : historicalTerminalFailure
+        ? "historical-terminal-failure"
+        : preflightFailure
+          ? "preflight-failure"
+          : plan.github.priorRunPolicy,
+  };
+}
+
+function exactReceiptInventory(receipts, classification, withSource = false) {
+  return receipts
+    .filter((receipt) => receipt.classification === classification)
+    .map((receipt) =>
+      withSource
+        ? { runId: receipt.runId, sourceSha: receipt.sourceSha }
+        : receipt.runId,
+    )
+    .sort(
+      (left, right) =>
+        Number(withSource ? left.runId : left) -
+        Number(withSource ? right.runId : right),
+    );
+}
+
+function assertExactReceiptInventories(plan, receipts) {
+  if (plan.github.priorRunPolicy === "unused") return;
+  const inventories = [
+    ["terminal-failure", plan.github.terminalFailureRunIds, false],
+    ["preflight-failure", plan.github.preflightFailureRunIds, false],
+    ["startup-failure", plan.github.startupFailureRuns, true],
+    [
+      "historical-terminal-failure",
+      plan.github.historicalTerminalFailureRuns,
+      true,
+    ],
+  ];
+  for (const [classification, expected, withSource] of inventories) {
+    const observed = exactReceiptInventory(
+      receipts,
+      classification,
+      withSource,
+    );
+    if (JSON.stringify(observed) !== JSON.stringify(expected)) {
+      throw new Error(
+        `macOS campaign ${classification} inventory does not match the confirmed runs`,
+      );
+    }
+  }
+}
+
 function campaignRunReceipts(plan) {
   const branch = sourceRefName(plan.source.ref);
   const response = ghJson(
@@ -81,13 +176,8 @@ function campaignRunReceipts(plan) {
   }
   const receipts = [];
   for (const run of matching) {
-    const startupFailure = plan.github.startupFailureRuns.find(
-      ({ runId }) => runId === String(run.id),
-    );
-    const expectedSourceSha = startupFailure
-      ? startupFailure.sourceSha
-      : plan.previousSource.sha;
-    if (run.head_sha !== expectedSourceSha) {
+    const classification = classifyCampaignRun(plan, run);
+    if (run.head_sha !== classification.expectedSourceSha) {
       throw new Error(
         `macOS campaign run ${run.id} is bound to an unexpected source`,
       );
@@ -109,17 +199,23 @@ function campaignRunReceipts(plan) {
     const artifactCount = Number(
       artifacts.total_count || (artifacts.artifacts || []).length || 0,
     );
-    if (startupFailure) {
+    if (classification.startupFailure) {
       assertExactStartupFailure(run, jobCount, artifactCount);
     } else {
-      assertRunMatchesPolicy(plan, run, jobs, jobCount, artifactCount);
+      assertRunMatchesPolicy(
+        classification.historicalTerminalFailure
+          ? "terminal-failure"
+          : plan.github.priorRunPolicy,
+        run,
+        jobs,
+        jobCount,
+        artifactCount,
+      );
     }
     receipts.push({
       runId: String(run.id),
       sourceSha: String(run.head_sha || ""),
-      classification: startupFailure
-        ? "startup-failure"
-        : plan.github.priorRunPolicy,
+      classification: classification.classification,
       status: String(run.status || "unknown"),
       conclusion: String(run.conclusion || ""),
       jobCount,
@@ -133,32 +229,7 @@ function campaignRunReceipts(plan) {
       })),
     });
   }
-  if (plan.github.priorRunPolicy === "terminal-failure") {
-    const observed = receipts
-      .filter(({ classification }) => classification === "terminal-failure")
-      .map((receipt) => receipt.runId)
-      .sort((left, right) => Number(left) - Number(right));
-    if (
-      JSON.stringify(observed) !==
-      JSON.stringify(plan.github.terminalFailureRunIds)
-    ) {
-      throw new Error(
-        "macOS campaign terminal failed run inventory does not match the confirmed run ids",
-      );
-    }
-    const observedStartupFailures = receipts
-      .filter(({ classification }) => classification === "startup-failure")
-      .map(({ runId, sourceSha }) => ({ runId, sourceSha }))
-      .sort((left, right) => Number(left.runId) - Number(right.runId));
-    if (
-      JSON.stringify(observedStartupFailures) !==
-      JSON.stringify(plan.github.startupFailureRuns)
-    ) {
-      throw new Error(
-        "macOS campaign startup failure inventory does not match the confirmed runs",
-      );
-    }
-  }
+  assertExactReceiptInventories(plan, receipts);
   return receipts;
 }
 
@@ -365,7 +436,16 @@ function assertZeroCampaignResidue(plan, profile) {
     throw new Error("macOS campaign already has a registered JIT runner");
   }
   const evidenceObjects = {};
-  for (const sourceSha of [plan.previousSource.sha, plan.source.sha]) {
+  const historicalTerminalSources =
+    plan.github.historicalTerminalFailureRuns.map(({ sourceSha }) => sourceSha);
+  const evidenceSources = [
+    ...new Set([
+      plan.previousSource.sha,
+      ...historicalTerminalSources,
+      plan.source.sha,
+    ]),
+  ];
+  for (const sourceSha of evidenceSources) {
     const evidence = awsJson(
       plan,
       profile,
@@ -396,12 +476,13 @@ function assertZeroCampaignResidue(plan, profile) {
     const count = Number(
       evidence.KeyCount || (evidence.Contents || []).length || 0,
     );
-    const previousTerminalEvidence =
-      sourceSha === plan.previousSource.sha &&
-      plan.github.priorRunPolicy === "terminal-failure";
+    const terminalEvidenceSource =
+      (sourceSha === plan.previousSource.sha &&
+        plan.github.priorRunPolicy === "terminal-failure") ||
+      historicalTerminalSources.includes(sourceSha);
     if (
-      (!previousTerminalEvidence && count !== 0) ||
-      (previousTerminalEvidence && count === 0)
+      (!terminalEvidenceSource && count !== 0) ||
+      (terminalEvidenceSource && count === 0)
     ) {
       throw new Error(
         `macOS campaign source ${sourceSha} bootstrap evidence does not match the rebind policy`,
@@ -577,7 +658,9 @@ export function executeMacosJitSourceRebind(plan, { profile = "" } = {}) {
     status:
       plan.github.priorRunPolicy === "terminal-failure"
         ? "rebound-after-terminal-failure-zero-allocation"
-        : "rebound-zero-allocation",
+        : plan.github.priorRunPolicy === "preflight-failure"
+          ? "rebound-after-preflight-failure-zero-allocation"
+          : "rebound-zero-allocation",
     repository: plan.repository,
     campaign: plan.campaign,
     previousSource: plan.previousSource,
