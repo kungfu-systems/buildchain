@@ -410,8 +410,14 @@ Pass the standard full-cut declaration with `--kfd-adopter-manifest-json`
 together with three `--kfd-product-gate-json` arguments for KFD-4, KFD-5, and
 KFD-7. The collector invokes the verifier from the exact installed
 `@kungfu-tech/kfd` package, binds the package artifact, registry and verifier
-roots, the exact Buildchain source, the manifest/report/bundle witness roots,
-and the existing product-gate roots. It emits `kfd-adopter-manifest.json`,
+roots, the collector's exact product repository and source, the
+manifest/report/bundle witness roots, and the existing product-gate roots. A
+non-Buildchain adopter is accepted only when its manifest identity, artifact
+coordinate, and all three product-gate repositories match the collector's
+`--repository` value. The lower-level Node API exposes the same boundary as
+`expectedAdopterId`, `expectedSourceRepository`, and `expectedSourceSha`, while
+omitted identity/repository values retain the Buildchain self-release default.
+It emits `kfd-adopter-manifest.json`,
 `kfd-adopter-manifest-gate.json`, and a legacy `kfd-support.json` projection.
 The release passport and `artifact-evidence.json` carry the same rooted
 `kfdAdopter` binding.
