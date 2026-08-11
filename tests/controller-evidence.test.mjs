@@ -278,7 +278,7 @@ test("build workflow receipts emit every stage declared by the build controller 
   const stageBlocks = [...workflow.matchAll(
     /BUILDCHAIN_CONTROLLER_STAGES_JSON:\s*>-\s*\n([\s\S]*?)\n\s+BUILDCHAIN_CONTROLLER_EVIDENCE_/g,
   )];
-  assert.equal(stageBlocks.length, 2, "build workflow must emit both controller receipt stage sets");
+  assert.equal(stageBlocks.length, 3, "build workflow must emit normal, candidate, and tail-reseal controller stage sets");
   const declared = descriptor("build-lifecycle").expected.stages.map((stage) => stage.id);
 
   for (const [index, stageBlock] of stageBlocks.entries()) {
