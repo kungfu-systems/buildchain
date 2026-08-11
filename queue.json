@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
+  "repository": "kungfu-systems/buildchain",
+  "protectedBase": "dev/v999/v999.0",
+  "generation": 1,
+  "fencingCounter": 0,
+  "policy": {
+    "agingSeconds": 900,
+    "maxPriority": 2,
+    "leaseSeconds": 3600,
+    "emergencyPolicy": "reviewed-explicit-only"
+  },
+  "activeWarrant": null,
+  "candidates": [
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v999/v999.0",
+      "pullRequestNumber": 900001,
+      "assignmentRoot": "sha256:fda7e093510c137364357f3303b10ef14e5db761d29eaa3f0bfa40d1c0026444",
+      "initiativeRoot": "sha256:fc0a5e079c3c13d7dccff1c4b7f52dee4ca8701deef9e6a3ce5ada232feb8ea7",
+      "sourceIdentityRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:ac25e5c8f58d33f006ada6d826096f7eebfb936f7fcae8226fb3373aa71dd810",
+      "sourceHead": "1111111111111111111111111111111111111111",
+      "sourcePatchRoot": "sha256:2111111111111111111111111111111111111111111111111111111111111111",
+      "sourceProofRoot": "sha256:3111111111111111111111111111111111111111111111111111111111111111",
+      "planRoot": "sha256:4111111111111111111111111111111111111111111111111111111111111111",
+      "closureRoot": "sha256:5111111111111111111111111111111111111111111111111111111111111111",
+      "dependencyRoot": "sha256:6111111111111111111111111111111111111111111111111111111111111111",
+      "toolchainRoot": "sha256:7111111111111111111111111111111111111111111111111111111111111111",
+      "sourceWorkflowRunId": 0,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-11T16:01:21.065Z",
+      "updatedAt": "2026-08-11T16:01:21.065Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "packages/native-a"
+      ]
+    }
+  ],
+  "updatedAt": "2026-08-11T16:01:21.065Z",
+  "stateRoot": "sha256:75bb19df783652fac5238f8c6466abd6cc432030182ed775572bf499d7d2d477"
+}
