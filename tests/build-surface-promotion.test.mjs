@@ -124,6 +124,20 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(implementation, /does not match promotion sha/);
 });
 
+test("promote action path-backed artifact input imports its runtime dependencies", () => {
+  const implementation = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+
+  assert.match(implementation, /import fs from "node:fs";/);
+  assert.match(implementation, /import path from "node:path";/);
+  assert.match(
+    implementation,
+    /fs\.readFileSync\(path\.resolve\(publishRequiredArtifactsPath\), "utf8"\)/,
+  );
+});
+
 test("promote wrapper exposes controlled branch-protection review bypass", () => {
   const action = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),
