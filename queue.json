@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 339,
+  "generation": 340,
   "fencingCounter": 99,
   "policy": {
     "agingSeconds": 900,
@@ -3048,8 +3048,44 @@
         "packages/core/dev-delivery-warrant-settlement.js",
         "tests/dev-delivery-warrant.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2597,
+      "assignmentRoot": "sha256:fda7e093510c137364357f3303b10ef14e5db761d29eaa3f0bfa40d1c0026444",
+      "initiativeRoot": "sha256:fc0a5e079c3c13d7dccff1c4b7f52dee4ca8701deef9e6a3ce5ada232feb8ea7",
+      "sourceIdentityRoot": "sha256:73953c5a48c33b1f25703b50e3c96860ee82ccee4800b40b6c19753ed0650517",
+      "deliveryClass": "native-proof-required",
+      "identitySemantics": "chained-attempt-v2",
+      "predecessorCandidateId": "sha256:90b4b5dc5575d31eabb03baf914d52707056f8d8529e959f33ab83917e80fd74",
+      "candidateId": "sha256:7f0ec44a7eb140a02a059393437f5715556ade7fa2185405c962620ea7560374",
+      "sourceHead": "518357f50a1ef9d4b9a48954baf1d9a7a3485d9c",
+      "sourcePatchRoot": "sha256:402b109e83d78cf742c6ef18468654c7ae4297af50c109a74076643dcd3fa5f6",
+      "sourceProofRoot": "sha256:d668fb47a76ff264316228a1cf9281ac4f629d872ae454fafc9c80d319d19b37",
+      "planRoot": "sha256:f9831f0237ac6f40abd98c9ff75b854062321a2b2f6a7f48ad1d50267d9bea8a",
+      "closureRoot": "sha256:e86152fc8c42897dba3564d5673363e91e3e70551494ab4512f819d5a221a090",
+      "dependencyRoot": "sha256:12889334118a5308a37efd77eb093d083286d18da5bdbd1863be47b9bd0bb6c0",
+      "toolchainRoot": "sha256:c2b05445ef06a60efb0bf4c35f4c8e2fc04aace0ed3edbe1ef52611f5edea30a",
+      "sourceWorkflowRunId": 0,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-11T17:14:24.102Z",
+      "updatedAt": "2026-08-11T17:14:24.102Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/maintainability-policy.json",
+        "packages/core/dev-delivery-warrant-settlement.js",
+        "scripts/check-internal-architecture.mjs",
+        "scripts/dev-delivery-two-phase.mjs",
+        "tests/dev-delivery-two-phase-run.test.mjs",
+        "tests/dev-delivery-warrant.test.mjs",
+        "tests/internal-architecture.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-11T16:58:36.501Z",
-  "stateRoot": "sha256:8885580fab998830833a742b743314ed006210ac56169e3fe0b942d70ec22f68"
+  "updatedAt": "2026-08-11T17:14:24.102Z",
+  "stateRoot": "sha256:224da93dc383259c6c6108074ea08d56253621573a1bb65ff6e2907bf2f9648f"
 }
