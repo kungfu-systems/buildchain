@@ -40,6 +40,11 @@ test("repository source inventory includes untracked files before commit", (t) =
   fs.writeFileSync(path.join(temporaryRoot, "tracked.mjs"), "export {};\n");
   execFileSync("git", ["add", "tracked.mjs"], { cwd: temporaryRoot });
   fs.writeFileSync(path.join(temporaryRoot, "new.mjs"), "export {};\n");
+  fs.mkdirSync(path.join(temporaryRoot, ".buildchain"));
+  fs.writeFileSync(
+    path.join(temporaryRoot, ".buildchain", "generated.mjs"),
+    "export {};\n",
+  );
 
   assert.deepEqual(repositoryJavaScriptFiles(temporaryRoot), [
     "new.mjs",

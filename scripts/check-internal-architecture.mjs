@@ -131,6 +131,7 @@ function repositoryJavaScriptFiles(root) {
     .filter((file) => [".js", ".mjs", ".cjs"].includes(path.extname(file)))
     .filter((file) => !file.startsWith("tests/"))
     .filter((file) => !/(?:^|\/)tests?\//u.test(file))
+    .filter((file) => !file.startsWith(".buildchain/"))
     .filter((file) => !/^actions\/[^/]+\/dist\//u.test(file))
     .sort();
 }

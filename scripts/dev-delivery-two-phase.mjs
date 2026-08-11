@@ -163,7 +163,7 @@ function semanticCurrent(options, currentBase, delta) {
   };
 }
 
-function composeCandidate(candidateDirectory, expectedHead, baseSha) {
+export function composeCandidate(candidateDirectory, expectedHead, baseSha) {
   try {
     execFileSync("git", ["-C", candidateDirectory, "merge", "--abort"], {
       stdio: "ignore",
@@ -181,7 +181,15 @@ function composeCandidate(candidateDirectory, expectedHead, baseSha) {
   execFileSync(
     "git",
     ["-C", candidateDirectory, "merge", "--no-commit", "--no-ff", baseSha],
-    { stdio: "pipe" },
+    {
+      stdio: "pipe",
+      env: {
+        ...process.env,
+        GIT_COMMITTER_NAME: "Buildchain Delivery Warrant",
+        GIT_COMMITTER_EMAIL:
+          "buildchain-delivery-warrant@users.noreply.github.com",
+      },
+    },
   );
 }
 
