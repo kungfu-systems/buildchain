@@ -14,14 +14,14 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:4adb7db6f5feac551e07ab77873724816c2127b43ad34923c4d69abc3fbde12e",
+    "compatibilityDigest": "sha256:7234ed200c568b1fea0e469de61ec7a67da48ede0af6290fb49b93a9e62e0b65",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "7c49824ef93866c537117ebeaf4f3a769932dccd200b77b6dd3e87bb2424a4a5",
+    "sha256": "a171d1d3305d885fafd8768bdaaa2628171896b906b4d5e9f70edf0eadcf0dcd",
     "summary": {
       "cliCommandCount": 113,
       "workflowCount": 70,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "7c49824ef93866c537117ebeaf4f3a769932dccd200b77b6dd3e87bb2424a4a5",
+      "sha256": "a171d1d3305d885fafd8768bdaaa2628171896b906b4d5e9f70edf0eadcf0dcd",
       "summary": {
         "cliCommandCount": 113,
         "workflowCount": 70,
@@ -3430,7 +3430,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 86,
+          "inputCount": 88,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3453,6 +3453,8 @@
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
+            "buildchain-expected-channel",
+            "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
             "cache-dependency-lock-root",
@@ -4188,7 +4190,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 89,
+          "inputCount": 91,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -4213,6 +4215,8 @@
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
+            "buildchain-expected-channel",
+            "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",

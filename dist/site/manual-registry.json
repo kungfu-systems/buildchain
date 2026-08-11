@@ -347,7 +347,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:2e4f9e2b5a374e5c5e2b69e0adc27d3659716afafa3532c75459a33419fa9a5b",
+      "digest": "sha256:7586113732fef4ba14f50df7ee30c4749d7e66d11ade1e0f794887ed65898b22",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -418,7 +418,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:7bc04f658d7e298872756278c60143d8edf5dfb841d0b0d3ea62af8028735b54",
+      "digest": "sha256:a0691ab13133fcb2cc0b11bfe44e994d605892041d0338729a37a5668526dde0",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -488,7 +488,7 @@
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:1a4ce3fc2c150f88bc4d32123a108478ba5d73d0d69b8a95bf0d6670e32618a0",
+      "digest": "sha256:f0a1cdb7fe5f72fc2ed921f1aeadbd16184dda16be3727e4193fa2af250325db",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "7149037df66555c083cf51ee5055301917026047",
-    "maxHandMaintainedSourceFiles": 331,
-    "maxHandMaintainedSourceLines": 127592,
+    "maxHandMaintainedSourceFiles": 332,
+    "maxHandMaintainedSourceLines": 127850,
     "maxWorkflowFiles": 70,
-    "maxWorkflowLines": 23187,
-    "latestTransition": "Buildchain v4 preserves the exact protected v3 Release Train, repair-priority and self-dogfood semantics with only branch, candidate-runtime and evidence-projection adapters.",
-    "rationale": "The v4 parity port binds the same 56 normative vectors for frozen Release Cuts, candidate patrol, dual-landing repair, Delivery Warrant priority and protected campaign replay. It changes only v4 branch coordinates, the candidate runtime ref and one architecture evidence projection; it adds no v4 redesign, authority cutover, Alpha2 migration or bypass. These exact 331-file and 127592-line ceilings cannot grow implicitly."
+    "maxWorkflowLines": 23418,
+    "latestTransition": "Buildchain v4 enforces major-independent stable and alpha shell, runtime, and lock identity while exact trusted runtime overrides self-dogfood the unpromoted router commit.",
+    "rationale": "The protected v4 Release Train parity semantics remain intact. One bounded channel-identity module classifies official, release, train, authority, exact-release, and exact-SHA refs without version-specific branches. Contract-lock evaluation applies the triad before unchanged, missing-lock, non-floating, or compatibility exits. The generated public router keeps override, alpha, and stable jobs on GitHub's exact local caller shell so an unpromoted commit remains parseable without publishing either channel ref; the nested runtime gate then requires that caller shell, selected runtime, and selected contract lock prove the same lane and major. Adjacent-major self-dogfood bypasses are rejected, and both checked-in v4 locks plus floating-ref dogfood routes are lane-exact. The exact one-file, 258-source-line, and 231-workflow-line increase is covered by cross-major permutation tests, workflow inventory guards, the real Build Surface Fixture, and Buildchain v4 self-dogfood and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/buildchain-channel-identity.js": {
+      "maxLines": 119,
+      "rationale": "The single major-independent classifier and triad evaluator keep shell, runtime, and contract-lock lane identity in one bounded fail-closed authority shared by stable and alpha consumers. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/dev-delivery-warrant.js": {
       "maxLines": 605,
       "rationale": "The v4 parity port preserves the reviewed v3 release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."
@@ -50,9 +54,10 @@
       "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification while the terminal report constructor drops from 470 lines to at most 180. This exact post-integration ceiling cannot grow implicitly."
     },
     "packages/core/buildchain-contract.js": {
-      "maxLines": 1037,
+      "maxLines": 1093,
       "maxFunctionLines": 679,
-      "rationale": "The contract world records the additive candidate-run recovery inputs, reuse guarantees, and reviewed predecessor digests for both public promotion surfaces; this exact public-contract wiring ceiling cannot grow implicitly."
+      "maxFunctionComplexity": 30,
+      "rationale": "The existing v4 contract evaluator now invokes the shared shell-runtime-lock binding before every compatibility or early-success path while preserving the prior contract-world, Release Train, and drift behavior. This exact public-contract wiring ceiling cannot grow implicitly."
     },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
@@ -63,8 +68,8 @@
       "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and every existing no-widening check remain unchanged."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1478,
-      "rationale": "Inventory retains the recovery, sealed-bundle, no-product-install, and durable-finalization checks and now admits the adjacent-major self-runtime bridge only when the checked-in v4 bootstrap authority is exactly qualification-bound. This exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1486,
+      "rationale": "Inventory retains the recovery, sealed-bundle, no-product-install, and durable-finalization checks, requires the self-dogfood lock to match the current major, and binds every channel-router lane to the exact caller shell without unresolved static channel refs. This exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
       "maxFunctionLines": 288,
@@ -332,6 +337,8 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "cache-dependency-lock-root",
@@ -455,7 +462,7 @@
           "trusted-event"
         ]
       },
-      "rationale": "The reusable build surface adds optional declarative pre-upload transport smoke and lifecycle substage evidence. Existing consumers preserve prior behavior when those inputs are absent; opted-in consumers bind exact source, platform, rooted substage timings, and failure evidence."
+      "rationale": "The reusable build surface adds optional router-owned expected channel and major inputs. Existing direct consumers preserve prior behavior when they are absent; trusted opaque-shell runs must provide both so the contract gate can bind shell, runtime, and lock without inferring identity from either runtime or lock."
     },
     "workflow:build": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -487,6 +494,8 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
@@ -614,7 +623,7 @@
           "trusted-event"
         ]
       },
-      "rationale": "The generated channel build router forwards optional declarative pre-upload transport smoke and lifecycle substage evidence without changing channel selection, runtime identity, secrets, outputs, or default behavior."
+      "rationale": "The generated channel router forwards its explicit resolved lane and major into the reusable build gate. This is additive for existing callers and prevents opaque PR or trusted override shells from deriving channel identity from a runtime ref or contract lock."
     },
 
     "workflow:paper-release-sealed": {

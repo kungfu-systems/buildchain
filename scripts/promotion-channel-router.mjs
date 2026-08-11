@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveBuildchainChannel } from "./buildchain-channel-router.mjs";
+import { parseBuildchainRefIdentity } from "../packages/core/buildchain-channel-identity.js";
 
 const TARGETS = [
   { pattern: /^alpha\/v(\d+)\/v\d+\.\d+$/, publicationChannel: "alpha", shellChannel: "alpha" },
@@ -54,9 +55,10 @@ export function resolvePromotionChannel({
     routerRef,
     packageVersion,
   });
-  const trustedRouterPin = selected.channel === "override"
-    && sameExactSha(selected.buildchainRef, routerSha);
-  const overrideUsed = selected.channel === "override" && !trustedRouterPin;
+  const runtimeIdentity = parseBuildchainRefIdentity(selected.buildchainRef);
+  const opaqueOverride = new Set(["train", "authority", "exact-sha"]).has(runtimeIdentity.kind);
+  const trustedRouterPin = opaqueOverride && sameExactSha(selected.buildchainRef, routerSha);
+  const overrideUsed = opaqueOverride && !trustedRouterPin;
   if (!overrideUsed && !trustedRouterPin && selected.channel !== intent.shellChannel) {
     throw new Error(
       `promotion target ${intent.targetRef} requires ${intent.shellChannel} shell/runtime, got ${selected.channel}`,

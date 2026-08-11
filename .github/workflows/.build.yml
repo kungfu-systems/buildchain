@@ -12,6 +12,16 @@ on:
         default: ""
         type: string
         required: false
+      buildchain-expected-channel:
+        description: "Explicit stable or alpha lane expected by a trusted channel router when the workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-major:
+        description: "Explicit Buildchain major expected by a trusted channel router when the workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
       buildchain-contract-lock-path:
         description: "Consumer-owned Buildchain contract lock path"
         default: "buildchain.contract-lock.json"
@@ -849,7 +859,7 @@ jobs:
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"
-              echo "contract-lock-compatible=true"
+              echo "contract-lock-compatible=false"
               echo "contract-lock-drift=false"
               echo "contract-lock-issue-needed=false"
               echo "contract-lock-issue-body-file="
@@ -869,6 +879,8 @@ jobs:
                 echo "- Note: the checked-out Buildchain runtime does not yet ship contract lock support."
               } >> "${GITHUB_STEP_SUMMARY}"
             fi
+            echo "::error::Buildchain runtime cannot prove channel-bound contract-lock semantics"
+            exit 1
           fi
         env:
           BUILDCHAIN_CONTRACT_LOCK_PATH: .buildchain/consumer/${{ inputs.buildchain-contract-lock-path }}
@@ -878,6 +890,10 @@ jobs:
           BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ steps.runtime.outputs.workflow-shell-ref }}
+          BUILDCHAIN_EXPECTED_CHANNEL: ${{ inputs.buildchain-expected-channel }}
+          BUILDCHAIN_EXPECTED_MAJOR: ${{ inputs.buildchain-expected-major }}
+          BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ steps.runtime.outputs.runtime-override }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Report consumer Buildchain contract drift

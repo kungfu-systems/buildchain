@@ -1,8 +1,21 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  BUILDCHAIN_CHANNELS,
+  evaluateBuildchainChannelBinding,
+  normalizeBuildchainRef,
+  parseBuildchainRefIdentity,
+} from "./buildchain-channel-identity.js";
 import { createControllerRegistry } from "./controller-evidence.js";
 import { enumerateWorkflowInputs } from "./public-surface-audit.js";
+
+export {
+  BUILDCHAIN_CHANNELS,
+  evaluateBuildchainChannelBinding,
+  normalizeBuildchainRef,
+  parseBuildchainRefIdentity,
+};
 
 export const BUILDCHAIN_RUNTIME_CONTRACT_WORLD = "kungfu-buildchain-runtime-contract-world";
 export const BUILDCHAIN_CONTRACT_LOCK = "kungfu-buildchain-contract-lock";
@@ -878,6 +891,26 @@ function surfaceMap(surfaces = []) {
   return new Map(surfaces.map((entry) => [entry.id, entry]));
 }
 
+function evaluateChannelBinding({
+  lock,
+  workflowShellRef,
+  runtimeRef,
+  expectedChannel,
+  expectedMajor,
+  allowOpaqueRuntime,
+}) {
+  if (!workflowShellRef && !expectedChannel && !expectedMajor) return null;
+  return evaluateBuildchainChannelBinding({
+    workflowShellRef,
+    runtimeRef,
+    lockRef: lock?.buildchain?.ref || "",
+    lockMajorLine: lock?.buildchain?.majorLine || "",
+    expectedChannel,
+    expectedMajor,
+    allowOpaqueRuntime,
+  });
+}
+
 export function evaluateBuildchainContractLock({
   lock,
   current,
@@ -885,9 +918,32 @@ export function evaluateBuildchainContractLock({
   runtimeSha = "",
   runtimeClass = "",
   compatibilityPolicy = "",
+  workflowShellRef = "",
+  expectedChannel = "",
+  expectedMajor = "",
+  allowOpaqueRuntime = false,
 } = {}) {
   if (!current || current.contract !== BUILDCHAIN_RUNTIME_CONTRACT_WORLD) {
     throw new Error("current must be a Buildchain runtime contract world");
+  }
+  const binding = evaluateChannelBinding({
+    lock,
+    workflowShellRef,
+    runtimeRef,
+    expectedChannel,
+    expectedMajor,
+    allowOpaqueRuntime,
+  });
+  if (binding?.ok === false) {
+    return {
+      ok: false,
+      status: binding.status,
+      drift: false,
+      compatible: false,
+      issueRecommended: false,
+      reasons: binding.reasons,
+      channelBinding: binding,
+    };
   }
   const floatingRuntime = FLOATING_CLASSES.has(runtimeClass);
   if (!floatingRuntime) {

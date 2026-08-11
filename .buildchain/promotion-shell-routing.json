@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "major": 3,
+  "major": 4,
   "alpha": {
-    "logicalRef": "v3-alpha",
-    "callRef": "train/v3/v3.0/resume-candidate-run",
+    "logicalRef": "v4-alpha",
+    "callRef": "v4-alpha",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true
   },
   "stable": {
-    "logicalRef": "v3",
-    "callRef": "v3",
+    "logicalRef": "v4",
+    "callRef": "v4",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true,
     "unsupportedInputs": [

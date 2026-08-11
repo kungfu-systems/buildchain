@@ -669,6 +669,8 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "cache-dependency-lock-root",
@@ -735,7 +737,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 86,
+        "inputCount": 88,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1557,6 +1559,8 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
@@ -1624,7 +1628,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 89,
+        "inputCount": 91,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -7833,8 +7837,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "8a27fc9ffb5d0567a78c2f0811b77332f1493d07ecbb56cbab411e8ef4eb7b07",
-    "workflowRegistryDigest": "4f8bb811e6581c1087b251bf07c465f76731040557fd38dd465ca6c46cd97078",
-    "pageRegistryDigest": "2d8b1d78e4d1ef733ba0b8ae5703807925d9752c668eb1be8115720258cdd09b"
+    "workflowRegistryDigest": "e0955e8f0ae0e8a779769de2ffc89d737ac988f931fb98a118ff0986a2818a7a",
+    "pageRegistryDigest": "a8ba8ecd50dc280b368e554bade29108a3d1233764c7ee365d81d4196c00af2f"
   },
   "comparison": {
     "missingCliRegistry": [],

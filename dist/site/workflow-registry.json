@@ -113,6 +113,8 @@
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
         "buildchain-contract-lock-path",
+        "buildchain-expected-channel",
+        "buildchain-expected-major",
         "buildchain-ref",
         "buildchain-repository",
         "cache-dependency-lock-root",
@@ -179,7 +181,7 @@
         "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 86,
+      "inputCount": 88,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1231,6 +1233,8 @@
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
         "buildchain-contract-lock-path",
+        "buildchain-expected-channel",
+        "buildchain-expected-major",
         "buildchain-ref",
         "buildchain-repository",
         "buildchain-stable-contract-lock-path",
@@ -1298,7 +1302,7 @@
         "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 89,
+      "inputCount": 91,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

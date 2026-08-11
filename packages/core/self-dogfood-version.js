@@ -65,39 +65,19 @@ export function hasQualifiedSelfDogfoodBootstrapAuthority({
 export function resolveSelfDogfoodMajor({
   packageVersion,
   alphaRef,
-  majorBootstrap = false,
 } = {}) {
   const version = parsePackageVersion(packageVersion);
   const acceptedMajor = parseAlphaRef(alphaRef);
-  if (acceptedMajor === version.major) {
-    return {
-      packageMajor: version.major,
-      workflowMajor: acceptedMajor,
-      bootstrap: false,
-    };
+  if (acceptedMajor !== version.major) {
+    throw new Error(
+      "Buildchain self-dogfood alpha lock must target the current major alpha ref",
+    );
   }
-
-  const stableBootstrap =
-    version.minor === 0 && version.patch === 0 && version.alpha === undefined;
-  const initialAlphaBootstrap =
-    version.minor === 0 && version.patch === 0 && version.alpha !== undefined;
-  const nextAlphaBootstrap =
-    version.minor === 0 && version.patch === 1 && version.alpha !== undefined;
-  if (
-    majorBootstrap === true &&
-    acceptedMajor + 1 === version.major &&
-    (stableBootstrap || initialAlphaBootstrap || nextAlphaBootstrap)
-  ) {
-    return {
-      packageMajor: version.major,
-      workflowMajor: acceptedMajor,
-      bootstrap: true,
-    };
-  }
-
-  throw new Error(
-    "Buildchain self-dogfood alpha lock must target the current major alpha ref",
-  );
+  return {
+    packageMajor: version.major,
+    workflowMajor: acceptedMajor,
+    bootstrap: false,
+  };
 }
 
 export function contractForSelfDogfoodEvaluation({
@@ -107,18 +87,12 @@ export function contractForSelfDogfoodEvaluation({
   if (!currentContract || typeof currentContract !== "object") {
     throw new Error("Buildchain self-dogfood requires a current contract");
   }
-  if (!majorResolution?.bootstrap) {
-    return currentContract;
-  }
-  return {
-    ...currentContract,
-    majorLine: `v${majorResolution.workflowMajor}`,
-  };
+  return currentContract;
 }
 
 export function canAdmitSelfDogfoodLockEvaluation({
   evaluation,
   majorResolution,
 } = {}) {
-  return evaluation?.compatible === true || majorResolution?.bootstrap === true;
+  return evaluation?.compatible === true;
 }

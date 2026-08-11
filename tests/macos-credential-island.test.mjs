@@ -816,15 +816,17 @@ test("public action and workflow keep credentials outside the build matrix", () 
   }
   assert.match(
     publicWorkflow,
-    /credential-island-macos-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-artifact \}\}/,
+    /credential-island-macos-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.override\.outputs\.credential-island-macos-artifact \|\| jobs\.alpha\.outputs\.credential-island-macos-artifact \|\| jobs\.stable\.outputs\.credential-island-macos-artifact \}\}/,
   );
   assert.match(
     publicWorkflow,
-    /credential-island-macos-manifest-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-manifest-artifact \}\}/,
+    /credential-island-macos-manifest-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.override\.outputs\.credential-island-macos-manifest-artifact \|\| jobs\.alpha\.outputs\.credential-island-macos-manifest-artifact \|\| jobs\.stable\.outputs\.credential-island-macos-manifest-artifact \}\}/,
   );
   assert.match(
     publicWorkflow,
-    /\n  build:\n[\s\S]*?uses: \.\/\.github\/workflows\/\.build\.yml\n\s+permissions:\n\s+actions: read\n\s+contents: read/,
+    new RegExp(
+      `\\n  alpha:\\n[\\s\\S]*?uses: \\.\\/\\.github\\/workflows\\/\\.build\\.yml\\n[\\s\\S]*?\\n  stable:\\n[\\s\\S]*?uses: \\.\\/\\.github\\/workflows\\/\\.build\\.yml\\n`,
+    ),
   );
   for (const buildJob of [nativeBuildJob, containerBuildJob]) {
     assert.doesNotMatch(
