@@ -1382,8 +1382,12 @@ async function handleDevCommand(args) {
       runScript("dev-delivery-proof.mjs", devArgs);
       return;
     }
+    if (subcommand === "two-phase") {
+      runScript("dev-delivery-two-phase.mjs", devArgs);
+      return;
+    }
     if (subcommand !== "merge-queue") {
-      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant|proof> [options]");
+      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant|proof|two-phase> [options]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;

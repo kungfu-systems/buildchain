@@ -34,6 +34,11 @@ function exactActiveReadback(result) {
   const warrant = result.observation.activeWarrant;
   const candidate = result.observation.activeCandidate;
   requireMatch(warrant?.schema === "kungfu.buildchain.dev-delivery-warrant/v1", "delivery-warrant-missing");
+  requireMatch((warrant.phase || "qualified") === "qualified", "delivery-warrant-not-qualified");
+  if (warrant.phase === "qualified") {
+    requireMatch(ROOT_PATTERN.test(String(warrant.nativeProofRoot || "")), "delivery-warrant-native-proof-missing");
+    requireMatch(ROOT_PATTERN.test(String(warrant.nativeProofReuseRoot || "")), "delivery-warrant-native-reuse-missing");
+  }
   requireMatch(candidate?.candidateId === warrant.candidateId, "delivery-warrant-candidate-readback-missing");
   requireMatch(!result.warrant || JSON.stringify(result.warrant) === JSON.stringify(warrant), "delivery-warrant-readback-mismatch");
   return { warrant, candidate };

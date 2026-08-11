@@ -111,7 +111,8 @@
     "SECURITY.md",
     "docs/*.md",
     "actions/*/README.md",
-    "fixtures/*/README.md"
+    "fixtures/*/README.md",
+    "templates/"
   ],
   "engines": {
     "node": ">=22.14.0"

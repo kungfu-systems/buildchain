@@ -905,6 +905,28 @@ test("required Warrant fails closed before GitHub queue admission", async () => 
   assert.deepEqual(fake.enqueued, []);
 });
 
+test("provisional Warrant cannot enter the GitHub merge queue", async () => {
+  await withWarrantResult({ warrant: { phase: "provisional" } }, async (resultPath) => {
+    const target = pr({ number: 21, headSha: exactHead });
+    const fake = client({
+      pullRequests: [target],
+      queueStates: [{ enabled: true, id: "MQ_1", entries: [] }],
+    });
+    const result = await runDevPrAdmission(
+      {
+        ...targetedOptions,
+        dryRun: false,
+        warrantMode: "required",
+        warrantResultPath: resultPath,
+      },
+      fake,
+    );
+    assert.equal(result.ok, false);
+    assert.equal(result.receipt.reason, "delivery-warrant-not-qualified");
+    assert.deepEqual(fake.enqueued, []);
+  });
+});
+
 test("exact active Warrant authorizes only its bound PR head", async () => {
   await withWarrantResult({}, async (resultPath, warrantResult) => {
     const target = pr({ number: 21, headSha: exactHead });

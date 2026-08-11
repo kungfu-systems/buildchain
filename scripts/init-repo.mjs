@@ -420,6 +420,12 @@ jobs:
 `;
 }
 
+function devDeliveryWorkflowYaml() {
+  return fs.readFileSync(
+    new URL("../templates/native-dev-delivery.yml", import.meta.url),
+    "utf8",
+  );
+}
 function writeIfAllowed(filePath, content, { force }) {
   if (fs.existsSync(filePath) && !force) {
     throw new Error(
@@ -505,6 +511,16 @@ export function initBuildchainRepo({
     ),
     writeManagedAgentEntry(agentsPath, currentAgents),
   ];
+
+  if (type === "native") {
+    written.push(
+      writeIfAllowed(
+        path.join(resolvedCwd, ".github", "workflows", "dev-delivery.yml"),
+        devDeliveryWorkflowYaml(),
+        { force },
+      ),
+    );
+  }
 
   if (
     type === "anchored-package" &&

@@ -284,6 +284,32 @@ test("init publication-artifact creates a paper artifact scaffold", () => {
   assert.match(workflow, /verify-command: make check/);
 });
 
+test("init native generates a two-phase protected-dev consumer workflow", () => {
+  const cwd = tempDir("init-native-delivery");
+  const result = JSON.parse(runBuildchain([
+    "init",
+    "--cwd",
+    cwd,
+    "--type",
+    "native",
+  ]));
+  assert.ok(result.written.includes(".github/workflows/dev-delivery.yml"));
+  const workflow = fs.readFileSync(
+    path.join(cwd, ".github", "workflows", "dev-delivery.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /dev-pr-auto-merge\.yml@v3/u);
+  assert.match(workflow, /delivery-warrant-mode: required/u);
+  assert.match(workflow, /native-proof-json:/u);
+  assert.match(workflow, /native-command: cmake/u);
+  assert.match(workflow, /native-heartbeat-seconds: 300/u);
+  assert.match(workflow, /repository_dispatch:/u);
+  assert.match(workflow, /buildchain-dev-delivery-wake/u);
+  assert.match(workflow, /github\.event\.client_payload\.pullRequestNumber/u);
+  assert.match(workflow, /landing-mode: queue/u);
+  assert.doesNotMatch(workflow, /delivery-warrant-mode: off/u);
+});
+
 test("infra-contract CLI apply consumes a saved fresh plan", () => {
   const cwd = tempDir("infra-contract-cli-apply");
   fs.cpSync(path.join(root, "fixtures/infra-contract-terraform-shaped"), cwd, { recursive: true });
