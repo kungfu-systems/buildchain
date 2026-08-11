@@ -5,6 +5,7 @@ import {
   NEXT_DEVELOPMENT_TRANSITION_CONTRACT,
   NEXT_DEVELOPMENT_VERSION_MODELS,
 } from "./next-development-transition.js";
+import { NEXT_DEVELOPMENT_CONTROLLER_CONTRACT } from "./next-development-controller.js";
 
 export const NEXT_DEVELOPMENT_AGENT_SECTION_START =
   "<!-- buildchain:next-development:v1:start -->";
@@ -15,6 +16,7 @@ export const NEXT_DEVELOPMENT_LOCAL_COMMAND =
 
 export function nextDevelopmentWorkflowHeader() {
   return `# Next-development contract: ${NEXT_DEVELOPMENT_TRANSITION_CONTRACT}
+# Durable controller: ${NEXT_DEVELOPMENT_CONTROLLER_CONTRACT}
 # ${NEXT_DEVELOPMENT_INVARIANT}
 `;
 }
@@ -22,6 +24,7 @@ export function nextDevelopmentWorkflowHeader() {
 export function nextDevelopmentToml() {
   return `[next_development]
 contract = ${JSON.stringify(NEXT_DEVELOPMENT_TRANSITION_CONTRACT)}
+controller_contract = ${JSON.stringify(NEXT_DEVELOPMENT_CONTROLLER_CONTRACT)}
 adr = ${JSON.stringify(NEXT_DEVELOPMENT_ADR)}
 invariant = ${JSON.stringify(NEXT_DEVELOPMENT_INVARIANT)}
 states = ${JSON.stringify(NEXT_DEVELOPMENT_STATES)}
@@ -71,6 +74,7 @@ export function assertNextDevelopmentConfig(config) {
   }
   const expected = {
     contract: NEXT_DEVELOPMENT_TRANSITION_CONTRACT,
+    controller_contract: NEXT_DEVELOPMENT_CONTROLLER_CONTRACT,
     adr: NEXT_DEVELOPMENT_ADR,
     invariant: NEXT_DEVELOPMENT_INVARIANT,
     states: [...NEXT_DEVELOPMENT_STATES],
@@ -103,6 +107,12 @@ Use only \`semver/auto\` or \`anchored/manual\`. Record \`planned\`,
 without changing the completed Alpha outcome. During preparation, never move
 an Alpha branch or tag and never write outside declared source and derived
 version paths. Treat the anchor manifest as read-only.
+
+The durable controller creates one child keyed by the completed-Alpha root.
+Every runner must reuse that child and its compare-and-swap checkpoints. Build
+from the latest protected Dev SHA, supersede stale material before opening the
+version PR, and do not record \`verified\` until protected Dev readback matches
+the target version plus every declared source and derived root.
 
 Plan locally before opting into declared-path writes:
 
@@ -172,6 +182,7 @@ last_reviewed: 2026-08-11
 
 This document is generated from
 \`packages/core/next-development-transition.js\` and
+\`packages/core/next-development-controller.js\` and
 \`packages/core/next-development-projection.js\`. Edit those sources and run
 \`node scripts/generate-next-development-guidance.mjs\`; direct edits fail the
 projection drift check.
@@ -179,6 +190,7 @@ projection drift check.
 ## Contract
 
 - Contract: \`${NEXT_DEVELOPMENT_TRANSITION_CONTRACT}\`
+- Durable controller: \`${NEXT_DEVELOPMENT_CONTROLLER_CONTRACT}\`
 - ADR: [ADR 0002](../${NEXT_DEVELOPMENT_ADR})
 - States: ${states}
 - Legal version models: ${models}
@@ -189,6 +201,33 @@ The idempotency key is a deterministic hash of the completed-Alpha root,
 repository, legal model, and sorted declared paths. Incomplete Dev preparation
 therefore cannot relabel Alpha N as failed, and replay cannot select a different
 Alpha or path set.
+
+## Durable controller
+
+\`scheduleNextDevelopmentController\` atomically creates one child for the
+repository and completed-Alpha root. Identical wakes reuse it. The store
+boundary requires read, create-if-absent, and compare-and-swap operations; the
+controller root fences every checkpoint. Materialization uses an operation key
+derived from the child, exact current protected Dev SHA, and reviewed target,
+so a fresh runner can recover an already-created commit instead of rebuilding
+the Alpha candidate or depending on the original runner workspace.
+
+Before opening the protected version PR, the controller reads Dev again. A
+moved head makes the prepared attempt \`superseded\`; the following wake
+regenerates only declared version material from that latest SHA. After merge,
+\`verified\` remains unreachable until protected Dev readback contains the
+prepared commit and its target version, source roots, and derived roots exactly
+match the checkpoint. The executor surface contains no Alpha publication, tag,
+release, or package operation.
+
+Alpha finalization no longer treats a non-fast-forward Dev update as successful
+bookkeeping. It requires an exact checkout of the current Dev head, regenerates
+the declared version lifecycle there, and uses a non-force merge or reusable
+protected version PR. Candidate Patrol ignores both the generated preparation
+commit and its two-parent integration commit. Before a later product candidate
+can settle, Patrol reads every prepared version path at the candidate SHA and
+requires the exact reserved blob identities; missing or stale state blocks
+before a Release Cut or heavy candidate build.
 
 ## Version models
 

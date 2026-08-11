@@ -54,6 +54,8 @@ const requiredPaths = [
   "packages/core/artifact-verification-envelope.js",
   "packages/core/anchored-version-material.js",
   "packages/core/next-development-transition.js",
+  "packages/core/next-development-controller.js",
+  "packages/core/next-development-candidate-reservation.js",
   "packages/core/next-development-projection.js",
   "packages/core/build-facts.js",
   "packages/core/publication-package.js",

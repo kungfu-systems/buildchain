@@ -82,7 +82,9 @@ export function selectLatestQualifiedSource({
   requiredWorkflowPaths,
   now,
   maxAgeSeconds,
+  ignoredSourceShas = [],
 }) {
+  const ignored = new Set(ignoredSourceShas);
   const latestByPath = new Map(
     requiredWorkflowPaths.map((workflow) => [
       workflow,
@@ -90,7 +92,11 @@ export function selectLatestQualifiedSource({
     ]),
   );
   for (let index = 0; index < sourceHistory.length; index += 1) {
-    const sourceSha = sourceHistory[index];
+    const sourceSha =
+      typeof sourceHistory[index] === "string"
+        ? sourceHistory[index]
+        : sourceHistory[index]?.sha;
+    if (ignored.has(sourceSha)) continue;
     const rows = requiredWorkflowPaths.map((workflow) =>
       latestByPath.get(workflow).get(sourceSha),
     );
@@ -115,7 +121,9 @@ export function selectLatestQualifiedSource({
       };
     }
   }
-  const staleSuccessfulPair = sourceHistory.some((sourceSha) => {
+  const staleSuccessfulPair = sourceHistory.some((entry) => {
+    const sourceSha = typeof entry === "string" ? entry : entry?.sha;
+    if (ignored.has(sourceSha)) return false;
     const rows = requiredWorkflowPaths.map((workflow) =>
       latestByPath.get(workflow).get(sourceSha),
     );

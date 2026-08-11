@@ -204,6 +204,7 @@ export function nodeApiMeta(exportName) {
     "./release-candidate-recovery": { group: "release-passport-trust", summary: "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads." },
     "./release-train": { group: "governance-versioning", summary: "Frozen Release Cut identity, rooted Release Train transitions, Dev observations, supersession, replay, and legacy read compatibility APIs." },
     "./next-development-transition": { group: "governance-versioning", summary: "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs." },
+    "./next-development-controller": { group: "governance-versioning", summary: "Durable completed-Alpha child scheduling, fresh-runner checkpoint resume, latest protected-Dev reconciliation, and exact version-root readback APIs." },
     "./next-development-projection": { group: "governance-versioning", summary: "Canonical generated config, Agent, and manual projections for the next-development transition contract." },
     "./stable-candidate-ledger": { group: "governance-versioning", summary: "Immutable alpha candidate ledger, qualification, revocation, selection, and exact stable source-lock APIs." },
     "./release-propagation": { group: "site-and-propagation", summary: "Release propagation graph, plan, and exact upstream lock APIs." },

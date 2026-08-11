@@ -70,6 +70,11 @@
         "pattern": "^release-activation-transaction\\.js$"
       },
       {
+        "mechanismId": "next-development-controller",
+        "root": "packages/core",
+        "pattern": "^next-development-(?:transition|controller|candidate-reservation)\\.js$"
+      },
+      {
         "mechanismId": "publication-authority",
         "root": "packages/core",
         "pattern": "^(?:(?:buildchain-)?publication-authority|publication-control-plane-audit)\\.js$"
@@ -120,6 +125,87 @@
     "orphanPolicy": "Every state-bearing mechanism must own source, tests, public surfaces, durable-store disposition, recovery, and v4 migration disposition; missing or ambiguous ownership fails validation."
   },
   "mechanisms": [
+    {
+      "id": "next-development-controller",
+      "owner": "Buildchain protected development version plane",
+      "writers": [
+        "completed Alpha terminal-success schedulers",
+        "packages/core/next-development-controller.js"
+      ],
+      "schemas": [
+        "kungfu-buildchain-next-development-transition/v1",
+        "kungfu-buildchain-next-development-controller/v1"
+      ],
+      "stores": [
+        "atomic child store keyed by repository and completed-Alpha root",
+        "compare-and-swap rooted controller checkpoints"
+      ],
+      "states": [
+        "planned",
+        "waiting-anchor",
+        "materialized",
+        "pr-pending",
+        "merged",
+        "verified"
+      ],
+      "events": [
+        "schedule",
+        "bind-reviewed-anchor",
+        "materialize-current-dev",
+        "open-protected-version-pr",
+        "record-merge",
+        "verify-protected-dev-readback"
+      ],
+      "transitions": [
+        "one completed Alpha creates or reuses one deterministic durable child",
+        "stale Dev material is superseded before protected delivery",
+        "merged reaches verified only after exact source and derived root readback"
+      ],
+      "recovery": [
+        "fresh runners load the durable child and resume the last rooted checkpoint",
+        "idempotent materialization operation keys reuse effects after lost responses"
+      ],
+      "effects": [
+        "declared source and derived version material",
+        "protected Dev version pull request"
+      ],
+      "retry": [
+        "Dev movement supersedes only the stale materialization attempt",
+        "readback mismatch remains merged and retries observation without rebuilding"
+      ],
+      "invalidation": [
+        "completed Alpha identity drift",
+        "undeclared changed path",
+        "durable compare-and-swap conflict",
+        "protected Dev version or root disagreement"
+      ],
+      "providerReadback": [
+        "latest protected Dev SHA",
+        "protected version PR status",
+        "protected Dev ancestry, target version, source roots, and derived roots"
+      ],
+      "publicSurfaces": [
+        "export:./next-development-transition",
+        "export:./next-development-controller"
+      ],
+      "compatibilityCallers": [
+        "v3 completed-Alpha schedulers through the atomic store and executor interfaces"
+      ],
+      "sourcePaths": [
+        "packages/core/next-development-transition.js",
+        "packages/core/next-development-controller.js",
+        "packages/core/next-development-candidate-reservation.js"
+      ],
+      "testPaths": [
+        "tests/next-development-transition.test.mjs",
+        "tests/next-development-controller.test.mjs",
+        "tests/dev-alpha-candidate-patrol.test.mjs"
+      ],
+      "migrationDisposition": "preserve-child-identity-checkpoints-and-readback-gate-together",
+      "unresolved": [
+        "provider-specific durable-store retention and workflow wake policy remain caller-owned integration choices"
+      ]
+    },
     {
       "id": "dev-delivery-warrant",
       "owner": "Buildchain Dev delivery control plane",
