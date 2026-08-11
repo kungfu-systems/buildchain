@@ -972,6 +972,8 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "channel",
@@ -1073,7 +1075,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 109,
+        "inputCount": 111,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -7837,8 +7839,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "8a27fc9ffb5d0567a78c2f0811b77332f1493d07ecbb56cbab411e8ef4eb7b07",
-    "workflowRegistryDigest": "e0955e8f0ae0e8a779769de2ffc89d737ac988f931fb98a118ff0986a2818a7a",
-    "pageRegistryDigest": "a8ba8ecd50dc280b368e554bade29108a3d1233764c7ee365d81d4196c00af2f"
+    "workflowRegistryDigest": "a044c60984a7f4ac90c9f4a695fa0372fae7206f5a099f2ade595e029f34105c",
+    "pageRegistryDigest": "44a2388ead07bf9ae025c03a76065682f9835d7d38c43b6379de5f348a81f7bb"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -1095,9 +1095,13 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-workflow-name:/);
   assert.match(workflow, /default: "Build"/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /buildchain-expected-channel:/);
+  assert.match(workflow, /buildchain-expected-major:/);
   assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
   assert.match(workflow, /Resolve checked out Buildchain runtime/);
   assert.match(workflow, /Check Buildchain contract lock/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /allow-repository:/);
   assert.match(workflow, /default: ""/);

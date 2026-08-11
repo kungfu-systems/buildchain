@@ -1905,7 +1905,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 1029
+        "line": 1031
       },
       "example": "import { contractSummary } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1934,7 +1934,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 828
+        "line": 830
       },
       "example": "import { createBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2016,7 +2016,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 914
+        "line": 916
       },
       "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2045,7 +2045,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 803
+        "line": 805
       },
       "example": "import { finalizeBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2122,7 +2122,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 879
+        "line": 881
       },
       "example": "import { readBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2151,7 +2151,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 859
+        "line": 861
       },
       "example": "import { readBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2180,7 +2180,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 1041
+        "line": 1043
       },
       "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20363,7 +20363,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:7b55935d11e9bbb0fc898b2ee9ccfb25e8896b860ac0350a04b2d44c5e0d4a92",
+      "digest": "sha256:89fb2505de4136a035805cfc320ebb686aaa17b18b2156b83d6d164b3d7334ed",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -21794,7 +21794,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:7586113732fef4ba14f50df7ee30c4749d7e66d11ade1e0f794887ed65898b22"
+      "digest": "sha256:7adfb3bd4c1a1ae2f3dc3d0cc87efe4982a3e1d11978821e14a69170e1eeb01f"
     },
     {
       "id": "build-facts",

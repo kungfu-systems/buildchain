@@ -860,6 +860,8 @@ jobs:
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-promotion.outputs.runtime-sha }}
+      buildchain-expected-channel: ${{ needs.resolve-promotion.outputs.channel }}
+      buildchain-expected-major: "4"
       promotion-router-ref: ${{ needs.resolve-promotion.outputs.router-ref }}
       promotion-router-sha: ${{ needs.resolve-promotion.outputs.router-sha }}
       promotion-shell-ref: ${{ needs.resolve-promotion.outputs.shell-call-ref }}
@@ -986,6 +988,8 @@ jobs:
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-promotion.outputs.runtime-sha }}
+      buildchain-expected-channel: ${{ needs.resolve-promotion.outputs.channel }}
+      buildchain-expected-major: "4"
       promotion-router-ref: ${{ needs.resolve-promotion.outputs.router-ref }}
       promotion-router-sha: ${{ needs.resolve-promotion.outputs.router-sha }}
       promotion-shell-ref: ${{ needs.resolve-promotion.outputs.shell-call-ref }}

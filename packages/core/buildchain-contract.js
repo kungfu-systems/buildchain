@@ -314,6 +314,8 @@ export function createBuildchainContractWorld({
       },
       optionalInputs: [
         "buildchain-ref",
+        "buildchain-expected-channel",
+        "buildchain-expected-major",
         "buildchain-contract-lock-path",
         "promotion-router-ref",
         "promotion-router-sha",

@@ -164,7 +164,7 @@ test("generated promotion router preserves every public input and output exactly
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
   const current = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
-  const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-") || name === "publication-authority-workflow-path"));
+  const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-") || name === "publication-authority-workflow-path" || name === "buildchain-expected-channel" || name === "buildchain-expected-major"));
   const expectedInputs = workflowFields(advanced, "inputs").filter((name) => !internal.has(name));
   expectedInputs.push("buildchain-channel", "buildchain-alpha-contract-lock-path", "buildchain-stable-contract-lock-path");
   const actualInputs = workflowFields(generated, "inputs");
@@ -174,6 +174,8 @@ test("generated promotion router preserves every public input and output exactly
   assert.equal(current, generated);
   assert.deepEqual([...actualInputs].sort(), [...expectedInputs].sort());
   assert.equal(new Set(actualInputs).size, actualInputs.length);
+  assert.equal(generated.match(/buildchain-expected-channel: \$\{\{ needs\.resolve-promotion\.outputs\.channel \}\}/g)?.length, 2);
+  assert.equal(generated.match(/buildchain-expected-major: "4"/g)?.length, 2);
   for (const output of expectedOutputs) assert.ok(actualOutputs.includes(output), `missing output ${output}`);
   assert.equal(new Set(actualOutputs).size, actualOutputs.length);
 });

@@ -12,6 +12,16 @@ on:
         default: ""
         type: string
         required: false
+      buildchain-expected-channel:
+        description: "Explicit stable or alpha lane expected when a bootstrap workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-major:
+        description: "Explicit Buildchain major expected when a bootstrap workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
       promotion-router-ref:
         description: "Router workflow ref bound by the generated public wrapper"
         default: ""
@@ -1482,6 +1492,8 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.buildchain-runtime.outputs.class }}
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ inputs.promotion-shell-ref || job.workflow_ref }}
+          BUILDCHAIN_EXPECTED_CHANNEL: ${{ inputs.buildchain-expected-channel }}
+          BUILDCHAIN_EXPECTED_MAJOR: ${{ inputs.buildchain-expected-major }}
           BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ steps.buildchain-runtime.outputs.override }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 

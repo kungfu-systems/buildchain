@@ -466,6 +466,8 @@
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
         "buildchain-contract-lock-path",
+        "buildchain-expected-channel",
+        "buildchain-expected-major",
         "buildchain-ref",
         "buildchain-repository",
         "channel",
@@ -567,7 +569,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 109,
+      "inputCount": 111,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
