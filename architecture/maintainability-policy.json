@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
-    "maxHandMaintainedSourceFiles": 307,
-    "maxHandMaintainedSourceLines": 119895,
+    "baselineRevision": "148e293f56e46990a44ed86525f9e38c910cda59",
+    "maxHandMaintainedSourceFiles": 308,
+    "maxHandMaintainedSourceLines": 120267,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23477,
-    "latestTransition": "Buildchain v3 adds the durable controller that schedules and reconciles next-development version state after completed Alpha success.",
-    "rationale": "The next-development slice adds one atomic child controller and one bounded Candidate Patrol reservation reader beside the existing provider-neutral transition. It preserves completed Alpha truth, resumes idempotent latest-Dev reconciliation, rejects stale reserved version material before candidate settlement, and withholds verification until protected Dev roots agree. Focused tests cover duplicate scheduling, runner loss, moving Dev, reviewed anchors, readback faults, pure preparation suppression and stale reservations. This exact 307-file, 119895-source-line and 23477-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "Buildchain v3 composes durable next-development control with bounded macOS JIT same-host instance rehydration.",
+    "rationale": "The protected next-development controller remains intact while one separate rehydration module adds exact account, source, Budget, host, AMI, subnet, runner-residue and cross-region capacity checks before same-host RunInstances DryRun and replacement launch; tests prove zero AllocateHosts calls. This exact 308-file, 120267-source-line and 23477-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/aws-macos-jit-controller.mjs": {
+      "maxLines": 631,
+      "rationale": "The existing operator entrypoint adds only the rehydration plan dispatch and explicit exact-host, replaced-instance and no-host-allocation confirmations; provider checks and execution remain in the separately budgeted rehydration module. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/next-development-transition.js": {
       "maxLines": 738,
       "rationale": "The single versioned authority keeps completed-Alpha identity, legal successor models, role-separated adapter bounds, materialization roots, compare-and-swap transitions and deterministic replay validation together. The bounded increase makes anchored/manual initial state persist as waiting-anchor even after reviewed input and exposes rooted anchor binding plus controller materialization recording; this exact reviewed ceiling cannot grow implicitly."
