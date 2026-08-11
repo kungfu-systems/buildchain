@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/release-cut-v1.schema.json",
+  "title": "Buildchain Release Cut v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "repository",
+    "sourceBranch",
+    "targetBranch",
+    "originDevSha",
+    "candidateSha",
+    "candidateTreeSha",
+    "alphaBaseSha",
+    "buildchainRuntimeSha",
+    "generation",
+    "authorityRoots",
+    "supersession",
+    "createdAt",
+    "cutRoot"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": { "const": "kungfu-buildchain-release-cut/v1" },
+    "repository": { "type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$" },
+    "sourceBranch": { "type": "string", "minLength": 1 },
+    "targetBranch": { "type": "string", "minLength": 1 },
+    "originDevSha": { "$ref": "#/$defs/gitSha" },
+    "candidateSha": { "$ref": "#/$defs/gitSha" },
+    "candidateTreeSha": { "$ref": "#/$defs/gitSha" },
+    "alphaBaseSha": { "$ref": "#/$defs/gitSha" },
+    "buildchainRuntimeSha": { "$ref": "#/$defs/gitSha" },
+    "generation": { "type": "integer", "minimum": 1 },
+    "authorityRoots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/root" }
+    },
+    "supersession": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cause", "priorCutRoot"],
+          "properties": {
+            "cause": {
+              "enum": [
+                "release-blocker-repair",
+                "incompatible-semantics",
+                "alpha-base-incompatibility",
+                "invalid-authority",
+                "severe-security"
+              ]
+            },
+            "priorCutRoot": { "$ref": "#/$defs/root" }
+          }
+        }
+      ]
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "cutRoot": { "$ref": "#/$defs/root" }
+  },
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}

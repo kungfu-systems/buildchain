@@ -37,7 +37,7 @@
       {
         "mechanismId": "release-candidate-passport",
         "root": "packages/core",
-        "pattern": "^release-candidate\\.js$"
+        "pattern": "^release-(?:candidate|train)\\.js$"
       },
       {
         "mechanismId": "release-candidate-recovery",
@@ -135,7 +135,8 @@
       ],
       "schemas": [
         "kungfu-buildchain-dev-delivery-warrant-queue",
-        "kungfu.buildchain.dev-delivery-warrant/v1"
+        "kungfu.buildchain.dev-delivery-warrant/v1",
+        "kungfu.buildchain.release-blocker-priority-claim/v1"
       ],
       "stores": [
         "Git ref selected by --warrant-state-ref",
@@ -163,7 +164,8 @@
       ],
       "transitions": [
         "root-checked compare-and-set queue successors",
-        "one active leased candidate per protected base"
+        "one active leased candidate per protected base",
+        "rooted release blocker ahead of only not-yet-leased ordinary work"
       ],
       "recovery": [
         "expired lease returns eligible candidate to the queue",
@@ -199,6 +201,7 @@
         "packages/core/dev-delivery-warrant-cancellation.js",
         "packages/core/dev-delivery-warrant-settlement.js",
         "packages/core/dev-delivery-warrant.js",
+        "packages/core/release-blocker-priority.js",
         "scripts/dev-delivery-proof.mjs",
         "scripts/dev-delivery-warrant.mjs",
         "scripts/dev-pr-auto-merge.mjs",
@@ -206,7 +209,8 @@
       ],
       "testPaths": [
         "tests/dev-delivery-warrant.test.mjs",
-        "tests/dev-delivery-warrant-command.test.mjs"
+        "tests/dev-delivery-warrant-command.test.mjs",
+        "tests/release-blocker-priority.test.mjs"
       ],
       "migrationDisposition": "rebuild-in-rust-with-compatibility-projection",
       "unresolved": [
@@ -217,59 +221,114 @@
       "id": "release-candidate-passport",
       "owner": "Buildchain candidate evidence plane",
       "writers": [
+        "packages/core/dev-alpha-active-release-train.js",
+        "packages/core/release-train.js",
+        "scripts/dev-alpha-candidate-patrol.mjs",
         "scripts/generate-release-candidate-passport.mjs",
         "actions/promote-buildchain-ref/lib.js"
       ],
       "schemas": [
         "kungfu-buildchain-release-candidate-passport",
-        "kungfu-buildchain-initiative-family-release-evidence/v1"
+        "kungfu-buildchain-initiative-family-release-evidence/v1",
+        "kungfu-buildchain-release-cut/v1",
+        "kungfu-buildchain-release-blocker-repair/v1",
+        "kungfu-buildchain-release-train-hold/v1",
+        "kungfu-buildchain-release-train/v1",
+        "kungfu-buildchain-release-train-transition/v1"
       ],
       "stores": [
         "candidate workflow artifacts",
-        "Passport JSON bound by sha256 root"
+        "Passport JSON bound by sha256 root",
+        "rooted Release Cut and append-only Release Train projection"
       ],
-      "states": ["assembled", "validated", "qualified", "invalidated"],
+      "states": [
+        "assembled",
+        "validated",
+        "qualified",
+        "invalidated",
+        "preparing",
+        "building",
+        "held",
+        "repair-required",
+        "publication-blocked",
+        "publishable",
+        "superseded",
+        "terminal"
+      ],
       "events": [
         "build-summary-complete",
         "gate-pass",
         "controller-receipts-attached",
-        "promotion-read"
+        "promotion-read",
+        "release-cut-created",
+        "release-train-held",
+        "release-train-transitioned",
+        "dev-head-observed"
       ],
-      "transitions": ["evidence assembly to immutable validated Passport"],
+      "transitions": [
+        "evidence assembly to immutable validated Passport",
+        "rooted compare-and-swap Release Train state transition",
+        "active-train resolution before new candidate selection",
+        "rooted cut-first release-blocker repair with exact Dev patch settlement",
+        "enumerated-cause supersession to a new Release Cut generation"
+      ],
       "recovery": [
-        "never rebuild from recovery; delegate to candidate-run recovery"
+        "never rebuild from recovery; delegate to candidate-run recovery",
+        "replay the exact rooted transition chain from the frozen Release Cut"
       ],
-      "effects": ["candidate artifact upload", "promotion admission"],
-      "retry": ["regenerate only from the same immutable build evidence"],
+      "effects": [
+        "candidate artifact upload",
+        "promotion admission",
+        "rooted candidate hold projection",
+        "Release Train state projection"
+      ],
+      "retry": [
+        "regenerate only from the same immutable build evidence",
+        "repeat an identical transition request idempotently"
+      ],
       "invalidation": [
         "source/runtime/root mismatch",
+        "candidate tree, Alpha base, runtime or route readback mismatch",
         "failed gate",
-        "invalidated family evidence"
+        "invalidated family evidence",
+        "invalid state-chain root or unenumerated supersession cause"
       ],
       "providerReadback": [
         "GitHub Actions run and artifact metadata",
-        "candidate PR ancestry"
+        "candidate PR ancestry",
+        "exact dev, alpha and runtime Git refs"
       ],
       "publicSurfaces": [
         "export:./release-candidate",
+        "export:./release-train",
         "cli:candidate",
         "workflow:release-candidate-promote",
         "workflow:buildchain-stable-candidate-qualification"
       ],
       "compatibilityCallers": [
         "actions/promote-buildchain-ref/lib.js",
-        "scripts/stable-candidate-qualification.mjs"
+        "scripts/stable-candidate-qualification.mjs",
+        "scripts/dev-alpha-candidate-patrol.mjs"
       ],
       "sourcePaths": [
         "packages/core/release-candidate.js",
+        "packages/core/dev-alpha-active-release-train.js",
+        "packages/core/dev-alpha-candidate-selection.js",
+        "packages/core/release-train.js",
+        "scripts/dev-alpha-candidate-patrol.mjs",
         "scripts/generate-release-candidate-passport.mjs"
       ],
       "testPaths": [
         "tests/release-candidate.test.mjs",
+        "tests/dev-alpha-candidate-patrol.test.mjs",
+        "tests/release-train.test.mjs",
         "tests/build-surface-promotion.test.mjs"
       ],
-      "migrationDisposition": "preserve-schema-and-byte-semantics-behind-rust-authority",
-      "unresolved": ["v4 canonical serialization boundary is not yet selected"]
+      "migrationDisposition": "preserve-schema-byte-and-root-semantics-behind-rust-authority",
+      "unresolved": [
+        "v4 canonical serialization boundary is not yet selected",
+        "v4 Release Train authority remains deferred to the parity wave"
+      ]
     },
     {
       "id": "release-candidate-recovery",

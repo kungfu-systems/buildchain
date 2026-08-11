@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-04
+  generated_at: 2026-08-11
   invisible_context: not asserted
 ---
 
@@ -62,6 +62,16 @@ The supported priority classes are `ordinary`, `expedited`, and `emergency`.
 The queue does not infer an emergency: callers must choose it explicitly under
 their reviewed policy. Delivery classes are `non-native-fast`,
 `native-proof-required`, `cross-platform`, and `release`.
+
+A release-blocker candidate may additionally carry a rooted priority claim
+created from a settled Release Train dual landing. The claim binds the exact
+Assignment, Initiative, repair, prior and successor cuts, candidate generation,
+cut candidate, Dev head, semantic patch, both landing evidence roots, and
+publication gate. Only a claim whose repository, protected base, Work roots,
+head, patch, and claim root match the queued candidate enters the blocker lane.
+That lane outranks not-yet-leased ordinary work, but never preempts or rewrites
+an active Warrant; unrelated, conflicted, mismatched, or fabricated claims fail
+closed before selection.
 
 ## Split proof authority
 

@@ -14,14 +14,21 @@ import {
   managedCandidateFromPullRequest,
   normalizeDevAlphaPatrolOptions,
   parseCandidateStateMarker,
+  reconcileActiveReleaseTrain,
   runDevAlphaCandidatePatrol,
   selectLatestQualifiedSource,
 } from "../scripts/dev-alpha-candidate-patrol.mjs";
+import {
+  createReleaseTrain,
+  transitionReleaseTrain,
+} from "../packages/core/release-train.js";
 
 const SOURCE_SHA = "a".repeat(40);
 const TARGET_SHA = "b".repeat(40);
 const OBSERVED_SHA = "c".repeat(40);
 const ACTIVE_SHA = "d".repeat(40);
+const CANDIDATE_TREE_SHA = "e".repeat(40);
+const RUNTIME_SHA = "f".repeat(40);
 const NOW = "2026-07-26T22:00:00.000Z";
 const DEV = ".github/workflows/dev-verify-patrol.yml";
 const ALPHA = ".github/workflows/alpha-promotion-preflight.yml";
@@ -197,12 +204,19 @@ function client({
   comparisons,
   promotionBaseline,
   openPullRequests = [],
+  candidateTreeSha = CANDIDATE_TREE_SHA,
+  sourceLockSha,
 } = {}) {
   const calls = [];
   return {
     calls,
-    resolveBranch: async (branch) =>
-      branch.startsWith("dev/") ? sourceHead : TARGET_SHA,
+    resolveBranch: async (branch) => {
+      if (branch.startsWith("dev/")) return sourceHead;
+      if (branch.startsWith("buildchain/candidate/"))
+        return sourceLockSha || openPullRequests[0]?.head?.sha || ACTIVE_SHA;
+      return TARGET_SHA;
+    },
+    resolveCommitTreeSha: async () => candidateTreeSha,
     compare: async (baseSha, headSha) =>
       comparisons?.get(`${baseSha}...${headSha}`) || comparison,
     resolveManagedPromotionBaseline: async () => promotionBaseline || null,
@@ -282,6 +296,7 @@ const patrolOptions = {
   alphaWorkflowPath: ALPHA,
   now: NOW,
   maxAgeSeconds: 86400,
+  requireActiveReleaseTrain: false,
 };
 
 function candidatePullRequest({
@@ -304,10 +319,284 @@ function candidatePullRequest({
       ].join("\n"),
     head: {
       ref: `buildchain/candidate/alpha-v4-v4.0/${sourceSha.slice(0, 12)}`,
+      sha: sourceSha,
     },
     base: { ref: "alpha/v4/v4.0" },
   };
 }
+
+const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
+
+function releaseTrain(overrides = {}) {
+  return createReleaseTrain({
+    repository: patrolOptions.repository,
+    sourceBranch: patrolOptions.sourceBranch,
+    targetBranch: patrolOptions.targetBranch,
+    originDevSha: ACTIVE_SHA,
+    candidateSha: ACTIVE_SHA,
+    candidateTreeSha: CANDIDATE_TREE_SHA,
+    alphaBaseSha: TARGET_SHA,
+    buildchainRuntimeSha: RUNTIME_SHA,
+    generation: 1,
+    authorityRoots: [ROOT("1"), ROOT("2")],
+    createdAt: NOW,
+    ...overrides,
+  });
+}
+
+function activeTrainCandidatePullRequest({
+  train = releaseTrain(),
+  body,
+} = {}) {
+  const pullRequest = candidatePullRequest({ sourceSha: ACTIVE_SHA });
+  const state = {
+    schema: "kungfu-buildchain-dev-alpha-candidate-state/v1",
+    repository: patrolOptions.repository,
+    sourceBranch: patrolOptions.sourceBranch,
+    targetBranch: patrolOptions.targetBranch,
+    targetSha: TARGET_SHA,
+    generation: train.releaseCut.generation,
+    priorStateRoot: "absent",
+    activeCandidate: {
+      sourceSha: ACTIVE_SHA,
+      sourceLockRef: pullRequest.head.ref,
+      decisionRoot: ROOT("3"),
+      pullRequestNumber: pullRequest.number,
+      pullRequestUrl: pullRequest.html_url,
+    },
+    nextCandidate: null,
+    tombstones: [],
+    releaseTrain: train,
+    observationDecisionRoot: ROOT("3"),
+    observedAt: NOW,
+    stateRoot: ROOT("4"),
+  };
+  return {
+    ...pullRequest,
+    body:
+      body ||
+      [
+        "Buildchain exact-source channel candidate.",
+        "",
+        `- Source SHA: \`${ACTIVE_SHA}\``,
+        "",
+        "<!-- buildchain-dev-alpha-candidate-state",
+        JSON.stringify(state),
+        "-->",
+      ].join("\n"),
+  };
+}
+
+test("one hundred dev advances remain observations on one frozen Release Cut", () => {
+  let train = releaseTrain();
+  const original = structuredClone(train.releaseCut);
+  for (let index = 0; index < 100; index += 1) {
+    const observedDevSha = (index + 16).toString(16).padStart(40, "0");
+    const result = reconcileActiveReleaseTrain({
+      releaseTrain: train,
+      repository: patrolOptions.repository,
+      sourceBranch: patrolOptions.sourceBranch,
+      targetBranch: patrolOptions.targetBranch,
+      activeCandidateSha: ACTIVE_SHA,
+      sourceLockSha: ACTIVE_SHA,
+      candidateTreeSha: CANDIDATE_TREE_SHA,
+      alphaBaseSha: TARGET_SHA,
+      buildchainRuntimeSha: RUNTIME_SHA,
+      observedDevSha,
+      observedAt: new Date(Date.parse(NOW) + index * 1000).toISOString(),
+    });
+    assert.equal(result.status, "active");
+    assert.equal(result.train.trainRoot, train.trainRoot);
+    assert.deepEqual(result.train.releaseCut, original);
+    train = result.train;
+  }
+  assert.equal(train.observations.length, 100);
+  assert.equal(train.releaseCut.candidateSha, ACTIVE_SHA);
+  assert.equal(train.releaseCut.candidateTreeSha, CANDIDATE_TREE_SHA);
+  assert.equal(train.releaseCut.generation, 1);
+});
+
+test("first settlement cuts and persists one exact active Release Train", async () => {
+  const fake = client();
+  const result = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      requireActiveReleaseTrain: true,
+      buildchainRuntimeSha: RUNTIME_SHA,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    fake,
+  );
+  assert.equal(result.controller.state, "active");
+  assert.equal(result.releaseTrain.releaseCut.candidateSha, SOURCE_SHA);
+  assert.equal(
+    result.releaseTrain.releaseCut.candidateTreeSha,
+    CANDIDATE_TREE_SHA,
+  );
+  assert.equal(result.releaseTrain.releaseCut.alphaBaseSha, TARGET_SHA);
+  assert.equal(
+    result.releaseTrain.releaseCut.buildchainRuntimeSha,
+    RUNTIME_SHA,
+  );
+  const state = parseCandidateStateMarker(
+    fake.calls.find(([kind]) => kind === "pr")[1].body,
+  );
+  assert.equal(state.releaseTrain.trainRoot, result.releaseTrain.trainRoot);
+  assert.equal(state.generation, 1);
+});
+
+test("observe and settle reconstruct the same Release Cut before writes", async () => {
+  const observed = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      requireActiveReleaseTrain: true,
+      buildchainRuntimeSha: RUNTIME_SHA,
+      dryRun: true,
+    },
+    client(),
+  );
+  const settled = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      requireActiveReleaseTrain: true,
+      buildchainRuntimeSha: RUNTIME_SHA,
+      expectedSelectedSha: observed.decision.source.sha,
+      expectedCutRoot: observed.releaseTrain.releaseCut.cutRoot,
+      cutCreatedAt: observed.releaseTrain.releaseCut.createdAt,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    client(),
+  );
+  assert.equal(
+    settled.releaseTrain.releaseCut.cutRoot,
+    observed.releaseTrain.releaseCut.cutRoot,
+  );
+});
+
+test("controller restart resumes the frozen candidate while dev moves", async () => {
+  const firstClient = client({
+    sourceHead: SOURCE_SHA,
+    openPullRequests: [activeTrainCandidatePullRequest()],
+    sourceLockSha: ACTIVE_SHA,
+  });
+  const first = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      requireActiveReleaseTrain: true,
+      buildchainRuntimeSha: RUNTIME_SHA,
+      settlementAuthorized: true,
+      dryRun: false,
+    },
+    firstClient,
+  );
+  assert.equal(first.decision.source.sha, ACTIVE_SHA);
+  assert.equal(first.controller.generation, 1);
+  assert.equal(
+    first.controller.settlementAction,
+    "observe-active-release-train",
+  );
+  const persistedBody = firstClient.calls.find(
+    ([kind]) => kind === "update-pr",
+  )[2];
+  const movedDevSha = "9".repeat(40);
+  const restartedClient = client({
+    sourceHead: movedDevSha,
+    openPullRequests: [
+      activeTrainCandidatePullRequest({ body: persistedBody }),
+    ],
+    sourceLockSha: ACTIVE_SHA,
+  });
+  const restarted = await runDevAlphaCandidatePatrol(
+    {
+      ...patrolOptions,
+      requireActiveReleaseTrain: true,
+      buildchainRuntimeSha: RUNTIME_SHA,
+      settlementAuthorized: true,
+      dryRun: false,
+      now: "2026-07-26T22:01:00.000Z",
+    },
+    restartedClient,
+  );
+  assert.equal(restarted.controller.state, "active");
+  assert.equal(restarted.decision.source.sha, ACTIVE_SHA);
+  assert.equal(
+    restarted.releaseTrain.releaseCut.candidateTreeSha,
+    CANDIDATE_TREE_SHA,
+  );
+  assert.equal(restarted.releaseTrain.releaseCut.generation, 1);
+  assert.equal(
+    restartedClient.calls.some(([kind]) => kind === "branch" || kind === "pr"),
+    false,
+  );
+});
+
+test("candidate, Alpha base, runtime and route drift produce rooted holds", () => {
+  const base = {
+    releaseTrain: releaseTrain(),
+    repository: patrolOptions.repository,
+    sourceBranch: patrolOptions.sourceBranch,
+    targetBranch: patrolOptions.targetBranch,
+    activeCandidateSha: ACTIVE_SHA,
+    sourceLockSha: ACTIVE_SHA,
+    candidateTreeSha: CANDIDATE_TREE_SHA,
+    alphaBaseSha: TARGET_SHA,
+    buildchainRuntimeSha: RUNTIME_SHA,
+    observedDevSha: SOURCE_SHA,
+    observedAt: NOW,
+  };
+  for (const [overrides, code] of [
+    [{ sourceLockSha: SOURCE_SHA }, "candidate-ref-drift"],
+    [{ candidateTreeSha: SOURCE_SHA }, "candidate-tree-drift"],
+    [{ alphaBaseSha: SOURCE_SHA }, "alpha-base-drift"],
+    [{ buildchainRuntimeSha: SOURCE_SHA }, "runtime-drift"],
+    [{ repository: "kungfu-systems/other" }, "invalid-authority"],
+  ]) {
+    const result = reconcileActiveReleaseTrain({ ...base, ...overrides });
+    assert.equal(result.status, "held");
+    assert.equal(result.hold.code, code);
+    assert.match(result.hold.holdRoot, /^sha256:[0-9a-f]{64}$/u);
+  }
+});
+
+test("duplicate observations are idempotent and explicit supersession is terminal", () => {
+  const base = {
+    releaseTrain: releaseTrain(),
+    repository: patrolOptions.repository,
+    sourceBranch: patrolOptions.sourceBranch,
+    targetBranch: patrolOptions.targetBranch,
+    activeCandidateSha: ACTIVE_SHA,
+    sourceLockSha: ACTIVE_SHA,
+    candidateTreeSha: CANDIDATE_TREE_SHA,
+    alphaBaseSha: TARGET_SHA,
+    buildchainRuntimeSha: RUNTIME_SHA,
+    observedDevSha: SOURCE_SHA,
+    observedAt: NOW,
+  };
+  const first = reconcileActiveReleaseTrain(base);
+  const duplicate = reconcileActiveReleaseTrain({
+    ...base,
+    releaseTrain: first.train,
+    observedAt: "2026-07-26T22:05:00.000Z",
+  });
+  assert.deepEqual(duplicate.train, first.train);
+  const superseded = transitionReleaseTrain(first.train, {
+    to: "superseded",
+    event: "candidate-invalidated",
+    reason: "an explicit authority check invalidated the candidate",
+    expectedStateRoot: first.train.state.stateRoot,
+    authorityRoots: [ROOT("5")],
+    supersessionCause: "invalid-authority",
+    replacementCutRoot: ROOT("6"),
+    replacementCandidateSha: SOURCE_SHA,
+    recordedAt: "2026-07-26T22:06:00.000Z",
+  });
+  assert.equal(
+    reconcileActiveReleaseTrain({ ...base, releaseTrain: superseded }).status,
+    "superseded",
+  );
+});
 
 test("dry-run emits an exact decision without GitHub writes", async () => {
   const fake = client();
@@ -962,6 +1251,22 @@ test("reusable workflow retains the no-publication boundary", () => {
   );
   assert.match(workflowText, /actions: read/u);
   assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_DRY_RUN/u);
+  assert.match(
+    workflowText,
+    /BUILDCHAIN_CHANNEL_PATROL_REQUIRE_ACTIVE_TRAIN: "true"/u,
+  );
+  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_RUNTIME_SHA/u);
+  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_CUT_ROOT/u);
+  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_CUT_CREATED_AT/u);
+  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_NOW/u);
+  assert.match(
+    workflowText,
+    /ref: \$\{\{ needs\.observe\.outputs\.runtime-sha \}\}/u,
+  );
+  assert.match(workflowText, /candidate-generation:/u);
+  assert.match(workflowText, /candidate-tree-sha:/u);
+  assert.match(workflowText, /drift-root:/u);
+  assert.match(workflowText, /hold-root:/u);
   assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX/u);
   assert.match(workflowText, /pull-request-body-prefix-renderer:/u);
   assert.match(
