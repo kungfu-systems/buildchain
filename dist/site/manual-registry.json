@@ -165,7 +165,7 @@
       "title": "Next-development transition",
       "path": "docs/next-development-transition.md",
       "plane": "verify",
-      "digest": "sha256:2c8823025d0883d89f869b4cc4426c0133460910e85791f9e85abaa63a6a4bba",
+      "digest": "sha256:a512df1684cab31458188aad6b25fe3fa23e93216240fd9709628aa774f79bda",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:84afde6c4c12c4b15673962750436fdb9bd1a240ebedf5778c805af4df911484",
+      "digest": "sha256:cf2137143bb567a11430cf35c3faaff7e16861af4e68554af5cbea1b3a0a1077",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

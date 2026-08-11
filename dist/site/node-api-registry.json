@@ -11558,6 +11558,245 @@
       ]
     },
     {
+      "id": "packages/core/next-development-controller.js#createNextDevelopmentController",
+      "name": "createNextDevelopmentController",
+      "kind": "function",
+      "signature": "function createNextDevelopmentController({ transition, protectedDevBranch, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ transition, protectedDevBranch, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 118
+      },
+      "example": "import { createNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#NEXT_DEVELOPMENT_CONTROLLER_CONTRACT",
+      "name": "NEXT_DEVELOPMENT_CONTROLLER_CONTRACT",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_CONTROLLER_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 11
+      },
+      "example": "import { NEXT_DEVELOPMENT_CONTROLLER_CONTRACT } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#nextDevelopmentChildKey",
+      "name": "nextDevelopmentChildKey",
+      "kind": "function",
+      "signature": "function nextDevelopmentChildKey(transition)",
+      "parameters": [
+        {
+          "name": "transition",
+          "signature": "transition"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 103
+      },
+      "example": "import { nextDevelopmentChildKey } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#nextDevelopmentControllerRoot",
+      "name": "nextDevelopmentControllerRoot",
+      "kind": "function",
+      "signature": "function nextDevelopmentControllerRoot(record)",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 99
+      },
+      "example": "import { nextDevelopmentControllerRoot } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#reconcileNextDevelopmentController",
+      "name": "reconcileNextDevelopmentController",
+      "kind": "function",
+      "signature": "async function reconcileNextDevelopmentController(record, { store, executor, reviewedInput, recordedAt, fault } = {})",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ store, executor, reviewedInput, recordedAt, fault } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 548
+      },
+      "example": "import { reconcileNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#runNextDevelopmentController",
+      "name": "runNextDevelopmentController",
+      "kind": "function",
+      "signature": "async function runNextDevelopmentController({ transition, protectedDevBranch, reviewedInput, recordedAt, fault } = {}, { store, executor } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ transition, protectedDevBranch, reviewedInput, recordedAt, fault } = {}"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ store, executor } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 710
+      },
+      "example": "import { runNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#scheduleNextDevelopmentController",
+      "name": "scheduleNextDevelopmentController",
+      "kind": "function",
+      "signature": "async function scheduleNextDevelopmentController({ transition, protectedDevBranch } = {}, store)",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ transition, protectedDevBranch } = {}"
+        },
+        {
+          "name": "store",
+          "signature": "store"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 475
+      },
+      "example": "import { scheduleNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#validateNextDevelopmentController",
+      "name": "validateNextDevelopmentController",
+      "kind": "function",
+      "signature": "function validateNextDevelopmentController(record)",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 385
+      },
+      "example": "import { validateNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/next-development-projection.js#appendNextDevelopmentToml",
       "name": "appendNextDevelopmentToml",
       "kind": "function",
@@ -11577,7 +11816,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 41
+        "line": 44
       },
       "example": "import { appendNextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11606,7 +11845,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 67
+        "line": 70
       },
       "example": "import { assertNextDevelopmentConfig } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11635,7 +11874,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 122
+        "line": 132
       },
       "example": "import { mergeNextDevelopmentAgentInstructions } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11659,7 +11898,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 11
+        "line": 12
       },
       "example": "import { NEXT_DEVELOPMENT_AGENT_SECTION_END } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11683,7 +11922,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 9
+        "line": 10
       },
       "example": "import { NEXT_DEVELOPMENT_AGENT_SECTION_START } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11707,7 +11946,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 13
+        "line": 14
       },
       "example": "import { NEXT_DEVELOPMENT_LOCAL_COMMAND } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11731,7 +11970,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 94
+        "line": 98
       },
       "example": "import { nextDevelopmentAgentInstructions } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11755,7 +11994,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 151
+        "line": 161
       },
       "example": "import { nextDevelopmentManual } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11779,7 +12018,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 22
+        "line": 24
       },
       "example": "import { nextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11803,7 +12042,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 16
+        "line": 17
       },
       "example": "import { nextDevelopmentWorkflowHeader } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11832,7 +12071,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-projection.js",
-        "line": 51
+        "line": 54
       },
       "example": "import { projectNextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
       "maturity": "stable",
@@ -11865,9 +12104,42 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 321
+        "line": 344
       },
       "example": "import { advanceNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#bindNextDevelopmentAnchor",
+      "name": "bindNextDevelopmentAnchor",
+      "kind": "function",
+      "signature": "function bindNextDevelopmentAnchor(record, input = {})",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 305
+      },
+      "example": "import { bindNextDevelopmentAnchor } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -11923,7 +12195,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 424
+        "line": 472
       },
       "example": "import { materializeNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -12106,6 +12378,39 @@
       ]
     },
     {
+      "id": "packages/core/next-development-transition.js#recordNextDevelopmentMaterialization",
+      "name": "recordNextDevelopmentMaterialization",
+      "kind": "function",
+      "signature": "function recordNextDevelopmentMaterialization(record, { materialization, evidenceRoot, recordedAt } = {})",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ materialization, evidenceRoot, recordedAt } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 416
+      },
+      "example": "import { recordNextDevelopmentMaterialization } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/next-development-transition.js#validateNextDevelopmentTransition",
       "name": "validateNextDevelopmentTransition",
       "kind": "function",
@@ -12125,7 +12430,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 679
+        "line": 729
       },
       "example": "import { validateNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -23298,7 +23603,7 @@
       "specifier": "@kungfu-tech/buildchain/channel-candidate",
       "export": "./channel-candidate",
       "target": "./packages/core/channel-candidate.js",
-      "digest": "sha256:2dcd0899d8c0f4bbb7876108529f4bed0e5e82f6536474a1a505e65a322d10a6",
+      "digest": "sha256:37f2d3ef241a713e279dc9f8d5018d0d90e9ae847b2f15aaa12c3776a82faf4f",
       "summary": "Exact-source channel candidate decisions, same-SHA workflow evidence validation, and deterministic source-lock reference APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -24455,16 +24760,17 @@
       "specifier": "@kungfu-tech/buildchain/next-development-transition",
       "export": "./next-development-transition",
       "target": "./packages/core/next-development-transition.js",
-      "digest": "sha256:679b6801ccfd632ca3cc4014ce42c490d547dfab976234b934bcc6b89c12aa79",
+      "digest": "sha256:01b47222bb17fc4a36a66bce74ff11bf2d2ac17c935085aeec93684933849fee",
       "summary": "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 11,
+      "symbolCount": 13,
       "symbolIds": [
         "packages/core/next-development-transition.js#advanceNextDevelopmentTransition",
+        "packages/core/next-development-transition.js#bindNextDevelopmentAnchor",
         "packages/core/next-development-transition.js#createNextDevelopmentTransition",
         "packages/core/next-development-transition.js#materializeNextDevelopmentTransition",
         "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_ADR",
@@ -24474,7 +24780,38 @@
         "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
         "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_VERSION_MODELS",
         "packages/core/next-development-transition.js#nextDevelopmentRoot",
+        "packages/core/next-development-transition.js#recordNextDevelopmentMaterialization",
         "packages/core/next-development-transition.js#validateNextDevelopmentTransition"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/next-development-controller",
+      "export": "./next-development-controller",
+      "target": "./packages/core/next-development-controller.js",
+      "digest": "sha256:c51c18eb329067cc33facb37c61a90fa392dddc8401936606df6bf306272f560",
+      "summary": "Durable completed-Alpha child scheduling, fresh-runner checkpoint resume, latest protected-Dev reconciliation, and exact version-root readback APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 8,
+      "symbolIds": [
+        "packages/core/next-development-controller.js#createNextDevelopmentController",
+        "packages/core/next-development-controller.js#NEXT_DEVELOPMENT_CONTROLLER_CONTRACT",
+        "packages/core/next-development-controller.js#nextDevelopmentChildKey",
+        "packages/core/next-development-controller.js#nextDevelopmentControllerRoot",
+        "packages/core/next-development-controller.js#reconcileNextDevelopmentController",
+        "packages/core/next-development-controller.js#runNextDevelopmentController",
+        "packages/core/next-development-controller.js#scheduleNextDevelopmentController",
+        "packages/core/next-development-controller.js#validateNextDevelopmentController"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -24488,7 +24825,7 @@
       "specifier": "@kungfu-tech/buildchain/next-development-projection",
       "export": "./next-development-projection",
       "target": "./packages/core/next-development-projection.js",
-      "digest": "sha256:ea1afdc247799d5034b2d9e57fc96bbd35af3d8b3770f0e64f64eaa0dcfb4c66",
+      "digest": "sha256:5fbfacd28d74c8e71d1a55fce618a329aee5edfe5e9755beedc08f8cb2ee7153",
       "summary": "Canonical generated config, Agent, and manual projections for the next-development transition contract.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -24961,7 +25298,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:84afde6c4c12c4b15673962750436fdb9bd1a240ebedf5778c805af4df911484"
+      "digest": "sha256:cf2137143bb567a11430cf35c3faaff7e16861af4e68554af5cbea1b3a0a1077"
     },
     {
       "id": "build-facts",

@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "228dc33e54701926b214cdc65d44cebc98b79a5bfbd18e96aceee306d744b891",
+    "sha256": "9bd678677ba31dd81e38793290cc83f3741407624cc511189809d21692a9ce0c",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "228dc33e54701926b214cdc65d44cebc98b79a5bfbd18e96aceee306d744b891",
+      "sha256": "9bd678677ba31dd81e38793290cc83f3741407624cc511189809d21692a9ce0c",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -1783,6 +1783,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./next-development-transition"
+        },
+        {
+          "id": "export:./next-development-controller",
+          "name": "@kungfu-tech/buildchain/next-development-controller",
+          "kind": "package-export",
+          "sourcePath": "packages/core/next-development-controller.js",
+          "evidencePath": "packages/core/next-development-controller.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./next-development-controller"
         },
         {
           "id": "export:./next-development-projection",
@@ -6806,6 +6818,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 434
+    "publicSurfaceCount": 435
   }
 }

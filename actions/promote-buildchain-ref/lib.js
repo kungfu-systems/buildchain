@@ -3711,6 +3711,11 @@ function createRefMutationOperations(context) {
       if (!allowedPaths.length) {
         return undefined;
       }
+      if (protectedUpdate?.reconciliationVersion && !reconciliationWorkspace) {
+        throw new Error(
+          `Version-state reconciliation for current ${branch} requires an exact checkout workspace`,
+        );
+      }
       const { data: generatedCommit } = await getGitCommitWithRetry({
         octokit,
         owner,
@@ -3727,7 +3732,7 @@ function createRefMutationOperations(context) {
         headSha: branchSha,
         allowedPaths,
       });
-      if (protectedUpdate?.reconciliationVersion && reconciliationWorkspace) {
+      if (protectedUpdate?.reconciliationVersion) {
         const workspaceCwd = path.resolve(cwd, reconciliationWorkspace);
         if (!fs.existsSync(workspaceCwd)) {
           throw new Error(`Version-state reconciliation workspace does not exist: ${workspaceCwd}`);

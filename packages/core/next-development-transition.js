@@ -274,10 +274,7 @@ export function createNextDevelopmentTransition(input = {}) {
     adapter,
   };
   const idempotencyKey = nextDevelopmentRoot(identity);
-  const status =
-    model.strategy === "anchored" && !target.anchor
-      ? "waiting-anchor"
-      : "planned";
+  const status = model.strategy === "anchored" ? "waiting-anchor" : "planned";
   return {
     schemaVersion: 1,
     contract: NEXT_DEVELOPMENT_TRANSITION_CONTRACT,
@@ -303,6 +300,32 @@ export function createNextDevelopmentTransition(input = {}) {
     materialization: null,
     transitions: [],
   };
+}
+
+export function bindNextDevelopmentAnchor(record, input = {}) {
+  const current = validateNextDevelopmentTransition(record);
+  if (
+    current.model.strategy !== "anchored" ||
+    current.state.status !== "waiting-anchor"
+  ) {
+    throw new Error(
+      "next-development anchor input requires anchored/manual waiting-anchor state",
+    );
+  }
+  const target = normalizeTarget({
+    model: current.model,
+    completedAlpha: current.completedAlpha,
+    targetVersion: input.targetVersion,
+    anchor: input.anchor,
+  });
+  if (!target.version || !target.anchor) {
+    throw new Error(
+      "next-development reviewed anchor input requires targetVersion and anchor",
+    );
+  }
+  const next = structuredClone(current);
+  next.target = target;
+  return validateNextDevelopmentTransition(next);
 }
 
 function transitionRequestRoot(record, request) {
@@ -390,6 +413,31 @@ export function advanceNextDevelopmentTransition(record, input = {}) {
   return next;
 }
 
+export function recordNextDevelopmentMaterialization(
+  record,
+  { materialization, evidenceRoot, recordedAt } = {},
+) {
+  const current = validateNextDevelopmentTransition(record);
+  if (!current.target.version) {
+    throw new Error(
+      "next-development materialization requires an authorized target version",
+    );
+  }
+  if (!materialization || typeof materialization !== "object") {
+    throw new Error("next-development materialization is required");
+  }
+  const next = structuredClone(current);
+  next.materialization = structuredClone(materialization);
+  assertMaterialization(next);
+  return advanceNextDevelopmentTransition(next, {
+    to: "materialized",
+    event: "declared-version-state-materialized",
+    expectedStateRoot: current.state.stateRoot,
+    evidenceRoot: evidenceRoot || next.materialization.materializationRoot,
+    recordedAt,
+  });
+}
+
 function assertLocalDeclaredFile(cwd, relative) {
   const root = fs.realpathSync(cwd);
   const target = path.resolve(root, relative);
@@ -463,7 +511,9 @@ export function materializeNextDevelopmentTransition({
     targetVersion: request.targetVersion,
     anchor: request.anchor,
   });
-  if (plan.state.status === "waiting-anchor") return plan;
+  if (plan.state.status === "waiting-anchor" && !plan.target.version) {
+    return plan;
+  }
   if (write && derivedPaths.length > 0) {
     throw new Error(
       "reference adapter cannot write derived files; the transaction adapter must run lifecycle.version-state and lifecycle.verify with BUILDCHAIN_VERSION",

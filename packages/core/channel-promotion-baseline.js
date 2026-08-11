@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import {
+  nextDevelopmentPatrolContext,
+  normalizeNextDevelopmentVersionReservation,
+} from "./next-development-candidate-reservation.js";
+
 const SHA = /^[0-9a-f]{40}$/;
 
 function text(value = "") {
@@ -56,6 +61,18 @@ export function normalizeChannelCandidateSelection(input) {
       ? {
           targetBaseline: normalizeManagedPromotionBaseline(
             input.targetBaseline,
+          ),
+        }
+      : {}),
+    ...(input.versionReservation
+      ? {
+          versionReservation: normalizeNextDevelopmentVersionReservation(
+            input.versionReservation,
+            {
+              reservationSha: input.versionReservation.reservationSha,
+              candidateSha: input.versionReservation.candidateSha,
+              targetVersion: input.versionReservation.targetVersion,
+            },
           ),
         }
       : {}),
@@ -117,6 +134,7 @@ export async function resolvePatrolSourceInputs({
   let comparison = headComparison;
   let workflowEvidence = [];
   let skippedNewerCommitCount = 0;
+  let versionReservation;
   let qualificationError;
   if (
     headComparison.status === "ahead" &&
@@ -130,6 +148,8 @@ export async function resolvePatrolSourceInputs({
       ),
     ]);
     try {
+      const { preparations, ignoredSourceShas } =
+        nextDevelopmentPatrolContext(sourceHistory);
       const selected = selectQualifiedSource({
         sourceHistory,
         workflowRunsByPath: new Map(
@@ -141,8 +161,39 @@ export async function resolvePatrolSourceInputs({
         requiredWorkflowPaths,
         now: options.now,
         maxAgeSeconds: options.maxAgeSeconds,
+        ignoredSourceShas,
       });
       ({ sourceSha, skippedNewerCommitCount, workflowEvidence } = selected);
+      const selectedIndex = sourceHistory.findIndex((entry) =>
+        (typeof entry === "string" ? entry : entry?.sha) === sourceSha,
+      );
+      const reservation = preparations.find(
+        ({ index }) => index > selectedIndex,
+      )?.preparation;
+      if (reservation) {
+        if (typeof client.readNextDevelopmentVersionReservation !== "function") {
+          throw new Error(
+            "candidate follows next-development preparation but reservation readback is unavailable",
+          );
+        }
+        versionReservation = normalizeNextDevelopmentVersionReservation(
+          await client.readNextDevelopmentVersionReservation({
+            reservationSha: reservation.sha,
+            candidateSha: sourceSha,
+            targetVersion: reservation.targetVersion,
+          }),
+          {
+            reservationSha: reservation.sha,
+            candidateSha: sourceSha,
+            targetVersion: reservation.targetVersion,
+          },
+        );
+        if (versionReservation.status !== "current") {
+          throw new Error(
+            `next-development version reservation is ${versionReservation.status} for candidate ${sourceSha}`,
+          );
+        }
+      }
       if (sourceSha !== observedSourceHeadSha)
         comparison = await client.compare(boundarySha, sourceSha);
     } catch (error) {
@@ -158,6 +209,7 @@ export async function resolvePatrolSourceInputs({
     comparison,
     workflowEvidence,
     skippedNewerCommitCount,
+    versionReservation,
     qualificationError,
   };
 }

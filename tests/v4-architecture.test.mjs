@@ -22,7 +22,7 @@ test("v4 architecture contract validates with zero production writer migrations"
     contract: "kungfu-buildchain-v4-architecture-validation",
     ok: true,
     releaseLine: "dev/v4/v4.0",
-    capabilities: 11,
+    capabilities: 12,
     stateMachines: 6,
     dependencyLayers: 6,
     dependencyCycles: 0,
@@ -33,7 +33,7 @@ test("v4 architecture contract validates with zero production writer migrations"
 
 test("architecture list and show are generated from the validated manifest", () => {
   const list = architectureList(root);
-  assert.equal(list.capabilities.length, 11);
+  assert.equal(list.capabilities.length, 12);
   assert.equal(
     list.capabilities.find(
       (entry) => entry.id === "release-tail-provider-plane",
@@ -164,6 +164,7 @@ test("N-1 qualification rejects self authority and candidate ceiling widening", 
     "tightened",
   );
 
+  const originalOwner = manifest.capabilities[0].owner;
   manifest.capabilities[0].owner = "candidate-owned authority";
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   const drifted = commit(temporaryRoot, "drift owner");
@@ -177,7 +178,7 @@ test("N-1 qualification rejects self authority and candidate ceiling widening", 
     /candidate drifted from N-1 manifest authority: capabilities/,
   );
 
-  manifest.capabilities[0].owner = "Buildchain Dev delivery control plane";
+  manifest.capabilities[0].owner = originalOwner;
   manifest.budgets.agentCognitive.hardCeilings.requiredDiscoveryCommands = 3;
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   const widened = commit(temporaryRoot, "widen");
