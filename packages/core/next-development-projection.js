@@ -241,6 +241,23 @@ adapter verifies the manifest already present in the checkout; it never invents
 or edits upstream anchor facts. \`semver/manual\` and \`anchored/auto\` are
 invalid.
 
+## Hosted self-dogfood and adoption
+
+\`.github/workflows/buildchain-alpha-self-dogfood.yml\` calls the same public
+\`build.yml@v3-alpha\` router as a consumer. After the hosted build succeeds, one
+runner uses the real version-state adapter and checkpoints an injected transient
+durable-state write failure. A separate runner restores the adapter operation
+without rebuilding Alpha, supersedes it when protected Dev moves, and preserves
+\`pr-pending\` while the protected PR is delayed. The final artifact roots the
+exact runtime SHA, controller transaction, both legal version-model outcomes,
+and an exact hosted protected Dev readback. Stable qualification recomputes and
+rejects evidence that omits or drifts any of those bindings.
+
+Production consumers, including Kungfu, adopt the proved contract through
+\`kungfu-systems/buildchain/.github/workflows/build.yml@v3\`. The evidence retains
+the exact resolved SHA for audit, but the committed production coordinate is the
+floating major contract rather than an exact-SHA pin.
+
 ## Local adapter
 
 From a normal Buildchain checkout:

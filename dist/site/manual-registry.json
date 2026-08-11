@@ -165,7 +165,7 @@
       "title": "Next-development transition",
       "path": "docs/next-development-transition.md",
       "plane": "verify",
-      "digest": "sha256:a512df1684cab31458188aad6b25fe3fa23e93216240fd9709628aa774f79bda",
+      "digest": "sha256:93b2687be0e36744cb7b0b9d0d76588d89569120ffdb577f13c8c0827988ba28",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
