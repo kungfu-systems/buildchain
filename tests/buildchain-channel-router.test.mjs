@@ -105,9 +105,17 @@ test("generated channel workflow mirrors the advanced build surface", () => {
   const source = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
   const expected = generateChannelBuildWorkflow(source);
   const current = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
+  const packageMajor = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"))
+    .version.split(".")[0];
   assert.equal(current, expected);
-  assert.match(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@v3-alpha/);
-  assert.match(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@v3\n/);
+  assert.match(
+    current,
+    new RegExp(`uses: kungfu-systems/buildchain/\\.github/workflows/\\.build\\.yml@v${packageMajor}-alpha`),
+  );
+  assert.match(
+    current,
+    new RegExp(`uses: kungfu-systems/buildchain/\\.github/workflows/\\.build\\.yml@v${packageMajor}\\n`),
+  );
   assert.doesNotMatch(current, /uses: \.\/\.github\/workflows\/\.build\.yml/);
   assert.match(current, /buildchain-ref: \$\{\{ needs\.resolve-channel\.outputs\.buildchain-ref \}\}/);
   assert.match(current, /buildchain-contract-lock-path: \$\{\{ needs\.resolve-channel\.outputs\.contract-lock-path \}\}/);

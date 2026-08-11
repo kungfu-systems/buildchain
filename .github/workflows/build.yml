@@ -759,7 +759,7 @@ jobs:
       - resolve-channel
       - controller-plan
     if: ${{ needs.resolve-channel.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v4-alpha
     permissions:
       actions: read
       contents: read
@@ -860,7 +860,7 @@ jobs:
       - resolve-channel
       - controller-plan
     if: ${{ needs.resolve-channel.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v4
     permissions:
       actions: read
       contents: read

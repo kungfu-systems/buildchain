@@ -772,6 +772,9 @@ test("public action and workflow keep credentials outside the build matrix", () 
     path.join(root, ".github/workflows/build.yml"),
     "utf8",
   );
+  const packageMajor = JSON.parse(
+    fs.readFileSync(path.join(root, "package.json"), "utf8"),
+  ).version.split(".")[0];
   const fixtureWorkflow = fs.readFileSync(
     path.join(root, ".github/workflows/build-surface-fixture.yml"),
     "utf8",
@@ -824,7 +827,9 @@ test("public action and workflow keep credentials outside the build matrix", () 
   );
   assert.match(
     publicWorkflow,
-    /\n  alpha:\n[\s\S]*?uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@v3-alpha\n[\s\S]*?\n  stable:\n[\s\S]*?uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@v3\n/,
+    new RegExp(
+      `\\n  alpha:\\n[\\s\\S]*?uses: kungfu-systems/buildchain/\\.github/workflows/\\.build\\.yml@v${packageMajor}-alpha\\n[\\s\\S]*?\\n  stable:\\n[\\s\\S]*?uses: kungfu-systems/buildchain/\\.github/workflows/\\.build\\.yml@v${packageMajor}\\n`,
+    ),
   );
   for (const buildJob of [nativeBuildJob, containerBuildJob]) {
     assert.doesNotMatch(

@@ -314,7 +314,7 @@ if (!promotionOverrideAuthorization.includes("promotion runtime override is only
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
-  "uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3-alpha", "uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3\n",
+  `uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v${String(rootPackage.version).split(".")[0]}-alpha`, `uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v${String(rootPackage.version).split(".")[0]}\n`,
   "needs.resolve-channel.outputs.buildchain-ref",
   "needs.resolve-channel.outputs.contract-lock-path",
 ]) {

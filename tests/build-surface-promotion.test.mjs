@@ -1650,7 +1650,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     fs.readFileSync(path.join(root, "architecture/v4-bootstrap-authority.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v3-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
+  assert.equal(alphaLock.buildchain.resolvedSha, "1055641ec4bb32baed2f3b57a896598ec6b0308d");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.equal(stableLock.buildchain.ref, "v3");
   assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
@@ -1807,9 +1807,10 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
     }),
     true,
   );
-  if (process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP !== "true") {
-    assert.equal(bootstrapEvaluation.compatible, true);
-  }
+  assert.equal(bootstrapEvaluation.compatible, false);
+  assert.deepEqual(bootstrapEvaluation.reasons, [
+    "surface breaking digest changed: release-candidate-promote",
+  ]);
   const breakingContract = structuredClone(bootstrapContract);
   breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
   const breakingEvaluation = evaluateBuildchainContractLock({

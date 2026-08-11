@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 326,
-    "maxHandMaintainedSourceLines": 125427,
+    "maxHandMaintainedSourceFiles": 327,
+    "maxHandMaintainedSourceLines": 125665,
     "maxWorkflowFiles": 70,
-    "maxWorkflowLines": 23187,
-    "latestTransition": "Buildchain v4 preserves the exact autonomous Engineering Housekeeper contract and provider boundary from the protected v3 delivery.",
-    "rationale": "The v4 line adds the exact provider-neutral contract, bounded GitHub adapter, reusable workflow, and thin daily, weekly, and monthly unattended callers already protected on v3. The v4 architecture inventory records one legacy-authoritative TypeScript capability without a second contract, provider authority, or production writer. Unknown branch families and unassociated heads remain report-only; exact OID, merged-PR association, ancestry, active-PR, protection, bounded concurrency, deterministic ordering, and replay fences remain binding. These exact source and workflow ceilings cannot grow implicitly."
+    "maxWorkflowLines": 23229,
+    "latestTransition": "Buildchain v4 enforces major-independent stable and alpha shell, runtime, and lock identity.",
+    "rationale": "One bounded channel-identity module classifies official, release, train, authority, exact-release, and exact-SHA refs without version-specific branches. Contract-lock evaluation applies the triad before unchanged, missing-lock, non-floating, or compatibility exits, while the generated public router dispatches through separate v4-alpha and v4 advanced workflow shells. The exact one-file, 238-source-line, and 42-workflow-line increase is covered by cross-major permutation tests and Buildchain v4 self-dogfood and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/buildchain-channel-identity.js": {
+      "maxLines": 119,
+      "rationale": "The single major-independent classifier and triad evaluator keep shell, runtime, and contract-lock lane identity in one bounded fail-closed authority shared by stable and alpha consumers. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/engineering-housekeeper-github.js": {
       "maxLines": 707,
       "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."
@@ -38,9 +42,10 @@
       "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification while the terminal report constructor drops from 470 lines to at most 180. This exact post-integration ceiling cannot grow implicitly."
     },
     "packages/core/buildchain-contract.js": {
-      "maxLines": 1037,
+      "maxLines": 1093,
       "maxFunctionLines": 679,
-      "rationale": "The contract world records the additive candidate-run recovery inputs, reuse guarantees, and reviewed predecessor digests for both public promotion surfaces; this exact public-contract wiring ceiling cannot grow implicitly."
+      "maxFunctionComplexity": 30,
+      "rationale": "The existing v4 contract evaluator now invokes the shared shell-runtime-lock binding before every compatibility or early-success path while preserving the prior contract-world and drift behavior. This exact public-contract wiring ceiling cannot grow implicitly."
     },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
