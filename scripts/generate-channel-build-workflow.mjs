@@ -46,26 +46,26 @@ function routerInputs(inputBlock) {
 
 function routerOutputs(outputBlock) {
   const forwarded = outputBlock
-    .replace(/^        value: \$\{\{ jobs\.[^.]+\.outputs\.([^ }]+) \}\}$/gm, "        value: ${{ jobs.build.outputs.$1 }}")
+    .replace(/^        value: \$\{\{ jobs\.[^.]+\.outputs\.([^ }]+) \}\}$/gm, "        value: ${{ jobs.alpha.outputs.$1 || jobs.stable.outputs.$1 }}")
     .replaceAll("build-lifecycle", "build-channel-router")
-    .replace("value: ${{ jobs.build.outputs.controller-plan-artifact }}", "value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}")
-    .replace("value: ${{ jobs.build.outputs.controller-plan-json }}", "value: ${{ jobs.controller-plan.outputs.controller-plan-json }}")
-    .replace("value: ${{ jobs.build.outputs.controller-plan-digest }}", "value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}")
-    .replace("value: ${{ jobs.build.outputs.controller-receipt-artifact }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}")
-    .replace("value: ${{ jobs.build.outputs.controller-receipt-json }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}")
-    .replace("value: ${{ jobs.build.outputs.controller-receipt-digest }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}")
-    .replace("value: ${{ jobs.build.outputs.controller-receipt-status }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}")
+    .replace("value: ${{ jobs.alpha.outputs.controller-plan-artifact || jobs.stable.outputs.controller-plan-artifact }}", "value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}")
+    .replace("value: ${{ jobs.alpha.outputs.controller-plan-json || jobs.stable.outputs.controller-plan-json }}", "value: ${{ jobs.controller-plan.outputs.controller-plan-json }}")
+    .replace("value: ${{ jobs.alpha.outputs.controller-plan-digest || jobs.stable.outputs.controller-plan-digest }}", "value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}")
+    .replace("value: ${{ jobs.alpha.outputs.controller-receipt-artifact || jobs.stable.outputs.controller-receipt-artifact }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}")
+    .replace("value: ${{ jobs.alpha.outputs.controller-receipt-json || jobs.stable.outputs.controller-receipt-json }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}")
+    .replace("value: ${{ jobs.alpha.outputs.controller-receipt-digest || jobs.stable.outputs.controller-receipt-digest }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}")
+    .replace("value: ${{ jobs.alpha.outputs.controller-receipt-status || jobs.stable.outputs.controller-receipt-status }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}")
     .replace(
-      /(      credential-island-macos-artifact:\n(?:        .*\n)*?        value:) \$\{\{ jobs\.build\.outputs\.artifact-name \}\}/,
-      "$1 ${{ jobs.build.outputs.credential-island-macos-artifact }}",
+      /(      credential-island-macos-artifact:\n(?:        .*\n)*?        value:) \$\{\{ jobs\.alpha\.outputs\.artifact-name \|\| jobs\.stable\.outputs\.artifact-name \}\}/,
+      "$1 ${{ jobs.alpha.outputs.credential-island-macos-artifact || jobs.stable.outputs.credential-island-macos-artifact }}",
     )
     .replace(
-      /(      credential-island-macos-manifest-artifact:\n(?:        .*\n)*?        value:) \$\{\{ jobs\.build\.outputs\.manifest-artifact-name \}\}/,
-      "$1 ${{ jobs.build.outputs.credential-island-macos-manifest-artifact }}",
+      /(      credential-island-macos-manifest-artifact:\n(?:        .*\n)*?        value:) \$\{\{ jobs\.alpha\.outputs\.manifest-artifact-name \|\| jobs\.stable\.outputs\.manifest-artifact-name \}\}/,
+      "$1 ${{ jobs.alpha.outputs.credential-island-macos-manifest-artifact || jobs.stable.outputs.credential-island-macos-manifest-artifact }}",
     );
   return [
     "      buildchain-channel:",
-    '        description: "Resolved Buildchain channel: alpha, stable, or override"',
+    '        description: "Resolved Buildchain channel: alpha or stable"',
     "        value: ${{ jobs.resolve-channel.outputs.channel }}",
     "      buildchain-channel-selection-source:",
     '        description: "Evidence source used to select the Buildchain channel"',
@@ -154,7 +154,8 @@ function routerControllerReceiptJob() {
     needs:
       - resolve-channel
       - controller-plan
-      - build
+      - alpha
+      - stable
     if: \${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: \${{ fromJSON(inputs.control-runner-json) }}
     outputs:
@@ -183,9 +184,9 @@ function routerControllerReceiptJob() {
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-channel","status":"\${{ needs.resolve-channel.result }}"},{"id":"build","status":"\${{ needs.build.result }}"},{"id":"aggregate","status":"\${{ needs.build.result }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_JSON: \${{ needs.build.outputs.controller-receipt-digest != '' && format('[{{"kind":"nested-controller-receipt","digest":"{0}"}}]', needs.build.outputs.controller-receipt-digest) || '[]' }}
-          BUILDCHAIN_CONTROLLER_REASON_CODE: \${{ needs.build.result == 'success' && '' || 'nested-build-incomplete' }}
+            [{"id":"resolve-channel","status":"\${{ needs.resolve-channel.result }}"},{"id":"alpha","status":"\${{ needs.alpha.result }}"},{"id":"stable","status":"\${{ needs.stable.result }}"},{"id":"aggregate","status":"\${{ needs.resolve-channel.outputs.channel == 'alpha' && needs.alpha.result || needs.stable.result }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_JSON: \${{ (needs.alpha.outputs.controller-receipt-digest != '' || needs.stable.outputs.controller-receipt-digest != '') && format('[{{"kind":"nested-controller-receipt","digest":"{0}"}}]', needs.alpha.outputs.controller-receipt-digest || needs.stable.outputs.controller-receipt-digest) || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: \${{ ((needs.resolve-channel.outputs.channel == 'alpha' && needs.alpha.result == 'success') || (needs.resolve-channel.outputs.channel == 'stable' && needs.stable.result == 'success')) && '' || 'nested-build-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Nested build controller did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-channel-controller-receipt-\${{ github.sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
@@ -215,7 +216,9 @@ function routerAggregateJob() {
   return `  summarize:
     name: Summarize build contract
     needs:
-      - build
+      - resolve-channel
+      - alpha
+      - stable
       - controller-receipt
     if: \${{ always() }}
     runs-on: \${{ fromJSON(inputs.control-runner-json) }}
@@ -223,12 +226,16 @@ function routerAggregateJob() {
       - name: Enforce public channel router aggregate
         shell: bash
         env:
-          BUILD_RESULT: \${{ needs.build.result }}
+          CHANNEL: \${{ needs.resolve-channel.outputs.channel }}
+          ALPHA_RESULT: \${{ needs.alpha.result }}
+          STABLE_RESULT: \${{ needs.stable.result }}
           CONTROLLER_RECEIPT_RESULT: \${{ needs.controller-receipt.result }}
         run: |
           set -euo pipefail
-          if [[ "\${BUILD_RESULT}" != "success" || "\${CONTROLLER_RECEIPT_RESULT}" != "success" ]]; then
-            echo "::error::Buildchain channel router did not qualify: build=\${BUILD_RESULT} controller-receipt=\${CONTROLLER_RECEIPT_RESULT}"
+          selected_result="\${STABLE_RESULT}"
+          if [[ "\${CHANNEL}" = "alpha" ]]; then selected_result="\${ALPHA_RESULT}"; fi
+          if [[ "\${selected_result}" != "success" || "\${CONTROLLER_RECEIPT_RESULT}" != "success" ]]; then
+            echo "::error::Buildchain channel router did not qualify: channel=\${CHANNEL} selected=\${selected_result} controller-receipt=\${CONTROLLER_RECEIPT_RESULT}"
             exit 1
           fi
           echo "Buildchain channel router aggregate passed."`;
@@ -243,6 +250,47 @@ function generateChannelBuildWorkflowBase(source) {
     throw new Error("source build workflow is missing channel-router inputs");
   }
   return `# Generated by scripts/generate-channel-build-workflow.mjs. Do not edit directly.\nname: Buildchain Channel Build\n\non:\n  workflow_call:\n    inputs:\n${routerInputs(inputs)}\n    secrets:\n${secrets.trimEnd()}\n    outputs:\n${routerOutputs(outputs)}\n\npermissions:\n  contents: read\n  issues: write\n  id-token: write\n\njobs:\n  resolve-channel:\n    name: Resolve Buildchain channel\n    runs-on: ubuntu-24.04\n    outputs:\n      channel: \${{ steps.channel.outputs.channel }}\n      buildchain-ref: \${{ steps.channel.outputs.buildchain-ref }}\n      contract-lock-path: \${{ steps.lock.outputs.path }}\n      selection-source: \${{ steps.channel.outputs.selection-source }}\n      reason: \${{ steps.channel.outputs.reason }}\n    steps:\n      - name: Resolve router source\n        id: router\n        shell: bash\n        env:\n          BUILDCHAIN_ROUTER_WORKFLOW_REF: \${{ job.workflow_ref }}\n        run: |\n          set -euo pipefail\n          workflow_ref=\"\${BUILDCHAIN_ROUTER_WORKFLOW_REF}\"\n          repository=\"\${workflow_ref%%/.github/workflows/*}\"\n          ref=\"\${workflow_ref##*@}\"\n          ref=\"\${ref#refs/heads/}\"\n          ref=\"\${ref#refs/tags/}\"\n          if [[ -z \"\${repository}\" || \"\${repository}\" = \"\${workflow_ref}\" || -z \"\${ref}\" ]]; then\n            echo \"Unable to resolve Buildchain router source from job.workflow_ref=\${workflow_ref}\" >&2\n            exit 1\n          fi\n          {\n            echo \"repository=\${repository}\"\n            echo \"ref=\${ref}\"\n          } >> \"\${GITHUB_OUTPUT}\"\n\n      - name: Checkout Buildchain router\n        uses: actions/checkout@v7.0.0\n        with:\n          repository: \${{ steps.router.outputs.repository }}\n          ref: \${{ steps.router.outputs.ref }}\n          path: .buildchain/router\n          persist-credentials: false\n\n      - name: Resolve channel\n        id: channel\n        shell: bash\n        env:\n          BUILDCHAIN_CHANNEL: \${{ inputs.buildchain-channel }}\n          BUILDCHAIN_REQUESTED_REF: \${{ inputs.buildchain-ref }}\n          BUILDCHAIN_PUBLISH_CHANNEL: \${{ inputs.publish-channel }}\n          BUILDCHAIN_EVENT_NAME: \${{ github.event_name }}\n          BUILDCHAIN_GIT_REF: \${{ github.ref }}\n          BUILDCHAIN_RELEASE_PRERELEASE: \${{ github.event.release.prerelease }}\n          BUILDCHAIN_ROUTER_REF: \${{ steps.router.outputs.ref }}\n        run: |\n          node .buildchain/router/scripts/buildchain-channel-router.mjs \\\n            --cwd .buildchain/router \\\n            --channel \"\${BUILDCHAIN_CHANNEL}\" \\\n            --buildchain-ref \"\${BUILDCHAIN_REQUESTED_REF}\" \\\n            --publish-channel \"\${BUILDCHAIN_PUBLISH_CHANNEL}\" \\\n            --event-name \"\${BUILDCHAIN_EVENT_NAME}\" \\\n            --ref \"\${BUILDCHAIN_GIT_REF}\" \\\n            --release-prerelease \"\${BUILDCHAIN_RELEASE_PRERELEASE}\" \\\n            --router-ref \"\${BUILDCHAIN_ROUTER_REF}\"\n\n      - name: Select consumer contract lock\n        id: lock\n        shell: bash\n        env:\n          EXPLICIT_PATH: \${{ inputs.buildchain-contract-lock-path }}\n          ALPHA_PATH: \${{ inputs.buildchain-alpha-contract-lock-path }}\n          STABLE_PATH: \${{ inputs.buildchain-stable-contract-lock-path }}\n          CHANNEL: \${{ steps.channel.outputs.channel }}\n        run: |\n          set -euo pipefail\n          path=\"\${EXPLICIT_PATH}\"\n          if [[ -z \"\${path}\" ]]; then\n            if [[ \"\${CHANNEL}\" = \"alpha\" ]]; then\n              path=\"\${ALPHA_PATH}\"\n            else\n              path=\"\${STABLE_PATH}\"\n            fi\n          fi\n          echo \"path=\${path}\" >> \"\${GITHUB_OUTPUT}\"\n\n  build:\n    name: Build with resolved channel\n    needs: resolve-channel\n    uses: ./.github/workflows/.build.yml\n    permissions:\n      contents: read\n      issues: write\n      id-token: write\n    with:\n${forwardedInputs(names)}\n    secrets: inherit\n`;
+}
+
+function splitBuildJobsByChannel(workflow, names, major) {
+  const marker = "\n  build:\n";
+  const index = workflow.indexOf(marker);
+  if (index < 0) throw new Error("generated workflow is missing the build job");
+  const inputs = forwardedInputs(names);
+  const jobs = `
+  alpha:
+    name: Build alpha channel
+    needs:
+      - resolve-channel
+      - controller-plan
+    if: \${{ needs.resolve-channel.outputs.channel == 'alpha' }}
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v${major}-alpha
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      id-token: write
+    with:
+${inputs}
+    secrets: inherit
+
+  stable:
+    name: Build stable channel
+    needs:
+      - resolve-channel
+      - controller-plan
+    if: \${{ needs.resolve-channel.outputs.channel == 'stable' }}
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v${major}
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      id-token: write
+    with:
+${inputs}
+    secrets: inherit
+`;
+  return `${workflow.slice(0, index)}${jobs}`;
 }
 
 function bindRouterCheckoutToWorkflowSha(workflow) {
@@ -294,7 +342,14 @@ function bindRouterCheckoutToWorkflowSha(workflow) {
 }
 
 export function generateChannelBuildWorkflow(source) {
-  const generated = bindRouterCheckoutToWorkflowSha(generateChannelBuildWorkflowBase(source))
+  const inputBlock = blockBetween(source, "    inputs:\n", "    secrets:\n");
+  const names = inputNames(inputBlock);
+  const packageVersion = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version || "";
+  const major = Number(String(packageVersion).split(".")[0]);
+  if (!Number.isInteger(major) || major < 1) throw new Error("package.json version must declare a positive major");
+  const generated = bindRouterCheckoutToWorkflowSha(
+    splitBuildJobsByChannel(generateChannelBuildWorkflowBase(source), names, major),
+  )
     .replaceAll("runs-on: ubuntu-24.04", "runs-on: ${{ fromJSON(inputs.control-runner-json) }}")
     .replace(
       "\npermissions:\n  contents: read\n",
@@ -310,15 +365,7 @@ export function generateChannelBuildWorkflow(source) {
         "",
       ].join("\n"),
     )
-    .replace("\n  build:\n", `\n${routerControllerPlanJob()}\n\n  build:\n`)
-    .replace(
-      "    needs: resolve-channel\n    uses: ./.github/workflows/.build.yml",
-      "    needs:\n      - resolve-channel\n      - controller-plan\n    uses: ./.github/workflows/.build.yml",
-    )
-    .replace(
-      "    uses: ./.github/workflows/.build.yml\n    permissions:\n      contents: read\n",
-      "    uses: ./.github/workflows/.build.yml\n    permissions:\n      actions: read\n      contents: read\n",
-    );
+    .replace("\n  alpha:\n", `\n${routerControllerPlanJob()}\n\n  alpha:\n`);
   return `${generated.trimEnd()}\n\n${routerControllerReceiptJob()}\n\n${routerAggregateJob()}\n`;
 }
 

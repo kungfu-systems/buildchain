@@ -22,10 +22,10 @@ test("internal architecture index covers implementations, tests, and dependency 
     schemaVersion: 1,
     capabilities: 17,
     implementations: 54,
-    repositorySources: 299,
-    ownedSources: 299,
+    repositorySources: 300,
+    ownedSources: 300,
     excludedSources: 0,
-    dependencyEdges: 242,
+    dependencyEdges: 245,
     dependencyRules: 4,
     dependencyCycles: 0,
   });

@@ -242,7 +242,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ebe9bb71cb45e59135d6c9ec3afd036eb8f67c8c9e3b41b0039add6c0757eae0"
+      "digest": "sha256:bbef23e4f489376f759e5678d61e2f07c69dfa5542f5538e14c68a0714233ea3"
     },
     {
       "id": "build-facts",
@@ -282,7 +282,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7f69bf3faf8c86b4af268f8e79d511f73de745e146a23809394074f816a372d7"
+      "digest": "sha256:8868acbf7942b0d8e5101203a4ab98b984028b90e0584ea131e1d9b0253e4344"
     },
     {
       "id": "publish-transaction",
@@ -338,7 +338,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1a4ce3fc2c150f88bc4d32123a108478ba5d73d0d69b8a95bf0d6670e32618a0"
+      "digest": "sha256:f0a1cdb7fe5f72fc2ed921f1aeadbd16184dda16be3727e4193fa2af250325db"
     },
     {
       "id": "versioning",
