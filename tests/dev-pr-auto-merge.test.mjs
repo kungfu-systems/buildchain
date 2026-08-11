@@ -964,7 +964,7 @@ test("exact active Warrant authorizes only its bound PR head", async () => {
 });
 
 test("exact active Warrant remains valid across fenced delivery progress states", async () => {
-  for (const status of ["proving", "waiting", "blocked"]) {
+  for (const status of ["proving", "waiting", "blocked", "qualified"]) {
     await withWarrantResult({}, async (resultPath, warrantResult) => {
       const target = pr({ number: 21, headSha: exactHead });
       const fake = client({

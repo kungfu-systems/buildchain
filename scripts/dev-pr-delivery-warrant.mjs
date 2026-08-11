@@ -152,7 +152,7 @@ export async function verifyCurrentDeliveryWarrant(client, options, pullRequest,
   requireMatch(Number(active?.generation) === Number(warrant.generation), "delivery-warrant-current-generation-mismatch");
   requireMatch(Number(active?.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-current-pr-mismatch");
   requireMatch(String(active?.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-current-head-mismatch");
-  requireMatch(["selected", "proving", "waiting", "blocked"].includes(candidate?.status), "delivery-warrant-current-candidate-not-selected");
+  requireMatch(["selected", "proving", "waiting", "blocked", "qualified"].includes(candidate?.status), "delivery-warrant-current-candidate-not-selected");
   requireMatch(candidate?.sourceHead === active.sourceHead, "delivery-warrant-current-candidate-head-mismatch");
 }
 
