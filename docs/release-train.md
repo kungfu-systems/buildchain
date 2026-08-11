@@ -100,6 +100,30 @@ single rooted observation. Candidate, tree, base, runtime, or route drift emits
 a rooted hold and stops settlement. Only a validated train already carrying an
 enumerated `superseded` transition is reported as superseded.
 
+## Buildchain self-dogfood campaign
+
+Buildchain qualifies the complete v3 mechanism with
+`scripts/release-train-self-dogfood.mjs`. The campaign composes one frozen
+Release Cut, moving-dev observation, deterministic failed build, successor
+repair, cut/dev patch-root settlement, publication gate, and bounded Delivery
+Warrant priority. It also proves that an active Warrant is not preempted and
+that duplicate events, invalid authority, and unrelated priority claims fail
+closed.
+
+The command accepts an exact evidence input and emits a replayable rooted
+report:
+
+```sh
+node scripts/release-train-self-dogfood.mjs \
+  --input /path/to/exact-protected-delivery.json \
+  --output /tmp/buildchain-release-train-self-dogfood.json
+```
+
+A passing report requires a merged protected PR, exact-head approval,
+merge-group CI success, tree-equivalent merge readback, artifact evidence, and
+installed-product evidence. Synthetic or unit-only evidence is useful for
+negative tests but is not sufficient for release qualification.
+
 ## Readback and legacy state
 
 `validateReleaseCut()` checks the standalone immutable cut and its canonical
