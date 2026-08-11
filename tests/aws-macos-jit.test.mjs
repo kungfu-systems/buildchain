@@ -205,6 +205,10 @@ test("macOS stack and bootstrap enforce one-host JIT cleanup and no ingress", ()
   assert.match(bootstrap, /export PATH="\$RunnerPath"/);
   assert.match(
     bootstrap,
+    /install -d -o "\$RunnerUser" -g staff -m 700 "\$RunnerBase"/,
+  );
+  assert.match(
+    bootstrap,
     /sudo -u "\$RunnerUser" -H env \\\n\s+PATH="\$RunnerPath"/,
   );
   assert.match(bootstrap, /aws ssm get-parameter/);
