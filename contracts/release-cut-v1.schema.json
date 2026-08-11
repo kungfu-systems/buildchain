@@ -49,6 +49,7 @@
           "properties": {
             "cause": {
               "enum": [
+                "release-blocker-repair",
                 "incompatible-semantics",
                 "alpha-base-incompatibility",
                 "invalid-authority",
