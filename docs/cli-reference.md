@@ -299,7 +299,18 @@ buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof classify-native`
+
+- Help: `buildchain dev proof classify-native --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof integration`
@@ -310,7 +321,18 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof native`
+
+- Help: `buildchain dev proof native --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof replay`
@@ -321,7 +343,7 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof source`
@@ -332,7 +354,7 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof verify-integration`
@@ -343,7 +365,29 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof verify-native`
+
+- Help: `buildchain dev proof verify-native --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof verify-native-reuse`
+
+- Help: `buildchain dev proof verify-native-reuse --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof verify-source`
@@ -354,7 +398,18 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev two-phase`
+
+- Help: `buildchain dev two-phase --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--expected-head`, `--native-command`, `--native-proof`, `--pull-request`, `--repository`, `--warrant-result`
+- Syntax:
+
+```text
+buildchain dev two-phase --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> --warrant-result <file> [--native-proof <file>] [--native-command <command>]
 ```
 
 ### `buildchain dev warrant cancel-queued`
@@ -365,7 +420,7 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant close`
@@ -376,7 +431,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant heartbeat`
@@ -387,7 +442,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant observe`
@@ -398,7 +453,18 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant qualify`
+
+- Help: `buildchain dev warrant qualify --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant recover`
@@ -409,7 +475,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant select`
@@ -420,7 +486,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant submit`
@@ -431,7 +497,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ## `diagnostics`

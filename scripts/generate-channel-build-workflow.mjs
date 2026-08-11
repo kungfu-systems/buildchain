@@ -46,6 +46,10 @@ function routerInputs(inputBlock) {
 
 function routerOutputs(outputBlock) {
   const forwarded = outputBlock
+    .replace(
+      /^        value: \$\{\{ jobs\.[^.]+\.outputs\.([a-z0-9-]+) \|\| jobs\.[^.]+\.outputs\.\1 \}\}$/gm,
+      "        value: ${{ jobs.alpha.outputs.$1 || jobs.stable.outputs.$1 }}",
+    )
     .replace(/^        value: \$\{\{ jobs\.[^.]+\.outputs\.([^ }]+) \}\}$/gm, "        value: ${{ jobs.alpha.outputs.$1 || jobs.stable.outputs.$1 }}")
     .replaceAll("build-lifecycle", "build-channel-router")
     .replace("value: ${{ jobs.alpha.outputs.controller-plan-artifact || jobs.stable.outputs.controller-plan-artifact }}", "value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}")

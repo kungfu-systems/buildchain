@@ -4946,6 +4946,202 @@
       ]
     },
     {
+      "id": "packages/core/dev-delivery-native-proof.js#createNativeProofReuseDecision",
+      "name": "createNativeProofReuseDecision",
+      "kind": "function",
+      "signature": "function createNativeProofReuseDecision({ proof, current = {} } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ proof, current = {} } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 205
+      },
+      "example": "import { createNativeProofReuseDecision } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-native-proof.js#createNativeQualificationProof",
+      "name": "createNativeQualificationProof",
+      "kind": "function",
+      "signature": "function createNativeQualificationProof(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 55
+      },
+      "example": "import { createNativeQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-native-proof.js#DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA",
+      "name": "DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA",
+      "kind": "constant",
+      "signature": "const DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 16
+      },
+      "example": "import { DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-native-proof.js#NATIVE_PROOF_REUSE_DECISION_SCHEMA",
+      "name": "NATIVE_PROOF_REUSE_DECISION_SCHEMA",
+      "kind": "constant",
+      "signature": "const NATIVE_PROOF_REUSE_DECISION_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 14
+      },
+      "example": "import { NATIVE_PROOF_REUSE_DECISION_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-native-proof.js#NATIVE_QUALIFICATION_PROOF_SCHEMA",
+      "name": "NATIVE_QUALIFICATION_PROOF_SCHEMA",
+      "kind": "constant",
+      "signature": "const NATIVE_QUALIFICATION_PROOF_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 12
+      },
+      "example": "import { NATIVE_QUALIFICATION_PROOF_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-native-proof.js#verifyNativeProofReuseDecision",
+      "name": "verifyNativeProofReuseDecision",
+      "kind": "function",
+      "signature": "function verifyNativeProofReuseDecision(decisionInput, { proof, current = {} } = {})",
+      "parameters": [
+        {
+          "name": "decisionInput",
+          "signature": "decisionInput"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ proof, current = {} } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 209
+      },
+      "example": "import { verifyNativeProofReuseDecision } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-native-proof.js#verifyNativeQualificationProof",
+      "name": "verifyNativeQualificationProof",
+      "kind": "function",
+      "signature": "function verifyNativeQualificationProof(proofInput, expected = {})",
+      "parameters": [
+        {
+          "name": "proofInput",
+          "signature": "proofInput"
+        },
+        {
+          "name": "expected",
+          "signature": "expected = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 85
+      },
+      "example": "import { verifyNativeQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/dev-delivery-proof.js#classifyDevDeliveryDelta",
       "name": "classifyDevDeliveryDelta",
       "kind": "function",
@@ -5289,7 +5485,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 579
+        "line": 600
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5326,7 +5522,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 531
+        "line": 552
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5355,7 +5551,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 100
+        "line": 106
       },
       "example": "import { createDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5403,7 +5599,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 22
+        "line": 24
       },
       "example": "import { DEV_DELIVERY_CLASSES } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5427,7 +5623,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 14
+        "line": 16
       },
       "example": "import { DEV_DELIVERY_LEASE_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5451,7 +5647,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 16
+        "line": 18
       },
       "example": "import { DEV_DELIVERY_PRIORITIES } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5475,7 +5671,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 10
+        "line": 12
       },
       "example": "import { DEV_DELIVERY_QUEUE_CONTRACT } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5499,7 +5695,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 13
+        "line": 15
       },
       "example": "import { DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5547,7 +5743,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 12
+        "line": 14
       },
       "example": "import { DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5571,7 +5767,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 11
+        "line": 13
       },
       "example": "import { DEV_DELIVERY_WARRANT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5608,7 +5804,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 448
+        "line": 467
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5641,7 +5837,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 115
+        "line": 121
       },
       "example": "import { normalizeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5674,9 +5870,46 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 582
+        "line": 603
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-warrant.js#qualifyDevDeliveryWarrant",
+      "name": "qualifyDevDeliveryWarrant",
+      "kind": "function",
+      "signature": "function qualifyDevDeliveryWarrant(queueInput, warrant, options)",
+      "parameters": [
+        {
+          "name": "queueInput",
+          "signature": "queueInput"
+        },
+        {
+          "name": "warrant",
+          "signature": "warrant"
+        },
+        {
+          "name": "options",
+          "signature": "options"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-warrant.js",
+        "line": 501
+      },
+      "example": "import { qualifyDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -5707,7 +5940,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 285
+        "line": 302
       },
       "example": "import { rankDevDeliveryCandidates } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5740,7 +5973,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 481
+        "line": 502
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5773,7 +6006,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 309
+        "line": 326
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5797,7 +6030,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 580
+        "line": 601
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5834,7 +6067,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 201
+        "line": 216
       },
       "example": "import { submitDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -23745,20 +23978,22 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:a002358b4c13b8859340e4427d489ce8c77f738ed64d560b964d8aacc03cdeea",
+      "digest": "sha256:8d354aa31faf225201b9adb04ff7ca7fc26984b89b47dd60ac1f8c696a3b4347",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 34,
+      "symbolCount": 42,
       "symbolIds": [
         "packages/core/dev-delivery-warrant.js#cancelQueuedDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#classifyDevDeliveryDelta",
         "packages/core/dev-delivery-warrant.js#closeDevDeliveryWarrant",
         "packages/core/dev-delivery-warrant.js#createDevDeliveryQueue",
         "packages/core/dev-delivery-proof.js#createIntegrationDeliveryProof",
+        "packages/core/dev-delivery-native-proof.js#createNativeProofReuseDecision",
+        "packages/core/dev-delivery-native-proof.js#createNativeQualificationProof",
         "packages/core/dev-delivery-proof.js#createProjectCutReplayPlan",
         "packages/core/dev-delivery-proof.js#createProjectCutReplayProof",
         "packages/core/release-blocker-priority.js#createReleaseBlockerPriorityClaim",
@@ -23767,6 +24002,7 @@
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CLASSES",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_LEASE_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_PRIORITIES",
+        "packages/core/dev-delivery-native-proof.js#DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_QUEUE_CONTRACT",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA",
@@ -23775,9 +24011,12 @@
         "packages/core/dev-delivery-common.js#devDeliveryContentRoot",
         "packages/core/dev-delivery-warrant.js#heartbeatDevDeliveryWarrant",
         "packages/core/dev-delivery-proof.js#INTEGRATION_DELIVERY_PROOF_SCHEMA",
+        "packages/core/dev-delivery-native-proof.js#NATIVE_PROOF_REUSE_DECISION_SCHEMA",
+        "packages/core/dev-delivery-native-proof.js#NATIVE_QUALIFICATION_PROOF_SCHEMA",
         "packages/core/dev-delivery-warrant.js#normalizeDevDeliveryQueue",
         "packages/core/dev-delivery-warrant.js#observeDevDeliveryQueue",
         "packages/core/dev-delivery-proof.js#PROJECT_CUT_REPLAY_PROOF_SCHEMA",
+        "packages/core/dev-delivery-warrant.js#qualifyDevDeliveryWarrant",
         "packages/core/dev-delivery-warrant.js#rankDevDeliveryCandidates",
         "packages/core/dev-delivery-warrant.js#recoverExpiredDevDeliveryWarrant",
         "packages/core/release-blocker-priority.js#RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA",
@@ -23786,6 +24025,8 @@
         "packages/core/dev-delivery-proof.js#SOURCE_QUALIFICATION_PROOF_SCHEMA",
         "packages/core/dev-delivery-warrant.js#submitDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#verifyIntegrationDeliveryProof",
+        "packages/core/dev-delivery-native-proof.js#verifyNativeProofReuseDecision",
+        "packages/core/dev-delivery-native-proof.js#verifyNativeQualificationProof",
         "packages/core/dev-delivery-proof.js#verifyProjectCutReplayProof",
         "packages/core/dev-delivery-proof.js#verifySourceQualificationProof"
       ],
@@ -25298,7 +25539,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:59eca91b679a4f645a2ffca59510e21eb6347b9260823cd29aed5fc511d1ad10"
+      "digest": "sha256:4663cf32a0116a8605e7b8a475fc4b38e02b81ca21af59e49be0043f3eb99a02"
     },
     {
       "id": "build-facts",
