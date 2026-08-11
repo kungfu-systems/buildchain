@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 295,
-    "maxHandMaintainedSourceLines": 115519,
+    "maxHandMaintainedSourceFiles": 296,
+    "maxHandMaintainedSourceLines": 115910,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23298,
-    "latestTransition": "An allocated but unused macOS campaign may advance to one reviewed descendant source without purchasing a second Dedicated Host.",
-    "rationale": "The source-rebind controller is isolated from launch and job execution. It requires the exact workload account, disabled workflow, complete regional stack, USD 25 Budget and notifications, strict same-ref descendant source, exact one-host and one-instance ownership, one encrypted volume, zero prior jobs and artifacts, zero registered runners, zero JIT parameters, and zero old or new source evidence. It changes only the three existing source tags and the campaign ref, compensates failures back to the prior source, and contains no allocation or dispatch path. Existing debt shrinks or remains fixed; these exact combined repository ceilings cannot grow implicitly."
+    "latestTransition": "The Buildchain v3 KFD adopter gate consumes one standard full-cut manifest authority and projects the legacy support matrix from it.",
+    "rationale": "The new bounded adopter-manifest module verifies the exact published KFD package cut, complete registry rows, Buildchain KFD-1/2/3/4/5/7 evidence, the KFD-10 Warrant witness, and KFD-4/5/7 product-gate roots before deriving any compatibility matrix. Root, row, package, gate, and witness substitutions fail closed; declaration, release, runtime, and certification authority remain separate. Existing file debt is unchanged, and these exact combined repository ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/kfd-adopter-manifest.js": {
+      "maxLines": 390,
+      "rationale": "The package-only adapter keeps published KFD verification, Buildchain-specific evidence constraints, decision and gate roots, and the one-way legacy projection in one bounded public authority seam. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/engineering-housekeeper-github.js": {
       "maxLines": 707,
       "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."
