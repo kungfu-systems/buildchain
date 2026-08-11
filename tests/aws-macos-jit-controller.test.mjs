@@ -203,6 +203,7 @@ test("macOS failed source rebind binds the exact terminal run inventory", () => 
   assert.equal(plan.safety.zeroPriorJobsRequired, false);
   assert.equal(plan.safety.zeroPriorArtifactsRequired, false);
   assert.equal(plan.safety.terminalFailureEvidencePreserved, true);
+  assert.deepEqual(plan.github.startupFailureRuns, []);
   assert.throws(
     () =>
       sourceRebindPlan({
@@ -211,6 +212,23 @@ test("macOS failed source rebind binds the exact terminal run inventory", () => 
       }),
     /terminalFailureRunIds must be a non-empty array/,
   );
+  const startupPlan = sourceRebindPlan({
+    priorRunPolicy: "terminal-failure",
+    terminalFailureRunIds: ["30720000001"],
+    startupFailureRuns: [
+      {
+        runId: "30710000001",
+        sourceSha: "e60591b3565b3b75f1b9cfe402ab025e6beeb677",
+      },
+    ],
+  });
+  assert.deepEqual(startupPlan.github.startupFailureRuns, [
+    {
+      runId: "30710000001",
+      sourceSha: "e60591b3565b3b75f1b9cfe402ab025e6beeb677",
+    },
+  ]);
+  assert.equal(startupPlan.safety.startupFailureEvidencePreserved, true);
 });
 
 test("macOS AllocateHosts binds one host while RunInstances enforces DryRun and stop reuse", () => {
@@ -292,7 +310,9 @@ if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
   process.stdout.write(JSON.stringify({ object: { sha: refWasUpdated ? "a60591b3565b3b75f1b9cfe402ab025e6beeb679" : "f60591b3565b3b75f1b9cfe402ab025e6beeb678" } }));
 } else if (joined.includes("actions/workflows/323846928")) {
   if (joined.includes("/runs?")) {
-    process.stdout.write(JSON.stringify({ workflow_runs: [{ id: 30720000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: process.env.FAKE_TERMINAL_FAILURE === "true" ? "failure" : "startup_failure" }] }));
+    const workflow_runs = [{ id: 30720000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: process.env.FAKE_TERMINAL_FAILURE === "true" ? "failure" : "startup_failure" }];
+    if (process.env.FAKE_STARTUP_FAILURE === "true") workflow_runs.push({ id: 30710000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "e60591b3565b3b75f1b9cfe402ab025e6beeb677", status: "completed", conclusion: "startup_failure" });
+    process.stdout.write(JSON.stringify({ total_count: workflow_runs.length, workflow_runs }));
   } else {
     process.stdout.write(JSON.stringify({ id: 323846928, state: process.env.FAKE_WORKFLOW_ENABLED === "true" ? "active" : "disabled_manually" }));
   }
@@ -302,6 +322,10 @@ if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
 } else if (joined.includes("actions/runs/30720000001/artifacts")) {
   const artifacts = process.env.FAKE_TERMINAL_FAILURE === "true" ? [{ id: 11, name: "macos-failure-evidence", size_in_bytes: 128, digest: "sha256:abc", expired: false }] : [];
   process.stdout.write(JSON.stringify({ total_count: artifacts.length, artifacts }));
+} else if (joined.includes("actions/runs/30710000001/jobs")) {
+  process.stdout.write(JSON.stringify({ total_count: 0, jobs: [] }));
+} else if (joined.includes("actions/runs/30710000001/artifacts")) {
+  process.stdout.write(JSON.stringify({ total_count: 0, artifacts: [] }));
 } else if (joined.includes("actions/runs/30730000001")) {
   process.stdout.write(JSON.stringify({ event: "workflow_dispatch", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
 } else if (joined.includes("actions/jobs/91450000001")) {
@@ -614,6 +638,14 @@ function runRebindWithFakes(extraEnv = {}, afterFailure = false) {
             '["30720000001"]',
             "--confirm-terminal-failure-run-ids-json",
             '["30720000001"]',
+            ...(extraEnv.FAKE_STARTUP_FAILURE === "true"
+              ? [
+                  "--startup-failure-runs-json",
+                  '[{"runId":"30710000001","sourceSha":"e60591b3565b3b75f1b9cfe402ab025e6beeb677"}]',
+                  "--confirm-startup-failure-runs-json",
+                  '[{"runId":"30710000001","sourceSha":"e60591b3565b3b75f1b9cfe402ab025e6beeb677"}]',
+                ]
+              : []),
           ]
         : []),
       ...cliArgs,
@@ -703,6 +735,36 @@ test("macOS controller rebinds only after the exact terminal failed run evidence
     );
     assert.equal(
       commands.some((entry) => entry.args.includes("run-instances")),
+      false,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS controller preserves an explicitly bound non-counting startup failure", () => {
+  const { tempRoot, result, commands } = runRebindWithFakes(
+    { FAKE_TERMINAL_FAILURE: "true", FAKE_STARTUP_FAILURE: "true" },
+    true,
+  );
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    const output = JSON.parse(result.stdout);
+    const startup = output.preflight.priorRuns.find(
+      ({ classification }) => classification === "startup-failure",
+    );
+    assert.deepEqual(startup, {
+      runId: "30710000001",
+      sourceSha: "e60591b3565b3b75f1b9cfe402ab025e6beeb677",
+      classification: "startup-failure",
+      status: "completed",
+      conclusion: "startup_failure",
+      jobCount: 0,
+      artifactCount: 0,
+      artifacts: [],
+    });
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
       false,
     );
   } finally {
