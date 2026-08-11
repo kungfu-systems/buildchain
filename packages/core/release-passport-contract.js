@@ -414,7 +414,7 @@ export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], c
   }
   const manifestGate = createKfdAdopterManifestGate({
     manifest, packageArtifactRoot: installedKfdPackageArtifactRoot(), gateResults,
-    expectedSourceSha: sourceSha, checkedAt,
+    authorityPath: "kfd-adopter-manifest.json", expectedSourceSha: sourceSha, checkedAt,
   });
   const legacyProjection = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
   if (comparisonMatrix) {
