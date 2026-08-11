@@ -499,7 +499,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/Publish signing finalization delegation/g) || []).length, 1);
   assert.match(workflow, /artifact-signing-control:[\s\S]*?runs-on: ubuntu-24\.04/);
   assert.match(workflow, /artifact-signing-control:[\s\S]*?needs:[\s\S]*?- build-native[\s\S]*?- build-linux-container/);
-  assert.match(workflow, /finalize-artifact-signing:[\s\S]*?runs-on: ubuntu-24\.04/);
+  assert.match(
+    workflow,
+    /finalize-artifact-signing:[\s\S]*?runs-on: \$\{\{ matrix\.platform\.platform == 'macos' && 'macos-15' \|\| 'ubuntu-24\.04' \}\}/,
+  );
   assert.match(workflow, /needs\.artifact-signing-control\.result == 'success'/);
   assert.match(workflow, /needs\.finalize-artifact-signing\.result == 'success'/);
   assert.equal(
