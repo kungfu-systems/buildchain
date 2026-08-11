@@ -105,13 +105,13 @@
     },
     "github_release": {
       "status": "complete",
-      "action": "applied-and-observed",
+      "action": "observed-existing",
       "tag": "v3.0.8-alpha.0",
       "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.8-alpha.0",
-      "assetCount": 9
+      "assetCount": 31
     }
   },
   "resume_command": "buildchain paper resume --version \"3.0.8-alpha.0\" --state-ref \"refs/heads/buildchain/release-state/3-0-8-alpha-0\"",
   "created_at": "2026-08-11T00:11:00.731Z",
-  "updated_at": "2026-08-11T02:05:30.150Z"
+  "updated_at": "2026-08-11T02:06:10.148Z"
 }
