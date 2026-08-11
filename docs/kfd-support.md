@@ -45,9 +45,8 @@ buildchain kfd 4 schema --json
 buildchain kfd 4 gate --input-json kfd-4-gate-input.json --json
 buildchain kfd 5 gate --input-json kfd-5-gate-input.json --json
 buildchain kfd 7 gate --input-json kfd-7-gate-input.json --json
-buildchain kfd support project --matrix-json support-matrix.json \
-  --gate-json kfd-4-gate.json --gate-json kfd-5-gate.json \
-  --gate-json kfd-7-gate.json --json
+buildchain kfd support project --manifest-json adopter-manifest.json \
+  --manifest-gate-json adopter-manifest-gate.json --json
 ```
 
 KFD-1, KFD-2, and KFD-3 have concrete Buildchain workflows. KFD-4, KFD-5, and
@@ -75,10 +74,11 @@ KFD records and evidence by SHA-256. The result uses
 - KFD-7 requires a qualified and activated Domain Profile, independent review,
   product witnesses, all 13 evidence obligations, and negative evidence.
 
-`buildchain kfd support project` joins the three gate results with the
-product-owned KFD-1..13 matrix. It rejects normative metadata drift, source or
-freshness mismatch, gate/matrix disagreement, KFD-4/5 candidate widening,
-KFD-6 support, KFD-8..13 promotion, or any unsupported shipped-support claim.
+`buildchain kfd support project` derives a compatibility projection from the
+standard adopter manifest and its exact passing gate. The adopter manifest is
+the sole KFD-1..13 declaration authority; the command rejects stale package,
+source, witness, registry, verifier-set, and KFD-4/5/7 gate roots. The emitted
+matrix is not an independent declaration and cannot widen adopter claims.
 
 ## KFD-1
 

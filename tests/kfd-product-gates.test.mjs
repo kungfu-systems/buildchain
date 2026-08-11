@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -9,11 +10,9 @@ import test from "node:test";
 import {
   KFD_PRODUCT_GATE_CONTRACT,
   KFD_PRODUCT_GATE_INPUT_CONTRACT,
-  createKfdSupportProjection,
   evaluateKfdProductGate,
   kfdProductGateDigest,
   validateKfdProductGateResult,
-  validateKfdSupportProjection,
   verifyKfdRecord,
 } from "../packages/core/kfd-product-gates.js";
 import {
@@ -229,58 +228,6 @@ async function passingGate(cwd, standard) {
   });
 }
 
-function supportMatrix(gates) {
-  const byStandard = new Map(gates.map((gate) => [gate.standard, gate]));
-  const standardsSha256 =
-    `sha256:${crypto.createHash("sha256").update(fs.readFileSync(standardsPath)).digest("hex")}`;
-  return {
-    schemaVersion: 1,
-    contract: "kungfu-kfd-support-matrix",
-    authority: { path: ".buildchain/kfd/support-matrix.json" },
-    upstream: {
-      package: "@kungfu-tech/kfd",
-      version: require("@kungfu-tech/kfd/package.json").version,
-      standardsSha256,
-    },
-    rows: Array.from({ length: 13 }, (_, index) => {
-      const number = index + 1;
-      const id = `KFD-${number}`;
-      const key = `kfd-${number}`;
-      const gate = byStandard.get(key);
-      const supportStatus = number === 4 || number === 5
-        ? "candidate"
-        : number === 6
-          ? "unsupported"
-          : number >= 8
-            ? "draft-adopter-evidence"
-            : number === 7
-              ? "source-supported-release-blocked"
-              : "source-supported";
-      return {
-        id,
-        key,
-        title: standards.standards[key].title,
-        supportStatus,
-        normative: {
-          status: standards.standards[key].status,
-          revision: standards.standards[key].revision,
-        },
-        implementation: { status: gate?.status === "passed" ? "implemented" : "not-evaluated" },
-        verification: { status: gate?.status === "passed" ? "passed" : "not-evaluated" },
-        buildchain: {
-          protocol: gate ? `${KFD_PRODUCT_GATE_CONTRACT}/v1` : "none",
-          gateStatus: gate?.status || "not-applicable",
-        },
-        releaseQualification: { shippedSupport: false },
-        claimClass: "bounded-product-evidence",
-        knownLimitations: [],
-        owner: "kungfu-systems/kungfu",
-        nextGate: "product-owned release decision",
-      };
-    }),
-  };
-}
-
 function manifestEvidence(id, kind, root) {
   return {
     kind,
@@ -364,30 +311,6 @@ test("product gates fail closed on evidence drift and stale cuts", async () => {
   assert.ok(gate.issues.some((entry) => entry.code === "stale-evidence"));
 });
 
-test("support projection preserves candidate and unsupported barriers", async () => {
-  const gates = [];
-  for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) {
-    gates.push(await passingGate(tempDir(), standard));
-  }
-  const projection = createKfdSupportProjection({
-    matrix: supportMatrix(gates),
-    gateResults: gates,
-    expectedSourceSha: sourceSha,
-    checkedAt,
-  });
-  assert.equal(projection.status, "passed", JSON.stringify(projection.issues));
-  assert.equal(projection.rows.find((row) => row.id === "KFD-4").supportStatus, "candidate");
-  assert.equal(projection.rows.find((row) => row.id === "KFD-6").supportStatus, "unsupported");
-  assert.equal(projection.rows.find((row) => row.id === "KFD-8").supportStatus, "draft-adopter-evidence");
-  assert.equal(validateKfdSupportProjection(projection, { expectedSourceSha: sourceSha, checkedAt }).valid, true);
-
-  const widened = structuredClone(projection);
-  widened.rows.find((row) => row.id === "KFD-4").releaseQualification.shippedSupport = true;
-  delete widened.projectionRoot;
-  widened.projectionRoot = kfdProductGateDigest(widened);
-  assert.equal(validateKfdSupportProjection(widened, { expectedSourceSha: sourceSha, checkedAt }).valid, false);
-});
-
 test("standard adopter manifest is the sole authority for the legacy support projection", async () => {
   const gates = [];
   for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) {
@@ -413,6 +336,23 @@ test("standard adopter manifest is the sole authority for the legacy support pro
   assert.equal(legacy.rows.find((row) => row.id === "KFD-6").supportStatus, "unsupported");
   assert.equal(legacy.rows.find((row) => row.id === "KFD-10").supportStatus, "draft-adopter-evidence");
   assert.equal(validateKfdLegacySupportMatrixProjection(legacy, { manifest, manifestGate }).valid, true);
+
+  const cliCwd = tempDir();
+  writeJson(cliCwd, "manifest.json", manifest);
+  writeJson(cliCwd, "manifest-gate.json", manifestGate);
+  const projected = JSON.parse(execFileSync(process.execPath, [
+    path.resolve("bin/buildchain.mjs"), "kfd", "support", "project",
+    "--cwd", cliCwd, "--manifest-json", "manifest.json",
+    "--manifest-gate-json", "manifest-gate.json", "--json",
+  ], { encoding: "utf8" }));
+  assert.deepEqual(projected, legacy);
+  writeJson(cliCwd, "projection.json", projected);
+  const cliVerification = JSON.parse(execFileSync(process.execPath, [
+    path.resolve("bin/buildchain.mjs"), "kfd", "support", "verify",
+    "--cwd", cliCwd, "--projection-json", "projection.json",
+    "--manifest-json", "manifest.json", "--manifest-gate-json", "manifest-gate.json", "--json",
+  ], { encoding: "utf8" }));
+  assert.equal(cliVerification.ok, true, JSON.stringify(cliVerification.issues));
 
   const drifted = structuredClone(legacy);
   drifted.rows.find((row) => row.id === "KFD-1").supportStatus = "adopted";
@@ -488,6 +428,127 @@ test("adopter manifest gate fails closed on package, row, gate, and Warrant witn
   }
 });
 
+test("release passport and artifact evidence bind the exact standard adopter closure", async () => {
+  const cwd = tempDir();
+  const gates = [];
+  for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) {
+    gates.push(await passingGate(cwd, standard));
+  }
+  const manifest = buildchainAdopterManifest(gates);
+  const manifestPath = writeJson(cwd, "adopter-manifest.json", manifest).path;
+  const gatePaths = gates.map((gate, index) => writeJson(cwd, `gate-${index + 1}.json`, gate).path);
+  fs.mkdirSync(path.join(cwd, "assets"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, "assets/buildchain.tgz"), "buildchain artifact\n");
+
+  const output = collectGitHubReleasePassport({
+    cwd,
+    repository: "kungfu-systems/buildchain",
+    tag: "v3.0.0-alpha.1",
+    sourceSha,
+    outputDir: "release-passport",
+    assetsDir: "assets",
+    kfdAdopterManifestJson: manifestPath,
+    kfdProductGateJsons: gatePaths,
+    checkedAt,
+  });
+  assert.equal(output.passport.kfdAdopter.status, "passed");
+  assert.equal(output.passport.kfdAdopter.qualifying, false);
+  assert.equal(output.passport.kfdAdopter.standardPackage.artifactRoot, kfdPackageArtifactRoot);
+  assert.match(output.passport.kfdAdopter.standardPackage.registryRoot, /^sha256:[0-9a-f]{64}$/);
+  assert.match(output.passport.kfdAdopter.standardPackage.verifierSetRoot, /^sha256:[0-9a-f]{64}$/);
+  assert.equal(output.passport.kfdAdopter.witness.decisionRoot, output.artifactEvidence.kfdAdopter.witness.decisionRoot);
+  assert.equal(output.passport.kfdAdopter.bindingRoot, output.artifactEvidence.kfdAdopter.bindingRoot);
+  assert.equal(output.passport.kfdSupport.authority.root, output.passport.kfdAdopter.authority.manifestRoot);
+  assert.equal(output.checkReport.ok, true, JSON.stringify(output.checkReport.issues));
+
+  const passportPath = path.join(cwd, "release-passport/buildchain.release.json");
+  const verified = await verifyReleasePassport({ passportLocation: passportPath, checkedAt });
+  assert.equal(verified.ok, true, JSON.stringify(verified.issues));
+
+  const manifestSiblingPath = path.join(cwd, "release-passport/kfd-adopter-manifest.json");
+  const manifestSibling = JSON.parse(fs.readFileSync(manifestSiblingPath, "utf8"));
+  manifestSibling.decisions.find((row) => row.id === "KFD-1").gaps.push("substituted sibling");
+  fs.writeFileSync(manifestSiblingPath, `${JSON.stringify(manifestSibling, null, 2)}\n`);
+  const manifestTampered = await verifyReleasePassport({ passportLocation: passportPath, checkedAt });
+  assert.equal(manifestTampered.ok, false);
+  assert.ok(manifestTampered.issues.some((entry) => entry.code.startsWith("kfdAdopter.")));
+
+  fs.writeFileSync(manifestSiblingPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  passport.kfdAdopter.standardPackage.registryRoot = `sha256:${"e".repeat(64)}`;
+  fs.writeFileSync(passportPath, `${JSON.stringify(passport, null, 2)}\n`);
+  const passportTampered = await verifyReleasePassport({ passportLocation: passportPath, checkedAt });
+  assert.equal(passportTampered.ok, false);
+  assert.ok(passportTampered.issues.some((entry) => entry.code === "kfdAdopter.bindingRoot"));
+
+  fs.writeFileSync(passportPath, `${JSON.stringify(output.passport, null, 2)}\n`);
+  const artifactEvidencePath = path.join(cwd, "release-passport/artifact-evidence.json");
+  const artifactEvidence = JSON.parse(fs.readFileSync(artifactEvidencePath, "utf8"));
+  artifactEvidence.kfdAdopter.witness.bundleRoot = `sha256:${"f".repeat(64)}`;
+  fs.writeFileSync(artifactEvidencePath, `${JSON.stringify(artifactEvidence, null, 2)}\n`);
+  const artifactTampered = await verifyReleasePassport({ passportLocation: passportPath, checkedAt });
+  assert.equal(artifactTampered.ok, false);
+  assert.ok(artifactTampered.issues.some((entry) => entry.code === "kfdAdopter.artifactEvidence"));
+
+  const substitutedPackageManifest = structuredClone(manifest);
+  substitutedPackageManifest.kfdCut.package.artifactRoot = `sha256:${"d".repeat(64)}`;
+  const substitutedPackagePath = writeJson(cwd, "substituted-package-manifest.json", substitutedPackageManifest).path;
+  assert.throws(
+    () => collectGitHubReleasePassport({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      tag: "v3.0.0-alpha.1",
+      sourceSha,
+      outputDir: "substituted-package-passport",
+      assetsDir: "assets",
+      kfdAdopterManifestJson: substitutedPackagePath,
+      kfdProductGateJsons: gatePaths,
+      checkedAt,
+    }),
+    /legacy support projection requires the exact passing standard adopter manifest authority/,
+  );
+  assert.throws(
+    () => collectGitHubReleasePassport({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      tag: "v3.0.0-alpha.1",
+      sourceSha: "b".repeat(40),
+      outputDir: "substituted-source-passport",
+      assetsDir: "assets",
+      kfdAdopterManifestJson: manifestPath,
+      kfdProductGateJsons: gatePaths,
+      checkedAt,
+    }),
+    /legacy support projection requires the exact passing standard adopter manifest authority/,
+  );
+
+  const gate = createKfdAdopterManifestGate({
+    manifest,
+    packageArtifactRoot: kfdPackageArtifactRoot,
+    gateResults: gates,
+    expectedSourceSha: sourceSha,
+    checkedAt,
+  });
+  const driftedLegacy = createKfdLegacySupportMatrixProjection({ manifest, manifestGate: gate });
+  driftedLegacy.rows.find((row) => row.id === "KFD-1").supportStatus = "adopted";
+  const driftedLegacyPath = writeJson(cwd, "drifted-support-matrix.json", driftedLegacy).path;
+  assert.throws(
+    () => collectGitHubReleasePassport({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      tag: "v3.0.0-alpha.1",
+      sourceSha,
+      outputDir: "drifted-release-passport",
+      assetsDir: "assets",
+      kfdAdopterManifestJson: manifestPath,
+      kfdSupportMatrixJson: driftedLegacyPath,
+      kfdProductGateJsons: gatePaths,
+      checkedAt,
+    }),
+    /legacy KFD support matrix drifted from the standard adopter manifest/,
+  );
+});
+
 test("KFD package verifier rejects structurally invalid records independently of product gates", async () => {
   const report = await verifyKfdRecord({
     schemaVersion: 1,
@@ -495,46 +556,4 @@ test("KFD package verifier rejects structurally invalid records independently of
     standard: "kfd-4",
   });
   assert.equal(report.valid, false);
-});
-
-test("release passport binds the exact support projection and detects sibling tampering", async () => {
-  const cwd = tempDir();
-  const gates = [];
-  for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) {
-    gates.push(await passingGate(cwd, standard));
-  }
-  const matrixPath = writeJson(cwd, "support-matrix.json", supportMatrix(gates)).path;
-  const gatePaths = gates.map((gate, index) =>
-    writeJson(cwd, `gate-${index + 1}.json`, gate).path);
-  fs.mkdirSync(path.join(cwd, "assets"), { recursive: true });
-  fs.writeFileSync(path.join(cwd, "assets/kungfu.tar.gz"), "product artifact\n");
-  const output = collectGitHubReleasePassport({
-    cwd,
-    repository: "kungfu-systems/kungfu",
-    tag: "v3.0.0-alpha.1",
-    sourceSha,
-    outputDir: "release-passport",
-    assetsDir: "assets",
-    kfdSupportMatrixJson: matrixPath,
-    kfdProductGateJsons: gatePaths,
-    checkedAt,
-  });
-  assert.equal(output.passport.generatedAt, checkedAt);
-  assert.equal(output.passport.kfdSupport.status, "passed");
-  assert.deepEqual(
-    output.passport.kfdSupport,
-    JSON.parse(fs.readFileSync(path.join(cwd, "release-passport/kfd-support.json"), "utf8")),
-  );
-  assert.equal(output.checkReport.ok, true, JSON.stringify(output.checkReport.issues));
-
-  const passportPath = path.join(cwd, "release-passport/buildchain.release.json");
-  const verification = await verifyReleasePassport({ passportLocation: passportPath, checkedAt });
-  assert.equal(verification.ok, true, JSON.stringify(verification.issues));
-  const siblingPath = path.join(cwd, "release-passport/kfd-support.json");
-  const sibling = JSON.parse(fs.readFileSync(siblingPath, "utf8"));
-  sibling.rows.find((row) => row.id === "KFD-4").supportStatus = "source-supported";
-  fs.writeFileSync(siblingPath, `${JSON.stringify(sibling, null, 2)}\n`);
-  const tampered = await verifyReleasePassport({ passportLocation: passportPath, checkedAt });
-  assert.equal(tampered.ok, false);
-  assert.ok(tampered.issues.some((entry) => entry.code === "kfdSupport.evidence"));
 });

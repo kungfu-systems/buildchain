@@ -135,6 +135,14 @@
       },
       "rationale": "Add a read-only generated list/show/validate surface plus exact Git N-1 qualification; the manifest remains the single authority and the commands do not migrate or write production state."
     },
+    "cli:kfd-support": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "kfd-support",
+        "usage": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>"
+      },
+      "rationale": "Replace the product-owned support-matrix declaration authority with a read-only compatibility projection derived from one exact standard adopter manifest and its passing gate; verification now requires the same authority closure and cannot widen adopter claims."
+    },
     "cli:dev": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
@@ -211,6 +219,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -985,6 +994,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -1139,6 +1149,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
