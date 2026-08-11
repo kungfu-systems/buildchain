@@ -777,7 +777,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /release-manifest-json:/);
   assert.equal(
     (workflow.match(/artifact-summary-json: \$\{\{ steps\.summary\.outputs\.artifact-summary-json \}\}/g) || []).length,
-    1,
+    2,
   );
   assert.match(
     workflow,
