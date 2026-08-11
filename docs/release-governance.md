@@ -263,9 +263,11 @@ semantics and fail-closed verification requirements.
 The authority verifies the complete result set on GitHub-hosted infrastructure
 before delivery. The consumer controller also performs final result verification,
 exact-byte import, manifest recomputation, and deterministic-artifact replacement
-on a GitHub-hosted lane. Self-hosted build runners do not download authority
-result payloads, and aggregate/release evidence fails closed until this
-finalization succeeds.
+on a GitHub-hosted lane. macOS results finalize on a GitHub-hosted macOS runner so
+the consumer lifecycle can perform native post-sign checks before publication;
+other platforms retain the GitHub-hosted Ubuntu control lane. Self-hosted build
+runners do not download authority result payloads, and aggregate/release evidence
+fails closed until this finalization succeeds.
 
 The central `buildchain-artifact-signing` environment reuses the established
 macOS Credential Island names (`BUILDCHAIN_MACOS_CERTIFICATE_*`,
