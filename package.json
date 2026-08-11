@@ -33,6 +33,8 @@
     "./issue-reporting": "./packages/core/issue-reporting.js",
     "./kfd": "./packages/core/kfd.js",
     "./kfd-product-gates": "./packages/core/kfd-product-gates.js",
+    "./kfd-adopter-manifest": "./packages/core/kfd-adopter-manifest.js",
+    "./kfd-adopter-release-binding": "./packages/core/artifact-verification-envelope.js",
     "./kfd-agent-hub": "./packages/core/kfd-agent-hub.js",
     "./buildchain-layout": "./packages/core/buildchain-layout.js",
     "./release-line-bootstrap": "./packages/core/release-line-bootstrap.js",
@@ -87,7 +89,6 @@
     "./site/schemas/release-passport-v1.schema.json": "./dist/site/schemas/release-passport-v1.schema.json",
     "./site/schemas/kfd-agent-hub-adoption.schema.json": "./dist/site/schemas/kfd-agent-hub-adoption.schema.json",
     "./site/schemas/kfd-product-gate-input-v1.schema.json": "./dist/site/schemas/kfd-product-gate-input-v1.schema.json",
-    "./site/schemas/kfd-support-projection-v1.schema.json": "./dist/site/schemas/kfd-support-projection-v1.schema.json",
     "./site/buildchain-contract.json": "./dist/site/buildchain-contract.json",
     "./site/product-mechanism.json": "./dist/site/product-mechanism.json",
     "./site/release-provenance.json": "./dist/site/release-provenance.json",
@@ -139,7 +140,7 @@
     "typescript": "^5.9.0"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.53",
+    "@kungfu-tech/kfd": "1.0.0-alpha.60",
     "ajv": "8.20.0",
     "smol-toml": "1.7.0"
   }

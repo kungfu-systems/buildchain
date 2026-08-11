@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 294,
-    "maxHandMaintainedSourceLines": 114911,
+    "maxHandMaintainedSourceFiles": 298,
+    "maxHandMaintainedSourceLines": 116567,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23298,
-    "latestTransition": "The macOS paid-allocation controller admits one explicit Ohio capacity fallback without weakening regional Budget identity or the one-host ceiling.",
-    "rationale": "The bounded macOS launch gate accepts only us-east-1 and us-east-2, binds each region to its own complete control-plane stack, and requires one shared USD 25 Budget covering both AWS-owned Dedicated Host usage types and regions. It rejects availability-zone drift and counts active hosts and instances across both regions. The workload account, disabled workflow, exact 80/95 percent thresholds, SNS subscribers, one-host ceiling, 24-hour minimum, 30-hour maximum, DryRun, ownership, JIT, and cleanup controls remain unchanged. Existing debt shrinks or remains fixed; these exact combined repository ceilings cannot grow implicitly."
+    "maxWorkflowLines": 23346,
+    "latestTransition": "Candidate Patrol resumes the active Release Train before considering later Dev movement.",
+    "rationale": "Two bounded controller modules separate exact-SHA qualification from active Release Train reconciliation. They add candidate-tree, Alpha-base, runtime and route readback, rooted hold evidence, duplicate-observation idempotence, frozen-candidate resume, and line-stable deterministic playback without widening the pre-existing patrol script's debt. The reusable workflow adds exact runtime checkout plus Release Cut, generation, tree, drift and hold outputs. The concurrently landed standard KFD adopter-manifest authority and macOS Ohio capacity fallback remain intact. This exact combined two-file, 657-source-line and 48-workflow-line increase over the refreshed base is covered by focused negative tests and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/kfd-adopter-manifest.js": {
+      "maxLines": 390,
+      "rationale": "The package-only adapter keeps published KFD verification, Buildchain-specific evidence constraints, decision and gate roots, and the one-way legacy projection in one bounded public authority seam. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/engineering-housekeeper-github.js": {
       "maxLines": 707,
       "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."
@@ -131,6 +135,14 @@
       },
       "rationale": "Add a read-only generated list/show/validate surface plus exact Git N-1 qualification; the manifest remains the single authority and the commands do not migrate or write production state."
     },
+    "cli:kfd-support": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "kfd-support",
+        "usage": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>"
+      },
+      "rationale": "Replace the product-owned support-matrix declaration authority with a read-only compatibility projection derived from one exact standard adopter manifest and its passing gate; verification now requires the same authority closure and cannot widen adopter claims."
+    },
     "cli:dev": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
@@ -207,6 +219,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -291,18 +304,25 @@
         "secrets": ["promotion-token"],
         "outputs": [
           "active-candidate-pr",
+          "candidate-generation",
+          "candidate-tree-sha",
           "controller-state",
+          "cut-root",
+          "drift-root",
           "eligible",
+          "hold-root",
           "next-candidate-sha",
           "prior-state-root",
           "promotion-pr",
           "result-path",
+          "runtime-sha",
           "selected-sha",
           "settlement-action",
-          "source-lock-ref"
+          "source-lock-ref",
+          "train-root"
         ]
       },
-      "rationale": "Expose opt-in auto-merge registration and an explicit merge method for the already-managed exact-source Alpha candidate without adding approval or direct-merge authority."
+      "rationale": "Expose the frozen Release Cut, generation, candidate tree, exact runtime, Dev-drift observation and fail-closed hold roots for Build inputs while preserving the existing no-publication and protected-settlement boundary."
     },
     "workflow:dev-pr-auto-merge": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -974,6 +994,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -1128,6 +1149,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",

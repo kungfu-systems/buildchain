@@ -320,7 +320,7 @@
       {
         "id": "kfd-support",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>..."
+        "usage": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>"
       },
       {
         "id": "kfd-upstream-check",
@@ -1054,6 +1054,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -1077,7 +1078,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 110,
+        "inputCount": 111,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1899,17 +1900,24 @@
         "secretCount": 1,
         "outputs": [
           "active-candidate-pr",
+          "candidate-generation",
+          "candidate-tree-sha",
           "controller-state",
+          "cut-root",
+          "drift-root",
           "eligible",
+          "hold-root",
           "next-candidate-sha",
           "prior-state-root",
           "promotion-pr",
           "result-path",
+          "runtime-sha",
           "selected-sha",
           "settlement-action",
-          "source-lock-ref"
+          "source-lock-ref",
+          "train-root"
         ],
-        "outputCount": 10
+        "outputCount": 17
       },
       {
         "id": "dev-delivery-warrant-cancel",
@@ -2561,6 +2569,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -2584,7 +2593,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 101,
+        "inputCount": 102,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2954,6 +2963,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -2973,7 +2983,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 80
+        "inputCount": 81
       },
       {
         "id": "release-tail",
@@ -7992,9 +8002,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "8b5e8a5a6bdd7f3095f999d6ada117cdfaf41eaf1e0dde2039416b658883bb2b",
-    "pageRegistryDigest": "83e4701148132712b684efb1f474943752ad8371e60f598f162b553f504e987f"
+    "cliRegistryDigest": "099c0db9c5346942aee236af2cb7b6a7a91fbb2c54ebb17b7a2544a339c00d40",
+    "workflowRegistryDigest": "3a89609848b3a8b5dbee477b82e273f3d8a47f4f152f84e29a236f0e52d2cceb",
+    "pageRegistryDigest": "e3b142a9012a80b0478a48431fd2a3d5290301b667ceb565fb7314ef7f693214"
   },
   "comparison": {
     "missingCliRegistry": [],

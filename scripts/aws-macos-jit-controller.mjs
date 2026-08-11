@@ -7,12 +7,14 @@ import {
   createMacosJitCampaignPlan,
   createMacosJitClosePlan,
   createMacosJitJobPlan,
+  createMacosJitSourceRebindPlan,
   macosAllocateHostsArgs,
   macosReleaseHostsArgs,
   macosRunInstancesArgs,
 } from "./aws-macos-jit-controller-core.mjs";
 import { MACOS_EC2_JIT_REGIONS } from "./aws-macos-jit-core.mjs";
 import { executeMacosJitJob } from "./aws-macos-jit-job-controller.mjs";
+import { executeMacosJitSourceRebind } from "./aws-macos-jit-source-rebind.mjs";
 import {
   assertDryRun,
   assertAllowedPolicySimulation,
@@ -498,6 +500,22 @@ function confirm(plan) {
   if (arg("confirm-campaign-id") !== plan.campaign.id) {
     throw new Error("--confirm-campaign-id must equal the campaign id");
   }
+  if (plan.kind === "campaign-source-rebind-plan") {
+    if (arg("confirm-previous-source-sha") !== plan.previousSource.sha) {
+      throw new Error(
+        "--confirm-previous-source-sha must equal previousSourceSha",
+      );
+    }
+    if (arg("confirm-host-id") !== plan.aws.hostId) {
+      throw new Error("--confirm-host-id must equal the exact host id");
+    }
+    if (arg("confirm-instance-id") !== plan.aws.instanceId) {
+      throw new Error("--confirm-instance-id must equal the exact instance id");
+    }
+    if (!flag("confirm-zero-allocation")) {
+      throw new Error("--confirm-zero-allocation is required");
+    }
+  }
 }
 
 function emit(plan, mode, execute, operation) {
@@ -522,6 +540,17 @@ export function main() {
     return emit(plan, mode, execute, () =>
       executeMacosJitCampaignLaunch(plan, { profile: arg("aws-profile") }),
     );
+  }
+  if (["plan-rebind", "rebind-campaign"].includes(mode)) {
+    const plan = createMacosJitSourceRebindPlan({
+      ...commonValues(execute),
+      previousSourceSha: arg("previous-source-sha"),
+      previousSourceRef: arg("previous-source-ref"),
+      workflowId: arg("workflow-id"),
+      hostId: arg("host-id"),
+      instanceId: arg("instance-id"),
+    });
+    return emit(plan, mode, execute, () => executeMacosJitSourceRebind(plan, { profile: arg("aws-profile") }));
   }
   if (["plan-job", "run-job"].includes(mode)) {
     const plan = createMacosJitJobPlan({

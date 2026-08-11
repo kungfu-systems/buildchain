@@ -2793,7 +2793,7 @@ test("KFD-3 artifact command can materialize transient product gate inputs befor
       kfd3ArtifactVerifyCommand: `${process.execPath} ${commandFixturePath}`,
       kfdProductGateJsons: [gatePath],
     }),
-    /KFD product gate inputs require --kfd-support-matrix-json/,
+    /KFD support and product-gate inputs require --kfd-adopter-manifest-json; --kfd-support-matrix-json is comparison-only/,
   );
   assert.equal(fs.existsSync(gatePath), true);
 });

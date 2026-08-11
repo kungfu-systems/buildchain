@@ -67,6 +67,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                                     [--kfd-3-prebuild-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-verify-cmd <command>]
+                                    [--kfd-adopter-manifest-json <json-or-path>]
                                     [--kfd-support-matrix-json <json-or-path>]
                                     [--kfd-product-gate-json <json-or-path>]...
                                     [--invariant-passport-json <json-or-path>]...
@@ -190,10 +191,11 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain kfd 7 schema [--schema <name>] [--json]
   buildchain kfd 7 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]
   buildchain kfd 7 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]
-  buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>...
+  buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>
                                   [--expected-source-sha <sha>] [--checked-at <date-time>]
                                   [--output <file>] [--json]
-  buildchain kfd support verify --projection-json <file-or-json>
+  buildchain kfd support verify --projection-json <file-or-json> --manifest-json <file-or-json>
+                                  --manifest-gate-json <file-or-json>
                                   [--expected-source-sha <sha>] [--checked-at <date-time>] [--json]
   buildchain sample process-tree [--interval-ms <n>] [--label <name>]
                                  [--output <jsonl>] [--summary-output <json>]

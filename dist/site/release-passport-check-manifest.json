@@ -16,10 +16,11 @@
       "result": "check-report.json"
     },
     "kfdSupportProjection": {
-      "inputSchema": "schemas/kfd-product-gate-input-v1.schema.json",
-      "projectionSchema": "schemas/kfd-support-projection-v1.schema.json",
+      "authorityContract": "kfd.adopter-conformance-manifest/v1",
+      "gateContract": "kungfu-buildchain-kfd-adopter-manifest-gate",
+      "bindingContract": "kungfu-buildchain-kfd-adopter-release-binding",
       "evidence": "kfd-support.json",
-      "rule": "The passport mirrors one product-owned support matrix and validated product-gate results without widening any claim state."
+      "rule": "The standard adopter manifest is the sole declaration authority; the legacy support matrix is an exact derived projection only."
     }
   },
   "ownership": {
@@ -42,6 +43,7 @@
       "platformArtifactManifests",
       "distTagPromotion",
       "controllerReceipts",
+      "kfdAdopter",
       "kfdSupport",
       "githubArtifactAttestations",
       "artifacts",
@@ -78,7 +80,16 @@
           "agentRuntimeAdapterRequest": "https://kfd.libkungfu.dev/schemas/kfd-agent-runtime/adapter-request.schema.json",
           "agentRuntimeAdapterResponse": "https://kfd.libkungfu.dev/schemas/kfd-agent-runtime/adapter-response.schema.json",
           "agentRuntimeSuite": "https://kfd.libkungfu.dev/schemas/kfd-agent-runtime/suite.schema.json",
-          "agentRuntimeReport": "https://kfd.libkungfu.dev/schemas/kfd-agent-runtime/report.schema.json"
+          "agentRuntimeReport": "https://kfd.libkungfu.dev/schemas/kfd-agent-runtime/report.schema.json",
+          "selfConformanceState": "https://kfd.libkungfu.dev/schemas/kfd-self-conformance/state.schema.json",
+          "selfConformanceBootstrapAnchor": "https://kfd.libkungfu.dev/schemas/kfd-self-conformance/bootstrap-anchor.schema.json",
+          "selfConformanceTransitionBundle": "https://kfd.libkungfu.dev/schemas/kfd-self-conformance/transition-bundle.schema.json",
+          "selfConformanceTransitionReport": "https://kfd.libkungfu.dev/schemas/kfd-self-conformance/transition-report.schema.json",
+          "selfConformancePackageManifest": "https://kfd.libkungfu.dev/schemas/kfd-self-conformance/package-manifest.schema.json",
+          "selfConformanceVectorRegistry": "https://kfd.libkungfu.dev/schemas/kfd-self-conformance/vector-registry.schema.json",
+          "selfConformanceLifecycleGateRequest": "https://kfd.libkungfu.dev/schemas/kfd-self-conformance/lifecycle-gate-request.schema.json",
+          "selfConformanceLifecycleGateReport": "https://kfd.libkungfu.dev/schemas/kfd-self-conformance/lifecycle-gate-report.schema.json",
+          "adopterConformanceManifest": "https://kfd.libkungfu.dev/schemas/kfd-adopter-conformance/manifest.schema.json"
         },
         "schemaPaths": {
           "metadata": "schemas/kfd-standards.schema.json",
@@ -100,7 +111,16 @@
           "agentRuntimeAdapterRequest": "schemas/kfd-agent-runtime/adapter-request.schema.json",
           "agentRuntimeAdapterResponse": "schemas/kfd-agent-runtime/adapter-response.schema.json",
           "agentRuntimeSuite": "schemas/kfd-agent-runtime/suite.schema.json",
-          "agentRuntimeReport": "schemas/kfd-agent-runtime/report.schema.json"
+          "agentRuntimeReport": "schemas/kfd-agent-runtime/report.schema.json",
+          "selfConformanceState": "schemas/kfd-self-conformance/state.schema.json",
+          "selfConformanceBootstrapAnchor": "schemas/kfd-self-conformance/bootstrap-anchor.schema.json",
+          "selfConformanceTransitionBundle": "schemas/kfd-self-conformance/transition-bundle.schema.json",
+          "selfConformanceTransitionReport": "schemas/kfd-self-conformance/transition-report.schema.json",
+          "selfConformancePackageManifest": "schemas/kfd-self-conformance/package-manifest.schema.json",
+          "selfConformanceVectorRegistry": "schemas/kfd-self-conformance/vector-registry.schema.json",
+          "selfConformanceLifecycleGateRequest": "schemas/kfd-self-conformance/lifecycle-gate-request.schema.json",
+          "selfConformanceLifecycleGateReport": "schemas/kfd-self-conformance/lifecycle-gate-report.schema.json",
+          "adopterConformanceManifest": "schemas/kfd-adopter-conformance/manifest.schema.json"
         },
         "compatibility": {
           "packageLine": "v1.0",
@@ -193,6 +213,14 @@
       {
         "when": "kfdSupport is present",
         "pointer": "evidence.kfdSupport"
+      },
+      {
+        "when": "kfdAdopter is present",
+        "pointer": "evidence.kfdAdopterManifest"
+      },
+      {
+        "when": "kfdAdopter is present",
+        "pointer": "evidence.kfdAdopterGate"
       }
     ],
     "rule": "The normative checker resolves every declared sibling relative to the passport and fails closed on missing required evidence, digest drift, or semantic mismatch."
