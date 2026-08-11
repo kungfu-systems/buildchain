@@ -932,8 +932,12 @@
             "required": true
           },
           {
-            "id": "build",
-            "required": true
+            "id": "alpha",
+            "required": false
+          },
+          {
+            "id": "stable",
+            "required": false
           },
           {
             "id": "aggregate",
@@ -950,7 +954,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:48545554883888862984cdf1b6b4b56341531cdd6192600782a76b92ad22fd36"
+      "digest": "sha256:6dfa79003f0c92e336c56f07f45f57cc5572921bdb46e432fd809fb19ee823bb"
     },
     {
       "schemaVersion": 1,
@@ -2406,5 +2410,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:af18b46d8441d29c319a30ba30dfed9707bf2188c8eac868de34db366efef880"
+  "digest": "sha256:56d9fd27f8e05f1d5c0f5de354b2dfc1cac62155e8ddc555b16e35e9161459c9"
 }

@@ -13,12 +13,8 @@ import { KFD_PRODUCT_GATE_INPUT_CONTRACT, evaluateKfdProductGate, kfdProductGate
 import { createBuildchainKfd1Witness, createBuildchainKfd2Claims, createBuildchainKfd3ArtifactWitness, createBuildchainKfd3PrebuildWitness } from "../packages/core/buildchain-kfd-claims.js";
 import { BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH, BUILDCHAIN_KFD2_CLAIMS_DIR, BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH, BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH } from "../packages/core/buildchain-layout.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
-
-const REPOSITORY = "kungfu-systems/buildchain";
-const require = createRequire(import.meta.url);
-const kfdRoot = path.dirname(require.resolve("@kungfu-tech/kfd/package.json"));
+const REPOSITORY = "kungfu-systems/buildchain", require = createRequire(import.meta.url), kfdRoot = path.dirname(require.resolve("@kungfu-tech/kfd/package.json"));
 const evidenceSources = { "KFD-1": "dist/site/release-passport-check-manifest.json", "KFD-2": "dist/site/kfd-claims.json", "KFD-3": "dist/site/public-surface-audit.json", "KFD-4": "packages/core/kfd-product-gates.js", "KFD-5": "packages/core/kfd-product-gates.js", "KFD-7": "packages/core/kfd-product-gates.js", "KFD-10": "packages/core/dev-delivery-warrant.js" };
-
 function parseArgs(argv = process.argv.slice(2)) {
   const args = { cwd: process.cwd(), outputDir: ".buildchain/kfd", sourceSha: process.env.BUILDCHAIN_SOURCE_SHA || "" };
   for (let index = 0; index < argv.length; index += 1) {
@@ -31,11 +27,9 @@ function parseArgs(argv = process.argv.slice(2)) {
   }
   return args;
 }
-
 function gitSha(cwd) {
   try { return execFileSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" }).trim(); } catch { return ""; }
 }
-
 function digest(bytes) { return `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`; }
 function fileDigest(filePath) { return digest(fs.readFileSync(filePath)); }
 function relative(root, filePath) { return path.relative(root, filePath).replace(/\\/g, "/"); }
@@ -46,11 +40,8 @@ function writeJson(root, relativePath, value) {
   return { path: relativePath, sha256: fileDigest(filePath), filePath };
 }
 function readJson(filePath, sourceSha = "") { return JSON.parse(fs.readFileSync(filePath, "utf8").replaceAll("{{SOURCE_SHA}}", sourceSha)); }
-
 export function generateBuildchainKfdWitnesses({ cwd = process.cwd(), outputDir = ".buildchain/kfd", sourceSha = "", emitOutputs = true } = {}) {
-  const root = path.resolve(cwd);
-  const outDir = path.resolve(root, outputDir);
-  const resolvedSourceSha = sourceSha || gitSha(root);
+  const root = path.resolve(cwd), outDir = path.resolve(root, outputDir), resolvedSourceSha = sourceSha || gitSha(root);
   const outputPath = (canonicalPath) => path.join(outDir, path.relative(".buildchain/kfd", canonicalPath));
   const paths = { kfd1Witness: outputPath(BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH), kfd3PrebuildWitness: outputPath(BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH), kfd3ArtifactWitness: outputPath(BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH), kfd2ClaimsDir: outputPath(BUILDCHAIN_KFD2_CLAIMS_DIR) };
   writeJson(path.dirname(paths.kfd1Witness), path.basename(paths.kfd1Witness), createBuildchainKfd1Witness({ root, sourceSha: resolvedSourceSha }));
@@ -65,7 +56,6 @@ export function generateBuildchainKfdWitnesses({ cwd = process.cwd(), outputDir 
   if (emitOutputs) writeGitHubOutputs(outputs);
   return { schemaVersion: 1, contract: "kungfu-buildchain-self-kfd-witness-generation", outputs };
 }
-
 function productRecords(root, standard, sourceSha) {
   if (standard === "kfd-4") return [
     ["observer-perspective", readJson(path.join(root, "contracts/fixtures/kfd-adopter-release-v1/kfd-4-perspective.json"), sourceSha)],
@@ -78,7 +68,6 @@ function productRecords(root, standard, sourceSha) {
   profile.domainProfile = { ...profile.domainProfile, product: "Buildchain", implementation: `git+https://github.com/${REPOSITORY}@${sourceSha}`, qualificationStatus: "qualified" };
   return [["domain-profile", profile]];
 }
-
 async function generateProductGate(root, outDir, standard, sourceSha, checkedAt) {
   const records = productRecords(root, standard, sourceSha).map(([role, value], index) => ({ role, ...writeJson(outDir, `records/${standard}-${index}.json`, value) }));
   const kinds = standard === "kfd-4" ? [["projection-fsck", "projection-fsck"], ["negative", "negative-fixture"]] : standard === "kfd-5" ? [["negative", "negative-fixture"]] : [["qualification-proof", "qualification-proof"], ["independent-review", "independent-review"], ["negative", "negative-fixture"]];
@@ -89,14 +78,11 @@ async function generateProductGate(root, outDir, standard, sourceSha, checkedAt)
   writeJson(outDir, `${standard}/product-gate.json`, gate);
   return gate;
 }
-
 export async function generateBuildchainKfdAdopterRelease({ cwd = process.cwd(), outputDir = ".buildchain/kfd/adopter-release", sourceSha = "", checkedAt = new Date().toISOString(), emitOutputs = true } = {}) {
-  const root = path.resolve(cwd);
-  const outDir = path.resolve(root, outputDir);
+  const root = path.resolve(cwd), outDir = path.resolve(root, outputDir);
   if (!/^[0-9a-f]{40}$/.test(sourceSha) || !Number.isFinite(Date.parse(checkedAt))) throw new Error("source SHA and checked-at must be exact");
   for (const sourcePath of Object.values(evidenceSources)) if (!fs.statSync(path.join(root, sourcePath)).isFile()) throw new Error(`required Buildchain evidence source is missing: ${sourcePath}`);
-  const packageArtifactRoot = installedKfdPackageArtifactRoot();
-  const gates = [];
+  const packageArtifactRoot = installedKfdPackageArtifactRoot(), gates = [];
   for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) gates.push(await generateProductGate(root, outDir, standard, sourceSha, checkedAt));
   const sourceRoot = kfdProductGateDigest({ repository: REPOSITORY, sourceSha, files: [...new Set(Object.values(evidenceSources))].sort().map((sourcePath) => ({ path: sourcePath, sha256: fileDigest(path.join(root, sourcePath)) })) });
   let manifest = initAdopterManifest({ manifestId: "buildchain-v3-full-cut", adopterId: REPOSITORY, artifactKind: "git-commit", artifactCoordinate: `${REPOSITORY}@${sourceSha}`, artifactRoot: sourceRoot, scope: "Buildchain v3 release and protected delivery authority", packageArtifactRoot, verifiedAt: checkedAt, maxAgeSeconds: 86400 });
@@ -110,18 +96,15 @@ export async function generateBuildchainKfdAdopterRelease({ cwd = process.cwd(),
   const kfd6 = manifest.decisions.find((entry) => entry.id === "KFD-6");
   kfd6.state = "unsupported"; kfd6.usage = "unused"; kfd6.gaps = ["Buildchain does not claim KFD-6 support in this cut."];
   manifest = addAdopterWitness(manifest, { decisionId: "KFD-10", profileId: "kfd-warrant-evidence", witnessCoordinate: `git+https://github.com/${REPOSITORY}@${sourceSha}#${evidenceSources["KFD-10"]}`, witnessRoot: fileDigest(path.join(root, evidenceSources["KFD-10"])), packageArtifactRoot, verifiedAt: checkedAt, maxAgeSeconds: 86400 });
-  const manifestPath = writeJson(outDir, "kfd-adopter-manifest.json", manifest).filePath;
-  const manifestGate = createKfdAdopterManifestGate({ manifest, packageArtifactRoot, gateResults: gates, authorityPath: "kfd-adopter-manifest.json", expectedSourceSha: sourceSha, checkedAt });
+  const manifestPath = writeJson(outDir, "kfd-adopter-manifest.json", manifest).filePath, manifestGate = createKfdAdopterManifestGate({ manifest, packageArtifactRoot, gateResults: gates, authorityPath: "kfd-adopter-manifest.json", expectedSourceSha: sourceSha, checkedAt });
   if (!validateKfdAdopterManifestGate(manifestGate, { expectedSourceSha: sourceSha, checkedAt }).valid) throw new Error(`generated adopter manifest gate failed: ${JSON.stringify(manifestGate.issues)}`);
-  const gatePath = writeJson(outDir, "kfd-adopter-manifest-gate.json", manifestGate).filePath;
-  const support = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
+  const gatePath = writeJson(outDir, "kfd-adopter-manifest-gate.json", manifestGate).filePath, support = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
   if (!validateKfdLegacySupportMatrixProjection(support, { manifest, manifestGate }).valid) throw new Error("generated KFD support projection failed");
   const supportPath = writeJson(outDir, "kfd-support.json", support).filePath;
   const outputs = { "kfd-adopter-manifest-json": relative(root, manifestPath), "kfd-adopter-manifest-gate-json": relative(root, gatePath), "kfd-support-matrix-json": relative(root, supportPath), "kfd-product-gate-jsons": gates.map((gate) => relative(root, path.join(outDir, gate.standard, "product-gate.json"))).join(","), "kfd-adopter-manifest-root": manifestGate.authority.manifestRoot, "kfd-adopter-gate-root": manifestGate.gateRoot, "kfd-package-artifact-root": packageArtifactRoot, "source-sha": sourceSha };
   if (emitOutputs) writeGitHubOutputs(outputs);
   return { schemaVersion: 1, contract: "kungfu-buildchain-kfd-adopter-release-generation", status: "passed", qualifying: false, selfCertified: false, outputs };
 }
-
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     const args = parseArgs();

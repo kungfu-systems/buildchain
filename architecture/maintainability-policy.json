@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 299,
-    "maxHandMaintainedSourceLines": 116970,
+    "maxHandMaintainedSourceFiles": 300,
+    "maxHandMaintainedSourceLines": 117123,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23346,
-    "latestTransition": "Rooted release-blocker repair advances one frozen-cut candidate generation and earns only bounded non-preemptive Warrant priority.",
-    "rationale": "The Release Train adds a rooted cut-first repair contract that preserves origin provenance, permits candidate build through a Dev conflict, and blocks publication until the same patch identity settles on Dev. A separate bounded priority-claim module keeps eligibility parsing out of the existing Warrant queue; only exact Work, route, head, patch, cut, repair, landing and gate roots enter the blocker lane, while active leases remain non-preemptive. Exact focused negative tests cover mismatch, conflict, fabricated claims and active-Warrant retention. This exact 299-file and 116970-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23477,
+    "latestTransition": "Stable and alpha Buildchain channels enforce one major-independent shell, runtime, and lock identity.",
+    "rationale": "The existing rooted release-blocker repair and bounded non-preemptive Warrant priority remain intact. One additional bounded channel-identity module classifies official, release, train, authority, and exact-SHA refs without major-specific branches. The contract-lock evaluator applies the triad before unchanged or compatibility exits, while five reusable surfaces remove the legacy unavailable-runtime success fallback. The generated public build router adds static alpha and stable advanced-workflow jobs so runtime selection cannot dynamically change shell class, and its controller descriptor declares both lane stages plus the selected-lane aggregate. This exact one-file, 153-source-line and 131-workflow-line increase is covered by cross-major permutation tests and Buildchain self-dogfood and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -30,6 +30,10 @@
     "packages/core/release-train.js": {
       "maxLines": 740,
       "rationale": "The Release Train contract adds one rooted successor-repair lifecycle with compare-and-swap, frozen origin provenance, exact cut and Dev patch identity, independent candidate-build eligibility, publication gating and deterministic validation; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/buildchain-compatibility-proof.js": {
+      "maxLines": 609,
+      "rationale": "The compatibility authority now performs channel binding before all legacy early exits while retaining rooted additive and breaking-drift proofs in the existing single evaluator module. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/kfd-adopter-manifest.js": {
       "maxLines": 390,
