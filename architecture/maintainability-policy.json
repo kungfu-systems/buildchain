@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 299,
-    "maxHandMaintainedSourceLines": 116970,
+    "maxHandMaintainedSourceFiles": 300,
+    "maxHandMaintainedSourceLines": 117274,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23346,
-    "latestTransition": "Rooted release-blocker repair advances one frozen-cut candidate generation and earns only bounded non-preemptive Warrant priority.",
-    "rationale": "The Release Train adds a rooted cut-first repair contract that preserves origin provenance, permits candidate build through a Dev conflict, and blocks publication until the same patch identity settles on Dev. A separate bounded priority-claim module keeps eligibility parsing out of the existing Warrant queue; only exact Work, route, head, patch, cut, repair, landing and gate roots enter the blocker lane, while active leases remain non-preemptive. Exact focused negative tests cover mismatch, conflict, fabricated claims and active-Warrant retention. This exact 299-file and 116970-line ceiling cannot grow implicitly."
+    "latestTransition": "The macOS JIT operator can rehydrate one replacement instance on the already-paid campaign host without allocating another host.",
+    "rationale": "One bounded rehydration module adds exact account, source, Budget, host, AMI, subnet, runner-residue and cross-region capacity checks before same-host RunInstances DryRun and replacement launch. The existing controller gains only deterministic planning, explicit confirmations and dispatch wiring; tests prove zero AllocateHosts calls. This exact 300-file and 117274-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/aws-macos-jit-controller.mjs": {
+      "maxLines": 631,
+      "rationale": "The existing operator entrypoint adds only the rehydration plan dispatch and explicit exact-host, replaced-instance and no-host-allocation confirmations; provider checks and execution remain in the separately budgeted rehydration module. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/dev-delivery-warrant.js": {
       "maxLines": 611,
       "rationale": "The existing durable queue adds only the narrow release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."
