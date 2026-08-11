@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "0de402c3877e4c55dbd07b2f4891facce5be8ba8",
     "maxHandMaintainedSourceFiles": 313,
-    "maxHandMaintainedSourceLines": 122686,
+    "maxHandMaintainedSourceLines": 122887,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23775,
-    "latestTransition": "The macOS JIT source rebind preserves explicitly confirmed non-counting startup failures without weakening terminal-failure evidence.",
-    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. The macOS JIT rebind now additionally binds each earlier non-counting startup failure to an exact run and source SHA while requiring completed startup_failure state with zero jobs and artifacts. This exact 313-file, 122686-source-line and 23775-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "The macOS JIT source rebind preserves historical failure generations and distinguishes preflight Trust-gate failures from AWS execution failures.",
+    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. The macOS JIT rebind now binds each earlier non-counting startup or terminal failure to an exact run and source SHA, preserves non-empty S3 evidence for historical AWS execution failures, and admits a current preflight failure only when exactly one Trust gate fails, every other job is skipped, no JIT label appears, and prior-source S3 evidence remains empty. This exact 313-file, 122887-source-line and 23775-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -20,12 +20,16 @@
   },
   "approvedNewFileTransitions": {
     "scripts/aws-macos-jit-controller-core.mjs": {
-      "maxLines": 619,
-      "rationale": "The macOS plan contract carries a sorted exact startup-failure run and source inventory only for terminal-failure rebinds, keeping the paid-capacity and zero-dispatch safety policy explicit. This exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 672,
+      "rationale": "The macOS plan contract carries sorted exact current preflight or terminal run ids plus historical startup and terminal run/source inventories, keeping paid-capacity, zero-dispatch, and evidence-preservation policy explicit. This exact reviewed ceiling cannot grow implicitly."
     },
     "scripts/aws-macos-jit-controller.mjs": {
-      "maxLines": 684,
-      "rationale": "The existing operator entrypoint retains rehydration and the explicit after-failure rebind mode, adding only exact startup-failure JSON parsing and matching execution confirmation beside the terminal failed-run inventory. Evidence checks and mutation remain in the separately bounded source-rebind module. This exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 749,
+      "rationale": "The operator entrypoint retains rehydration and explicit after-failure rebind modes, adding exact preflight and historical failure JSON parsing with matching execution confirmations. Evidence checks and mutation remain in the separately bounded source-rebind module. This exact reviewed ceiling cannot grow implicitly."
+    },
+    "scripts/aws-macos-jit-source-rebind.mjs": {
+      "maxLines": 683,
+      "rationale": "The source-rebind authority keeps forward-only GitHub ref mutation, exact campaign resource ownership, historical failure inventories, source-specific S3 evidence rules, and compensated rollback in one auditable zero-allocation transaction. Preflight Trust-gate failures are separately proven to have no JIT-labelled job or AWS evidence. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/next-development-transition.js": {
       "maxLines": 738,
