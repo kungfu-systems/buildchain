@@ -17,6 +17,17 @@ import {
   verifyKfdRecord,
 } from "../packages/core/kfd-product-gates.js";
 import {
+  KFD_ADOPTER_MANIFEST_GATE_CONTRACT,
+  createKfdAdopterManifestGate,
+  createKfdLegacySupportMatrixProjection,
+  validateKfdAdopterManifestGate,
+  validateKfdLegacySupportMatrixProjection,
+} from "../packages/core/kfd-adopter-manifest.js";
+import {
+  addAdopterWitness,
+  initAdopterManifest,
+} from "@kungfu-tech/kfd/adopter-conformance/toolchain";
+import {
   collectGitHubReleasePassport,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
@@ -27,6 +38,7 @@ const standardsPath = require.resolve("@kungfu-tech/kfd/standards.json");
 const standards = JSON.parse(fs.readFileSync(standardsPath, "utf8"));
 const sourceSha = "a".repeat(40);
 const checkedAt = "2026-07-26T12:00:00.000Z";
+const kfdPackageArtifactRoot = "sha256:07bea3dacab8cba10901539a5acb958db1ee09738fd424c9933f9baa2187675b";
 
 function tempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-kfd-product-gate-"));
@@ -269,6 +281,56 @@ function supportMatrix(gates) {
   };
 }
 
+function manifestEvidence(id, kind, root) {
+  return {
+    kind,
+    coordinate: `git+https://github.com/kungfu-systems/buildchain@${sourceSha}#${id.toLowerCase()}`,
+    root,
+    observedAt: checkedAt,
+    kfdPackageRoot: kfdPackageArtifactRoot,
+  };
+}
+
+function buildchainAdopterManifest(gates) {
+  const gateById = new Map(gates.map((gate) => [gate.standard.toUpperCase(), gate]));
+  const manifest = initAdopterManifest({
+    manifestId: "buildchain-v3-full-cut",
+    adopterId: "kungfu-systems/buildchain",
+    artifactKind: "git-commit",
+    artifactCoordinate: `kungfu-systems/buildchain@${sourceSha}`,
+    artifactRoot: `sha256:${"b".repeat(64)}`,
+    scope: "Buildchain v3 release and protected delivery authority",
+    packageArtifactRoot: kfdPackageArtifactRoot,
+    verifiedAt: checkedAt,
+    maxAgeSeconds: 86400,
+  });
+  for (const id of ["KFD-1", "KFD-2", "KFD-3", "KFD-4", "KFD-5", "KFD-7"]) {
+    const row = manifest.decisions.find((entry) => entry.id === id);
+    const suffix = String(row.number).padStart(2, "0");
+    row.state = "candidate";
+    row.usage = "used";
+    row.implementationEvidence = [manifestEvidence(id, "implementation", `sha256:${suffix.repeat(32)}`)];
+    row.verificationEvidence = [manifestEvidence(
+      id,
+      "verification",
+      gateById.get(id)?.gateRoot || `sha256:${String(row.number + 20).padStart(2, "0").repeat(32)}`,
+    )];
+    row.gaps = ["Independent decision-specific assessment remains external."];
+  }
+  const kfd6 = manifest.decisions.find((entry) => entry.id === "KFD-6");
+  kfd6.state = "unsupported";
+  kfd6.gaps = ["Buildchain does not claim KFD-6 support in this cut."];
+  return addAdopterWitness(manifest, {
+    decisionId: "KFD-10",
+    profileId: "kfd-warrant-evidence",
+    witnessCoordinate: `kungfu-systems/buildchain@${sourceSha}#dev-delivery-warrant`,
+    witnessRoot: `sha256:${"c".repeat(64)}`,
+    packageArtifactRoot: kfdPackageArtifactRoot,
+    verifiedAt: checkedAt,
+    maxAgeSeconds: 86400,
+  });
+}
+
 test("KFD-4/5/7 product gates bind real KFD records and retained evidence", async () => {
   for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) {
     const cwd = tempDir();
@@ -324,6 +386,106 @@ test("support projection preserves candidate and unsupported barriers", async ()
   delete widened.projectionRoot;
   widened.projectionRoot = kfdProductGateDigest(widened);
   assert.equal(validateKfdSupportProjection(widened, { expectedSourceSha: sourceSha, checkedAt }).valid, false);
+});
+
+test("standard adopter manifest is the sole authority for the legacy support projection", async () => {
+  const gates = [];
+  for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) {
+    gates.push(await passingGate(tempDir(), standard));
+  }
+  const manifest = buildchainAdopterManifest(gates);
+  const manifestGate = createKfdAdopterManifestGate({
+    manifest,
+    packageArtifactRoot: kfdPackageArtifactRoot,
+    gateResults: gates,
+    expectedSourceSha: sourceSha,
+    checkedAt,
+  });
+  assert.equal(manifestGate.contract, KFD_ADOPTER_MANIFEST_GATE_CONTRACT);
+  assert.equal(manifestGate.status, "passed", JSON.stringify(manifestGate.issues));
+  assert.equal(manifestGate.qualifying, false);
+  assert.equal(manifestGate.selfCertified, false);
+  assert.equal(validateKfdAdopterManifestGate(manifestGate, { expectedSourceSha: sourceSha, checkedAt }).valid, true);
+
+  const legacy = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
+  assert.equal(legacy.authority.contract, "kfd.adopter-conformance-manifest/v1");
+  assert.equal(legacy.authority.root, manifestGate.authority.manifestRoot);
+  assert.equal(legacy.rows.find((row) => row.id === "KFD-6").supportStatus, "unsupported");
+  assert.equal(legacy.rows.find((row) => row.id === "KFD-10").supportStatus, "draft-adopter-evidence");
+  assert.equal(validateKfdLegacySupportMatrixProjection(legacy, { manifest, manifestGate }).valid, true);
+
+  const drifted = structuredClone(legacy);
+  drifted.rows.find((row) => row.id === "KFD-1").supportStatus = "adopted";
+  const drift = validateKfdLegacySupportMatrixProjection(drifted, { manifest, manifestGate });
+  assert.equal(drift.valid, false);
+  assert.ok(drift.issues.some((entry) => entry.code === "legacy-projection-drift"));
+
+  const substitutedManifest = structuredClone(manifest);
+  substitutedManifest.decisions.find((row) => row.id === "KFD-1").gaps.push("Sibling manifest content.");
+  assert.throws(
+    () => createKfdLegacySupportMatrixProjection({ manifest: substitutedManifest, manifestGate }),
+    /manifest does not match the exact gate authority closure/,
+  );
+
+  const incompleteGate = structuredClone(manifestGate);
+  incompleteGate.gateResults.pop();
+  delete incompleteGate.gateRoot;
+  incompleteGate.gateRoot = kfdProductGateDigest(incompleteGate);
+  const incomplete = validateKfdAdopterManifestGate(incompleteGate, { expectedSourceSha: sourceSha, checkedAt });
+  assert.equal(incomplete.valid, false);
+  assert.ok(incomplete.issues.some((entry) => entry.code === "adopter-gate-result-set"));
+});
+
+test("adopter manifest gate fails closed on package, row, gate, and Warrant witness substitution", async () => {
+  const gates = [];
+  for (const standard of ["kfd-4", "kfd-5", "kfd-7"]) {
+    gates.push(await passingGate(tempDir(), standard));
+  }
+  const manifest = buildchainAdopterManifest(gates);
+  const cases = [
+    {
+      name: "package root",
+      manifest,
+      packageArtifactRoot: `sha256:${"d".repeat(64)}`,
+      code: "adopter-manifest-invalid",
+    },
+    {
+      name: "missing row",
+      manifest: { ...manifest, decisions: manifest.decisions.filter((row) => row.id !== "KFD-3") },
+      packageArtifactRoot: kfdPackageArtifactRoot,
+      code: "adopter-manifest-invalid",
+    },
+    {
+      name: "unbound product gate",
+      manifest: structuredClone(manifest),
+      packageArtifactRoot: kfdPackageArtifactRoot,
+      code: "adopter-gate-unbound",
+      mutate(value) {
+        value.decisions.find((row) => row.id === "KFD-4").verificationEvidence[0].root = `sha256:${"e".repeat(64)}`;
+      },
+    },
+    {
+      name: "Warrant witness",
+      manifest: structuredClone(manifest),
+      packageArtifactRoot: kfdPackageArtifactRoot,
+      code: "adopter-manifest-invalid",
+      mutate(value) {
+        value.decisions.find((row) => row.id === "KFD-10").witnessBindings[0].verifierRoot = `sha256:${"f".repeat(64)}`;
+      },
+    },
+  ];
+  for (const fixture of cases) {
+    fixture.mutate?.(fixture.manifest);
+    const gate = createKfdAdopterManifestGate({
+      manifest: fixture.manifest,
+      packageArtifactRoot: fixture.packageArtifactRoot,
+      gateResults: gates,
+      expectedSourceSha: sourceSha,
+      checkedAt,
+    });
+    assert.equal(gate.status, "failed", fixture.name);
+    assert.ok(gate.issues.some((entry) => entry.code === fixture.code), `${fixture.name}: ${JSON.stringify(gate.issues)}`);
+  }
 });
 
 test("KFD package verifier rejects structurally invalid records independently of product gates", async () => {

@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "b63da91d183b047294814e770dacbad7e0b43e0554b4c8248bf8e36602f28231",
+    "sha256": "1d9623d704cbe0cacc16ef67db1720719b2150a0e5bddc474349fba7cad2f01b",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "b63da91d183b047294814e770dacbad7e0b43e0554b4c8248bf8e36602f28231",
+      "sha256": "1d9623d704cbe0cacc16ef67db1720719b2150a0e5bddc474349fba7cad2f01b",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -1471,6 +1471,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./kfd-product-gates"
+        },
+        {
+          "id": "export:./kfd-adopter-manifest",
+          "name": "@kungfu-tech/buildchain/kfd-adopter-manifest",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-adopter-manifest.js",
+          "evidencePath": "packages/core/kfd-adopter-manifest.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-adopter-manifest"
         },
         {
           "id": "export:./kfd-agent-hub",
@@ -6731,6 +6743,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 428
+    "publicSurfaceCount": 429
   }
 }

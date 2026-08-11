@@ -8706,6 +8706,178 @@
       ]
     },
     {
+      "id": "packages/core/kfd-adopter-manifest.js#createKfdAdopterManifestGate",
+      "name": "createKfdAdopterManifestGate",
+      "kind": "function",
+      "signature": "function createKfdAdopterManifestGate({ manifest, packageArtifactRoot = \"\", gateResults = [], authorityPath = \".buildchain/kfd/adopter-manifest.json\", expectedSourceSha = \"\", checkedAt = new Date().toISOString(), maxAgeSeconds = 86400, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ manifest, packageArtifactRoot = \"\", gateResults = [], authorityPath = \".buildchain/kfd/adopter-manifest.json\", expectedSourceSha = \"\", checkedAt = new Date().toISOString(), maxAgeSeconds = 86400, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/kfd-adopter-manifest.js",
+        "line": 209
+      },
+      "example": "import { createKfdAdopterManifestGate } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/kfd-adopter-manifest.js#createKfdLegacySupportMatrixProjection",
+      "name": "createKfdLegacySupportMatrixProjection",
+      "kind": "function",
+      "signature": "function createKfdLegacySupportMatrixProjection({ manifest, manifestGate } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ manifest, manifestGate } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/kfd-adopter-manifest.js",
+        "line": 327
+      },
+      "example": "import { createKfdLegacySupportMatrixProjection } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/kfd-adopter-manifest.js#KFD_ADOPTER_MANIFEST_GATE_CONTRACT",
+      "name": "KFD_ADOPTER_MANIFEST_GATE_CONTRACT",
+      "kind": "constant",
+      "signature": "const KFD_ADOPTER_MANIFEST_GATE_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/kfd-adopter-manifest.js",
+        "line": 18
+      },
+      "example": "import { KFD_ADOPTER_MANIFEST_GATE_CONTRACT } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/kfd-adopter-manifest.js#KFD_LEGACY_SUPPORT_MATRIX_CONTRACT",
+      "name": "KFD_LEGACY_SUPPORT_MATRIX_CONTRACT",
+      "kind": "constant",
+      "signature": "const KFD_LEGACY_SUPPORT_MATRIX_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/kfd-adopter-manifest.js",
+        "line": 20
+      },
+      "example": "import { KFD_LEGACY_SUPPORT_MATRIX_CONTRACT } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/kfd-adopter-manifest.js#validateKfdAdopterManifestGate",
+      "name": "validateKfdAdopterManifestGate",
+      "kind": "function",
+      "signature": "function validateKfdAdopterManifestGate(gate, { expectedSourceSha = \"\", checkedAt = gate?.checkedAt || new Date().toISOString(), } = {})",
+      "parameters": [
+        {
+          "name": "gate",
+          "signature": "gate"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ expectedSourceSha = \"\", checkedAt = gate?.checkedAt || new Date().toISOString(), } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/kfd-adopter-manifest.js",
+        "line": 279
+      },
+      "example": "import { validateKfdAdopterManifestGate } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/kfd-adopter-manifest.js#validateKfdLegacySupportMatrixProjection",
+      "name": "validateKfdLegacySupportMatrixProjection",
+      "kind": "function",
+      "signature": "function validateKfdLegacySupportMatrixProjection(matrix, { manifest, manifestGate } = {})",
+      "parameters": [
+        {
+          "name": "matrix",
+          "signature": "matrix"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ manifest, manifestGate } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/kfd-adopter-manifest.js",
+        "line": 381
+      },
+      "example": "import { validateKfdLegacySupportMatrixProjection } from \"@kungfu-tech/buildchain/kfd-adopter-manifest\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/kfd-agent-hub.js#explainKfdAgentHub",
       "name": "explainKfdAgentHub",
       "kind": "function",
@@ -22307,6 +22479,34 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/kfd-adopter-manifest",
+      "export": "./kfd-adopter-manifest",
+      "target": "./packages/core/kfd-adopter-manifest.js",
+      "digest": "sha256:45fc7620410c48001da97cb0748c0b19ff9f5c5b07267f1aaf744dc816e970bd",
+      "summary": "Exact-cut KFD adopter manifest verification, Buildchain evidence binding, and one-way legacy support-matrix projection APIs.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 6,
+      "symbolIds": [
+        "packages/core/kfd-adopter-manifest.js#createKfdAdopterManifestGate",
+        "packages/core/kfd-adopter-manifest.js#createKfdLegacySupportMatrixProjection",
+        "packages/core/kfd-adopter-manifest.js#KFD_ADOPTER_MANIFEST_GATE_CONTRACT",
+        "packages/core/kfd-adopter-manifest.js#KFD_LEGACY_SUPPORT_MATRIX_CONTRACT",
+        "packages/core/kfd-adopter-manifest.js#validateKfdAdopterManifestGate",
+        "packages/core/kfd-adopter-manifest.js#validateKfdLegacySupportMatrixProjection"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/kfd-agent-hub",
       "export": "./kfd-agent-hub",
       "target": "./packages/core/kfd-agent-hub.js",
@@ -23495,7 +23695,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:34f39632494c0f4d4961fd79fc8ac94466da56c29f04f09e706f402d98ef125c"
+      "digest": "sha256:8088298056439bbbc6296fc3160a562bad763a14d45d132935cb76c18b3ca266"
     },
     {
       "id": "build-facts",
