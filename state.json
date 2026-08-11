@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "id": "7efbc9b977dada585b03fcc2ab971e9e1737eb2295e00ac2e5910d4871c3c6b0",
+  "repository": "kungfu-systems/buildchain",
+  "target_ref": "release/v3/v3.0",
+  "source_sha": "8e9bbf94d27066cb7ce1de33a3aaf29d507749ac",
+  "release_sha": "0f3b12601d04dc13684e486145f5a73db46ef4df",
+  "release_material_sha": "0f3b12601d04dc13684e486145f5a73db46ef4df",
+  "publish_tooling_sha": "0f3b12601d04dc13684e486145f5a73db46ef4df",
+  "version": "3.0.8",
+  "exact_tag": "v3.0.8",
+  "channel": "release",
+  "line": "v3.0",
+  "version_strategy": "",
+  "lifecycle_identity": "lifecycle.publish",
+  "state_ref": "buildchain/release-state/3-0-8",
+  "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v3.0.8.json",
+  "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v3.0.8/evidence.json",
+  "state": "sealed",
+  "previous_state": "prepared",
+  "actor": "dongkeren",
+  "run_id": "31448540373",
+  "superseded_by": "",
+  "failure": "",
+  "artifacts": [],
+  "evidence": [],
+  "sealed_bundle": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-publication-sealed-bundle",
+    "root": "sha256:22b618a3aadcddd05af8905e87347b74179f8f433d1eba3f0b63ebf25dd9ecbb",
+    "candidate": {
+      "schemaVersion": 1,
+      "contract": "kungfu-buildchain-publication-artifact-candidate",
+      "repository": "kungfu-systems/buildchain",
+      "sourceSha": "af50d95ad10cd2c12875d3570de02d1a34f4cc8c",
+      "sourceTreeSha": "cce64f974030a625311a74626b9e951709aca8b4",
+      "runtimeSha": "827fa0252c0546816c33ec89e66ca505ad6d5162",
+      "releaseCandidateRoot": "sha256:313bbc42154af2bb7b81f6f7678a25eac6a0d2af11e5d727f700ee5881dadd9c",
+      "files": [
+        {
+          "path": "buildchain-package-af50d95ad10cd2c12875d3570de02d1a34f4cc8c/kungfu-tech-buildchain-3.0.8.tgz",
+          "size": 2026071,
+          "sha256": "0edb375969c586acac49c1ad6b244bcd64f4b72bd11a237114368bf18afc90a3"
+        },
+        {
+          "path": "buildchain-package-af50d95ad10cd2c12875d3570de02d1a34f4cc8c/product-payload-manifest.json",
+          "size": 878,
+          "sha256": "dce8a13e71e20326aa6b2f42b12aff5a7272924d517137627cd4dff857a6cab6"
+        }
+      ],
+      "candidateDigest": "22b618a3aadcddd05af8905e87347b74179f8f433d1eba3f0b63ebf25dd9ecbb"
+    },
+    "files": [
+      {
+        "path": "buildchain-package-af50d95ad10cd2c12875d3570de02d1a34f4cc8c/kungfu-tech-buildchain-3.0.8.tgz",
+        "size": 2026071,
+        "sha256": "0edb375969c586acac49c1ad6b244bcd64f4b72bd11a237114368bf18afc90a3"
+      },
+      {
+        "path": "buildchain-package-af50d95ad10cd2c12875d3570de02d1a34f4cc8c/product-payload-manifest.json",
+        "size": 878,
+        "sha256": "dce8a13e71e20326aa6b2f42b12aff5a7272924d517137627cd4dff857a6cab6"
+      }
+    ],
+    "npm": {
+      "name": "@kungfu-tech/buildchain",
+      "version": "3.0.8",
+      "path": "buildchain-package-af50d95ad10cd2c12875d3570de02d1a34f4cc8c/kungfu-tech-buildchain-3.0.8.tgz",
+      "size": 2026071,
+      "sha256": "0edb375969c586acac49c1ad6b244bcd64f4b72bd11a237114368bf18afc90a3",
+      "integrity": "sha512-FxdSDy0zbw/xFyrh+ZgE2g5rn1eEmEUCBri2hd+EwNKj4SirdSc3qehcLKg4SQZhryPOxbnK/IqLWgHbdwKBuA=="
+    },
+    "releaseAssets": [
+      {
+        "path": "buildchain-package-af50d95ad10cd2c12875d3570de02d1a34f4cc8c/kungfu-tech-buildchain-3.0.8.tgz",
+        "size": 2026071,
+        "sha256": "0edb375969c586acac49c1ad6b244bcd64f4b72bd11a237114368bf18afc90a3"
+      }
+    ],
+    "completion": {
+      "githubReleaseRequired": true
+    },
+    "durablePath": "sealed-bundle/sha256/22b618a3aadcddd05af8905e87347b74179f8f433d1eba3f0b63ebf25dd9ecbb",
+    "resumeCommand": "buildchain paper resume --version \"3.0.8\" --state-ref \"refs/heads/buildchain/release-state/3-0-8\""
+  },
+  "publication_state": "sealed",
+  "milestones": {},
+  "resume_command": "buildchain paper resume --version \"3.0.8\" --state-ref \"refs/heads/buildchain/release-state/3-0-8\"",
+  "created_at": "2026-08-11T01:17:32.434Z",
+  "updated_at": "2026-08-11T01:17:32.434Z"
+}
