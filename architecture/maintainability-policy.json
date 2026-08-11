@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 296,
-    "maxHandMaintainedSourceLines": 115547,
+    "maxHandMaintainedSourceFiles": 298,
+    "maxHandMaintainedSourceLines": 116567,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23346,
     "latestTransition": "Candidate Patrol resumes the active Release Train before considering later Dev movement.",
-    "rationale": "Two bounded controller modules separate exact-SHA qualification from active Release Train reconciliation. They add candidate-tree, Alpha-base, runtime and route readback, rooted hold evidence, duplicate-observation idempotence, and frozen-candidate resume without widening the pre-existing patrol script's line, function-length or complexity debt. The reusable workflow adds exact runtime checkout plus Release Cut, generation, tree, drift and hold outputs. The concurrently landed macOS Ohio capacity fallback remains intact. This exact combined two-file, 636-source-line and 48-workflow-line increase over the refreshed base is covered by focused negative tests and cannot grow implicitly."
+    "rationale": "Two bounded controller modules separate exact-SHA qualification from active Release Train reconciliation. They add candidate-tree, Alpha-base, runtime and route readback, rooted hold evidence, duplicate-observation idempotence, frozen-candidate resume, and line-stable deterministic playback without widening the pre-existing patrol script's debt. The reusable workflow adds exact runtime checkout plus Release Cut, generation, tree, drift and hold outputs. The concurrently landed standard KFD adopter-manifest authority and macOS Ohio capacity fallback remain intact. This exact combined two-file, 657-source-line and 48-workflow-line increase over the refreshed base is covered by focused negative tests and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/kfd-adopter-manifest.js": {
+      "maxLines": 390,
+      "rationale": "The package-only adapter keeps published KFD verification, Buildchain-specific evidence constraints, decision and gate roots, and the one-way legacy projection in one bounded public authority seam. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/engineering-housekeeper-github.js": {
       "maxLines": 707,
       "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."

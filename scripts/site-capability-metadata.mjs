@@ -218,6 +218,7 @@ export function nodeApiMeta(exportName) {
     "./issue-reporting": { group: "observability-diagnostics", summary: "Buildchain-owned issue reporting API for workflow friction feedback." },
     "./buildchain-layout": { group: "kfd-trust", summary: "Versioned Buildchain repository-layout discovery contract plus canonical .buildchain path resolution and migration APIs." },
     "./kfd": { group: "kfd-trust", summary: "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers." },
+    "./kfd-adopter-manifest": { group: "kfd-trust", summary: "Exact-cut KFD adopter manifest verification, Buildchain evidence binding, and one-way legacy support-matrix projection APIs." },
     "./kfd-product-gates": { group: "kfd-trust", summary: "Fail-closed KFD-4, KFD-5, and KFD-7 product evidence gates plus non-widening KFD support-matrix release projections." },
     "./public-surface-audit": { group: "kfd-trust", summary: "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces." },
     "./kfd-gate": { group: "kfd-trust", summary: "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs." },

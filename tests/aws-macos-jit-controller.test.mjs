@@ -11,6 +11,7 @@ import {
   createMacosJitCampaignPlan,
   createMacosJitClosePlan,
   createMacosJitJobPlan,
+  createMacosJitSourceRebindPlan,
   macosAllocateHostsArgs,
   macosReleaseHostsArgs,
   macosRunInstancesArgs,
@@ -21,6 +22,7 @@ const values = {
   accountId: "727884401362",
   campaignId: "mac-20260802-f60591b3",
   sourceSha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678",
+  replacementSourceSha: "a60591b3565b3b75f1b9cfe402ab025e6beeb679",
   sourceRef: "refs/heads/ci/aws-macos-burst-qualification-20260802-f60591b3",
   region: "us-east-1",
   availabilityZone: "us-east-1a",
@@ -53,6 +55,18 @@ function jobPlan(overrides = {}) {
     hostId: "h-0123456789abcdef0",
     instanceId: "i-0123456789abcdef0",
     hostAllocatedAt: "2026-08-02T01:05:00Z",
+    ...overrides,
+  });
+}
+
+function sourceRebindPlan(overrides = {}) {
+  return createMacosJitSourceRebindPlan({
+    ...values,
+    previousSourceSha: values.sourceSha,
+    sourceSha: values.replacementSourceSha,
+    workflowId: "323846928",
+    hostId: "h-0123456789abcdef0",
+    instanceId: "i-0123456789abcdef0",
     ...overrides,
   });
 }
@@ -124,6 +138,28 @@ test("macOS controller requires a unique exact qualification label per job", () 
   );
 });
 
+test("macOS source rebind is forward-only, same-ref, and zero-allocation", () => {
+  const plan = sourceRebindPlan();
+  assert.equal(plan.kind, "campaign-source-rebind-plan");
+  assert.equal(plan.previousSource.sha, values.sourceSha);
+  assert.equal(plan.source.sha, values.replacementSourceSha);
+  assert.equal(plan.previousSource.ref, plan.source.ref);
+  assert.equal(plan.safety.noAllocation, true);
+  assert.equal(plan.safety.noDispatch, true);
+  assert.equal(plan.github.requiredState, "disabled_manually");
+  assert.throws(
+    () => sourceRebindPlan({ sourceSha: values.sourceSha }),
+    /sourceSha must differ/,
+  );
+  assert.throws(
+    () =>
+      sourceRebindPlan({
+        previousSourceRef: "refs/heads/ci/another-campaign",
+      }),
+    /sourceRef must remain unchanged/,
+  );
+});
+
 test("macOS AllocateHosts binds one host while RunInstances enforces DryRun and stop reuse", () => {
   const plan = campaignPlan();
   const allocate = macosAllocateHostsArgs(plan);
@@ -180,12 +216,38 @@ function installFakes(tempRoot) {
     String.raw`
 const fs = require("node:fs");
 const args = process.argv.slice(2);
+const previousLog = fs.existsSync(process.env.FAKE_COMMAND_LOG)
+  ? fs.readFileSync(process.env.FAKE_COMMAND_LOG, "utf8")
+  : "";
 fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "gh", args }) + "\n");
 const joined = args.join(" ");
+const refWasUpdated = previousLog.includes('"PATCH"') && previousLog.includes("a60591b3565b3b75f1b9cfe402ab025e6beeb679");
 if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
   process.stdout.write(JSON.stringify({ sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678" }));
+} else if (joined.includes("commits/a60591b3565b3b75f1b9cfe402ab025e6beeb679")) {
+  process.stdout.write(JSON.stringify({ sha: "a60591b3565b3b75f1b9cfe402ab025e6beeb679" }));
+} else if (joined.includes("compare/f60591b3565b3b75f1b9cfe402ab025e6beeb678...a60591b3565b3b75f1b9cfe402ab025e6beeb679")) {
+  process.stdout.write(JSON.stringify({ status: "ahead", merge_base_commit: { sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678" } }));
+} else if (joined.includes("git/refs/heads/ci/aws-macos-burst-qualification-20260802-f60591b3") && args.includes("PATCH")) {
+  if (process.env.FAKE_REF_UPDATE_FAILURE === "true" && args.includes("force=false")) {
+    process.stderr.write("simulated ref update failure");
+    process.exitCode = 2;
+  } else {
+    process.stdout.write(JSON.stringify({ object: { sha: args.find((arg) => arg.startsWith("sha=")).slice(4) } }));
+  }
+} else if (joined.includes("git/refs/heads/ci/aws-macos-burst-qualification-20260802-f60591b3")) {
+  process.stdout.write(JSON.stringify({ object: { sha: refWasUpdated ? "a60591b3565b3b75f1b9cfe402ab025e6beeb679" : "f60591b3565b3b75f1b9cfe402ab025e6beeb678" } }));
 } else if (joined.includes("actions/workflows/323846928")) {
-  process.stdout.write(JSON.stringify({ id: 323846928, state: "disabled_manually" }));
+  if (joined.includes("/runs?")) {
+    process.stdout.write(JSON.stringify({ workflow_runs: [{ id: 30720000001, head_branch: "ci/aws-macos-burst-qualification-20260802-f60591b3", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", status: "completed", conclusion: "startup_failure" }] }));
+  } else {
+    process.stdout.write(JSON.stringify({ id: 323846928, state: process.env.FAKE_WORKFLOW_ENABLED === "true" ? "active" : "disabled_manually" }));
+  }
+} else if (joined.includes("actions/runs/30720000001/jobs")) {
+  const count = process.env.FAKE_PRIOR_JOB === "true" ? 1 : 0;
+  process.stdout.write(JSON.stringify({ total_count: count, jobs: count ? [{ id: 1 }] : [] }));
+} else if (joined.includes("actions/runs/30720000001/artifacts")) {
+  process.stdout.write(JSON.stringify({ total_count: 0, artifacts: [] }));
 } else if (joined.includes("actions/runs/30730000001")) {
   process.stdout.write(JSON.stringify({ event: "workflow_dispatch", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
 } else if (joined.includes("actions/jobs/91450000001")) {
@@ -209,6 +271,13 @@ if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
 const fs = require("node:fs");
 const args = process.argv.slice(2);
 const joined = args.join(" ");
+const previousLog = fs.existsSync(process.env.FAKE_COMMAND_LOG)
+  ? fs.readFileSync(process.env.FAKE_COMMAND_LOG, "utf8")
+  : "";
+const sourceWasRetagged = previousLog.includes('"create-tags"') && previousLog.includes("a60591b3565b3b75f1b9cfe402ab025e6beeb679");
+const resourceSourceSha = sourceWasRetagged
+  ? "a60591b3565b3b75f1b9cfe402ab025e6beeb679"
+  : "f60591b3565b3b75f1b9cfe402ab025e6beeb678";
 let metadata = {};
 if (joined.includes("--cli-input-json")) {
   const input = args[args.indexOf("--cli-input-json") + 1].replace(/^file:\/\//, "");
@@ -236,14 +305,18 @@ if (joined.includes("sts get-caller-identity")) {
   process.stdout.write(JSON.stringify({ Subscribers: [{ SubscriptionType: "SNS", Address: "arn:aws:sns:us-east-1:727884401362:mac-kill" }] }));
 } else if (joined.includes("ec2 describe-hosts") && joined.includes("--host-ids")) {
   process.stdout.write(JSON.stringify({ Hosts: [{ HostId: "h-0123456789abcdef0", State: "available", AvailabilityZone: "us-east-1a", AllocationTime: "2026-08-02T01:05:00Z", HostProperties: { InstanceType: "mac2.metal" }, Tags: [
-    { Key: "kungfu:owner", Value: "buildchain" }, { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" }, { Key: "kungfu:provider", Value: "macos-ec2-jit" }, { Key: "kungfu:campaign-id", Value: "mac-20260802-f60591b3" }, { Key: "kungfu:source-sha", Value: "f60591b3565b3b75f1b9cfe402ab025e6beeb678" }
+    { Key: "kungfu:owner", Value: "buildchain" }, { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" }, { Key: "kungfu:provider", Value: "macos-ec2-jit" }, { Key: "kungfu:campaign-id", Value: "mac-20260802-f60591b3" }, { Key: "kungfu:source-sha", Value: resourceSourceSha }
   ] }] }));
+} else if (joined.includes("ec2 describe-hosts") && joined.includes("tag:kungfu:campaign-id")) {
+  process.stdout.write(JSON.stringify({ Hosts: [{ HostId: "h-0123456789abcdef0" }] }));
 } else if (joined.includes("ec2 describe-hosts")) {
   process.stdout.write(JSON.stringify({ Hosts: [] }));
 } else if (joined.includes("ec2 describe-instances") && joined.includes("--instance-ids")) {
   process.stdout.write(JSON.stringify({ Reservations: [{ Instances: [{ InstanceId: "i-0123456789abcdef0", State: { Name: "running" }, Placement: { HostId: "h-0123456789abcdef0" }, ImageId: "ami-0a337ecd4cb8e307f", InstanceType: "mac2.metal", BlockDeviceMappings: [{ DeviceName: "/dev/sda1", Ebs: { VolumeId: "vol-0123456789abcdef0", DeleteOnTermination: true } }], Tags: [
-    { Key: "kungfu:owner", Value: "buildchain" }, { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" }, { Key: "kungfu:provider", Value: "macos-ec2-jit" }, { Key: "kungfu:campaign-id", Value: "mac-20260802-f60591b3" }, { Key: "kungfu:source-sha", Value: "f60591b3565b3b75f1b9cfe402ab025e6beeb678" }
+    { Key: "kungfu:owner", Value: "buildchain" }, { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" }, { Key: "kungfu:provider", Value: "macos-ec2-jit" }, { Key: "kungfu:campaign-id", Value: "mac-20260802-f60591b3" }, { Key: "kungfu:source-sha", Value: resourceSourceSha }
   ] }] }] }));
+} else if (joined.includes("ec2 describe-instances") && joined.includes("tag:kungfu:campaign-id")) {
+  process.stdout.write(JSON.stringify({ Reservations: [{ Instances: [{ InstanceId: "i-0123456789abcdef0" }] }] }));
 } else if (joined.includes("ec2 describe-instances")) {
   process.stdout.write(JSON.stringify({ Reservations: [] }));
 } else if (joined.includes("ec2 describe-images")) {
@@ -251,7 +324,9 @@ if (joined.includes("sts get-caller-identity")) {
 } else if (joined.includes("ec2 describe-subnets")) {
   process.stdout.write(JSON.stringify({ Subnets: [{ SubnetId: "subnet-fa5c77b7", AvailabilityZone: "us-east-1a" }] }));
 } else if (joined.includes("ec2 describe-volumes")) {
-  process.stdout.write(JSON.stringify({ Volumes: [{ VolumeId: "vol-0123456789abcdef0", Encrypted: true }] }));
+  process.stdout.write(JSON.stringify({ Volumes: [{ VolumeId: "vol-0123456789abcdef0", State: "in-use", Encrypted: true, Tags: [
+    { Key: "kungfu:owner", Value: "buildchain" }, { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" }, { Key: "kungfu:provider", Value: "macos-ec2-jit" }, { Key: "kungfu:campaign-id", Value: "mac-20260802-f60591b3" }, { Key: "kungfu:source-sha", Value: resourceSourceSha }
+  ] }] }));
 } else if (joined.includes("iam simulate-principal-policy")) {
   process.stdout.write(JSON.stringify({ EvaluationResults: [{ EvalActionName: "ec2:AllocateHosts", EvalDecision: process.env.FAKE_ALLOCATE_DENIED === "true" ? "implicitDeny" : "allowed", MissingContextValues: [] }] }));
 } else if (joined.includes("ec2 allocate-hosts")) {
@@ -264,6 +339,8 @@ if (joined.includes("sts get-caller-identity")) {
   process.stdout.write("");
 } else if (joined.includes("ssm describe-parameters")) {
   process.stdout.write(JSON.stringify({ Parameters: [] }));
+} else if (joined.includes("s3api list-objects-v2")) {
+  process.stdout.write(JSON.stringify({ KeyCount: 0, Contents: [] }));
 } else if (joined.includes("ssm put-parameter")) {
   process.stdout.write(JSON.stringify({ Version: 1, Tier: "Advanced" }));
 } else if (joined.includes("ssm describe-instance-information")) {
@@ -370,6 +447,154 @@ test("macOS controller launches only after exact-source preflight, IAM simulatio
     assert.equal(simulationIndex < allocateIndexes[0].index, true);
     assert.equal(runIndexes[0].entry.args.includes("--dry-run"), true);
     assert.equal(runIndexes[1].entry.args.includes("--dry-run"), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+function runRebindWithFakes(extraEnv = {}) {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "mac-jit-source-rebind-test-"),
+  );
+  const commandLog = path.join(tempRoot, "commands.jsonl");
+  installFakes(tempRoot);
+  const cliArgs = commonCliArgs();
+  cliArgs[cliArgs.indexOf("--source-sha") + 1] = values.replacementSourceSha;
+  const result = spawnSync(
+    process.execPath,
+    [
+      "scripts/aws-macos-jit-controller.mjs",
+      "rebind-campaign",
+      "--execute",
+      "--previous-source-sha",
+      values.sourceSha,
+      "--workflow-id",
+      "323846928",
+      "--host-id",
+      "h-0123456789abcdef0",
+      "--instance-id",
+      "i-0123456789abcdef0",
+      "--confirm-source-sha",
+      values.replacementSourceSha,
+      "--confirm-previous-source-sha",
+      values.sourceSha,
+      "--confirm-campaign-id",
+      values.campaignId,
+      "--confirm-host-id",
+      "h-0123456789abcdef0",
+      "--confirm-instance-id",
+      "i-0123456789abcdef0",
+      "--confirm-zero-allocation",
+      ...cliArgs,
+    ],
+    {
+      cwd: path.resolve(import.meta.dirname, ".."),
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${tempRoot}:${process.env.PATH}`,
+        FAKE_COMMAND_LOG: commandLog,
+        ...extraEnv,
+      },
+    },
+  );
+  const commands = fs.existsSync(commandLog)
+    ? fs
+        .readFileSync(commandLog, "utf8")
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .map(JSON.parse)
+    : [];
+  return { tempRoot, result, commands };
+}
+
+test("macOS controller rebinds an unused campaign without allocating or dispatching", () => {
+  const { tempRoot, result, commands } = runRebindWithFakes();
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.status, "rebound-zero-allocation");
+    assert.equal(output.paidCapacityCreated, false);
+    assert.equal(output.jobDispatched, false);
+    assert.equal(output.preflight.priorRuns[0].jobCount, 0);
+    assert.equal(output.preflight.priorRuns[0].artifactCount, 0);
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
+    assert.equal(
+      commands.some((entry) => entry.args.includes("run-instances")),
+      false,
+    );
+    assert.equal(
+      commands.some((entry) => entry.args.includes("workflow_dispatch")),
+      false,
+    );
+    assert.equal(
+      commands.filter((entry) => entry.args.includes("create-tags")).length,
+      1,
+    );
+    const refUpdate = commands.find(
+      (entry) =>
+        entry.command === "gh" &&
+        entry.args.includes("PATCH") &&
+        entry.args.some((arg) =>
+          arg.includes("git/refs/heads/ci/aws-macos-burst-qualification"),
+        ),
+    );
+    assert.ok(refUpdate);
+    assert.ok(refUpdate.args.includes("force=false"));
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS source rebind fails closed before mutation when the workflow is enabled or a prior job exists", () => {
+  for (const extraEnv of [
+    { FAKE_WORKFLOW_ENABLED: "true" },
+    { FAKE_PRIOR_JOB: "true" },
+  ]) {
+    const { tempRoot, result, commands } = runRebindWithFakes(extraEnv);
+    try {
+      assert.equal(result.status, 1);
+      assert.equal(
+        commands.some((entry) => entry.args.includes("create-tags")),
+        false,
+      );
+      assert.equal(
+        commands.some(
+          (entry) => entry.command === "gh" && entry.args.includes("PATCH"),
+        ),
+        false,
+      );
+    } finally {
+      fs.rmSync(tempRoot, { recursive: true });
+    }
+  }
+});
+
+test("macOS source rebind compensates source tags when the ref update fails", () => {
+  const { tempRoot, result, commands } = runRebindWithFakes({
+    FAKE_REF_UPDATE_FAILURE: "true",
+  });
+  try {
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /compensated rollback completed/);
+    const tagUpdates = commands.filter((entry) =>
+      entry.args.includes("create-tags"),
+    );
+    assert.equal(tagUpdates.length, 2);
+    assert.ok(
+      tagUpdates[0].args.some((arg) =>
+        arg.includes(values.replacementSourceSha),
+      ),
+    );
+    assert.ok(tagUpdates[1].args.some((arg) => arg.includes(values.sourceSha)));
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
   } finally {
     fs.rmSync(tempRoot, { recursive: true });
   }

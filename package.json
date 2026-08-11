@@ -33,6 +33,7 @@
     "./issue-reporting": "./packages/core/issue-reporting.js",
     "./kfd": "./packages/core/kfd.js",
     "./kfd-product-gates": "./packages/core/kfd-product-gates.js",
+    "./kfd-adopter-manifest": "./packages/core/kfd-adopter-manifest.js",
     "./kfd-agent-hub": "./packages/core/kfd-agent-hub.js",
     "./buildchain-layout": "./packages/core/buildchain-layout.js",
     "./release-line-bootstrap": "./packages/core/release-line-bootstrap.js",
