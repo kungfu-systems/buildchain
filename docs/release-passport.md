@@ -313,6 +313,13 @@ fails closed if any claim is missing source bindings, machine evidence, hashes,
 artifact coordinates, verification result, audit boundary, responsibility, or
 residual risk.
 
+The same self-promotion boundary extends the Buildchain-owned KFD witness
+generator against the transaction's exact source SHA. It produces the standard
+full-cut adopter manifest, the non-qualifying KFD-4/5/7 product gates, and the
+one-way legacy projection before the final passport is collected. An explicitly
+supplied adopter manifest still takes precedence; an omitted self-release
+manifest no longer silently produces a KFD-1/2/3-only passport.
+
 ### KFD-3 collaboration-interface release gate
 
 KFD-3 asks a different release question than KFD-1. KFD-1 proves that named

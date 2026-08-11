@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "contract": "kfd-4-perspective-replay",
+  "standard": "kfd-4",
+  "replayId": "buildchain-release-product-contrast",
+  "mode": "contrastive",
+  "sourceViews": [
+    {
+      "id": "maintainer",
+      "kind": "observer-view",
+      "coordinate": "git://kungfu-systems/buildchain@{{SOURCE_SHA}}",
+      "observer": "buildchain-release-maintainer",
+      "perspective": "release-integrity",
+      "acceptedFactCut": "git://kungfu-systems/buildchain@{{SOURCE_SHA}}",
+      "naturalObjects": ["release"],
+      "consequences": ["published artifact"],
+      "knownGaps": []
+    },
+    {
+      "id": "consumer",
+      "kind": "observer-view",
+      "coordinate": "npm://@kungfu-tech/buildchain@{{SOURCE_SHA}}",
+      "observer": "buildchain-release-consumer",
+      "perspective": "artifact-consumption",
+      "acceptedFactCut": "artifact://published-package",
+      "naturalObjects": ["installed package"],
+      "consequences": ["local build execution"],
+      "knownGaps": ["consumer runtime state"]
+    }
+  ],
+  "replayObserver": {
+    "id": "buildchain",
+    "kind": "service",
+    "purpose": "retain source and artifact fact boundaries"
+  },
+  "reconstruction": {
+    "policyVersion": "1",
+    "sharedContext": "same source-bound release",
+    "preservedElements": ["observer", "accepted-fact-cut", "evidence-boundary"],
+    "declaredLoss": ["consumer runtime state"],
+    "degradedState": "none"
+  },
+  "contrast": {
+    "dimensions": ["evidence-boundary"],
+    "mismatches": [
+      {
+        "sourceViewIds": ["maintainer", "consumer"],
+        "observation": "source and installed artifact evidence have different custody",
+        "primitiveSignal": "inconclusive"
+      }
+    ]
+  },
+  "verification": {
+    "result": "pass",
+    "evidence": ["evidence/projection-fsck.json"]
+  }
+}
