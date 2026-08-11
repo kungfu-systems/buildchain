@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "0de402c3877e4c55dbd07b2f4891facce5be8ba8",
-    "maxHandMaintainedSourceFiles": 310,
-    "maxHandMaintainedSourceLines": 121344,
+    "maxHandMaintainedSourceFiles": 313,
+    "maxHandMaintainedSourceLines": 122604,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23607,
-    "latestTransition": "Buildchain v3 preserves failed macOS JIT evidence while advancing the same paid host to a strict descendant source.",
-    "rationale": "The protected next-development controller, hosted self-dogfood and same-host macOS rehydration remain intact. The failed-source rebind adds one explicit operator mode over the existing compensated tag and ref transaction. It requires the exact terminal failed run inventory, complete jobs, retained GitHub artifacts and S3 bootstrap evidence, zero JIT residue, an empty next-source prefix and strict forward lineage; it never allocates capacity or dispatches work. This exact 310-file, 121344-source-line and 23607-workflow-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23756,
+    "latestTransition": "Buildchain v3 makes protected Dev delivery a two-phase, fenced Warrant transaction with semantic native-proof reuse.",
+    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. This exact 313-file, 122604-source-line and 23756-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -40,8 +40,8 @@
       "rationale": "The extracted Alpha promotion stage replaces the former non-fast-forward skip with the existing exact-current-Dev regeneration contract, protected PR fallback, and fail-closed workspace binding; this exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/dev-delivery-warrant.js": {
-      "maxLines": 611,
-      "rationale": "The existing durable queue adds only the narrow release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 645,
+      "rationale": "The existing durable queue adds one explicit provisional-to-qualified transition bound to the same generation and fencing token, persists rooted native proof and reuse decisions, and keeps legacy qualified state readable without rewriting historical roots. Selection, heartbeat, expiry, release-blocker handoff, deterministic ranking, and terminal semantics remain unchanged; this exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/release-blocker-priority.js": {
       "maxLines": 193,
@@ -149,6 +149,10 @@
     "scripts/generate-site-bundle.mjs": {
       "maxLines": 1502,
       "rationale": "Lifecycle metadata and CLI registry parity are generated centrally across the latest upstream public surface while the largest generator function remains at or below its prior size and complexity ceilings."
+    },
+    "scripts/init-repo.mjs": {
+      "maxLines": 592,
+      "rationale": "Repository initialization adds only a bounded read and write projection for the native two-phase Delivery Warrant consumer; the workflow body is extracted into a separately reviewed template and existing initialization behavior remains unchanged. This exact reviewed ceiling cannot grow implicitly."
     },
     "scripts/run-lifecycle-core.mjs": {
       "maxLines": 886,
@@ -388,6 +392,9 @@
           "landing-mode",
           "max-merges",
           "merge-method",
+          "native-command",
+          "native-heartbeat-seconds",
+          "native-proof-json",
           "plan-root",
           "project-cut-proof-json",
           "queue-admission-context",
@@ -413,7 +420,10 @@
           "evaluated-count",
           "final-base-sha",
           "merged-count",
+          "native-proof-root",
+          "native-reuse-decision-root",
           "project-cut-proof-root",
+          "qualified-warrant-receipt-root",
           "skipped-count",
           "source-proof-root",
           "warrant-receipt-root",
@@ -421,7 +431,7 @@
           "warrant-state-root"
         ]
       },
-      "rationale": "Extend targeted exact-head admission with immediate active-candidate handoff and one optional exact lease context that is reactivated before every queue retry. Independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
+      "rationale": "Extend exact-head admission into a two-phase Warrant transaction: provisional selection precedes heartbeat-supervised native work, semantic proof reuse is rooted and fail closed, qualification is fenced and atomic, and only qualified candidates reach merge-queue admission. Independent approval, required checks, protected integration, and exact post-merge readback remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
