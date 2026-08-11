@@ -8,6 +8,8 @@ export const RELEASE_TRAIN_TRANSITION_CONTRACT =
   "kungfu-buildchain-release-train-transition/v1";
 export const RELEASE_TRAIN_OBSERVATION_CONTRACT =
   "kungfu-buildchain-release-train-observation/v1";
+export const RELEASE_BLOCKER_REPAIR_CONTRACT =
+  "kungfu-buildchain-release-blocker-repair/v1";
 export const LEGACY_DEV_ALPHA_CANDIDATE_STATE_SCHEMA =
   "kungfu-buildchain-dev-alpha-candidate-state/v1";
 
@@ -22,6 +24,7 @@ export const RELEASE_TRAIN_STATES = Object.freeze([
 ]);
 
 export const RELEASE_TRAIN_SUPERSESSION_CAUSES = Object.freeze([
+  "release-blocker-repair",
   "incompatible-semantics",
   "alpha-base-incompatibility",
   "invalid-authority",
@@ -517,4 +520,221 @@ export function readReleaseTrain(input) {
     };
   }
   throw new Error("unsupported Release Train record");
+}
+
+function releaseBlockerLanding(input, label, { allowConflict = false } = {}) {
+  const status = text(input?.status, `${label}.status`);
+  if (status !== "landed" && !(allowConflict && status === "conflict")) {
+    throw new Error(
+      `${label}.status must be ${allowConflict ? "landed or conflict" : "landed"}`,
+    );
+  }
+  const landing = {
+    status,
+    baseSha: exactSha(input.baseSha, `${label}.baseSha`),
+    landedSha:
+      status === "landed"
+        ? exactSha(input.landedSha, `${label}.landedSha`)
+        : "",
+    patchRoot: contentRoot(input.patchRoot, `${label}.patchRoot`),
+    evidenceRoot: contentRoot(input.evidenceRoot, `${label}.evidenceRoot`),
+  };
+  return landing;
+}
+
+function releaseBlockerPublication(patchRoot, devLanding) {
+  const eligible =
+    devLanding.status === "landed" && devLanding.patchRoot === patchRoot;
+  const body = {
+    eligible,
+    reason:
+      devLanding.status === "conflict"
+        ? "dev-forward-port-conflict"
+        : eligible
+          ? "exact-cut-dev-patch-settled"
+          : "cut-dev-patch-root-mismatch",
+    requiredPatchRoot: patchRoot,
+    observedDevPatchRoot: devLanding.patchRoot,
+    devLandingStatus: devLanding.status,
+  };
+  return { ...body, gateRoot: releaseTrainRoot(body) };
+}
+
+function buildReleaseBlockerRepair(activeTrainInput, input = {}) {
+  const activeTrain = validateReleaseTrain(activeTrainInput);
+  if (activeTrain.state.status !== "repair-required") {
+    throw new Error(
+      "release-blocker repair requires the active train to be repair-required",
+    );
+  }
+  const expectedStateRoot = contentRoot(
+    input.expectedStateRoot,
+    "expectedStateRoot",
+  );
+  if (expectedStateRoot !== activeTrain.state.stateRoot) {
+    throw new Error("release-blocker repair compare-and-swap failed");
+  }
+  const patchRoot = contentRoot(input.patchRoot, "patchRoot");
+  const blockerRoot = contentRoot(input.blockerRoot, "blockerRoot");
+  const authorityRoots = sortedRoots(input.authorityRoots, "authorityRoots");
+  const createdAt = timestamp(input.createdAt, "createdAt");
+  const cutLanding = releaseBlockerLanding(
+    {
+      status: "landed",
+      baseSha: activeTrain.releaseCut.candidateSha,
+      landedSha: input.cutCandidateSha,
+      patchRoot: input.cutPatchRoot,
+      evidenceRoot: input.cutLandingEvidenceRoot,
+    },
+    "cutLanding",
+  );
+  if (cutLanding.patchRoot !== patchRoot) {
+    throw new Error(
+      "cut landing must preserve the declared release-blocker patch root",
+    );
+  }
+  const devLanding = releaseBlockerLanding(
+    {
+      status: input.devLandingStatus,
+      baseSha: input.devBaseSha,
+      landedSha: input.devLandingSha,
+      patchRoot: input.devPatchRoot,
+      evidenceRoot: input.devLandingEvidenceRoot,
+    },
+    "devLanding",
+    { allowConflict: true },
+  );
+  const priorCut = activeTrain.releaseCut;
+  const successorTrain = createReleaseTrain({
+    repository: priorCut.repository,
+    sourceBranch: priorCut.sourceBranch,
+    targetBranch: priorCut.targetBranch,
+    originDevSha: priorCut.originDevSha,
+    candidateSha: cutLanding.landedSha,
+    candidateTreeSha: exactSha(
+      input.cutCandidateTreeSha,
+      "cutCandidateTreeSha",
+    ),
+    alphaBaseSha: priorCut.alphaBaseSha,
+    buildchainRuntimeSha: priorCut.buildchainRuntimeSha,
+    generation: priorCut.generation + 1,
+    authorityRoots: [
+      ...new Set([...priorCut.authorityRoots, ...authorityRoots]),
+    ].sort(),
+    supersession: {
+      cause: "release-blocker-repair",
+      priorCutRoot: priorCut.cutRoot,
+    },
+    createdAt,
+  });
+  const supersededTrain = transitionReleaseTrain(activeTrain, {
+    to: "superseded",
+    expectedStateRoot,
+    event: "release-blocker-successor-cut",
+    reason:
+      "a rooted release-blocker repair advanced the active candidate generation",
+    authorityRoots,
+    supersessionCause: "release-blocker-repair",
+    replacementCutRoot: successorTrain.releaseCut.cutRoot,
+    replacementCandidateSha: successorTrain.releaseCut.candidateSha,
+    recordedAt: createdAt,
+  });
+  const publication = releaseBlockerPublication(patchRoot, devLanding);
+  const body = {
+    schemaVersion: 1,
+    contract: RELEASE_BLOCKER_REPAIR_CONTRACT,
+    blockerRoot,
+    patchRoot,
+    priorTrain: activeTrain,
+    supersededTrain,
+    successorTrain,
+    cutLanding,
+    devLanding,
+    candidateBuild: {
+      eligible: true,
+      candidateSha: successorTrain.releaseCut.candidateSha,
+      candidateTreeSha: successorTrain.releaseCut.candidateTreeSha,
+      generation: successorTrain.releaseCut.generation,
+      cutRoot: successorTrain.releaseCut.cutRoot,
+      reason: "rooted-cut-landing",
+    },
+    publication,
+    authorityRoots,
+    createdAt,
+  };
+  return { ...body, repairRoot: releaseTrainRoot(body) };
+}
+
+export function createReleaseBlockerRepair(activeTrainInput, input = {}) {
+  return buildReleaseBlockerRepair(activeTrainInput, input);
+}
+
+export function validateReleaseBlockerRepair(input) {
+  if (
+    input?.contract !== RELEASE_BLOCKER_REPAIR_CONTRACT ||
+    Number(input?.schemaVersion) !== 1
+  ) {
+    throw new Error(
+      `release-blocker repair must use ${RELEASE_BLOCKER_REPAIR_CONTRACT}`,
+    );
+  }
+  const rebuilt = buildReleaseBlockerRepair(input.priorTrain, {
+    expectedStateRoot: input.priorTrain?.state?.stateRoot,
+    blockerRoot: input.blockerRoot,
+    patchRoot: input.patchRoot,
+    cutCandidateSha: input.cutLanding?.landedSha,
+    cutCandidateTreeSha: input.successorTrain?.releaseCut?.candidateTreeSha,
+    cutPatchRoot: input.cutLanding?.patchRoot,
+    cutLandingEvidenceRoot: input.cutLanding?.evidenceRoot,
+    devLandingStatus: input.devLanding?.status,
+    devBaseSha: input.devLanding?.baseSha,
+    devLandingSha: input.devLanding?.landedSha,
+    devPatchRoot: input.devLanding?.patchRoot,
+    devLandingEvidenceRoot: input.devLanding?.evidenceRoot,
+    authorityRoots: input.authorityRoots,
+    createdAt: input.createdAt,
+  });
+  if (input.repairRoot !== rebuilt.repairRoot) {
+    throw new Error("release-blocker repair root does not match its content");
+  }
+  if (releaseTrainRoot(input) !== releaseTrainRoot(rebuilt)) {
+    throw new Error(
+      "release-blocker repair content drifted from its rooted contract",
+    );
+  }
+  return clone(input);
+}
+
+export function settleReleaseBlockerDevLanding(repairInput, input = {}) {
+  const repair = validateReleaseBlockerRepair(repairInput);
+  if (
+    contentRoot(input.expectedRepairRoot, "expectedRepairRoot") !==
+    repair.repairRoot
+  ) {
+    throw new Error(
+      "release-blocker repair settlement compare-and-swap failed",
+    );
+  }
+  const patchRoot = contentRoot(input.patchRoot, "patchRoot");
+  if (patchRoot !== repair.patchRoot) {
+    throw new Error(
+      "dev landing settlement must preserve the release-blocker patch root",
+    );
+  }
+  return buildReleaseBlockerRepair(repair.priorTrain, {
+    expectedStateRoot: repair.priorTrain.state.stateRoot,
+    blockerRoot: repair.blockerRoot,
+    patchRoot: repair.patchRoot,
+    cutCandidateSha: repair.cutLanding.landedSha,
+    cutCandidateTreeSha: repair.successorTrain.releaseCut.candidateTreeSha,
+    cutPatchRoot: repair.cutLanding.patchRoot,
+    cutLandingEvidenceRoot: repair.cutLanding.evidenceRoot,
+    devLandingStatus: "landed",
+    devBaseSha: input.devBaseSha,
+    devLandingSha: input.devLandingSha,
+    devPatchRoot: patchRoot,
+    devLandingEvidenceRoot: input.devLandingEvidenceRoot,
+    authorityRoots: repair.authorityRoots,
+    createdAt: repair.createdAt,
+  });
 }
