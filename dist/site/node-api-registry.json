@@ -23057,7 +23057,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd-adopter-manifest",
       "export": "./kfd-adopter-manifest",
       "target": "./packages/core/kfd-adopter-manifest.js",
-      "digest": "sha256:45fc7620410c48001da97cb0748c0b19ff9f5c5b07267f1aaf744dc816e970bd",
+      "digest": "sha256:9300bf0531cd9bb6a0cce50363765cb5dd22cdf1bd0c9075d0eb36b80cea9943",
       "summary": "Exact-cut KFD adopter manifest verification, Buildchain evidence binding, and one-way legacy support-matrix projection APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
