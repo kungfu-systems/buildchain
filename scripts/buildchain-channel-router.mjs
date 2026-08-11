@@ -79,6 +79,7 @@ function selected(channel, major, source, reason) {
     channel,
     major,
     buildchainRef: channel === "alpha" ? `v${major}-alpha` : `v${major}`,
+    runtimeOverride: false,
     selectionSource: source,
     reason,
   };
@@ -120,6 +121,7 @@ export function resolveBuildchainChannel({
         ...lane,
         major,
         buildchainRef: explicitRef.ref,
+        runtimeOverride: true,
         selectionSource: "explicit-buildchain-ref+channel-evidence",
         reason: `trusted runtime override ${explicitRef.ref} bound to ${lane.channel}`,
       };
@@ -197,6 +199,7 @@ function appendOutputs(file, result) {
     channel: result.channel,
     major: String(result.major),
     "buildchain-ref": result.buildchainRef,
+    "runtime-override": String(result.runtimeOverride),
     "selection-source": result.selectionSource,
     reason: result.reason,
   };

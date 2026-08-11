@@ -15,6 +15,7 @@ test("development and prerelease events select the generic major alpha", () => {
     channel: "alpha",
     major: 2,
     buildchainRef: "v2-alpha",
+    runtimeOverride: false,
     selectionSource: "development-default",
     reason: "non-release pull_request event",
   });
@@ -62,6 +63,7 @@ test("explicit channel and runtime overrides take precedence with conflict check
       channel: "alpha",
       major: 2,
       buildchainRef: "authority/v2/v2.3/artifact-signing",
+      runtimeOverride: true,
       selectionSource: "explicit-buildchain-ref+channel-evidence",
       reason: "trusted runtime override authority/v2/v2.3/artifact-signing bound to alpha",
     },
@@ -116,7 +118,16 @@ test("generated channel workflow mirrors the advanced build surface", () => {
     current,
     new RegExp(`uses: kungfu-systems/buildchain/\\.github/workflows/\\.build\\.yml@v${packageMajor}\\n`),
   );
-  assert.doesNotMatch(current, /uses: \.\/\.github\/workflows\/\.build\.yml/);
+  assert.equal(
+    (current.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length,
+    1,
+    "only the trusted runtime override lane may self-dogfood the exact router commit",
+  );
+  assert.match(current, /if: \$\{\{ needs\.resolve-channel\.outputs\.runtime-override == 'true' \}\}/);
+  assert.match(
+    current,
+    /if: \$\{\{ needs\.resolve-channel\.outputs\.runtime-override != 'true' && needs\.resolve-channel\.outputs\.channel == 'alpha' \}\}/,
+  );
   assert.match(current, /buildchain-ref: \$\{\{ needs\.resolve-channel\.outputs\.buildchain-ref \}\}/);
   assert.match(current, /buildchain-contract-lock-path: \$\{\{ needs\.resolve-channel\.outputs\.contract-lock-path \}\}/);
   assert.match(current, /BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY: \$\{\{ job\.workflow_repository \}\}/);

@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "7149037df66555c083cf51ee5055301917026047",
     "maxHandMaintainedSourceFiles": 332,
-    "maxHandMaintainedSourceLines": 127830,
+    "maxHandMaintainedSourceLines": 127861,
     "maxWorkflowFiles": 70,
-    "maxWorkflowLines": 23279,
-    "latestTransition": "Buildchain v4 enforces major-independent stable and alpha shell, runtime, and lock identity on top of the protected Release Train parity line.",
-    "rationale": "The protected v4 Release Train parity semantics remain intact. One bounded channel-identity module classifies official, release, train, authority, exact-release, and exact-SHA refs without version-specific branches. Contract-lock evaluation applies the triad before unchanged, missing-lock, non-floating, or compatibility exits, while the generated public router dispatches through separate v4-alpha and v4 advanced workflow shells. The exact one-file, 238-source-line, and 92-workflow-line increase is covered by cross-major permutation tests and Buildchain v4 self-dogfood and cannot grow implicitly."
+    "maxWorkflowLines": 23389,
+    "latestTransition": "Buildchain v4 enforces major-independent stable and alpha shell, runtime, and lock identity while exact trusted runtime overrides self-dogfood the unpromoted router commit.",
+    "rationale": "The protected v4 Release Train parity semantics remain intact. One bounded channel-identity module classifies official, release, train, authority, exact-release, and exact-SHA refs without version-specific branches. Contract-lock evaluation applies the triad before unchanged, missing-lock, non-floating, or compatibility exits, while the generated public router dispatches ordinary traffic through separate v4-alpha and v4 advanced workflow shells. A third local workflow job is reachable only for a trusted exact-SHA, train, or authority runtime override and still inherits the explicitly selected stable or alpha lane plus its contract lock, allowing Buildchain to validate an unpromoted v4 commit without publishing either channel ref. The exact one-file, 269-source-line, and 202-workflow-line increase is covered by cross-major permutation tests, the real Build Surface Fixture, and Buildchain v4 self-dogfood and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

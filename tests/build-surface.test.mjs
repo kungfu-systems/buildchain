@@ -188,8 +188,8 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.doesNotMatch(channelRouter, /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/);
   assert.match(
     channelRouter,
-    /  summarize:\n    name: Summarize build contract\n    needs:\n      - resolve-channel\n      - alpha\n      - stable\n      - controller-receipt/,
-    "the public router must emit a stable top-level aggregate independent of nested workflow job names",
+    /needs:\n      - resolve-channel\n      - override\n      - alpha\n      - stable\n      - controller-receipt/,
+    "the aggregate must include the trusted exact-runtime self-dogfood lane",
   );
   assert.match(channelRouter, /Enforce public channel router aggregate/);
 

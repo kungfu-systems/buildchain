@@ -928,6 +928,10 @@
             "required": true
           },
           {
+            "id": "override",
+            "required": false
+          },
+          {
             "id": "alpha",
             "required": false
           },
@@ -950,7 +954,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:6dfa79003f0c92e336c56f07f45f57cc5572921bdb46e432fd809fb19ee823bb"
+      "digest": "sha256:71a0b80ff926ea0eedd322dc1e5d006141bfe1d788c7de35b3f4cdd3fa3d3576"
     },
     {
       "schemaVersion": 1,
@@ -2398,5 +2402,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:56d44fe2b37d1363762c626477dcd04553b3df84f32c593762312202d986f6df"
+  "digest": "sha256:506771c1dde716357523bb3b0e66d5bee83211d1d2dd7d845b1f509a72a8931e"
 }

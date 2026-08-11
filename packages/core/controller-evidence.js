@@ -52,8 +52,8 @@ const CONTROLLER_SPECS = [
     workflowId: "build",
     version: 1,
     capabilities: ["channel-selection", "runtime-selection", "build-delegation"],
-    stages: ["resolve-channel", "alpha", "stable", "aggregate"],
-    optionalStages: ["alpha", "stable"],
+    stages: ["resolve-channel", "override", "alpha", "stable", "aggregate"],
+    optionalStages: ["override", "alpha", "stable"],
     evidence: ["nested-controller-receipt", "controller-receipt"],
   },
   {

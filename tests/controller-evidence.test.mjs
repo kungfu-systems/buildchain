@@ -307,7 +307,7 @@ test("channel router workflow receipt emits every lane-aware controller stage", 
     descriptor("build-channel-router").expected.stages
       .filter((stage) => !stage.required)
       .map((stage) => stage.id),
-    ["alpha", "stable"],
+    ["override", "alpha", "stable"],
   );
 });
 
