@@ -314,13 +314,21 @@ if (!promotionOverrideAuthorization.includes("promotion runtime override is only
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
-  `uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v${String(rootPackage.version).split(".")[0]}-alpha`, `uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v${String(rootPackage.version).split(".")[0]}\n`,
+  "uses: ./.github/workflows/.build.yml",
+  "needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'alpha'",
+  "needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'stable'",
   "needs.resolve-channel.outputs.buildchain-ref",
   "needs.resolve-channel.outputs.contract-lock-path",
 ]) {
   if (!channelBuildWorkflow.includes(requiredSnippet)) {
     throw new Error(`channel build workflow missing routing contract: ${requiredSnippet}`);
   }
+}
+if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 3) {
+  throw new Error("channel build workflow must bind override, alpha, and stable to the exact caller workflow shell");
+}
+if (channelBuildWorkflow.includes("uses: kungfu-systems/buildchain/.github/workflows/.build.yml@")) {
+  throw new Error("channel build workflow must not statically fetch another channel shell before its ref exists");
 }
 for (const requiredSnippet of [
   "group: buildchain-release-promotion-${{ github.repository }}",

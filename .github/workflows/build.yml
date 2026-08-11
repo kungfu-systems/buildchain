@@ -861,7 +861,7 @@ jobs:
       - resolve-channel
       - controller-plan
     if: ${{ needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v4-alpha
+    uses: ./.github/workflows/.build.yml
     permissions:
       actions: read
       contents: read
@@ -962,7 +962,7 @@ jobs:
       - resolve-channel
       - controller-plan
     if: ${{ needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v4
+    uses: ./.github/workflows/.build.yml
     permissions:
       actions: read
       contents: read

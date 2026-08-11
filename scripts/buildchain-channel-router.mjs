@@ -130,6 +130,7 @@ export function resolveBuildchainChannel({
       channel: explicitRef.kind,
       major,
       buildchainRef: explicitRef.ref,
+      runtimeOverride: false,
       selectionSource: "explicit-buildchain-ref",
       reason: `explicit Buildchain runtime ref ${explicitRef.ref}`,
     };

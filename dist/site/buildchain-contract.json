@@ -91,7 +91,7 @@
         "alpha and stable channel selections use separate consumer contract locks by default"
       ],
       "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
-      "auditDigest": "sha256:4b909d06b9dd9c905e5c859b4799e8d92090c2307bb8111303e33d76f70ad32d"
+      "auditDigest": "sha256:235b4c5f64d8457115fef762a6f0696c31d5e8b7423a5601c6a98b129c833c53"
     },
     {
       "contractVersion": 1,
@@ -1983,7 +1983,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:30549aa26cd1e1dd81f10fe3529d3c6e3f8438a6efa0100c47ebae4d2f3d71df",
-      "auditDigest": "sha256:4b909d06b9dd9c905e5c859b4799e8d92090c2307bb8111303e33d76f70ad32d"
+      "auditDigest": "sha256:235b4c5f64d8457115fef762a6f0696c31d5e8b7423a5601c6a98b129c833c53"
     },
     {
       "contractVersion": 1,
@@ -3728,5 +3728,5 @@
     }
   ],
   "compatibilityDigest": "sha256:7234ed200c568b1fea0e469de61ec7a67da48ede0af6290fb49b93a9e62e0b65",
-  "contractDigest": "sha256:d497f2203ec4c444f912fd19e3dc6280f90d76a8936a4fa76c2f448769fa1056"
+  "contractDigest": "sha256:c1e76903f4da1b2e8f72051aaaa343b834f15db1a58efdc94500ece039c71c36"
 }

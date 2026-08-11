@@ -107,22 +107,13 @@ test("generated channel workflow mirrors the advanced build surface", () => {
   const source = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
   const expected = generateChannelBuildWorkflow(source);
   const current = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
-  const packageMajor = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"))
-    .version.split(".")[0];
   assert.equal(current, expected);
-  assert.match(
-    current,
-    new RegExp(`uses: kungfu-systems/buildchain/\\.github/workflows/\\.build\\.yml@v${packageMajor}-alpha`),
-  );
-  assert.match(
-    current,
-    new RegExp(`uses: kungfu-systems/buildchain/\\.github/workflows/\\.build\\.yml@v${packageMajor}\\n`),
-  );
   assert.equal(
     (current.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length,
-    1,
-    "only the trusted runtime override lane may self-dogfood the exact router commit",
+    3,
+    "every lane must reuse the exact caller workflow shell so channel binding can validate that shell",
   );
+  assert.doesNotMatch(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@/);
   assert.match(current, /if: \$\{\{ needs\.resolve-channel\.outputs\.runtime-override == 'true' \}\}/);
   assert.match(
     current,
