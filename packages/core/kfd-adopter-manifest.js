@@ -25,7 +25,7 @@ const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const REQUIRED_DECISIONS = Object.freeze(["KFD-1", "KFD-2", "KFD-3", "KFD-4", "KFD-5", "KFD-7"]);
 const PRODUCT_GATE_STANDARDS = Object.freeze(["kfd-4", "kfd-5", "kfd-7"]);
 const PRODUCT_GATE_SET = new Set(PRODUCT_GATE_STANDARDS);
-const require = createRequire(import.meta.url);
+const require = createRequire(import.meta.url), installedKfdPackageOptions = (options) => { try { return { ...options, packageRoot: require.resolve("@kungfu-tech/kfd/package.json").replace(/[\\/]package\.json$/, "") }; } catch { return options; } };
 
 function issue(code, path, message, detail = {}) {
   return { level: "error", code, path, message, ...detail };
@@ -63,14 +63,14 @@ function decisionWitnessRow(row) {
 
 function verifyPublishedManifest(manifest, packageOptions, issues) {
   try {
-    const report = verifyAdopterManifestFromPackage(manifest, packageOptions);
+    const report = verifyAdopterManifestFromPackage(manifest, installedKfdPackageOptions(packageOptions));
     if (!report.valid) {
       issues.push(issue("adopter-manifest-invalid", "manifest", "published KFD adopter verifier rejected the manifest", {
         manifestIssues: report.issues,
       }));
       return null;
     }
-    return bundleAdopterManifest(manifest, packageOptions);
+    return bundleAdopterManifest(manifest, installedKfdPackageOptions(packageOptions));
   } catch (error) {
     issues.push(issue("adopter-manifest-invalid", "manifest", error.message));
     return null;
