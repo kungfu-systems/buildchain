@@ -8003,7 +8003,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "099c0db9c5346942aee236af2cb7b6a7a91fbb2c54ebb17b7a2544a339c00d40",
-    "workflowRegistryDigest": "9742372099b3e98f8352915892cfaaabc0227393ff9468f2133cdc6a46cde346",
+    "workflowRegistryDigest": "3a89609848b3a8b5dbee477b82e273f3d8a47f4f152f84e29a236f0e52d2cceb",
     "pageRegistryDigest": "e3b142a9012a80b0478a48431fd2a3d5290301b667ceb565fb7314ef7f693214"
   },
   "comparison": {
