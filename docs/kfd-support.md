@@ -77,8 +77,13 @@ KFD records and evidence by SHA-256. The result uses
 `buildchain kfd support project` derives a compatibility projection from the
 standard adopter manifest and its exact passing gate. The adopter manifest is
 the sole KFD-1..13 declaration authority; the command rejects stale package,
-source, witness, registry, verifier-set, and KFD-4/5/7 gate roots. The emitted
-matrix is not an independent declaration and cannot widen adopter claims.
+source, witness, registry, verifier-set, and KFD-4/5/7 gate roots. Gate creation
+accepts an explicit `expectedAdopterId`, `expectedSourceRepository`, and
+`expectedSourceSha`; omitting the first two preserves the Buildchain
+self-release default. The gate, every product-gate projection, the legacy
+matrix, Release Passport, and artifact evidence all retain that exact
+adopter/repository/source closure. The emitted matrix is not an independent
+declaration and cannot widen adopter claims.
 
 ## KFD-1
 

@@ -22,10 +22,10 @@ test("internal architecture index covers implementations, tests, and dependency 
     schemaVersion: 1,
     capabilities: 17,
     implementations: 54,
-    repositorySources: 310,
-    ownedSources: 310,
+    repositorySources: 314,
+    ownedSources: 314,
     excludedSources: 0,
-    dependencyEdges: 260,
+    dependencyEdges: 265,
     dependencyRules: 4,
     dependencyCycles: 0,
   });
@@ -40,6 +40,11 @@ test("repository source inventory includes untracked files before commit", (t) =
   fs.writeFileSync(path.join(temporaryRoot, "tracked.mjs"), "export {};\n");
   execFileSync("git", ["add", "tracked.mjs"], { cwd: temporaryRoot });
   fs.writeFileSync(path.join(temporaryRoot, "new.mjs"), "export {};\n");
+  fs.mkdirSync(path.join(temporaryRoot, ".buildchain"));
+  fs.writeFileSync(
+    path.join(temporaryRoot, ".buildchain", "generated.mjs"),
+    "export {};\n",
+  );
 
   assert.deepEqual(repositoryJavaScriptFiles(temporaryRoot), [
     "new.mjs",

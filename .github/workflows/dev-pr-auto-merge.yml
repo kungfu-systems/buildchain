@@ -125,9 +125,30 @@ on:
         }
       shard-evidence-roots-json:
         {
-          description: "JSON array of additional source-shard evidence roots",
+          description: "JSON array of additional native-shard evidence roots",
           default: "[]",
           type: string,
+          required: false,
+        }
+      native-proof-json:
+        {
+          description: "Optional reusable semantic native proof; base-only drift is classified before use",
+          default: "",
+          type: string,
+          required: false,
+        }
+      native-command:
+        {
+          description: "Native qualification command run after provisional Warrant selection when proof reuse is unavailable",
+          default: "",
+          type: string,
+          required: false,
+        }
+      native-heartbeat-seconds:
+        {
+          description: "Heartbeat cadence while native qualification is running",
+          default: 300,
+          type: number,
           required: false,
         }
       delivery-class:
@@ -261,6 +282,15 @@ on:
       project-cut-proof-root:
         description: "Verified exact Project Cut replay proof root, when supplied"
         value: ${{ jobs.merge-dev-prs.outputs.project-cut-proof-root }}
+      native-proof-root:
+        description: "Fresh or reused semantic native proof root"
+        value: ${{ jobs.merge-dev-prs.outputs.native-proof-root }}
+      native-reuse-decision-root:
+        description: "Rooted fail-closed native proof reuse decision"
+        value: ${{ jobs.merge-dev-prs.outputs.native-reuse-decision-root }}
+      qualified-warrant-receipt-root:
+        description: "Atomic provisional-to-qualified Warrant receipt root"
+        value: ${{ jobs.merge-dev-prs.outputs.qualified-warrant-receipt-root }}
 
 permissions:
   actions: write
@@ -291,6 +321,9 @@ jobs:
       warrant-state-root: ${{ steps.warrant.outputs.warrant-state-root }}
       warrant-state-commit: ${{ steps.warrant.outputs.warrant-state-commit }}
       project-cut-proof-root: ${{ steps.project-cut.outputs.proof-root }}
+      native-proof-root: ${{ steps.native-final.outputs.native-proof-root }}
+      native-reuse-decision-root: ${{ steps.native-final.outputs.decision-root }}
+      qualified-warrant-receipt-root: ${{ steps.native-final.outputs.qualification-receipt-root }}
     steps:
       - name: Resolve target branch
         id: target
@@ -432,7 +465,7 @@ jobs:
         shell: bash
         run: |
           receipt_root="$(jq -er '.receiptRoot' .buildchain/dev-delivery/source-admission.json)"
-          evidence_roots="$(jq -cn --arg root "${receipt_root}" --argjson extra "${SHARD_ROOTS}" '$extra + [$root] | unique')"
+          evidence_roots="$(jq -cn --arg root "${receipt_root}" '[$root]')"
           node .buildchain/runtime/scripts/dev-delivery-proof.mjs source \
             --repository "${GITHUB_REPOSITORY}" \
             --branch "${TARGET_BRANCH}" \
@@ -458,7 +491,6 @@ jobs:
           DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
           TOOLCHAIN_ROOT: ${{ inputs.toolchain-root }}
           AFFECTED_PATHS: ${{ inputs.affected-paths-json }}
-          SHARD_ROOTS: ${{ inputs.shard-evidence-roots-json }}
 
       - name: Submit qualified delivery candidate
         id: submit
@@ -481,6 +513,7 @@ jobs:
             --closure-root "${CLOSURE_ROOT}"
             --dependency-root "${DEPENDENCY_ROOT}"
             --toolchain-root "${TOOLCHAIN_ROOT}"
+            --affected-paths-json "${AFFECTED_PATHS}"
             --delivery-class "${DELIVERY_CLASS}"
             --priority "${DELIVERY_PRIORITY}"
             --output .buildchain/dev-delivery/submission.json
@@ -507,6 +540,7 @@ jobs:
           CLOSURE_ROOT: ${{ inputs.closure-root }}
           DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
           TOOLCHAIN_ROOT: ${{ inputs.toolchain-root }}
+          AFFECTED_PATHS: ${{ inputs.affected-paths-json }}
           DELIVERY_CLASS: ${{ inputs.delivery-class }}
           DELIVERY_PRIORITY: ${{ inputs.delivery-priority }}
           WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
@@ -525,6 +559,7 @@ jobs:
             --output .buildchain/dev-delivery/warrant.json
           selected_pr="$(jq -er '.observation.activeWarrant.pullRequestNumber' .buildchain/dev-delivery/warrant.json)"
           selected_head="$(jq -er '.observation.activeWarrant.sourceHead' .buildchain/dev-delivery/warrant.json)"
+          selected_phase="$(jq -er '.observation.activeWarrant.phase' .buildchain/dev-delivery/warrant.json)"
           if [ "$selected_pr" != "$EXPECTED_PR" ] || [ "$selected_head" != "$EXPECTED_HEAD" ]; then
             if [ -z "$HANDOFF_WORKFLOW_ID" ]; then
               echo "::error::Active Warrant belongs to PR #$selected_pr, but no immediate handoff workflow was configured"
@@ -574,19 +609,37 @@ jobs:
             exit 0
           fi
           echo "handoff-required=false" >> "$GITHUB_OUTPUT"
+          case "$selected_phase" in
+            provisional)
+              echo "already-qualified=false" >> "$GITHUB_OUTPUT"
+              ;;
+            qualified)
+              echo "already-qualified=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Active Warrant has unsupported phase $selected_phase"
+              exit 1
+              ;;
+          esac
           jq -e \
             --argjson pr "${EXPECTED_PR}" \
             --arg head "${EXPECTED_HEAD}" \
+            --arg phase "$selected_phase" \
             '.schema == "kungfu.buildchain.dev-delivery-command-result/v1"
              and .mode == "execute"
              and (.after.commitSha | test("^[0-9a-f]{40}$"))
              and (.after.stateRoot == .observation.stateRoot)
              and (.warrant == .observation.activeWarrant)
+             and (.observation.activeWarrant.phase == $phase)
              and (.observation.activeWarrant.pullRequestNumber == $pr)
              and (.observation.activeWarrant.sourceHead == $head)
              and (.observation.activeCandidate.pullRequestNumber == $pr)
              and (.observation.activeCandidate.sourceHead == $head)
-             and (.observation.activeCandidate.candidateId == .observation.activeWarrant.candidateId)' \
+             and (.observation.activeCandidate.candidateId == .observation.activeWarrant.candidateId)
+             and ($phase != "qualified" or
+               ((.observation.activeWarrant.nativeProofRoot | test("^sha256:[0-9a-f]{64}$"))
+                and (.observation.activeWarrant.nativeProofReuseRoot | test("^sha256:[0-9a-f]{64}$"))
+                and .observation.activeCandidate.status == "qualified"))' \
             .buildchain/dev-delivery/warrant.json >/dev/null
           {
             echo "warrant-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/warrant.json)"
@@ -602,9 +655,98 @@ jobs:
           HANDOFF_WORKFLOW_ID: ${{ inputs.handoff-workflow-id }}
           SOURCE_WORKFLOW_ID: ${{ inputs.source-workflow-id }}
 
+      - name: Checkout exact candidate for native qualification
+        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true' && steps.warrant.outputs.already-qualified != 'true'
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.expected-head-sha }}
+          fetch-depth: 0
+          path: .buildchain/candidate
+          persist-credentials: false
+
+      - name: Materialize optional reusable native proof
+        id: native-input
+        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true' && steps.warrant.outputs.already-qualified != 'true' && inputs.native-proof-json != ''
+        shell: bash
+        run: |
+          printf '%s\n' "${NATIVE_PROOF_JSON}" > .buildchain/dev-delivery/reusable-native-proof.json
+          node .buildchain/runtime/scripts/dev-delivery-proof.mjs verify-native \
+            --source-proof .buildchain/dev-delivery/reusable-native-proof.json \
+            --output .buildchain/dev-delivery/reusable-native-proof-verification.json
+          jq -e '.ok == true and .reason == "exact-native-proof"' \
+            .buildchain/dev-delivery/reusable-native-proof-verification.json >/dev/null
+          echo "path=.buildchain/dev-delivery/reusable-native-proof.json" >> "${GITHUB_OUTPUT}"
+        env:
+          NATIVE_PROOF_JSON: ${{ inputs.native-proof-json }}
+
+      - name: Run or reuse native proof and atomically qualify Warrant
+        id: native-final
+        if: inputs.delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' && steps.warrant.outputs.handoff-required != 'true' && steps.warrant.outputs.already-qualified != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --repository "${GITHUB_REPOSITORY}"
+            --branch "${TARGET_BRANCH}"
+            --pull-request "${EXPECTED_PR}"
+            --expected-head "${EXPECTED_HEAD}"
+            --source-identity-root "${SOURCE_IDENTITY_ROOT}"
+            --source-patch-root "${SOURCE_PATCH_ROOT}"
+            --plan-root "${PLAN_ROOT}"
+            --closure-root "${CLOSURE_ROOT}"
+            --dependency-root "${DEPENDENCY_ROOT}"
+            --toolchain-root "${TOOLCHAIN_ROOT}"
+            --affected-paths-json "${AFFECTED_PATHS}"
+            --shard-evidence-roots-json "${SHARD_ROOTS}"
+            --native-command "${NATIVE_COMMAND}"
+            --warrant-result .buildchain/dev-delivery/warrant.json
+            --candidate-directory .buildchain/candidate
+            --evidence-directory .buildchain/dev-delivery
+            --lease-seconds "${LEASE_SECONDS}"
+            --heartbeat-seconds "${HEARTBEAT_SECONDS}"
+          )
+          if [ -n "${NATIVE_PROOF_PATH}" ]; then
+            args+=(--native-proof "${NATIVE_PROOF_PATH}")
+          fi
+          node .buildchain/runtime/scripts/dev-delivery-two-phase.mjs "${args[@]}"
+          jq -e \
+            --argjson pr "${EXPECTED_PR}" \
+            --arg head "${EXPECTED_HEAD}" \
+            '.ok == true
+             and .outcome == "qualified-warrant"
+             and .qualifiedWarrant.phase == "qualified"
+             and .qualifiedWarrant.pullRequestNumber == $pr
+             and .qualifiedWarrant.sourceHead == $head
+             and (.nativeProofRoot | test("^sha256:[0-9a-f]{64}$"))
+             and (.nativeReuseDecisionRoot | test("^sha256:[0-9a-f]{64}$"))' \
+            .buildchain/dev-delivery/two-phase-result.json >/dev/null
+          cp .buildchain/dev-delivery/qualified-warrant.json .buildchain/dev-delivery/warrant.json
+          {
+            echo "native-proof-root=$(jq -er '.nativeProofRoot' .buildchain/dev-delivery/two-phase-result.json)"
+            echo "decision-root=$(jq -er '.nativeReuseDecisionRoot' .buildchain/dev-delivery/two-phase-result.json)"
+            echo "qualification-receipt-root=$(jq -er '.qualificationReceiptRoot' .buildchain/dev-delivery/two-phase-result.json)"
+          } >> "${GITHUB_OUTPUT}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          SOURCE_IDENTITY_ROOT: ${{ inputs.source-identity-root }}
+          SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
+          PLAN_ROOT: ${{ inputs.plan-root }}
+          CLOSURE_ROOT: ${{ inputs.closure-root }}
+          DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
+          TOOLCHAIN_ROOT: ${{ inputs.toolchain-root }}
+          AFFECTED_PATHS: ${{ inputs.affected-paths-json }}
+          SHARD_ROOTS: ${{ inputs.shard-evidence-roots-json }}
+          NATIVE_COMMAND: ${{ inputs.native-command }}
+          NATIVE_PROOF_PATH: ${{ steps.native-input.outputs.path }}
+          LEASE_SECONDS: ${{ inputs.warrant-lease-seconds }}
+          HEARTBEAT_SECONDS: ${{ inputs.native-heartbeat-seconds }}
+
       - name: Run Buildchain dev PR auto-merge
         id: merge
-        if: steps.warrant.outputs.handoff-required != 'true'
+        if: steps.warrant.outputs.handoff-required != 'true' && (inputs.delivery-warrant-mode != 'required' || steps.warrant.outputs.already-qualified == 'true' || steps.native-final.outcome == 'success')
         continue-on-error: true
         run: node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs
         env:
@@ -678,6 +820,10 @@ jobs:
             echo "::error::Exact Delivery Warrant selection failed"
             exit 1
           fi
+          if [ "${WARRANT_MODE}" = "required" ] && [ "${ALREADY_QUALIFIED}" != "true" ] && [ "${NATIVE_OUTCOME}" != "success" ]; then
+            echo "::error::Provisional Warrant did not atomically upgrade with an exact native proof"
+            exit 1
+          fi
           if [ "${TARGETED}" = "true" ] && [ "${TARGETED_OK}" != "true" ]; then
             echo "::error::Targeted PR was not admitted at its expected head"
             exit 1
@@ -690,5 +836,7 @@ jobs:
           QUALIFY_OUTCOME: ${{ steps.qualify.outcome }}
           SUBMIT_OUTCOME: ${{ steps.submit.outcome }}
           WARRANT_OUTCOME: ${{ steps.warrant.outcome }}
+          NATIVE_OUTCOME: ${{ steps.native-final.outcome }}
+          ALREADY_QUALIFIED: ${{ steps.warrant.outputs.already-qualified }}
           HANDOFF_REQUIRED: ${{ steps.warrant.outputs.handoff-required }}
           HANDOFF_DISPATCHED: ${{ steps.warrant.outputs.handoff-dispatched }}

@@ -874,7 +874,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
     /Upload relayed macOS credential-island input[\s\S]*?steps\.relay-download\.outputs\.credential-input-path/,
   );
   const credentialJob = workflow.match(
-    /\n  credential-island-macos:[\s\S]+?(?=\n  summarize:)/u,
+    /\n  credential-island-macos:[\s\S]+?(?=\n  [a-z0-9-]+:\n)/u,
   )?.[0];
   assert.ok(credentialJob);
   assert.match(

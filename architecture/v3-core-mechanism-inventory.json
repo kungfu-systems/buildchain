@@ -211,12 +211,16 @@
       "owner": "Buildchain Dev delivery control plane",
       "writers": [
         "scripts/dev-delivery-warrant.mjs",
+        "scripts/dev-delivery-native-run.mjs",
+        "scripts/dev-delivery-two-phase.mjs",
         "scripts/dev-pr-delivery-warrant.mjs",
         "scripts/dev-pr-auto-merge.mjs"
       ],
       "schemas": [
         "kungfu-buildchain-dev-delivery-warrant-queue",
         "kungfu.buildchain.dev-delivery-warrant/v1",
+        "kungfu.buildchain.native-qualification-proof/v1",
+        "kungfu.buildchain.native-proof-reuse-decision/v1",
         "kungfu.buildchain.release-blocker-priority-claim/v1"
       ],
       "stores": [
@@ -226,7 +230,9 @@
       "states": [
         "queued",
         "selected",
+        "provisional",
         "proving",
+        "qualified",
         "waiting",
         "blocked",
         "merged",
@@ -237,20 +243,24 @@
       "events": [
         "submit",
         "select",
+        "qualify",
         "lease",
         "renew",
         "recover-expired",
         "settle",
-        "cancel"
+        "cancel",
+        "wake-next"
       ],
       "transitions": [
         "root-checked compare-and-set queue successors",
         "one active leased candidate per protected base",
+        "provisional reservation upgrades atomically to qualified on exact native proof",
         "rooted release blocker ahead of only not-yet-leased ordinary work"
       ],
       "recovery": [
         "expired lease returns eligible candidate to the queue",
-        "head/proof refresh preserves age when safe"
+        "head/proof refresh preserves age when safe",
+        "terminal failure emits a bounded wake event for the next queued candidate"
       ],
       "effects": [
         "Git ref state commit",
@@ -262,6 +272,8 @@
       "invalidation": [
         "head SHA drift",
         "proof-root drift",
+        "semantic source, affected closure, dependency, or toolchain drift",
+        "overlapping or unknown protected-base delta",
         "lease expiry",
         "terminal PR state"
       ],
@@ -279,18 +291,24 @@
       ],
       "sourcePaths": [
         "packages/core/dev-delivery-proof.js",
+        "packages/core/dev-delivery-native-proof.js",
         "packages/core/dev-delivery-warrant-cancellation.js",
         "packages/core/dev-delivery-warrant-shadow.js",
         "packages/core/dev-delivery-warrant-settlement.js",
         "packages/core/dev-delivery-warrant.js",
         "packages/core/release-blocker-priority.js",
         "scripts/dev-delivery-proof.mjs",
+        "scripts/dev-delivery-native-run.mjs",
+        "scripts/dev-delivery-two-phase.mjs",
         "scripts/dev-delivery-warrant.mjs",
         "scripts/dev-pr-auto-merge.mjs",
         "scripts/dev-pr-delivery-warrant.mjs"
       ],
       "testPaths": [
         "tests/dev-delivery-warrant.test.mjs",
+        "tests/dev-delivery-two-phase.test.mjs",
+        "tests/dev-delivery-native-run.test.mjs",
+        "tests/dev-delivery-two-phase-run.test.mjs",
         "tests/dev-delivery-warrant-command.test.mjs",
         "tests/dev-delivery-warrant-shadow.test.mjs",
         "tests/release-blocker-priority.test.mjs"

@@ -1,5 +1,5 @@
 ---
-status: draft
+status: accepted
 period: ongoing
 theme: dev-delivery-warrant
 doc_type: technical-reference
@@ -7,7 +7,7 @@ source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: unreviewed
+review_state: self-reviewed
 last_reviewed: 2026-08-11
 ai_provenance:
   model_family: GPT-5
@@ -38,10 +38,14 @@ and retained enqueue time.
 
 Selection is deterministic FIFO plus aging with bounded priority. Priority may
 reorder queued work, but it cannot preempt the active Warrant. Exactly one
-candidate receives a leased Warrant containing a fencing token, lease
-generation, expected-old state root, expiry, and the complete exact source
-binding. Heartbeat extends only that generation. Expiry recovery rejects the
-old token, retains queue age, and returns the candidate to selection.
+candidate receives a `provisional` leased Warrant containing a fencing token,
+lease generation, expected-old state root, expiry, and the complete exact
+source binding. It reserves the next protected-dev landing before expensive
+native shards start, but it is not GitHub Merge Queue admission authority.
+Heartbeat extends only that generation. Native proof success atomically
+upgrades the same token and generation to `qualified`; only then may enqueue
+begin. Expiry recovery rejects the old token, retains queue age, and returns
+the candidate to selection.
 
 A terminal event may cancel a candidate before selection without minting a
 Warrant. This transition is limited to an exact non-active queued candidate and
@@ -73,23 +77,28 @@ That lane outranks not-yet-leased ordinary work, but never preempts or rewrites
 an active Warrant; unrelated, conflicted, mismatched, or fabricated claims fail
 closed before selection.
 
-## Split proof authority
+## Three proof authorities
 
-Source Qualification Proof is independent of the moving dev base. It binds the
-semantic source, exact source head and patch/tree intent, plan, affected
-closure, dependencies, toolchain, covered paths, and shard evidence.
+Source Qualification Proof is created from the cheap source-acceptance gate. It
+binds the semantic source, exact source head and patch/tree intent, plan,
+affected closure, dependencies, toolchain, covered paths, and exact acceptance
+evidence. Ready state and approval are established before provisional
+selection.
 
-Before reuse, the consumer classifies the dev delta:
+Native Qualification Proof is separate. It binds semantic source and patch,
+plan, affected closure, dependency graph, toolchain, covered paths, native
+shard evidence, and the exact dev base used by the native composition. Before
+reuse, the consumer classifies the dev delta:
 
-- unchanged roots plus an unrelated attributed delta reuse source
-  qualification and run only a cheap Project Cut replay. GitHub's `behind`
+- unchanged semantic roots plus an unrelated fully attributed base delta reuse
+  native qualification and run only a cheap Project Cut replay. GitHub's `behind`
   state is accepted only when a rooted replay proof binds the exact current
   protected base, unchanged PR head and source patch, replay tree, required
   context roots, and a qualified `project.cut.merge-queue-admission/v1`
   receipt;
-- an overlapping delta reruns the affected source shards;
+- an overlapping delta reruns affected native shards or the full native plan;
 - an unknown graph or changed source, plan, closure, dependency, or toolchain
-  root fails closed to full source qualification.
+  root fails closed to full native qualification.
 
 Integration Delivery Proof is separate and cannot be cached across candidates.
 It binds the exact current dev base, replay tree, GitHub `merge_group` head and
@@ -113,6 +122,17 @@ buildchain dev warrant submit --repository owner/repository \
 buildchain dev warrant select --repository owner/repository \
   --branch dev/v4/v4.0 --execute
 
+buildchain dev proof native --branch dev/v4/v4.0 \
+  --qualified-base <sha> --affected-paths-json '["packages/native"]' ...
+
+buildchain dev proof classify-native --source-proof native-proof.json \
+  --current-base <sha> --graph-known true --changed-paths-json '[]' ...
+
+buildchain dev warrant qualify --repository owner/repository \
+  --branch dev/v4/v4.0 --fencing-token <root> --lease-generation 1 \
+  --native-proof native-proof.json \
+  --native-reuse-decision native-reuse-decision.json --execute
+
 buildchain dev warrant cancel-queued --repository owner/repository \
   --branch dev/v4/v4.0 --candidate-id <root> --pull-request 123 \
   --expected-source-head <queued-sha> --observed-source-head <event-sha> \
@@ -120,7 +140,7 @@ buildchain dev warrant cancel-queued --repository owner/repository \
   --evidence-root <terminal-event-root> --execute
 ```
 
-`heartbeat`, `recover`, `close`, `settle`, `cancel-queued`, and `observe` use the same durable authority.
+`heartbeat`, `qualify`, `recover`, `close`, `settle`, `cancel-queued`, and `observe` use the same durable authority.
 Warrant-scoped mutations require the exact fencing token and lease generation.
 `close` also requires a rooted terminal evidence object.
 
@@ -174,8 +194,9 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
 
 - `off` preserves the previous exact-head admission controller;
 - `shadow` qualifies the source and emits a read-only queue submission plan;
-- `required` persists the submission, selects the Warrant, and refuses GitHub
-  enqueue unless the immutable queue commit, state root, active Warrant, and
+- `required` persists the submission, selects a provisional Warrant, runs or
+  reuses semantic native proof under heartbeat, atomically qualifies the same
+  fence, and refuses GitHub enqueue unless the immutable queue commit, state root, active Warrant, and
   selected candidate all pass exact readback validation. Immediately before
   enqueue, the controller also rereads the current protected state ref and
   verifies the active candidate, fencing token, generation, pull request, and
@@ -187,6 +208,14 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   controller discovers that another candidate owns the active Warrant, a
   configured consumer workflow is dispatched immediately for that exact PR,
   head, and source run; the candidate is not left waiting for a patrol cron.
+
+The required controller checks the protected base again after native work. A
+disjoint attributed delta reuses the proof. Overlap or unknown attribution
+triggers one automatic revalidation on the latest base; continued overlap,
+native failure, cancellation, semantic head movement, or an unrecoverable merge
+conflict closes the exact fence. The next queued candidate is notified through
+the `buildchain-dev-delivery-wake` repository event. If cancellation prevents
+cleanup, lease expiry recovers retained queue age and mints a new fence.
 
 Consumers should deploy `shadow` first, inspect receipts, then change their
 protected caller to `required`. Rollback is a reviewed caller change back to
@@ -202,10 +231,15 @@ cannot close a newer active Warrant generation.
 
 Buildchain uses the same contract for its own protected dev line through
 `buildchain-dev-delivery.yml`. The manual caller requires the exact PR head and
-all native/source proof roots, pins the runtime to the caller commit, selects
+semantic source roots, accepts an optional reusable native proof, pins the runtime to the caller commit, selects
 `delivery-warrant-mode: required`, and targets GitHub Merge Queue. It does not
 offer an `off` switch: rollback is a reviewed change to this caller, not an
 operator-time weakening of a specific delivery attempt.
+
+`buildchain init --type native` generates the corresponding protected-dev
+consumer workflow. It supports both explicit dispatch and the bounded wake
+event, uses the same reusable controller, and keeps the native command in the
+consumer repository rather than inventing provider-specific shards.
 
 This mechanism schedules protected delivery only. It does not serialize local
 development, source-only checks, unrelated channels, release publication, or

@@ -405,7 +405,7 @@ export function prepareReleasePassportKfdSections({ kfd1, kfd2Claims, kfd3, kfdA
   };
 }
 
-export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], comparisonMatrix, sourceSha = "", checkedAt } = {}) {
+export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], comparisonMatrix, expectedAdopterId = "kungfu-systems/buildchain", expectedSourceRepository = "", sourceSha = "", checkedAt } = {}) {
   if (!manifest) {
     if (comparisonMatrix || gateResults.length > 0) {
       throw new Error("KFD support and product-gate inputs require --kfd-adopter-manifest-json; --kfd-support-matrix-json is comparison-only");
@@ -414,7 +414,7 @@ export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], c
   }
   const manifestGate = createKfdAdopterManifestGate({
     manifest, packageArtifactRoot: installedKfdPackageArtifactRoot(), gateResults,
-    authorityPath: "kfd-adopter-manifest.json", expectedSourceSha: sourceSha, checkedAt,
+    authorityPath: "kfd-adopter-manifest.json", expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha, checkedAt,
   });
   const legacyProjection = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
   if (comparisonMatrix) {
@@ -425,18 +425,18 @@ export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], c
   }
   return {
     manifest, manifestGate, legacyProjection,
-    binding: createKfdAdopterReleaseBinding({ manifest, manifestGate, legacyProjection, expectedSourceSha: sourceSha }),
+    binding: createKfdAdopterReleaseBinding({ manifest, manifestGate, legacyProjection, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha }),
   };
 }
 
-export function validateKfdAdopterReleaseEvidence({ binding, artifactBinding, manifest, manifestGate, legacyProjection, passportLegacyProjection, expectedSourceSha = "" } = {}) {
+export function validateKfdAdopterReleaseEvidence({ binding, artifactBinding, manifest, manifestGate, legacyProjection, passportLegacyProjection, expectedAdopterId = "kungfu-systems/buildchain", expectedSourceRepository = "", expectedSourceSha = "" } = {}) {
   if (!binding) {
     return passportLegacyProjection
       ? [{ code: "kfdSupport.authority", message: "legacy KFD support projection requires the standard adopter manifest binding" }]
       : [];
   }
   const issues = validateKfdAdopterReleaseBinding(binding, {
-    manifest, manifestGate, legacyProjection, expectedSourceSha,
+    manifest, manifestGate, legacyProjection, expectedAdopterId, expectedSourceRepository, expectedSourceSha,
   }).issues.map((entry) => ({ code: `kfdAdopter.${entry.path || entry.code}`, message: entry.message, details: entry }));
   if (!artifactBinding || passportStableJson(artifactBinding) !== passportStableJson(binding)) {
     issues.push({ code: "kfdAdopter.artifactEvidence", message: "release passport and artifact evidence must bind the same exact KFD adopter closure" });
