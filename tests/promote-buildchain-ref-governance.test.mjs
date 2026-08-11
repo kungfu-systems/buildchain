@@ -37,6 +37,7 @@ const {
   generateReleaseEvidenceInputs,
   resolveProtectedStatusCheckContext,
   releasePassportArtifactFiles,
+  verifyCollectedReleasePassport,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
@@ -801,6 +802,24 @@ test("major promotion requires a release passport with the matching source tree"
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }
+});
+
+test("Buildchain self-KFD release requires the exact adopter manifest closure", async () => {
+  const kfd123Only = {
+    outputDir: "/unused",
+    passport: {
+      evidence: { kfd1: "kfd-1", kfd2: "kfd-2", kfd3: "kfd-3" },
+      "kfd-1": {},
+      "kfd-2": {},
+      "kfd-3": {},
+    },
+    artifactEvidence: {},
+    files: ["buildchain.release.json", "artifact-evidence.json"],
+  };
+  await assert.rejects(
+    verifyCollectedReleasePassport({ collected: kfd123Only, cwd: "/unused", requireBuildchainSelfKfd: true }),
+    /self-KFD release requires the exact adopter manifest closure.*passport\.kfdAdopter.*kfd-adopter-manifest\.json/,
+  );
 });
 
 test("promote-only RC passport tolerates legacy unbound target channel", () => {
