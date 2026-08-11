@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
-    "maxHandMaintainedSourceFiles": 307,
-    "maxHandMaintainedSourceLines": 119895,
+    "maxHandMaintainedSourceFiles": 309,
+    "maxHandMaintainedSourceLines": 120855,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23477,
-    "latestTransition": "Buildchain v3 adds the durable controller that schedules and reconciles next-development version state after completed Alpha success.",
-    "rationale": "The next-development slice adds one atomic child controller and one bounded Candidate Patrol reservation reader beside the existing provider-neutral transition. It preserves completed Alpha truth, resumes idempotent latest-Dev reconciliation, rejects stale reserved version material before candidate settlement, and withholds verification until protected Dev roots agree. Focused tests cover duplicate scheduling, runner loss, moving Dev, reviewed anchors, readback faults, pure preparation suppression and stale reservations. This exact 307-file, 119895-source-line and 23477-workflow-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23607,
+    "latestTransition": "Buildchain v3 self-dogfoods next-development recovery through the real version-state adapter and exact hosted readback.",
+    "rationale": "The self-dogfood slice adds one bounded scenario harness and one evidence command. It calls the real version-state adapter, injects transient durable-state failure, restores the operation on a fresh runner, exercises protected Dev movement and protected PR delay, proves both legal models, and roots exact hosted readback before stable qualification. The workflow adds only the public owner/repo route and read-only GitHub observations. This exact 309-file, 120855-source-line and 23607-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -117,8 +117,8 @@
       "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and all existing no-widening checks remain unchanged."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1479,
-      "rationale": "Inventory retains the complete recovery and publication authority set and additionally requires the next-development contract, controller, schemas, fixtures, adapter, generated guidance and public documentation; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1481,
+      "rationale": "Inventory retains the complete recovery and publication authority set and additionally requires both bounded next-development self-dogfood command and harness files beside the contract, controller, schemas, fixtures, adapter, generated guidance and public documentation; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
       "maxFunctionLines": 288,

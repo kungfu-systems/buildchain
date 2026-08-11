@@ -1780,7 +1780,8 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
   assert.match(workflow, /ALPHA_RUNTIME_SHA: \$\{\{ needs\.alpha-consumer\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(workflow, /STABLE_RUNTIME_SHA: \$\{\{ needs\.stable-consumer\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(workflow, /ref: `tags\/\$\{tag\}`/);
-  assert.match(workflow, /kungfu-buildchain-alpha-self-dogfood/);
+  assert.match(workflow, /buildchain-v3-alpha-self-dogfood-evidence/);
+  assert.match(workflow, /next-development-self-dogfood\.mjs attest-hosted/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
   assert.doesNotMatch(workflow, /\.build\.yml@v3\n/);

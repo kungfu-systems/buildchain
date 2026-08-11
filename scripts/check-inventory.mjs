@@ -98,6 +98,8 @@ const requiredPaths = [
   "docs/versioning.md",
   "scripts/release-line-dry-run.mjs",
   "scripts/next-development-transition.mjs",
+  "scripts/next-development-self-dogfood.mjs",
+  "scripts/next-development-self-dogfood-harness.mjs",
   "scripts/generate-next-development-guidance.mjs",
   "scripts/reconcile-release-governance.mjs",
   "scripts/buildchain-channel-router.mjs",
