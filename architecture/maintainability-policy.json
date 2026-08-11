@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 293,
-    "maxHandMaintainedSourceLines": 114185,
+    "maxHandMaintainedSourceFiles": 295,
+    "maxHandMaintainedSourceLines": 114821,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23298,
-    "latestTransition": "Release Train freezes one authorized Alpha candidate independently from subsequent Dev movement.",
-    "rationale": "One provider-neutral Release Train module adds rooted Release Cut identity, compare-and-swap state transitions, idempotent Dev observations, enumerated supersession, full replay validation, and a non-authoritative legacy patrol read projection. Four registry wiring lines expose its package subpath and manual through existing generated public surfaces. The prior Engineering Housekeeper sources remain unchanged; this exact one-file and 524-line increase is covered by focused negative tests and cannot grow implicitly."
+    "maxWorkflowLines": 23346,
+    "latestTransition": "Candidate Patrol resumes the active Release Train before considering later Dev movement.",
+    "rationale": "Two bounded controller modules separate exact-SHA qualification from active Release Train reconciliation. They add candidate-tree, Alpha-base, runtime and route readback, rooted hold evidence, duplicate-observation idempotence, and frozen-candidate resume without widening the pre-existing patrol script's line, function-length or complexity debt. The reusable workflow adds exact runtime checkout plus Release Cut, generation, tree, drift and hold outputs. This exact two-file, 636-source-line and 48-workflow-line increase is covered by focused negative tests and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -291,18 +291,25 @@
         "secrets": ["promotion-token"],
         "outputs": [
           "active-candidate-pr",
+          "candidate-generation",
+          "candidate-tree-sha",
           "controller-state",
+          "cut-root",
+          "drift-root",
           "eligible",
+          "hold-root",
           "next-candidate-sha",
           "prior-state-root",
           "promotion-pr",
           "result-path",
+          "runtime-sha",
           "selected-sha",
           "settlement-action",
-          "source-lock-ref"
+          "source-lock-ref",
+          "train-root"
         ]
       },
-      "rationale": "Expose opt-in auto-merge registration and an explicit merge method for the already-managed exact-source Alpha candidate without adding approval or direct-merge authority."
+      "rationale": "Expose the frozen Release Cut, generation, candidate tree, exact runtime, Dev-drift observation and fail-closed hold roots for Build inputs while preserving the existing no-publication and protected-settlement boundary."
     },
     "workflow:dev-pr-auto-merge": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
