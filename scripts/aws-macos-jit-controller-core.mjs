@@ -203,6 +203,87 @@ export function createMacosJitCampaignPlan(values = {}) {
   return { ...plan, digest: digest(plan) };
 }
 
+export function createMacosJitInstanceRehydratePlan(values = {}) {
+  const id = campaignId(values.campaignId);
+  const boundSource = source(values);
+  const aws = commonAws(values);
+  const regionConfig = macosJitRegionConfig(aws.region);
+  const tags = ownershipTags({ id, sourceSha: boundSource.sha });
+  const rehydrationId = exact(
+    values.rehydrationId,
+    /^r[1-9]\d{0,2}$/,
+    "rehydrationId",
+  );
+  const instanceClientToken = `kungfu-mac-rehydrate-${id}-${rehydrationId}`;
+  if (instanceClientToken.length > 64) {
+    throw new Error("rehydration client token exceeds the EC2 limit");
+  }
+  const plan = {
+    schemaVersion: 1,
+    contract: AWS_MACOS_JIT_CONTROLLER_CONTRACT,
+    kind: "instance-rehydrate-plan",
+    repository: repository(values.repository),
+    account: {
+      id: exact(values.accountId, /^\d{12}$/, "accountId"),
+    },
+    github: {
+      workflowId: MACOS_EC2_JIT.workflowId,
+      requiredState: "disabled_manually",
+    },
+    campaign: { id },
+    source: boundSource,
+    aws: {
+      ...aws,
+      hostId: exact(values.hostId, /^h-[0-9a-f]+$/, "hostId"),
+      hostAllocatedAt: iso(values.hostAllocatedAt, "hostAllocatedAt"),
+      replacesInstanceId: exact(
+        values.replacesInstanceId,
+        /^i-[0-9a-f]+$/,
+        "replacesInstanceId",
+      ),
+      rehydrationId,
+      instanceTags: tags,
+      volumeTags: tags,
+      instanceClientToken,
+      rootVolume: {
+        deviceName: "/dev/sda1",
+        deleteOnTermination: true,
+        encrypted: true,
+        volumeSizeGiB: 200,
+        volumeType: "gp3",
+      },
+      metadata: {
+        httpEndpoint: "enabled",
+        httpTokens: "required",
+        httpPutResponseHopLimit: 1,
+        instanceMetadataTags: "disabled",
+      },
+    },
+    safety: {
+      applyMode: values.execute === true ? "execute" : "dry-run",
+      exactSourceRequired: true,
+      existingCampaignHostRequired: true,
+      noHostAllocation: true,
+      zeroActiveInstanceRequired: true,
+      zeroRunnerResidueRequired: true,
+      awsDryRunRequiredBeforeLaunch: true,
+      cleanupOwner: "scheduled-card-scoped-reaper",
+      budget: {
+        name: regionConfig.budgetName,
+        limitUsd: MACOS_EC2_JIT.budgetLimitUsd,
+        metrics: ["UnblendedCost"],
+        dimensionFilter: {
+          usageTypes: regionConfig.budgetUsageTypes,
+          operation: MACOS_EC2_JIT.budgetOperation,
+          regions: regionConfig.budgetRegions,
+        },
+        requiredActualThresholds: [80, 95],
+      },
+    },
+  };
+  return { ...plan, digest: digest(plan) };
+}
+
 export function createMacosJitSourceRebindPlan(values = {}) {
   const id = campaignId(values.campaignId);
   const boundSource = source(values);
@@ -301,9 +382,9 @@ export function macosAllocateHostsArgs(plan) {
 export function macosRunInstancesArgs(plan, { hostId, dryRun = false } = {}) {
   if (
     plan?.contract !== AWS_MACOS_JIT_CONTROLLER_CONTRACT ||
-    plan.kind !== "campaign-launch-plan"
+    !["campaign-launch-plan", "instance-rehydrate-plan"].includes(plan.kind)
   ) {
-    throw new Error("macOS JIT campaign launch plan contract is invalid");
+    throw new Error("macOS JIT instance launch plan contract is invalid");
   }
   const resolvedHostId = exact(hostId, /^h-[0-9a-f]+$/, "hostId");
   const args = [

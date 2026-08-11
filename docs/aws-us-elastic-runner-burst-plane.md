@@ -380,7 +380,7 @@ host, including at least one full run, plus proof that:
 ### Phase 3 lifecycle controller
 
 `scripts/aws-macos-jit-controller.mjs` is the operator boundary for the paid
-campaign. It has four explicit mutation modes:
+campaign. It has five explicit mutation modes:
 
 - `launch-campaign` binds the exact repository source, AMI, availability zone,
   tagged Dedicated Host, and reusable instance. Before paid allocation it
@@ -390,6 +390,12 @@ campaign. It has four explicit mutation modes:
   a DryRun parameter for `AllocateHosts`, it requires an allowed IAM policy
   simulation for the exact tagged allocation before the real call, then a
   successful `RunInstances` DryRun before launching the instance.
+- `rehydrate-instance` creates a replacement instance on the one already-paid,
+  empty campaign host after an interrupted or failed instance lifecycle. It
+  rechecks the exact account, disabled workflow, Budget, source, host identity
+  and allocation time, zero runner residue, zero active JIT instances, and no
+  other active Mac host in either admitted region. It then requires a
+  successful same-host `RunInstances` DryRun and never calls `AllocateHosts`.
 - `run-job` binds one queued exact-source GitHub job to the existing campaign
   host and instance. It writes the repository JIT configuration through a
   mode-0600 temporary file into a distinct SSM SecureString, sends only the
@@ -417,8 +423,10 @@ through `--confirm-source-sha` and `--confirm-campaign-id`. `run-job` also
 requires `--confirm-run-id`; `launch-campaign` additionally requires the
 expected workload account through `--account-id`. `rebind-campaign`
 additionally repeats the prior source, host, and instance identities and
-requires `--confirm-zero-allocation`. Omitting `--execute` emits a deterministic
-plan without changing AWS or GitHub state.
+requires `--confirm-zero-allocation`. `rehydrate-instance` additionally repeats
+the existing host and replaced instance identities and requires
+`--confirm-no-host-allocation`. Omitting `--execute` emits a deterministic plan
+without changing AWS or GitHub state.
 
 ## Provider lifecycle
 
