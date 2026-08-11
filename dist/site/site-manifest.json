@@ -133,7 +133,7 @@
       "path": "docs/release-train.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:550e50726ff479730bee1abe7839776308396bb01613e31a3ed6e898297619fa"
+      "digest": "sha256:7e97af1d4b32e34e944e5137d8a4d3b4efdd357e0542b4f483d941bc003be495"
     },
     {
       "id": "release-propagation",
