@@ -89,6 +89,20 @@ function assertExactStartupFailure(run, jobCount, artifactCount) {
   }
 }
 
+function assertExactSuccessfulRun(run, jobs, jobCount, artifactCount) {
+  if (
+    run.status !== "completed" ||
+    run.conclusion !== "success" ||
+    jobCount === 0 ||
+    artifactCount === 0 ||
+    (jobs.jobs || []).some((job) => job.status !== "completed")
+  ) {
+    throw new Error(
+      `macOS campaign run ${run.id} is not a terminal successful run with retained evidence`,
+    );
+  }
+}
+
 function classifyCampaignRun(plan, run) {
   const startupFailure = plan.github.startupFailureRuns.find(
     ({ runId }) => runId === String(run.id),
@@ -100,9 +114,11 @@ function classifyCampaignRun(plan, run) {
   const preflightFailure = plan.github.preflightFailureRunIds.includes(
     String(run.id),
   );
+  const successfulRun = plan.github.successfulRunIds.includes(String(run.id));
   return {
     startupFailure,
     historicalTerminalFailure,
+    successfulRun,
     expectedSourceSha:
       startupFailure?.sourceSha ||
       historicalTerminalFailure?.sourceSha ||
@@ -111,9 +127,11 @@ function classifyCampaignRun(plan, run) {
       ? "startup-failure"
       : historicalTerminalFailure
         ? "historical-terminal-failure"
-        : preflightFailure
-          ? "preflight-failure"
-          : plan.github.priorRunPolicy,
+        : successfulRun
+          ? "successful-run"
+          : preflightFailure
+            ? "preflight-failure"
+            : plan.github.priorRunPolicy,
   };
 }
 
@@ -137,6 +155,7 @@ function assertExactReceiptInventories(plan, receipts) {
   const inventories = [
     ["terminal-failure", plan.github.terminalFailureRunIds, false],
     ["preflight-failure", plan.github.preflightFailureRunIds, false],
+    ["successful-run", plan.github.successfulRunIds, false],
     ["startup-failure", plan.github.startupFailureRuns, true],
     [
       "historical-terminal-failure",
@@ -201,6 +220,8 @@ function campaignRunReceipts(plan) {
     );
     if (classification.startupFailure) {
       assertExactStartupFailure(run, jobCount, artifactCount);
+    } else if (classification.successfulRun) {
+      assertExactSuccessfulRun(run, jobs, jobCount, artifactCount);
     } else {
       assertRunMatchesPolicy(
         classification.historicalTerminalFailure
