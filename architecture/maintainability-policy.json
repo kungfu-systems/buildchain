@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "7f4c81e824f761271b90c3cf12ce3bc351da7937",
+    "baselineRevision": "0de402c3877e4c55dbd07b2f4891facce5be8ba8",
     "maxHandMaintainedSourceFiles": 310,
-    "maxHandMaintainedSourceLines": 121227,
+    "maxHandMaintainedSourceLines": 121344,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23607,
-    "latestTransition": "Buildchain v3 composes bounded macOS JIT rehydration with hosted next-development self-dogfood.",
-    "rationale": "The protected next-development controller and bounded same-host macOS JIT rehydration remain intact while the self-dogfood slice adds one scenario harness and one evidence command. It calls the real version-state adapter, injects transient durable-state failure, restores the operation on a fresh runner, exercises protected Dev movement and protected PR delay, proves both legal models, and roots exact hosted readback before stable qualification. This exact 310-file, 121227-source-line and 23607-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "Buildchain v3 preserves failed macOS JIT evidence while advancing the same paid host to a strict descendant source.",
+    "rationale": "The protected next-development controller, hosted self-dogfood and same-host macOS rehydration remain intact. The failed-source rebind adds one explicit operator mode over the existing compensated tag and ref transaction. It requires the exact terminal failed run inventory, complete jobs, retained GitHub artifacts and S3 bootstrap evidence, zero JIT residue, an empty next-source prefix and strict forward lineage; it never allocates capacity or dispatches work. This exact 310-file, 121344-source-line and 23607-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -20,8 +20,8 @@
   },
   "approvedNewFileTransitions": {
     "scripts/aws-macos-jit-controller.mjs": {
-      "maxLines": 631,
-      "rationale": "The existing operator entrypoint adds only the rehydration plan dispatch and explicit exact-host, replaced-instance and no-host-allocation confirmations; provider checks and execution remain in the separately budgeted rehydration module. This exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 669,
+      "rationale": "The existing operator entrypoint retains rehydration and adds only an explicit after-failure rebind mode, exact failed-run JSON parsing and matching confirmation. Evidence checks and mutation remain in the separately bounded source-rebind module. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/next-development-transition.js": {
       "maxLines": 738,

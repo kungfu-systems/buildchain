@@ -28,7 +28,29 @@ function priorOwnershipPlan(plan) {
   };
 }
 
-function campaignRunsWithNoWork(plan) {
+function assertRunMatchesPolicy(plan, run, jobs, jobCount, artifactCount) {
+  if (plan.github.priorRunPolicy === "unused") {
+    if (jobCount !== 0 || artifactCount !== 0) {
+      throw new Error(
+        `macOS campaign run ${run.id} already has jobs or artifacts`,
+      );
+    }
+    return;
+  }
+  if (
+    run.status !== "completed" ||
+    run.conclusion !== "failure" ||
+    jobCount === 0 ||
+    artifactCount === 0 ||
+    (jobs.jobs || []).some((job) => job.status !== "completed")
+  ) {
+    throw new Error(
+      `macOS campaign run ${run.id} is not a terminal failed run with retained evidence`,
+    );
+  }
+}
+
+function campaignRunReceipts(plan) {
   const branch = sourceRefName(plan.source.ref);
   const response = ghJson(
     [
@@ -68,18 +90,34 @@ function campaignRunsWithNoWork(plan) {
     const artifactCount = Number(
       artifacts.total_count || (artifacts.artifacts || []).length || 0,
     );
-    if (jobCount !== 0 || artifactCount !== 0) {
-      throw new Error(
-        `macOS campaign run ${run.id} already has jobs or artifacts`,
-      );
-    }
+    assertRunMatchesPolicy(plan, run, jobs, jobCount, artifactCount);
     receipts.push({
       runId: String(run.id),
       status: String(run.status || "unknown"),
       conclusion: String(run.conclusion || ""),
       jobCount,
       artifactCount,
+      artifacts: (artifacts.artifacts || []).map((artifact) => ({
+        id: String(artifact.id),
+        name: String(artifact.name || ""),
+        sizeInBytes: Number(artifact.size_in_bytes || 0),
+        digest: String(artifact.digest || ""),
+        expired: artifact.expired === true,
+      })),
     });
+  }
+  if (plan.github.priorRunPolicy === "terminal-failure") {
+    const observed = receipts
+      .map((receipt) => receipt.runId)
+      .sort((left, right) => Number(left) - Number(right));
+    if (
+      JSON.stringify(observed) !==
+      JSON.stringify(plan.github.terminalFailureRunIds)
+    ) {
+      throw new Error(
+        "macOS campaign terminal failed run inventory does not match the confirmed run ids",
+      );
+    }
   }
   return receipts;
 }
@@ -286,7 +324,7 @@ function assertZeroCampaignResidue(plan, profile) {
   if (matchingRunners.length !== 0) {
     throw new Error("macOS campaign already has a registered JIT runner");
   }
-  const evidenceObjectCounts = {};
+  const evidenceObjects = {};
   for (const sourceSha of [plan.previousSource.sha, plan.source.sha]) {
     const evidence = awsJson(
       plan,
@@ -299,27 +337,43 @@ function assertZeroCampaignResidue(plan, profile) {
         "--prefix",
         `macos/${sourceSha}/`,
         "--max-keys",
-        "1",
+        "1000",
         "--output",
         "json",
       ],
       `macOS campaign evidence inventory for ${sourceSha}`,
     );
+    if (evidence.IsTruncated === true) {
+      throw new Error(
+        `macOS campaign source ${sourceSha} evidence inventory is incomplete`,
+      );
+    }
+    const objects = (evidence.Contents || []).map((object) => ({
+      key: String(object.Key || ""),
+      size: Number(object.Size || 0),
+      etag: String(object.ETag || ""),
+    }));
     const count = Number(
       evidence.KeyCount || (evidence.Contents || []).length || 0,
     );
-    if (count !== 0) {
+    const previousTerminalEvidence =
+      sourceSha === plan.previousSource.sha &&
+      plan.github.priorRunPolicy === "terminal-failure";
+    if (
+      (!previousTerminalEvidence && count !== 0) ||
+      (previousTerminalEvidence && count === 0)
+    ) {
       throw new Error(
-        `macOS campaign source ${sourceSha} already has bootstrap evidence`,
+        `macOS campaign source ${sourceSha} bootstrap evidence does not match the rebind policy`,
       );
     }
-    evidenceObjectCounts[sourceSha] = count;
+    evidenceObjects[sourceSha] = objects;
   }
   return {
-    priorRuns: campaignRunsWithNoWork(plan),
+    priorRuns: campaignRunReceipts(plan),
     jitParameterCount: parameters.length,
     runnerCount: matchingRunners.length,
-    evidenceObjectCounts,
+    evidenceObjects,
   };
 }
 
@@ -480,7 +534,10 @@ export function executeMacosJitSourceRebind(plan, { profile = "" } = {}) {
     schemaVersion: 1,
     contract: AWS_MACOS_JIT_CONTROLLER_CONTRACT,
     kind: "campaign-source-rebind-result",
-    status: "rebound-zero-allocation",
+    status:
+      plan.github.priorRunPolicy === "terminal-failure"
+        ? "rebound-after-terminal-failure-zero-allocation"
+        : "rebound-zero-allocation",
     repository: plan.repository,
     campaign: plan.campaign,
     previousSource: plan.previousSource,
