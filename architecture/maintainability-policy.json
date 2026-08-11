@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "0de402c3877e4c55dbd07b2f4891facce5be8ba8",
     "maxHandMaintainedSourceFiles": 313,
-    "maxHandMaintainedSourceLines": 122604,
+    "maxHandMaintainedSourceLines": 122608,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23775,
-    "latestTransition": "Buildchain v3 makes qualified Delivery Warrant retries idempotent after native proof and before Merge Queue settlement.",
-    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run now accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. This exact 313-file, 122604-source-line and 23775-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "Buildchain v3 settles the exact active chained Delivery Warrant attempt after protected Merge Queue integration.",
+    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. Terminal settlement now selects that exact active chained attempt before an older same-head predecessor, so a recovered native failure cannot block verified merge settlement. This exact 313-file, 122608-source-line and 23775-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
