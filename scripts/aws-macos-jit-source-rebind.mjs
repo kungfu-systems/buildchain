@@ -50,6 +50,19 @@ function assertRunMatchesPolicy(plan, run, jobs, jobCount, artifactCount) {
   }
 }
 
+function assertExactStartupFailure(run, jobCount, artifactCount) {
+  if (
+    run.status !== "completed" ||
+    run.conclusion !== "startup_failure" ||
+    jobCount !== 0 ||
+    artifactCount !== 0
+  ) {
+    throw new Error(
+      `macOS campaign run ${run.id} is not an exact startup failure`,
+    );
+  }
+}
+
 function campaignRunReceipts(plan) {
   const branch = sourceRefName(plan.source.ref);
   const response = ghJson(
@@ -68,7 +81,13 @@ function campaignRunReceipts(plan) {
   }
   const receipts = [];
   for (const run of matching) {
-    if (run.head_sha !== plan.previousSource.sha) {
+    const startupFailure = plan.github.startupFailureRuns.find(
+      ({ runId }) => runId === String(run.id),
+    );
+    const expectedSourceSha = startupFailure
+      ? startupFailure.sourceSha
+      : plan.previousSource.sha;
+    if (run.head_sha !== expectedSourceSha) {
       throw new Error(
         `macOS campaign run ${run.id} is bound to an unexpected source`,
       );
@@ -90,9 +109,17 @@ function campaignRunReceipts(plan) {
     const artifactCount = Number(
       artifacts.total_count || (artifacts.artifacts || []).length || 0,
     );
-    assertRunMatchesPolicy(plan, run, jobs, jobCount, artifactCount);
+    if (startupFailure) {
+      assertExactStartupFailure(run, jobCount, artifactCount);
+    } else {
+      assertRunMatchesPolicy(plan, run, jobs, jobCount, artifactCount);
+    }
     receipts.push({
       runId: String(run.id),
+      sourceSha: String(run.head_sha || ""),
+      classification: startupFailure
+        ? "startup-failure"
+        : plan.github.priorRunPolicy,
       status: String(run.status || "unknown"),
       conclusion: String(run.conclusion || ""),
       jobCount,
@@ -108,6 +135,7 @@ function campaignRunReceipts(plan) {
   }
   if (plan.github.priorRunPolicy === "terminal-failure") {
     const observed = receipts
+      .filter(({ classification }) => classification === "terminal-failure")
       .map((receipt) => receipt.runId)
       .sort((left, right) => Number(left) - Number(right));
     if (
@@ -116,6 +144,18 @@ function campaignRunReceipts(plan) {
     ) {
       throw new Error(
         "macOS campaign terminal failed run inventory does not match the confirmed run ids",
+      );
+    }
+    const observedStartupFailures = receipts
+      .filter(({ classification }) => classification === "startup-failure")
+      .map(({ runId, sourceSha }) => ({ runId, sourceSha }))
+      .sort((left, right) => Number(left.runId) - Number(right.runId));
+    if (
+      JSON.stringify(observedStartupFailures) !==
+      JSON.stringify(plan.github.startupFailureRuns)
+    ) {
+      throw new Error(
+        "macOS campaign startup failure inventory does not match the confirmed runs",
       );
     }
   }

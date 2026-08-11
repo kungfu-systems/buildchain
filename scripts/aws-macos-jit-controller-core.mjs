@@ -88,6 +88,25 @@ function terminalFailureRunIds(value) {
   return [...normalized].sort((left, right) => Number(left) - Number(right));
 }
 
+function startupFailureRuns(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    throw new Error("startupFailureRuns must be an array");
+  }
+  const normalized = value.map((entry) => ({
+    runId: exact(entry?.runId, /^[1-9]\d*$/, "startupFailureRunId"),
+    sourceSha: exactSha(entry?.sourceSha),
+  }));
+  if (
+    new Set(normalized.map(({ runId }) => runId)).size !== normalized.length
+  ) {
+    throw new Error("startupFailureRuns must use unique run ids");
+  }
+  return [...normalized].sort(
+    (left, right) => Number(left.runId) - Number(right.runId),
+  );
+}
+
 function commonAws(values) {
   const region = exact(
     values.region || MACOS_EC2_JIT.region,
@@ -321,6 +340,12 @@ export function createMacosJitSourceRebindPlan(values = {}) {
     priorRunPolicy === "terminal-failure"
       ? terminalFailureRunIds(values.terminalFailureRunIds)
       : [];
+  const startupRuns = startupFailureRuns(values.startupFailureRuns);
+  if (priorRunPolicy !== "terminal-failure" && startupRuns.length !== 0) {
+    throw new Error(
+      "startupFailureRuns require priorRunPolicy terminal-failure",
+    );
+  }
   const plan = {
     schemaVersion: 1,
     contract: AWS_MACOS_JIT_CONTROLLER_CONTRACT,
@@ -337,6 +362,7 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       requiredState: "disabled_manually",
       priorRunPolicy,
       terminalFailureRunIds: terminalRunIds,
+      startupFailureRuns: startupRuns,
     },
     aws: {
       ...aws,
@@ -353,6 +379,7 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       zeroPriorJobsRequired: priorRunPolicy === "unused",
       zeroPriorArtifactsRequired: priorRunPolicy === "unused",
       terminalFailureEvidencePreserved: priorRunPolicy === "terminal-failure",
+      startupFailureEvidencePreserved: startupRuns.length !== 0,
       zeroJitResidueRequired: true,
       zeroEvidenceRequired: true,
       exactCampaignResourcesRequired: true,
