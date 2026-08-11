@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 299,
-    "maxHandMaintainedSourceLines": 116970,
+    "baselineRevision": "c25b7cde87f61911c4ef6c8a6c8567d0679c54e2",
+    "maxHandMaintainedSourceFiles": 300,
+    "maxHandMaintainedSourceLines": 117481,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23346,
-    "latestTransition": "Rooted release-blocker repair advances one frozen-cut candidate generation and earns only bounded non-preemptive Warrant priority.",
-    "rationale": "The Release Train adds a rooted cut-first repair contract that preserves origin provenance, permits candidate build through a Dev conflict, and blocks publication until the same patch identity settles on Dev. A separate bounded priority-claim module keeps eligibility parsing out of the existing Warrant queue; only exact Work, route, head, patch, cut, repair, landing and gate roots enter the blocker lane, while active leases remain non-preemptive. Exact focused negative tests cover mismatch, conflict, fabricated claims and active-Warrant retention. This exact 299-file and 116970-line ceiling cannot grow implicitly."
+    "latestTransition": "Buildchain v3 self-dogfood composes moving-dev, repair, publication and Warrant authority into one protected replayable campaign.",
+    "rationale": "The self-dogfood campaign is one bounded orchestration file over existing Release Train, Candidate Patrol and Delivery Warrant authorities. It requires exact protected PR, review, merge-group CI, tree, artifact and installed-product readback; deterministic negative cases prove restart replay, duplicate idempotence, invalid authority, unrelated priority and non-preemption. Train/repair and queue transactions are independently bounded helpers. This exact 300-file and 117481-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
