@@ -471,6 +471,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "channel",
+        "declarative-release-tail",
         "dry-run",
         "github-artifact-attestation-environment",
         "github-artifact-attestation-policy-json",
@@ -569,7 +570,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 111,
+      "inputCount": 112,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -606,9 +607,14 @@
         "release-candidate-artifact",
         "release-candidate-recovery-receipt-artifact",
         "release-candidate-recovery-root",
-        "release-propagation-work-artifact"
+        "release-propagation-work-artifact",
+        "release-tail-declaration-root",
+        "release-tail-receipt-roots-json",
+        "release-tail-state-root",
+        "release-tail-transaction-root",
+        "release-tail-transaction-state"
       ],
-      "outputCount": 23,
+      "outputCount": 28,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active",
@@ -2499,6 +2505,7 @@
         "buildchain-repository",
         "buildchain-stable-contract-lock-path",
         "channel",
+        "declarative-release-tail",
         "dry-run",
         "github-artifact-attestation-environment",
         "github-artifact-attestation-policy-json",
@@ -2585,7 +2592,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 100,
+      "inputCount": 101,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2634,9 +2641,14 @@
         "release-candidate-artifact",
         "release-candidate-recovery-receipt-artifact",
         "release-candidate-recovery-root",
-        "release-propagation-work-artifact"
+        "release-propagation-work-artifact",
+        "release-tail-declaration-root",
+        "release-tail-receipt-roots-json",
+        "release-tail-state-root",
+        "release-tail-transaction-root",
+        "release-tail-transaction-state"
       ],
-      "outputCount": 35,
+      "outputCount": 40,
       "surface": "release-governance",
       "capabilityGroup": "reusable-build",
       "status": "active",
@@ -2770,6 +2782,39 @@
       "status": "preview",
       "owner": "buildchain-workflows",
       "maturity": "preview",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
+      "id": "release-tail",
+      "path": ".github/workflows/release-tail.yml",
+      "reusable": true,
+      "inputs": [
+        "buildchain-ref",
+        "declaration-path",
+        "execute",
+        "provider-bindings-path",
+        "state-path"
+      ],
+      "inputCount": 5,
+      "secrets": [
+        "http-token"
+      ],
+      "secretCount": 1,
+      "outputs": [
+        "state-root",
+        "transaction-root",
+        "transaction-state"
+      ],
+      "outputCount": 3,
+      "surface": "release-tail-provider-plane",
+      "capabilityGroup": "release-passport-trust",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
       "introducedVersion": "pre-3.0.2-alpha.4",
       "compatibilityPromise": "preserved-through-the-v3-major-line",
       "deprecationReplacement": "",
@@ -3034,6 +3079,7 @@
         "branch-protection-bypass-apps",
         "branch-protection-bypass-teams",
         "branch-protection-bypass-users",
+        "declarative-release-tail",
         "dry-run",
         "expected-publication-version",
         "generated-pull-request-token",
@@ -3095,6 +3141,7 @@
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
         "release-passport-promotion-routing-json",
+        "release-tail-state-path",
         "require-governance",
         "require-publication-qualification",
         "require-publish-source-lock",
@@ -3107,7 +3154,29 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 76,
+      "inputCount": 78,
+      "capabilityGroup": "release-passport-trust",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing action identity retained as the canonical composite or JavaScript action boundary."
+    },
+    {
+      "id": "release-tail",
+      "path": "actions/release-tail/action.yml",
+      "inputs": [
+        "declaration",
+        "execute",
+        "github-token",
+        "http-token",
+        "provider-bindings",
+        "state-path"
+      ],
+      "inputCount": 6,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

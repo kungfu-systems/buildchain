@@ -748,8 +748,8 @@ const registeredActionIds = (workflowRegistry.actions || []).map((entry) => entr
 const readmeActionIndex = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
-if (registeredActionIds.length !== 6) {
-  throw new Error(`workflow-registry.json must expose the six current action entries, got ${registeredActionIds.length}`);
+if (registeredActionIds.length !== 7) {
+  throw new Error(`workflow-registry.json must expose the seven current action entries, got ${registeredActionIds.length}`);
 }
 for (const actionId of registeredActionIds) {
   if (!readmeActionIndex.includes(`actions/${actionId}`) || !mapActionIndex.includes(`actions/${actionId}`)) {
@@ -1132,7 +1132,7 @@ for (const retiredWorkflow of [
   }
 }
 const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/action.yml"), "utf8");
-const promoteBuildchainRefIndex = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/index.js"), "utf8");
+const promoteBuildchainRefIndex = ["actions/promote-buildchain-ref/index.js", "actions/promote-buildchain-ref/github-release.js"].map((entry) => fs.readFileSync(path.join(root, entry), "utf8")).join("\n");
 for (const requiredSnippet of [
   "github-release:",
   "github-release-title:",

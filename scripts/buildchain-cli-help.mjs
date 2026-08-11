@@ -40,6 +40,10 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-governance reconcile --repository <owner/repo>
                                --branch <dev|alpha|release/vN/vN.N>
                                --candidate-sha <sha> [--apply] [--json]
+  buildchain release-tail plan --declaration <json-or-path> [--output <path>]
+  buildchain release-tail init --declaration <json-or-path> [--state <path>]
+  buildchain release-tail <status|verify> [--state <path>] [--output <path>]
+  buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
   buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...

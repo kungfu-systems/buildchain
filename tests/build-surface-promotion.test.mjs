@@ -701,6 +701,11 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
     path.join(root, "actions/promote-buildchain-ref/index.js"),
     "utf8",
   );
+  const githubReleaseSource = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/github-release.js"),
+    "utf8",
+  );
+  const implementation = `${source}\n${githubReleaseSource}`;
 
   assert.match(action, /github-release:/);
   assert.match(action, /github-release-artifact-paths:/);
@@ -709,12 +714,13 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(action, /public-release-tag:/);
   assert.match(action, /github-release-url:/);
   assert.match(action, /github-release-action:/);
-  assert.match(source, /ensureGitHubRelease/);
-  assert.match(source, /publishGitHubReleaseEvidence/);
-  assert.match(source, /collectGitHubReleaseEvidenceAssets/);
-  assert.match(source, /duplicate asset basename/);
-  assert.match(source, /uploadReleaseAsset/);
-  assert.match(source, /transaction-state.*complete/s);
+  assert.match(implementation, /ensureGitHubRelease/);
+  assert.match(implementation, /publishGitHubReleaseEvidence/);
+  assert.match(implementation, /collectGitHubReleaseEvidenceAssets/);
+  assert.match(implementation, /duplicate asset basename/);
+  assert.match(implementation, /uploadReleaseAsset/);
+  assert.match(source, /publishTransaction\?\.state === "complete"/);
+  assert.match(source, /transaction-state=/);
   assert.match(source, /finalizationNeeded !== true/);
 });
 

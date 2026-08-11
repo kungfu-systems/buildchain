@@ -178,6 +178,30 @@
       "evidenceRequirements"
     ]
   },
+  "providerPlane": {
+    "status": "preview-implemented",
+    "train": "train/v3/v3.0/declarative-release-provider-plane",
+    "bindingSchemaPath": "contracts/release-tail-provider-bindings-v1.schema.json",
+    "coreSources": [
+      "packages/core/release-tail-provider-plane.js",
+      "packages/core/release-tail-provider-adapters.js",
+      "packages/core/release-tail-compatibility.js"
+    ],
+    "entrySurfaces": [
+      "cli:release-tail",
+      "action:release-tail",
+      "workflow:release-tail"
+    ],
+    "executionRule": "All four fixed capabilities use the same durable transaction, rooted observation, receipt, and bounded local-retry implementation.",
+    "consumerCommandPolicy": "deny",
+    "productionCutover": false,
+    "selfDogfoodCutover": {
+      "status": "alpha-train",
+      "publicWorkflow": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood",
+      "providerCapability": "artifact.publish",
+      "stableCutover": false
+    }
+  },
   "legacyExecutableSurfaces": [
     {
       "id": "publication-admission-commands",

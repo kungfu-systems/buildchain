@@ -27,8 +27,11 @@ machine authority for the current inventory is
 The declaration schema is
 [`contracts/release-tail-capabilities-v1.schema.json`](../contracts/release-tail-capabilities-v1.schema.json).
 
-This contract freezes the replacement boundary. It does not cut over a
-consumer, run a release, or reinterpret an already published release.
+This contract freezes the replacement boundary. The Buildchain-owned provider
+implementation is documented in
+[`release-tail-provider-plane.md`](./release-tail-provider-plane.md). Adding the
+provider plane does not itself cut over a consumer, run a release, or
+reinterpret an already published release.
 
 The v4 line carries this contract as a read-only compatibility and migration
 boundary. It does not change the v4 capability manifest's authoritative

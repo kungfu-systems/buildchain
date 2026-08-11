@@ -3589,7 +3589,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 61
+        "line": 62
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3618,7 +3618,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 85
+        "line": 86
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17762,6 +17762,833 @@
       ]
     },
     {
+      "id": "packages/core/release-tail-compatibility.js#diagnoseLegacyReleaseTailHooks",
+      "name": "diagnoseLegacyReleaseTailHooks",
+      "kind": "function",
+      "signature": "function diagnoseLegacyReleaseTailHooks(hooks = {})",
+      "parameters": [
+        {
+          "name": "hooks",
+          "signature": "hooks = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-compatibility.js",
+        "line": 23
+      },
+      "example": "import { diagnoseLegacyReleaseTailHooks } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-compatibility.js#RELEASE_TAIL_COMPATIBILITY_CONTRACT",
+      "name": "RELEASE_TAIL_COMPATIBILITY_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_COMPATIBILITY_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-compatibility.js",
+        "line": 1
+      },
+      "example": "import { RELEASE_TAIL_COMPATIBILITY_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-compatibility.js#RELEASE_TAIL_LEGACY_HOOKS",
+      "name": "RELEASE_TAIL_LEGACY_HOOKS",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_LEGACY_HOOKS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-compatibility.js",
+        "line": 4
+      },
+      "example": "import { RELEASE_TAIL_LEGACY_HOOKS } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-adapters.js#createActivationReceiptProjectorAdapter",
+      "name": "createActivationReceiptProjectorAdapter",
+      "kind": "function",
+      "signature": "function createActivationReceiptProjectorAdapter(options = {})",
+      "parameters": [
+        {
+          "name": "options",
+          "signature": "options = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-adapters.js",
+        "line": 181
+      },
+      "example": "import { createActivationReceiptProjectorAdapter } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-adapters.js#createGitHubReleaseAssetsAdapter",
+      "name": "createGitHubReleaseAssetsAdapter",
+      "kind": "function",
+      "signature": "function createGitHubReleaseAssetsAdapter({ octokit, resolveArtifact, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ octokit, resolveArtifact, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-adapters.js",
+        "line": 310
+      },
+      "example": "import { createGitHubReleaseAssetsAdapter } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-adapters.js#createHttpJsonReadback",
+      "name": "createHttpJsonReadback",
+      "kind": "function",
+      "signature": "function createHttpJsonReadback({ fetchImpl = globalThis.fetch } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ fetchImpl = globalThis.fetch } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-adapters.js",
+        "line": 191
+      },
+      "example": "import { createHttpJsonReadback } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-adapters.js#createSignedStaticChannelAdapter",
+      "name": "createSignedStaticChannelAdapter",
+      "kind": "function",
+      "signature": "function createSignedStaticChannelAdapter(options = {})",
+      "parameters": [
+        {
+          "name": "options",
+          "signature": "options = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-adapters.js",
+        "line": 161
+      },
+      "example": "import { createSignedStaticChannelAdapter } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-adapters.js#createSiteReleaseActivationAdapter",
+      "name": "createSiteReleaseActivationAdapter",
+      "kind": "function",
+      "signature": "function createSiteReleaseActivationAdapter(options = {})",
+      "parameters": [
+        {
+          "name": "options",
+          "signature": "options = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-adapters.js",
+        "line": 171
+      },
+      "example": "import { createSiteReleaseActivationAdapter } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-adapters.js#githubReleaseAssetsTargetRoot",
+      "name": "githubReleaseAssetsTargetRoot",
+      "kind": "function",
+      "signature": "function githubReleaseAssetsTargetRoot({ destination, artifacts })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ destination, artifacts }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-adapters.js",
+        "line": 297
+      },
+      "example": "import { githubReleaseAssetsTargetRoot } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-adapters.js#ReleaseTailProviderError",
+      "name": "ReleaseTailProviderError",
+      "kind": "class",
+      "signature": "class ReleaseTailProviderError",
+      "parameters": [],
+      "returns": "ReleaseTailProviderError",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-adapters.js",
+        "line": 9
+      },
+      "example": "import { ReleaseTailProviderError } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#compileReleaseTailDeclaration",
+      "name": "compileReleaseTailDeclaration",
+      "kind": "function",
+      "signature": "function compileReleaseTailDeclaration(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 584
+      },
+      "example": "import { compileReleaseTailDeclaration } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#createReleaseTailAdapterSet",
+      "name": "createReleaseTailAdapterSet",
+      "kind": "function",
+      "signature": "function createReleaseTailAdapterSet(declaration, adapters)",
+      "parameters": [
+        {
+          "name": "declaration",
+          "signature": "declaration"
+        },
+        {
+          "name": "adapters",
+          "signature": "adapters"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 1217
+      },
+      "example": "import { createReleaseTailAdapterSet } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#createReleaseTailTransaction",
+      "name": "createReleaseTailTransaction",
+      "kind": "function",
+      "signature": "function createReleaseTailTransaction(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 697
+      },
+      "example": "import { createReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#executeReleaseTailTransaction",
+      "name": "executeReleaseTailTransaction",
+      "kind": "function",
+      "signature": "async function executeReleaseTailTransaction(transaction, { adapters, checkpoint: checkpointCallback } = {})",
+      "parameters": [
+        {
+          "name": "transaction",
+          "signature": "transaction"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ adapters, checkpoint: checkpointCallback } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 1016
+      },
+      "example": "import { executeReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#parseReleaseTailDeclaration",
+      "name": "parseReleaseTailDeclaration",
+      "kind": "function",
+      "signature": "function parseReleaseTailDeclaration(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 491
+      },
+      "example": "import { parseReleaseTailDeclaration } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#readReleaseTailTransaction",
+      "name": "readReleaseTailTransaction",
+      "kind": "function",
+      "signature": "function readReleaseTailTransaction(filePath)",
+      "parameters": [
+        {
+          "name": "filePath",
+          "signature": "filePath"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 830
+      },
+      "example": "import { readReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_CAPABILITY_REGISTRY",
+      "name": "RELEASE_TAIL_CAPABILITY_REGISTRY",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_CAPABILITY_REGISTRY",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 31
+      },
+      "example": "import { RELEASE_TAIL_CAPABILITY_REGISTRY } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_DECLARATION_CONTRACT",
+      "name": "RELEASE_TAIL_DECLARATION_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_DECLARATION_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 5
+      },
+      "example": "import { RELEASE_TAIL_DECLARATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_EFFECT_SCHEMA",
+      "name": "RELEASE_TAIL_EFFECT_SCHEMA",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_EFFECT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 10
+      },
+      "example": "import { RELEASE_TAIL_EFFECT_SCHEMA } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_OBSERVATION_SCHEMA",
+      "name": "RELEASE_TAIL_OBSERVATION_SCHEMA",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_OBSERVATION_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 12
+      },
+      "example": "import { RELEASE_TAIL_OBSERVATION_SCHEMA } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_RECEIPT_SCHEMA",
+      "name": "RELEASE_TAIL_RECEIPT_SCHEMA",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_RECEIPT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 14
+      },
+      "example": "import { RELEASE_TAIL_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_STATES",
+      "name": "RELEASE_TAIL_STATES",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_STATES",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 17
+      },
+      "example": "import { RELEASE_TAIL_STATES } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_TRANSACTION_POLICY",
+      "name": "RELEASE_TAIL_TRANSACTION_POLICY",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_TRANSACTION_POLICY",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 7
+      },
+      "example": "import { RELEASE_TAIL_TRANSACTION_POLICY } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_TRANSACTION_SCHEMA",
+      "name": "RELEASE_TAIL_TRANSACTION_SCHEMA",
+      "kind": "constant",
+      "signature": "const RELEASE_TAIL_TRANSACTION_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 8
+      },
+      "example": "import { RELEASE_TAIL_TRANSACTION_SCHEMA } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#releaseTailRetryPolicyFromDeclaration",
+      "name": "releaseTailRetryPolicyFromDeclaration",
+      "kind": "function",
+      "signature": "function releaseTailRetryPolicyFromDeclaration(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 1207
+      },
+      "example": "import { releaseTailRetryPolicyFromDeclaration } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#releaseTailRoot",
+      "name": "releaseTailRoot",
+      "kind": "function",
+      "signature": "function releaseTailRoot(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 164
+      },
+      "example": "import { releaseTailRoot } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#releaseTailStableJson",
+      "name": "releaseTailStableJson",
+      "kind": "function",
+      "signature": "function releaseTailStableJson(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 149
+      },
+      "example": "import { releaseTailStableJson } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan",
+      "name": "validateReleaseTailEffectPlan",
+      "kind": "function",
+      "signature": "function validateReleaseTailEffectPlan(plan)",
+      "parameters": [
+        {
+          "name": "plan",
+          "signature": "plan"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 602
+      },
+      "example": "import { validateReleaseTailEffectPlan } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#validateReleaseTailTransaction",
+      "name": "validateReleaseTailTransaction",
+      "kind": "function",
+      "signature": "function validateReleaseTailTransaction(transaction)",
+      "parameters": [
+        {
+          "name": "transaction",
+          "signature": "transaction"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 744
+      },
+      "example": "import { validateReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-tail-provider-plane.js#writeReleaseTailTransaction",
+      "name": "writeReleaseTailTransaction",
+      "kind": "function",
+      "signature": "function writeReleaseTailTransaction(filePath, transaction)",
+      "parameters": [
+        {
+          "name": "filePath",
+          "signature": "filePath"
+        },
+        {
+          "name": "transaction",
+          "signature": "transaction"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "local-filesystem-write"
+      ],
+      "source": {
+        "path": "packages/core/release-tail-provider-plane.js",
+        "line": 841
+      },
+      "example": "import { writeReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release-train.js#createReleaseBlockerRepair",
       "name": "createReleaseBlockerRepair",
       "kind": "function",
@@ -18876,14 +19703,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:735fe63c2e1c642ce07a402ae4d714dc53a76fbd320b5bf4cac41eaf2a27a693",
+      "digest": "sha256:ae7917ccdbbf268073bad5dac68e9af915d6e40ede628171f4e5241c4e5bc88a",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 579,
+      "symbolCount": 609,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -19016,12 +19843,14 @@
         "packages/core/package-manager.js#commandForRunScript",
         "packages/core/package-manager.js#commandForVersion",
         "packages/core/github-governance-authority.js#compileEffectiveGithubGovernancePolicy",
+        "packages/core/release-tail-provider-plane.js#compileReleaseTailDeclaration",
         "packages/core/release-propagation-work-transitions.js#completeReleasePropagationWork",
         "packages/core/issue-reporting.js#computeConsumerIssueFingerprint",
         "packages/core/publication-authority.js#CONSUMER_PUBLICATION_DECISION_CONTRACT",
         "packages/core/issue-reporting.js#consumerIssueMarker",
         "packages/core/buildchain-contract.js#contractSummary",
         "packages/core/controller-evidence.js#controllerEvidenceDigest",
+        "packages/core/release-tail-provider-adapters.js#createActivationReceiptProjectorAdapter",
         "packages/core/anchored-version-material.js#createAnchoredVersionMaterialEvidence",
         "packages/core/release-passport.js#createArtifactEvidence",
         "packages/core/artifact-signing.js#createArtifactSigningReceipt",
@@ -19056,8 +19885,10 @@
         "packages/core/github-artifact-attestation.js#createGitHubArtifactAttestationVerificationPlan",
         "packages/core/github-governance-authority.js#createGithubGovernanceRolloutPlan",
         "packages/core/issue-reporting.js#createGitHubIssueRequest",
+        "packages/core/release-tail-provider-adapters.js#createGitHubReleaseAssetsAdapter",
         "packages/core/github-governance-authority.js#createGithubRulesetBypassRolloutPlan",
         "packages/core/github-governance-authority.js#createGithubRulesetGovernanceRolloutPlan",
+        "packages/core/release-tail-provider-adapters.js#createHttpJsonReadback",
         "packages/core/kfd-gate.js#createKfd1ReleaseGateEvidence",
         "packages/core/kfd-gate.js#createKfd3CollaborationInterfaceReleaseGateEvidence",
         "packages/core/kfd3-surface-register.js#createKfd3SurfaceWitness",
@@ -19095,8 +19926,12 @@
         "packages/core/release-propagation.js#createReleasePropagationReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationStageReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationWork",
+        "packages/core/release-tail-provider-plane.js#createReleaseTailAdapterSet",
+        "packages/core/release-tail-provider-plane.js#createReleaseTailTransaction",
         "packages/core/publish-transaction.js#createReleaseTransaction",
         "packages/core/publication-authority.js#createRunnerProvenance",
+        "packages/core/release-tail-provider-adapters.js#createSignedStaticChannelAdapter",
+        "packages/core/release-tail-provider-adapters.js#createSiteReleaseActivationAdapter",
         "packages/core/stable-candidate-ledger.js#createStableCandidateLedger",
         "packages/core/surface-manifest.js#createSurfaceTimestampPolicy",
         "packages/core/web-surface-publication-candidate.js#createWebSurfaceProductionDecision",
@@ -19114,6 +19949,7 @@
         "packages/core/publication-authority.js#detectPublicationAuthoritySignals",
         "packages/core/diagnostics.js#detectRequestedParallelism",
         "packages/core/diagnostics.js#detectRequestedParallelismFromProcessSamples",
+        "packages/core/release-tail-compatibility.js#diagnoseLegacyReleaseTailHooks",
         "packages/core/artifact-passport.js#discoverArtifactPassport",
         "packages/core/buildchain-layout.js#discoverBuildchainRepoFiles",
         "packages/core/buildchain-config.js#discoverConfiguredDerivedVersionMaterial",
@@ -19137,6 +19973,7 @@
         "packages/core/paper-work.js#executePaperWorkStart",
         "packages/core/paper-work.js#executePaperWorkSubmitPush",
         "packages/core/release-propagation-push.js#executeReleasePropagationPush",
+        "packages/core/release-tail-provider-plane.js#executeReleaseTailTransaction",
         "packages/core/artifact-passport.js#explainArtifactPassport",
         "packages/core/kfd-agent-hub.js#explainKfdAgentHub",
         "packages/core/release-line-dry-run.js#explainReleaseLineDryRun",
@@ -19171,6 +20008,7 @@
         "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
         "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
         "packages/core/issue-reporting.js#GitHubIssueRequestError",
+        "packages/core/release-tail-provider-adapters.js#githubReleaseAssetsTargetRoot",
         "packages/core/homebrew.js#HOMEBREW_TAP_CHECK_CONTRACT",
         "packages/core/homebrew.js#HOMEBREW_TAP_FACTS_CONTRACT",
         "packages/core/homebrew.js#HOMEBREW_TAP_MANIFEST_CONTRACT",
@@ -19267,6 +20105,7 @@
         "packages/core/paper-fleet.js#paperFleetTransitionWorkspace",
         "packages/core/github-governance-authority.js#parseCodeowners",
         "packages/core/issue-reporting.js#parseIssueLabels",
+        "packages/core/release-tail-provider-plane.js#parseReleaseTailDeclaration",
         "packages/core/buildchain-layout.js#planBuildchainLayoutMigration",
         "packages/core/paper-fleet.js#planPaperFleetUpdate",
         "packages/core/paper.js#planPaperMigration",
@@ -19316,6 +20155,7 @@
         "packages/core/publish-transaction.js#readPublishEvidence",
         "packages/core/readme-badges.js#readReadme",
         "packages/core/release-propagation.js#readReleasePropagationJson",
+        "packages/core/release-tail-provider-plane.js#readReleaseTailTransaction",
         "packages/core/publish-transaction.js#readReleaseTransaction",
         "packages/core/release-activation-transaction.js#recordReleaseActivationPhase",
         "packages/core/release-propagation-work-transitions.js#recordReleasePropagationStage",
@@ -19347,8 +20187,22 @@
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_STAGES",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_CAPABILITY_REGISTRY",
+        "packages/core/release-tail-compatibility.js#RELEASE_TAIL_COMPATIBILITY_CONTRACT",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_DECLARATION_CONTRACT",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_EFFECT_SCHEMA",
+        "packages/core/release-tail-compatibility.js#RELEASE_TAIL_LEGACY_HOOKS",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_OBSERVATION_SCHEMA",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_RECEIPT_SCHEMA",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_STATES",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_TRANSACTION_POLICY",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_TRANSACTION_SCHEMA",
         "packages/core/release-activation-transaction.js#releaseActivationRoot",
         "packages/core/release-candidate-recovery.js#ReleaseCandidateRecoveryError",
+        "packages/core/release-tail-provider-adapters.js#ReleaseTailProviderError",
+        "packages/core/release-tail-provider-plane.js#releaseTailRetryPolicyFromDeclaration",
+        "packages/core/release-tail-provider-plane.js#releaseTailRoot",
+        "packages/core/release-tail-provider-plane.js#releaseTailStableJson",
         "packages/core/readme-badges.js#renderBadgeBundleBlock",
         "packages/core/buildchain-contract.js#renderBuildchainContractDriftIssueBody",
         "packages/core/homebrew.js#renderHomebrewFormula",
@@ -19429,6 +20283,8 @@
         "packages/core/release-activation-transaction.js#validateReleaseActivationTransaction",
         "packages/core/release-candidate.js#validateReleaseCandidatePassport",
         "packages/core/release-passport-contract.js#validateReleasePassportSchema",
+        "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan",
+        "packages/core/release-tail-provider-plane.js#validateReleaseTailTransaction",
         "packages/core/artifact-passport.js#verifyArtifactPassport",
         "packages/core/artifact-signing-result.js#verifyArtifactSigningResultFiles",
         "packages/core/artifact-verification-envelope.js#verifyArtifactVerificationEnvelope",
@@ -19463,6 +20319,7 @@
         "packages/core/publication-artifact.js#writePublicationArtifact",
         "packages/core/release-line-bootstrap.js#writeReleaseLineBootstrapVersionState",
         "packages/core/release-propagation.js#writeReleasePropagationLock",
+        "packages/core/release-tail-provider-plane.js#writeReleaseTailTransaction",
         "packages/core/publish-transaction.js#writeReleaseTransaction"
       ],
       "owner": "buildchain-core",
@@ -19553,14 +20410,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:735fe63c2e1c642ce07a402ae4d714dc53a76fbd320b5bf4cac41eaf2a27a693",
+      "digest": "sha256:ae7917ccdbbf268073bad5dac68e9af915d6e40ede628171f4e5241c4e5bc88a",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 579,
+      "symbolCount": 609,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -19693,12 +20550,14 @@
         "packages/core/package-manager.js#commandForRunScript",
         "packages/core/package-manager.js#commandForVersion",
         "packages/core/github-governance-authority.js#compileEffectiveGithubGovernancePolicy",
+        "packages/core/release-tail-provider-plane.js#compileReleaseTailDeclaration",
         "packages/core/release-propagation-work-transitions.js#completeReleasePropagationWork",
         "packages/core/issue-reporting.js#computeConsumerIssueFingerprint",
         "packages/core/publication-authority.js#CONSUMER_PUBLICATION_DECISION_CONTRACT",
         "packages/core/issue-reporting.js#consumerIssueMarker",
         "packages/core/buildchain-contract.js#contractSummary",
         "packages/core/controller-evidence.js#controllerEvidenceDigest",
+        "packages/core/release-tail-provider-adapters.js#createActivationReceiptProjectorAdapter",
         "packages/core/anchored-version-material.js#createAnchoredVersionMaterialEvidence",
         "packages/core/release-passport.js#createArtifactEvidence",
         "packages/core/artifact-signing.js#createArtifactSigningReceipt",
@@ -19733,8 +20592,10 @@
         "packages/core/github-artifact-attestation.js#createGitHubArtifactAttestationVerificationPlan",
         "packages/core/github-governance-authority.js#createGithubGovernanceRolloutPlan",
         "packages/core/issue-reporting.js#createGitHubIssueRequest",
+        "packages/core/release-tail-provider-adapters.js#createGitHubReleaseAssetsAdapter",
         "packages/core/github-governance-authority.js#createGithubRulesetBypassRolloutPlan",
         "packages/core/github-governance-authority.js#createGithubRulesetGovernanceRolloutPlan",
+        "packages/core/release-tail-provider-adapters.js#createHttpJsonReadback",
         "packages/core/kfd-gate.js#createKfd1ReleaseGateEvidence",
         "packages/core/kfd-gate.js#createKfd3CollaborationInterfaceReleaseGateEvidence",
         "packages/core/kfd3-surface-register.js#createKfd3SurfaceWitness",
@@ -19772,8 +20633,12 @@
         "packages/core/release-propagation.js#createReleasePropagationReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationStageReceipt",
         "packages/core/release-propagation-work.js#createReleasePropagationWork",
+        "packages/core/release-tail-provider-plane.js#createReleaseTailAdapterSet",
+        "packages/core/release-tail-provider-plane.js#createReleaseTailTransaction",
         "packages/core/publish-transaction.js#createReleaseTransaction",
         "packages/core/publication-authority.js#createRunnerProvenance",
+        "packages/core/release-tail-provider-adapters.js#createSignedStaticChannelAdapter",
+        "packages/core/release-tail-provider-adapters.js#createSiteReleaseActivationAdapter",
         "packages/core/stable-candidate-ledger.js#createStableCandidateLedger",
         "packages/core/surface-manifest.js#createSurfaceTimestampPolicy",
         "packages/core/web-surface-publication-candidate.js#createWebSurfaceProductionDecision",
@@ -19791,6 +20656,7 @@
         "packages/core/publication-authority.js#detectPublicationAuthoritySignals",
         "packages/core/diagnostics.js#detectRequestedParallelism",
         "packages/core/diagnostics.js#detectRequestedParallelismFromProcessSamples",
+        "packages/core/release-tail-compatibility.js#diagnoseLegacyReleaseTailHooks",
         "packages/core/artifact-passport.js#discoverArtifactPassport",
         "packages/core/buildchain-layout.js#discoverBuildchainRepoFiles",
         "packages/core/buildchain-config.js#discoverConfiguredDerivedVersionMaterial",
@@ -19814,6 +20680,7 @@
         "packages/core/paper-work.js#executePaperWorkStart",
         "packages/core/paper-work.js#executePaperWorkSubmitPush",
         "packages/core/release-propagation-push.js#executeReleasePropagationPush",
+        "packages/core/release-tail-provider-plane.js#executeReleaseTailTransaction",
         "packages/core/artifact-passport.js#explainArtifactPassport",
         "packages/core/kfd-agent-hub.js#explainKfdAgentHub",
         "packages/core/release-line-dry-run.js#explainReleaseLineDryRun",
@@ -19848,6 +20715,7 @@
         "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperClient",
         "packages/core/engineering-housekeeper-github-client.js#GitHubHousekeeperProviderError",
         "packages/core/issue-reporting.js#GitHubIssueRequestError",
+        "packages/core/release-tail-provider-adapters.js#githubReleaseAssetsTargetRoot",
         "packages/core/homebrew.js#HOMEBREW_TAP_CHECK_CONTRACT",
         "packages/core/homebrew.js#HOMEBREW_TAP_FACTS_CONTRACT",
         "packages/core/homebrew.js#HOMEBREW_TAP_MANIFEST_CONTRACT",
@@ -19944,6 +20812,7 @@
         "packages/core/paper-fleet.js#paperFleetTransitionWorkspace",
         "packages/core/github-governance-authority.js#parseCodeowners",
         "packages/core/issue-reporting.js#parseIssueLabels",
+        "packages/core/release-tail-provider-plane.js#parseReleaseTailDeclaration",
         "packages/core/buildchain-layout.js#planBuildchainLayoutMigration",
         "packages/core/paper-fleet.js#planPaperFleetUpdate",
         "packages/core/paper.js#planPaperMigration",
@@ -19993,6 +20862,7 @@
         "packages/core/publish-transaction.js#readPublishEvidence",
         "packages/core/readme-badges.js#readReadme",
         "packages/core/release-propagation.js#readReleasePropagationJson",
+        "packages/core/release-tail-provider-plane.js#readReleaseTailTransaction",
         "packages/core/publish-transaction.js#readReleaseTransaction",
         "packages/core/release-activation-transaction.js#recordReleaseActivationPhase",
         "packages/core/release-propagation-work-transitions.js#recordReleasePropagationStage",
@@ -20024,8 +20894,22 @@
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_STAGE_RECEIPT_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_CONTRACT",
         "packages/core/release-propagation-work-constants.js#RELEASE_PROPAGATION_WORK_STAGES",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_CAPABILITY_REGISTRY",
+        "packages/core/release-tail-compatibility.js#RELEASE_TAIL_COMPATIBILITY_CONTRACT",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_DECLARATION_CONTRACT",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_EFFECT_SCHEMA",
+        "packages/core/release-tail-compatibility.js#RELEASE_TAIL_LEGACY_HOOKS",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_OBSERVATION_SCHEMA",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_RECEIPT_SCHEMA",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_STATES",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_TRANSACTION_POLICY",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_TRANSACTION_SCHEMA",
         "packages/core/release-activation-transaction.js#releaseActivationRoot",
         "packages/core/release-candidate-recovery.js#ReleaseCandidateRecoveryError",
+        "packages/core/release-tail-provider-adapters.js#ReleaseTailProviderError",
+        "packages/core/release-tail-provider-plane.js#releaseTailRetryPolicyFromDeclaration",
+        "packages/core/release-tail-provider-plane.js#releaseTailRoot",
+        "packages/core/release-tail-provider-plane.js#releaseTailStableJson",
         "packages/core/readme-badges.js#renderBadgeBundleBlock",
         "packages/core/buildchain-contract.js#renderBuildchainContractDriftIssueBody",
         "packages/core/homebrew.js#renderHomebrewFormula",
@@ -20106,6 +20990,8 @@
         "packages/core/release-activation-transaction.js#validateReleaseActivationTransaction",
         "packages/core/release-candidate.js#validateReleaseCandidatePassport",
         "packages/core/release-passport-contract.js#validateReleasePassportSchema",
+        "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan",
+        "packages/core/release-tail-provider-plane.js#validateReleaseTailTransaction",
         "packages/core/artifact-passport.js#verifyArtifactPassport",
         "packages/core/artifact-signing-result.js#verifyArtifactSigningResultFiles",
         "packages/core/artifact-verification-envelope.js#verifyArtifactVerificationEnvelope",
@@ -20140,6 +21026,7 @@
         "packages/core/publication-artifact.js#writePublicationArtifact",
         "packages/core/release-line-bootstrap.js#writeReleaseLineBootstrapVersionState",
         "packages/core/release-propagation.js#writeReleasePropagationLock",
+        "packages/core/release-tail-provider-plane.js#writeReleaseTailTransaction",
         "packages/core/publish-transaction.js#writeReleaseTransaction"
       ],
       "owner": "buildchain-core",
@@ -21262,7 +22149,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:52b4de15ab7e240c1b85a0caa28277603543780d6897f914c5d302806f0581b3",
+      "digest": "sha256:c340301fb115c81b6cb382b6a563d3d3cc4ed45f070a631699358975db03d1c5",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -21728,6 +22615,102 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/release-tail-provider-plane",
+      "export": "./release-tail-provider-plane",
+      "target": "./packages/core/release-tail-provider-plane.js",
+      "digest": "sha256:63860bdc066768c9fd69e8a64c2de245bdfc8798537e07d6a9a8f1e4b16cfb1e",
+      "summary": "Versioned declarative release-tail parsing, deterministic effect planning, durable transaction execution, readback, retry, and rooted receipt APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 20,
+      "symbolIds": [
+        "packages/core/release-tail-provider-plane.js#compileReleaseTailDeclaration",
+        "packages/core/release-tail-provider-plane.js#createReleaseTailAdapterSet",
+        "packages/core/release-tail-provider-plane.js#createReleaseTailTransaction",
+        "packages/core/release-tail-provider-plane.js#executeReleaseTailTransaction",
+        "packages/core/release-tail-provider-plane.js#parseReleaseTailDeclaration",
+        "packages/core/release-tail-provider-plane.js#readReleaseTailTransaction",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_CAPABILITY_REGISTRY",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_DECLARATION_CONTRACT",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_EFFECT_SCHEMA",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_OBSERVATION_SCHEMA",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_RECEIPT_SCHEMA",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_STATES",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_TRANSACTION_POLICY",
+        "packages/core/release-tail-provider-plane.js#RELEASE_TAIL_TRANSACTION_SCHEMA",
+        "packages/core/release-tail-provider-plane.js#releaseTailRetryPolicyFromDeclaration",
+        "packages/core/release-tail-provider-plane.js#releaseTailRoot",
+        "packages/core/release-tail-provider-plane.js#releaseTailStableJson",
+        "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan",
+        "packages/core/release-tail-provider-plane.js#validateReleaseTailTransaction",
+        "packages/core/release-tail-provider-plane.js#writeReleaseTailTransaction"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/release-tail-provider-adapters",
+      "export": "./release-tail-provider-adapters",
+      "target": "./packages/core/release-tail-provider-adapters.js",
+      "digest": "sha256:c9aa8a5fcd9ee9053c415367df3da007aec5b560dd88f407e121e269e233553e",
+      "summary": "Buildchain-owned GitHub Release, signed-channel, activation, and released-evidence provider adapters.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 7,
+      "symbolIds": [
+        "packages/core/release-tail-provider-adapters.js#createActivationReceiptProjectorAdapter",
+        "packages/core/release-tail-provider-adapters.js#createGitHubReleaseAssetsAdapter",
+        "packages/core/release-tail-provider-adapters.js#createHttpJsonReadback",
+        "packages/core/release-tail-provider-adapters.js#createSignedStaticChannelAdapter",
+        "packages/core/release-tail-provider-adapters.js#createSiteReleaseActivationAdapter",
+        "packages/core/release-tail-provider-adapters.js#githubReleaseAssetsTargetRoot",
+        "packages/core/release-tail-provider-adapters.js#ReleaseTailProviderError"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/release-tail-compatibility",
+      "export": "./release-tail-compatibility",
+      "target": "./packages/core/release-tail-compatibility.js",
+      "digest": "sha256:735aaaef73cf51e615f15943796141ea64606d38a7fbe11b2936b27963b7d6a7",
+      "summary": "Bounded v3 release-hook compatibility diagnostics that reject new executable release-tail inputs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 3,
+      "symbolIds": [
+        "packages/core/release-tail-compatibility.js#diagnoseLegacyReleaseTailHooks",
+        "packages/core/release-tail-compatibility.js#RELEASE_TAIL_COMPATIBILITY_CONTRACT",
+        "packages/core/release-tail-compatibility.js#RELEASE_TAIL_LEGACY_HOOKS"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/surface-manifest",
       "export": "./surface-manifest",
       "target": "./packages/core/surface-manifest.js",
@@ -21794,7 +22777,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:1df4ca139f088cf2df83f31eeb9d083ac30ef768e25b4ca9140182c625951dc6"
+      "digest": "sha256:a558364778cf6457d091881bdccd96040fc87ac285c9971b76b84957c1595c5a"
     },
     {
       "id": "build-facts",

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "dedf864aa431247f1976abe0a97b54c2813cc901b77b43e7cbac25defe7d41ba",
+    "sha256": "49e6c77c8b2a88cc57ae17f0f2cabcbc69203eeb4902d5a05b1a3ecb0d8e4e45",
     "summary": {
-      "cliCommandCount": 113,
-      "workflowCount": 70,
-      "actionCount": 6,
-      "sitePageCount": 72,
-      "docCommandRefCount": 897,
+      "cliCommandCount": 114,
+      "workflowCount": 71,
+      "actionCount": 7,
+      "sitePageCount": 74,
+      "docCommandRefCount": 919,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "dedf864aa431247f1976abe0a97b54c2813cc901b77b43e7cbac25defe7d41ba",
+      "sha256": "49e6c77c8b2a88cc57ae17f0f2cabcbc69203eeb4902d5a05b1a3ecb0d8e4e45",
       "summary": {
-        "cliCommandCount": 113,
-        "workflowCount": 70,
-        "actionCount": 6,
-        "sitePageCount": 72,
-        "docCommandRefCount": 897,
+        "cliCommandCount": 114,
+        "workflowCount": 71,
+        "actionCount": 7,
+        "sitePageCount": 74,
+        "docCommandRefCount": 919,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -326,6 +326,18 @@
           "kind": "documentation",
           "sourcePath": "actions/promote-buildchain-ref/README.md",
           "evidencePath": "actions/promote-buildchain-ref/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
+        },
+        {
+          "id": "doc:actions/release-tail/README.md",
+          "name": "actions/release-tail/README.md",
+          "kind": "documentation",
+          "sourcePath": "actions/release-tail/README.md",
+          "evidencePath": "actions/release-tail/README.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -727,6 +739,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "verify"
+        },
+        {
+          "id": "doc:docs/release-tail-provider-plane.md",
+          "name": "Declarative release-tail provider plane",
+          "kind": "documentation",
+          "sourcePath": "docs/release-tail-provider-plane.md",
+          "evidencePath": "docs/release-tail-provider-plane.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
         },
         {
           "id": "doc:docs/release-train.md",
@@ -1759,6 +1783,42 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-activation-transaction"
+        },
+        {
+          "id": "export:./release-tail-provider-plane",
+          "name": "@kungfu-tech/buildchain/release-tail-provider-plane",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-tail-provider-plane.js",
+          "evidencePath": "packages/core/release-tail-provider-plane.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-tail-provider-plane"
+        },
+        {
+          "id": "export:./release-tail-provider-adapters",
+          "name": "@kungfu-tech/buildchain/release-tail-provider-adapters",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-tail-provider-adapters.js",
+          "evidencePath": "packages/core/release-tail-provider-adapters.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-tail-provider-adapters"
+        },
+        {
+          "id": "export:./release-tail-compatibility",
+          "name": "@kungfu-tech/buildchain/release-tail-compatibility",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-tail-compatibility.js",
+          "evidencePath": "packages/core/release-tail-compatibility.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-tail-compatibility"
         },
         {
           "id": "export:./surface-manifest",
@@ -3173,6 +3233,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:release-tail",
+          "name": "buildchain release-tail plan --declaration <json-or-path> [--output <path>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:release-transaction",
           "name": "buildchain release <inspect|recover|finalize|abort> ...",
           "kind": "cli-command",
@@ -3671,7 +3743,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 111,
+          "inputCount": 112,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3687,6 +3759,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "channel",
+            "declarative-release-tail",
             "dry-run",
             "github-artifact-attestation-environment",
             "github-artifact-attestation-policy-json",
@@ -5012,7 +5085,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 100,
+          "inputCount": 101,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -5029,6 +5102,7 @@
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
             "channel",
+            "declarative-release-tail",
             "dry-run",
             "github-artifact-attestation-environment",
             "github-artifact-attestation-policy-json",
@@ -5195,6 +5269,26 @@
             "refresh-managed-readme-badges",
             "source-node",
             "upstream-release-json"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:release-tail",
+          "name": "workflow:release-tail",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/release-tail.yml",
+          "evidencePath": ".github/workflows/release-tail.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 5,
+          "inputs": [
+            "buildchain-ref",
+            "declaration-path",
+            "execute",
+            "provider-bindings-path",
+            "state-path"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5394,12 +5488,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 76,
+          "inputCount": 78,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
             "branch-protection-bypass-teams",
             "branch-protection-bypass-users",
+            "declarative-release-tail",
             "dry-run",
             "expected-publication-version",
             "generated-pull-request-token",
@@ -5461,6 +5556,7 @@
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
             "release-passport-promotion-routing-json",
+            "release-tail-state-path",
             "require-governance",
             "require-publication-qualification",
             "require-publish-source-lock",
@@ -5472,6 +5568,27 @@
             "token",
             "transaction-state-path",
             "verification-command"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:release-tail",
+          "name": "action:release-tail",
+          "kind": "action",
+          "sourcePath": "actions/release-tail/action.yml",
+          "evidencePath": "actions/release-tail/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 6,
+          "inputs": [
+            "declaration",
+            "execute",
+            "github-token",
+            "http-token",
+            "provider-bindings",
+            "state-path"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -5615,6 +5732,18 @@
         {
           "id": "site-page:action:promote-buildchain-ref",
           "name": "site-page:action:promote-buildchain-ref",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:action:release-tail",
+          "name": "site-page:action:release-tail",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -6285,6 +6414,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:release-tail-provider-plane",
+          "name": "site-page:manual:release-tail-provider-plane",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:release-train",
           "name": "site-page:manual:release-train",
           "kind": "site-page",
@@ -6623,6 +6764,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 420
+    "publicSurfaceCount": 430
   }
 }

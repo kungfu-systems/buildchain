@@ -676,6 +676,24 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/release-tail.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "artifact.publish",
+        "release.activate",
+        "released-evidence.synthesize",
+        "signed-channel.commit"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/release-tail.yml",
+      "environment": "caller-bound",
+      "environmentMode": "caller-bound",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/release-verify.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -1133,6 +1151,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/release-tail.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/release-verify.yml",
       "signals": [
         "write-permission"
@@ -1172,5 +1197,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "7338e31a43be707cf8f176c46c386f2c27079fbaa75ad832f19a80949247c3e2"
+  "registryDigest": "456987223fcd21bb1db29583187fcbefacf91668a1a245ed1fb186ffe95c15c3"
 }

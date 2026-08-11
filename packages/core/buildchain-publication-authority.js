@@ -54,6 +54,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/release-candidate-promote.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/release-line-bootstrap.yml", "governance-write"],
   [".github/workflows/release-propagation.yml", "governance-write"],
+  [".github/workflows/release-tail.yml", "product-publication", true, ["artifact.publish", "signed-channel.commit", "release.activate", "released-evidence.synthesize"], "caller-secrets", "caller-bound", "caller-bound", "fixed"],
   [".github/workflows/release-verify.yml", "governance-write"],
   [".github/workflows/stable-candidate-patrol.yml", "governance-write"],
 ]);

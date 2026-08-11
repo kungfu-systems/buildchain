@@ -23,6 +23,10 @@
     "packages/core/engineering-housekeeper.js",
     "packages/core/engineering-housekeeper-github-client.js",
     "packages/core/engineering-housekeeper-github.js",
+    "packages/core/release-tail-provider-plane.js",
+    "packages/core/release-tail-provider-adapters.js",
+    "packages/core/release-tail-compatibility.js",
+    "actions/release-tail/index.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
     "scripts/buildchain-cli-help.mjs",
@@ -33,6 +37,7 @@
     "scripts/resolve-artifact-transfer-mode.mjs",
     "scripts/release-propagation.mjs",
     "scripts/engineering-housekeeper-workflow.mjs",
+    "scripts/release-tail.mjs",
     "scripts/web-surface-core.mjs",
     "scripts/web-surface-routing.mjs",
     "scripts/web-surface.mjs",
@@ -385,6 +390,28 @@
         "contracts/engineering-housekeeper-v1.schema.json",
         "contracts/fixtures/engineering-housekeeper-v1/cases.json",
         "docs/engineering-housekeeper.md"
+      ]
+    },
+    {
+      "id": "declarative-release-provider-plane",
+      "owner": "Buildchain release provider maintainers",
+      "implementation": [
+        "packages/core/release-tail-provider-plane.js",
+        "packages/core/release-tail-provider-adapters.js",
+        "packages/core/release-tail-compatibility.js",
+        "scripts/release-tail.mjs",
+        "actions/release-tail/index.js"
+      ],
+      "tests": [
+        "tests/release-tail-provider-plane.test.mjs",
+        "tests/release-tail-contract.test.mjs"
+      ],
+      "contracts": [
+        "contracts/release-tail-capabilities-v1.schema.json",
+        "contracts/release-tail-provider-bindings-v1.schema.json",
+        ".github/workflows/release-tail.yml",
+        "actions/release-tail/action.yml",
+        "docs/release-tail-provider-plane.md"
       ]
     },
     {
