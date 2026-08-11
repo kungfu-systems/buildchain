@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
-    "maxHandMaintainedSourceFiles": 309,
-    "maxHandMaintainedSourceLines": 120855,
+    "baselineRevision": "7f4c81e824f761271b90c3cf12ce3bc351da7937",
+    "maxHandMaintainedSourceFiles": 310,
+    "maxHandMaintainedSourceLines": 121227,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23607,
-    "latestTransition": "Buildchain v3 self-dogfoods next-development recovery through the real version-state adapter and exact hosted readback.",
-    "rationale": "The self-dogfood slice adds one bounded scenario harness and one evidence command. It calls the real version-state adapter, injects transient durable-state failure, restores the operation on a fresh runner, exercises protected Dev movement and protected PR delay, proves both legal models, and roots exact hosted readback before stable qualification. The workflow adds only the public owner/repo route and read-only GitHub observations. This exact 309-file, 120855-source-line and 23607-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "Buildchain v3 composes bounded macOS JIT rehydration with hosted next-development self-dogfood.",
+    "rationale": "The protected next-development controller and bounded same-host macOS JIT rehydration remain intact while the self-dogfood slice adds one scenario harness and one evidence command. It calls the real version-state adapter, injects transient durable-state failure, restores the operation on a fresh runner, exercises protected Dev movement and protected PR delay, proves both legal models, and roots exact hosted readback before stable qualification. This exact 310-file, 121227-source-line and 23607-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/aws-macos-jit-controller.mjs": {
+      "maxLines": 631,
+      "rationale": "The existing operator entrypoint adds only the rehydration plan dispatch and explicit exact-host, replaced-instance and no-host-allocation confirmations; provider checks and execution remain in the separately budgeted rehydration module. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/next-development-transition.js": {
       "maxLines": 738,
       "rationale": "The single versioned authority keeps completed-Alpha identity, legal successor models, role-separated adapter bounds, materialization roots, compare-and-swap transitions and deterministic replay validation together. The bounded increase makes anchored/manual initial state persist as waiting-anchor even after reviewed input and exposes rooted anchor binding plus controller materialization recording; this exact reviewed ceiling cannot grow implicitly."
