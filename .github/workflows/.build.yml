@@ -2589,7 +2589,7 @@ jobs:
 
   finalize-artifact-signing:
     name: Finalize signed artifact ${{ matrix.platform.name }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.platform.platform == 'macos' && 'macos-15' || 'ubuntu-24.04' }}
     needs:
       - trust-gate
       - resolve-contract
