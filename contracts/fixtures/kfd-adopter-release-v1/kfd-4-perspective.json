@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "contract": "kfd-4-observer-perspective",
+  "standard": "kfd-4",
+  "id": "buildchain-release-maintainer-view",
+  "observer": { "id": "buildchain-release-maintainer", "kind": "human" },
+  "acceptedFacts": [
+    { "sourceId": "kungfu-systems/buildchain@{{SOURCE_SHA}}", "sourceKind": "repository" }
+  ],
+  "projectionPolicy": {
+    "policyVersion": "1",
+    "causalDominance": true,
+    "tieBreaker": "source-coordinate"
+  },
+  "verification": { "result": "pass" }
+}

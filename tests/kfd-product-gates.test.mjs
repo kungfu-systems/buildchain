@@ -26,6 +26,7 @@ import {
   addAdopterWitness,
   initAdopterManifest,
 } from "@kungfu-tech/kfd/adopter-conformance/toolchain";
+import { generateBuildchainKfdAdopterRelease } from "../scripts/generate-buildchain-kfd-witnesses.mjs";
 import {
   collectGitHubReleasePassport,
   verifyReleasePassport,
@@ -374,6 +375,21 @@ test("standard adopter manifest is the sole authority for the legacy support pro
   const incomplete = validateKfdAdopterManifestGate(incompleteGate, { expectedSourceSha: sourceSha, checkedAt });
   assert.equal(incomplete.valid, false);
   assert.ok(incomplete.issues.some((entry) => entry.code === "adopter-gate-result-set"));
+});
+
+test("Buildchain self release emits one exact full-cut adopter authority", async () => {
+  const generated = await generateBuildchainKfdAdopterRelease({
+    cwd: process.cwd(), outputDir: tempDir(), sourceSha, checkedAt, emitOutputs: false,
+  });
+  const load = (key) => JSON.parse(fs.readFileSync(path.resolve(generated.outputs[key]), "utf8"));
+  const manifest = load("kfd-adopter-manifest-json");
+  const gate = load("kfd-adopter-manifest-gate-json");
+  const support = load("kfd-support-matrix-json");
+  assert.equal(manifest.adopter.artifact.coordinate, `kungfu-systems/buildchain@${sourceSha}`);
+  assert.equal(gate.authority.manifestRoot, generated.outputs["kfd-adopter-manifest-root"]);
+  assert.equal(validateKfdAdopterManifestGate(gate, { expectedSourceSha: sourceSha, checkedAt }).valid, true);
+  assert.equal(validateKfdLegacySupportMatrixProjection(support, { manifest, manifestGate: gate }).valid, true);
+  assert.deepEqual(gate.gateResults.map((entry) => entry.standard), ["kfd-4", "kfd-5", "kfd-7"]);
 });
 
 test("adopter manifest gate fails closed on package, row, gate, and Warrant witness substitution", async () => {
