@@ -28,6 +28,16 @@ on:
         default: ""
         type: string
         required: false
+      buildchain-expected-channel:
+        description: "Explicit stable or alpha lane expected by a trusted channel router when the workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-major:
+        description: "Explicit Buildchain major expected by a trusted channel router when the workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
       buildchain-contract-lock-path:
         description: "Consumer-owned Buildchain contract lock path"
         default: ""
@@ -610,6 +620,7 @@ jobs:
     outputs:
       channel: ${{ steps.channel.outputs.channel }}
       buildchain-ref: ${{ steps.channel.outputs.buildchain-ref }}
+      major: ${{ steps.channel.outputs.major }}
       runtime-override: ${{ steps.channel.outputs.runtime-override }}
       contract-lock-path: ${{ steps.lock.outputs.path }}
       router-repository: ${{ steps.router.outputs.repository }}
@@ -712,6 +723,8 @@ jobs:
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
+      buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
+      buildchain-expected-major: ${{ needs.resolve-channel.outputs.major }}
       buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
@@ -870,6 +883,8 @@ jobs:
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
+      buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
+      buildchain-expected-major: ${{ needs.resolve-channel.outputs.major }}
       buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
@@ -971,6 +986,8 @@ jobs:
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
+      buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
+      buildchain-expected-major: ${{ needs.resolve-channel.outputs.major }}
       buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}

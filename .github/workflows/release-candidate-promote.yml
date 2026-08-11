@@ -752,10 +752,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           CHANNEL: ${{ steps.route.outputs.channel }}
           SELECTED_SHELL_REF: ${{ steps.route.outputs.shell-ref }}
-          ALPHA_SHELL_REF: v3-alpha
-          ALPHA_SHELL_CALL_REF: train/v3/v3.0/resume-candidate-run
-          STABLE_SHELL_REF: v3
-          STABLE_SHELL_CALL_REF: v3
+          ALPHA_SHELL_REF: v4-alpha
+          ALPHA_SHELL_CALL_REF: v4-alpha
+          STABLE_SHELL_REF: v4
+          STABLE_SHELL_CALL_REF: v4
         run: |
           set -euo pipefail
           if [[ "${CHANNEL}" = "alpha" ]]; then
@@ -847,7 +847,7 @@ jobs:
     name: Promote with alpha workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@train/v3/v3.0/resume-candidate-run
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write
@@ -973,7 +973,7 @@ jobs:
     name: Promote with stable workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4
     permissions:
       actions: write
       artifact-metadata: write

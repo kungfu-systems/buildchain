@@ -120,6 +120,8 @@ test("generated channel workflow mirrors the advanced build surface", () => {
     /if: \$\{\{ needs\.resolve-channel\.outputs\.runtime-override != 'true' && needs\.resolve-channel\.outputs\.channel == 'alpha' \}\}/,
   );
   assert.match(current, /buildchain-ref: \$\{\{ needs\.resolve-channel\.outputs\.buildchain-ref \}\}/);
+  assert.match(current, /buildchain-expected-channel: \$\{\{ needs\.resolve-channel\.outputs\.channel \}\}/);
+  assert.match(current, /buildchain-expected-major: \$\{\{ needs\.resolve-channel\.outputs\.major \}\}/);
   assert.match(current, /buildchain-contract-lock-path: \$\{\{ needs\.resolve-channel\.outputs\.contract-lock-path \}\}/);
   assert.match(current, /BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY: \$\{\{ job\.workflow_repository \}\}/);
   assert.match(current, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);

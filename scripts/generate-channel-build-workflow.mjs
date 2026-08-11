@@ -81,6 +81,12 @@ function forwardedInputs(names) {
   return names
     .map((name) => {
       if (name === "buildchain-ref") return `      buildchain-ref: \${{ needs.resolve-channel.outputs.buildchain-ref }}`;
+      if (name === "buildchain-expected-channel") {
+        return "      buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}";
+      }
+      if (name === "buildchain-expected-major") {
+        return "      buildchain-expected-major: ${{ needs.resolve-channel.outputs.major }}";
+      }
       if (name === "buildchain-contract-lock-path") {
         return "      buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}";
       }
@@ -377,7 +383,7 @@ export function generateChannelBuildWorkflow(source) {
     .replaceAll("runs-on: ubuntu-24.04", "runs-on: ${{ fromJSON(inputs.control-runner-json) }}")
     .replace(
       "      buildchain-ref: ${{ steps.channel.outputs.buildchain-ref }}\n",
-      "      buildchain-ref: ${{ steps.channel.outputs.buildchain-ref }}\n      runtime-override: ${{ steps.channel.outputs.runtime-override }}\n",
+      "      buildchain-ref: ${{ steps.channel.outputs.buildchain-ref }}\n      major: ${{ steps.channel.outputs.major }}\n      runtime-override: ${{ steps.channel.outputs.runtime-override }}\n",
     )
     .replace(
       "\npermissions:\n  contents: read\n",

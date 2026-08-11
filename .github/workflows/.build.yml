@@ -12,6 +12,16 @@ on:
         default: ""
         type: string
         required: false
+      buildchain-expected-channel:
+        description: "Explicit stable or alpha lane expected by a trusted channel router when the workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-major:
+        description: "Explicit Buildchain major expected by a trusted channel router when the workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
       buildchain-contract-lock-path:
         description: "Consumer-owned Buildchain contract lock path"
         default: "buildchain.contract-lock.json"
@@ -881,6 +891,8 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ steps.runtime.outputs.workflow-shell-ref }}
+          BUILDCHAIN_EXPECTED_CHANNEL: ${{ inputs.buildchain-expected-channel }}
+          BUILDCHAIN_EXPECTED_MAJOR: ${{ inputs.buildchain-expected-major }}
           BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ steps.runtime.outputs.runtime-override }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
