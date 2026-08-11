@@ -165,6 +165,12 @@ maintain, or admin permission on the caller repository. Pull requests,
 including fork-originated pull requests, cannot use train or exact-SHA
 overrides.
 
+That permission does not create a third channel. A train, authority ref, or
+exact SHA must be bound to an alpha or stable shell lane, and the consumer lock
+must prove that same lane and major. Trusted overrides can replace the runtime
+coordinate for validation; they cannot combine a stable shell or lock with an
+alpha runtime, or the reverse.
+
 Runtime train validation covers Buildchain runtime scripts, CLI code, local
 actions, configuration parsing, and lifecycle behavior. It cannot validate
 changes that require the outer reusable workflow YAML itself to change, such as

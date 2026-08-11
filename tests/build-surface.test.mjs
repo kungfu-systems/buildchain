@@ -187,7 +187,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.doesNotMatch(channelRouter, /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/);
   assert.match(
     channelRouter,
-    /  summarize:\n    name: Summarize build contract\n    needs:\n      - build\n      - controller-receipt/,
+    /  summarize:\n    name: Summarize build contract\n    needs:\n      - resolve-channel\n      - alpha\n      - stable\n      - controller-receipt/,
     "the public router must emit a stable top-level aggregate independent of nested workflow job names",
   );
   assert.match(channelRouter, /Enforce public channel router aggregate/);
@@ -438,6 +438,9 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /runtime-sha/);
   assert.match(workflow, /Checkout consumer contract lock/);
   assert.match(workflow, /buildchain-contract-lock\.mjs check/);
+  assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
+  assert.match(workflow, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME:/);
+  assert.doesNotMatch(workflow, /contract-lock-compatible=true/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /contract-lock-status=/);
   assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
@@ -1844,6 +1847,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Validate apply inputs before build/);
   assert.match(workflow, /Check Buildchain contract lock/);
   assert.match(workflow, /buildchain-contract-lock\.mjs check/);
+  assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
+  assert.doesNotMatch(workflow, /contract-lock-compatible=true/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /contract-lock-status=/);
   assert.ok(

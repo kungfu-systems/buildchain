@@ -1444,6 +1444,8 @@ jobs:
             runtime_class="exact-sha"
           elif [[ "${runtime_ref}" =~ ^(refs/heads/)?train/v[0-9]+/v[0-9]+\.[0-9]+/.+ ]]; then
             runtime_class="train"
+          elif [[ "${runtime_ref}" =~ ^(refs/heads/)?authority/v[0-9]+/v[0-9]+\.[0-9]+/.+ ]]; then
+            runtime_class="authority"
           elif [[ "${runtime_ref}" =~ ^v[0-9]+(\.[0-9]+)?$ || "${runtime_ref}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             runtime_class="stable"
           elif [[ "${runtime_ref}" =~ ^v[0-9]+(\.[0-9]+)?-alpha$ || "${runtime_ref}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
@@ -1453,6 +1455,10 @@ jobs:
             echo "ref=${runtime_ref}"
             echo "sha=${runtime_sha}"
             echo "class=${runtime_class}"
+            case "${runtime_class}" in
+              train|authority|exact-sha) echo "override=true" ;;
+              *) echo "override=false" ;;
+            esac
           } >> "${GITHUB_OUTPUT}"
         env:
           INPUT_BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
@@ -1484,7 +1490,7 @@ jobs:
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"
-              echo "contract-lock-compatible=true"
+              echo "contract-lock-compatible=false"
               echo "contract-lock-drift=false"
               echo "contract-lock-issue-needed=false"
               echo "contract-lock-issue-body-file="
@@ -1504,6 +1510,8 @@ jobs:
                 echo "- Note: the checked-out Buildchain runtime does not yet ship contract lock support."
               } >> "${GITHUB_STEP_SUMMARY}"
             fi
+            echo "::error::Buildchain runtime cannot prove channel-bound contract-lock semantics"
+            exit 1
           fi
         env:
           BUILDCHAIN_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-contract-lock-path }}
@@ -1513,6 +1521,8 @@ jobs:
           BUILDCHAIN_RUNTIME_REF: ${{ steps.buildchain-runtime.outputs.ref }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.buildchain-runtime.outputs.class }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ inputs.promotion-shell-ref || job.workflow_ref }}
+          BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ steps.buildchain-runtime.outputs.override }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Report consumer Buildchain contract drift

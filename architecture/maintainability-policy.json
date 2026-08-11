@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 300,
-    "maxHandMaintainedSourceLines": 117274,
+    "maxHandMaintainedSourceFiles": 301,
+    "maxHandMaintainedSourceLines": 117495,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23346,
+    "maxWorkflowLines": 23477,
     "latestTransition": "The macOS JIT operator can rehydrate one replacement instance on the already-paid campaign host without allocating another host.",
-    "rationale": "One bounded rehydration module adds exact account, source, Budget, host, AMI, subnet, runner-residue and cross-region capacity checks before same-host RunInstances DryRun and replacement launch. The existing controller gains only deterministic planning, explicit confirmations and dispatch wiring; tests prove zero AllocateHosts calls. This exact 300-file and 117274-line ceiling cannot grow implicitly."
+    "rationale": "The protected dual-channel shell, runtime and lock identity transition remains intact at its exact 23477-workflow-line ceiling. One bounded rehydration module adds exact account, source, Budget, host, AMI, subnet, runner-residue and cross-region capacity checks before same-host RunInstances DryRun and replacement launch. The existing controller gains only deterministic planning, explicit confirmations and dispatch wiring; tests prove zero AllocateHosts calls. This exact 301-file and 117495-source-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -34,6 +34,10 @@
     "packages/core/release-train.js": {
       "maxLines": 740,
       "rationale": "The Release Train contract adds one rooted successor-repair lifecycle with compare-and-swap, frozen origin provenance, exact cut and Dev patch identity, independent candidate-build eligibility, publication gating and deterministic validation; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/buildchain-compatibility-proof.js": {
+      "maxLines": 609,
+      "rationale": "The compatibility authority now performs channel binding before all legacy early exits while retaining rooted additive and breaking-drift proofs in the existing single evaluator module. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/kfd-adopter-manifest.js": {
       "maxLines": 390,

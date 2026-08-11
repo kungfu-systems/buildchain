@@ -69,6 +69,10 @@ export function checkBuildchainContractLock({
   runtimeSha = env("BUILDCHAIN_RUNTIME_SHA"),
   runtimeClass = env("BUILDCHAIN_RUNTIME_CLASS"),
   compatibilityPolicy = env("BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY"),
+  workflowShellRef = env("BUILDCHAIN_WORKFLOW_SHELL_REF"),
+  expectedChannel = env("BUILDCHAIN_EXPECTED_CHANNEL"),
+  expectedMajor = env("BUILDCHAIN_EXPECTED_MAJOR"),
+  allowOpaqueRuntime = boolEnv("BUILDCHAIN_ALLOW_OPAQUE_RUNTIME"),
   issueMode = env("BUILDCHAIN_CONTRACT_DRIFT_ISSUE_MODE", "compatible-and-breaking"),
   issueBodyPath = env("BUILDCHAIN_CONTRACT_DRIFT_ISSUE_BODY", ".buildchain/contract-drift/issue-body.md"),
   repository = env("GITHUB_REPOSITORY"),
@@ -84,6 +88,10 @@ export function checkBuildchainContractLock({
     runtimeSha,
     runtimeClass,
     compatibilityPolicy,
+    workflowShellRef,
+    expectedChannel,
+    expectedMajor,
+    allowOpaqueRuntime,
   });
   const shouldIssue = issueModeAllows(issueMode, evaluation);
   if (shouldIssue) {
@@ -104,6 +112,8 @@ export function checkBuildchainContractLock({
     `- Compatible: \`${evaluation.compatible ? "true" : "false"}\``,
     `- Runtime ref: \`${runtimeRef || "(unknown)"}\``,
     `- Runtime SHA: \`${runtimeSha || "(unknown)"}\``,
+    `- Workflow shell ref: \`${workflowShellRef || "(unknown)"}\``,
+    evaluation.channelBinding ? `- Bound channel: \`${evaluation.channelBinding.channel || "(unknown)"}\`` : "",
     `- Contract digest: \`${current.contractDigest}\``,
     `- Compatibility digest: \`${current.compatibilityDigest}\``,
     `- Compatibility proof registry: \`${current.compatibilityProofRegistryRoot || "(legacy)"}\``,
@@ -128,7 +138,7 @@ export function checkBuildchainContractLock({
     "current-buildchain-sha": runtimeSha || "",
   });
   if (!evaluation.ok) {
-    throw new Error(`Buildchain contract drift is not compatible: ${(evaluation.reasons || []).join("; ")}`);
+    throw new Error(`Buildchain contract lock rejected: ${(evaluation.reasons || []).join("; ")}`);
   }
   return { evaluation, current, shouldIssue };
 }

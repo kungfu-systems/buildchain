@@ -10,6 +10,13 @@ import { createControllerRegistry } from "./controller-evidence.js";
 import { enumerateWorkflowInputs } from "./public-surface-audit.js";
 
 export {
+  BUILDCHAIN_CHANNELS,
+  evaluateBuildchainChannelBinding,
+  normalizeBuildchainRef,
+  parseBuildchainRefIdentity,
+} from "./buildchain-channel-identity.js";
+
+export {
   BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA,
   BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA,
   BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA,

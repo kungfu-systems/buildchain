@@ -459,7 +459,7 @@ on:
         required: false
     outputs:
       buildchain-channel:
-        description: "Resolved Buildchain channel: alpha, stable, or override"
+        description: "Resolved Buildchain channel: alpha or stable"
         value: ${{ jobs.resolve-channel.outputs.channel }}
       buildchain-channel-selection-source:
         description: "Evidence source used to select the Buildchain channel"
@@ -469,112 +469,112 @@ on:
         value: ${{ jobs.resolve-channel.outputs.reason }}
       runner-preset:
         description: "Resolved runner preset name"
-        value: ${{ jobs.build.outputs.runner-preset }}
+        value: ${{ jobs.alpha.outputs.runner-preset || jobs.stable.outputs.runner-preset }}
       platforms-json:
         description: "Resolved platform matrix JSON"
-        value: ${{ jobs.build.outputs.platforms-json }}
+        value: ${{ jobs.alpha.outputs.platforms-json || jobs.stable.outputs.platforms-json }}
       runner-routing-json:
         description: "De-identified self-hosted availability and offline fallback decision"
-        value: ${{ jobs.build.outputs.runner-routing-json }}
+        value: ${{ jobs.alpha.outputs.runner-routing-json || jobs.stable.outputs.runner-routing-json }}
       platform-count:
         description: "Resolved platform count"
-        value: ${{ jobs.build.outputs.platform-count }}
+        value: ${{ jobs.alpha.outputs.platform-count || jobs.stable.outputs.platform-count }}
       linux-container-enabled:
         description: "Whether Linux build platforms are routed through a job container"
-        value: ${{ jobs.build.outputs.linux-container-enabled }}
+        value: ${{ jobs.alpha.outputs.linux-container-enabled || jobs.stable.outputs.linux-container-enabled }}
       linux-container-image:
         description: "Resolved Linux job container image"
-        value: ${{ jobs.build.outputs.linux-container-image }}
+        value: ${{ jobs.alpha.outputs.linux-container-image || jobs.stable.outputs.linux-container-image }}
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
-        value: ${{ jobs.build.outputs.summary-artifact-name }}
+        value: ${{ jobs.alpha.outputs.summary-artifact-name || jobs.stable.outputs.summary-artifact-name }}
       credential-island-macos-artifact:
         description: "Uploaded signed macOS payload artifact name when the credential island is enabled"
-        value: ${{ jobs.build.outputs.credential-island-macos-artifact }}
+        value: ${{ jobs.alpha.outputs.credential-island-macos-artifact || jobs.stable.outputs.credential-island-macos-artifact }}
       credential-island-macos-manifest-artifact:
         description: "Uploaded signed macOS manifest artifact name when the credential island is enabled"
-        value: ${{ jobs.build.outputs.credential-island-macos-manifest-artifact }}
+        value: ${{ jobs.alpha.outputs.credential-island-macos-manifest-artifact || jobs.stable.outputs.credential-island-macos-manifest-artifact }}
       build-diagnostics-summary-artifact:
         description: "Uploaded aggregate diagnostics summary artifact name"
-        value: ${{ jobs.build.outputs.diagnostics-summary-artifact-name }}
+        value: ${{ jobs.alpha.outputs.diagnostics-summary-artifact-name || jobs.stable.outputs.diagnostics-summary-artifact-name }}
       release-candidate-passport-artifact:
         description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
-        value: ${{ jobs.build.outputs.release-candidate-passport-artifact-name }}
+        value: ${{ jobs.alpha.outputs.release-candidate-passport-artifact-name || jobs.stable.outputs.release-candidate-passport-artifact-name }}
       release-candidate-artifact:
         description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
-        value: ${{ jobs.build.outputs.release-candidate-passport-artifact-name }}
+        value: ${{ jobs.alpha.outputs.release-candidate-passport-artifact-name || jobs.stable.outputs.release-candidate-passport-artifact-name }}
       release-candidate-passport-json:
         description: "Compact release-candidate passport JSON when release-candidate is enabled"
-        value: ${{ jobs.build.outputs.release-candidate-passport-json }}
+        value: ${{ jobs.alpha.outputs.release-candidate-passport-json || jobs.stable.outputs.release-candidate-passport-json }}
       build-summary-json:
         description: "Compact aggregate build summary JSON"
-        value: ${{ jobs.build.outputs.artifact-summary-json }}
+        value: ${{ jobs.alpha.outputs.artifact-summary-json || jobs.stable.outputs.artifact-summary-json }}
       artifact-coordinates-json:
         description: "Producer-owned exact GitHub Artifact coordinates for every resolved build platform"
-        value: ${{ jobs.build.outputs.artifact-coordinates-json }}
+        value: ${{ jobs.alpha.outputs.artifact-coordinates-json || jobs.stable.outputs.artifact-coordinates-json }}
       build-diagnostics-summary-json:
         description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
-        value: ${{ jobs.build.outputs.diagnostics-summary-json }}
+        value: ${{ jobs.alpha.outputs.diagnostics-summary-json || jobs.stable.outputs.diagnostics-summary-json }}
       trusted-event:
         description: "Whether the event is trusted enough to run build jobs"
-        value: ${{ jobs.build.outputs.trusted-event }}
+        value: ${{ jobs.alpha.outputs.trusted-event || jobs.stable.outputs.trusted-event }}
       buildchain-runtime-ref:
         description: "Resolved Buildchain runtime ref"
-        value: ${{ jobs.build.outputs.buildchain-runtime-ref }}
+        value: ${{ jobs.alpha.outputs.buildchain-runtime-ref || jobs.stable.outputs.buildchain-runtime-ref }}
       buildchain-runtime-sha:
         description: "Resolved immutable Buildchain runtime SHA"
-        value: ${{ jobs.build.outputs.buildchain-runtime-sha }}
+        value: ${{ jobs.alpha.outputs.buildchain-runtime-sha || jobs.stable.outputs.buildchain-runtime-sha }}
       buildchain-runtime-class:
         description: "Runtime stability class: stable, alpha, authority, train, exact-sha, or development"
-        value: ${{ jobs.build.outputs.buildchain-runtime-class }}
+        value: ${{ jobs.alpha.outputs.buildchain-runtime-class || jobs.stable.outputs.buildchain-runtime-class }}
       buildchain-runtime-override:
         description: "Whether an authority, train, or exact-SHA buildchain-ref override was used"
-        value: ${{ jobs.build.outputs.buildchain-runtime-override }}
+        value: ${{ jobs.alpha.outputs.buildchain-runtime-override || jobs.stable.outputs.buildchain-runtime-override }}
       buildchain-runtime-trust-decision:
         description: "Runtime override trust decision"
-        value: ${{ jobs.build.outputs.buildchain-runtime-trust-decision }}
+        value: ${{ jobs.alpha.outputs.buildchain-runtime-trust-decision || jobs.stable.outputs.buildchain-runtime-trust-decision }}
       buildchain-contract-lock-status:
         description: "Floating Buildchain runtime contract lock status"
-        value: ${{ jobs.build.outputs.buildchain-contract-lock-status }}
+        value: ${{ jobs.alpha.outputs.buildchain-contract-lock-status || jobs.stable.outputs.buildchain-contract-lock-status }}
       buildchain-contract-lock-drift:
         description: "Whether the floating Buildchain runtime SHA or contract digest drifted from the consumer lock"
-        value: ${{ jobs.build.outputs.buildchain-contract-lock-drift }}
+        value: ${{ jobs.alpha.outputs.buildchain-contract-lock-drift || jobs.stable.outputs.buildchain-contract-lock-drift }}
       buildchain-contract-digest:
         description: "Current Buildchain runtime contract digest"
-        value: ${{ jobs.build.outputs.buildchain-contract-digest }}
+        value: ${{ jobs.alpha.outputs.buildchain-contract-digest || jobs.stable.outputs.buildchain-contract-digest }}
       publish-channel:
         description: "Resolved publish channel"
-        value: ${{ jobs.build.outputs.publish-channel }}
+        value: ${{ jobs.alpha.outputs.publish-channel || jobs.stable.outputs.publish-channel }}
       publish-allowed:
         description: "Whether this event/ref may publish after successful verification"
-        value: ${{ jobs.build.outputs.publish-allowed }}
+        value: ${{ jobs.alpha.outputs.publish-allowed || jobs.stable.outputs.publish-allowed }}
       publish-reason:
         description: "Human-readable publish gate reason"
-        value: ${{ jobs.build.outputs.publish-reason }}
+        value: ${{ jobs.alpha.outputs.publish-reason || jobs.stable.outputs.publish-reason }}
       publish-source-ref:
         description: "Resolved publish source ref"
-        value: ${{ jobs.build.outputs.publish-source-ref }}
+        value: ${{ jobs.alpha.outputs.publish-source-ref || jobs.stable.outputs.publish-source-ref }}
       publish-source-sha:
         description: "Locked source SHA used for checkout/build/summary"
-        value: ${{ jobs.build.outputs.publish-source-sha }}
+        value: ${{ jobs.alpha.outputs.publish-source-sha || jobs.stable.outputs.publish-source-sha }}
       publish-source-tree-sha:
         description: "Git tree SHA for the locked source commit used by release-candidate promotion equivalence checks"
-        value: ${{ jobs.build.outputs.publish-source-tree-sha }}
+        value: ${{ jobs.alpha.outputs.publish-source-tree-sha || jobs.stable.outputs.publish-source-tree-sha }}
       publish-source-locked:
         description: "Whether a publish-gate source ref was explicitly locked"
-        value: ${{ jobs.build.outputs.publish-source-locked }}
+        value: ${{ jobs.alpha.outputs.publish-source-locked || jobs.stable.outputs.publish-source-locked }}
       publish-source-channel:
         description: "Channel parsed from the publish-gate source ref"
-        value: ${{ jobs.build.outputs.publish-source-channel }}
+        value: ${{ jobs.alpha.outputs.publish-source-channel || jobs.stable.outputs.publish-source-channel }}
       publish-source-line:
         description: "Line parsed from the publish-gate source ref"
-        value: ${{ jobs.build.outputs.publish-source-line }}
+        value: ${{ jobs.alpha.outputs.publish-source-line || jobs.stable.outputs.publish-source-line }}
       publish-source-consumer-version:
         description: "Consumer version parsed from the publish-gate source ref"
-        value: ${{ jobs.build.outputs.publish-source-consumer-version }}
+        value: ${{ jobs.alpha.outputs.publish-source-consumer-version || jobs.stable.outputs.publish-source-consumer-version }}
       release-manifest-json:
         description: "Resolved release manifest JSON"
-        value: ${{ jobs.build.outputs.release-manifest-json }}
+        value: ${{ jobs.alpha.outputs.release-manifest-json || jobs.stable.outputs.release-manifest-json }}
       controller-plan-artifact:
         description: "Uploaded build-channel-router controller plan artifact name"
         value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
@@ -753,12 +753,114 @@ jobs:
           path: .buildchain/controller/plan.json
           if-no-files-found: error
 
-  build:
-    name: Build with resolved channel
+  alpha:
+    name: Build alpha channel
     needs:
       - resolve-channel
       - controller-plan
-    uses: ./.github/workflows/.build.yml
+    if: ${{ needs.resolve-channel.outputs.channel == 'alpha' }}
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3-alpha
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      id-token: write
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
+      buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
+      buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
+      buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
+      working-directory: ${{ inputs.working-directory }}
+      runner-preset: ${{ inputs.runner-preset }}
+      aws-codebuild-project: ${{ inputs.aws-codebuild-project }}
+      aws-ec2-windows-runner-label: ${{ inputs.aws-ec2-windows-runner-label }}
+      aws-ec2-macos-runner-label: ${{ inputs.aws-ec2-macos-runner-label }}
+      platforms-json: ${{ inputs.platforms-json }}
+      self-hosted-offline-fallback: ${{ inputs.self-hosted-offline-fallback }}
+      control-runner-json: ${{ inputs.control-runner-json }}
+      fail-fast: ${{ inputs.fail-fast }}
+      linux-container-preset: ${{ inputs.linux-container-preset }}
+      linux-container-image: ${{ inputs.linux-container-image }}
+      require-trusted-event: ${{ inputs.require-trusted-event }}
+      untrusted-policy: ${{ inputs.untrusted-policy }}
+      publish-channel: ${{ inputs.publish-channel }}
+      publish-refs-json: ${{ inputs.publish-refs-json }}
+      publish-source-ref: ${{ inputs.publish-source-ref }}
+      publish-anchor-request-json: ${{ inputs.publish-anchor-request-json }}
+      publish-registry: ${{ inputs.publish-registry }}
+      setup-node: ${{ inputs.setup-node }}
+      node-version: ${{ inputs.node-version }}
+      setup-rust: ${{ inputs.setup-rust }}
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      rustup-dist-server: ${{ inputs.rustup-dist-server }}
+      rustup-update-root: ${{ inputs.rustup-update-root }}
+      cargo-registry-index: ${{ inputs.cargo-registry-index }}
+      install-command: ${{ inputs.install-command }}
+      build-command: ${{ inputs.build-command }}
+      verify-command: ${{ inputs.verify-command }}
+      verify-substage-evidence-path: ${{ inputs.verify-substage-evidence-path }}
+      kfd-agent-hub: ${{ inputs.kfd-agent-hub }}
+      lifecycle-timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
+      require-install: ${{ inputs.require-install }}
+      require-build: ${{ inputs.require-build }}
+      require-verify: ${{ inputs.require-verify }}
+      artifact-name: ${{ inputs.artifact-name }}
+      artifact-name-template: ${{ inputs.artifact-name-template }}
+      artifact-paths: ${{ inputs.artifact-paths }}
+      pre-upload-transport-smoke-scenario-path: ${{ inputs.pre-upload-transport-smoke-scenario-path }}
+      pre-upload-transport-smoke-artifact-root: ${{ inputs.pre-upload-transport-smoke-artifact-root }}
+      credential-island-macos-app-path: ${{ inputs.credential-island-macos-app-path }}
+      credential-island-environment: ${{ inputs.credential-island-environment }}
+      credential-island-caller-owned: ${{ inputs.credential-island-caller-owned }}
+      credential-island-macos-platform-id: ${{ inputs.credential-island-macos-platform-id }}
+      github-artifact-attestation-subject-path: ${{ inputs.github-artifact-attestation-subject-path }}
+      github-artifact-attestation-signer-sha: ${{ inputs.github-artifact-attestation-signer-sha }}
+      github-artifact-attestation-platform-id: ${{ inputs.github-artifact-attestation-platform-id }}
+      release-candidate: ${{ inputs.release-candidate }}
+      expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+      process-summary-path: ${{ inputs.process-summary-path }}
+      sample-process-tree: ${{ inputs.sample-process-tree }}
+      process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+      requested-parallelism: ${{ inputs.requested-parallelism }}
+      artifact-retention-days: ${{ inputs.artifact-retention-days }}
+      artifact-compression-level: ${{ inputs.artifact-compression-level }}
+      artifact-signing-request-upload-no-proxy: ${{ inputs.artifact-signing-request-upload-no-proxy }}
+      artifact-transfer-mode: ${{ inputs.artifact-transfer-mode }}
+      artifact-relay-s3-bucket: ${{ inputs.artifact-relay-s3-bucket }}
+      artifact-relay-s3-region: ${{ inputs.artifact-relay-s3-region }}
+      artifact-relay-s3-prefix: ${{ inputs.artifact-relay-s3-prefix }}
+      artifact-relay-s3-role-arn: ${{ inputs.artifact-relay-s3-role-arn }}
+      artifact-relay-s3-upload-role-arn: ${{ inputs.artifact-relay-s3-upload-role-arn }}
+      artifact-relay-s3-download-role-arn: ${{ inputs.artifact-relay-s3-download-role-arn }}
+      artifact-relay-s3-oidc-audience: ${{ inputs.artifact-relay-s3-oidc-audience }}
+      checkout-cache-mode: ${{ inputs.checkout-cache-mode }}
+      checkout-cache-mirror-url-template: ${{ inputs.checkout-cache-mirror-url-template }}
+      checkout-cache-reference-repository-template: ${{ inputs.checkout-cache-reference-repository-template }}
+      checkout-cache-fallback: ${{ inputs.checkout-cache-fallback }}
+      checkout-cache-timeout-seconds: ${{ inputs.checkout-cache-timeout-seconds }}
+      checkout-cache-github-timeout-seconds: ${{ inputs.checkout-cache-github-timeout-seconds }}
+      checkout-cache-fetch-attempts: ${{ inputs.checkout-cache-fetch-attempts }}
+      checkout-history-mode: ${{ inputs.checkout-history-mode }}
+      shifu-cache-profile-ref: ${{ inputs.shifu-cache-profile-ref }}
+      shifu-cache-profile-digest: ${{ inputs.shifu-cache-profile-digest }}
+      cache-dependency-lock-root: ${{ inputs.cache-dependency-lock-root }}
+      cache-toolchain-root: ${{ inputs.cache-toolchain-root }}
+      cache-policy-root: ${{ inputs.cache-policy-root }}
+      compiler-cache-provider: ${{ inputs.compiler-cache-provider }}
+      compiler-cache-platforms-json: ${{ inputs.compiler-cache-platforms-json }}
+      compiler-cache-required: ${{ inputs.compiler-cache-required }}
+      gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
+      release-candidate-family-evidence-json: ${{ inputs.release-candidate-family-evidence-json }}
+    secrets: inherit
+
+  stable:
+    name: Build stable channel
+    needs:
+      - resolve-channel
+      - controller-plan
+    if: ${{ needs.resolve-channel.outputs.channel == 'stable' }}
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
     permissions:
       actions: read
       contents: read
@@ -858,7 +960,8 @@ jobs:
     needs:
       - resolve-channel
       - controller-plan
-      - build
+      - alpha
+      - stable
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
@@ -887,9 +990,9 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-channel","status":"${{ needs.resolve-channel.result }}"},{"id":"build","status":"${{ needs.build.result }}"},{"id":"aggregate","status":"${{ needs.build.result }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_JSON: ${{ needs.build.outputs.controller-receipt-digest != '' && format('[{{"kind":"nested-controller-receipt","digest":"{0}"}}]', needs.build.outputs.controller-receipt-digest) || '[]' }}
-          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.build.result == 'success' && '' || 'nested-build-incomplete' }}
+            [{"id":"resolve-channel","status":"${{ needs.resolve-channel.result }}"},{"id":"alpha","status":"${{ needs.alpha.result }}"},{"id":"stable","status":"${{ needs.stable.result }}"},{"id":"aggregate","status":"${{ needs.resolve-channel.outputs.channel == 'alpha' && needs.alpha.result || needs.stable.result }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_JSON: ${{ (needs.alpha.outputs.controller-receipt-digest != '' || needs.stable.outputs.controller-receipt-digest != '') && format('[{{"kind":"nested-controller-receipt","digest":"{0}"}}]', needs.alpha.outputs.controller-receipt-digest || needs.stable.outputs.controller-receipt-digest) || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ ((needs.resolve-channel.outputs.channel == 'alpha' && needs.alpha.result == 'success') || (needs.resolve-channel.outputs.channel == 'stable' && needs.stable.result == 'success')) && '' || 'nested-build-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Nested build controller did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-channel-controller-receipt-${{ github.sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
@@ -917,7 +1020,9 @@ jobs:
   summarize:
     name: Summarize build contract
     needs:
-      - build
+      - resolve-channel
+      - alpha
+      - stable
       - controller-receipt
     if: ${{ always() }}
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
@@ -925,12 +1030,16 @@ jobs:
       - name: Enforce public channel router aggregate
         shell: bash
         env:
-          BUILD_RESULT: ${{ needs.build.result }}
+          CHANNEL: ${{ needs.resolve-channel.outputs.channel }}
+          ALPHA_RESULT: ${{ needs.alpha.result }}
+          STABLE_RESULT: ${{ needs.stable.result }}
           CONTROLLER_RECEIPT_RESULT: ${{ needs.controller-receipt.result }}
         run: |
           set -euo pipefail
-          if [[ "${BUILD_RESULT}" != "success" || "${CONTROLLER_RECEIPT_RESULT}" != "success" ]]; then
-            echo "::error::Buildchain channel router did not qualify: build=${BUILD_RESULT} controller-receipt=${CONTROLLER_RECEIPT_RESULT}"
+          selected_result="${STABLE_RESULT}"
+          if [[ "${CHANNEL}" = "alpha" ]]; then selected_result="${ALPHA_RESULT}"; fi
+          if [[ "${selected_result}" != "success" || "${CONTROLLER_RECEIPT_RESULT}" != "success" ]]; then
+            echo "::error::Buildchain channel router did not qualify: channel=${CHANNEL} selected=${selected_result} controller-receipt=${CONTROLLER_RECEIPT_RESULT}"
             exit 1
           fi
           echo "Buildchain channel router aggregate passed."

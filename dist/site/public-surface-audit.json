@@ -8004,7 +8004,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "099c0db9c5346942aee236af2cb7b6a7a91fbb2c54ebb17b7a2544a339c00d40",
     "workflowRegistryDigest": "3a89609848b3a8b5dbee477b82e273f3d8a47f4f152f84e29a236f0e52d2cceb",
-    "pageRegistryDigest": "539080675f37d444ffeee2d82bd9e6b38c27c1bb8df372f5677f5e33b51a809c"
+    "pageRegistryDigest": "c48f40b2947ce17eba796d537692daa6aef6a5af4a90061d1435a40265754fe3"
   },
   "comparison": {
     "missingCliRegistry": [],
