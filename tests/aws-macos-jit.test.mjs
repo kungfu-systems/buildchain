@@ -213,6 +213,10 @@ test("macOS stack and bootstrap enforce one-host JIT cleanup and no ingress", ()
   );
   assert.match(bootstrap, /aws ssm get-parameter/);
   assert.match(bootstrap, /aws ssm delete-parameter/);
+  assert.match(
+    bootstrap,
+    /HOMEBREW_NO_AUTO_UPDATE=1 \\\n\s+brew install cmake/,
+  );
   assert.match(bootstrap, /run\.sh" --jitconfig "\$JitConfig"/);
   assert.match(
     bootstrap,

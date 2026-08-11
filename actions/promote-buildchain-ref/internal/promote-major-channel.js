@@ -194,6 +194,7 @@ function majorCompletionOptions(context, plan, finalizationSource) {
     passportPromotionRoutingJson: "",
     passportKfd1WitnessJsons: [],
     passportKfd2ClaimJsons: [],
+    passportKfdAdopterManifestJson: "",
     passportKfdSupportMatrixJson: "",
     passportKfdProductGateJsons: [],
     passportKfd3PrebuildWitnessJsons: [],

@@ -26,7 +26,7 @@ RunnerPath="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 export PATH="$RunnerPath"
 
-for Command in aws curl tar shasum sudo; do
+for Command in aws brew curl tar shasum sudo; do
   if ! command -v "$Command" >/dev/null 2>&1; then
     echo "required command is unavailable: ${Command}" >&2
     exit 1
@@ -59,6 +59,13 @@ aws ssm delete-parameter --region "$Region" --name "$JitParameterName"
 if [[ -z "$JitConfig" || "$JitConfig" == "None" ]]; then
   echo "JIT configuration was empty" >&2
   exit 1
+fi
+
+if ! command -v cmake >/dev/null 2>&1; then
+  sudo -u "$RunnerUser" -H env \
+    PATH="$RunnerPath" \
+    HOMEBREW_NO_AUTO_UPDATE=1 \
+    brew install cmake
 fi
 
 install -d -o "$RunnerUser" -g staff -m 700 "$RunnerBase"

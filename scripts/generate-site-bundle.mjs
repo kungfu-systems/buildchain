@@ -15,10 +15,7 @@ import {
   collectKfdUpstreamFacts,
 } from "../packages/core/kfd.js";
 import { KFD_AGENT_HUB_ADOPTION_SCHEMA } from "../packages/core/kfd-agent-hub.js";
-import {
-  KFD_PRODUCT_GATE_INPUT_SCHEMA,
-  KFD_SUPPORT_PROJECTION_SCHEMA,
-} from "../packages/core/kfd-product-gates.js";
+import { KFD_PRODUCT_GATE_INPUT_SCHEMA } from "../packages/core/kfd-product-gates.js";
 import {
   createReadmeBadgeEndpointRegistry,
 } from "../packages/core/readme-badges.js";
@@ -933,7 +930,6 @@ function buildSiteBundle() {
       "schemas/release-tail-provider-bindings-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
-      "schemas/kfd-support-projection-v1.schema.json",
       "kfd-support.json",
       "artifact-evidence.json",
       "product-mechanism.json",
@@ -971,7 +967,6 @@ function buildSiteBundle() {
       "schemas/release-tail-provider-bindings-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
-      "schemas/kfd-support-projection-v1.schema.json",
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1105,7 +1100,6 @@ function buildSiteBundle() {
       "schemas/release-tail-provider-bindings-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
-      "schemas/kfd-support-projection-v1.schema.json",
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1289,7 +1283,6 @@ function buildSiteBundle() {
     ),
     "schemas/kfd-agent-hub-adoption.schema.json": KFD_AGENT_HUB_ADOPTION_SCHEMA,
     "schemas/kfd-product-gate-input-v1.schema.json": KFD_PRODUCT_GATE_INPUT_SCHEMA,
-    "schemas/kfd-support-projection-v1.schema.json": KFD_SUPPORT_PROJECTION_SCHEMA,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),

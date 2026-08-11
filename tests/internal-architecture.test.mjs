@@ -25,7 +25,7 @@ test("internal architecture index covers implementations, tests, and dependency 
     repositorySources: 299,
     ownedSources: 299,
     excludedSources: 0,
-    dependencyEdges: 240,
+    dependencyEdges: 242,
     dependencyRules: 4,
     dependencyCycles: 0,
   });

@@ -1,10 +1,9 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-08-10T07:48:36.957Z",
-  "publishedAt": "2026-08-10T07:48:36.957Z",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
   "reproducible": true,
-  "timestampPolicy": "ci-injected",
+  "timestampPolicy": "source-date-epoch",
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
@@ -13,13 +12,11 @@
     "packages/core/README.md",
     "package.json#exports",
     "tests/buildchain-inventory.json",
-    "sourceRevision",
     "sourceDateEpoch",
     "package content",
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "17ef29eb398908be9f833209ba599e4e2e55fe87",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +34,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.7-alpha.1",
+    "version": "3.0.8-alpha.0",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -85,7 +82,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:e1ca1d470de4faeb9f7f0a57228aebbc166d0c96d03a5603fc576ad955c497a4"
+      "digest": "sha256:4ce3c2edb095d7a103b3b1d22033b4ac3709ce709f8990b21995d491898bd051"
     },
     {
       "id": "github-artifact-attestation",
@@ -229,7 +226,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1707dd8989e1630b5ba9381c6f8aabbbc64288590628cbae9058ea6f56f9037c"
+      "digest": "sha256:142d4c11dde521dae8d829372ef28eb0b7b4d05ff29d0ce35d7fc33a7230dca5"
     },
     {
       "id": "cli-reference",
@@ -237,7 +234,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3b203848db87e68762417e768eb8a09a7e653eb30fb7cc21354e72678706b714"
+      "digest": "sha256:9b3b7425b5a487afa81520cfac215466c71265915c1465bf6f185cb42b1c340e"
     },
     {
       "id": "node-api-reference",
@@ -245,7 +242,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:370573e93b02ec0cf85fe9278ec7ca20264e3718317bbb0c29fed0930bb209b2"
+      "digest": "sha256:ebe9bb71cb45e59135d6c9ec3afd036eb8f67c8c9e3b41b0039add6c0757eae0"
     },
     {
       "id": "build-facts",
@@ -261,7 +258,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:3a6143e450ab7976a50788fee48ec4d7313706774ff5cf8f71075a7b9e196e01"
+      "digest": "sha256:4efc8fb6f94293b75606aa0631dfa122edccc970c2cfc00c7e35f81817ea8335"
     },
     {
       "id": "kfd-agent-hub",

@@ -1,8 +1,18 @@
+import path from "node:path";
 import kfdStandards from "@kungfu-tech/kfd/standards.json" with { type: "json" };
 import {
-  RELEASE_CHECK_REPORT_CONTRACT,
-  RELEASE_PASSPORT_CONTRACT,
-} from "./release-passport.js";
+  createKfdAdopterManifestGate,
+  createKfdLegacySupportMatrixProjection,
+  validateKfdLegacySupportMatrixProjection,
+} from "./kfd-adopter-manifest.js";
+import {
+  createKfdAdopterReleaseBinding,
+  installedKfdPackageArtifactRoot,
+  validateKfdAdopterReleaseBinding,
+} from "./artifact-verification-envelope.js";
+
+export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
+export const RELEASE_CHECK_REPORT_CONTRACT = "kungfu-buildchain-release-check-report";
 
 export const RELEASE_PASSPORT_SCHEMA_ID =
   "https://buildchain.libkungfu.dev/schemas/release-passport-v1.schema.json";
@@ -100,6 +110,7 @@ export const RELEASE_PASSPORT_SCHEMA = {
     "kfd-1": OBJECT,
     "kfd-2": OBJECT,
     "kfd-3": OBJECT,
+    kfdAdopter: OBJECT,
     kfdSupport: OBJECT,
   },
   additionalProperties: true,
@@ -123,6 +134,7 @@ const BUILDCHAIN_AGGREGATION_FIELDS = [
   "platformArtifactManifests",
   "distTagPromotion",
   "controllerReceipts",
+  "kfdAdopter",
   "kfdSupport",
   "githubArtifactAttestations",
   "artifacts",
@@ -163,11 +175,12 @@ export function createReleasePassportCheckManifest({ standards = kfdStandards } 
         result: "check-report.json",
       },
       kfdSupportProjection: {
-        inputSchema: "schemas/kfd-product-gate-input-v1.schema.json",
-        projectionSchema: "schemas/kfd-support-projection-v1.schema.json",
+        authorityContract: "kfd.adopter-conformance-manifest/v1",
+        gateContract: "kungfu-buildchain-kfd-adopter-manifest-gate",
+        bindingContract: "kungfu-buildchain-kfd-adopter-release-binding",
         evidence: "kfd-support.json",
         rule:
-          "The passport mirrors one product-owned support matrix and validated product-gate results without widening any claim state.",
+          "The standard adopter manifest is the sole declaration authority; the legacy support matrix is an exact derived projection only.",
       },
     },
     ownership: {
@@ -198,6 +211,14 @@ export function createReleasePassportCheckManifest({ standards = kfdStandards } 
         {
           when: "kfdSupport is present",
           pointer: "evidence.kfdSupport",
+        },
+        {
+          when: "kfdAdopter is present",
+          pointer: "evidence.kfdAdopterManifest",
+        },
+        {
+          when: "kfdAdopter is present",
+          pointer: "evidence.kfdAdopterGate",
         },
       ],
       rule:
@@ -262,5 +283,197 @@ export function validateReleasePassportSchema(passport) {
     schemaId: RELEASE_PASSPORT_SCHEMA_ID,
     ok: issues.length === 0,
     issues,
+  };
+}
+
+function passportStableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(passportStableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${passportStableJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function passportOptional(value) {
+  return value === undefined || value === null ? "" : String(value);
+}
+
+export function defaultReleaseProductMechanism({ repository = "", productName = "Buildchain" } = {}) {
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-product-mechanism",
+    product: { name: productName, repository, northStar: "GitHub-native release passport protocol for binary and multi-artifact products." },
+    trustModel: {
+      executionSubstrate: "github-actions",
+      releaseAuthority: "protected Buildchain channel refs, exact tags, and release passport evidence",
+      runnerRequirement: "runner facts are recorded, but the protocol is runner-agnostic",
+    },
+    compatibility: {
+      promise: "release passport schemas are welded surfaces; additive fields are allowed, breaking semantic changes require a new major line",
+      kfd: "KFD-1",
+    },
+  };
+}
+
+export function defaultReleaseImpact({ tag = "", line = "", decision = "unknown" } = {}) {
+  const normalized = String(decision).toLowerCase();
+  const final = ["unknown", "patch", "minor", "major"].includes(normalized) ? normalized : String(decision);
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-impact",
+    release: { tag, line },
+    versionImpact: { final, source: "default", rationale: "No surface impact classification was supplied." },
+    surfaceImpacts: [],
+    classification: final,
+    breaking: final === "major",
+    security: false,
+    migrationRequired: final === "major",
+    summary: "No release impact summary was supplied.",
+    recovery: { rollback: "Use the previous exact release tag or previous floating channel ref.", block: "Fail closed if release passport verification fails." },
+  };
+}
+
+export function defaultReleaseAgentIndex({ tag = "", passportPath = "buildchain.release.json" } = {}) {
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-agent-index",
+    release: { tag },
+    entrypoints: [
+      { id: "release-passport", kind: "json", path: passportPath, description: "Read this first to verify release completeness, artifacts, impact, and recovery pointers." },
+      { id: "llms", kind: "text", path: "llms.txt", description: "Short agent-readable release instructions." },
+    ],
+  };
+}
+
+export function defaultReleaseLlmsText({ tag = "", passportPath = "buildchain.release.json" } = {}) {
+  return [
+    "# Buildchain Release Passport",
+    "",
+    `Release: ${tag || "unknown"}`,
+    "",
+    `Start with ${passportPath}. Verify artifact-evidence.json before installing binaries.`,
+    "If verification fails, do not install or promote this release.",
+  ].join("\n");
+}
+
+export function buildReleaseArtifactEvidence({ normalizedAssets = [], repository = "", tag = "", sourceSha = "", workflow = {}, kfdAdopter } = {}) {
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-artifact-evidence",
+    repository: passportOptional(repository),
+    release: { tag: passportOptional(tag), sourceSha: passportOptional(sourceSha) },
+    generatedAt: new Date().toISOString(),
+    runner: {
+      kind: passportOptional(workflow.runnerKind || workflow.runner?.kind || ""),
+      os: passportOptional(workflow.runnerOs || workflow.runner?.os || ""),
+      arch: passportOptional(workflow.runnerArch || workflow.runner?.arch || ""),
+      labels: Array.isArray(workflow.runnerLabels) ? workflow.runnerLabels : [],
+      image: passportOptional(workflow.runnerImage || workflow.runner?.image || ""),
+    },
+    workflow: {
+      name: passportOptional(workflow.name),
+      runId: passportOptional(workflow.runId),
+      runAttempt: passportOptional(workflow.runAttempt),
+      url: passportOptional(workflow.url),
+    },
+    artifacts: normalizedAssets.map((asset) => ({
+      name: asset.name, kind: asset.kind, platform: asset.platform, size: asset.size,
+      sha256: asset.sha256, url: asset.url, githubAssetId: asset.githubAssetId,
+      attestation: passportOptional(asset.attestation || ""),
+    })),
+    ...(kfdAdopter ? { kfdAdopter: structuredClone(kfdAdopter) } : {}),
+  };
+}
+
+export function prepareReleasePassportKfdSections({ kfd1, kfd2Claims, kfd3, kfdAdopter, kfdSupport, kfd1DefaultKey, createKfd2, evidencePaths = {} } = {}) {
+  const one = kfd1?.passportSection ? kfd1 : undefined;
+  const three = kfd3?.passportSection ? kfd3 : undefined;
+  const adopter = kfdAdopter ? structuredClone(kfdAdopter) : undefined;
+  const support = kfdSupport ? structuredClone(kfdSupport) : undefined;
+  const two = createKfd2({ explicitClaims: kfd2Claims, kfd1Section: one?.passportSection, kfd3Section: three?.passportSection });
+  return {
+    sectionEntries: [
+      [one?.key || kfd1DefaultKey, one?.passportSection], ["kfd-2", two],
+      [three?.key || "kfd-3", three?.passportSection], ["kfdAdopter", adopter], ["kfdSupport", support],
+    ],
+    evidence: {
+      kfd1: one ? `${one.key || kfd1DefaultKey}` : "", kfd2: two ? "kfd-2" : "", kfd3: three ? `${three.key || "kfd-3"}` : "",
+      kfdAdopterManifest: adopter ? evidencePaths.manifest || "kfd-adopter-manifest.json" : "",
+      kfdAdopterGate: adopter ? evidencePaths.gate || "kfd-adopter-manifest-gate.json" : "",
+      kfdSupport: support ? evidencePaths.support || "kfd-support.json" : "",
+    },
+  };
+}
+
+export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], comparisonMatrix, sourceSha = "", checkedAt } = {}) {
+  if (!manifest) {
+    if (comparisonMatrix || gateResults.length > 0) {
+      throw new Error("KFD support and product-gate inputs require --kfd-adopter-manifest-json; --kfd-support-matrix-json is comparison-only");
+    }
+    return {};
+  }
+  const manifestGate = createKfdAdopterManifestGate({
+    manifest, packageArtifactRoot: installedKfdPackageArtifactRoot(), gateResults,
+    expectedSourceSha: sourceSha, checkedAt,
+  });
+  const legacyProjection = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
+  if (comparisonMatrix) {
+    const comparison = validateKfdLegacySupportMatrixProjection(comparisonMatrix, { manifest, manifestGate });
+    if (!comparison.valid) {
+      throw new Error(`legacy KFD support matrix drifted from the standard adopter manifest: ${JSON.stringify(comparison.issues)}`);
+    }
+  }
+  return {
+    manifest, manifestGate, legacyProjection,
+    binding: createKfdAdopterReleaseBinding({ manifest, manifestGate, legacyProjection, expectedSourceSha: sourceSha }),
+  };
+}
+
+export function validateKfdAdopterReleaseEvidence({ binding, artifactBinding, manifest, manifestGate, legacyProjection, passportLegacyProjection, expectedSourceSha = "" } = {}) {
+  if (!binding) {
+    return passportLegacyProjection
+      ? [{ code: "kfdSupport.authority", message: "legacy KFD support projection requires the standard adopter manifest binding" }]
+      : [];
+  }
+  const issues = validateKfdAdopterReleaseBinding(binding, {
+    manifest, manifestGate, legacyProjection, expectedSourceSha,
+  }).issues.map((entry) => ({ code: `kfdAdopter.${entry.path || entry.code}`, message: entry.message, details: entry }));
+  if (!artifactBinding || passportStableJson(artifactBinding) !== passportStableJson(binding)) {
+    issues.push({ code: "kfdAdopter.artifactEvidence", message: "release passport and artifact evidence must bind the same exact KFD adopter closure" });
+  }
+  if (!passportLegacyProjection || !legacyProjection
+    || passportStableJson(legacyProjection) !== passportStableJson(passportLegacyProjection)) {
+    issues.push({ code: "kfdAdopter.legacyProjection", message: "legacy support projection must exactly match the manifest-derived passport sibling" });
+  }
+  return issues;
+}
+
+async function explicitOrSibling({ location, basePath, sibling, readJson, resolveSibling, fallback }) {
+  if (location) return readJson(location);
+  return await resolveSibling(basePath, sibling) || fallback;
+}
+
+export async function resolveReleasePassportVerificationInputs({ passportLocation, locations = {}, readJson, resolveSibling } = {}) {
+  const passport = await readJson(passportLocation);
+  const basePath = /^https?:\/\//.test(passportLocation) ? passportLocation : path.resolve(passportLocation);
+  const resolve = (location, sibling, fallback) => explicitOrSibling({ location, basePath, sibling, readJson, resolveSibling, fallback });
+  const releaseEvidenceDocuments = [];
+  for (const reference of Array.isArray(passport.releaseEvidence) ? passport.releaseEvidence : []) {
+    const id = String(reference?.id || "");
+    const safePath = /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(id) && reference?.path === `release-evidence-${id}.json`;
+    releaseEvidenceDocuments.push({ reference, document: safePath ? await resolveSibling(basePath, reference.path) : undefined });
+  }
+  return {
+    passport,
+    artifactEvidence: await resolve(locations.artifactEvidence, passport.evidence?.artifactEvidence, {}),
+    publishEvidence: await resolve(locations.publishEvidence, passport.evidence?.publishEvidence, {}),
+    impact: await resolve(locations.impact, passport.evidence?.impact, {}),
+    agentIndex: await resolve(locations.agentIndex, passport.evidence?.agentIndex, {}),
+    productMechanism: await resolve(locations.productMechanism, passport.product?.mechanism, {}),
+    kfdAgentHubEvidence: await resolve(locations.kfdAgentHubEvidence, passport.evidence?.kfdAgentHub),
+    kfdAdopterManifest: await resolve(locations.kfdAdopterManifest, passport.evidence?.kfdAdopterManifest),
+    kfdAdopterManifestGate: await resolve(locations.kfdAdopterManifestGate, passport.evidence?.kfdAdopterGate),
+    kfdSupportEvidence: await resolve(locations.kfdSupportEvidence, passport.evidence?.kfdSupport),
+    releaseEvidenceDocuments,
   };
 }

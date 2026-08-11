@@ -16,10 +16,11 @@
       "result": "check-report.json"
     },
     "kfdSupportProjection": {
-      "inputSchema": "schemas/kfd-product-gate-input-v1.schema.json",
-      "projectionSchema": "schemas/kfd-support-projection-v1.schema.json",
+      "authorityContract": "kfd.adopter-conformance-manifest/v1",
+      "gateContract": "kungfu-buildchain-kfd-adopter-manifest-gate",
+      "bindingContract": "kungfu-buildchain-kfd-adopter-release-binding",
       "evidence": "kfd-support.json",
-      "rule": "The passport mirrors one product-owned support matrix and validated product-gate results without widening any claim state."
+      "rule": "The standard adopter manifest is the sole declaration authority; the legacy support matrix is an exact derived projection only."
     }
   },
   "ownership": {
@@ -42,6 +43,7 @@
       "platformArtifactManifests",
       "distTagPromotion",
       "controllerReceipts",
+      "kfdAdopter",
       "kfdSupport",
       "githubArtifactAttestations",
       "artifacts",
@@ -211,6 +213,14 @@
       {
         "when": "kfdSupport is present",
         "pointer": "evidence.kfdSupport"
+      },
+      {
+        "when": "kfdAdopter is present",
+        "pointer": "evidence.kfdAdopterManifest"
+      },
+      {
+        "when": "kfdAdopter is present",
+        "pointer": "evidence.kfdAdopterGate"
       }
     ],
     "rule": "The normative checker resolves every declared sibling relative to the passport and fails closed on missing required evidence, digest drift, or semantic mismatch."

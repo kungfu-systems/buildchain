@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "3.0.7-alpha.1",
+  "version": "3.0.8-alpha.0",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -34,6 +34,7 @@
     "./kfd": "./packages/core/kfd.js",
     "./kfd-product-gates": "./packages/core/kfd-product-gates.js",
     "./kfd-adopter-manifest": "./packages/core/kfd-adopter-manifest.js",
+    "./kfd-adopter-release-binding": "./packages/core/artifact-verification-envelope.js",
     "./kfd-agent-hub": "./packages/core/kfd-agent-hub.js",
     "./buildchain-layout": "./packages/core/buildchain-layout.js",
     "./release-line-bootstrap": "./packages/core/release-line-bootstrap.js",
@@ -88,7 +89,6 @@
     "./site/schemas/release-passport-v1.schema.json": "./dist/site/schemas/release-passport-v1.schema.json",
     "./site/schemas/kfd-agent-hub-adoption.schema.json": "./dist/site/schemas/kfd-agent-hub-adoption.schema.json",
     "./site/schemas/kfd-product-gate-input-v1.schema.json": "./dist/site/schemas/kfd-product-gate-input-v1.schema.json",
-    "./site/schemas/kfd-support-projection-v1.schema.json": "./dist/site/schemas/kfd-support-projection-v1.schema.json",
     "./site/buildchain-contract.json": "./dist/site/buildchain-contract.json",
     "./site/product-mechanism.json": "./dist/site/product-mechanism.json",
     "./site/release-provenance.json": "./dist/site/release-provenance.json",
