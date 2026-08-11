@@ -1755,6 +1755,41 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(qualification, /stable-candidate-qualification\.mjs/);
 });
 
+test("alpha self-dogfood proves fresh-runner next-development recovery before stable qualification", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-alpha-self-dogfood.yml"),
+    "utf8",
+  );
+  const qualification = fs.readFileSync(
+    path.join(root, "scripts/stable-candidate-qualification.mjs"),
+    "utf8",
+  );
+  const implementation = fs.readFileSync(
+    path.join(root, "scripts/next-development-self-dogfood.mjs"),
+    "utf8",
+  );
+  const harness = fs.readFileSync(
+    path.join(root, "scripts/next-development-self-dogfood-harness.mjs"),
+    "utf8",
+  );
+
+  assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v3-alpha/);
+  assert.match(workflow, /next-development-fault:/);
+  assert.match(workflow, /next-development-resume:/);
+  assert.match(workflow, /next-development-self-dogfood\.mjs checkpoint/);
+  assert.match(workflow, /next-development-self-dogfood\.mjs resume/);
+  assert.match(workflow, /--repository "\$\{\{ github\.repository \}\}"/);
+  assert.match(workflow, /github\.rest\.repos\.getContent/);
+  assert.match(workflow, /next-development-self-dogfood\.mjs attest-hosted/);
+  assert.match(workflow, /next-development-self-dogfood\.mjs verify-hosted/);
+  assert.match(workflow, /buildchain-v3-alpha-self-dogfood-evidence/);
+  assert.match(harness, /materializeNextDevelopmentTransition/);
+  assert.match(harness, /injected transient durable-state write failure/);
+  assert.match(implementation, /protectedPrDelay/);
+  assert.match(implementation, /hostedProtectedDevReadback/);
+  assert.match(qualification, /validateHostedSelfDogfoodEvidence/);
+});
+
 test("check workflow preserves verify mode and exposes source-check mode", () => {
   const reusable = fs.readFileSync(
     path.join(root, ".github/workflows/check.yml"),

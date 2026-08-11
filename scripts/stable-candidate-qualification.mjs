@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { validateHostedSelfDogfoodEvidence } from "./next-development-self-dogfood.mjs";
+
 const DEFAULTS = {
   buildWorkflowFile: "build-surface-fixture.yml",
   buildWorkflowName: "Build Surface Fixture",
@@ -48,13 +50,11 @@ export function resolveStableCandidateQualificationCandidate({ eventName, inputC
   if (text(eventName) !== "workflow_run") {
     throw new Error(`qualification candidate resolver does not admit event ${eventName || "<empty>"}`);
   }
-  const evidence = selfDogfoodEvidence;
-  if (
-    evidence?.contract !== "kungfu-buildchain-alpha-self-dogfood"
-    || evidence?.status !== "passed"
-    || evidence?.observed?.alpha?.ref !== "v3-alpha"
-  ) {
-    throw new Error("self-dogfood evidence is not a passing v3-alpha observation");
+  let evidence;
+  try {
+    evidence = validateHostedSelfDogfoodEvidence(selfDogfoodEvidence);
+  } catch (error) {
+    throw new Error(`self-dogfood evidence is not a passing rooted v3-alpha observation: ${error.message}`);
   }
   const observedSha = optionalSha(evidence.observed.alpha.sha, "observed v3-alpha SHA");
   const expectedSha = optionalSha(evidence.observed.alpha.expectedSha, "expected v3-alpha SHA");

@@ -7,26 +7,69 @@ import {
   resolveStableCandidateQualificationCandidate,
   runStableCandidateQualification,
 } from "../scripts/stable-candidate-qualification.mjs";
+import {
+  createHostedSelfDogfoodEvidence,
+  createSelfDogfoodCheckpoint,
+  resumeSelfDogfoodCheckpoint,
+} from "../scripts/next-development-self-dogfood.mjs";
 
 const SHA = "a".repeat(40);
+const ROOT = `sha256:${"b".repeat(64)}`;
+const CHECKPOINT = await createSelfDogfoodCheckpoint({
+  repository: "kungfu-systems/buildchain",
+  runtimeRef: "v3-alpha",
+  runtimeSha: SHA,
+  contractRoot: ROOT,
+  runnerId: "qualification:fault-runner",
+});
+const NEXT_DEVELOPMENT = await resumeSelfDogfoodCheckpoint(CHECKPOINT, {
+  runnerId: "qualification:fresh-runner",
+});
+const SELF_DOGFOOD_EVIDENCE = createHostedSelfDogfoodEvidence({
+  nextDevelopment: NEXT_DEVELOPMENT,
+  observation: {
+    repository: "kungfu-systems/buildchain",
+    callerSha: "c".repeat(40),
+    checkedAt: "2026-08-11T03:00:00.000Z",
+    observed: {
+      alpha: { ref: "v3-alpha", sha: SHA, class: "alpha", expectedSha: SHA },
+      stable: { ref: "v3", sha: "d".repeat(40), class: "stable", expectedSha: "d".repeat(40) },
+    },
+    protectedDevReadback: {
+      repository: "kungfu-systems/buildchain",
+      branch: "dev/v3/v3.0",
+      commitSha: "e".repeat(40),
+      treeSha: "f".repeat(40),
+      versionRoots: [
+        { path: ".buildchain/release-impact.json", gitBlobSha: "1".repeat(40) },
+        { path: "dist/site/buildchain-contract.json", gitBlobSha: "2".repeat(40) },
+        { path: "package.json", gitBlobSha: "3".repeat(40) },
+      ],
+    },
+  },
+});
+
+function selfDogfoodEvidence() {
+  return structuredClone(SELF_DOGFOOD_EVIDENCE);
+}
 
 test("binds automatic qualification to the exact alpha proved by self-dogfood", () => {
   assert.equal(resolveStableCandidateQualificationCandidate({
     eventName: "workflow_run",
-    selfDogfoodEvidence: {
-      contract: "kungfu-buildchain-alpha-self-dogfood",
-      status: "passed",
-      observed: { alpha: { ref: "v3-alpha", sha: SHA, expectedSha: SHA } },
-    },
+    selfDogfoodEvidence: selfDogfoodEvidence(),
   }), SHA);
+  const mismatched = selfDogfoodEvidence();
+  mismatched.observed.alpha.expectedSha = "b".repeat(40);
   assert.throws(() => resolveStableCandidateQualificationCandidate({
     eventName: "workflow_run",
-    selfDogfoodEvidence: {
-      contract: "kungfu-buildchain-alpha-self-dogfood",
-      status: "passed",
-      observed: { alpha: { ref: "v3-alpha", sha: SHA, expectedSha: "b".repeat(40) } },
-    },
-  }), /does not bind observed and expected/);
+    selfDogfoodEvidence: mismatched,
+  }), /not a passing rooted v3-alpha observation/);
+});
+
+test("rejects alpha evidence without fresh-runner next-development proof", () => {
+  const evidence = selfDogfoodEvidence();
+  evidence.nextDevelopment.recovery.transientDurableStateFailures = 0;
+  assert.throws(() => resolveStableCandidateQualificationCandidate({ eventName: "workflow_run", selfDogfoodEvidence: evidence }), /not a passing rooted v3-alpha observation/);
 });
 
 test("keeps manual qualification bound to its explicit immutable candidate", () => {

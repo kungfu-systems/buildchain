@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "148e293f56e46990a44ed86525f9e38c910cda59",
-    "maxHandMaintainedSourceFiles": 308,
-    "maxHandMaintainedSourceLines": 120267,
+    "baselineRevision": "7f4c81e824f761271b90c3cf12ce3bc351da7937",
+    "maxHandMaintainedSourceFiles": 310,
+    "maxHandMaintainedSourceLines": 121227,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23477,
-    "latestTransition": "Buildchain v3 composes durable next-development control with bounded macOS JIT same-host instance rehydration.",
-    "rationale": "The protected next-development controller remains intact while one separate rehydration module adds exact account, source, Budget, host, AMI, subnet, runner-residue and cross-region capacity checks before same-host RunInstances DryRun and replacement launch; tests prove zero AllocateHosts calls. This exact 308-file, 120267-source-line and 23477-workflow-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23607,
+    "latestTransition": "Buildchain v3 composes bounded macOS JIT rehydration with hosted next-development self-dogfood.",
+    "rationale": "The protected next-development controller and bounded same-host macOS JIT rehydration remain intact while the self-dogfood slice adds one scenario harness and one evidence command. It calls the real version-state adapter, injects transient durable-state failure, restores the operation on a fresh runner, exercises protected Dev movement and protected PR delay, proves both legal models, and roots exact hosted readback before stable qualification. This exact 310-file, 121227-source-line and 23607-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -121,8 +121,8 @@
       "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and all existing no-widening checks remain unchanged."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1479,
-      "rationale": "Inventory retains the complete recovery and publication authority set and additionally requires the next-development contract, controller, schemas, fixtures, adapter, generated guidance and public documentation; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1481,
+      "rationale": "Inventory retains the complete recovery and publication authority set and additionally requires both bounded next-development self-dogfood command and harness files beside the contract, controller, schemas, fixtures, adapter, generated guidance and public documentation; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
       "maxFunctionLines": 288,
