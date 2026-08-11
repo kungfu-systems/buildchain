@@ -4,6 +4,13 @@ import path from "node:path";
 import { createControllerRegistry } from "./controller-evidence.js";
 import { enumerateWorkflowInputs } from "./public-surface-audit.js";
 
+export {
+  BUILDCHAIN_CHANNELS,
+  evaluateBuildchainChannelBinding,
+  normalizeBuildchainRef,
+  parseBuildchainRefIdentity,
+} from "./buildchain-channel-identity.js";
+
 export const BUILDCHAIN_RUNTIME_CONTRACT_WORLD = "kungfu-buildchain-runtime-contract-world";
 export const BUILDCHAIN_CONTRACT_LOCK = "kungfu-buildchain-contract-lock";
 

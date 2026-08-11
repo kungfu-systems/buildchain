@@ -443,6 +443,8 @@ jobs:
           BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ job.workflow_ref }}
+          BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ steps.runtime.outputs.runtime-override }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Preflight protected publication authority

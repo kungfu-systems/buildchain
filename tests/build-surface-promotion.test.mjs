@@ -1681,6 +1681,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     runtimeRef: "v3-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
+    workflowShellRef: "v3-alpha",
   });
   assert.equal(
     canAdmitSelfDogfoodLockEvaluation({

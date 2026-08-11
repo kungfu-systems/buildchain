@@ -225,7 +225,7 @@ const selfDogfoodAlphaEvaluation = evaluateBuildchainContractLock({
   }),
   runtimeRef: `v${selfDogfoodMajor}-alpha`,
   runtimeSha: "current-development-contract",
-  runtimeClass: "alpha",
+  runtimeClass: "alpha", workflowShellRef: `v${selfDogfoodMajor}-alpha`,
 });
 if (
   !canAdmitSelfDogfoodLockEvaluation({
@@ -314,7 +314,7 @@ if (!promotionOverrideAuthorization.includes("promotion runtime override is only
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
-  "uses: ./.github/workflows/.build.yml",
+  "uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3-alpha", "uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3\n",
   "needs.resolve-channel.outputs.buildchain-ref",
   "needs.resolve-channel.outputs.contract-lock-path",
 ]) {

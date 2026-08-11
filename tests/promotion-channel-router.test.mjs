@@ -70,7 +70,7 @@ test("consumer target version does not override the Buildchain major", () => {
   assert.equal(result.runtimeRef, "v3");
 });
 
-test("train and exact-SHA overrides retain auto-only selection and target shell lane", () => {
+test("train and exact-SHA overrides are always bound to the target shell lane", () => {
   for (const requestedRef of ["train/v3/v3.0/promotion-router", "a".repeat(40)]) {
     const result = resolvePromotionChannel({ ...base, targetRef: "alpha/v3/v3.0", requestedRef });
     assert.equal(result.channel, "alpha");
@@ -78,14 +78,14 @@ test("train and exact-SHA overrides retain auto-only selection and target shell 
     assert.equal(result.runtimeRef, requestedRef);
     assert.equal(result.overrideUsed, true);
   }
-  assert.throws(
-    () => resolvePromotionChannel({
+  assert.equal(
+    resolvePromotionChannel({
       ...base,
       targetRef: "alpha/v3/v3.0",
       requestedChannel: "alpha",
       requestedRef: "a".repeat(40),
-    }),
-    /require buildchain-channel=auto/,
+    }).channel,
+    "alpha",
   );
 });
 
@@ -120,7 +120,7 @@ test("a matching workflow ref cannot authorize a different runtime SHA", () => {
     routerSha: "b".repeat(40),
   });
   assert.equal(result.overrideUsed, true);
-  assert.equal(result.selectionSource, "explicit-buildchain-ref");
+  assert.equal(result.selectionSource, "explicit-buildchain-ref+channel-evidence");
 });
 
 test("floating promotion refs resolve once even when the ref moves during routing", async () => {

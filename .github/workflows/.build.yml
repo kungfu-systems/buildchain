@@ -849,7 +849,7 @@ jobs:
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"
-              echo "contract-lock-compatible=true"
+              echo "contract-lock-compatible=false"
               echo "contract-lock-drift=false"
               echo "contract-lock-issue-needed=false"
               echo "contract-lock-issue-body-file="
@@ -869,6 +869,8 @@ jobs:
                 echo "- Note: the checked-out Buildchain runtime does not yet ship contract lock support."
               } >> "${GITHUB_STEP_SUMMARY}"
             fi
+            echo "::error::Buildchain runtime cannot prove channel-bound contract-lock semantics"
+            exit 1
           fi
         env:
           BUILDCHAIN_CONTRACT_LOCK_PATH: .buildchain/consumer/${{ inputs.buildchain-contract-lock-path }}
@@ -878,6 +880,8 @@ jobs:
           BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ steps.runtime.outputs.workflow-shell-ref }}
+          BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ steps.runtime.outputs.runtime-override }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Report consumer Buildchain contract drift
