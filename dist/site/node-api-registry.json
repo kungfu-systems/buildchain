@@ -5289,7 +5289,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 568
+        "line": 579
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5326,7 +5326,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 520
+        "line": 531
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5355,7 +5355,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 96
+        "line": 100
       },
       "example": "import { createDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5403,7 +5403,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 20
+        "line": 22
       },
       "example": "import { DEV_DELIVERY_CLASSES } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5427,7 +5427,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 12
+        "line": 14
       },
       "example": "import { DEV_DELIVERY_LEASE_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5451,7 +5451,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 14
+        "line": 16
       },
       "example": "import { DEV_DELIVERY_PRIORITIES } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5475,7 +5475,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 8
+        "line": 10
       },
       "example": "import { DEV_DELIVERY_QUEUE_CONTRACT } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5499,7 +5499,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 11
+        "line": 13
       },
       "example": "import { DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5547,7 +5547,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 10
+        "line": 12
       },
       "example": "import { DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5571,7 +5571,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 9
+        "line": 11
       },
       "example": "import { DEV_DELIVERY_WARRANT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5608,7 +5608,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 437
+        "line": 448
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5641,7 +5641,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 111
+        "line": 115
       },
       "example": "import { normalizeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5674,7 +5674,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 571
+        "line": 582
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5707,7 +5707,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 276
+        "line": 285
       },
       "example": "import { rankDevDeliveryCandidates } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5740,7 +5740,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 470
+        "line": 481
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5773,7 +5773,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 300
+        "line": 309
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5797,7 +5797,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 569
+        "line": 580
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5834,7 +5834,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 195
+        "line": 201
       },
       "example": "import { submitDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -16445,6 +16445,63 @@
       ]
     },
     {
+      "id": "packages/core/release-blocker-priority.js#createReleaseBlockerPriorityClaim",
+      "name": "createReleaseBlockerPriorityClaim",
+      "kind": "function",
+      "signature": "function createReleaseBlockerPriorityClaim(repairInput, input = {})",
+      "parameters": [
+        {
+          "name": "repairInput",
+          "signature": "repairInput"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-blocker-priority.js",
+        "line": 32
+      },
+      "example": "import { createReleaseBlockerPriorityClaim } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-blocker-priority.js#RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA",
+      "name": "RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA",
+      "kind": "constant",
+      "signature": "const RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-blocker-priority.js",
+        "line": 15
+      },
+      "example": "import { RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release-candidate-recovery.js#rebindPublicationGateAggregateForEquivalentTree",
       "name": "rebindPublicationGateAggregateForEquivalentTree",
       "kind": "function",
@@ -19926,6 +19983,39 @@
       ]
     },
     {
+      "id": "packages/core/release-train.js#createReleaseBlockerRepair",
+      "name": "createReleaseBlockerRepair",
+      "kind": "function",
+      "signature": "function createReleaseBlockerRepair(activeTrainInput, input = {})",
+      "parameters": [
+        {
+          "name": "activeTrainInput",
+          "signature": "activeTrainInput"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 668
+      },
+      "example": "import { createReleaseBlockerRepair } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release-train.js#createReleaseCut",
       "name": "createReleaseCut",
       "kind": "function",
@@ -19945,7 +20035,7 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 179
+        "line": 182
       },
       "example": "import { createReleaseCut } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
@@ -19974,7 +20064,7 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 213
+        "line": 216
       },
       "example": "import { createReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
@@ -19998,7 +20088,7 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 11
+        "line": 13
       },
       "example": "import { LEGACY_DEV_ALPHA_CANDIDATE_STATE_SCHEMA } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
@@ -20031,7 +20121,7 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 358
+        "line": 361
       },
       "example": "import { observeReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
@@ -20060,9 +20150,33 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 491
+        "line": 494
       },
       "example": "import { readReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#RELEASE_BLOCKER_REPAIR_CONTRACT",
+      "name": "RELEASE_BLOCKER_REPAIR_CONTRACT",
+      "kind": "constant",
+      "signature": "const RELEASE_BLOCKER_REPAIR_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 11
+      },
+      "example": "import { RELEASE_BLOCKER_REPAIR_CONTRACT } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -20156,7 +20270,7 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 14
+        "line": 16
       },
       "example": "import { RELEASE_TRAIN_STATES } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
@@ -20180,7 +20294,7 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 24
+        "line": 26
       },
       "example": "import { RELEASE_TRAIN_SUPERSESSION_CAUSES } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
@@ -20233,9 +20347,42 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 71
+        "line": 74
       },
       "example": "import { releaseTrainRoot } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#settleReleaseBlockerDevLanding",
+      "name": "settleReleaseBlockerDevLanding",
+      "kind": "function",
+      "signature": "function settleReleaseBlockerDevLanding(repairInput, input = {})",
+      "parameters": [
+        {
+          "name": "repairInput",
+          "signature": "repairInput"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 708
+      },
+      "example": "import { settleReleaseBlockerDevLanding } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -20266,9 +20413,38 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 336
+        "line": 339
       },
       "example": "import { transitionReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release-train.js#validateReleaseBlockerRepair",
+      "name": "validateReleaseBlockerRepair",
+      "kind": "function",
+      "signature": "function validateReleaseBlockerRepair(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-train.js",
+        "line": 672
+      },
+      "example": "import { validateReleaseBlockerRepair } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -20295,7 +20471,7 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 229
+        "line": 232
       },
       "example": "import { validateReleaseCut } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
@@ -20324,7 +20500,7 @@
       ],
       "source": {
         "path": "packages/core/release-train.js",
-        "line": 362
+        "line": 365
       },
       "example": "import { validateReleaseTrain } from \"@kungfu-tech/buildchain/release-train\";",
       "maturity": "stable",
@@ -22687,14 +22863,14 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:084b586e798779c324b5fb68b6d2e9a9e2cc397daba1bd9f78a34d584c51f445",
+      "digest": "sha256:a002358b4c13b8859340e4427d489ce8c77f738ed64d560b964d8aacc03cdeea",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 32,
+      "symbolCount": 34,
       "symbolIds": [
         "packages/core/dev-delivery-warrant.js#cancelQueuedDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#classifyDevDeliveryDelta",
@@ -22703,6 +22879,7 @@
         "packages/core/dev-delivery-proof.js#createIntegrationDeliveryProof",
         "packages/core/dev-delivery-proof.js#createProjectCutReplayPlan",
         "packages/core/dev-delivery-proof.js#createProjectCutReplayProof",
+        "packages/core/release-blocker-priority.js#createReleaseBlockerPriorityClaim",
         "packages/core/dev-delivery-proof.js#createSourceQualificationProof",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CLASSES",
@@ -22721,6 +22898,7 @@
         "packages/core/dev-delivery-proof.js#PROJECT_CUT_REPLAY_PROOF_SCHEMA",
         "packages/core/dev-delivery-warrant.js#rankDevDeliveryCandidates",
         "packages/core/dev-delivery-warrant.js#recoverExpiredDevDeliveryWarrant",
+        "packages/core/release-blocker-priority.js#RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA",
         "packages/core/dev-delivery-warrant.js#selectDevDeliveryWarrant",
         "packages/core/dev-delivery-warrant.js#settleDevDeliveryTerminalEvent",
         "packages/core/dev-delivery-proof.js#SOURCE_QUALIFICATION_PROOF_SCHEMA",
@@ -23659,20 +23837,22 @@
       "specifier": "@kungfu-tech/buildchain/release-train",
       "export": "./release-train",
       "target": "./packages/core/release-train.js",
-      "digest": "sha256:16ea77f54dde016af95de9b2c18bfdb925f13fc3d263819eacd1100a111731c4",
+      "digest": "sha256:87689dcbf4b7d2fc1e5be41193a695ebf28f2e28e32df1f41661ae9c828614b4",
       "summary": "Frozen Release Cut identity, rooted Release Train transitions, Dev observations, supersession, replay, and legacy read compatibility APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 15,
+      "symbolCount": 19,
       "symbolIds": [
+        "packages/core/release-train.js#createReleaseBlockerRepair",
         "packages/core/release-train.js#createReleaseCut",
         "packages/core/release-train.js#createReleaseTrain",
         "packages/core/release-train.js#LEGACY_DEV_ALPHA_CANDIDATE_STATE_SCHEMA",
         "packages/core/release-train.js#observeReleaseTrain",
         "packages/core/release-train.js#readReleaseTrain",
+        "packages/core/release-train.js#RELEASE_BLOCKER_REPAIR_CONTRACT",
         "packages/core/release-train.js#RELEASE_CUT_CONTRACT",
         "packages/core/release-train.js#RELEASE_TRAIN_CONTRACT",
         "packages/core/release-train.js#RELEASE_TRAIN_OBSERVATION_CONTRACT",
@@ -23680,7 +23860,9 @@
         "packages/core/release-train.js#RELEASE_TRAIN_SUPERSESSION_CAUSES",
         "packages/core/release-train.js#RELEASE_TRAIN_TRANSITION_CONTRACT",
         "packages/core/release-train.js#releaseTrainRoot",
+        "packages/core/release-train.js#settleReleaseBlockerDevLanding",
         "packages/core/release-train.js#transitionReleaseTrain",
+        "packages/core/release-train.js#validateReleaseBlockerRepair",
         "packages/core/release-train.js#validateReleaseCut",
         "packages/core/release-train.js#validateReleaseTrain"
       ],
@@ -24136,7 +24318,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:2cf140428bebd03ec152a86d05231927b54111db4b07bf8053306f9bc3521b20"
+      "digest": "sha256:ac0e20135882aa89c773de0783eb0a36f6ec92cce0f2d2d28224e5457b0ff155"
     },
     {
       "id": "build-facts",

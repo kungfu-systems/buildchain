@@ -1,10 +1,9 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-08-10T07:48:36.957Z",
-  "publishedAt": "2026-08-10T07:48:36.957Z",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
   "reproducible": true,
-  "timestampPolicy": "ci-injected",
+  "timestampPolicy": "source-date-epoch",
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
@@ -13,13 +12,11 @@
     "packages/core/README.md",
     "package.json#exports",
     "tests/buildchain-inventory.json",
-    "sourceRevision",
     "sourceDateEpoch",
     "package content",
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "17ef29eb398908be9f833209ba599e4e2e55fe87",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +34,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.7-alpha.1",
+    "version": "3.0.8-alpha.0",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -133,7 +130,7 @@
       "path": "docs/release-train.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:7e97af1d4b32e34e944e5137d8a4d3b4efdd357e0542b4f483d941bc003be495"
+      "digest": "sha256:dccd34936e68f9fdfdcc30729634bbc38341c587211c1a20c3de70d649ba1619"
     },
     {
       "id": "release-propagation",
@@ -245,7 +242,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2cf140428bebd03ec152a86d05231927b54111db4b07bf8053306f9bc3521b20"
+      "digest": "sha256:ac0e20135882aa89c773de0783eb0a36f6ec92cce0f2d2d28224e5457b0ff155"
     },
     {
       "id": "build-facts",
@@ -349,7 +346,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:6af44926f8138932aeb606bb264b19a40a273ce7bea7bad9b021bb9aa542d61b"
+      "digest": "sha256:68934ebe8330a13376d1b71d1a875d67d2970b1036e0f185a923175ca2a257fe"
     },
     {
       "id": "web-surface-deployments",

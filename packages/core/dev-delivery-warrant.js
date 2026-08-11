@@ -2,7 +2,9 @@ import { devDeliveryClone as clone, devDeliveryContentRoot, devDeliveryExactRoot
 import { chainedDevDeliveryAttemptInput, createDevDeliveryCandidateIdentity, validateDevDeliveryCandidateChain } from "./dev-delivery-candidate-identity.js";
 import { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA, createCancelQueuedDevDeliveryCandidate } from "./dev-delivery-warrant-cancellation.js";
 import { DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA, createDevDeliveryTerminalSettler } from "./dev-delivery-warrant-settlement.js";
+import { compareReleaseBlockerPriority, normalizeReleaseBlockerPriorityClaim } from "./release-blocker-priority.js";
 export { devDeliveryContentRoot } from "./dev-delivery-common.js";
+export { RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA, createReleaseBlockerPriorityClaim } from "./release-blocker-priority.js";
 export { SOURCE_QUALIFICATION_PROOF_SCHEMA, PROJECT_CUT_REPLAY_PROOF_SCHEMA, INTEGRATION_DELIVERY_PROOF_SCHEMA, classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "./dev-delivery-proof.js";
 export { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA };
 export const DEV_DELIVERY_QUEUE_CONTRACT = "kungfu-buildchain-dev-delivery-warrant-queue";
@@ -60,7 +62,7 @@ function normalizeCandidate(input, expected) {
   if (!["queued", "selected", "proving", "waiting", "blocked", ...TERMINAL_STATES].includes(status)) {
     throw new Error(`unsupported candidate status ${status || "<empty>"}`);
   }
-  return {
+  const candidate = {
     ...identity,
     sourceHead: exactSha(input.sourceHead, "sourceHead"),
     sourcePatchRoot: exactRoot(input.sourcePatchRoot, "sourcePatchRoot"),
@@ -78,6 +80,8 @@ function normalizeCandidate(input, expected) {
     status,
     terminal: input.terminal || null,
   };
+  if (Object.hasOwn(input, "releaseBlockerPriority")) candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(input.releaseBlockerPriority, candidate, expected);
+  return candidate;
 }
 
 function queueBody(queue) {
@@ -140,6 +144,7 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
     if (activeCandidates.length !== 1 || activeCandidates[0].candidateId !== warrant.candidateId) {
       throw new Error("exactly one active candidate must match the active Warrant");
     }
+    if (warrant.releaseBlockerPriority?.claimRoot !== activeCandidates[0].releaseBlockerPriority?.claimRoot) throw new Error("active Warrant release-blocker priority drift");
   } else if (queue.candidates.some((candidate) => ["selected", "proving", "waiting", "blocked"].includes(candidate.status))) {
     throw new Error("active candidate exists without an active Warrant");
   }
@@ -180,6 +185,7 @@ function submissionReceipt({ before, after, candidate, action, now }) {
     dependencyRoot: candidate.dependencyRoot,
     toolchainRoot: candidate.toolchainRoot,
     sourceWorkflowRunId: candidate.sourceWorkflowRunId,
+    ...(Object.hasOwn(candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: candidate.releaseBlockerPriority } : {}),
     deliveryClass: candidate.deliveryClass,
     priority: candidate.priority,
     retainedEnqueuedAt: candidate.enqueuedAt,
@@ -219,7 +225,7 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
           throw new Error(`candidate ${attemptedCandidate.candidateId} is terminal and cannot be resubmitted`);
         }
         const exactProofFields = ["sourcePatchRoot", "sourceProofRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot"];
-        const exactProofMatches = exactProofFields.every((field) => existing[field] === attemptedCandidate[field]);
+        const exactProofMatches = exactProofFields.every((field) => existing[field] === attemptedCandidate[field]) && existing.releaseBlockerPriority?.claimRoot === attemptedCandidate.releaseBlockerPriority?.claimRoot;
         if (existing.sourceHead === attemptedCandidate.sourceHead && exactProofMatches) {
           action = "duplicate-noop";
           selected = existing;
@@ -235,6 +241,8 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
           const headChanged = existing.sourceHead !== attemptedCandidate.sourceHead;
           existing.sourceHead = attemptedCandidate.sourceHead;
           for (const field of exactProofFields) existing[field] = attemptedCandidate[field];
+          if (Object.hasOwn(attemptedCandidate, "releaseBlockerPriority")) existing.releaseBlockerPriority = attemptedCandidate.releaseBlockerPriority;
+          else delete existing.releaseBlockerPriority;
           existing.updatedAt = currentTime;
           existing.attempts += 1;
           existing.status = "queued";
@@ -270,6 +278,7 @@ function effectivePriority(candidate, policy, now) {
     basePriority: DEV_DELIVERY_PRIORITIES[candidate.priority],
     agingBoost,
     score: Math.min(policy.maxPriority, DEV_DELIVERY_PRIORITIES[candidate.priority] + agingBoost),
+    releaseBlocker: Boolean(candidate.releaseBlockerPriority),
   };
 }
 
@@ -282,7 +291,7 @@ export function rankDevDeliveryCandidates(queueInput, { now = new Date().toISOSt
       candidate,
       priority: effectivePriority(candidate, queue.policy, currentTime),
     }))
-    .sort((left, right) => right.priority.score - left.priority.score || left.candidate.enqueuedAt.localeCompare(right.candidate.enqueuedAt) || left.candidate.candidateId.localeCompare(right.candidate.candidateId));
+    .sort((left, right) => compareReleaseBlockerPriority(left, right) || right.priority.score - left.priority.score || left.candidate.enqueuedAt.localeCompare(right.candidate.enqueuedAt) || left.candidate.candidateId.localeCompare(right.candidate.candidateId));
 }
 
 function warrantToken(input) {
@@ -371,6 +380,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
         dependencyRoot: candidate.dependencyRoot,
         toolchainRoot: candidate.toolchainRoot,
         sourceWorkflowRunId: candidate.sourceWorkflowRunId,
+        ...(Object.hasOwn(candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: candidate.releaseBlockerPriority } : {}),
         deliveryClass: candidate.deliveryClass,
         generation: next.fencingCounter,
         expectedOldStateRoot: before.stateRoot,
@@ -390,7 +400,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
   const receipt = {
     schema: DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA,
     selected: true,
-    reason: selected.priority.agingBoost > 0 ? "fifo-aging-bounded-priority" : "fifo-bounded-priority",
+    reason: selected.priority.releaseBlocker ? "release-blocker-bounded-priority" : selected.priority.agingBoost > 0 ? "fifo-aging-bounded-priority" : "fifo-bounded-priority",
     repository: transaction.after.repository,
     protectedBase: transaction.after.protectedBase,
     candidateId: transaction.result.candidate.candidateId,
@@ -406,6 +416,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
     dependencyRoot: transaction.result.candidate.dependencyRoot,
     toolchainRoot: transaction.result.candidate.toolchainRoot,
     sourceWorkflowRunId: transaction.result.candidate.sourceWorkflowRunId,
+    ...(Object.hasOwn(transaction.result.candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: transaction.result.candidate.releaseBlockerPriority } : {}),
     deliveryClass: transaction.result.candidate.deliveryClass,
     queueAgeSeconds: selected.priority.ageSeconds,
     basePriority: selected.priority.basePriority,

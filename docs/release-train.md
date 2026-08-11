@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-10
-  visible_context: Buildchain v3 release candidate, recovery, Dev to Alpha Candidate Patrol, Warrant, publication transaction, and release governance sources.
+  generated_at: 2026-08-11
+  visible_context: Buildchain v3 release candidate, recovery, Dev to Alpha Candidate Patrol, rooted blocker repair, Warrant, publication transaction, and release governance sources.
   invisible_context_boundary: Live provider state and credentials were not read.
 ---
 
@@ -38,8 +38,9 @@ own those effects and persist the rooted contract in their declared store.
 - a canonical creation timestamp.
 
 The resulting `cutRoot` covers all of those fields. A generation greater than
-one must name the prior cut root and one of four supersession causes:
+one must name the prior cut root and one of five supersession causes:
 
+- `release-blocker-repair` (reserved for the rooted repair contract below);
 - `incompatible-semantics`;
 - `alpha-base-incompatibility`;
 - `invalid-authority`; or
@@ -73,6 +74,23 @@ an invalid transition fails closed.
 `observeReleaseTrain()` appends a rooted development-head observation without
 changing `trainRoot`, `cutRoot`, candidate identity, generation, or state. The
 same exact observation is idempotent.
+
+## Rooted release-blocker repair
+
+`createReleaseBlockerRepair()` starts only from the active train's exact
+`repair-required` state root. It creates generation N+1 from the frozen cut,
+changing only the candidate commit and tree while preserving the original Dev
+cut, Alpha base, runtime, route, and prior cut root. The prior train receives an
+explicit `release-blocker-repair` supersession transition; later Dev movement
+alone still cannot advance a generation.
+
+The repair binds one semantic patch root to a cut landing and a Dev
+forward-port. A successful cut landing makes the successor candidate buildable
+even while the Dev forward-port is in conflict. Publication remains blocked
+until `settleReleaseBlockerDevLanding()` compare-and-swap checks the repair root
+and records a Dev landing with the same patch root. A landed but different Dev
+patch produces a rooted `cut-dev-patch-root-mismatch` gate rather than
+publication authority.
 
 Buildchain v3 Candidate Patrol resolves the open managed candidate's persisted
 train before it considers a new qualified development head. It reads back the

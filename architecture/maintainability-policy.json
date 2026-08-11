@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 299,
-    "maxHandMaintainedSourceLines": 116715,
+    "maxHandMaintainedSourceFiles": 300,
+    "maxHandMaintainedSourceLines": 117122,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23477,
     "latestTransition": "Stable and alpha Buildchain channels enforce one major-independent shell, runtime, and lock identity.",
-    "rationale": "One bounded channel-identity module classifies official, release, train, authority, and exact-SHA refs without major-specific branches. The contract-lock evaluator applies the triad before unchanged or compatibility exits, while five reusable surfaces remove the legacy unavailable-runtime success fallback. The generated public build router adds static alpha and stable advanced-workflow jobs so runtime selection cannot dynamically change shell class. This exact one-file, 148-source-line and 131-workflow-line increase is covered by cross-major permutation tests and Buildchain self-dogfood and cannot grow implicitly."
+    "rationale": "The existing rooted release-blocker repair and bounded non-preemptive Warrant priority remain intact. One additional bounded channel-identity module classifies official, release, train, authority, and exact-SHA refs without major-specific branches. The contract-lock evaluator applies the triad before unchanged or compatibility exits, while five reusable surfaces remove the legacy unavailable-runtime success fallback. The generated public build router adds static alpha and stable advanced-workflow jobs so runtime selection cannot dynamically change shell class. This exact one-file, 152-source-line and 131-workflow-line increase is covered by cross-major permutation tests and Buildchain self-dogfood and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,18 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/dev-delivery-warrant.js": {
+      "maxLines": 611,
+      "rationale": "The existing durable queue adds only the narrow release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/release-blocker-priority.js": {
+      "maxLines": 193,
+      "rationale": "The bounded adapter creates and validates one exact dual-landing priority claim, keeping repair-contract parsing and unrelated-work rejection outside the durable Warrant state machine; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/release-train.js": {
+      "maxLines": 740,
+      "rationale": "The Release Train contract adds one rooted successor-repair lifecycle with compare-and-swap, frozen origin provenance, exact cut and Dev patch identity, independent candidate-build eligibility, publication gating and deterministic validation; this exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/buildchain-compatibility-proof.js": {
       "maxLines": 609,
       "rationale": "The compatibility authority now performs channel binding before all legacy early exits while retaining rooted additive and breaking-drift proofs in the existing single evaluator module. This exact reviewed ceiling cannot grow implicitly."
