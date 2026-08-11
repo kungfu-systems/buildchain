@@ -203,11 +203,11 @@ buildchain collect
 
 - Help: `buildchain collect github-release --help`
 - Canonical id: `collect-github-release`
-- Options: `--anchor-manifest-json`, `--assets-dir`, `--assets-json`, `--base-passport-json`, `--build-facts-json`, `--build-summary-json`, `--dist-tag-evidence-json`, `--github-artifact-attestation-policy-json`, `--impact-json`, `--invariant-passport-cmd`, `--invariant-passport-json`, `--json`, `--kfd-1-witness-json`, `--kfd-2-claim-json`, `--kfd-3-artifact-verify-cmd`, `--kfd-3-artifact-witness-json`, `--kfd-3-prebuild-witness-json`, `--kfd-agent-hub-evidence-json`, `--kfd-product-gate-json`, `--kfd-support-matrix-json`, `--output-dir`, `--package-set-json`, `--platform-manifest-json`, `--product-name`, `--publish-evidence-json`, `--publish-json`, `--release-evidence-json`, `--release-extra-json`, `--release-json`, `--repository`, `--require-base-kfd`, `--tag`, `--transaction-json`, `--trusted-publishing-json`
+- Options: `--anchor-manifest-json`, `--assets-dir`, `--assets-json`, `--base-passport-json`, `--build-facts-json`, `--build-summary-json`, `--dist-tag-evidence-json`, `--github-artifact-attestation-policy-json`, `--impact-json`, `--invariant-passport-cmd`, `--invariant-passport-json`, `--json`, `--kfd-1-witness-json`, `--kfd-2-claim-json`, `--kfd-3-artifact-verify-cmd`, `--kfd-3-artifact-witness-json`, `--kfd-3-prebuild-witness-json`, `--kfd-adopter-manifest-json`, `--kfd-agent-hub-evidence-json`, `--kfd-product-gate-json`, `--kfd-support-matrix-json`, `--output-dir`, `--package-set-json`, `--platform-manifest-json`, `--product-name`, `--publish-evidence-json`, `--publish-json`, `--release-evidence-json`, `--release-extra-json`, `--release-json`, `--repository`, `--require-base-kfd`, `--tag`, `--transaction-json`, `--trusted-publishing-json`
 - Syntax:
 
 ```text
-buildchain collect github-release --tag <tag> [--repository <owner/repo>] [--assets-dir <dir>] [--assets-json <json-or-path>] [--release-json <json-or-path>] [--package-set-json <json-or-path>] [--product-name <name>] [--publish-evidence-json <json-or-path>] [--trusted-publishing-json <json-or-path>] [--transaction-json <json-or-path>] [--anchor-manifest-json <json-or-path>] [--impact-json <json-or-path>] [--build-summary-json <json-or-path>] [--build-facts-json <json-or-path>]... [--platform-manifest-json <json-or-path>]... [--dist-tag-evidence-json <json-or-path>] [--kfd-1-witness-json <json-or-path>]... [--kfd-2-claim-json <json-or-path>]... [--kfd-3-prebuild-witness-json <json-or-path>]... [--kfd-3-artifact-witness-json <json-or-path>]... [--kfd-3-artifact-verify-cmd <command>] [--kfd-support-matrix-json <json-or-path>] [--kfd-product-gate-json <json-or-path>]... [--invariant-passport-json <json-or-path>]... [--invariant-passport-cmd <command>] [--release-evidence-json <json-or-path>]... [--github-artifact-attestation-policy-json <json-or-path>]... [--kfd-agent-hub-evidence-json <json-or-path>] [--base-passport-json <json-or-path>] [--require-base-kfd] [--release-extra-json <json-or-path>] [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
+buildchain collect github-release --tag <tag> [--repository <owner/repo>] [--assets-dir <dir>] [--assets-json <json-or-path>] [--release-json <json-or-path>] [--package-set-json <json-or-path>] [--product-name <name>] [--publish-evidence-json <json-or-path>] [--trusted-publishing-json <json-or-path>] [--transaction-json <json-or-path>] [--anchor-manifest-json <json-or-path>] [--impact-json <json-or-path>] [--build-summary-json <json-or-path>] [--build-facts-json <json-or-path>]... [--platform-manifest-json <json-or-path>]... [--dist-tag-evidence-json <json-or-path>] [--kfd-1-witness-json <json-or-path>]... [--kfd-2-claim-json <json-or-path>]... [--kfd-3-prebuild-witness-json <json-or-path>]... [--kfd-3-artifact-witness-json <json-or-path>]... [--kfd-3-artifact-verify-cmd <command>] [--kfd-adopter-manifest-json <json-or-path>] [--kfd-support-matrix-json <json-or-path>] [--kfd-product-gate-json <json-or-path>]... [--invariant-passport-json <json-or-path>]... [--invariant-passport-cmd <command>] [--release-evidence-json <json-or-path>]... [--github-artifact-attestation-policy-json <json-or-path>]... [--kfd-agent-hub-evidence-json <json-or-path>] [--base-passport-json <json-or-path>] [--require-base-kfd] [--release-extra-json <json-or-path>] [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
 ```
 
 ## `create`
@@ -1230,22 +1230,22 @@ buildchain kfd status [--cwd <dir>] [--json]
 
 - Help: `buildchain kfd support project --help`
 - Canonical id: `kfd-support`
-- Options: `--checked-at`, `--expected-source-sha`, `--gate-json`, `--json`, `--matrix-json`, `--output`
+- Options: `--checked-at`, `--expected-source-sha`, `--json`, `--manifest-gate-json`, `--manifest-json`, `--output`
 - Syntax:
 
 ```text
-buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>... [--expected-source-sha <sha>] [--checked-at <date-time>] [--output <file>] [--json]
+buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json> [--expected-source-sha <sha>] [--checked-at <date-time>] [--output <file>] [--json]
 ```
 
 ### `buildchain kfd support verify`
 
 - Help: `buildchain kfd support verify --help`
 - Canonical id: `kfd-support`
-- Options: `--checked-at`, `--expected-source-sha`, `--json`, `--projection-json`
+- Options: `--checked-at`, `--expected-source-sha`, `--json`, `--manifest-gate-json`, `--manifest-json`, `--projection-json`
 - Syntax:
 
 ```text
-buildchain kfd support verify --projection-json <file-or-json> [--expected-source-sha <sha>] [--checked-at <date-time>] [--json]
+buildchain kfd support verify --projection-json <file-or-json> --manifest-json <file-or-json> --manifest-gate-json <file-or-json> [--expected-source-sha <sha>] [--checked-at <date-time>] [--json]
 ```
 
 ### `buildchain kfd upstream check`

@@ -80,7 +80,6 @@ async function planAlphaPublication(context) {
     currentAlphaDevSha,
   };
 }
-
 function needsContainedAlphaFinalization(context, plan, recovery) {
   return Boolean(
     plan.currentAlpha &&
@@ -241,6 +240,7 @@ async function finalizeContainedAlpha(context, state) {
       passportKfd2ClaimJsons: [],
       passportKfd3PrebuildWitnessJsons: [],
       passportKfd3ArtifactWitnessJsons: [],
+      passportKfdAdopterManifestJson: "",
       passportKfdSupportMatrixJson: "",
       passportKfdProductGateJsons: [],
       passportInvariantPassportJsons: [],

@@ -2079,6 +2079,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "release-passport-kfd-adopter-manifest-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-passport-kfd-product-gate-jsons": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -2209,7 +2213,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:83bc2f7d57ad3500e0b2983314aa5fdaa0dff1f78ef011af94cde760b86a010f"
+      "digest": "sha256:4d44d0f729fbc112aa309ed22e74b9f1401b0470b99c1e6061c278babe5e4b8b"
     },
     {
       "schemaVersion": 1,
@@ -2402,5 +2406,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:e9f5716c5298730bcab51a9e2f2316df8b4a7cec7ce609a7a8808928a48edd1e"
+  "digest": "sha256:af18b46d8441d29c319a30ba30dfed9707bf2188c8eac868de34db366efef880"
 }

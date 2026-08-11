@@ -242,6 +242,11 @@ async function handleCollectCommand({ args, runScript, packageVersion }) {
       "kfd-3-artifact-verify-cmd",
       "",
     ),
+    kfdAdopterManifestJson: readFlag(
+      collectArgs,
+      "kfd-adopter-manifest-json",
+      "",
+    ),
     kfdSupportMatrixJson: readFlag(collectArgs, "kfd-support-matrix-json", ""),
     kfdProductGateJsons: readRepeatedFlag(collectArgs, "kfd-product-gate-json"),
     invariantPassportJsons: readRepeatedFlag(

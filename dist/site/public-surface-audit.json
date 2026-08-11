@@ -320,7 +320,7 @@
       {
         "id": "kfd-support",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>..."
+        "usage": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>"
       },
       {
         "id": "kfd-upstream-check",
@@ -1054,6 +1054,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -1077,7 +1078,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 110,
+        "inputCount": 111,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2561,6 +2562,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -2584,7 +2586,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 101,
+        "inputCount": 102,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2954,6 +2956,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -2973,7 +2976,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 80
+        "inputCount": 81
       },
       {
         "id": "release-tail",
@@ -7992,9 +7995,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "e7b90e95dabcffb3fecb8e84cec48d7a99261c5e90732aff0ebc174b01c4e35c",
-    "workflowRegistryDigest": "80f511f968d4ef6556002d8316fa340bd01c95048dc55bdf8921f58a2da8e8f1",
-    "pageRegistryDigest": "8c3ae9f745ec39f985ddb077a92652d9f2e99e82470826e12a416ce1ff43bd9f"
+    "cliRegistryDigest": "099c0db9c5346942aee236af2cb7b6a7a91fbb2c54ebb17b7a2544a339c00d40",
+    "workflowRegistryDigest": "17130c1d1740c3432ac78024f4b84dbc7ded066b1ea9de7abb89d44399265d24",
+    "pageRegistryDigest": "1727a08908f3e35ff3b6479de8604b6c5adcb8c7367297fd33e40969facf4038"
   },
   "comparison": {
     "missingCliRegistry": [],
