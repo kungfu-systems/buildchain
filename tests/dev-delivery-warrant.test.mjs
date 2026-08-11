@@ -364,6 +364,35 @@ test("terminal settlement closes the exact active Warrant and repeats idempotent
   );
 });
 
+test("terminal settlement selects the active chained retry when its predecessor has the same source head", () => {
+  const submitted = submit(queue(), 149, "2026-08-04T00:00:00Z");
+  const first = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  const failed = closeDevDeliveryWarrant(first.queue, first.warrant, {
+    outcome: "terminal-failure",
+    evidenceRoot: ROOTS.evidence,
+    reason: "native command failed",
+    now: "2026-08-04T00:01:00Z",
+  });
+  const retried = submitDevDeliveryCandidate(failed.queue, candidate(149), { now: "2026-08-04T00:02:00Z" });
+  const second = selectDevDeliveryWarrant(retried.queue, { now: "2026-08-04T00:02:01Z" });
+
+  const settled = settleDevDeliveryTerminalEvent(second.queue, {
+    pullRequestNumber: 149,
+    sourceHead: second.warrant.sourceHead,
+    fencingToken: second.warrant.fencingToken,
+    leaseGeneration: second.warrant.generation,
+    outcome: "merged",
+    evidenceRoot: ROOTS.context,
+    reason: "retry merge group passed",
+  }, { now: "2026-08-04T00:03:00Z" });
+
+  assert.equal(settled.receipt.action, "terminal-closeout");
+  assert.equal(settled.receipt.candidateId, second.warrant.candidateId);
+  assert.equal(settled.queue.activeWarrant, null);
+  assert.equal(settled.queue.candidates[0].status, "terminal-failure");
+  assert.equal(settled.queue.candidates[1].status, "merged");
+});
+
 test("duplicate terminal settlement remains a no-op after the next Warrant is selected", () => {
   let state = submit(queue(), 149, "2026-08-04T00:00:00Z").queue;
   state = submitDevDeliveryCandidate(state, candidate(150), { now: "2026-08-04T00:00:01Z" }).queue;

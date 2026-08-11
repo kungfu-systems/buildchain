@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -6,6 +7,7 @@ import test from "node:test";
 
 import { createNativeQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 import {
+  composeCandidate,
   GitHubTwoPhaseClient,
   runTwoPhaseDelivery,
 } from "../scripts/dev-delivery-two-phase.mjs";
@@ -13,6 +15,72 @@ import {
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const HEAD = "a".repeat(40);
 const BASE = "b".repeat(40);
+
+test("candidate replay composes a divergent base without ambient Git identity", (t) => {
+  const directory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-two-phase-compose-"),
+  );
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const git = (...args) =>
+    spawnSync("git", ["-C", directory, ...args], { encoding: "utf8" });
+  assert.equal(git("init").status, 0);
+  fs.writeFileSync(path.join(directory, "source.txt"), "base\n");
+  assert.equal(git("add", "source.txt").status, 0);
+  assert.equal(
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.com",
+      "commit",
+      "-m",
+      "base",
+    ).status,
+    0,
+  );
+  const base = git("rev-parse", "HEAD").stdout.trim();
+  assert.equal(git("switch", "-c", "candidate").status, 0);
+  fs.writeFileSync(path.join(directory, "candidate.txt"), "candidate\n");
+  assert.equal(git("add", "candidate.txt").status, 0);
+  assert.equal(
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.com",
+      "commit",
+      "-m",
+      "candidate",
+    ).status,
+    0,
+  );
+  const head = git("rev-parse", "HEAD").stdout.trim();
+  assert.equal(git("switch", "--detach", base).status, 0);
+  fs.writeFileSync(path.join(directory, "base.txt"), "advanced base\n");
+  assert.equal(git("add", "base.txt").status, 0);
+  assert.equal(
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.com",
+      "commit",
+      "-m",
+      "advance base",
+    ).status,
+    0,
+  );
+  const advancedBase = git("rev-parse", "HEAD").stdout.trim();
+  assert.equal(git("config", "user.name", "").status, 0);
+  assert.equal(git("config", "user.email", "").status, 0);
+
+  assert.doesNotThrow(() => composeCandidate(directory, head, advancedBase));
+  assert.equal(git("rev-parse", "HEAD").stdout.trim(), head);
+  assert.equal(
+    fs.readFileSync(path.join(directory, "base.txt"), "utf8"),
+    "advanced base\n",
+  );
+});
 
 test("GitHub base delta attributes both sides of a rename", async () => {
   const client = new GitHubTwoPhaseClient({
