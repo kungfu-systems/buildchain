@@ -7,6 +7,7 @@ import {
   devDeliveryRepository as repository,
   devDeliveryText as text,
 } from "./dev-delivery-common.js";
+import { evaluateBuildchainChannelBinding } from "./buildchain-channel-identity.js";
 
 export const BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA = "kungfu.buildchain.compatibility-proof/v1";
 export const BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA = "kungfu.buildchain.compatibility-proof-registry/v1";
@@ -437,6 +438,19 @@ function evaluateSurfaceRelation({ oldSurface, nextSurface, proofRegistry, major
   };
 }
 
+function evaluateChannelBinding({ lock, workflowShellRef, runtimeRef, expectedChannel, expectedMajor, allowOpaqueRuntime }) {
+  if (!workflowShellRef && !expectedChannel && !expectedMajor) return null;
+  return evaluateBuildchainChannelBinding({
+    workflowShellRef,
+    runtimeRef,
+    lockRef: lock?.buildchain?.ref || "",
+    lockMajorLine: lock?.buildchain?.majorLine || "",
+    expectedChannel,
+    expectedMajor,
+    allowOpaqueRuntime,
+  });
+}
+
 export function evaluateBuildchainContractLock({
   lock,
   current,
@@ -444,11 +458,29 @@ export function evaluateBuildchainContractLock({
   runtimeSha = "",
   runtimeClass = "",
   compatibilityPolicy = "",
+  workflowShellRef = "",
+  expectedChannel = "",
+  expectedMajor = "",
+  allowOpaqueRuntime = false,
 } = {}) {
   if (!current || current.contract !== BUILDCHAIN_CONTRACT) {
     throw new Error("current must be a Buildchain runtime contract world");
   }
   assertBuildchainCompatibilityProjection(current);
+  const binding = evaluateChannelBinding({
+    lock, workflowShellRef, runtimeRef, expectedChannel, expectedMajor, allowOpaqueRuntime,
+  });
+  if (binding?.ok === false) {
+    return {
+      ok: false,
+      status: binding.status,
+      drift: false,
+      compatible: false,
+      issueRecommended: false,
+      reasons: binding.reasons,
+      channelBinding: binding,
+    };
+  }
   if (!new Set(["stable", "alpha"]).has(runtimeClass)) {
     return {
       ok: true,

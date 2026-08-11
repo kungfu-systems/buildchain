@@ -1821,6 +1821,7 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
     runtimeRef: "v3-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
+    workflowShellRef: "v3-alpha",
   });
   assert.equal(
     canAdmitSelfDogfoodLockEvaluation({

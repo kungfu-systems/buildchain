@@ -105,8 +105,24 @@ export function resolveBuildchainChannel({
     if (channel !== "auto" && explicitRef.kind !== "override" && channel !== explicitRef.kind) {
       throw new Error(`buildchain-channel=${channel} conflicts with buildchain-ref=${explicitRef.ref}`);
     }
-    if (channel !== "auto" && explicitRef.kind === "override") {
-      throw new Error("train, authority, and exact-SHA buildchain-ref overrides require buildchain-channel=auto");
+    if (explicitRef.kind === "override") {
+      const lane = resolveBuildchainChannel({
+        requestedChannel: channel,
+        requestedRef: "",
+        publishChannel,
+        eventName,
+        gitRef,
+        releasePrerelease,
+        routerRef: `v${major}`,
+        packageVersion,
+      });
+      return {
+        ...lane,
+        major,
+        buildchainRef: explicitRef.ref,
+        selectionSource: "explicit-buildchain-ref+channel-evidence",
+        reason: `trusted runtime override ${explicitRef.ref} bound to ${lane.channel}`,
+      };
     }
     return {
       channel: explicitRef.kind,

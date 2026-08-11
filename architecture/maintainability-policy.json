@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 298,
-    "maxHandMaintainedSourceLines": 116567,
+    "maxHandMaintainedSourceFiles": 299,
+    "maxHandMaintainedSourceLines": 116715,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23346,
-    "latestTransition": "Candidate Patrol resumes the active Release Train before considering later Dev movement.",
-    "rationale": "Two bounded controller modules separate exact-SHA qualification from active Release Train reconciliation. They add candidate-tree, Alpha-base, runtime and route readback, rooted hold evidence, duplicate-observation idempotence, frozen-candidate resume, and line-stable deterministic playback without widening the pre-existing patrol script's debt. The reusable workflow adds exact runtime checkout plus Release Cut, generation, tree, drift and hold outputs. The concurrently landed standard KFD adopter-manifest authority and macOS Ohio capacity fallback remain intact. This exact combined two-file, 657-source-line and 48-workflow-line increase over the refreshed base is covered by focused negative tests and cannot grow implicitly."
+    "maxWorkflowLines": 23477,
+    "latestTransition": "Stable and alpha Buildchain channels enforce one major-independent shell, runtime, and lock identity.",
+    "rationale": "One bounded channel-identity module classifies official, release, train, authority, and exact-SHA refs without major-specific branches. The contract-lock evaluator applies the triad before unchanged or compatibility exits, while five reusable surfaces remove the legacy unavailable-runtime success fallback. The generated public build router adds static alpha and stable advanced-workflow jobs so runtime selection cannot dynamically change shell class. This exact one-file, 148-source-line and 131-workflow-line increase is covered by cross-major permutation tests and Buildchain self-dogfood and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/buildchain-compatibility-proof.js": {
+      "maxLines": 609,
+      "rationale": "The compatibility authority now performs channel binding before all legacy early exits while retaining rooted additive and breaking-drift proofs in the existing single evaluator module. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/kfd-adopter-manifest.js": {
       "maxLines": 390,
       "rationale": "The package-only adapter keeps published KFD verification, Buildchain-specific evidence constraints, decision and gate roots, and the one-way legacy projection in one bounded public authority seam. This exact reviewed ceiling cannot grow implicitly."
