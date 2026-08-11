@@ -18,6 +18,7 @@ import {
 
 const values = {
   repository: "kungfu-systems/kungfu",
+  accountId: "727884401362",
   campaignId: "mac-20260802-f60591b3",
   sourceSha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678",
   sourceRef: "refs/heads/ci/aws-macos-burst-qualification-20260802-f60591b3",
@@ -72,6 +73,36 @@ test("macOS controller binds one campaign host and one reusable instance", () =>
   );
 });
 
+test("macOS controller binds the Ohio fallback to its own stack and Budget", () => {
+  const plan = campaignPlan({
+    region: "us-east-2",
+    availabilityZone: "us-east-2a",
+    amiId: "ami-0621afa68ae41e7d4",
+    subnetId: "subnet-9af441f1",
+  });
+  assert.equal(
+    plan.aws.controlPlaneStack,
+    "kungfu-buildchain-macos-jit-us-east-2",
+  );
+  assert.equal(
+    plan.safety.budget.name,
+    "kungfu-buildchain-macos-jit-actual-spend",
+  );
+  assert.deepEqual(plan.safety.budget.dimensionFilter, {
+    usageTypes: ["HostUsage:mac2", "USE2-HostUsage:mac2"],
+    operation: "RunInstances",
+    regions: ["us-east-1", "us-east-2"],
+  });
+  assert.throws(
+    () => campaignPlan({ region: "us-west-2" }),
+    /region must be one of us-east-1, us-east-2/,
+  );
+  assert.throws(
+    () => campaignPlan({ region: "us-east-2" }),
+    /availabilityZone must belong to us-east-2/,
+  );
+});
+
 test("macOS controller requires a unique exact qualification label per job", () => {
   const plan = jobPlan();
   assert.equal(
@@ -93,10 +124,10 @@ test("macOS controller requires a unique exact qualification label per job", () 
   );
 });
 
-test("macOS AllocateHosts and RunInstances enforce DryRun, host placement, and stop reuse", () => {
+test("macOS AllocateHosts binds one host while RunInstances enforces DryRun and stop reuse", () => {
   const plan = campaignPlan();
-  const allocate = macosAllocateHostsArgs(plan, { dryRun: true });
-  assert.equal(allocate.includes("--dry-run"), true);
+  const allocate = macosAllocateHostsArgs(plan);
+  assert.equal(allocate.includes("--dry-run"), false);
   assert.equal(allocate[allocate.indexOf("--quantity") + 1], "1");
   const launch = macosRunInstancesArgs(plan, {
     hostId: "h-0123456789abcdef0",
@@ -153,6 +184,8 @@ fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "gh", 
 const joined = args.join(" ");
 if (joined.includes("commits/f60591b3565b3b75f1b9cfe402ab025e6beeb678")) {
   process.stdout.write(JSON.stringify({ sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678" }));
+} else if (joined.includes("actions/workflows/323846928")) {
+  process.stdout.write(JSON.stringify({ id: 323846928, state: "disabled_manually" }));
 } else if (joined.includes("actions/runs/30730000001")) {
   process.stdout.write(JSON.stringify({ event: "workflow_dispatch", head_sha: "f60591b3565b3b75f1b9cfe402ab025e6beeb678", head_repository: { full_name: "kungfu-systems/kungfu" }, status: "queued" }));
 } else if (joined.includes("actions/jobs/91450000001")) {
@@ -190,7 +223,18 @@ if (joined.includes("--cli-input-json")) {
   }
 }
 fs.appendFileSync(process.env.FAKE_COMMAND_LOG, JSON.stringify({ command: "aws", args, ...metadata }) + "\n");
-if (joined.includes("ec2 describe-hosts") && joined.includes("--host-ids")) {
+if (joined.includes("sts get-caller-identity")) {
+  process.stdout.write(JSON.stringify({ Account: "727884401362", Arn: "arn:aws:iam::727884401362:user/test", UserId: "test" }));
+} else if (joined.includes("cloudformation describe-stacks")) {
+  process.stdout.write(JSON.stringify({ Stacks: [{ StackStatus: "CREATE_COMPLETE", Outputs: [{ OutputKey: "KillSwitchTopic", OutputValue: "arn:aws:sns:us-east-1:727884401362:mac-kill" }] }] }));
+} else if (joined.includes("budgets describe-budget")) {
+  const usageTypes = process.env.FAKE_BUDGET_INVALID === "true" ? ["HostUsage:mac1"] : ["HostUsage:mac2", "USE2-HostUsage:mac2"];
+  process.stdout.write(JSON.stringify({ Budget: { BudgetName: "kungfu-buildchain-macos-jit-actual-spend", BudgetLimit: { Amount: "25", Unit: "USD" }, BudgetType: "COST", Metrics: ["UnblendedCost"], FilterExpression: { And: [{ Dimensions: { Key: "USAGE_TYPE", Values: usageTypes, MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "OPERATION", Values: ["RunInstances"], MatchOptions: ["EQUALS"] } }, { Dimensions: { Key: "REGION", Values: ["us-east-1", "us-east-2"], MatchOptions: ["EQUALS"] } }] } } }));
+} else if (joined.includes("budgets describe-notifications-for-budget")) {
+  process.stdout.write(JSON.stringify({ Notifications: [{ NotificationType: "ACTUAL", ComparisonOperator: "GREATER_THAN", Threshold: 80, ThresholdType: "PERCENTAGE" }, { NotificationType: "ACTUAL", ComparisonOperator: "GREATER_THAN", Threshold: 95, ThresholdType: "PERCENTAGE" }] }));
+} else if (joined.includes("budgets describe-subscribers-for-notification")) {
+  process.stdout.write(JSON.stringify({ Subscribers: [{ SubscriptionType: "SNS", Address: "arn:aws:sns:us-east-1:727884401362:mac-kill" }] }));
+} else if (joined.includes("ec2 describe-hosts") && joined.includes("--host-ids")) {
   process.stdout.write(JSON.stringify({ Hosts: [{ HostId: "h-0123456789abcdef0", State: "available", AvailabilityZone: "us-east-1a", AllocationTime: "2026-08-02T01:05:00Z", HostProperties: { InstanceType: "mac2.metal" }, Tags: [
     { Key: "kungfu:owner", Value: "buildchain" }, { Key: "kungfu:plane", Value: "aws-us-elastic-runner-burst" }, { Key: "kungfu:provider", Value: "macos-ec2-jit" }, { Key: "kungfu:campaign-id", Value: "mac-20260802-f60591b3" }, { Key: "kungfu:source-sha", Value: "f60591b3565b3b75f1b9cfe402ab025e6beeb678" }
   ] }] }));
@@ -208,8 +252,8 @@ if (joined.includes("ec2 describe-hosts") && joined.includes("--host-ids")) {
   process.stdout.write(JSON.stringify({ Subnets: [{ SubnetId: "subnet-fa5c77b7", AvailabilityZone: "us-east-1a" }] }));
 } else if (joined.includes("ec2 describe-volumes")) {
   process.stdout.write(JSON.stringify({ Volumes: [{ VolumeId: "vol-0123456789abcdef0", Encrypted: true }] }));
-} else if (joined.includes("ec2 allocate-hosts") && args.includes("--dry-run")) {
-  process.stderr.write("DryRunOperation"); process.exitCode = 255;
+} else if (joined.includes("iam simulate-principal-policy")) {
+  process.stdout.write(JSON.stringify({ EvaluationResults: [{ EvalActionName: "ec2:AllocateHosts", EvalDecision: process.env.FAKE_ALLOCATE_DENIED === "true" ? "implicitDeny" : "allowed", MissingContextValues: [] }] }));
 } else if (joined.includes("ec2 allocate-hosts")) {
   process.stdout.write(JSON.stringify({ HostIds: ["h-0123456789abcdef0"] }));
 } else if (joined.includes("ec2 run-instances") && args.includes("--dry-run")) {
@@ -245,6 +289,8 @@ if (joined.includes("ec2 describe-hosts") && joined.includes("--host-ids")) {
 
 function commonCliArgs() {
   return [
+    "--account-id",
+    values.accountId,
     "--campaign-id",
     values.campaignId,
     "--source-sha",
@@ -268,7 +314,7 @@ function commonCliArgs() {
   ];
 }
 
-test("macOS controller launches only after exact-source preflight and both AWS DryRuns", () => {
+test("macOS controller launches only after exact-source preflight, IAM simulation, and RunInstances DryRun", () => {
   const tempRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "mac-jit-launch-test-"),
   );
@@ -314,12 +360,115 @@ test("macOS controller launches only after exact-source preflight and both AWS D
     const runIndexes = commands
       .map((entry, index) => ({ entry, index }))
       .filter(({ entry }) => entry.args.includes("run-instances"));
-    assert.equal(allocateIndexes.length, 2);
+    assert.equal(allocateIndexes.length, 1);
     assert.equal(runIndexes.length, 2);
-    assert.equal(allocateIndexes[0].entry.args.includes("--dry-run"), true);
-    assert.equal(allocateIndexes[1].entry.args.includes("--dry-run"), false);
+    assert.equal(allocateIndexes[0].entry.args.includes("--dry-run"), false);
+    const simulationIndex = commands.findIndex((entry) =>
+      entry.args.includes("simulate-principal-policy"),
+    );
+    assert.equal(simulationIndex >= 0, true);
+    assert.equal(simulationIndex < allocateIndexes[0].index, true);
     assert.equal(runIndexes[0].entry.args.includes("--dry-run"), true);
     assert.equal(runIndexes[1].entry.args.includes("--dry-run"), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS controller fails closed before allocation when IAM simulation denies AllocateHosts", () => {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "mac-jit-allocation-denied-test-"),
+  );
+  const commandLog = path.join(tempRoot, "commands.jsonl");
+  installFakes(tempRoot);
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "scripts/aws-macos-jit-controller.mjs",
+        "launch-campaign",
+        "--execute",
+        "--confirm-source-sha",
+        values.sourceSha,
+        "--confirm-campaign-id",
+        values.campaignId,
+        "--created-at",
+        "2026-08-02T01:00:00Z",
+        ...commonCliArgs(),
+      ],
+      {
+        cwd: path.resolve(import.meta.dirname, ".."),
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${tempRoot}:${process.env.PATH}`,
+          FAKE_COMMAND_LOG: commandLog,
+          FAKE_ALLOCATE_DENIED: "true",
+        },
+      },
+    );
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /ec2:AllocateHosts IAM policy simulation did not allow allocation/,
+    );
+    const commands = fs
+      .readFileSync(commandLog, "utf8")
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true });
+  }
+});
+
+test("macOS controller fails closed before allocation when the Budget drifts", () => {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "mac-jit-budget-drift-test-"),
+  );
+  const commandLog = path.join(tempRoot, "commands.jsonl");
+  installFakes(tempRoot);
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "scripts/aws-macos-jit-controller.mjs",
+        "launch-campaign",
+        "--execute",
+        "--confirm-source-sha",
+        values.sourceSha,
+        "--confirm-campaign-id",
+        values.campaignId,
+        "--created-at",
+        "2026-08-02T01:00:00Z",
+        ...commonCliArgs(),
+      ],
+      {
+        cwd: path.resolve(import.meta.dirname, ".."),
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${tempRoot}:${process.env.PATH}`,
+          FAKE_COMMAND_LOG: commandLog,
+          FAKE_BUDGET_INVALID: "true",
+        },
+      },
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Budget identity or dimension filter mismatch/);
+    const commands = fs
+      .readFileSync(commandLog, "utf8")
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    assert.equal(
+      commands.some((entry) => entry.args.includes("allocate-hosts")),
+      false,
+    );
   } finally {
     fs.rmSync(tempRoot, { recursive: true });
   }

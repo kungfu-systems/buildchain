@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generatedAt": "2026-08-10T07:48:36.957Z",
+  "publishedAt": "2026-08-10T07:48:36.957Z",
   "reproducible": true,
-  "timestampPolicy": "source-date-epoch",
+  "timestampPolicy": "ci-injected",
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
@@ -12,11 +13,13 @@
     "packages/core/README.md",
     "package.json#exports",
     "tests/buildchain-inventory.json",
+    "sourceRevision",
     "sourceDateEpoch",
     "package content",
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
+  "sourceRevision": "17ef29eb398908be9f833209ba599e4e2e55fe87",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -34,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.7-alpha.0",
+    "version": "3.0.7-alpha.1",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -194,7 +197,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:36a4e60e91f500ea1dcdbef97cd0250a2c26562b98d8d3622e8e0f9df2aad23b"
+      "digest": "sha256:371030eda56d7a968d037e8b9a348e0211038506b8c0b14c539ec790ce884945"
     },
     {
       "id": "migration-inventory",
@@ -242,7 +245,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:759d07aec4258f194eec861fc31b33e16c63bb2475fcb41af7843837f8db2f6d"
+      "digest": "sha256:34f39632494c0f4d4961fd79fc8ac94466da56c29f04f09e706f402d98ef125c"
     },
     {
       "id": "build-facts",
@@ -282,7 +285,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:4741dc7661d40e14df8203d88a709b9becb08edc4313f5ad308c7e80bf672085"
+      "digest": "sha256:7f69bf3faf8c86b4af268f8e79d511f73de745e146a23809394074f816a372d7"
     },
     {
       "id": "publish-transaction",

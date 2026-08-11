@@ -39,17 +39,14 @@ export async function resolveArtifactSigningAuthorityRuntime({
   const ref = resolveAuthorityDispatchRef(authorityRef);
   const encodedRef = ref.split("/").map(encodeURIComponent).join("/");
   const response = await requestImpl(
-    `/repos/${authorityRepo}/git/ref/heads/${encodedRef}`,
+    `/repos/${authorityRepo}/commits/${encodedRef}`,
     { token: required(token, "Buildchain authority dispatch token") },
   );
-  if (response?.object?.type !== "commit") {
-    throw new Error(
-      "Buildchain signing authority ref does not resolve to a commit",
-    );
-  }
-  const sha = String(response.object.sha || "");
+  const sha = String(response?.sha || "");
   if (!/^[0-9a-f]{40}$/u.test(sha)) {
-    throw new Error("Buildchain signing authority runtime SHA must be exact");
+    throw new Error(
+      "Buildchain signing authority ref must resolve to an exact commit SHA",
+    );
   }
   return { ref, sha };
 }

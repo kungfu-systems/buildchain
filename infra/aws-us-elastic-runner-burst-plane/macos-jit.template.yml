@@ -35,6 +35,13 @@ Parameters:
     MinValue: 24
     MaxValue: 30
 
+Mappings:
+  MacRegion:
+    us-east-1:
+      StackName: kungfu-buildchain-macos-jit
+    us-east-2:
+      StackName: kungfu-buildchain-macos-jit-us-east-2
+
 Resources:
   RunnerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -48,7 +55,7 @@ Resources:
           Description: Outbound package, GitHub Actions, and AWS API access
       Tags:
         - Key: Name
-          Value: kungfu-buildchain-macos-jit
+          Value: !FindInMap [MacRegion, !Ref "AWS::Region", StackName]
         - Key: kungfu:owner
           Value: buildchain
         - Key: kungfu:plane
@@ -424,9 +431,30 @@ Resources:
           Unit: USD
         BudgetType: COST
         TimeUnit: MONTHLY
-        CostFilters:
-          TagKeyValue:
-            - user:kungfu:provider$macos-ec2-jit
+        Metrics:
+          - UnblendedCost
+        FilterExpression:
+          And:
+            - Dimensions:
+                Key: USAGE_TYPE
+                Values:
+                  - HostUsage:mac2
+                  - USE2-HostUsage:mac2
+                MatchOptions:
+                  - EQUALS
+            - Dimensions:
+                Key: OPERATION
+                Values:
+                  - RunInstances
+                MatchOptions:
+                  - EQUALS
+            - Dimensions:
+                Key: REGION
+                Values:
+                  - us-east-1
+                  - us-east-2
+                MatchOptions:
+                  - EQUALS
       NotificationsWithSubscribers:
         - Notification:
             ComparisonOperator: GREATER_THAN
@@ -464,3 +492,5 @@ Outputs:
     Value: !Ref Reaper
   KillSwitchTopic:
     Value: !Ref KillSwitchTopic
+  BudgetDimensionFilter:
+    Value: USAGE_TYPE=HostUsage:mac2,USE2-HostUsage:mac2;OPERATION=RunInstances;REGION=us-east-1,us-east-2

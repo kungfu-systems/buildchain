@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 295,
-    "maxHandMaintainedSourceLines": 114821,
+    "maxHandMaintainedSourceFiles": 296,
+    "maxHandMaintainedSourceLines": 115547,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23346,
     "latestTransition": "Candidate Patrol resumes the active Release Train before considering later Dev movement.",
-    "rationale": "Two bounded controller modules separate exact-SHA qualification from active Release Train reconciliation. They add candidate-tree, Alpha-base, runtime and route readback, rooted hold evidence, duplicate-observation idempotence, and frozen-candidate resume without widening the pre-existing patrol script's line, function-length or complexity debt. The reusable workflow adds exact runtime checkout plus Release Cut, generation, tree, drift and hold outputs. This exact two-file, 636-source-line and 48-workflow-line increase is covered by focused negative tests and cannot grow implicitly."
+    "rationale": "Two bounded controller modules separate exact-SHA qualification from active Release Train reconciliation. They add candidate-tree, Alpha-base, runtime and route readback, rooted hold evidence, duplicate-observation idempotence, and frozen-candidate resume without widening the pre-existing patrol script's line, function-length or complexity debt. The reusable workflow adds exact runtime checkout plus Release Cut, generation, tree, drift and hold outputs. The concurrently landed macOS Ohio capacity fallback remains intact. This exact combined two-file, 636-source-line and 48-workflow-line increase over the refreshed base is covered by focused negative tests and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

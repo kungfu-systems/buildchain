@@ -3,6 +3,7 @@
 import { digest } from "./aws-runner-burst-core.mjs";
 import {
   MACOS_EC2_JIT,
+  macosJitRegionConfig,
   macosJitRunnerLabel,
   macosJitRunnerLabels,
 } from "./aws-macos-jit-core.mjs";
@@ -69,9 +70,7 @@ function commonAws(values) {
     /^us-[a-z]+-\d$/,
     "region",
   );
-  if (region !== MACOS_EC2_JIT.region) {
-    throw new Error(`region must be ${MACOS_EC2_JIT.region}`);
-  }
+  const regionConfig = macosJitRegionConfig(region);
   const instanceType = exact(
     values.instanceType || MACOS_EC2_JIT.instanceType,
     /^mac2\.metal$/,
@@ -80,13 +79,18 @@ function commonAws(values) {
   if (instanceType !== MACOS_EC2_JIT.instanceType) {
     throw new Error(`instanceType must be ${MACOS_EC2_JIT.instanceType}`);
   }
+  const availabilityZone = exact(
+    values.availabilityZone,
+    /^us-[a-z]+-\d[a-z]$/,
+    "availabilityZone",
+  );
+  if (!availabilityZone.startsWith(region)) {
+    throw new Error(`availabilityZone must belong to ${region}`);
+  }
   return {
     region,
-    availabilityZone: exact(
-      values.availabilityZone,
-      /^us-[a-z]+-\d[a-z]$/,
-      "availabilityZone",
-    ),
+    availabilityZone,
+    controlPlaneStack: regionConfig.stack,
     instanceType,
     amiId: exact(values.amiId, /^ami-[0-9a-f]+$/, "amiId"),
     amiName: exact(values.amiName, /^[A-Za-z0-9._-]+$/, "amiName"),
@@ -123,6 +127,7 @@ export function createMacosJitCampaignPlan(values = {}) {
   const id = campaignId(values.campaignId);
   const boundSource = source(values);
   const aws = commonAws(values);
+  const regionConfig = macosJitRegionConfig(aws.region);
   const tags = ownershipTags({ id, sourceSha: boundSource.sha });
   const createdAt = iso(values.createdAt, "createdAt");
   const plan = {
@@ -130,6 +135,13 @@ export function createMacosJitCampaignPlan(values = {}) {
     contract: AWS_MACOS_JIT_CONTROLLER_CONTRACT,
     kind: "campaign-launch-plan",
     repository: repository(values.repository),
+    account: {
+      id: exact(values.accountId, /^\d{12}$/, "accountId"),
+    },
+    github: {
+      workflowId: MACOS_EC2_JIT.workflowId,
+      requiredState: "disabled_manually",
+    },
     campaign: { id, createdAt },
     source: boundSource,
     aws: {
@@ -158,18 +170,29 @@ export function createMacosJitCampaignPlan(values = {}) {
       exactSourceRequired: true,
       activeHostCeiling: MACOS_EC2_JIT.maxAcceptedHosts,
       activeInstanceCeiling: 1,
-      awsDryRunRequiredBeforeAllocation: true,
+      awsPermissionSimulationRequiredBeforeAllocation: true,
       awsDryRunRequiredBeforeLaunch: true,
       retainHostOnInstanceLaunchFailure: true,
       minimumHostAllocationHours: MACOS_EC2_JIT.minimumHostAllocationHours,
       maximumHostAllocationHours: MACOS_EC2_JIT.maximumHostAllocationHours,
       cleanupOwner: "scheduled-card-scoped-reaper",
+      budget: {
+        name: regionConfig.budgetName,
+        limitUsd: MACOS_EC2_JIT.budgetLimitUsd,
+        metrics: ["UnblendedCost"],
+        dimensionFilter: {
+          usageTypes: regionConfig.budgetUsageTypes,
+          operation: MACOS_EC2_JIT.budgetOperation,
+          regions: regionConfig.budgetRegions,
+        },
+        requiredActualThresholds: [80, 95],
+      },
     },
   };
   return { ...plan, digest: digest(plan) };
 }
 
-export function macosAllocateHostsArgs(plan, { dryRun = false } = {}) {
+export function macosAllocateHostsArgs(plan) {
   if (
     plan?.contract !== AWS_MACOS_JIT_CONTROLLER_CONTRACT ||
     plan.kind !== "campaign-launch-plan"
@@ -196,7 +219,6 @@ export function macosAllocateHostsArgs(plan, { dryRun = false } = {}) {
     "--output",
     "json",
   ];
-  if (dryRun) args.splice(2, 0, "--dry-run");
   return args;
 }
 

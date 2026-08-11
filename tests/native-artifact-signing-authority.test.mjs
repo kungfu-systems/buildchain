@@ -9,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
 import {
   githubRequest,
+  resolveArtifactSigningAuthorityRuntime,
   resolveAuthorityDispatchRef,
 } from "../scripts/dispatch-artifact-signing-authority.mjs";
 import { finalizeNativeArtifactSigningResult } from "../scripts/finalize-native-artifact-signing-result.mjs";
@@ -27,6 +28,50 @@ test("exact runtime pins dispatch through the formal protected authority ref", (
   assert.equal(
     resolveAuthorityDispatchRef(FORMAL_AUTHORITY_REF),
     FORMAL_AUTHORITY_REF,
+  );
+});
+
+test("authority runtime resolution accepts official tag and branch refs", async () => {
+  const calls = [];
+  const requestImpl = async (url) => {
+    calls.push(url);
+    return { sha: "5".repeat(40) };
+  };
+
+  assert.deepEqual(
+    await resolveArtifactSigningAuthorityRuntime({
+      authorityRepository: "kungfu-systems/buildchain",
+      authorityRef: "v3",
+      token: "test-token",
+      requestImpl,
+    }),
+    { ref: "v3", sha: "5".repeat(40) },
+  );
+  assert.deepEqual(
+    await resolveArtifactSigningAuthorityRuntime({
+      authorityRepository: "kungfu-systems/buildchain",
+      authorityRef: FORMAL_AUTHORITY_REF,
+      token: "test-token",
+      requestImpl,
+    }),
+    { ref: FORMAL_AUTHORITY_REF, sha: "5".repeat(40) },
+  );
+  assert.deepEqual(calls, [
+    "/repos/kungfu-systems/buildchain/commits/v3",
+    "/repos/kungfu-systems/buildchain/commits/authority/v3/v3.0/artifact-signing",
+  ]);
+});
+
+test("authority runtime resolution fails closed on a non-exact commit response", async () => {
+  await assert.rejects(
+    () =>
+      resolveArtifactSigningAuthorityRuntime({
+        authorityRepository: "kungfu-systems/buildchain",
+        authorityRef: "v3",
+        token: "test-token",
+        requestImpl: async () => ({ sha: "not-exact" }),
+      }),
+    /must resolve to an exact commit SHA/u,
   );
 });
 
