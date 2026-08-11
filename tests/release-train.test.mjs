@@ -9,11 +9,14 @@ import {
   RELEASE_TRAIN_CONTRACT,
   RELEASE_TRAIN_STATES,
   RELEASE_TRAIN_SUPERSESSION_CAUSES,
+  createReleaseBlockerRepair,
   createReleaseCut,
   createReleaseTrain,
   observeReleaseTrain,
   readReleaseTrain,
+  settleReleaseBlockerDevLanding,
   transitionReleaseTrain,
+  validateReleaseBlockerRepair,
   validateReleaseCut,
   validateReleaseTrain,
 } from "../packages/core/release-train.js";
@@ -27,6 +30,7 @@ const SHA = {
   laterDev: "6".repeat(40),
   replacement: "7".repeat(40),
   replacementTree: "8".repeat(40),
+  devLanding: "9".repeat(40),
 };
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 
@@ -201,6 +205,7 @@ test("the state machine exposes every declared lifecycle state", () => {
 
 test("only enumerated causes can supersede a candidate", () => {
   assert.deepEqual(RELEASE_TRAIN_SUPERSESSION_CAUSES, [
+    "release-blocker-repair",
     "incompatible-semantics",
     "alpha-base-incompatibility",
     "invalid-authority",
@@ -250,6 +255,118 @@ test("only enumerated causes can supersede a candidate", () => {
   );
   assert.equal(replacement.generation, 2);
   assert.equal(replacement.supersession.priorCutRoot, train.releaseCut.cutRoot);
+});
+
+function repairRequiredTrain() {
+  const train = createReleaseTrain(cutInput());
+  return transitionReleaseTrain(
+    train,
+    transitionInput(train, {
+      to: "repair-required",
+      event: "release-blocker-confirmed",
+      reason: "the frozen candidate requires a bounded repair",
+    }),
+  );
+}
+
+function repairInput(train, overrides = {}) {
+  return {
+    expectedStateRoot: train.state.stateRoot,
+    blockerRoot: ROOT("d"),
+    patchRoot: ROOT("e"),
+    cutCandidateSha: SHA.replacement,
+    cutCandidateTreeSha: SHA.replacementTree,
+    cutPatchRoot: ROOT("e"),
+    cutLandingEvidenceRoot: ROOT("f"),
+    devLandingStatus: "conflict",
+    devBaseSha: SHA.laterDev,
+    devLandingSha: "",
+    devPatchRoot: ROOT("e"),
+    devLandingEvidenceRoot: ROOT("1"),
+    authorityRoots: [ROOT("2"), ROOT("3")],
+    createdAt: "2026-08-10T12:07:00.000Z",
+    ...overrides,
+  };
+}
+
+test("release-blocker repair advances only the active cut generation while preserving origin provenance", () => {
+  const active = repairRequiredTrain();
+  const repair = createReleaseBlockerRepair(active, repairInput(active));
+
+  assert.equal(repair.priorTrain.releaseCut.cutRoot, active.releaseCut.cutRoot);
+  assert.equal(repair.supersededTrain.state.status, "superseded");
+  assert.equal(repair.successorTrain.releaseCut.generation, 2);
+  assert.equal(
+    repair.successorTrain.releaseCut.originDevSha,
+    active.releaseCut.originDevSha,
+  );
+  assert.equal(
+    repair.successorTrain.releaseCut.alphaBaseSha,
+    active.releaseCut.alphaBaseSha,
+  );
+  assert.equal(
+    repair.successorTrain.releaseCut.buildchainRuntimeSha,
+    active.releaseCut.buildchainRuntimeSha,
+  );
+  assert.equal(
+    repair.successorTrain.releaseCut.supersession.cause,
+    "release-blocker-repair",
+  );
+  assert.equal(repair.candidateBuild.eligible, true);
+  assert.equal(repair.publication.eligible, false);
+  assert.equal(repair.publication.reason, "dev-forward-port-conflict");
+  assert.deepEqual(validateReleaseBlockerRepair(repair), repair);
+});
+
+test("dev forward-port conflict does not block candidate build but exact settlement gates publication", () => {
+  const active = repairRequiredTrain();
+  const conflicted = createReleaseBlockerRepair(active, repairInput(active));
+  const settled = settleReleaseBlockerDevLanding(conflicted, {
+    expectedRepairRoot: conflicted.repairRoot,
+    devBaseSha: SHA.laterDev,
+    devLandingSha: SHA.devLanding,
+    patchRoot: conflicted.patchRoot,
+    devLandingEvidenceRoot: ROOT("4"),
+  });
+
+  assert.equal(conflicted.candidateBuild.eligible, true);
+  assert.equal(
+    settled.successorTrain.releaseCut.cutRoot,
+    conflicted.successorTrain.releaseCut.cutRoot,
+  );
+  assert.equal(settled.devLanding.status, "landed");
+  assert.equal(settled.publication.eligible, true);
+  assert.equal(settled.publication.reason, "exact-cut-dev-patch-settled");
+  assert.throws(
+    () =>
+      settleReleaseBlockerDevLanding(conflicted, {
+        expectedRepairRoot: conflicted.repairRoot,
+        devBaseSha: SHA.laterDev,
+        devLandingSha: SHA.devLanding,
+        patchRoot: ROOT("6"),
+        devLandingEvidenceRoot: ROOT("4"),
+      }),
+    /must preserve/u,
+  );
+});
+
+test("mismatched cut and dev patch roots remain publication-blocked and rooted", () => {
+  const active = repairRequiredTrain();
+  const mismatch = createReleaseBlockerRepair(
+    active,
+    repairInput(active, {
+      devLandingStatus: "landed",
+      devLandingSha: SHA.devLanding,
+      devPatchRoot: ROOT("6"),
+    }),
+  );
+  assert.equal(mismatch.candidateBuild.eligible, true);
+  assert.equal(mismatch.publication.eligible, false);
+  assert.equal(mismatch.publication.reason, "cut-dev-patch-root-mismatch");
+
+  const tampered = structuredClone(mismatch);
+  tampered.devLanding.patchRoot = ROOT("7");
+  assert.throws(() => validateReleaseBlockerRepair(tampered), /repair root/u);
 });
 
 test("tampered roots and chains fail closed", () => {

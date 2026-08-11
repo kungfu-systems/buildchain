@@ -150,7 +150,7 @@
       "title": "Release Train and Release Cut",
       "path": "docs/release-train.md",
       "plane": "verify",
-      "digest": "sha256:7e97af1d4b32e34e944e5137d8a4d3b4efdd357e0542b4f483d941bc003be495",
+      "digest": "sha256:dccd34936e68f9fdfdcc30729634bbc38341c587211c1a20c3de70d649ba1619",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
@@ -347,7 +347,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:8088298056439bbbc6296fc3160a562bad763a14d45d132935cb76c18b3ca266",
+      "digest": "sha256:370573e93b02ec0cf85fe9278ec7ca20264e3718317bbb0c29fed0930bb209b2",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -532,7 +532,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:6af44926f8138932aeb606bb264b19a40a273ce7bea7bad9b021bb9aa542d61b",
+      "digest": "sha256:68934ebe8330a13376d1b71d1a875d67d2970b1036e0f185a923175ca2a257fe",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"

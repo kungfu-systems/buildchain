@@ -130,7 +130,8 @@
       ],
       "schemas": [
         "kungfu-buildchain-dev-delivery-warrant-queue",
-        "kungfu.buildchain.dev-delivery-warrant/v1"
+        "kungfu.buildchain.dev-delivery-warrant/v1",
+        "kungfu.buildchain.release-blocker-priority-claim/v1"
       ],
       "stores": [
         "Git ref selected by --warrant-state-ref",
@@ -158,7 +159,8 @@
       ],
       "transitions": [
         "root-checked compare-and-set queue successors",
-        "one active leased candidate per protected base"
+        "one active leased candidate per protected base",
+        "rooted release blocker ahead of only not-yet-leased ordinary work"
       ],
       "recovery": [
         "expired lease returns eligible candidate to the queue",
@@ -195,6 +197,7 @@
         "packages/core/dev-delivery-warrant-shadow.js",
         "packages/core/dev-delivery-warrant-settlement.js",
         "packages/core/dev-delivery-warrant.js",
+        "packages/core/release-blocker-priority.js",
         "scripts/dev-delivery-proof.mjs",
         "scripts/dev-delivery-warrant.mjs",
         "scripts/dev-pr-auto-merge.mjs",
@@ -203,7 +206,8 @@
       "testPaths": [
         "tests/dev-delivery-warrant.test.mjs",
         "tests/dev-delivery-warrant-command.test.mjs",
-        "tests/dev-delivery-warrant-shadow.test.mjs"
+        "tests/dev-delivery-warrant-shadow.test.mjs",
+        "tests/release-blocker-priority.test.mjs"
       ],
       "migrationDisposition": "rebuild-in-rust-with-compatibility-projection",
       "unresolved": [
@@ -224,6 +228,7 @@
         "kungfu-buildchain-release-candidate-passport",
         "kungfu-buildchain-initiative-family-release-evidence/v1",
         "kungfu-buildchain-release-cut/v1",
+        "kungfu-buildchain-release-blocker-repair/v1",
         "kungfu-buildchain-release-train-hold/v1",
         "kungfu-buildchain-release-train/v1",
         "kungfu-buildchain-release-train-transition/v1"
@@ -261,6 +266,7 @@
         "evidence assembly to immutable validated Passport",
         "rooted compare-and-swap Release Train state transition",
         "active-train resolution before new candidate selection",
+        "rooted cut-first release-blocker repair with exact Dev patch settlement",
         "enumerated-cause supersession to a new Release Cut generation"
       ],
       "recovery": [
