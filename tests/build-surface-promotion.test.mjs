@@ -162,6 +162,12 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.equal(publicWrapper.match(/artifact-metadata: write/g)?.length, 3);
   assert.equal(publicWrapper.match(/attestations: write/g)?.length, 3);
   assert.equal(publicWrapper.match(/pull-requests: write/g)?.length, 3);
+  assert.equal(
+    publicWrapper.match(/buildchain-expected-channel: \$\{\{ needs\.resolve-promotion\.outputs\.channel \}\}/g)?.length,
+    2,
+  );
+  assert.equal(publicWrapper.match(/buildchain-expected-major: "4"/g)?.length, 2);
+  assert.doesNotMatch(publicWrapper, /inputs\.buildchain-expected-(?:channel|major)/);
   assert.match(wrapper, /token: \$\{\{ github\.token \}\}/);
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(
@@ -620,6 +626,15 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(
     workflow,
     /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(\(inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != ''\) && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /buildchain-expected-channel: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && 'alpha' \|\| 'stable' \}\}/,
+  );
+  assert.match(workflow, /buildchain-expected-major: "3"/);
+  assert.match(
+    workflow,
+    /buildchain-contract-lock-path: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && '\.buildchain\/alpha-contract-lock\.json' \|\| '\.buildchain\/contract-lock\.json' \}\}/,
   );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);

@@ -1771,6 +1771,14 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "buildchain-expected-channel": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "buildchain-expected-major": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "buildchain-issue-app-id": {
           "classification": "redacted",
           "source": "workflow-call-secret"
@@ -2225,7 +2233,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:6c08b8c5065a0fd90f11213f8438e3eaad6f166408d197e9e860269c530cd6e6"
+      "digest": "sha256:1307c298b97baa658b36d49551b1bc99d046ba204e165a8a776b37498a64a54c"
     },
     {
       "schemaVersion": 1,
@@ -2418,5 +2426,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:73c61576c90d5420928d903b81c1e207a3e9cfa7efe1d068b6da9a4a818c8f3a"
+  "digest": "sha256:0eb201502660448b37b20be9c858c589b2a4b10845c2fd40f88164820f750898"
 }

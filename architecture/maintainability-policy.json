@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "7149037df66555c083cf51ee5055301917026047",
     "maxHandMaintainedSourceFiles": 332,
-    "maxHandMaintainedSourceLines": 127850,
+    "maxHandMaintainedSourceLines": 127860,
     "maxWorkflowFiles": 70,
-    "maxWorkflowLines": 23418,
-    "latestTransition": "Buildchain v4 enforces major-independent stable and alpha shell, runtime, and lock identity while exact trusted runtime overrides self-dogfood the unpromoted router commit.",
-    "rationale": "The protected v4 Release Train parity semantics remain intact. One bounded channel-identity module classifies official, release, train, authority, exact-release, and exact-SHA refs without version-specific branches. Contract-lock evaluation applies the triad before unchanged, missing-lock, non-floating, or compatibility exits. The generated public router keeps override, alpha, and stable jobs on GitHub's exact local caller shell so an unpromoted commit remains parseable without publishing either channel ref; the nested runtime gate then requires that caller shell, selected runtime, and selected contract lock prove the same lane and major. Adjacent-major self-dogfood bypasses are rejected, and both checked-in v4 locks plus floating-ref dogfood routes are lane-exact. The exact one-file, 258-source-line, and 231-workflow-line increase is covered by cross-major permutation tests, workflow inventory guards, the real Build Surface Fixture, and Buildchain v4 self-dogfood and cannot grow implicitly."
+    "maxWorkflowLines": 23437,
+    "latestTransition": "The v3 release bootstrap explicitly binds its selected alpha or stable lane and major into the reusable contract-lock gate.",
+    "rationale": "The protected v4 Release Train parity semantics remain intact. One bounded channel-identity module classifies official, release, train, authority, exact-release, and exact-SHA refs without version-specific branches. Contract-lock evaluation applies the triad before unchanged, missing-lock, non-floating, or compatibility exits. The generated public router keeps override, alpha, and stable jobs on GitHub's exact local caller shell so an unpromoted commit remains parseable without publishing either channel ref; the nested runtime gate then requires that caller shell, selected runtime, and selected contract lock prove the same lane and major. Adjacent-major self-dogfood bypasses are rejected, and both checked-in v4 locks plus floating-ref dogfood routes are lane-exact. The v3 bootstrap now passes the already resolved lane and major into that same gate and chooses the matching checked-in lock, so an opaque exact runtime cannot erase release-channel identity. The public router generator derives those internal bindings from its selected route instead of exposing caller-controlled inputs. The exact additional ten source lines and nineteen workflow lines are covered by focused generator, workflow-surface, and channel-identity tests and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -54,10 +54,10 @@
       "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification while the terminal report constructor drops from 470 lines to at most 180. This exact post-integration ceiling cannot grow implicitly."
     },
     "packages/core/buildchain-contract.js": {
-      "maxLines": 1093,
-      "maxFunctionLines": 679,
+      "maxLines": 1095,
+      "maxFunctionLines": 681,
       "maxFunctionComplexity": 30,
-      "rationale": "The existing v4 contract evaluator now invokes the shared shell-runtime-lock binding before every compatibility or early-success path while preserving the prior contract-world, Release Train, and drift behavior. This exact public-contract wiring ceiling cannot grow implicitly."
+      "rationale": "The existing v4 contract evaluator invokes the shared shell-runtime-lock binding before every compatibility or early-success path while preserving the prior contract-world, Release Train, and drift behavior. Its public advanced-workflow projection now declares the two optional expected lane inputs consumed by that unchanged evaluator. This exact public-contract wiring ceiling cannot grow implicitly."
     },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
@@ -72,8 +72,8 @@
       "rationale": "Inventory retains the recovery, sealed-bundle, no-product-install, and durable-finalization checks, requires the self-dogfood lock to match the current major, and binds every channel-router lane to the exact caller shell without unresolved static channel refs. This exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
-      "maxFunctionLines": 288,
-      "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator; this combined train ceiling cannot grow implicitly."
+      "maxFunctionLines": 290,
+      "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator. It now derives the advanced contract gate's expected lane and major from the selected route without exposing them as caller-controlled public inputs. This exact combined train ceiling cannot grow implicitly."
     },
     "scripts/release-candidate-resolver.mjs": {
       "maxLines": 810,
@@ -797,6 +797,8 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "channel",
@@ -936,7 +938,7 @@
           "release-propagation-work-artifact"
         ]
       },
-      "rationale": "The advanced promotion workflow accepts an explicit public authority path and an optional exact consumer qualification controller SHA. Candidate, target tree, Gate controller, predicate controller, command, and authority workflow identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
+      "rationale": "The advanced promotion workflow accepts explicit optional expected channel and major inputs for opaque exact-runtime contract-lock checks. Existing callers preserve prior behavior when they are absent; the v3 bootstrap supplies both and the matching lock so shell, runtime, and lock stay lane-bound. Candidate, target tree, Gate controller, predicate controller, command, and authority workflow identities remain independently bound, while incomplete, expired, mismatched, or untrusted evidence still fails closed without a hidden rebuild."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
