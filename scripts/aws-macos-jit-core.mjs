@@ -2,13 +2,29 @@ import { digest } from "./aws-runner-burst-core.mjs";
 
 export const AWS_MACOS_JIT_CONTRACT = "kungfu-buildchain-aws-macos-jit/v1";
 
+export const MACOS_EC2_JIT_REGIONS = Object.freeze({
+  "us-east-1": Object.freeze({
+    stack: "kungfu-buildchain-macos-jit",
+  }),
+  "us-east-2": Object.freeze({
+    stack: "kungfu-buildchain-macos-jit-us-east-2",
+  }),
+});
+
 export const MACOS_EC2_JIT = Object.freeze({
   phase: "macos-ec2-jit",
   region: "us-east-1",
   repository: "kungfu-systems/kungfu",
+  workflowId: "323846928",
   stack: "kungfu-buildchain-macos-jit",
+  budgetName: "kungfu-buildchain-macos-jit-actual-spend",
+  budgetUsageTypes: Object.freeze([
+    "HostUsage:mac2",
+    "USE2-HostUsage:mac2",
+  ]),
+  budgetOperation: "RunInstances",
   instanceType: "mac2.metal",
-  pricePerHourUsd: 0.6498,
+  pricePerHourUsd: 0.65,
   minimumHostAllocationHours: 24,
   maximumHostAllocationHours: 30,
   maxAcceptedHosts: 1,
@@ -22,6 +38,22 @@ export const MACOS_EC2_JIT = Object.freeze({
   labelPrefix: "aws-us-ec2-macos-jit-",
   jitParameterPrefix: "/kungfu/burst/macos/",
 });
+
+export function macosJitRegionConfig(region) {
+  const resolved = String(region || MACOS_EC2_JIT.region).trim();
+  const config = MACOS_EC2_JIT_REGIONS[resolved];
+  if (!config) {
+    throw new Error(
+      `region must be one of ${Object.keys(MACOS_EC2_JIT_REGIONS).join(", ")}`,
+    );
+  }
+  return {
+    ...config,
+    budgetName: MACOS_EC2_JIT.budgetName,
+    budgetUsageTypes: MACOS_EC2_JIT.budgetUsageTypes,
+    budgetRegions: Object.keys(MACOS_EC2_JIT_REGIONS),
+  };
+}
 
 function exactSha(value, label) {
   const normalized = String(value || "")
@@ -323,8 +355,14 @@ export function verifyMacosEc2JitQualification({
   }
   let allocationHours = 0;
   try {
-    const allocatedAt = iso(hostLifecycle.allocatedAt, "hostLifecycle.allocatedAt");
-    const releasedAt = iso(hostLifecycle.releasedAt, "hostLifecycle.releasedAt");
+    const allocatedAt = iso(
+      hostLifecycle.allocatedAt,
+      "hostLifecycle.allocatedAt",
+    );
+    const releasedAt = iso(
+      hostLifecycle.releasedAt,
+      "hostLifecycle.releasedAt",
+    );
     allocationHours = elapsedHours(allocatedAt, releasedAt);
     if (
       hostLifecycle.status !== "passed" ||

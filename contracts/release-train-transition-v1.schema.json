@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/release-train-transition-v1.schema.json",
+  "title": "Buildchain Release Train Transition v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "trainRoot",
+    "expectedStateRoot",
+    "from",
+    "to",
+    "event",
+    "reason",
+    "authorityRoots",
+    "recordedAt",
+    "requestRoot",
+    "transitionRoot"
+  ],
+  "properties": {
+    "contract": { "const": "kungfu-buildchain-release-train-transition/v1" },
+    "trainRoot": { "$ref": "#/$defs/root" },
+    "expectedStateRoot": { "$ref": "#/$defs/root" },
+    "from": { "$ref": "#/$defs/state" },
+    "to": { "$ref": "#/$defs/state" },
+    "event": { "type": "string", "minLength": 1 },
+    "reason": { "type": "string", "minLength": 1 },
+    "authorityRoots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/root" }
+    },
+    "supersessionCause": { "$ref": "#/$defs/supersessionCause" },
+    "replacementCutRoot": { "$ref": "#/$defs/root" },
+    "replacementCandidateSha": { "$ref": "#/$defs/gitSha" },
+    "recordedAt": { "type": "string", "format": "date-time" },
+    "requestRoot": { "$ref": "#/$defs/root" },
+    "transitionRoot": { "$ref": "#/$defs/root" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "to": { "const": "superseded" } } },
+      "then": {
+        "required": [
+          "supersessionCause",
+          "replacementCutRoot",
+          "replacementCandidateSha"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            { "required": ["supersessionCause"] },
+            { "required": ["replacementCutRoot"] },
+            { "required": ["replacementCandidateSha"] }
+          ]
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "state": {
+      "enum": [
+        "preparing",
+        "building",
+        "repair-required",
+        "publication-blocked",
+        "publishable",
+        "superseded",
+        "terminal"
+      ]
+    },
+    "supersessionCause": {
+      "enum": [
+        "incompatible-semantics",
+        "alpha-base-incompatibility",
+        "invalid-authority",
+        "severe-security"
+      ]
+    }
+  }
+}

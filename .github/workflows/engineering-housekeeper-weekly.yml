@@ -32,28 +32,27 @@ jobs:
           exit 1
 
   report:
-    if: ${{ github.event_name == 'schedule' || inputs.mode != 'apply' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode != 'apply' }}
     uses: ./.github/workflows/engineering-housekeeper.yml
     permissions:
       contents: read
       pull-requests: read
     with:
-      target-branch: dev/v3/v3.0
       mode: report
       stale-days: 45
       max-actions: 20
-      buildchain-ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}
 
   apply:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && inputs.apply-enabled }}
+    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && inputs.apply-enabled) }}
     uses: ./.github/workflows/engineering-housekeeper.yml
     permissions:
       contents: write
       pull-requests: write
     with:
-      target-branch: dev/v3/v3.0
       mode: apply
       apply-enabled: true
+      stale-pull-request-label: engineering-housekeeper:stale
       stale-days: 45
       max-actions: 20
-      buildchain-ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}

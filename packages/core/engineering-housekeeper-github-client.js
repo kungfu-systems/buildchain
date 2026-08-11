@@ -7,7 +7,8 @@ function requiredString(value, field) {
 function normalizeRepository(value) {
   const normalized = requiredString(value?.fullName || value, "repository");
   const match = normalized.match(/^([^/\s]+)\/([^/\s]+)$/);
-  if (!match) throw new Error(`repository must be owner/repo, got: ${normalized}`);
+  if (!match)
+    throw new Error(`repository must be owner/repo, got: ${normalized}`);
   return { owner: match[1], repo: match[2], fullName: normalized };
 }
 
@@ -159,6 +160,22 @@ export class GitHubHousekeeperClient {
     const coordinate = normalizeRepository(repository);
     return this.paginate(
       `/repos/${coordinate.owner}/${coordinate.repo}/pulls?state=open&sort=updated&direction=asc&per_page=100`,
+    );
+  }
+
+  async listClosedPullRequests(repository) {
+    const coordinate = normalizeRepository(repository);
+    return this.paginate(
+      `/repos/${coordinate.owner}/${coordinate.repo}/pulls?state=closed&sort=updated&direction=asc&per_page=100`,
+    );
+  }
+
+  async listPullRequestsForCommit(repository, commitOid) {
+    const coordinate = normalizeRepository(repository);
+    return this.paginate(
+      `/repos/${coordinate.owner}/${coordinate.repo}/commits/${encodeURIComponent(
+        requiredString(commitOid, "commit OID"),
+      )}/pulls?per_page=100`,
     );
   }
 

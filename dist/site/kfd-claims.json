@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe",
+    "compatibilityDigest": "sha256:c74d76789e49291503292e0a5c38fffc5e3ef420ad85eeb8a2480d287fccfed7",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "1d9b603c5adcd90d7e8431621f44baa36ce78e9b0cd27776697aa87b791e712b",
+    "sha256": "bdd3afbfe5fa8a6581937dea4953d847a92762cfd4614fee6302ac93fdc96c06",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 70,
+      "sitePageCount": 71,
       "docCommandRefCount": 924,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "1d9b603c5adcd90d7e8431621f44baa36ce78e9b0cd27776697aa87b791e712b",
+      "sha256": "bdd3afbfe5fa8a6581937dea4953d847a92762cfd4614fee6302ac93fdc96c06",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 70,
+        "sitePageCount": 71,
         "docCommandRefCount": 924,
         "failureCount": 0
       },
@@ -763,6 +763,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/release-train.md",
+          "name": "Release Train and Release Cut",
+          "kind": "documentation",
+          "sourcePath": "docs/release-train.md",
+          "evidencePath": "docs/release-train.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/reusable-build-surface.md",
@@ -1711,6 +1723,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-candidate-recovery"
+        },
+        {
+          "id": "export:./release-train",
+          "name": "@kungfu-tech/buildchain/release-train",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-train.js",
+          "evidencePath": "packages/core/release-train.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-train"
         },
         {
           "id": "export:./stable-candidate-ledger",
@@ -4787,7 +4811,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "apply-enabled",
             "artifact-prefix",
@@ -4801,7 +4825,8 @@
             "retained-patterns",
             "stale-days",
             "stale-pull-request-label",
-            "target-branch"
+            "target-branch",
+            "temporary-branch-patterns"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -6416,6 +6441,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:release-train",
+          "name": "site-page:manual:release-train",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:reusable-build-surface",
           "name": "site-page:manual:reusable-build-surface",
           "kind": "site-page",
@@ -6694,6 +6731,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 425
+    "publicSurfaceCount": 428
   }
 }

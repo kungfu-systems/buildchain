@@ -32,6 +32,16 @@
       "reason": "branch.not-merged"
     },
     {
+      "id": "unknown-family",
+      "branch": {
+        "name": "experiment/merged",
+        "ancestry": "ancestor",
+        "openPullRequestNumbers": []
+      },
+      "eligible": false,
+      "reason": "branch.not-temporary-development"
+    },
+    {
       "id": "advanced",
       "revalidation": "head",
       "reason": "branch.head-advanced"

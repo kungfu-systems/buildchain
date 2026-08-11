@@ -20,7 +20,7 @@ test("macOS EC2 JIT plan binds one host below USD 25", () => {
   assert.equal(plan.config.minimumHostAllocationHours, 24);
   assert.equal(plan.config.maximumHostAllocationHours, 30);
   assert.equal(plan.costEnvelope.minimumCommittedComputeUsd, 15.6);
-  assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 19.49);
+  assert.equal(plan.costEnvelope.maximumBoundedSpendUsd, 19.5);
   assert.ok(plan.costEnvelope.maximumBoundedSpendUsd < 25);
   assert.equal(plan.invariants.oneJobPerRunner, true);
   assert.equal(plan.invariants.oneHostPerCampaign, true);
@@ -184,6 +184,19 @@ test("macOS stack and bootstrap enforce one-host JIT cleanup and no ingress", ()
   assert.match(stack, /ssm:GetParameter/);
   assert.match(stack, /ssm:DescribeParameters/);
   assert.match(stack, /ssm:DescribeInstanceInformation/);
+  assert.match(stack, /Metrics:\n\s+- UnblendedCost/);
+  assert.match(stack, /Key: USAGE_TYPE/);
+  assert.match(stack, /HostUsage:mac2/);
+  assert.match(stack, /USE2-HostUsage:mac2/);
+  assert.match(stack, /Key: OPERATION/);
+  assert.match(stack, /- RunInstances/);
+  assert.match(stack, /Key: REGION/);
+  assert.match(stack, /- us-east-1\n\s+- us-east-2/);
+  assert.doesNotMatch(stack, /CostFilters:|TagKeyValue:/);
+  assert.match(
+    stack,
+    /BudgetLimitUsd:\n\s+Type: Number\n\s+Default: 25\n\s+MinValue: 1\n\s+MaxValue: 25/,
+  );
   assert.match(bootstrap, /latest\/api\/token/);
   assert.match(bootstrap, /aws ssm get-parameter/);
   assert.match(bootstrap, /aws ssm delete-parameter/);

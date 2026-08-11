@@ -723,13 +723,13 @@ status to failure, while the merge group must still produce its own final check.
 that want a stable day-to-day operations contract, Buildchain also exposes a
 patrol workflow family:
 
-| Workflow | Intended cadence | Default intent |
-| --- | --- | --- |
-| `.github/workflows/patrol-daily.yml` | daily | lightweight inspection plus ready dev PR maintenance |
-| `.github/workflows/patrol-weekly.yml` | weekly | release-state, passport, gate, and stale-state health checks as they are added |
-| `.github/workflows/patrol-monthly.yml` | monthly | governance, permission, branch-protection, and workflow drift checks as they are added |
-| `.github/workflows/patrol-observed-evidence.yml` | caller-selected schedule | validated immutable observation plus atomic last-known-good publication; no per-refresh PR |
-| `.github/workflows/stable-candidate-patrol.yml` | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR |
+| Workflow                                         | Intended cadence                   | Default intent                                                                             |
+| ------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| `.github/workflows/patrol-daily.yml`             | daily                              | lightweight inspection plus ready dev PR maintenance                                       |
+| `.github/workflows/patrol-weekly.yml`            | weekly                             | release-state, passport, gate, and stale-state health checks as they are added             |
+| `.github/workflows/patrol-monthly.yml`           | monthly                            | governance, permission, branch-protection, and workflow drift checks as they are added     |
+| `.github/workflows/patrol-observed-evidence.yml` | caller-selected schedule           | validated immutable observation plus atomic last-known-good publication; no per-refresh PR |
+| `.github/workflows/stable-candidate-patrol.yml`  | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR                |
 
 The cadence names describe patrol intensity, not release cadence:
 
@@ -792,9 +792,12 @@ The separate workflow names keep consumer schedules readable and stable while
 Buildchain adds new checks behind the cadence wrappers.
 
 Branch and pull-request residue uses the separate
-[`Engineering Housekeeper`](engineering-housekeeper.md) contract. Its scheduled
-callers are report-only and read-only by default; apply requires a manual,
-explicit two-part gate, exact provider-state revalidation, scoped job
+[`Engineering Housekeeper`](engineering-housekeeper.md) contract. Its reusable
+surface remains report-first, while Buildchain's committed daily, weekly, and
+monthly callers run unattended apply across all discovered protected mainlines.
+Only the positive temporary-development allowlist is mutable; unknown branch
+families remain report-only. Every apply still requires the caller's explicit
+two-part policy inputs, exact provider-state revalidation, scoped job
 permissions, and rooted plan/report/receipt evidence.
 
 ## Package-Manager Adapters
