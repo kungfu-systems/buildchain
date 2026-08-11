@@ -990,7 +990,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-channel","status":"${{ needs.resolve-channel.result }}"},{"id":"alpha","status":"${{ needs.alpha.result }}"},{"id":"stable","status":"${{ needs.stable.result }}"}]
+            [{"id":"resolve-channel","status":"${{ needs.resolve-channel.result }}"},{"id":"alpha","status":"${{ needs.alpha.result }}"},{"id":"stable","status":"${{ needs.stable.result }}"},{"id":"aggregate","status":"${{ needs.resolve-channel.outputs.channel == 'alpha' && needs.alpha.result || needs.stable.result }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_JSON: ${{ (needs.alpha.outputs.controller-receipt-digest != '' || needs.stable.outputs.controller-receipt-digest != '') && format('[{{"kind":"nested-controller-receipt","digest":"{0}"}}]', needs.alpha.outputs.controller-receipt-digest || needs.stable.outputs.controller-receipt-digest) || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ ((needs.resolve-channel.outputs.channel == 'alpha' && needs.alpha.result == 'success') || (needs.resolve-channel.outputs.channel == 'stable' && needs.stable.result == 'success')) && '' || 'nested-build-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Nested build controller did not complete successfully

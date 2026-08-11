@@ -14,14 +14,14 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:c74d76789e49291503292e0a5c38fffc5e3ef420ad85eeb8a2480d287fccfed7",
+    "compatibilityDigest": "sha256:80f65cc191b1f771475184edf8a1bf9c10dd69bb58060aa09313d0e1e57f508a",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "3c62055eab7745a43099131d3ca0d9f3d435edbb2f3f5148154f87324a6d350f",
+    "sha256": "b67b968e5ca0039d5807eaf021611970d184555cf0d2822cf4c1fb28bf6f8429",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "3c62055eab7745a43099131d3ca0d9f3d435edbb2f3f5148154f87324a6d350f",
+      "sha256": "b67b968e5ca0039d5807eaf021611970d184555cf0d2822cf4c1fb28bf6f8429",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
