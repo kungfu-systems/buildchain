@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 326,
-    "maxHandMaintainedSourceLines": 125427,
+    "baselineRevision": "7149037df66555c083cf51ee5055301917026047",
+    "maxHandMaintainedSourceFiles": 331,
+    "maxHandMaintainedSourceLines": 127592,
     "maxWorkflowFiles": 70,
     "maxWorkflowLines": 23187,
-    "latestTransition": "Buildchain v4 preserves the exact autonomous Engineering Housekeeper contract and provider boundary from the protected v3 delivery.",
-    "rationale": "The v4 line adds the exact provider-neutral contract, bounded GitHub adapter, reusable workflow, and thin daily, weekly, and monthly unattended callers already protected on v3. The v4 architecture inventory records one legacy-authoritative TypeScript capability without a second contract, provider authority, or production writer. Unknown branch families and unassociated heads remain report-only; exact OID, merged-PR association, ancestry, active-PR, protection, bounded concurrency, deterministic ordering, and replay fences remain binding. These exact source and workflow ceilings cannot grow implicitly."
+    "latestTransition": "Buildchain v4 preserves the exact protected v3 Release Train, repair-priority and self-dogfood semantics with only branch, candidate-runtime and evidence-projection adapters.",
+    "rationale": "The v4 parity port binds the same 56 normative vectors for frozen Release Cuts, candidate patrol, dual-landing repair, Delivery Warrant priority and protected campaign replay. It changes only v4 branch coordinates, the candidate runtime ref and one architecture evidence projection; it adds no v4 redesign, authority cutover, Alpha2 migration or bypass. These exact 331-file and 127592-line ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,18 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/dev-delivery-warrant.js": {
+      "maxLines": 605,
+      "rationale": "The v4 parity port preserves the reviewed v3 release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/release-blocker-priority.js": {
+      "maxLines": 193,
+      "rationale": "The v4 parity adapter preserves the reviewed v3 exact dual-landing priority claim, repair-contract parsing and unrelated-work rejection outside the durable Warrant state machine; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/release-train.js": {
+      "maxLines": 740,
+      "rationale": "The v4 Release Train parity contract preserves the reviewed v3 rooted successor-repair lifecycle, compare-and-swap, frozen origin provenance, exact cut and Dev patch identity, independent candidate-build eligibility, publication gating and deterministic validation; this exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/engineering-housekeeper-github.js": {
       "maxLines": 707,
       "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."
@@ -169,18 +181,25 @@
         "secrets": ["promotion-token"],
         "outputs": [
           "active-candidate-pr",
+          "candidate-generation",
+          "candidate-tree-sha",
           "controller-state",
+          "cut-root",
+          "drift-root",
           "eligible",
+          "hold-root",
           "next-candidate-sha",
           "prior-state-root",
           "promotion-pr",
           "result-path",
+          "runtime-sha",
           "selected-sha",
           "settlement-action",
-          "source-lock-ref"
+          "source-lock-ref",
+          "train-root"
         ]
       },
-      "rationale": "Expose opt-in auto-merge registration and an explicit merge method for the already-managed exact-source Alpha candidate without adding approval or direct-merge authority."
+      "rationale": "Expose the frozen Release Cut, generation, candidate tree, exact runtime, Dev-drift observation and fail-closed hold roots for v4 Build inputs while preserving the existing no-publication and protected-settlement boundary."
     },
     "workflow:dev-pr-auto-merge": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

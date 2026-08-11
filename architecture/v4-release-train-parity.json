@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-release-train-parity",
+  "sourceAuthority": {
+    "branch": "dev/v3/v3.0",
+    "familyStateRoot": "sha256:212c90214e34f41de5720452c048f342ecfd04f31e732491b51069ae52ff61f9",
+    "portableSealRoot": "sha256:dbdaa70e23bd853d865ff0c90aefa6f74bb8e043feab4faac1d486381e116261",
+    "commits": [
+      "71bf3f64f4766a339592ca35463800be19fdec2d",
+      "81455e922eb50ebbb88ac6c1fb6c051047ba36ad",
+      "ce1ca498f01c702bc70d6ac5a7788ed0c1da2ab4",
+      "590eaf9de7d9db6df341c435d42dfb616bd70bc1"
+    ]
+  },
+  "target": {
+    "branch": "dev/v4/v4.0",
+    "capturedBase": "7149037df66555c083cf51ee5055301917026047",
+    "implementation": "exact-shared-javascript-semantics"
+  },
+  "normativeVectors": [
+    {
+      "path": "tests/release-train.test.mjs",
+      "count": 11,
+      "result": "exact"
+    },
+    {
+      "path": "tests/dev-alpha-candidate-patrol.test.mjs",
+      "count": 37,
+      "result": "exact"
+    },
+    {
+      "path": "tests/release-blocker-priority.test.mjs",
+      "count": 3,
+      "result": "exact"
+    },
+    {
+      "path": "tests/release-train-self-dogfood.test.mjs",
+      "count": 5,
+      "result": "exact"
+    }
+  ],
+  "adapterDifferences": [
+    {
+      "surface": "branch-coordinates",
+      "source": "dev/v3/v3.0 -> alpha/v3/v3.0",
+      "target": "dev/v4/v4.0 -> alpha/v4/v4.0",
+      "semanticImpact": "none"
+    },
+    {
+      "surface": "candidate-patrol-runtime-ref",
+      "source": "v3-alpha",
+      "target": "v4-alpha",
+      "semanticImpact": "none"
+    },
+    {
+      "surface": "architecture-projection",
+      "source": "architecture/v3-core-mechanism-inventory.json",
+      "target": "architecture/v4-release-train-parity.json",
+      "semanticImpact": "evidence-only"
+    }
+  ],
+  "forbidden": [
+    "v4-first-redesign",
+    "production-authority-cutover",
+    "alpha2-migration",
+    "provider-gate-bypass"
+  ]
+}
