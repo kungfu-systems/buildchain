@@ -75,6 +75,19 @@ function qualificationId(value) {
   return exact(value, /^mac-(?:smoke-0[12]|full-01)$/, "qualificationId");
 }
 
+function terminalFailureRunIds(value) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error("terminalFailureRunIds must be a non-empty array");
+  }
+  const normalized = value.map((entry) =>
+    exact(entry, /^[1-9]\d*$/, "terminalFailureRunId"),
+  );
+  if (new Set(normalized).size !== normalized.length) {
+    throw new Error("terminalFailureRunIds must be unique");
+  }
+  return [...normalized].sort((left, right) => Number(left) - Number(right));
+}
+
 function commonAws(values) {
   const region = exact(
     values.region || MACOS_EC2_JIT.region,
@@ -300,6 +313,14 @@ export function createMacosJitSourceRebindPlan(values = {}) {
   if (workflowId !== MACOS_EC2_JIT.workflowId) {
     throw new Error(`workflowId must be ${MACOS_EC2_JIT.workflowId}`);
   }
+  const priorRunPolicy = values.priorRunPolicy || "unused";
+  if (!["unused", "terminal-failure"].includes(priorRunPolicy)) {
+    throw new Error("priorRunPolicy must be unused or terminal-failure");
+  }
+  const terminalRunIds =
+    priorRunPolicy === "terminal-failure"
+      ? terminalFailureRunIds(values.terminalFailureRunIds)
+      : [];
   const plan = {
     schemaVersion: 1,
     contract: AWS_MACOS_JIT_CONTROLLER_CONTRACT,
@@ -314,6 +335,8 @@ export function createMacosJitSourceRebindPlan(values = {}) {
     github: {
       workflowId,
       requiredState: "disabled_manually",
+      priorRunPolicy,
+      terminalFailureRunIds: terminalRunIds,
     },
     aws: {
       ...aws,
@@ -327,8 +350,9 @@ export function createMacosJitSourceRebindPlan(values = {}) {
       forwardOnlySource: true,
       sameSourceRefRequired: true,
       workflowDisabledRequired: true,
-      zeroPriorJobsRequired: true,
-      zeroPriorArtifactsRequired: true,
+      zeroPriorJobsRequired: priorRunPolicy === "unused",
+      zeroPriorArtifactsRequired: priorRunPolicy === "unused",
+      terminalFailureEvidencePreserved: priorRunPolicy === "terminal-failure",
       zeroJitResidueRequired: true,
       zeroEvidenceRequired: true,
       exactCampaignResourcesRequired: true,
