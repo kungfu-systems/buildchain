@@ -11558,6 +11558,583 @@
       ]
     },
     {
+      "id": "packages/core/next-development-projection.js#appendNextDevelopmentToml",
+      "name": "appendNextDevelopmentToml",
+      "kind": "function",
+      "signature": "function appendNextDevelopmentToml(source)",
+      "parameters": [
+        {
+          "name": "source",
+          "signature": "source"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 41
+      },
+      "example": "import { appendNextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#assertNextDevelopmentConfig",
+      "name": "assertNextDevelopmentConfig",
+      "kind": "function",
+      "signature": "function assertNextDevelopmentConfig(config)",
+      "parameters": [
+        {
+          "name": "config",
+          "signature": "config"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 67
+      },
+      "example": "import { assertNextDevelopmentConfig } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#mergeNextDevelopmentAgentInstructions",
+      "name": "mergeNextDevelopmentAgentInstructions",
+      "kind": "function",
+      "signature": "function mergeNextDevelopmentAgentInstructions(current = \"\")",
+      "parameters": [
+        {
+          "name": "current",
+          "signature": "current = \"\""
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 122
+      },
+      "example": "import { mergeNextDevelopmentAgentInstructions } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_AGENT_SECTION_END",
+      "name": "NEXT_DEVELOPMENT_AGENT_SECTION_END",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_AGENT_SECTION_END",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 11
+      },
+      "example": "import { NEXT_DEVELOPMENT_AGENT_SECTION_END } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_AGENT_SECTION_START",
+      "name": "NEXT_DEVELOPMENT_AGENT_SECTION_START",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_AGENT_SECTION_START",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 9
+      },
+      "example": "import { NEXT_DEVELOPMENT_AGENT_SECTION_START } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_LOCAL_COMMAND",
+      "name": "NEXT_DEVELOPMENT_LOCAL_COMMAND",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_LOCAL_COMMAND",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 13
+      },
+      "example": "import { NEXT_DEVELOPMENT_LOCAL_COMMAND } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#nextDevelopmentAgentInstructions",
+      "name": "nextDevelopmentAgentInstructions",
+      "kind": "function",
+      "signature": "function nextDevelopmentAgentInstructions()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 94
+      },
+      "example": "import { nextDevelopmentAgentInstructions } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#nextDevelopmentManual",
+      "name": "nextDevelopmentManual",
+      "kind": "function",
+      "signature": "function nextDevelopmentManual()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 151
+      },
+      "example": "import { nextDevelopmentManual } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#nextDevelopmentToml",
+      "name": "nextDevelopmentToml",
+      "kind": "function",
+      "signature": "function nextDevelopmentToml()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 22
+      },
+      "example": "import { nextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#nextDevelopmentWorkflowHeader",
+      "name": "nextDevelopmentWorkflowHeader",
+      "kind": "function",
+      "signature": "function nextDevelopmentWorkflowHeader()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 16
+      },
+      "example": "import { nextDevelopmentWorkflowHeader } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#projectNextDevelopmentToml",
+      "name": "projectNextDevelopmentToml",
+      "kind": "function",
+      "signature": "function projectNextDevelopmentToml(source)",
+      "parameters": [
+        {
+          "name": "source",
+          "signature": "source"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 51
+      },
+      "example": "import { projectNextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#advanceNextDevelopmentTransition",
+      "name": "advanceNextDevelopmentTransition",
+      "kind": "function",
+      "signature": "function advanceNextDevelopmentTransition(record, input = {})",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 321
+      },
+      "example": "import { advanceNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#createNextDevelopmentTransition",
+      "name": "createNextDevelopmentTransition",
+      "kind": "function",
+      "signature": "function createNextDevelopmentTransition(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 253
+      },
+      "example": "import { createNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#materializeNextDevelopmentTransition",
+      "name": "materializeNextDevelopmentTransition",
+      "kind": "function",
+      "signature": "function materializeNextDevelopmentTransition({ cwd = process.cwd(), request, write = false, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ cwd = process.cwd(), request, write = false, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "local-filesystem-write"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 424
+      },
+      "example": "import { materializeNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_ADR",
+      "name": "NEXT_DEVELOPMENT_ADR",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_ADR",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 20
+      },
+      "example": "import { NEXT_DEVELOPMENT_ADR } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_INVARIANT",
+      "name": "NEXT_DEVELOPMENT_INVARIANT",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_INVARIANT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 22
+      },
+      "example": "import { NEXT_DEVELOPMENT_INVARIANT } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_REQUEST_CONTRACT",
+      "name": "NEXT_DEVELOPMENT_REQUEST_CONTRACT",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_REQUEST_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 18
+      },
+      "example": "import { NEXT_DEVELOPMENT_REQUEST_CONTRACT } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_STATES",
+      "name": "NEXT_DEVELOPMENT_STATES",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_STATES",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 24
+      },
+      "example": "import { NEXT_DEVELOPMENT_STATES } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
+      "name": "NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 16
+      },
+      "example": "import { NEXT_DEVELOPMENT_TRANSITION_CONTRACT } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_VERSION_MODELS",
+      "name": "NEXT_DEVELOPMENT_VERSION_MODELS",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_VERSION_MODELS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 32
+      },
+      "example": "import { NEXT_DEVELOPMENT_VERSION_MODELS } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#nextDevelopmentRoot",
+      "name": "nextDevelopmentRoot",
+      "kind": "function",
+      "signature": "function nextDevelopmentRoot(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 63
+      },
+      "example": "import { nextDevelopmentRoot } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#validateNextDevelopmentTransition",
+      "name": "validateNextDevelopmentTransition",
+      "kind": "function",
+      "signature": "function validateNextDevelopmentTransition(record)",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 679
+      },
+      "example": "import { validateNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/package-manager.js#assertPackageManager",
       "name": "assertPackageManager",
       "kind": "function",
@@ -11854,7 +12431,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 254
+        "line": 257
       },
       "example": "import { collectPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11883,7 +12460,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 94
+        "line": 95
       },
       "example": "import { createPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11916,7 +12493,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 62
+        "line": 63
       },
       "example": "import { mergePaperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11940,7 +12517,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 17
+        "line": 18
       },
       "example": "import { PAPER_AGENT_ENTRY_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11964,7 +12541,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 18
+        "line": 19
       },
       "example": "import { PAPER_AGENT_ENTRY_SCHEMA_VERSION } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -11988,7 +12565,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 21
+        "line": 22
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_END } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -12012,7 +12589,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 19
+        "line": 20
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_START } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -12041,7 +12618,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 151
+        "line": 152
       },
       "example": "import { paperAgentEntryFiles } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -12070,7 +12647,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 37
+        "line": 38
       },
       "example": "import { paperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -12103,7 +12680,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 180
+        "line": 183
       },
       "example": "import { resolvePaperBuildchainSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -12546,7 +13123,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2439
+        "line": 2446
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12575,7 +13152,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1496
+        "line": 1503
       },
       "example": "import { collectPaperStatus } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12604,7 +13181,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2681
+        "line": 2688
       },
       "example": "import { createPaperAlphaPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12633,7 +13210,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2618
+        "line": 2625
       },
       "example": "import { createPaperBuildPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12662,7 +13239,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 525
+        "line": 530
       },
       "example": "import { createPaperProvisioningAuthority } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -12691,7 +13268,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2739
+        "line": 2746
       },
       "example": "import { createPaperResumePlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12720,7 +13297,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2866
+        "line": 2873
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12744,7 +13321,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 95
+        "line": 100
       },
       "example": "import { PAPER_ALPHA_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12768,7 +13345,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 94
+        "line": 99
       },
       "example": "import { PAPER_BUILD_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12792,7 +13369,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 87
+        "line": 92
       },
       "example": "import { PAPER_MIGRATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12816,7 +13393,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 90
+        "line": 95
       },
       "example": "import { PAPER_NPM_BOOTSTRAP_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12840,7 +13417,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 88
+        "line": 93
       },
       "example": "import { PAPER_PREFLIGHT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12864,7 +13441,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 92
+        "line": 97
       },
       "example": "import { PAPER_PROVISIONING_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -12888,7 +13465,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 96
+        "line": 101
       },
       "example": "import { PAPER_RESUME_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12912,7 +13489,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 86
+        "line": 91
       },
       "example": "import { PAPER_SCAFFOLD_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12936,7 +13513,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 99
+        "line": 104
       },
       "example": "import { PAPER_STATE_ORDER } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12960,7 +13537,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 89
+        "line": 94
       },
       "example": "import { PAPER_STATUS_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12984,7 +13561,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 97
+        "line": 102
       },
       "example": "import { PAPER_VISIBILITY_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13013,7 +13590,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1038
+        "line": 1045
       },
       "example": "import { planPaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13042,7 +13619,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 718
+        "line": 723
       },
       "example": "import { planPaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13075,7 +13652,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 251
+        "line": 256
       },
       "example": "import { resolvePaperRuntimeGitSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13104,7 +13681,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1154
+        "line": 1161
       },
       "example": "import { writePaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13133,7 +13710,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 863
+        "line": 868
       },
       "example": "import { writePaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23469,7 +24046,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:a82e7875e0bdaa1be06ad22396522fd284a30db99e2ec712ed4f2190a2d3ec2b",
+      "digest": "sha256:573bc2c8c5ac767103042a02ab8d2f9d67b1e1c9d1756bab7e2c5493981f308a",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -23865,6 +24442,72 @@
         "packages/core/release-train.js#validateReleaseBlockerRepair",
         "packages/core/release-train.js#validateReleaseCut",
         "packages/core/release-train.js#validateReleaseTrain"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/next-development-transition",
+      "export": "./next-development-transition",
+      "target": "./packages/core/next-development-transition.js",
+      "digest": "sha256:679b6801ccfd632ca3cc4014ce42c490d547dfab976234b934bcc6b89c12aa79",
+      "summary": "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 11,
+      "symbolIds": [
+        "packages/core/next-development-transition.js#advanceNextDevelopmentTransition",
+        "packages/core/next-development-transition.js#createNextDevelopmentTransition",
+        "packages/core/next-development-transition.js#materializeNextDevelopmentTransition",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_ADR",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_INVARIANT",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_REQUEST_CONTRACT",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_STATES",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_VERSION_MODELS",
+        "packages/core/next-development-transition.js#nextDevelopmentRoot",
+        "packages/core/next-development-transition.js#validateNextDevelopmentTransition"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/next-development-projection",
+      "export": "./next-development-projection",
+      "target": "./packages/core/next-development-projection.js",
+      "digest": "sha256:ea1afdc247799d5034b2d9e57fc96bbd35af3d8b3770f0e64f64eaa0dcfb4c66",
+      "summary": "Canonical generated config, Agent, and manual projections for the next-development transition contract.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 11,
+      "symbolIds": [
+        "packages/core/next-development-projection.js#appendNextDevelopmentToml",
+        "packages/core/next-development-projection.js#assertNextDevelopmentConfig",
+        "packages/core/next-development-projection.js#mergeNextDevelopmentAgentInstructions",
+        "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_AGENT_SECTION_END",
+        "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_AGENT_SECTION_START",
+        "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_LOCAL_COMMAND",
+        "packages/core/next-development-projection.js#nextDevelopmentAgentInstructions",
+        "packages/core/next-development-projection.js#nextDevelopmentManual",
+        "packages/core/next-development-projection.js#nextDevelopmentToml",
+        "packages/core/next-development-projection.js#nextDevelopmentWorkflowHeader",
+        "packages/core/next-development-projection.js#projectNextDevelopmentToml"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -24318,7 +24961,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:bbef23e4f489376f759e5678d61e2f07c69dfa5542f5538e14c68a0714233ea3"
+      "digest": "sha256:84afde6c4c12c4b15673962750436fdb9bd1a240ebedf5778c805af4df911484"
     },
     {
       "id": "build-facts",

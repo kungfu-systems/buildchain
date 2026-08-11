@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "62693cfd4387ed4913651a4c892dedadc456314f9b09da4a2d4c87f343ae05fd",
+    "sha256": "228dc33e54701926b214cdc65d44cebc98b79a5bfbd18e96aceee306d744b891",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 71,
+      "sitePageCount": 72,
       "docCommandRefCount": 924,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "62693cfd4387ed4913651a4c892dedadc456314f9b09da4a2d4c87f343ae05fd",
+      "sha256": "228dc33e54701926b214cdc65d44cebc98b79a5bfbd18e96aceee306d744b891",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 71,
+        "sitePageCount": 72,
         "docCommandRefCount": 924,
         "failureCount": 0
       },
@@ -590,6 +590,18 @@
           "kind": "documentation",
           "sourcePath": "docs/migration-inventory.md",
           "evidencePath": "docs/migration-inventory.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:docs/next-development-transition.md",
+          "name": "Next-development transition",
+          "kind": "documentation",
+          "sourcePath": "docs/next-development-transition.md",
+          "evidencePath": "docs/next-development-transition.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -1759,6 +1771,30 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-train"
+        },
+        {
+          "id": "export:./next-development-transition",
+          "name": "@kungfu-tech/buildchain/next-development-transition",
+          "kind": "package-export",
+          "sourcePath": "packages/core/next-development-transition.js",
+          "evidencePath": "packages/core/next-development-transition.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./next-development-transition"
+        },
+        {
+          "id": "export:./next-development-projection",
+          "name": "@kungfu-tech/buildchain/next-development-projection",
+          "kind": "package-export",
+          "sourcePath": "packages/core/next-development-projection.js",
+          "evidencePath": "packages/core/next-development-projection.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./next-development-projection"
         },
         {
           "id": "export:./stable-candidate-ledger",
@@ -6264,6 +6300,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:next-development-transition",
+          "name": "site-page:manual:next-development-transition",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:node-api-reference",
           "name": "site-page:manual:node-api-reference",
           "kind": "site-page",
@@ -6758,6 +6806,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 430
+    "publicSurfaceCount": 434
   }
 }

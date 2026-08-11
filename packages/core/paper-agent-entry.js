@@ -13,6 +13,7 @@ import {
   workCheck,
 } from "./paper-repository.js";
 import { mergePublicationRehearsalAgentInstructions } from "./publication-rehearsal-projection.js";
+import { mergeNextDevelopmentAgentInstructions } from "./next-development-projection.js";
 
 export const PAPER_AGENT_ENTRY_CONTRACT = "kungfu-buildchain-paper-agent-entry";
 export const PAPER_AGENT_ENTRY_SCHEMA_VERSION = 1;
@@ -168,10 +169,12 @@ export function paperAgentEntryFiles({
     [PAPER_PATHS.agentEntry, jsonText(entry)],
     [
       PAPER_PATHS.agentInstructions,
-      mergePublicationRehearsalAgentInstructions(
-        mergePaperAgentEntryInstructions(currentAgents, {
-          developmentRef: resolvedDevelopmentRef,
-        }),
+      mergeNextDevelopmentAgentInstructions(
+        mergePublicationRehearsalAgentInstructions(
+          mergePaperAgentEntryInstructions(currentAgents, {
+            developmentRef: resolvedDevelopmentRef,
+          }),
+        ),
       ),
     ],
   ]);
