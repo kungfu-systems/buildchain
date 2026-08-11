@@ -22,6 +22,7 @@ import {
   createReleaseTrain,
   transitionReleaseTrain,
 } from "../packages/core/release-train.js";
+import { readGitHubNextDevelopmentVersionReservation } from "../packages/core/next-development-candidate-reservation.js";
 
 const SOURCE_SHA = "a".repeat(40);
 const TARGET_SHA = "b".repeat(40);
@@ -206,6 +207,7 @@ function client({
   openPullRequests = [],
   candidateTreeSha = CANDIDATE_TREE_SHA,
   sourceLockSha,
+  versionReservation,
 } = {}) {
   const calls = [];
   return {
@@ -221,6 +223,15 @@ function client({
       comparisons?.get(`${baseSha}...${headSha}`) || comparison,
     resolveManagedPromotionBaseline: async () => promotionBaseline || null,
     listBranchHistory: async () => sourceHistory,
+    readNextDevelopmentVersionReservation: async (request) => ({
+      reservationSha: request.reservationSha,
+      candidateSha: request.candidateSha,
+      targetVersion: request.targetVersion,
+      paths: ["package.json"],
+      evidenceRoot: ROOT("8"),
+      status: "current",
+      ...versionReservation,
+    }),
     listCompletedWorkflowRuns: async (workflowPath) =>
       runs.filter((run) => run.path === workflowPath),
     listOpenPullRequests: async () => openPullRequests,
@@ -239,6 +250,111 @@ function client({
       calls.push(["update-pr", number, body]),
   };
 }
+
+test("pure next-development preparation is ignored by Candidate Patrol", async () => {
+  const preparationSha = "9".repeat(40);
+  const integrationSha = "7".repeat(40);
+  const fake = client({
+    sourceHead: integrationSha,
+    sourceHistory: [
+      {
+        sha: integrationSha,
+        message: "Merge pull request #91 from buildchain/version-state",
+        parents: [TARGET_SHA, preparationSha],
+      },
+      {
+        sha: preparationSha,
+        message: "chore(release): prepare v3.0.9-alpha.2\n\nSigned-off-by: buildchain-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      },
+    ],
+    runs: [
+      apiRun(DEV, { head_sha: integrationSha }),
+      apiRun(ALPHA, { head_sha: integrationSha }),
+    ],
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, createPullRequest: false, dryRun: true },
+    fake,
+  );
+  assert.equal(result.decision.eligible, false);
+  assert.match(result.decision.blockReason, /no source commit/u);
+  assert.deepEqual(fake.calls, []);
+});
+
+test("GitHub reservation readback roots exact prepared and candidate blobs", async () => {
+  const preparationSha = "9".repeat(40);
+  const api = async (endpoint) => {
+    if (endpoint.includes(`/commits/${preparationSha}`)) {
+      return {
+        sha: preparationSha,
+        commit: { message: "chore(release): prepare v3.0.9-alpha.2" },
+        files: [{ filename: "package.json" }, { filename: "dist/version.json" }],
+      };
+    }
+    if (endpoint.includes("package.json")) {
+      return { type: "file", sha: "1".repeat(40) };
+    }
+    return { type: "file", sha: "2".repeat(40) };
+  };
+  const readback = await readGitHubNextDevelopmentVersionReservation({
+    api,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    reservationSha: preparationSha,
+    candidateSha: SOURCE_SHA,
+    targetVersion: "3.0.9-alpha.2",
+  });
+  assert.equal(readback.status, "current");
+  assert.deepEqual(readback.paths, ["dist/version.json", "package.json"]);
+  assert.match(readback.evidenceRoot, /^sha256:[0-9a-f]{64}$/u);
+});
+
+test("Candidate Patrol rejects stale reserved version state before settlement", async () => {
+  const preparationSha = "9".repeat(40);
+  const fake = client({
+    sourceHistory: [
+      { sha: SOURCE_SHA, message: "feat(product): continue development" },
+      {
+        sha: preparationSha,
+        message: "chore(release): prepare v3.0.9-alpha.2",
+      },
+    ],
+    versionReservation: { status: "stale" },
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, createPullRequest: false, dryRun: true },
+    fake,
+  );
+  assert.equal(result.decision.eligible, false);
+  assert.match(result.decision.blockReason, /reservation is stale/u);
+  assert.deepEqual(fake.calls, []);
+});
+
+test("Candidate Patrol roots current reserved version state into selection", async () => {
+  const preparationSha = "9".repeat(40);
+  const fake = client({
+    sourceHistory: [
+      { sha: SOURCE_SHA, message: "feat(product): continue development" },
+      {
+        sha: preparationSha,
+        message: "chore(release): prepare v3.0.9-alpha.2",
+      },
+    ],
+  });
+  const result = await runDevAlphaCandidatePatrol(
+    { ...patrolOptions, createPullRequest: false, dryRun: true },
+    fake,
+  );
+  assert.equal(result.decision.eligible, true);
+  assert.equal(
+    result.decision.selection.versionReservation.reservationSha,
+    preparationSha,
+  );
+  assert.equal(
+    result.decision.selection.versionReservation.candidateSha,
+    SOURCE_SHA,
+  );
+});
 
 test("managed Alpha promotion merge uses its exact source as the patrol baseline", async () => {
   const promotedSourceSha = "e".repeat(40);

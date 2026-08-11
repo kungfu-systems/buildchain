@@ -97,6 +97,14 @@ export function decideChannelCandidate(input) {
   const sourceSha = sha(input.sourceSha, "sourceSha");
   const targetSha = sha(input.targetSha, "targetSha");
   const selection = normalizeChannelCandidateSelection(input.selection);
+  if (
+    selection?.versionReservation &&
+    selection.versionReservation.candidateSha !== sourceSha
+  ) {
+    throw new Error(
+      "selection version reservation must bind the selected source SHA",
+    );
+  }
   const now = required(input.now || new Date().toISOString(), "now");
   const maxAgeSeconds = Number(input.maxAgeSeconds ?? 7 * 24 * 60 * 60);
   if (!Number.isSafeInteger(maxAgeSeconds) || maxAgeSeconds <= 0) {

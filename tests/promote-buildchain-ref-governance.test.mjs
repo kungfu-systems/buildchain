@@ -2892,7 +2892,7 @@ test("strict alpha promotion can advance from a generated version-state merge co
   assert.equal(refs.get("tags/v1.0-alpha"), nextVersionSha);
 });
 
-test("strict alpha promotion finalizes tags when dev already advanced", async () => {
+test("strict alpha promotion fails closed when dev advanced without an exact reconciliation checkout", async () => {
   const oldAlphaSha = "a".repeat(40);
   const versionHeadSha = "b".repeat(40);
   const mergeSha = "c".repeat(40);
@@ -2976,34 +2976,24 @@ test("strict alpha promotion finalizes tags when dev already advanced", async ()
     },
   };
 
-  const result = await promoteBuildchainRefs({
-    octokit,
-    owner: "kungfu-systems",
-    repo: "buildchain",
-    sha: mergeSha,
-    targetRef: "alpha/v1/v1.0",
-    cwd,
-    requireGovernance: true,
-    requireVersionState: true,
-  });
-
-  assert.equal(result.sha, mergeSha);
-  assert.equal(refs.get("heads/dev/v1/v1.0"), advancedDevSha);
-  assert.equal(refs.get("tags/v1.0.6-alpha.0"), mergeSha);
-  assert.equal(refs.get("tags/v1.0-alpha"), mergeSha);
-  assert.deepEqual(
-    result.updates.find(
-      (update) =>
-        update.ref === "dev/v1/v1.0" &&
-        update.action === "skipped-non-fast-forward",
-    ),
-    {
-      ref: "dev/v1/v1.0",
-      action: "skipped-non-fast-forward",
-      sha: mergeSha,
-      currentSha: advancedDevSha,
-    },
+  await assert.rejects(
+    () =>
+      promoteBuildchainRefs({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        sha: mergeSha,
+        targetRef: "alpha/v1/v1.0",
+        cwd,
+        requireGovernance: true,
+        requireVersionState: true,
+      }),
+    /requires an exact checkout workspace/u,
   );
+
+  assert.equal(refs.get("heads/dev/v1/v1.0"), advancedDevSha);
+  assert.equal(refs.has("tags/v1.0.6-alpha.0"), false);
+  assert.equal(refs.has("tags/v1.0-alpha"), false);
 });
 
 test("strict release promotion requires a matching alpha tree and alpha-to-release PR", async () => {

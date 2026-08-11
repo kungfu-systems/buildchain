@@ -66,7 +66,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Publication Artifacts | `publication-registry.json`, `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
 | Distribution Indexes and Badges | `badge-endpoint-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`readme-badges.md`](readme-badges.md), [`homebrew.md`](homebrew.md) |
 | Build Facts, Observability, and Diagnostics | `cli-registry.json`, `node-api-registry.json`, lifecycle artifacts | [`build-facts.md`](build-facts.md), [`toolkit-observability.md`](toolkit-observability.md), [`consumer-issue-reporting.md`](consumer-issue-reporting.md) |
-| Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`github-governance-authority.md`](github-governance-authority.md), [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md), [`cli.md`](cli.md) |
+| Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`github-governance-authority.md`](github-governance-authority.md), [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`next-development-transition.md`](next-development-transition.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md), [`cli.md`](cli.md) |
 | CLI and Node API Reference | `cli-registry.json`, `node-api-registry.json`, `workflow-registry.json`, `manual-registry.json` | [`cli-reference.md`](cli-reference.md), [`node-api-reference.md`](node-api-reference.md), [`cli.md`](cli.md), [`../packages/core/README.md`](../packages/core/README.md) |
 
 | Capability | Machine-readable entry | Manual entry |
@@ -118,6 +118,7 @@ replace them.
 | How do I report or safely apply branch and pull-request engineering hygiene? | [`engineering-housekeeper.md`](engineering-housekeeper.md) | use/verify | preview |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
+| How does a completed Alpha remain successful while the following development version is prepared? | [`next-development-transition.md`](next-development-transition.md), [`../architecture/decisions/0002-next-development-transition.md`](../architecture/decisions/0002-next-development-transition.md) | verify/use | preview |
 | What did Buildchain migrate or retire from old action repositories? | [`migration-inventory.md`](migration-inventory.md) | verify | stable |
 | What is the active action and workflow source of truth? | [`ownership.md`](ownership.md) | verify | stable |
 | How do I declare version files and custom lifecycle commands? | [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |

@@ -6,7 +6,7 @@
     "cliCommandCount": 114,
     "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 71,
+    "sitePageCount": 72,
     "docCommandRefCount": 924,
     "failureCount": 0
   },
@@ -3264,6 +3264,10 @@
       },
       {
         "id": "manual:migration-inventory",
+        "category": "manual"
+      },
+      {
+        "id": "manual:next-development-transition",
         "category": "manual"
       },
       {
@@ -8003,8 +8007,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "099c0db9c5346942aee236af2cb7b6a7a91fbb2c54ebb17b7a2544a339c00d40",
-    "workflowRegistryDigest": "3a89609848b3a8b5dbee477b82e273f3d8a47f4f152f84e29a236f0e52d2cceb",
-    "pageRegistryDigest": "6e76c213adb11b486661ae277b92767a2d6d662890e9da796df9e1068af9d2a6"
+    "workflowRegistryDigest": "9fa0cedd177e417d0c4bd90259a5e05753ae464a745e1422fccac8c730b84011",
+    "pageRegistryDigest": "26d97fb2a57eebe108598bba9c78c59e4a60bfdf6145d08b5e78b6c7a59fcb4c"
   },
   "comparison": {
     "missingCliRegistry": [],

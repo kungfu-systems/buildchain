@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "48ec6dce02dd7a2e72cf3f326abb7cfe5b70346b",
-    "maxHandMaintainedSourceFiles": 302,
-    "maxHandMaintainedSourceLines": 118074,
+    "baselineRevision": "148e293f56e46990a44ed86525f9e38c910cda59",
+    "maxHandMaintainedSourceFiles": 308,
+    "maxHandMaintainedSourceLines": 120267,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23477,
-    "latestTransition": "The v3 self-dogfood campaign and macOS JIT operator now compose moving-dev delivery with same-host instance rehydration without allocating another host.",
-    "rationale": "The protected channel identity and v3 self-dogfood campaign remain intact with exact PR, review, merge-group CI, artifact and installed-product readback. One separate bounded rehydration module adds exact account, source, Budget, host, AMI, subnet, runner-residue and cross-region capacity checks before same-host RunInstances DryRun and replacement launch; tests prove zero AllocateHosts calls. This exact 302-file, 118074-source-line and 23477-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "Buildchain v3 composes durable next-development control with bounded macOS JIT same-host instance rehydration.",
+    "rationale": "The protected next-development controller remains intact while one separate rehydration module adds exact account, source, Budget, host, AMI, subnet, runner-residue and cross-region capacity checks before same-host RunInstances DryRun and replacement launch; tests prove zero AllocateHosts calls. This exact 308-file, 120267-source-line and 23477-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -22,6 +22,22 @@
     "scripts/aws-macos-jit-controller.mjs": {
       "maxLines": 631,
       "rationale": "The existing operator entrypoint adds only the rehydration plan dispatch and explicit exact-host, replaced-instance and no-host-allocation confirmations; provider checks and execution remain in the separately budgeted rehydration module. This exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/next-development-transition.js": {
+      "maxLines": 738,
+      "rationale": "The single versioned authority keeps completed-Alpha identity, legal successor models, role-separated adapter bounds, materialization roots, compare-and-swap transitions and deterministic replay validation together. The bounded increase makes anchored/manual initial state persist as waiting-anchor even after reviewed input and exposes rooted anchor binding plus controller materialization recording; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/next-development-controller.js": {
+      "maxLines": 726,
+      "rationale": "The durable controller keeps atomic child identity, rooted checkpoints, idempotent materialization operations, latest protected Dev revalidation, PR settlement and exact source and derived root readback in one provider-neutral authority. It exposes no Alpha publication effect and resumes only through injected atomic store and executor boundaries; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "packages/core/next-development-candidate-reservation.js": {
+      "maxLines": 186,
+      "rationale": "The bounded provider adapter recognizes generated preparation identity, excludes pure preparation integrations, validates exact candidate blob preservation, and roots the remote readback without adding candidate settlement authority; this exact reviewed ceiling cannot grow implicitly."
+    },
+    "actions/promote-buildchain-ref/internal/promote-alpha-channel.js": {
+      "maxLines": 599,
+      "rationale": "The extracted Alpha promotion stage replaces the former non-fast-forward skip with the existing exact-current-Dev regeneration contract, protected PR fallback, and fail-closed workspace binding; this exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/dev-delivery-warrant.js": {
       "maxLines": 611,
@@ -105,8 +121,8 @@
       "rationale": "The new-file budget evaluator recognizes only explicit path-scoped transitions with exact ceilings and mandatory rationales; the default budget and all existing no-widening checks remain unchanged."
     },
     "scripts/check-inventory.mjs": {
-      "maxLines": 1470,
-      "rationale": "Inventory now requires the recovery verifier, schema, resolver, deterministic startup-failure fixture, sealed-bundle wiring, no-product-install condition, bounded Buildchain self-runtime dependency bridge, and contained durable-finalization helper; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 1479,
+      "rationale": "Inventory retains the complete recovery and publication authority set and additionally requires the next-development contract, controller, schemas, fixtures, adapter, generated guidance and public documentation; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/generate-channel-promotion-workflow.mjs": {
       "maxFunctionLines": 288,
@@ -123,8 +139,8 @@
       "rationale": "The existing Gate validator admits an explicit bounded long-form duration class while preserving the standard 60-second default and exact capture-to-scene binding; this exact post-integration ceiling cannot grow implicitly."
     },
     "scripts/dev-alpha-candidate-patrol.mjs": {
-      "maxLines": 1184,
-      "rationale": "The existing single-flight exact-source Alpha controller now idempotently registers repository-selected GitHub auto-merge intent only after settlement revalidation, with explicit merge-method validation and no direct merge or approval path; this exact ceiling cannot grow implicitly."
+      "maxLines": 1197,
+      "rationale": "The existing single-flight exact-source Alpha controller delegates next-development reservation validation to the bounded core reader, carries the rooted result into selection, and retains the no-publication boundary; this exact ceiling cannot grow implicitly."
     },
     "scripts/build-contract-core.mjs": {
       "maxLines": 1234,

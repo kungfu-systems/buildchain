@@ -82,6 +82,16 @@
   },
   "capabilities": [
     {
+      "id": "next-development-controller",
+      "owner": "Buildchain protected development version plane",
+      "sourceInventoryId": "next-development-controller",
+      "surfaces": [
+        "export:./next-development-transition",
+        "export:./next-development-controller"
+      ],
+      "migrationPhase": "legacy-authoritative"
+    },
+    {
       "id": "dev-delivery-warrant",
       "owner": "Buildchain Dev delivery control plane",
       "sourceInventoryId": "dev-delivery-warrant",

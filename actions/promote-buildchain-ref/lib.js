@@ -96,6 +96,7 @@ import {
   BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
   BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
 } from "../../packages/core/buildchain-layout.js";
+import { generateBuildchainKfdAdopterRelease } from "../../scripts/generate-buildchain-kfd-witnesses.mjs";
 import { promoteMajorChannel } from "./internal/promote-major-channel.js";
 import { promoteAlphaChannel } from "./internal/promote-alpha-channel.js";
 import { promoteReleaseChannel } from "./internal/promote-release-channel.js";
@@ -1985,6 +1986,7 @@ async function collectAndPersistReleasePassport({
     validation: result.validation || { valid: true, errors: [] },
   };
   const passportSourceSha = result.transaction.source_sha || sourceSha;
+  const passportCheckedAt = new Date().toISOString();
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
   const publicReleaseTag = publicReleaseTagForTransaction(result.transaction);
@@ -2025,6 +2027,9 @@ async function collectAndPersistReleasePassport({
         cwd,
         sourceSha: passportSourceSha,
       })
+    : undefined;
+  const selfAdopter = buildchainSelfKfd && !kfdAdopterManifestJson
+    ? await generateBuildchainKfdAdopterRelease({ cwd, sourceSha: passportSourceSha, checkedAt: passportCheckedAt, emitOutputs: false })
     : undefined;
   const resolvedKfd1WitnessJsons = kfd1WitnessJsons.length > 0
     ? kfd1WitnessJsons
@@ -2071,9 +2076,9 @@ async function collectAndPersistReleasePassport({
     kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
     kfd3ArtifactWitnessJsons: resolvedKfd3ArtifactWitnessJsons,
     kfd3ArtifactVerifyCommand,
-    kfdAdopterManifestJson,
-    kfdSupportMatrixJson,
-    kfdProductGateJsons,
+    kfdAdopterManifestJson: kfdAdopterManifestJson || selfAdopter?.outputs?.["kfd-adopter-manifest-json"],
+    kfdSupportMatrixJson: kfdSupportMatrixJson || selfAdopter?.outputs?.["kfd-support-matrix-json"],
+    kfdProductGateJsons: kfdProductGateJsons.length > 0 ? kfdProductGateJsons : selfAdopter?.outputs?.["kfd-product-gate-jsons"].split(","),
     invariantPassportJsons,
     invariantPassportCommand,
     releaseEvidenceJsons: [
@@ -2085,6 +2090,7 @@ async function collectAndPersistReleasePassport({
     platformManifestJsons: platformManifests,
     distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
     controllerReceiptReferences: releaseCandidateValidation?.controllerReceipts || [],
+    checkedAt: passportCheckedAt,
     releaseJsonExtra: JSON.stringify({
       channel,
       targetRef,
@@ -3705,6 +3711,11 @@ function createRefMutationOperations(context) {
       if (!allowedPaths.length) {
         return undefined;
       }
+      if (protectedUpdate?.reconciliationVersion && !reconciliationWorkspace) {
+        throw new Error(
+          `Version-state reconciliation for current ${branch} requires an exact checkout workspace`,
+        );
+      }
       const { data: generatedCommit } = await getGitCommitWithRetry({
         octokit,
         owner,
@@ -3721,7 +3732,7 @@ function createRefMutationOperations(context) {
         headSha: branchSha,
         allowedPaths,
       });
-      if (protectedUpdate?.reconciliationVersion && reconciliationWorkspace) {
+      if (protectedUpdate?.reconciliationVersion) {
         const workspaceCwd = path.resolve(cwd, reconciliationWorkspace);
         if (!fs.existsSync(workspaceCwd)) {
           throw new Error(`Version-state reconciliation workspace does not exist: ${workspaceCwd}`);

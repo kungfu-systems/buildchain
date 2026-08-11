@@ -20,6 +20,7 @@ import {
   candidateFromDecision,
   selectLatestQualifiedSource,
 } from "../packages/core/dev-alpha-candidate-selection.js";
+import { readGitHubNextDevelopmentVersionReservation } from "../packages/core/next-development-candidate-reservation.js";
 
 export { reconcileActiveReleaseTrain, selectLatestQualifiedSource };
 
@@ -617,6 +618,7 @@ export async function runDevAlphaCandidatePatrol(
     comparison,
     workflowEvidence,
     skippedNewerCommitCount,
+    versionReservation,
     qualificationError,
   } = await resolvePatrolSourceInputs({
     client,
@@ -646,6 +648,7 @@ export async function runDevAlphaCandidatePatrol(
           observedSourceHeadSha,
           skippedNewerCommitCount,
           ...(targetBaseline ? { targetBaseline } : {}),
+          ...(versionReservation ? { versionReservation } : {}),
         },
         workflowEvidence,
         requiredWorkflowPaths,
@@ -992,6 +995,20 @@ export function createGitHubChannelCandidateClient({
         targetBranch,
         parseCandidate: managedCandidateFromPullRequest,
       }),
+    async readNextDevelopmentVersionReservation({
+      reservationSha,
+      candidateSha,
+      targetVersion,
+    }) {
+      return readGitHubNextDevelopmentVersionReservation({
+        api,
+        owner,
+        repo,
+        reservationSha,
+        candidateSha,
+        targetVersion,
+      });
+    },
     async listCompletedWorkflowRuns(workflowPathValue, sourceBranch) {
       const runs = [];
       for (let page = 1; page <= 10; page += 1) {
@@ -1015,7 +1032,11 @@ export function createGitHubChannelCandidateClient({
         for (const commit of rows) {
           const commitSha = text(commit.sha);
           if (commitSha === targetSha) return commits;
-          commits.push(commitSha);
+          commits.push({
+            sha: commitSha,
+            message: text(commit.commit?.message),
+            parents: (commit.parents || []).map((parent) => text(parent.sha)),
+          });
         }
         if (rows.length < 100) return commits;
       }

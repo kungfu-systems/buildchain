@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "3.0.8-alpha.0",
+    "version": "3.0.9-alpha.1",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v3",
@@ -324,7 +324,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:67b2f3ff8f37e91f9b0534a557973b6a3f2c06234f9564c9e1effaee1eeaa70a"
+      "auditDigest": "sha256:a7c836d20ef6a5d22b0099cded80738301d81ef7030dd0ac0eb6df320b4c184e"
     },
     {
       "contractVersion": 1,
@@ -1071,7 +1071,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:5dec958a479f6cf4f83d2be6eb6a8285e344acb9c402574095a436193cf50fa7"
+      "auditDigest": "sha256:06f591753e0b4cd5b836b0d80d59ff4de6cecccef353788647512f7af956ccaf"
     },
     {
       "contractVersion": 1,
@@ -1093,7 +1093,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:d552e8c900dda0f25e5a43a0eafababe861512ee5ad9c7bb5e709c6e85b6dc51"
+      "auditDigest": "sha256:cc540762205894a736454e9a87b518ff4fcab2ac1dc85f244d2f8fcf46561542"
     },
     {
       "contractVersion": 1,
@@ -1718,7 +1718,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:67b2f3ff8f37e91f9b0534a557973b6a3f2c06234f9564c9e1effaee1eeaa70a",
+      "auditDigest": "sha256:a7c836d20ef6a5d22b0099cded80738301d81ef7030dd0ac0eb6df320b4c184e",
       "compatibleBreakingDigests": [
         "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
         "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
@@ -4024,5 +4024,5 @@
   ],
   "compatibilityProofRegistryRoot": "sha256:f11b62ce69cfb0ff25b66861474b99a75148192c0474c9d1cc2067e347b05abd",
   "compatibilityDigest": "sha256:80f65cc191b1f771475184edf8a1bf9c10dd69bb58060aa09313d0e1e57f508a",
-  "contractDigest": "sha256:503d93256e5f1470a238748e9992bc2ed4869e637e8560631065e7958344cd06"
+  "contractDigest": "sha256:b250e7c5211c56234544fcb1e47000f16b4df8f90179975bcf7658a52dff1e19"
 }

@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/next-development-transition-v1.schema.json",
+  "title": "Buildchain Next-development Transition v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "idempotencyKey",
+    "repository",
+    "completedAlpha",
+    "completedAlphaRoot",
+    "alphaOutcome",
+    "model",
+    "target",
+    "declaredPaths",
+    "adapter",
+    "effectBounds",
+    "state",
+    "materialization",
+    "transitions"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": {
+      "const": "kungfu-buildchain-next-development-transition/v1"
+    },
+    "idempotencyKey": { "$ref": "#/$defs/root" },
+    "repository": {
+      "type": "string",
+      "pattern": "^[^/\\s]+/[^/\\s]+$"
+    },
+    "completedAlpha": { "$ref": "#/$defs/completedAlpha" },
+    "completedAlphaRoot": { "$ref": "#/$defs/root" },
+    "alphaOutcome": { "const": "preserved-success" },
+    "model": { "$ref": "#/$defs/model" },
+    "target": { "$ref": "#/$defs/target" },
+    "declaredPaths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/path" }
+    },
+    "adapter": { "$ref": "#/$defs/adapter" },
+    "effectBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowedPaths", "refUpdates", "forbiddenRefNamespaces"],
+      "properties": {
+        "allowedPaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/path" }
+        },
+        "refUpdates": { "type": "array", "maxItems": 0 },
+        "forbiddenRefNamespaces": {
+          "const": ["refs/heads/alpha/", "refs/tags/"]
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "generation", "stateRoot"],
+      "properties": {
+        "status": { "$ref": "#/$defs/state" },
+        "generation": { "type": "integer", "minimum": 1 },
+        "stateRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "materialization": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/materialization" }]
+    },
+    "transitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/transition" }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "properties": {
+              "status": {
+                "enum": ["materialized", "pr-pending", "merged", "verified"]
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "materialization": { "$ref": "#/$defs/materialization" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "path": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\s]+$"
+    },
+    "state": {
+      "enum": [
+        "planned",
+        "waiting-anchor",
+        "materialized",
+        "pr-pending",
+        "merged",
+        "verified"
+      ]
+    },
+    "completedAlpha": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "version",
+        "exactTag",
+        "releaseSha",
+        "treeSha",
+        "publicationRoot",
+        "completedAt"
+      ],
+      "properties": {
+        "outcome": { "const": "succeeded" },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-alpha\\.(0|[1-9][0-9]*)$"
+        },
+        "exactTag": { "type": "string", "minLength": 1 },
+        "releaseSha": { "$ref": "#/$defs/gitSha" },
+        "treeSha": { "$ref": "#/$defs/gitSha" },
+        "publicationRoot": { "$ref": "#/$defs/root" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "model": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["strategy", "next"],
+          "properties": {
+            "strategy": { "const": "semver" },
+            "next": { "const": "auto" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["strategy", "next"],
+          "properties": {
+            "strategy": { "const": "anchored" },
+            "next": { "const": "manual" }
+          }
+        }
+      ]
+    },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environmentVariable",
+        "sourcePaths",
+        "derivedPaths",
+        "allowedChangePaths",
+        "readOnlyPaths",
+        "derivationStage",
+        "verificationStage"
+      ],
+      "properties": {
+        "environmentVariable": { "const": "BUILDCHAIN_VERSION" },
+        "sourcePaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/path" }
+        },
+        "derivedPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/path" }
+        },
+        "allowedChangePaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/path" }
+        },
+        "readOnlyPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/path" }
+        },
+        "derivationStage": {
+          "oneOf": [{ "type": "null" }, { "const": "lifecycle.version-state" }]
+        },
+        "verificationStage": { "const": "lifecycle.verify" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "anchor"],
+      "properties": {
+        "version": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/semver" }]
+        },
+        "anchor": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["manifestPath", "manifestRoot"],
+              "properties": {
+                "manifestPath": { "$ref": "#/$defs/path" },
+                "manifestRoot": { "$ref": "#/$defs/root" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "materialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targetVersion",
+        "anchorRoot",
+        "paths",
+        "materializationRoot"
+      ],
+      "properties": {
+        "targetVersion": { "$ref": "#/$defs/semver" },
+        "anchorRoot": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/root" }]
+        },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "beforeRoot", "afterRoot", "changed"],
+            "properties": {
+              "path": { "$ref": "#/$defs/path" },
+              "beforeRoot": { "$ref": "#/$defs/root" },
+              "afterRoot": { "$ref": "#/$defs/root" },
+              "changed": { "type": "boolean" }
+            }
+          }
+        },
+        "materializationRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedStateRoot",
+        "from",
+        "to",
+        "event",
+        "evidenceRoot",
+        "recordedAt",
+        "requestRoot",
+        "transitionRoot"
+      ],
+      "properties": {
+        "expectedStateRoot": { "$ref": "#/$defs/root" },
+        "from": { "$ref": "#/$defs/state" },
+        "to": { "$ref": "#/$defs/state" },
+        "event": { "type": "string", "minLength": 1 },
+        "evidenceRoot": { "$ref": "#/$defs/root" },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "requestRoot": { "$ref": "#/$defs/root" },
+        "transitionRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}
