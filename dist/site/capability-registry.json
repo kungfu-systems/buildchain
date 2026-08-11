@@ -48,12 +48,12 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 6,
-        "pageCount": 7,
-        "cliCommandCount": 25,
-        "nodeApiCount": 12,
-        "workflowCount": 3,
-        "actionCount": 2
+        "manualCount": 7,
+        "pageCount": 8,
+        "cliCommandCount": 26,
+        "nodeApiCount": 15,
+        "workflowCount": 4,
+        "actionCount": 3
       },
       "manuals": [
         "docs/release-passport.md",
@@ -61,7 +61,8 @@
         "docs/publication-authority.md",
         "docs/binary-distribution.md",
         "docs/publish-transaction.md",
-        "docs/release-tail-contract.md"
+        "docs/release-tail-contract.md",
+        "docs/release-tail-provider-plane.md"
       ],
       "factSources": [
         "page-registry.json",
@@ -291,7 +292,7 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 3,
-        "pageCount": 10,
+        "pageCount": 11,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
         "workflowCount": 42,

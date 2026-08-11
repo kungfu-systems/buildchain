@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:98faca339bbb9029113af82edeb9d0f5b1e91aedb4c59f9e04454b7ef2b36750",
+      "digest": "sha256:94a4866f5a44f97ab10ad460c4d9ff39c58aa28e231311425af2fcb857aa8c72",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -332,7 +332,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:928412e4a2469cb2df000f1a498f3925d661360e2ee6357a7e519d22141a5ca6",
+      "digest": "sha256:8654a8c391ede02f0c962e05c1ec9e1b973d2b1922252919ab59548f018340b7",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -347,7 +347,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:1df4ca139f088cf2df83f31eeb9d083ac30ef768e25b4ca9140182c625951dc6",
+      "digest": "sha256:a558364778cf6457d091881bdccd96040fc87ac285c9971b76b84957c1595c5a",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -445,7 +445,7 @@
       "title": "Declarative release-tail contract",
       "path": "docs/release-tail-contract.md",
       "plane": "verify",
-      "digest": "sha256:10e04181efe9a84713fde226e4a4cd9e2b21f27b18add7cd97459c07aa6180b1",
+      "digest": "sha256:3992fabcf6e9750c17bf025b782ac209096313de6a77897c21a108d160df045c",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -454,6 +454,21 @@
       ],
       "maturity": "draft",
       "order": 122
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "title": "Declarative release-tail provider plane",
+      "path": "docs/release-tail-provider-plane.md",
+      "plane": "use",
+      "digest": "sha256:80b39ba4f0a8ed723e2a03e7efff0fee1e891245f7d1bf343edc75011aded801",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "release-operator",
+        "agent",
+        "maintainer"
+      ],
+      "maturity": "preview",
+      "order": 123
     },
     {
       "id": "release-governance",
