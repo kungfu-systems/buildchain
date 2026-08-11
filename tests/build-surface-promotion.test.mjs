@@ -1796,7 +1796,7 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v3-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
+  assert.equal(alphaLock.buildchain.resolvedSha, "1055641ec4bb32baed2f3b57a896598ec6b0308d");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.equal(stableLock.buildchain.ref, "v3");
   assert.equal(stableLock.buildchain.resolvedSha, "380b2d8c2a660b07ed785e71276f71dc6a9184f7");
