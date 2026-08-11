@@ -4,13 +4,13 @@
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
-    "baselineRevision": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
-    "maxHandMaintainedSourceFiles": 301,
-    "maxHandMaintainedSourceLines": 117702,
+    "baselineRevision": "48ec6dce02dd7a2e72cf3f326abb7cfe5b70346b",
+    "maxHandMaintainedSourceFiles": 302,
+    "maxHandMaintainedSourceLines": 118074,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23477,
-    "latestTransition": "Buildchain v3 self-dogfood composes moving-dev, repair, publication and Warrant authority over the major-independent channel identity.",
-    "rationale": "The latest Dev channel-identity transition remains intact: stable and alpha use one major-independent shell, runtime and lock identity, and the reusable surfaces keep both lanes explicit and fail closed. The self-dogfood campaign adds one bounded orchestration file over the existing Release Train, Candidate Patrol and Delivery Warrant authorities. It requires exact protected PR, review, merge-group CI, tree, artifact and installed-product readback; deterministic negative cases prove restart replay, duplicate idempotence, invalid authority, unrelated priority and non-preemption. Train/repair and queue transactions are independently bounded helpers. This exact 301-file, 117702-source-line and 23477-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "The v3 self-dogfood campaign and macOS JIT operator now compose moving-dev delivery with same-host instance rehydration without allocating another host.",
+    "rationale": "The protected channel identity and v3 self-dogfood campaign remain intact with exact PR, review, merge-group CI, artifact and installed-product readback. One separate bounded rehydration module adds exact account, source, Budget, host, AMI, subnet, runner-residue and cross-region capacity checks before same-host RunInstances DryRun and replacement launch; tests prove zero AllocateHosts calls. This exact 302-file, 118074-source-line and 23477-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/aws-macos-jit-controller.mjs": {
+      "maxLines": 631,
+      "rationale": "The existing operator entrypoint adds only the rehydration plan dispatch and explicit exact-host, replaced-instance and no-host-allocation confirmations; provider checks and execution remain in the separately budgeted rehydration module. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/dev-delivery-warrant.js": {
       "maxLines": 611,
       "rationale": "The existing durable queue adds only the narrow release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly."

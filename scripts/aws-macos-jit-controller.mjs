@@ -6,6 +6,7 @@ import {
   AWS_MACOS_JIT_CONTROLLER_CONTRACT,
   createMacosJitCampaignPlan,
   createMacosJitClosePlan,
+  createMacosJitInstanceRehydratePlan,
   createMacosJitJobPlan,
   createMacosJitSourceRebindPlan,
   macosAllocateHostsArgs,
@@ -13,6 +14,7 @@ import {
   macosRunInstancesArgs,
 } from "./aws-macos-jit-controller-core.mjs";
 import { MACOS_EC2_JIT_REGIONS } from "./aws-macos-jit-core.mjs";
+import { executeMacosJitInstanceRehydrate } from "./aws-macos-jit-instance-rehydrate.mjs";
 import { executeMacosJitJob } from "./aws-macos-jit-job-controller.mjs";
 import { executeMacosJitSourceRebind } from "./aws-macos-jit-source-rebind.mjs";
 import {
@@ -516,6 +518,19 @@ function confirm(plan) {
       throw new Error("--confirm-zero-allocation is required");
     }
   }
+  if (plan.kind === "instance-rehydrate-plan") {
+    if (arg("confirm-host-id") !== plan.aws.hostId) {
+      throw new Error("--confirm-host-id must equal the exact host id");
+    }
+    if (arg("confirm-replaces-instance-id") !== plan.aws.replacesInstanceId) {
+      throw new Error(
+        "--confirm-replaces-instance-id must equal replacesInstanceId",
+      );
+    }
+    if (!flag("confirm-no-host-allocation")) {
+      throw new Error("--confirm-no-host-allocation is required");
+    }
+  }
 }
 
 function emit(plan, mode, execute, operation) {
@@ -541,6 +556,20 @@ export function main() {
       executeMacosJitCampaignLaunch(plan, { profile: arg("aws-profile") }),
     );
   }
+  if (["plan-rehydrate", "rehydrate-instance"].includes(mode)) {
+    const plan = createMacosJitInstanceRehydratePlan({
+      ...commonValues(execute),
+      hostId: arg("host-id"),
+      hostAllocatedAt: arg("host-allocated-at"),
+      replacesInstanceId: arg("replaces-instance-id"),
+      rehydrationId: arg("rehydration-id"),
+    });
+    return emit(plan, mode, execute, () =>
+      executeMacosJitInstanceRehydrate(plan, {
+        profile: arg("aws-profile"),
+      }),
+    );
+  }
   if (["plan-rebind", "rebind-campaign"].includes(mode)) {
     const plan = createMacosJitSourceRebindPlan({
       ...commonValues(execute),
@@ -550,7 +579,9 @@ export function main() {
       hostId: arg("host-id"),
       instanceId: arg("instance-id"),
     });
-    return emit(plan, mode, execute, () => executeMacosJitSourceRebind(plan, { profile: arg("aws-profile") }));
+    return emit(plan, mode, execute, () =>
+      executeMacosJitSourceRebind(plan, { profile: arg("aws-profile") }),
+    );
   }
   if (["plan-job", "run-job"].includes(mode)) {
     const plan = createMacosJitJobPlan({
