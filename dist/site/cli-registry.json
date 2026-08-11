@@ -354,7 +354,7 @@
         "collect github-release"
       ],
       "syntaxes": [
-        "buildchain collect github-release --tag <tag> [--repository <owner/repo>] [--assets-dir <dir>] [--assets-json <json-or-path>] [--release-json <json-or-path>] [--package-set-json <json-or-path>] [--product-name <name>] [--publish-evidence-json <json-or-path>] [--trusted-publishing-json <json-or-path>] [--transaction-json <json-or-path>] [--anchor-manifest-json <json-or-path>] [--impact-json <json-or-path>] [--build-summary-json <json-or-path>] [--build-facts-json <json-or-path>]... [--platform-manifest-json <json-or-path>]... [--dist-tag-evidence-json <json-or-path>] [--kfd-1-witness-json <json-or-path>]... [--kfd-2-claim-json <json-or-path>]... [--kfd-3-prebuild-witness-json <json-or-path>]... [--kfd-3-artifact-witness-json <json-or-path>]... [--kfd-3-artifact-verify-cmd <command>] [--kfd-support-matrix-json <json-or-path>] [--kfd-product-gate-json <json-or-path>]... [--invariant-passport-json <json-or-path>]... [--invariant-passport-cmd <command>] [--release-evidence-json <json-or-path>]... [--github-artifact-attestation-policy-json <json-or-path>]... [--kfd-agent-hub-evidence-json <json-or-path>] [--base-passport-json <json-or-path>] [--require-base-kfd] [--release-extra-json <json-or-path>] [--publish-json <json-or-path>] [--output-dir <dir>] [--json]"
+        "buildchain collect github-release --tag <tag> [--repository <owner/repo>] [--assets-dir <dir>] [--assets-json <json-or-path>] [--release-json <json-or-path>] [--package-set-json <json-or-path>] [--product-name <name>] [--publish-evidence-json <json-or-path>] [--trusted-publishing-json <json-or-path>] [--transaction-json <json-or-path>] [--anchor-manifest-json <json-or-path>] [--impact-json <json-or-path>] [--build-summary-json <json-or-path>] [--build-facts-json <json-or-path>]... [--platform-manifest-json <json-or-path>]... [--dist-tag-evidence-json <json-or-path>] [--kfd-1-witness-json <json-or-path>]... [--kfd-2-claim-json <json-or-path>]... [--kfd-3-prebuild-witness-json <json-or-path>]... [--kfd-3-artifact-witness-json <json-or-path>]... [--kfd-3-artifact-verify-cmd <command>] [--kfd-adopter-manifest-json <json-or-path>] [--kfd-support-matrix-json <json-or-path>] [--kfd-product-gate-json <json-or-path>]... [--invariant-passport-json <json-or-path>]... [--invariant-passport-cmd <command>] [--release-evidence-json <json-or-path>]... [--github-artifact-attestation-policy-json <json-or-path>]... [--kfd-agent-hub-evidence-json <json-or-path>] [--base-passport-json <json-or-path>] [--require-base-kfd] [--release-extra-json <json-or-path>] [--publish-json <json-or-path>] [--output-dir <dir>] [--json]"
       ],
       "options": [
         "--anchor-manifest-json",
@@ -374,6 +374,7 @@
         "--kfd-3-artifact-verify-cmd",
         "--kfd-3-artifact-witness-json",
         "--kfd-3-prebuild-witness-json",
+        "--kfd-adopter-manifest-json",
         "--kfd-agent-hub-evidence-json",
         "--kfd-product-gate-json",
         "--kfd-support-matrix-json",
@@ -2168,21 +2169,21 @@
     {
       "id": "kfd-support",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>...",
+      "usage": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>",
       "paths": [
         "kfd support project",
         "kfd support verify"
       ],
       "syntaxes": [
-        "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>... [--expected-source-sha <sha>] [--checked-at <date-time>] [--output <file>] [--json]",
-        "buildchain kfd support verify --projection-json <file-or-json> [--expected-source-sha <sha>] [--checked-at <date-time>] [--json]"
+        "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json> [--expected-source-sha <sha>] [--checked-at <date-time>] [--output <file>] [--json]",
+        "buildchain kfd support verify --projection-json <file-or-json> --manifest-json <file-or-json> --manifest-gate-json <file-or-json> [--expected-source-sha <sha>] [--checked-at <date-time>] [--json]"
       ],
       "options": [
         "--checked-at",
         "--expected-source-sha",
-        "--gate-json",
         "--json",
-        "--matrix-json",
+        "--manifest-gate-json",
+        "--manifest-json",
         "--output",
         "--projection-json"
       ],

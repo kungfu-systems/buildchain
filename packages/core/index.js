@@ -305,10 +305,14 @@ export {
 export {
   ARTIFACT_VERIFICATION_ENVELOPE_CHECK_CONTRACT,
   ARTIFACT_VERIFICATION_ENVELOPE_CONTRACT,
+  KFD_ADOPTER_RELEASE_BINDING_CONTRACT,
   KFX_ADMISSION_INPUTS_CONTRACT,
   artifactVerificationEnvelopeDigest,
+  createKfdAdopterReleaseBinding,
+  installedKfdPackageArtifactRoot,
   projectArtifactVerificationEnvelopeToKfx,
   sealArtifactVerificationReport,
+  validateKfdAdopterReleaseBinding,
   verifyArtifactVerificationEnvelope,
 } from "./artifact-verification-envelope.js";
 
@@ -488,15 +492,10 @@ export {
   KFD_PRODUCT_GATE_INPUT_CONTRACT,
   KFD_PRODUCT_GATE_INPUT_SCHEMA,
   KFD_PRODUCT_GATE_INPUT_SCHEMA_ID,
-  KFD_SUPPORT_PROJECTION_CONTRACT,
-  KFD_SUPPORT_PROJECTION_SCHEMA,
-  KFD_SUPPORT_PROJECTION_SCHEMA_ID,
-  createKfdSupportProjection,
   evaluateKfdProductGate,
   kfdProductGateDigest,
   kfdProductGates,
   validateKfdProductGateResult,
-  validateKfdSupportProjection,
   verifyKfdRecord,
 } from "./kfd-product-gates.js";
 

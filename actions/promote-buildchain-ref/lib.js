@@ -1849,6 +1849,7 @@ async function collectAndPersistReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  kfdAdopterManifestJson = "",
   kfdSupportMatrixJson = "",
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
@@ -1971,6 +1972,7 @@ async function collectAndPersistReleasePassport({
     kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
     kfd3ArtifactWitnessJsons: resolvedKfd3ArtifactWitnessJsons,
     kfd3ArtifactVerifyCommand,
+    kfdAdopterManifestJson,
     kfdSupportMatrixJson,
     kfdProductGateJsons,
     invariantPassportJsons,
@@ -3256,6 +3258,7 @@ function createRefMutationOperations(context) {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -3882,6 +3885,7 @@ function createReconciliationOperations(context) {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -3924,7 +3928,6 @@ function createReconciliationOperations(context) {
         `Version-state PR changed files outside declared version state: ${unexpected.join(", ")}`);
     }
   };
-
   const listChangedPathsBetweenTrees = async ({ baseSha, headSha }) => {
     const [baseCommitResult, headCommitResult] = await Promise.all([
       getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha }),
@@ -4567,6 +4570,7 @@ async function promoteBuildchainRefs({
   releasePassportKfd3PrebuildWitnessJsons = "",
   releasePassportKfd3ArtifactWitnessJsons = "",
   releasePassportKfd3ArtifactVerifyCommand = "",
+  releasePassportKfdAdopterManifestJson = "",
   releasePassportKfdSupportMatrixJson = "",
   releasePassportKfdProductGateJsons = "",
   releasePassportInvariantPassportJsons = "",
@@ -4778,6 +4782,7 @@ async function promoteBuildchainRefs({
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,

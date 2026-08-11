@@ -547,6 +547,7 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-adopter-manifest-json",
         "release-passport-kfd-product-gate-jsons",
         "release-passport-kfd-support-matrix-json",
         "release-passport-output-dir",
@@ -570,7 +571,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 112,
+      "inputCount": 113,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2569,6 +2570,7 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-adopter-manifest-json",
         "release-passport-kfd-product-gate-jsons",
         "release-passport-kfd-support-matrix-json",
         "release-passport-output-dir",
@@ -2592,7 +2594,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 101,
+      "inputCount": 102,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3103,6 +3105,7 @@
         "publish-package-set-order",
         "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
+        "publish-required-artifacts-path",
         "publish-sealed-bundle-manifest",
         "publish-sealed-bundle-root",
         "publish-source-locked",
@@ -3135,6 +3138,7 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-adopter-manifest-json",
         "release-passport-kfd-product-gate-jsons",
         "release-passport-kfd-support-matrix-json",
         "release-passport-output-dir",
@@ -3154,7 +3158,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 78,
+      "inputCount": 80,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
