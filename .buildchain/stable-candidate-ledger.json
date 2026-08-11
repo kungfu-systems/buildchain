@@ -6,11 +6,17 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-08-10T19:51:28.370Z"
+    "updatedAt": "2026-08-11T19:57:55.394Z"
   },
   "candidates": [],
-  "updatedAt": "2026-08-10T19:51:28.370Z",
+  "updatedAt": "2026-08-11T19:57:55.394Z",
   "stableReleases": [
+    {
+      "version": "3.0.8",
+      "tag": "v3.0.8",
+      "publishedAt": "2026-08-11T01:28:47Z",
+      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.8"
+    },
     {
       "version": "3.0.7",
       "tag": "v3.0.7",
@@ -70,18 +76,6 @@
       "tag": "v2.14.13",
       "publishedAt": "2026-07-21T20:08:55Z",
       "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.13"
-    },
-    {
-      "version": "2.14.12",
-      "tag": "v2.14.12",
-      "publishedAt": "2026-07-21T19:11:07Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.12"
-    },
-    {
-      "version": "2.14.11",
-      "tag": "v2.14.11",
-      "publishedAt": "2026-07-21T18:38:08Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.11"
     }
   ]
 }
