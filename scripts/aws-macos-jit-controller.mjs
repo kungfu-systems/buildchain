@@ -542,6 +542,17 @@ function confirm(plan) {
           "--confirm-terminal-failure-run-ids-json must equal the exact failed run inventory",
         );
       }
+      const confirmedStartupFailures = flag("confirm-startup-failure-runs-json")
+        ? jsonArrayArg("confirm-startup-failure-runs-json")
+        : [];
+      if (
+        JSON.stringify(confirmedStartupFailures) !==
+        JSON.stringify(plan.github.startupFailureRuns)
+      ) {
+        throw new Error(
+          "--confirm-startup-failure-runs-json must equal the exact startup failure inventory",
+        );
+      }
     }
   }
   if (plan.kind === "instance-rehydrate-plan") {
@@ -616,6 +627,10 @@ export function main() {
       terminalFailureRunIds: afterFailure
         ? jsonArrayArg("terminal-failure-run-ids-json")
         : [],
+      startupFailureRuns:
+        afterFailure && flag("startup-failure-runs-json")
+          ? jsonArrayArg("startup-failure-runs-json")
+          : [],
     });
     return emit(plan, mode, execute, () =>
       executeMacosJitSourceRebind(plan, { profile: arg("aws-profile") }),

@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "0de402c3877e4c55dbd07b2f4891facce5be8ba8",
     "maxHandMaintainedSourceFiles": 313,
-    "maxHandMaintainedSourceLines": 122604,
+    "maxHandMaintainedSourceLines": 122686,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 23775,
-    "latestTransition": "Buildchain v3 makes qualified Delivery Warrant retries idempotent after native proof and before Merge Queue settlement.",
-    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run now accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. This exact 313-file, 122604-source-line and 23775-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "The macOS JIT source rebind preserves explicitly confirmed non-counting startup failures without weakening terminal-failure evidence.",
+    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. The macOS JIT rebind now additionally binds each earlier non-counting startup failure to an exact run and source SHA while requiring completed startup_failure state with zero jobs and artifacts. This exact 313-file, 122686-source-line and 23775-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,9 +19,13 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/aws-macos-jit-controller-core.mjs": {
+      "maxLines": 619,
+      "rationale": "The macOS plan contract carries a sorted exact startup-failure run and source inventory only for terminal-failure rebinds, keeping the paid-capacity and zero-dispatch safety policy explicit. This exact reviewed ceiling cannot grow implicitly."
+    },
     "scripts/aws-macos-jit-controller.mjs": {
-      "maxLines": 669,
-      "rationale": "The existing operator entrypoint retains rehydration and adds only an explicit after-failure rebind mode, exact failed-run JSON parsing and matching confirmation. Evidence checks and mutation remain in the separately bounded source-rebind module. This exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 684,
+      "rationale": "The existing operator entrypoint retains rehydration and the explicit after-failure rebind mode, adding only exact startup-failure JSON parsing and matching execution confirmation beside the terminal failed-run inventory. Evidence checks and mutation remain in the separately bounded source-rebind module. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/next-development-transition.js": {
       "maxLines": 738,
