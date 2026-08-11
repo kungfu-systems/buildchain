@@ -96,15 +96,22 @@
     "durablePath": "sealed-bundle/sha256/2f114e167d395b2dfb4a60cdad16b532ceb0564a35c448cb4f93e84edb9890d2",
     "resumeCommand": "buildchain paper resume --version \"3.0.9-alpha.4\" --state-ref \"refs/heads/buildchain/release-state/3-0-9-alpha-4\""
   },
-  "publication_state": "package-published",
+  "publication_state": "alpha-complete",
   "milestones": {
     "package_published": {
       "status": "complete",
       "artifactCount": 1,
       "sealedBundleRoot": "sha256:2f114e167d395b2dfb4a60cdad16b532ceb0564a35c448cb4f93e84edb9890d2"
+    },
+    "github_release": {
+      "status": "complete",
+      "action": "created",
+      "tag": "v3.0.9-alpha.4",
+      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.9-alpha.4",
+      "assetCount": 12
     }
   },
   "resume_command": "buildchain paper resume --version \"3.0.9-alpha.4\" --state-ref \"refs/heads/buildchain/release-state/3-0-9-alpha-4\"",
   "created_at": "2026-08-11T16:00:52.657Z",
-  "updated_at": "2026-08-11T16:16:04.130Z"
+  "updated_at": "2026-08-11T16:16:27.803Z"
 }
