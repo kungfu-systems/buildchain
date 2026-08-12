@@ -44,8 +44,11 @@ source binding. It reserves the next protected-dev landing before expensive
 native shards start, but it is not GitHub Merge Queue admission authority.
 Heartbeat extends only that generation. Native proof success atomically
 upgrades the same token and generation to `qualified`; only then may enqueue
-begin. Expiry recovery rejects the old token, retains queue age, and returns
-the candidate to selection.
+begin. Expiry fences further mutations by the old token, but it does not prove
+that the old native process stopped. The active Warrant therefore remains in
+place until bounded termination is proven by rooted terminal evidence. Only
+that exact fenced settlement may clear the holder and permit successor
+selection.
 
 A terminal event may cancel a candidate before selection without minting a
 Warrant. This transition is limited to an exact non-active queued candidate and
@@ -55,7 +58,12 @@ An active candidate still requires its current fencing token and lease
 generation. Exact duplicate cancellation evidence is a visible no-op; identity,
 state, event, or evidence drift fails closed.
 
-The reusable terminal controller uses one `settle` operation for active,
+The reusable terminal controller classifies authoritative completion,
+cancellation, supersession, native failure, and transient dequeue separately.
+`dequeued` alone never clears an active Warrant: a fresh holder continues with
+the same generation and token, while an expired holder waits for proof that its
+fenced worker stopped. Queued work may still settle as dequeued because it never
+started native execution. The controller uses one `settle` operation for active,
 queued, already-terminal, and never-admitted pull requests. An active Warrant
 still requires its exact fence and evidence. A matching queued cancellation is
 persisted normally. A duplicate terminal event or a pull request that never
@@ -154,6 +162,13 @@ buildchain dev warrant cancel-queued --repository owner/repository \
 `heartbeat`, `qualify`, `recover`, `close`, `settle`, `cancel-queued`, and `observe` use the same durable authority.
 Warrant-scoped mutations require the exact fencing token and lease generation.
 `close` also requires a rooted terminal evidence object.
+
+Expensive native commands must run through `dev-delivery-native-run.mjs` (or an
+equivalent exact consumer). It performs an exact fenced heartbeat before spawn,
+renews throughout the complete child lifetime, performs a final renewal before
+accepting success, and terminates the process group on heartbeat or fencing
+failure. Missing, stale, expired, or mismatched Warrant state therefore blocks
+native spawn instead of becoming qualification evidence.
 
 Proof commands create, verify, classify, and compose the two proof layers:
 
