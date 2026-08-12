@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "4972e2ad6d9748341712cf4dd752a4ebaab0d0bfc5bc13b30896b7044ada03f7",
+    "sha256": "26b9035b96a9814d6098b77ebddf7ee5be7a870f2ecb875b87f79c2488ee2094",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 72,
-      "docCommandRefCount": 946,
+      "sitePageCount": 73,
+      "docCommandRefCount": 989,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "4972e2ad6d9748341712cf4dd752a4ebaab0d0bfc5bc13b30896b7044ada03f7",
+      "sha256": "26b9035b96a9814d6098b77ebddf7ee5be7a870f2ecb875b87f79c2488ee2094",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 72,
-        "docCommandRefCount": 946,
+        "sitePageCount": 73,
+        "docCommandRefCount": 989,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1423,6 +1423,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./diagnostics"
+        },
+        {
+          "id": "export:./dev-delivery-authority",
+          "name": "@kungfu-tech/buildchain/dev-delivery-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/dev-delivery-authority.js",
+          "evidencePath": "packages/core/dev-delivery-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./dev-delivery-authority"
         },
         {
           "id": "export:./dev-delivery-warrant",
@@ -4766,7 +4778,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 39,
+          "inputCount": 40,
           "inputs": [
             "active-lease-context",
             "affected-paths-json",
@@ -4782,6 +4794,7 @@
             "dependency-root",
             "diagnostic-context",
             "dry-run",
+            "environment-root",
             "expected-head-sha",
             "expected-pr-number",
             "handoff-workflow-id",
@@ -6147,6 +6160,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:dev-delivery-qualification-landing-adr",
+          "name": "site-page:manual:dev-delivery-qualification-landing-adr",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:dev-delivery-warrant",
           "name": "site-page:manual:dev-delivery-warrant",
           "kind": "site-page",
@@ -6821,6 +6846,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 435
+    "publicSurfaceCount": 437
   }
 }

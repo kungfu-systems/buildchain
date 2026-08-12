@@ -73,13 +73,14 @@ function decodeBlob(blob) {
 }
 
 export class GitHubDevDeliveryStore {
-  constructor({ repository, token, apiUrl = "https://api.github.com", fetchImpl = globalThis.fetch } = {}) {
+  constructor({ repository, token, apiUrl = "https://api.github.com", fetchImpl = globalThis.fetch, createInitialState = createDevDeliveryQueue } = {}) {
     this.repository = normalizeRepository(repository);
     if (!fetchImpl) throw new Error("fetch is required");
     if (!token) throw new Error("GITHUB_TOKEN is required for the GitHub dev delivery store");
     this.token = token;
     this.apiUrl = apiUrl.replace(/\/+$/, "");
     this.fetch = fetchImpl;
+    this.createInitialState = createInitialState;
   }
 
   async request(method, requestPath, body) {
@@ -113,7 +114,7 @@ export class GitHubDevDeliveryStore {
       return {
         exists: false,
         commitSha: "",
-        queue: createDevDeliveryQueue({
+        queue: this.createInitialState({
           repository: this.repository.fullName,
           protectedBase,
           now,
@@ -206,6 +207,7 @@ function transitionFor(command, queue, options) {
         closureRoot: exactRoot(options.closureRoot, "closureRoot"),
         dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
         toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
+        ...(options.environmentRoot ? { environmentRoot: exactRoot(options.environmentRoot, "environmentRoot") } : {}),
         affectedPaths: jsonList(options.affectedPaths, "affected paths"),
         sourceWorkflowRunId: options.sourceWorkflowRunId ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId") : 0,
         deliveryClass: options.deliveryClass,
@@ -233,7 +235,9 @@ function transitionFor(command, queue, options) {
       current: {
         currentBase: options.currentBase,
         graphKnown: options.graphKnown,
+        attributionComplete: options.attributionComplete,
         changedPaths: jsonList(options.changedPaths, "changed paths"),
+        renames: jsonList(options.renames, "renames"),
       },
       now: options.now,
     });
@@ -426,10 +430,13 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
     currentBase: flag(rest, "current-base", environment.BUILDCHAIN_DEV_DELIVERY_CURRENT_BASE),
     changedPaths: flag(rest, "changed-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_CHANGED_PATHS || "[]"),
     graphKnown: ["1", "true", "yes", "on"].includes(flag(rest, "graph-known", environment.BUILDCHAIN_DEV_DELIVERY_GRAPH_KNOWN).trim().toLowerCase()),
+    attributionComplete: ["1", "true", "yes", "on"].includes(flag(rest, "attribution-complete", environment.BUILDCHAIN_DEV_DELIVERY_ATTRIBUTION_COMPLETE).trim().toLowerCase()),
+    renames: flag(rest, "renames-json", environment.BUILDCHAIN_DEV_DELIVERY_RENAMES || "[]"),
     planRoot: flag(rest, "plan-root", environment.BUILDCHAIN_DEV_DELIVERY_PLAN_ROOT),
     closureRoot: flag(rest, "closure-root", environment.BUILDCHAIN_DEV_DELIVERY_CLOSURE_ROOT),
     dependencyRoot: flag(rest, "dependency-root", environment.BUILDCHAIN_DEV_DELIVERY_DEPENDENCY_ROOT),
     toolchainRoot: flag(rest, "toolchain-root", environment.BUILDCHAIN_DEV_DELIVERY_TOOLCHAIN_ROOT),
+    environmentRoot: flag(rest, "environment-root", environment.BUILDCHAIN_DEV_DELIVERY_ENVIRONMENT_ROOT),
     deliveryClass: flag(rest, "delivery-class", environment.BUILDCHAIN_DEV_DELIVERY_CLASS),
     priority: flag(rest, "priority", environment.BUILDCHAIN_DEV_DELIVERY_PRIORITY || "ordinary"),
     fencingToken: flag(rest, "fencing-token", environment.BUILDCHAIN_DEV_DELIVERY_FENCING_TOKEN),

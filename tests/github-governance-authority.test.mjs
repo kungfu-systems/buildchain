@@ -1094,6 +1094,22 @@ test("publication authority recollects live App-authenticated governance instead
   assert.match(authorityWorkflow, /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY/);
   assert.match(
     authorityWorkflow,
+    /name: Mint bounded governance auditor token[\s\S]+KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''[\s\S]+continue-on-error: true/,
+  );
+  assert.match(
+    authorityWorkflow,
+    /GH_TOKEN: \$\{\{ steps\.governance-auditor\.outputs\.token \|\| secrets\.BUILDCHAIN_GOVERNANCE_READ_TOKEN \|\| github\.token \}\}/,
+  );
+  const releaseWorkflow = fs.readFileSync(
+    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    releaseWorkflow,
+    /BUILDCHAIN_GOVERNANCE_READ_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
+  assert.match(
+    authorityWorkflow,
     /audit-github-governance\.mjs[\s\S]+--repository "\$repository"[\s\S]+--target-ref "\$target_ref"[\s\S]+--require-qualifying/,
   );
   assert.match(authorityWorkflow, /audit\.inventory\?\.targetCount !== 1/);
@@ -1123,7 +1139,6 @@ test("publication authority recollects live App-authenticated governance instead
     );
   }
   for (const workflow of [
-    ".release-candidate-promote.yml",
     "paper-release.yml",
     "paper-release-sealed.yml",
   ]) {

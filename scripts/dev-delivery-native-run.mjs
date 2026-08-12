@@ -35,6 +35,8 @@ export async function runNativeWithHeartbeat({
   heartbeat,
   executionBinding = {},
   intervalMs = 30_000,
+  terminationGraceMs = 10_000,
+  terminationKillMs = 5_000,
   spawnImpl = spawn,
   now = () => new Date().toISOString(),
 } = {}) {
@@ -53,11 +55,47 @@ export async function runNativeWithHeartbeat({
   let heartbeatCount = 1;
   let heartbeatError = null;
   let heartbeatRunning = false;
+  let childExited = false;
+  let forceKillTimer = null;
+  let terminationTimer = null;
+  let rejectTermination;
+  const terminationFailure = new Promise((_, reject) => {
+    rejectTermination = reject;
+  });
   const child = spawnImpl("bash", ["-lc", command], {
     cwd,
     env: process.env,
     stdio: "inherit",
+    detached: process.platform !== "win32",
   });
+
+  const signalChild = (signal) => {
+    if (childExited) return;
+    if (process.platform !== "win32" && Number.isInteger(child.pid)) {
+      try {
+        process.kill(-child.pid, signal);
+        return;
+      } catch {
+        // Fall through to the direct child handle for mocked or already-exiting processes.
+      }
+    }
+    child.kill(signal);
+  };
+
+  const terminateForFenceLoss = () => {
+    signalChild("SIGTERM");
+    forceKillTimer = setTimeout(() => {
+      signalChild("SIGKILL");
+      terminationTimer = setTimeout(() => {
+        if (!childExited)
+          rejectTermination(
+            new Error("native worker did not stop after fencing loss"),
+          );
+      }, terminationKillMs);
+      terminationTimer.unref?.();
+    }, terminationGraceMs);
+    forceKillTimer.unref?.();
+  };
 
   const beat = async () => {
     if (heartbeatRunning || heartbeatError) return;
@@ -67,16 +105,26 @@ export async function runNativeWithHeartbeat({
       heartbeatCount += 1;
     } catch (error) {
       heartbeatError = error;
-      child.kill("SIGTERM");
+      terminateForFenceLoss();
     } finally {
       heartbeatRunning = false;
     }
   };
   const timer = setInterval(beat, intervalMs);
-  const exit = await new Promise((resolve, reject) => {
+  const exitPromise = new Promise((resolve, reject) => {
     child.once("error", reject);
-    child.once("exit", (code, signal) => resolve({ code, signal }));
-  }).finally(() => clearInterval(timer));
+    child.once("exit", (code, signal) => {
+      childExited = true;
+      resolve({ code, signal });
+    });
+  });
+  const exit = await Promise.race([exitPromise, terminationFailure]).finally(
+    () => {
+      clearInterval(timer);
+      if (forceKillTimer) clearTimeout(forceKillTimer);
+      if (terminationTimer) clearTimeout(terminationTimer);
+    },
+  );
   while (heartbeatRunning) {
     await new Promise((resolve) => setTimeout(resolve, 10));
   }

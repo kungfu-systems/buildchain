@@ -96,7 +96,6 @@ import {
   BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
   BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
 } from "../../packages/core/buildchain-layout.js";
-import { generateBuildchainKfdAdopterRelease } from "../../scripts/generate-buildchain-kfd-witnesses.mjs";
 import { promoteMajorChannel } from "./internal/promote-major-channel.js";
 import { promoteAlphaChannel } from "./internal/promote-alpha-channel.js";
 import { promoteReleaseChannel } from "./internal/promote-release-channel.js";
@@ -2027,7 +2026,7 @@ async function collectAndPersistReleasePassport({
       })
     : undefined;
   const selfAdopter = buildchainSelfKfd && !kfdAdopterManifestJson
-    ? await generateBuildchainKfdAdopterRelease({ cwd, sourceSha: passportSourceSha, checkedAt: passportCheckedAt, emitOutputs: false })
+    ? await (await import("../../scripts/generate-buildchain-kfd-witnesses.mjs")).generateBuildchainKfdAdopterRelease({ cwd, sourceSha: passportSourceSha, checkedAt: passportCheckedAt, emitOutputs: false })
     : undefined;
   const resolvedKfd1WitnessJsons = kfd1WitnessJsons.length > 0
     ? kfd1WitnessJsons

@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "0de402c3877e4c55dbd07b2f4891facce5be8ba8",
-    "maxHandMaintainedSourceFiles": 314,
-    "maxHandMaintainedSourceLines": 123505,
+    "maxHandMaintainedSourceFiles": 317,
+    "maxHandMaintainedSourceLines": 125200,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 24247,
-    "latestTransition": "The compatibility authority records one protected, directed proof for the reviewed build-channel-router stage-model transition.",
-    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. Terminal settlement selects that exact active chained attempt before an older same-head predecessor, so a recovered native failure cannot block verified merge settlement. Divergent base replay supplies only a process-scoped committer identity to the no-commit conflict probe, leaving runner and repository Git configuration untouched. Architecture inventory ignores generated .buildchain runtime material so parallel bundle tests cannot create transient sources. The macOS JIT rebind binds each earlier non-counting startup, terminal failure, or preflight failure to an exact run and source SHA. Historical AWS execution failures require non-empty source-specific S3 evidence, while historical preflight failures require the exact Trust-gate failure shape, retained GitHub evidence, no JIT-labelled job, and zero source-specific S3 evidence. A mixed-result rebind additionally requires every successful run to be explicitly inventoried, terminally successful, backed by completed jobs, and retain at least one artifact before any source or AWS tag mutation. The opt-in Alpha tail reseal binds one exact failed consumer run, source tree, floating v3-alpha contract resolution, retained artifact digests, signing authority result, and reviewed consumer controller; it skips all product build jobs, revalidates every retained platform, reruns only macOS signing finalization, and emits a standard rooted candidate Passport for existing recovery. The generated channel router collapses the advanced workflow's normal-or-reseal output fallback back to the existing alpha-or-stable public contract. The macOS JIT provenance step now explicitly suppresses signing-request generation for qualification-only jobs, preventing any signing or notarization authority dispatch without weakening default consumer enforcement. This exact 314-file, 123505-source-line and 24247-workflow-line ceiling cannot grow implicitly."
+    "maxWorkflowLines": 24263,
+    "latestTransition": "Exact duplicate Delivery Warrant admission may enrich a queued zero source-run binding only with a verified positive run, while conflicting positive runs and active candidate-only mutation remain rejected.",
+    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. Terminal settlement selects that exact active chained attempt before an older same-head predecessor, so a recovered native failure cannot block verified merge settlement. Divergent base replay supplies only a process-scoped committer identity to the no-commit conflict probe, leaving runner and repository Git configuration untouched. Architecture inventory ignores generated .buildchain runtime material so parallel bundle tests cannot create transient sources. The macOS JIT rebind binds each earlier non-counting startup, terminal failure, or preflight failure to an exact run and source SHA. Historical AWS execution failures require non-empty source-specific S3 evidence, while historical preflight failures require the exact Trust-gate failure shape, retained GitHub evidence, no JIT-labelled job, and zero source-specific S3 evidence. A mixed-result rebind additionally requires every successful run to be explicitly inventoried, terminally successful, backed by completed jobs, and retain at least one artifact before any source or AWS tag mutation. The opt-in Alpha tail reseal binds one exact failed consumer run, source tree, floating v3-alpha contract resolution, retained artifact digests, signing authority result, reviewed consumer controller; it skips all product build jobs, revalidates every retained platform, reruns only macOS signing finalization, and emits a standard rooted candidate Passport for existing recovery. The generated channel router collapses the advanced workflow's normal-or-reseal output fallback back to the existing alpha-or-stable public contract. The macOS JIT provenance step now explicitly suppresses signing-request generation for qualification-only jobs, preventing any signing or notarization authority dispatch without weakening default consumer enforcement. The opt-in v2 authority adds one bounded core state machine and one GitHub-backed CLI adapter; the legacy v1 Warrant export remains unchanged, explicit migration preserves its rooted candidate and fencing evidence, qualification leases carry no merge_group authority, and one exclusive Landing Warrant remains the only admission token. The scheduler extension adds rooted domain exclusion, zero-or-greater durable overtake budgets, fenced heartbeats, bounded qualification retries, content-rooted blocking reasons, deterministic wake instructions, and compare-and-swap replay tests without changing v1 bytes or merge authority. The wake envelope preserves every candidate binding under one top-level dispatch property. Native proof v2 adds one bounded resume helper, a required environment root, complete base-delta and rename attribution, persistent proof-before-reclassification evidence, and effect-free replay of the same already-qualified Warrant; legacy proof remains readable but cannot gain reuse or landing authority without the new binding. The non-preemption repair retains an active holder across transient dequeue and expiry until exact fenced worker-stop evidence settles it, and heartbeat loss terminates the native process group before failure returns. This exact 317-file, 125183-source-line and 24263-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/dev-delivery-authority.js": {
+      "maxLines": 996,
+      "rationale": "The provider-neutral v2 authority keeps state normalization, rooted domain exclusion, bounded qualification leases, one exclusive Landing Warrant, durable fairness counters, fenced heartbeat recovery, idempotent terminal reconciliation, deterministic wake evidence, v1 migration, and observation in one auditable state machine. Its largest function remains below the default new-function budget, and this exact file ceiling cannot grow implicitly."
+    },
     "scripts/aws-macos-jit-controller-core.mjs": {
       "maxLines": 722,
       "rationale": "The macOS plan contract carries sorted exact current preflight, terminal-failure, or terminal-success run ids plus historical startup, terminal, and preflight run/source inventories, keeping paid-capacity, zero-dispatch, and source-specific evidence-preservation policy explicit. This exact reviewed ceiling cannot grow implicitly."
@@ -48,8 +52,8 @@
       "rationale": "The extracted Alpha promotion stage replaces the former non-fast-forward skip with the existing exact-current-Dev regeneration contract, protected PR fallback, and fail-closed workspace binding; this exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/dev-delivery-warrant.js": {
-      "maxLines": 645,
-      "rationale": "The existing durable queue adds one explicit provisional-to-qualified transition bound to the same generation and fencing token, persists rooted native proof and reuse decisions, and keeps legacy qualified state readable without rewriting historical roots. Selection, heartbeat, expiry, release-blocker handoff, deterministic ranking, and terminal semantics remain unchanged; this exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 693,
+      "rationale": "The durable queue retains one active holder across transient dequeue and lease expiry, blocks successor selection until exact fenced worker-stop settlement, distinguishes authoritative completion, cancellation, supersession and transient dequeue, and preserves the same generation and token while live. A queued exact duplicate may enrich only a zero sourceWorkflowRunId with one verified positive run while retaining age and attempts; an existing positive run cannot change or downgrade, and an active Warrant cannot be mutated candidate-only. The existing provisional-to-qualified transition, release-blocker handoff, deterministic ranking and legacy qualified state remain readable without rewriting historical roots; this exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/release-blocker-priority.js": {
       "maxLines": 193,
@@ -393,6 +397,7 @@
           "dependency-root",
           "diagnostic-context",
           "dry-run",
+          "environment-root",
           "expected-head-sha",
           "expected-pr-number",
           "handoff-workflow-id",
@@ -439,7 +444,7 @@
           "warrant-state-root"
         ]
       },
-      "rationale": "Extend exact-head admission into a two-phase Warrant transaction: provisional selection precedes heartbeat-supervised native work, semantic proof reuse is rooted and fail closed, qualification is fenced and atomic, and only qualified candidates reach merge-queue admission. Independent approval, required checks, protected integration, and exact post-merge readback remain authoritative."
+      "rationale": "Extend exact-head admission into a two-phase Warrant transaction: provisional selection precedes heartbeat-supervised native work, semantic proof reuse binds the execution environment plus complete rooted Dev-delta and rename attribution, qualification is fenced and atomic, and only qualified candidates reach merge-queue admission. Independent approval, required checks, protected integration, and exact post-merge readback remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -942,7 +947,10 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "secrets": ["KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"],
+        "secrets": [
+          "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
+          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
+        ],
         "outputs": [
           "capability-artifact",
           "capability-digest",
@@ -951,7 +959,7 @@
           "gate-aggregate-json"
         ]
       },
-      "rationale": "The sealed read-only authority accepts an optional exact caller-repository controller commit for the consumer Gate. It independently checks out the immutable publication subject and controller, verifies both SHAs and the subject tree, and binds controller repository, SHA, and command digest into the qualifying aggregate without granting publication credentials or provider write permission."
+      "rationale": "The sealed read-only authority preserves the dedicated auditor App while adding an isolated governance-read token mapped from the existing caller credential only at the authority boundary. It independently checks out the immutable publication subject and controller, verifies both SHAs and the subject tree, and binds controller repository, SHA, and command digest into the qualifying aggregate without granting new provider write permission."
     },
     "workflow:.release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

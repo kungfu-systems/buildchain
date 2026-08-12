@@ -49,6 +49,7 @@ export function devDeliveryProofCliOptions(args = [], environment = process.env)
     closureRoot: flag(rest, "closure-root", environment.BUILDCHAIN_DEV_DELIVERY_CLOSURE_ROOT),
     dependencyRoot: flag(rest, "dependency-root", environment.BUILDCHAIN_DEV_DELIVERY_DEPENDENCY_ROOT),
     toolchainRoot: flag(rest, "toolchain-root", environment.BUILDCHAIN_DEV_DELIVERY_TOOLCHAIN_ROOT),
+    environmentRoot: flag(rest, "environment-root", environment.BUILDCHAIN_DEV_DELIVERY_ENVIRONMENT_ROOT),
     affectedPaths: flag(rest, "affected-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_AFFECTED_PATHS || "[]"),
     shardEvidenceRoots: flag(rest, "shard-evidence-roots-json", environment.BUILDCHAIN_DEV_DELIVERY_SHARD_EVIDENCE_ROOTS || "[]"),
     qualifiedAt: flag(rest, "qualified-at", environment.BUILDCHAIN_DEV_DELIVERY_QUALIFIED_AT),
@@ -67,6 +68,8 @@ export function devDeliveryProofCliOptions(args = [], environment = process.env)
     pullRequestNumber: flag(rest, "pull-request", environment.BUILDCHAIN_DEV_DELIVERY_PR_NUMBER),
     changedPaths: flag(rest, "changed-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_CHANGED_PATHS || "[]"),
     graphKnown: boolean(flag(rest, "graph-known", environment.BUILDCHAIN_DEV_DELIVERY_GRAPH_KNOWN), false),
+    attributionComplete: boolean(flag(rest, "attribution-complete", environment.BUILDCHAIN_DEV_DELIVERY_ATTRIBUTION_COMPLETE), false),
+    renames: flag(rest, "renames-json", environment.BUILDCHAIN_DEV_DELIVERY_RENAMES || "[]"),
     outputPath: flag(rest, "output", environment.BUILDCHAIN_DEV_DELIVERY_PROOF_OUTPUT || ".buildchain/dev-delivery/proof.json"),
     json: hasFlag(rest, "json"),
   };
@@ -128,6 +131,7 @@ export function runDevDeliveryProofCommand(options) {
       closureRoot: options.closureRoot,
       dependencyRoot: options.dependencyRoot,
       toolchainRoot: options.toolchainRoot,
+      environmentRoot: options.environmentRoot,
       qualifiedBase: options.qualifiedBase,
       affectedPaths: jsonList(options.affectedPaths, "affected paths"),
       shardEvidenceRoots: jsonList(options.shardEvidenceRoots, "shard evidence roots", { required: true }),
@@ -147,9 +151,12 @@ export function runDevDeliveryProofCommand(options) {
         closureRoot: options.closureRoot,
         dependencyRoot: options.dependencyRoot,
         toolchainRoot: options.toolchainRoot,
+        environmentRoot: options.environmentRoot,
         currentBase: options.currentBase,
         graphKnown: options.graphKnown,
+        attributionComplete: options.attributionComplete,
         changedPaths: jsonList(options.changedPaths, "changed paths"),
+        renames: jsonList(options.renames, "renames"),
       },
     });
   }
@@ -163,9 +170,12 @@ export function runDevDeliveryProofCommand(options) {
         closureRoot: options.closureRoot,
         dependencyRoot: options.dependencyRoot,
         toolchainRoot: options.toolchainRoot,
+        environmentRoot: options.environmentRoot,
         currentBase: options.currentBase,
         graphKnown: options.graphKnown,
+        attributionComplete: options.attributionComplete,
         changedPaths: jsonList(options.changedPaths, "changed paths"),
+        renames: jsonList(options.renames, "renames"),
       },
     });
   }

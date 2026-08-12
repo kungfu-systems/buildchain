@@ -991,7 +991,7 @@ jobs:
         if: ${{ inputs.resume-candidate-run-id == '' }}
         shell: bash
         run: |
-          case "${PACKAGE_MANAGER}" in
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts; case "${PACKAGE_MANAGER}" in
             pnpm)
               corepack enable
               corepack pnpm --version
@@ -1068,7 +1068,6 @@ jobs:
             echo "::error::publication plan version/tag mismatch: ${BUILDCHAIN_PUBLICATION_VERSION} != ${BUILDCHAIN_PUBLICATION_EXACT_TAG}"
             exit 1
           fi
-
   publication-authority:
     name: Seal product publication capability
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
@@ -1114,8 +1113,9 @@ jobs:
       evidence-manifest-pattern: ${{ needs.release-candidate-preflight.outputs.manifest-pattern }}
       evidence-payload-pattern: ${{ needs.release-candidate-preflight.outputs.payload-pattern }}
       dry-run: ${{ inputs.dry-run }}
-    secrets: inherit
-
+    secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+      BUILDCHAIN_GOVERNANCE_READ_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
   qualification-plan:
     name: Bind consumer publication predicate
     needs: [preflight]
@@ -1486,7 +1486,7 @@ jobs:
         shell: bash
         run: |
           if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
-            node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+            if [[ "${{ inputs.promotion-shell-ref }}" =~ ^(refs/heads/)?(train|authority)/v([0-9]+)/ ]]; then expected_major="${BASH_REMATCH[3]}"; else expected_major=""; fi; BUILDCHAIN_EXPECTED_CHANNEL="${{ inputs.promotion-publication-channel }}" BUILDCHAIN_EXPECTED_MAJOR="$expected_major" node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"

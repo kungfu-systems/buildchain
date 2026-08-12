@@ -227,6 +227,9 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
+  assert.match(promotion, /"\$\{\{ inputs\.promotion-shell-ref \}\}" =~/);
+  assert.match(promotion, /\(train\|authority\)\/v\(\[0-9\]\+\)\//);
+  assert.match(promotion, /BUILDCHAIN_EXPECTED_MAJOR="\$expected_major"/);
   assert.match(
     promotion,
     /"id":"publication-authority","status":"\$\{\{ needs\.promote\.result == 'success' && 'success' \|\| needs\.publication-authority\.result \}\}"/,
@@ -1189,8 +1192,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(publicationPlan, /name: Validate consumer package manager contract/);
   assert.match(publicationPlan, /publish-transaction-override: \$\{\{ inputs\.publish-transaction-override \}\}/);
+  assert.match(publicationPlan, /corepack pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/);
   assert.match(publicationPlan, /corepack pnpm install --frozen-lockfile/);
-  assert.doesNotMatch(publicationPlan, /corepack pnpm@11\.7\.0/);
   assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);
   assert.match(publicationPlan, /npm ci/);
   assert.match(publicationPlan, /Skipping dependency install for custom package manager/);
@@ -1567,15 +1570,16 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
   assert.match(workflow, /native-roots-json:/);
-  assert.match(workflow, /github\.event\.client_payload\.pullRequestNumber/u);
-  assert.match(workflow, /github\.event\.client_payload\.assignmentRoot/u);
-  assert.match(workflow, /github\.event\.client_payload\.initiativeRoot/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.pullRequestNumber/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.assignmentRoot/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.initiativeRoot/u);
   assert.match(workflow, /source-identity-root:/);
   assert.match(workflow, /source-patch-root:/);
   assert.match(workflow, /plan-root:/);
   assert.match(workflow, /closure-root:/);
   assert.match(workflow, /dependency-root:/);
   assert.match(workflow, /toolchain-root:/);
+  assert.match(workflow, /environment-root:/);
   assert.match(workflow, /native-proof-json:/);
   assert.match(workflow, /native-command:/);
   assert.match(workflow, /native-heartbeat-seconds:/);
@@ -1583,8 +1587,8 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /permissions:\n  actions: write/);
   assert.match(workflow, /delivery-warrant-mode: required/);
-  assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.deliveryClass \|\| 'native-proof-required' \}\}/u);
-  assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.priority \|\| 'ordinary' \}\}/u);
+  assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| 'native-proof-required' \}\}/u);
+  assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.candidate\.priority \|\| 'ordinary' \}\}/u);
   assert.match(workflow, /required-status-checks: check/);
   assert.match(
     workflow,
@@ -1593,7 +1597,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /landing-mode: queue/);
   assert.match(workflow, /dry-run: false/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
-  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ github\.event\.client_payload\.pullRequestNumber \|\| inputs\.expected-pr-number \}\} · two-phase Delivery Warrant"/u);
+  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ github\.event\.client_payload\.candidate\.pullRequestNumber \|\| inputs\.expected-pr-number \}\} · two-phase Delivery Warrant"/u);
   assert.match(workflow, /repository_dispatch:/u);
   assert.match(workflow, /buildchain-dev-delivery-wake/u);
   const controller = fs.readFileSync(
@@ -1610,7 +1614,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   const dispatchInputs = workflow
     .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
     .match(/^      [a-z][a-z0-9-]+:$/gmu);
-  assert.equal(dispatchInputs?.length, 13);
+  assert.equal(dispatchInputs?.length, 14);
   assert.match(controller, /activeWarrant\.phase == \$phase/);
   assert.match(controller, /provisional\)\s+echo "already-qualified=false"/u);
   assert.match(controller, /dev-delivery-two-phase\.mjs/);
