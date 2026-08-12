@@ -41,6 +41,10 @@ on:
         description: "Exact qualification toolchain root"
         type: string
         required: true
+      environment-root:
+        description: "Exact native execution environment contract root"
+        type: string
+        required: true
       affected-paths-json:
         description: "JSON array of paths covered by source qualification"
         type: string
@@ -88,6 +92,7 @@ jobs:
       closure-root: ${{ github.event.client_payload.closureRoot || github.event.inputs.closure-root }}
       dependency-root: ${{ github.event.client_payload.dependencyRoot || github.event.inputs.dependency-root }}
       toolchain-root: ${{ github.event.client_payload.toolchainRoot || github.event.inputs.toolchain-root }}
+      environment-root: ${{ github.event.client_payload.environmentRoot || github.event.inputs.environment-root }}
       affected-paths-json: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload.affectedPaths) || github.event.inputs.affected-paths-json }}
       native-proof-json: ${{ github.event.inputs.native-proof-json || '' }}
       native-command: ${{ github.event.inputs.native-command || 'node --test tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-native-run.test.mjs' }}

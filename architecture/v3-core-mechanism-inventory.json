@@ -220,6 +220,8 @@
         "kungfu-buildchain-dev-delivery-warrant-queue",
         "kungfu.buildchain.dev-delivery-warrant/v1",
         "kungfu.buildchain.native-qualification-proof/v1",
+        "kungfu.buildchain.native-qualification-proof/v2",
+        "kungfu.buildchain.native-proof-base-delta/v1",
         "kungfu.buildchain.native-proof-reuse-decision/v1",
         "kungfu.buildchain.release-blocker-priority-claim/v1"
       ],

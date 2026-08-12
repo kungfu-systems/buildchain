@@ -5,6 +5,7 @@ import {
   createDevDeliveryQueue,
   createNativeProofReuseDecision,
   createNativeQualificationProof,
+  devDeliveryContentRoot,
   heartbeatDevDeliveryWarrant,
   qualifyDevDeliveryWarrant,
   recoverExpiredDevDeliveryWarrant,
@@ -31,6 +32,7 @@ function candidate(number = 401, overrides = {}) {
     closureRoot: ROOT("7"),
     dependencyRoot: ROOT("8"),
     toolchainRoot: ROOT("9"),
+    environmentRoot: ROOT("a"),
     deliveryClass: "native-proof-required",
     priority: "ordinary",
     ...overrides,
@@ -65,6 +67,7 @@ function nativeProof(overrides = {}) {
     closureRoot: ROOT("7"),
     dependencyRoot: ROOT("8"),
     toolchainRoot: ROOT("9"),
+    environmentRoot: ROOT("a"),
     qualifiedBase: QUALIFIED_BASE,
     affectedPaths: ["packages/native", "pnpm-lock.yaml"],
     shardEvidenceRoots: [ROOT("c"), ROOT("d")],
@@ -81,9 +84,12 @@ function current(overrides = {}) {
     closureRoot: ROOT("7"),
     dependencyRoot: ROOT("8"),
     toolchainRoot: ROOT("9"),
+    environmentRoot: ROOT("a"),
     currentBase: QUALIFIED_BASE,
     graphKnown: true,
+    attributionComplete: true,
     changedPaths: [],
+    renames: [],
     ...overrides,
   };
 }
@@ -175,6 +181,19 @@ test("overlap, unknown attribution, semantic change, and toolchain change fail c
       "rerun-full-native-qualification",
       "toolchainRoot-changed-or-unknown",
     ],
+    [
+      current({ environmentRoot: ROOT("e") }),
+      "rerun-full-native-qualification",
+      "environmentRoot-changed-or-unknown",
+    ],
+    [
+      current({
+        currentBase: "c".repeat(40),
+        attributionComplete: false,
+      }),
+      "rerun-full-native-qualification",
+      "base-delta-attribution-unknown",
+    ],
   ];
   for (const [value, action, reason] of cases) {
     const decision = createNativeProofReuseDecision({ proof, current: value });
@@ -182,6 +201,46 @@ test("overlap, unknown attribution, semantic change, and toolchain change fail c
     assert.equal(decision.action, action);
     assert.equal(decision.reason, reason);
   }
+});
+
+test("rename and generated-surface overlap are attributed on both sides", () => {
+  const proof = nativeProof({
+    affectedPaths: ["packages/native", "dist/native"],
+  });
+  const renamed = createNativeProofReuseDecision({
+    proof,
+    current: current({
+      currentBase: "c".repeat(40),
+      changedPaths: ["docs/native.md"],
+      renames: [{ from: "packages/native/README.md", to: "docs/native.md" }],
+    }),
+  });
+  assert.equal(renamed.reusable, false);
+  assert.equal(renamed.reason, "base-delta-overlaps-affected-closure");
+  assert.deepEqual(renamed.overlappingPaths, ["packages/native/README.md"]);
+
+  const generated = createNativeProofReuseDecision({
+    proof,
+    current: current({
+      currentBase: "c".repeat(40),
+      changedPaths: ["dist/native/index.js"],
+    }),
+  });
+  assert.equal(generated.reusable, false);
+  assert.equal(generated.action, "rerun-affected-native-shards");
+});
+
+test("reuse decision and base-delta lineage root are deterministic", () => {
+  const proof = nativeProof();
+  const input = current({
+    currentBase: "c".repeat(40),
+    changedPaths: ["docs/b.md", "docs/a.md", "docs/a.md"],
+  });
+  const first = createNativeProofReuseDecision({ proof, current: input });
+  const second = createNativeProofReuseDecision({ proof, current: input });
+  assert.deepEqual(first, second);
+  assert.match(first.baseDeltaRoot, /^sha256:[0-9a-f]{64}$/u);
+  assert.equal(first.decisionRoot, second.decisionRoot);
 });
 
 test("qualification rejects overlapping base changes and semantic proof drift", () => {
@@ -263,4 +322,19 @@ test("native proof timestamp is observational while semantic evidence is rooted"
   assert.notEqual(first.observationRoot, second.observationRoot);
   assert.equal(verifyNativeQualificationProof(first).ok, true);
   assert.equal(verifyNativeQualificationProof(second).ok, true);
+});
+
+test("legacy v1 native proof remains verifiable but cannot gain v2 reuse", () => {
+  const proof = nativeProof();
+  proof.schema = "kungfu.buildchain.native-qualification-proof/v1";
+  delete proof.environmentRoot;
+  const identity = structuredClone(proof);
+  delete identity.proofRoot;
+  delete identity.qualifiedAt;
+  delete identity.observationRoot;
+  proof.proofRoot = devDeliveryContentRoot(identity);
+  assert.equal(verifyNativeQualificationProof(proof).ok, true);
+  const decision = createNativeProofReuseDecision({ proof, current: current() });
+  assert.equal(decision.reusable, false);
+  assert.equal(decision.reason, "environmentRoot-changed-or-unknown");
 });

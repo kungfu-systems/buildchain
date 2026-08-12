@@ -5611,6 +5611,35 @@
       ]
     },
     {
+      "id": "packages/core/dev-delivery-native-proof.js#createNativeProofBaseDelta",
+      "name": "createNativeProofBaseDelta",
+      "kind": "function",
+      "signature": "function createNativeProofBaseDelta(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 58
+      },
+      "example": "import { createNativeProofBaseDelta } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/dev-delivery-native-proof.js#createNativeProofReuseDecision",
       "name": "createNativeProofReuseDecision",
       "kind": "function",
@@ -5630,7 +5659,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 205
+        "line": 288
       },
       "example": "import { createNativeProofReuseDecision } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5659,7 +5688,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 55
+        "line": 88
       },
       "example": "import { createNativeQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5683,9 +5712,33 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 16
+        "line": 18
       },
       "example": "import { DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-native-proof.js#NATIVE_PROOF_BASE_DELTA_SCHEMA",
+      "name": "NATIVE_PROOF_BASE_DELTA_SCHEMA",
+      "kind": "constant",
+      "signature": "const NATIVE_PROOF_BASE_DELTA_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-native-proof.js",
+        "line": 20
+      },
+      "example": "import { NATIVE_PROOF_BASE_DELTA_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -5707,7 +5760,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 14
+        "line": 16
       },
       "example": "import { NATIVE_PROOF_REUSE_DECISION_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5764,7 +5817,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 209
+        "line": 292
       },
       "example": "import { verifyNativeProofReuseDecision } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -5797,7 +5850,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 85
+        "line": 119
       },
       "example": "import { verifyNativeQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -24687,20 +24740,21 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:8d354aa31faf225201b9adb04ff7ca7fc26984b89b47dd60ac1f8c696a3b4347",
+      "digest": "sha256:3a532e1c461ef66f1a0bf91faf2a3e73d13c5c3a7f05b2cef2b12c587f28bce1",
       "summary": "Durable single-flight Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 42,
+      "symbolCount": 44,
       "symbolIds": [
         "packages/core/dev-delivery-warrant.js#cancelQueuedDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#classifyDevDeliveryDelta",
         "packages/core/dev-delivery-warrant.js#closeDevDeliveryWarrant",
         "packages/core/dev-delivery-warrant.js#createDevDeliveryQueue",
         "packages/core/dev-delivery-proof.js#createIntegrationDeliveryProof",
+        "packages/core/dev-delivery-native-proof.js#createNativeProofBaseDelta",
         "packages/core/dev-delivery-native-proof.js#createNativeProofReuseDecision",
         "packages/core/dev-delivery-native-proof.js#createNativeQualificationProof",
         "packages/core/dev-delivery-proof.js#createProjectCutReplayPlan",
@@ -24720,6 +24774,7 @@
         "packages/core/dev-delivery-common.js#devDeliveryContentRoot",
         "packages/core/dev-delivery-warrant.js#heartbeatDevDeliveryWarrant",
         "packages/core/dev-delivery-proof.js#INTEGRATION_DELIVERY_PROOF_SCHEMA",
+        "packages/core/dev-delivery-native-proof.js#NATIVE_PROOF_BASE_DELTA_SCHEMA",
         "packages/core/dev-delivery-native-proof.js#NATIVE_PROOF_REUSE_DECISION_SCHEMA",
         "packages/core/dev-delivery-native-proof.js#NATIVE_QUALIFICATION_PROOF_SCHEMA",
         "packages/core/dev-delivery-warrant.js#normalizeDevDeliveryQueue",
@@ -26248,7 +26303,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:4a60b4de6dab7cb419a61b07f851df31cb1596bab99d4bc95b2fb7e1b6cd1f03"
+      "digest": "sha256:542c7e6de9bb543ca3698e6f388c3cc1ac7ca9fb341287155482276e1e9b170f"
     },
     {
       "id": "build-facts",

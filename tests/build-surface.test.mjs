@@ -1579,6 +1579,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /closure-root:/);
   assert.match(workflow, /dependency-root:/);
   assert.match(workflow, /toolchain-root:/);
+  assert.match(workflow, /environment-root:/);
   assert.match(workflow, /native-proof-json:/);
   assert.match(workflow, /native-command:/);
   assert.match(workflow, /native-heartbeat-seconds:/);
@@ -1613,7 +1614,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   const dispatchInputs = workflow
     .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
     .match(/^      [a-z][a-z0-9-]+:$/gmu);
-  assert.equal(dispatchInputs?.length, 13);
+  assert.equal(dispatchInputs?.length, 14);
   assert.match(controller, /activeWarrant\.phase == \$phase/);
   assert.match(controller, /provisional\)\s+echo "already-qualified=false"/u);
   assert.match(controller, /dev-delivery-two-phase\.mjs/);

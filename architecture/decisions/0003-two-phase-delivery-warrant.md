@@ -58,9 +58,10 @@ The transition binds a Native Qualification Proof and a rooted reuse decision.
 Only a qualified Warrant may authorize enqueue. The upgrade does not mint a new
 fence and cannot change the PR head or semantic source roots.
 
-Native Qualification Proof binds semantic source identity, semantic patch,
-qualification plan, affected closure, dependency graph, toolchain, covered
-paths, exact shard evidence roots, and the dev base used for qualification. Its
+Native Qualification Proof v2 binds semantic source identity, semantic patch,
+qualification plan, affected closure, dependency graph, toolchain, execution
+environment contract, covered paths, exact shard evidence roots, and the dev
+base used for qualification. Its
 timestamp is observational rather than part of proof identity. Reuse on another
 base requires an attributed base delta. Identical base is accepted directly; a
 descendant base with no overlap against the affected closure reuses the proof;

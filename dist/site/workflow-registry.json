@@ -1849,6 +1849,7 @@
         "dependency-root",
         "diagnostic-context",
         "dry-run",
+        "environment-root",
         "expected-head-sha",
         "expected-pr-number",
         "handoff-workflow-id",
@@ -1875,7 +1876,7 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 39,
+      "inputCount": 40,
       "secrets": [
         "github-token"
       ],
