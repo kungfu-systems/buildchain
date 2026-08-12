@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-adopter-delivery-vectors/v1",
+  "rootAlgorithm": "sha256-buildchain-canonical-json-v1",
+  "authorities": {
+    "kfdPackage": "@kungfu-tech/kfd@1.0.0-alpha.62",
+    "categoryProfileVectors": "@kungfu-tech/kfd/adopter-conformance/category-profile-vectors.json",
+    "categoryInstanceVectors": "@kungfu-tech/kfd/adopter-conformance/category-instance-vectors.json"
+  },
+  "cases": [
+    {
+      "id": "golden-two-driver-offline-replay",
+      "class": "golden",
+      "surface": "protocol-neutral-gate",
+      "operation": "evaluate identical exact requests with two isolated protocol drivers and replay each request offline",
+      "expected": {
+        "statuses": ["passed", "passed"],
+        "issueCodes": [],
+        "deterministicRoots": true,
+        "qualifying": false,
+        "selfCertified": false
+      }
+    },
+    {
+      "id": "negative-driver-mismatch",
+      "class": "negative",
+      "surface": "protocol-neutral-gate",
+      "operation": "select an exact protocol identity and version that are not registered",
+      "expected": {
+        "status": "failed",
+        "issueCodes": ["delivery-driver-unknown"]
+      }
+    },
+    {
+      "id": "negative-category-conflict",
+      "class": "negative",
+      "surface": "published-kfd-category-driver",
+      "operation": "append a duplicate published category profile to the exact KFD instance selection",
+      "expected": {
+        "status": "failed",
+        "issueCodes": ["acp-composition-invalid"]
+      }
+    },
+    {
+      "id": "negative-evidence-substitution",
+      "class": "negative",
+      "surface": "release-passport-binding",
+      "operation": "substitute the artifact root in artifact evidence after binding the passport",
+      "expected": {
+        "status": "failed",
+        "issueCodes": ["adopterDelivery.artifactEvidence"]
+      }
+    },
+    {
+      "id": "negative-stale-package-cut",
+      "class": "negative",
+      "surface": "published-kfd-category-driver",
+      "operation": "replace the KFD instance package version with an uninstalled stale cut",
+      "expected": {
+        "status": "failed",
+        "issueCodes": ["delivery-kfd-package-cut-mismatch"]
+      }
+    },
+    {
+      "id": "fault-driver-throw",
+      "class": "fault",
+      "surface": "protocol-neutral-gate",
+      "operation": "throw a private exception from the selected protocol driver",
+      "expected": {
+        "status": "failed",
+        "issueCodes": ["delivery-driver-error"],
+        "privateDetailRedacted": true
+      }
+    }
+  ],
+  "suiteRoot": "sha256:cf329805d928a9883cbafbdfdf21ef66c6a0889ed8dfe14356b4e0d25d6738f9"
+}

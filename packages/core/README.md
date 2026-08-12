@@ -16,6 +16,9 @@ Current shared surfaces:
   `@kungfu-tech/buildchain/build-facts`;
 - release passport creation and verification through
   `@kungfu-tech/buildchain/release-passport`.
+- protocol-neutral adopter delivery gating, published KFD category verification,
+  explicit legacy adaptation, Release Passport binding, and rooted offline vectors
+  through the `@kungfu-tech/buildchain/adopter-delivery-*` subpaths.
 - anchored/manual derived witness preflight and exact-tree evidence through
   `@kungfu-tech/buildchain/anchored-version-material`.
 - sealed exact-root and KFD assessment inputs for KFX admission through
@@ -81,6 +84,28 @@ import {
 const fact = collectModuleBuildFacts({ moduleId: "native-core" });
 writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
 ```
+
+Adopter delivery consumers compose an exact protocol driver with an explicit
+artifact profile. Buildchain does not infer a driver from project identity:
+
+```js
+import {
+  createAdopterDeliveryGate,
+  createPackageArtifactProfile,
+} from "@kungfu-tech/buildchain/adopter-delivery-gate";
+import { createKfdAdopterCategoryProtocolDriver } from "@kungfu-tech/buildchain/kfd-adopter-category-driver";
+
+const gate = createAdopterDeliveryGate({
+  drivers: [createKfdAdopterCategoryProtocolDriver()],
+  artifactProfiles: [createPackageArtifactProfile()],
+});
+const result = gate.evaluate(request, exactPublishedKfdContext);
+```
+
+The returned result remains non-qualifying and non-self-certifying. Bind it to
+Release Passport and artifact evidence only after `status === "passed"`; use the
+rooted suite from `@kungfu-tech/buildchain/adopter-delivery-vectors` for offline
+consumer replay.
 
 KFX producers can seal one passing artifact verification with exact roots,
 identity, lifecycle, revocation, and an existing ADR-0052 assessment. Consumers
