@@ -267,15 +267,14 @@ jobs:
             exit 1
           fi
 
-          remote_url="https://github.com/\${repository}.git"
-          refs="$(git ls-remote "\${remote_url}" "refs/heads/\${ref}" "refs/tags/\${ref}" "refs/tags/\${ref}^{}")"
-          head_sha="$(printf '%s\\n' "\${refs}" | awk -v name="refs/heads/\${ref}" '$2 == name { print tolower($1) }')"
-          tag_sha="$(printf '%s\\n' "\${refs}" | awk -v peeled="refs/tags/\${ref}^{}" -v name="refs/tags/\${ref}" '$2 == peeled { print tolower($1); found=1 } $2 == name && !found { fallback=tolower($1) } END { if (!found && fallback != "") print fallback }')"
-          if [[ -n "\${head_sha}" && -n "\${tag_sha}" && "\${head_sha}" != "\${tag_sha}" ]]; then
-            echo "::error::Promotion router ref is ambiguous between branch and tag"
-            exit 1
+          if [[ "\${ref}" =~ ^[0-9a-fA-F]{40}$ ]]; then sha="\${ref,,}"; else
+            remote_url="https://github.com/\${repository}.git"
+            refs="$(git ls-remote "\${remote_url}" "refs/heads/\${ref}" "refs/tags/\${ref}" "refs/tags/\${ref}^{}")"
+            head_sha="$(printf '%s\\n' "\${refs}" | awk -v name="refs/heads/\${ref}" '$2 == name { print tolower($1) }')"
+            tag_sha="$(printf '%s\\n' "\${refs}" | awk -v peeled="refs/tags/\${ref}^{}" -v name="refs/tags/\${ref}" '$2 == peeled { print tolower($1); found=1 } $2 == name && !found { fallback=tolower($1) } END { if (!found && fallback != "") print fallback }')"
+            if [[ -n "\${head_sha}" && -n "\${tag_sha}" && "\${head_sha}" != "\${tag_sha}" ]]; then echo "::error::Promotion router ref is ambiguous between branch and tag"; exit 1; fi
+            sha="\${head_sha:-\${tag_sha}}"
           fi
-          sha="\${head_sha:-\${tag_sha}}"
           if [[ ! "\${sha}" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::Promotion router ref did not resolve to one exact commit SHA"
             exit 1
