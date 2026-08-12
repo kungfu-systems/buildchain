@@ -390,6 +390,7 @@ jobs:
       - name: Mint bounded governance auditor token
         if: ${{ !inputs.dry-run && vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID != '' }}
         id: governance-auditor
+        continue-on-error: true
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
