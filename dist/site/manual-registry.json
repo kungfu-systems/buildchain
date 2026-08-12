@@ -64,7 +64,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:70bf29e974b190b249fbbcfd9a5de1e33a9b069de5d7811a25e147b860137629",
+      "digest": "sha256:99df84336b7e1cf7a645ea4bc5c0cdfbb6a3495eb01517d65efaca734407c9e7",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -347,7 +347,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:d6fd9d704376e47a281ce337f6c5d6346e117effe8851d43a9b370955ac07204",
+      "digest": "sha256:079a9e3309e7948f7794426ffce2b5922a874464394b5ec9d3a90c37f410a3b7",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:abc275255e38f639b4566df72e4b8b71e4b282d0f17b6a021f036e860cb5c657",
+      "digest": "sha256:697027ad90ece9927ffa35ce044d3d2a00c83bce0e613ae9c11c8868c2bb004f",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

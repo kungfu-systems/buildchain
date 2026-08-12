@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "210f79314fcc7db3046d4114457da04090791d6e490c136d1466ced4596e1940",
+    "sha256": "206725ba0620d03dd8918cac7e993121f41338562196c3b49e89fadc3900d0ec",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "210f79314fcc7db3046d4114457da04090791d6e490c136d1466ced4596e1940",
+      "sha256": "206725ba0620d03dd8918cac7e993121f41338562196c3b49e89fadc3900d0ec",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -3945,7 +3945,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 111,
+          "inputCount": 112,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4022,6 +4022,7 @@
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
+            "release-passport-adopter-delivery-json",
             "release-passport-attachment-command",
             "release-passport-buildchain-self-kfd",
             "release-passport-evidence-command",
@@ -5292,7 +5293,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 102,
+          "inputCount": 103,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -5360,6 +5361,7 @@
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
+            "release-passport-adopter-delivery-json",
             "release-passport-attachment-command",
             "release-passport-buildchain-self-kfd",
             "release-passport-evidence-command",
@@ -5662,7 +5664,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 81,
+          "inputCount": 82,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -5712,6 +5714,7 @@
             "release-candidate-version",
             "release-material-sha",
             "release-passport",
+            "release-passport-adopter-delivery-json",
             "release-passport-attachment-command",
             "release-passport-build-summary-path",
             "release-passport-buildchain-self-kfd",
