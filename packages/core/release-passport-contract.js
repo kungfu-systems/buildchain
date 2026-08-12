@@ -10,6 +10,7 @@ import {
   installedKfdPackageArtifactRoot,
   validateKfdAdopterReleaseBinding,
 } from "./artifact-verification-envelope.js";
+import { normalizeAdopterDeliveryPassportBinding } from "./adopter-delivery-passport.js";
 
 export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
 export const RELEASE_CHECK_REPORT_CONTRACT = "kungfu-buildchain-release-check-report";
@@ -110,6 +111,7 @@ export const RELEASE_PASSPORT_SCHEMA = {
     "kfd-1": OBJECT,
     "kfd-2": OBJECT,
     "kfd-3": OBJECT,
+    adopterDelivery: OBJECT,
     kfdAdopter: OBJECT,
     kfdSupport: OBJECT,
   },
@@ -134,6 +136,7 @@ const BUILDCHAIN_AGGREGATION_FIELDS = [
   "platformArtifactManifests",
   "distTagPromotion",
   "controllerReceipts",
+  "adopterDelivery",
   "kfdAdopter",
   "kfdSupport",
   "githubArtifactAttestations",
@@ -356,7 +359,7 @@ export function defaultReleaseLlmsText({ tag = "", passportPath = "buildchain.re
   ].join("\n");
 }
 
-export function buildReleaseArtifactEvidence({ normalizedAssets = [], repository = "", tag = "", sourceSha = "", workflow = {}, kfdAdopter } = {}) {
+export function buildReleaseArtifactEvidence({ normalizedAssets = [], repository = "", tag = "", sourceSha = "", workflow = {}, adopterDelivery, kfdAdopter } = {}) {
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-artifact-evidence",
@@ -381,6 +384,7 @@ export function buildReleaseArtifactEvidence({ normalizedAssets = [], repository
       sha256: asset.sha256, url: asset.url, githubAssetId: asset.githubAssetId,
       attestation: passportOptional(asset.attestation || ""),
     })),
+    ...(adopterDelivery ? { adopterDelivery: normalizeAdopterDeliveryPassportBinding(adopterDelivery) } : {}),
     ...(kfdAdopter ? { kfdAdopter: structuredClone(kfdAdopter) } : {}),
   };
 }
