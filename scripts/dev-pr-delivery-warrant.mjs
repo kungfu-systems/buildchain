@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { defaultDevDeliveryStateRef, GitHubDevDeliveryStore } from "./dev-delivery-warrant.mjs";
 
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
@@ -122,19 +123,19 @@ export function readDeliveryWarrantResult(options, pullRequest) {
 }
 
 export async function readCurrentDeliveryQueueState(client, repository, targetBranch) {
-  if (typeof client.getDevDeliveryQueueState === "function") {
-    return client.getDevDeliveryQueueState(targetBranch);
-  }
-  const stateRef = `buildchain/dev-delivery-warrant/${targetBranch.replaceAll("/", "-")}`;
-  const query = new URLSearchParams({ ref: stateRef });
-  const { data } = await client.request(
-    "GET",
-    `/repos/${repository.owner}/${repository.repo}/contents/queue.json?${query}`,
-  );
-  if (data?.type !== "file" || data?.encoding !== "base64" || !data?.content) {
-    mismatch("delivery-warrant-current-readback-invalid");
-  }
-  return JSON.parse(Buffer.from(String(data.content).replace(/\s+/g, ""), "base64").toString("utf8"));
+  if (typeof client.getDevDeliveryQueueState === "function") return client.getDevDeliveryQueueState(targetBranch);
+  const store = new GitHubDevDeliveryStore({
+    repository: `${repository.owner}/${repository.repo}`,
+    token: client.token,
+    apiUrl: client.apiUrl,
+    fetchImpl: client.fetch,
+  });
+  const { queue } = await store.read({
+    stateRef: defaultDevDeliveryStateRef(targetBranch),
+    protectedBase: targetBranch,
+    now: new Date().toISOString(),
+  });
+  return queue;
 }
 
 export async function verifyCurrentDeliveryWarrant(client, options, pullRequest, warrant) {
