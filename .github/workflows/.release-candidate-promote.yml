@@ -1486,7 +1486,7 @@ jobs:
         shell: bash
         run: |
           if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
-            node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+            BUILDCHAIN_EXPECTED_CHANNEL="${{ inputs.promotion-publication-channel }}" node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"
