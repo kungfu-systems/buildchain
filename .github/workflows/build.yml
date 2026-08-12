@@ -92,6 +92,16 @@ on:
         default: '["ubuntu-24.04"]'
         type: string
         required: false
+      artifact-finalization-command:
+        description: "Optional consumer verification command over final artifact bytes before manifest resealing"
+        default: ""
+        type: string
+        required: false
+      artifact-finalization-on-platform:
+        description: "Run trusted artifact finalization on each GitHub-hosted platform runner instead of the control runner"
+        default: false
+        type: boolean
+        required: false
       fail-fast:
         description: "Cancel sibling platform lanes after a required matrix failure; false retains all-platform diagnostics"
         default: false
@@ -736,6 +746,8 @@ jobs:
       platforms-json: ${{ inputs.platforms-json }}
       self-hosted-offline-fallback: ${{ inputs.self-hosted-offline-fallback }}
       control-runner-json: ${{ inputs.control-runner-json }}
+      artifact-finalization-command: ${{ inputs.artifact-finalization-command }}
+      artifact-finalization-on-platform: ${{ inputs.artifact-finalization-on-platform }}
       fail-fast: ${{ inputs.fail-fast }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
       linux-container-image: ${{ inputs.linux-container-image }}
@@ -896,6 +908,8 @@ jobs:
       platforms-json: ${{ inputs.platforms-json }}
       self-hosted-offline-fallback: ${{ inputs.self-hosted-offline-fallback }}
       control-runner-json: ${{ inputs.control-runner-json }}
+      artifact-finalization-command: ${{ inputs.artifact-finalization-command }}
+      artifact-finalization-on-platform: ${{ inputs.artifact-finalization-on-platform }}
       fail-fast: ${{ inputs.fail-fast }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
       linux-container-image: ${{ inputs.linux-container-image }}
@@ -999,6 +1013,8 @@ jobs:
       platforms-json: ${{ inputs.platforms-json }}
       self-hosted-offline-fallback: ${{ inputs.self-hosted-offline-fallback }}
       control-runner-json: ${{ inputs.control-runner-json }}
+      artifact-finalization-command: ${{ inputs.artifact-finalization-command }}
+      artifact-finalization-on-platform: ${{ inputs.artifact-finalization-on-platform }}
       fail-fast: ${{ inputs.fail-fast }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
       linux-container-image: ${{ inputs.linux-container-image }}

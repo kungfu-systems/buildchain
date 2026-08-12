@@ -654,6 +654,8 @@
         "reusable": true,
         "inputs": [
           "artifact-compression-level",
+          "artifact-finalization-command",
+          "artifact-finalization-on-platform",
           "artifact-name",
           "artifact-name-template",
           "artifact-paths",
@@ -742,7 +744,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 88,
+        "inputCount": 90,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1551,6 +1553,8 @@
         "reusable": true,
         "inputs": [
           "artifact-compression-level",
+          "artifact-finalization-command",
+          "artifact-finalization-on-platform",
           "artifact-name",
           "artifact-name-template",
           "artifact-paths",
@@ -1642,7 +1646,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 91,
+        "inputCount": 93,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -8016,8 +8020,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
-    "workflowRegistryDigest": "0648b32fc5f0f2f8e55e031bda65542efe865b1c34a55cf22a1604ff7322b639",
-    "pageRegistryDigest": "4e7524e438c0d1fa4d19b5ef87a837afc4e1fb0540a320cf54d3ef0a14ead5a3"
+    "workflowRegistryDigest": "36b47dfcb2462101f0207c4921afb3df4f8855d42d984358292a77d9b513cda7",
+    "pageRegistryDigest": "80fa4cadbc00dc937e964825c082b7f9103e54b1157078ad8597b3735aaf9267"
   },
   "comparison": {
     "missingCliRegistry": [],

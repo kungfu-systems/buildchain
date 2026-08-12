@@ -284,6 +284,14 @@ test("reusable build workflow exposes the required surface contract", () => {
     workflow,
     /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
   );
+  assert.match(
+    workflow,
+    /artifact-finalization-command:\n\s+description: "Optional consumer verification command over final artifact bytes before manifest resealing"/,
+  );
+  assert.match(
+    workflow,
+    /artifact-finalization-on-platform:\n\s+description: "Run trusted artifact finalization on each GitHub-hosted platform runner instead of the control runner"[\s\S]*?default: false[\s\S]*?type: boolean/,
+  );
   assert.equal(
     (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
     9,
@@ -502,7 +510,29 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/Publish signing finalization delegation/g) || []).length, 1);
   assert.match(workflow, /artifact-signing-control:[\s\S]*?runs-on: ubuntu-24\.04/);
   assert.match(workflow, /artifact-signing-control:[\s\S]*?needs:[\s\S]*?- build-native[\s\S]*?- build-linux-container/);
-  assert.match(workflow, /finalize-artifact-signing:[\s\S]*?runs-on: ubuntu-24\.04/);
+  assert.match(
+    workflow,
+    /finalize-artifact-signing:[\s\S]*?runs-on: \$\{\{ fromJSON\(inputs\.artifact-finalization-on-platform && matrix\.platform\.runner \|\| inputs\.control-runner-json\) \}\}/,
+  );
+  assert.match(
+    workflow,
+    /Enforce trusted platform-native finalization[\s\S]*?artifact-finalization-on-platform requires a GitHub-hosted platform runner/,
+  );
+  const finalizationJob = workflow.slice(
+    workflow.indexOf("  finalize-artifact-signing:"),
+    workflow.indexOf("\n  credential-island-macos:", workflow.indexOf("  finalize-artifact-signing:")),
+  );
+  assert.match(finalizationJob, /Download pre-signing deterministic artifact\n\s+uses:/);
+  assert.doesNotMatch(finalizationJob, /Download pre-signing deterministic artifact\n\s+if:/);
+  assert.match(finalizationJob, /Verify final artifact bytes with consumer policy/);
+  assert.match(finalizationJob, /BUILDCHAIN_ARTIFACT_SIGNING_STATE:/);
+  assert.ok(
+    finalizationJob.indexOf("Verify and import final signed bytes") <
+      finalizationJob.indexOf("Verify final artifact bytes with consumer policy") &&
+      finalizationJob.indexOf("Verify final artifact bytes with consumer policy") <
+        finalizationJob.indexOf("Recompute manifest over final signed bytes"),
+    "consumer final-byte verification must run after signed-byte import and before manifest resealing",
+  );
   assert.match(workflow, /needs\.artifact-signing-control\.result == 'success'/);
   assert.match(workflow, /needs\.finalize-artifact-signing\.result == 'success'/);
   assert.equal(
@@ -700,7 +730,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   const deterministicPayloadUploads = [
     ...workflow.matchAll(
-      /\n      - name: (?:Upload|Publish final signed) deterministic artifact\n([\s\S]*?)(?=\n      - name:|\n  [a-z])/g,
+      /\n      - name: (?:Upload|Publish final(?: signed)?) deterministic artifact\n([\s\S]*?)(?=\n      - name:|\n  [a-z])/g,
     ),
   ];
   assert.equal(deterministicPayloadUploads.length, 4);
