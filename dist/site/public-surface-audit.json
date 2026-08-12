@@ -8123,7 +8123,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2db0002dc06d97c6ab975f3ba395d23a0c6d7fe2796ded9852a7a127e52637cd",
-    "workflowRegistryDigest": "3f456e31419aa68bf7c6b00f3f19d2c452e5198e77c71285792d95ab1ebf6fc1",
+    "workflowRegistryDigest": "14fa5b4a29f03f337f1502bd852771d72a1c7af25684ef23c3b5be990f748acf",
     "pageRegistryDigest": "f8cbbdc8e411ef8c753107476adebf7d6e69b83089c7a7e814cbe47c5b7f0a95"
   },
   "comparison": {
