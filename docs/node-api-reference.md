@@ -1754,6 +1754,15 @@ Target: `./packages/core/buildchain-delivery-bootstrap.js`. Public symbols: 2.
 | `BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT` | constant: const BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT | none | value | Import does not declare a throw contract. | none-on-import | `import { BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT } from "@kungfu-tech/buildchain/buildchain-delivery-bootstrap";` | `packages/core/buildchain-delivery-bootstrap.js:4` |
 | `qualifyBuildchainDeliveryInfrastructureBootstrap` | function: function qualifyBuildchainDeliveryInfrastructureBootstrap({ authority, candidate, gateResult, warrant, transitionEvidence, } = {}) | { authority, candidate, gateResult, warrant, transitionEvidence, } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | may-write-or-invoke-external-actions | `import { qualifyBuildchainDeliveryInfrastructureBootstrap } from "@kungfu-tech/buildchain/buildchain-delivery-bootstrap";` | `packages/core/buildchain-delivery-bootstrap.js:122` |
 
+## `@kungfu-tech/buildchain/buildchain-delivery-self-dogfood`
+
+Target: `./packages/core/buildchain-delivery-self-dogfood.js`. Public symbols: 2.
+
+| Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT` | constant: const BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT | none | value | Import does not declare a throw contract. | none-on-import | `import { BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT } from "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood";` | `packages/core/buildchain-delivery-self-dogfood.js:3` |
+| `createBuildchainDeliveryInfrastructureSelfDogfood` | function: function createBuildchainDeliveryInfrastructureSelfDogfood({ authorityPackage, kfdPackage, authority, candidate, instanceId, adopterManifest, source, artifact, release, evidence = [], warrant, transitionEvidence, verifiedAt, maxAgeSeconds, } = {}, authorityRuntime) | { authorityPackage, kfdPackage, authority, candidate, instanceId, adopterManifest, source, artifact, release, evidence = [], warrant, transitionEvidence, verifiedAt, maxAgeSeconds, } = {}, authorityRuntime | unknown | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { createBuildchainDeliveryInfrastructureSelfDogfood } from "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood";` | `packages/core/buildchain-delivery-self-dogfood.js:54` |
+
 ## `@kungfu-tech/buildchain/legacy-kfd-adopter-driver`
 
 Target: `./packages/core/legacy-kfd-adopter-driver.js`. Public symbols: 4.

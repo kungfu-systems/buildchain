@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "206725ba0620d03dd8918cac7e993121f41338562196c3b49e89fadc3900d0ec",
+    "sha256": "837dadd72acd7267e374e0f83ce727e22e01f79bc6ecbdb36df2f50f3c32137e",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "206725ba0620d03dd8918cac7e993121f41338562196c3b49e89fadc3900d0ec",
+      "sha256": "837dadd72acd7267e374e0f83ce727e22e01f79bc6ecbdb36df2f50f3c32137e",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -1555,6 +1555,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./buildchain-delivery-bootstrap"
+        },
+        {
+          "id": "export:./buildchain-delivery-self-dogfood",
+          "name": "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-delivery-self-dogfood.js",
+          "evidencePath": "packages/core/buildchain-delivery-self-dogfood.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-delivery-self-dogfood"
         },
         {
           "id": "export:./legacy-kfd-adopter-driver",
@@ -6945,6 +6957,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 445
+    "publicSurfaceCount": 446
   }
 }
