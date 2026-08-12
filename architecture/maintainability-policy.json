@@ -888,7 +888,10 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "secrets": ["KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"],
+        "secrets": [
+          "BUILDCHAIN_PROMOTION_TOKEN",
+          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
+        ],
         "outputs": [
           "capability-artifact",
           "capability-digest",
@@ -897,7 +900,7 @@
           "gate-aggregate-json"
         ]
       },
-      "rationale": "The sealed read-only authority accepts an optional exact caller-repository controller commit for the consumer Gate. It independently checks out the immutable publication subject and controller, verifies both SHAs and the subject tree, and binds controller repository, SHA, and command digest into the qualifying aggregate without granting publication credentials or provider write permission."
+      "rationale": "The sealed read-only authority preserves the dedicated auditor App while adding the existing consumer-owned promotion token only as a read fallback when App credentials are incomplete. It independently checks out the immutable publication subject and controller, verifies both SHAs and the subject tree, and binds controller repository, SHA, and command digest into the qualifying aggregate without granting new provider write permission."
     },
     "workflow:.release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

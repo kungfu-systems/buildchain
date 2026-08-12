@@ -202,10 +202,11 @@ on:
       KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
         description: "Private key for the dedicated read-only GitHub governance auditor App"
         required: false
-
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Optional consumer-owned token used as the live governance read fallback"
+        required: false
 permissions:
   contents: read
-
 jobs:
   verify:
     name: Independently verify publication admission
@@ -378,7 +379,6 @@ jobs:
               exit 1
               ;;
           esac
-
       - name: Checkout exact Buildchain authority runtime
         uses: actions/checkout@v7.0.0
         with:
@@ -386,21 +386,21 @@ jobs:
           ref: ${{ inputs.buildchain-ref }}
           path: .buildchain/authority-runtime
           persist-credentials: false
-
       - name: Mint bounded governance auditor token
-        if: ${{ !inputs.dry-run && vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID != '' }}
+        if: ${{ !inputs.dry-run && vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID != '' && env.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != '' }}
         id: governance-auditor
         continue-on-error: true
         uses: actions/create-github-app-token@v3
+        env:
+          KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
         with:
           app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
-          private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+          private-key: ${{ env.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-
       - name: Collect and verify exact live GitHub governance authority
         if: ${{ !inputs.dry-run }}
         env:
-          GH_TOKEN: ${{ steps.governance-auditor.outputs.token || github.token }}
+          GH_TOKEN: ${{ steps.governance-auditor.outputs.token || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY: ${{ inputs.evidence-repository || github.repository }}
           BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF: ${{ inputs.target-ref }}
           BUILDCHAIN_AUTHORITY_REF: ${{ inputs.buildchain-ref }}

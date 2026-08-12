@@ -953,9 +953,10 @@
         ],
         "inputCount": 37,
         "secrets": [
+          "BUILDCHAIN_PROMOTION_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
-        "secretCount": 1,
+        "secretCount": 2,
         "outputs": [
           "capability-artifact",
           "capability-digest",
@@ -8020,7 +8021,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
-    "workflowRegistryDigest": "36b47dfcb2462101f0207c4921afb3df4f8855d42d984358292a77d9b513cda7",
+    "workflowRegistryDigest": "47230bd75a9bef5bf083653b1a533dc43c4589aa07b32aaef6f92b34a58fe59e",
     "pageRegistryDigest": "80fa4cadbc00dc937e964825c082b7f9103e54b1157078ad8597b3735aaf9267"
   },
   "comparison": {
