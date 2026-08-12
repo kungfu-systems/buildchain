@@ -63,10 +63,10 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
     workflow.indexOf("\n  github-artifact-attestation:"),
   );
   const checkoutShell = promoteJob.indexOf(
-    "path: .buildchain/promotion-shell",
+    "path: .buildchain/runtime/promotion-shell",
   );
   const recordRouting = promoteJob.indexOf(
-    "node .buildchain/promotion-shell/scripts/promotion-routing-evidence.mjs",
+    "node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs",
   );
   assert.match(
     workflow,
