@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 390,
+  "generation": 391,
   "fencingCounter": 108,
   "policy": {
     "agingSeconds": 900,
@@ -3386,8 +3386,57 @@
         "scripts/aws-macos-jit-source-rebind.mjs",
         "tests/aws-macos-jit-controller.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2640,
+      "assignmentRoot": "sha256:2174e7d0894921db50accac870cf4362efbb9669a0e194c9824a439cb22d49fb",
+      "initiativeRoot": "sha256:8a33a7befb4a2c6472eba6bb98f1b1f4749a786618f2497e78c2dc7099961b70",
+      "sourceIdentityRoot": "sha256:7e4b2b878b7538eeabbab274438df1e51acba431d88b2d8803983ca9a3004c79",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:ca9b055775c2792f6bff9875d9cfbe083d330624cdf26907d2fe208b727de7b9",
+      "sourceHead": "81b3a5846b49da22c7952209ba5d5fa2bd059703",
+      "sourcePatchRoot": "sha256:e621a96a54e3cd537d1e7b4ddb7fb7c97f9de38be1110099e3da4125414d59ab",
+      "sourceProofRoot": "sha256:48409442d67b975ddc0702da05b2475be3e411a0f7e351179ee83b8fd0074199",
+      "planRoot": "sha256:02f9c1c9a26249079ec85d6228f0c77c672a46ab2921eb09bdb116c9413280fe",
+      "closureRoot": "sha256:813fa2d200a71ee17db8b7dd8c1aaa29f932852974ecacc666fc712760eb0e47",
+      "dependencyRoot": "sha256:7db5bc03c48c7de2d3735e90551078d94ca0f8dd71f2d813a8e434d806a85ec5",
+      "toolchainRoot": "sha256:84409b19442bd41c2690bbf2e6612a983191f5bd23888338b5f4bb7fd2d496a6",
+      "sourceWorkflowRunId": 0,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-12T08:18:40.142Z",
+      "updatedAt": "2026-08-12T08:18:40.142Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/maintainability-policy.json",
+        "contracts/dev-delivery-authority-v2.schema.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/cli-registry.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/schemas/dev-delivery-authority-v2.schema.json",
+        "dist/site/site-manifest.json",
+        "docs/cli-reference.md",
+        "docs/dev-delivery-qualification-landing-adr.md",
+        "docs/dev-delivery-warrant.md",
+        "docs/node-api-reference.md",
+        "packages/core/dev-delivery-authority.js",
+        "scripts/buildchain-cli-help.mjs",
+        "scripts/dev-delivery-authority.mjs",
+        "scripts/site-capability-metadata.mjs",
+        "tests/dev-delivery-authority.test.mjs",
+        "tests/internal-architecture.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-11T23:15:18.019Z",
-  "stateRoot": "sha256:3a01d8f2d6e8809d832fd2fe9c0e555a0c13edd3bc5247c618307dec415e634a"
+  "updatedAt": "2026-08-12T08:18:40.142Z",
+  "stateRoot": "sha256:892839d9664b7d9bcf58dc6afe66aa4d1330716d4c1cd7b7a9cd0271bdce56b8"
 }
