@@ -18,6 +18,7 @@ import {
   createAdopterDeliveryPassportBinding,
   validateAdopterDeliveryPassportBinding,
 } from "../packages/core/adopter-delivery-passport.js";
+import { getAdopterDeliveryVector } from "../packages/core/adopter-delivery-vectors.js";
 import {
   defaultReleaseAgentIndex,
   defaultReleaseImpact,
@@ -152,6 +153,9 @@ test("release passport and artifact evidence bind one exact category gate closur
 });
 
 test("release verification rejects gate, artifact evidence, and project substitution", () => {
+  const substitutionVector = getAdopterDeliveryVector(
+    "negative-evidence-substitution",
+  );
   const original = releaseEvidence();
 
   const changedGate = structuredClone(original);
@@ -170,11 +174,9 @@ test("release verification rejects gate, artifact evidence, and project substitu
     adopterDeliveryGateDigest("substituted-artifact");
   const artifactReport = check(changedArtifactEvidence);
   assert.equal(artifactReport.ok, false);
-  assert.ok(
-    artifactReport.issues.some(
-      ({ code }) => code === "adopterDelivery.artifactEvidence",
-    ),
-  );
+  for (const code of substitutionVector.expected.issueCodes) {
+    assert.ok(artifactReport.issues.some((entry) => entry.code === code));
+  }
 
   const changedProject = releaseEvidence(gateResult(), "example/other-project");
   const projectReport = check(changedProject);

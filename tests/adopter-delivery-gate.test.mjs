@@ -12,6 +12,7 @@ import {
   defineAdopterArtifactProfile,
   defineAdopterProtocolDriver,
 } from "../packages/core/adopter-delivery-gate.js";
+import { getAdopterDeliveryVector } from "../packages/core/adopter-delivery-vectors.js";
 
 const root = (value) => adopterDeliveryGateDigest(value);
 
@@ -48,6 +49,7 @@ function request({
 }
 
 test("one protocol-neutral gate loads isolated drivers without project branches", () => {
+  const vector = getAdopterDeliveryVector("golden-two-driver-offline-replay");
   const gate = createAdopterDeliveryGate({
     drivers: [
       driver("example.protocol/alpha"),
@@ -58,9 +60,14 @@ test("one protocol-neutral gate loads isolated drivers without project branches"
 
   const alpha = gate.evaluate(request());
   const beta = gate.evaluate(request({ protocol: "example.protocol/beta" }));
+  const alphaReplay = gate.evaluate(request());
+  const betaReplay = gate.evaluate(
+    request({ protocol: "example.protocol/beta" }),
+  );
 
-  assert.equal(alpha.status, "passed");
-  assert.equal(beta.status, "passed");
+  assert.deepEqual([alpha.status, beta.status], vector.expected.statuses);
+  assert.equal(alpha.gateRoot, alphaReplay.gateRoot);
+  assert.equal(beta.gateRoot, betaReplay.gateRoot);
   assert.equal(alpha.semanticReport.protocol, "example.protocol/alpha");
   assert.equal(beta.semanticReport.protocol, "example.protocol/beta");
   assert.equal(alpha.qualifying, false);
@@ -155,6 +162,7 @@ test("a declared custom immutable artifact kind does not widen the core", () => 
 });
 
 test("unknown and malformed states fail closed with deterministic diagnostics", () => {
+  const vector = getAdopterDeliveryVector("negative-driver-mismatch");
   const gate = createAdopterDeliveryGate({
     drivers: [driver("example.protocol/alpha")],
     artifactProfiles: [createGitCommitArtifactProfile()],
@@ -170,7 +178,7 @@ test("unknown and malformed states fail closed with deterministic diagnostics", 
 
   assert.deepEqual(
     unknownDriver.issues.map(({ code }) => code),
-    ["delivery-driver-unknown"],
+    vector.expected.issueCodes,
   );
   assert.deepEqual(
     unknownProfile.issues.map(({ code }) => code),
@@ -225,6 +233,7 @@ test("non-JSON declarations and driver reports fail closed without unstable clon
 });
 
 test("driver exceptions and invalid results fail closed", () => {
+  const vector = getAdopterDeliveryVector("fault-driver-throw");
   const broken = defineAdopterProtocolDriver({
     interface: ADOPTER_PROTOCOL_DRIVER_INTERFACE,
     id: "example.protocol/broken",
@@ -243,7 +252,7 @@ test("driver exceptions and invalid results fail closed", () => {
 
   assert.deepEqual(
     result.issues.map(({ code }) => code),
-    ["delivery-driver-error"],
+    vector.expected.issueCodes,
   );
   assert.equal(JSON.stringify(result).includes("private detail"), false);
 });

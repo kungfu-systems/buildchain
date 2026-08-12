@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e916f015216da4e388dc49d09fcc3d4e238d8b72a284aa2537c30a2bb007bad7",
+    "sha256": "39929bf8724f75ea3ce70b6b71b9b6a0b1e36ce86005bfafa6f31f578a165bbb",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 73,
+      "sitePageCount": 74,
       "docCommandRefCount": 989,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e916f015216da4e388dc49d09fcc3d4e238d8b72a284aa2537c30a2bb007bad7",
+      "sha256": "39929bf8724f75ea3ce70b6b71b9b6a0b1e36ce86005bfafa6f31f578a165bbb",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 73,
+        "sitePageCount": 74,
         "docCommandRefCount": 989,
         "failureCount": 0
       },
@@ -1507,6 +1507,66 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./kfd-adopter-manifest"
+        },
+        {
+          "id": "export:./adopter-delivery-gate",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-gate",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-gate.js",
+          "evidencePath": "packages/core/adopter-delivery-gate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-gate"
+        },
+        {
+          "id": "export:./kfd-adopter-category-driver",
+          "name": "@kungfu-tech/buildchain/kfd-adopter-category-driver",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-adopter-category-driver.js",
+          "evidencePath": "packages/core/kfd-adopter-category-driver.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-adopter-category-driver"
+        },
+        {
+          "id": "export:./legacy-kfd-adopter-driver",
+          "name": "@kungfu-tech/buildchain/legacy-kfd-adopter-driver",
+          "kind": "package-export",
+          "sourcePath": "packages/core/legacy-kfd-adopter-driver.js",
+          "evidencePath": "packages/core/legacy-kfd-adopter-driver.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./legacy-kfd-adopter-driver"
+        },
+        {
+          "id": "export:./adopter-delivery-passport",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-passport",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-passport.js",
+          "evidencePath": "packages/core/adopter-delivery-passport.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-passport"
+        },
+        {
+          "id": "export:./adopter-delivery-vectors",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-vectors",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-vectors.js",
+          "evidencePath": "packages/core/adopter-delivery-vectors.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-vectors"
         },
         {
           "id": "export:./kfd-adopter-release-binding",
@@ -6040,6 +6100,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:adopter-delivery-gate",
+          "name": "site-page:manual:adopter-delivery-gate",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:artifact-verification-envelope",
           "name": "site-page:manual:artifact-verification-envelope",
           "kind": "site-page",
@@ -6846,6 +6918,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 437
+    "publicSurfaceCount": 443
   }
 }

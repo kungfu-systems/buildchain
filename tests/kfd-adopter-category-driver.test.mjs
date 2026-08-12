@@ -18,6 +18,7 @@ import {
   resolvePublishedKfdAdopterCategoryProfiles,
   verifyPublishedKfdAdopterCategoryInstance,
 } from "../packages/core/kfd-adopter-category-driver.js";
+import { getAdopterDeliveryVector } from "../packages/core/adopter-delivery-vectors.js";
 
 const checkedAt = "2026-08-12T00:00:00.000Z";
 const maxAgeSeconds = 86400;
@@ -193,6 +194,27 @@ test("KFD driver carries the exact published category-instance decision", () => 
 });
 
 test("KFD driver rejects profile, package, and outer artifact substitution", () => {
+  const categoryConflictVector = getAdopterDeliveryVector(
+    "negative-category-conflict",
+  );
+  const categoryConflict = fixture();
+  categoryConflict.request.declaration.selection.profiles.push(
+    structuredClone(categoryConflict.request.declaration.selection.profiles[0]),
+  );
+  const categoryConflictResult = gate().evaluate(
+    categoryConflict.request,
+    categoryConflict.context,
+  );
+  assert.equal(
+    categoryConflictResult.status,
+    categoryConflictVector.expected.status,
+  );
+  for (const code of categoryConflictVector.expected.issueCodes) {
+    assert.ok(
+      categoryConflictResult.issues.some((entry) => entry.code === code),
+    );
+  }
+
   const staleProfile = fixture();
   staleProfile.request.declaration.selection.profiles[0].version = "2.0.0";
   const staleResult = gate().evaluate(
@@ -205,17 +227,18 @@ test("KFD driver rejects profile, package, and outer artifact substitution", () 
   );
 
   const stalePackage = fixture();
+  const stalePackageVector = getAdopterDeliveryVector(
+    "negative-stale-package-cut",
+  );
   stalePackage.request.declaration.kfdCut.packageVersion = "1.0.0-alpha.999";
   const packageResult = gate().evaluate(
     stalePackage.request,
     stalePackage.context,
   );
-  assert.equal(packageResult.status, "failed");
-  assert.ok(
-    packageResult.issues.some(
-      ({ code }) => code === "delivery-kfd-package-cut-mismatch",
-    ),
-  );
+  assert.equal(packageResult.status, stalePackageVector.expected.status);
+  for (const code of stalePackageVector.expected.issueCodes) {
+    assert.ok(packageResult.issues.some((entry) => entry.code === code));
+  }
 
   const substitutedArtifact = fixture();
   substitutedArtifact.request.artifact.root = `sha256:${"f".repeat(64)}`;
