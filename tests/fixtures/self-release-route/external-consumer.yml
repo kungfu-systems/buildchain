@@ -5,7 +5,7 @@ on:
 
 jobs:
   promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@769b221bad7a6b9104afad4c2628d9dca396ab0f
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@cc6c32845ab5779009aeb48cc34efe65e229fe30
     permissions:
       actions: write
       contents: write
@@ -13,7 +13,7 @@ jobs:
     secrets: inherit
     with:
       buildchain-channel: auto
-      buildchain-ref: 769b221bad7a6b9104afad4c2628d9dca396ab0f
+      buildchain-ref: cc6c32845ab5779009aeb48cc34efe65e229fe30
       target-ref: alpha/v1/v1.0
       target-sha: ${{ github.sha }}
       declarative-release-tail: true
