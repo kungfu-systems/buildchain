@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-    "maxHandMaintainedSourceFiles": 293,
-    "maxHandMaintainedSourceLines": 114185,
+    "maxHandMaintainedSourceFiles": 295,
+    "maxHandMaintainedSourceLines": 115623,
     "maxWorkflowFiles": 69,
-    "maxWorkflowLines": 23298,
-    "latestTransition": "Release Train freezes one authorized Alpha candidate independently from subsequent Dev movement.",
-    "rationale": "One provider-neutral Release Train module adds rooted Release Cut identity, compare-and-swap state transitions, idempotent Dev observations, enumerated supersession, full replay validation, and a non-authoritative legacy patrol read projection. Four registry wiring lines expose its package subpath and manual through existing generated public surfaces. The prior Engineering Housekeeper sources remain unchanged; this exact one-file and 524-line increase is covered by focused negative tests and cannot grow implicitly."
+    "maxWorkflowLines": 23344,
+    "latestTransition": "Bounded parallel Dev qualification separates two fenced proof lanes from one exclusive Landing Warrant.",
+    "rationale": "One provider-neutral qualification authority and one deterministic Buildchain-only dogfood harness add exact-head lane leases, conflict and unknown-delta fail closure, expected-old fencing, reusable rooted proofs, a scalar Landing Warrant, exact Warrant-to-proof validation, rooted recovery receipts, expired-worker rejection, and explicit non-acceptance fields for hosted facts that do not yet exist. The existing Buildchain delivery caller adds 46 lines to retain model evidence after invoking the checked-in reusable workflow through its external dev ref. This exact two-file, 1438-source-line, and 46-workflow-line increase is covered by focused negative tests and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "packages/core/dev-delivery-qualification-lanes.js": {
+      "maxLines": 1010,
+      "rationale": "The versioned qualification authority keeps strict state normalization, two-lane scheduling, exact-old transition fencing, heartbeat and expiry recovery, expired-worker rejection, rooted convergence receipts, proof reuse, Dev-advance classification, one scalar Landing Warrant with exact candidate and proof bindings, terminal settlement, and telemetry validation in one independently tested control-plane module. Keeping validation and transition rules together prevents a second authority from drifting; this exact preview ceiling cannot grow implicitly."
+    },
     "packages/core/engineering-housekeeper-github.js": {
       "maxLines": 707,
       "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly."
@@ -1210,6 +1214,11 @@
     }
   },
   "approvedExtractedDebt": {
+    "scripts/dev-delivery-parallel-dogfood.mjs#runParallelQualificationDogfood": {
+      "maxLines": 188,
+      "maxComplexity": 12,
+      "rationale": "The deterministic dogfood scenario keeps one ordered timeline across slow and fast progress, fail-closed candidates, retry, Warrant expiry, Dev advance, cancellation, terminal history, and explicit hosted non-acceptance fields so the report cannot splice unrelated state roots; this exact fixture orchestration ceiling cannot grow implicitly."
+    },
     "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan": {
       "maxLines": 94,
       "maxComplexity": 30,

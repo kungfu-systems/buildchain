@@ -1568,7 +1568,11 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /closure-root:/);
   assert.match(workflow, /dependency-root:/);
   assert.match(workflow, /toolchain-root:/);
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
+  assert.match(
+    workflow,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/dev-pr-auto-merge\.yml@dev\/v3\/v3\.0/,
+  );
+  assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /permissions:\n  actions: write/);
   assert.match(workflow, /delivery-warrant-mode: required/);
@@ -1598,6 +1602,10 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
     .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
     .match(/^      [a-z][a-z0-9-]+:$/gmu);
   assert.equal(dispatchInputs?.length, 10);
+  assert.match(workflow, /parallel-model:/);
+  assert.match(workflow, /dev-delivery-parallel-dogfood\.mjs/);
+  assert.match(workflow, /hostedAcceptance\.consumerPilotDecision == "not-authorized"/);
+  assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
 test("declared merge queue governance reconciles automatically on dev changes", () => {

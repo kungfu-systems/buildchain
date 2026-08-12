@@ -54,7 +54,7 @@ permissions:
 
 jobs:
   deliver:
-    uses: ./.github/workflows/dev-pr-auto-merge.yml
+    uses: kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@dev/v3/v3.0
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ github.sha }}
@@ -82,3 +82,51 @@ jobs:
       dry-run: false
     secrets:
       github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+
+  parallel-model:
+    name: Retain bounded qualification model evidence
+    needs: deliver
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Exercise bounded production qualification model
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/dev-delivery-parallel-dogfood.mjs \
+            --repository "${GITHUB_REPOSITORY}" \
+            --branch dev/v3/v3.0 \
+            --caller-ref dev/v3/v3.0 \
+            --output .buildchain/evidence/parallel-qualification-model.json
+          jq -e '.checks | all(. == true)' \
+            .buildchain/evidence/parallel-qualification-model.json >/dev/null
+          jq -e \
+            '.hostedContext.hosted == true
+             and .hostedAcceptance.status == "hosted-model-exercised"
+             and .hostedAcceptance.consumerPilotDecision == "not-authorized"
+             and .hostedAcceptance.protectedDevExactReadback == null
+             and .hostedAcceptance.mergeGroupEvidence == null
+             and .hostedAcceptance.fiveChildAssignments == []
+             and .hostedAcceptance.reviewed == false' \
+            .buildchain/evidence/parallel-qualification-model.json >/dev/null
+
+      - name: Retain hosted model evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-parallel-qualification-model-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/evidence/parallel-qualification-model.json
+          if-no-files-found: error
+          retention-days: 90
+          overwrite: true

@@ -16,11 +16,18 @@ ai_provenance:
   invisible_context: not asserted
 ---
 
-# Dev Delivery Warrant Queue
+# Parallel Dev Qualification and Landing Warrant
 
-Buildchain's Dev Delivery Warrant Queue gives a qualified slow pull request a
-durable, non-preemptive delivery turn without replacing GitHub Merge Queue as
-the final protected-ref authority.
+Buildchain separates bounded source qualification from protected landing. Up to
+two disjoint pull requests may hold fenced Qualification Lanes concurrently,
+while one exclusive Landing Warrant remains the only Buildchain authority that
+may admit an exact qualified head to GitHub Merge Queue. GitHub remains the
+final protected-ref authority.
+
+The prior single-flight Warrant queue remains readable for settlement,
+comparison, and rollback evidence. New production qualification state uses
+`kungfu-buildchain-dev-delivery-qualification-lanes/v1`; it does not reinterpret
+an old Warrant or convert shadow evidence into live authority.
 
 The queue is stored on a dedicated Git ref below
 `buildchain/dev-delivery-warrant/`. Every update creates a child Git commit and
@@ -125,13 +132,44 @@ buildchain dev proof replay-proof \
 buildchain dev proof integration --warrant-result warrant.json ...
 ```
 
-## Bounded-concurrency shadow qualification
+## Bounded production qualification model
 
-The production queue remains single-flight. A separate effect-disabled shadow
-planner can replay the same deterministic candidate order with a bound of one
-or two lanes. It does not issue, renew, supersede, close, or persist a Warrant;
-it cannot enqueue a pull request; and its output explicitly carries no
-production or rollout authority.
+The proposed production controller has a hard maximum of two Qualification
+Lanes. Each lane binds the exact candidate, source head, protected Dev head, lease
+generation, fencing token, heartbeat, and expiry. A candidate with an
+overlapping or unknown Dev delta fails closed before it can occupy a lane.
+Disjoint candidates are selected in retained enqueue order, except that a
+candidate conflicting with an active lane waits while a later disjoint
+candidate may use the otherwise idle lane. This permits bounded progress but
+does not erase the older candidate's age.
+
+Qualification success seals a reusable exact-source proof and releases the
+lane. The Landing Warrant selector only considers sealed candidates and stores
+the active Warrant in a scalar field. State validation rejects telemetry that
+ever reports more than one active Landing Warrant. A later fast candidate may
+land while an earlier slow candidate is still qualifying; after the fast
+Warrant settles, the earlier candidate remains eligible and cannot be starved.
+
+Cancellation removes only the exact queued or qualifying candidate. Runner
+loss, heartbeat failure, and lane expiry return unproved work to the queue with
+a new fence. A retry after qualification, or a disjoint Dev advance, reuses the
+rooted qualification proof. Exact-head change retains the native proof but
+invalidates source qualification. Overlapping or unknown Dev advance fails
+closed. Duplicate controllers must bind the exact expected-old state root, so
+only one non-fast-forward state transition can be retained.
+
+The provider-neutral controller model is implemented in
+`packages/core/dev-delivery-qualification-lanes.js`. The deterministic fault
+and progress dogfood is `scripts/dev-delivery-parallel-dogfood.mjs`. Neither is
+live production authority until the hosted cutover record is complete and
+reviewed.
+
+## Shadow comparison
+
+The effect-disabled shadow planner remains available to replay the former
+single-flight candidate order with a bound of one or two lanes. It does not
+issue, renew, supersede, close, or persist a Warrant; it cannot enqueue a pull
+request; and its output explicitly carries no production or rollout authority.
 
 Each lane binds the exact queue root and generation, protected-base head,
 source head, projected-base root, Project Cut, approval, required checks,
@@ -155,8 +193,8 @@ buildchain dev warrant shadow-qualify --input qualification-input.json \
 Both commands reject `--execute`. Qualification reports compare explicit
 thresholds for sample count, eligible overlap, projected queue-wait benefit,
 additional runner cost, ambiguity, and false positives. A `proceed` result is
-only evidence for a separate reviewed rollout decision; it never changes the
-live Warrant schema, queue state, merge-queue policy, or protected branch.
+comparison evidence for a separate reviewed cutover decision; it never changes
+the live Warrant schema, queue state, merge-queue policy, or protected branch.
 
 ## Workflow rollout and rollback
 
@@ -193,9 +231,27 @@ cannot close a newer active Warrant generation.
 Buildchain uses the same contract for its own protected dev line through
 `buildchain-dev-delivery.yml`. The manual caller requires the exact PR head and
 all native/source proof roots, pins the runtime to the caller commit, selects
-`delivery-warrant-mode: required`, and targets GitHub Merge Queue. It does not
-offer an `off` switch: rollback is a reviewed change to this caller, not an
-operator-time weakening of a specific delivery attempt.
+`delivery-warrant-mode: required`, and targets GitHub Merge Queue. The caller
+invokes the checked-in reusable workflow through
+`kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@dev/v3/v3.0`;
+it does not use a local reusable-workflow shortcut. It does not offer an `off`
+switch: rollback is a reviewed change to this caller, not an operator-time
+weakening of a specific delivery attempt.
+
+The same `buildchain-dev-delivery.yml` run executes and retains the parallel
+controller model after the reusable delivery job. Its hosted model artifact
+explicitly leaves protected Dev readback, `merge_group` evidence, five child
+Assignment records, review, and the consumer-pilot decision unset. A successful
+model run is not hosted acceptance.
+
+Final evidence must bind all five child PR heads and terminal sealed native
+roots, overlapping run intervals for at least two disjoint PRs, the maximum
+observed Landing Warrant count, slow/fast ordering, fail-closed cases,
+failure-recovery receipts, exact protected Dev readback, merge-group head and
+tree, shadow-versus-live comparison, cutover and rollback refs, terminal
+Warrant settlements, and reviewer identity. Until those hosted facts are
+retained and reviewed, `consumerPilotDecision` stays `not-authorized`; no
+consumer rollout may be claimed.
 
 This mechanism schedules protected delivery only. It does not serialize local
 development, source-only checks, unrelated channels, release publication, or
