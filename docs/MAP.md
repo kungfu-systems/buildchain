@@ -107,6 +107,7 @@ replace them.
 | How do I install a standalone binary or npm package? | [`install.md`](install.md) | use | stable |
 | How do I run or look up the `buildchain` CLI? | [`cli-reference.md`](cli-reference.md) + [`cli.md`](cli.md) | use | stable |
 | How do I import Buildchain toolkit APIs from JavaScript build code? | [`node-api-reference.md`](node-api-reference.md) + [`../packages/core/README.md`](../packages/core/README.md) | use | stable |
+| How are bounded Qualification Leases separated from exclusive merge-group Landing authority? | [`dev-delivery-qualification-landing-adr.md`](dev-delivery-qualification-landing-adr.md) + [`dev-delivery-warrant.md`](dev-delivery-warrant.md) | govern | accepted |
 | How do I initialize a new repository? | [`getting-started.md`](getting-started.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
 | What freezes the v4 dependency direction, writer authority, complexity budgets, exceptions, and N-1 qualification? | [`../architecture/v4-architecture-constitution.md`](../architecture/v4-architecture-constitution.md) | why/verify | preview |

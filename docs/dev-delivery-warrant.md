@@ -157,7 +157,7 @@ buildchain dev proof integration --warrant-result warrant.json ...
 
 ## Bounded-concurrency shadow qualification
 
-The production queue remains single-flight. A separate effect-disabled shadow
+The default production queue remains single-flight. A separate effect-disabled shadow
 planner can replay the same deterministic candidate order with a bound of one
 or two lanes. It does not issue, renew, supersede, close, or persist a Warrant;
 it cannot enqueue a pull request; and its output explicitly carries no
@@ -187,6 +187,46 @@ thresholds for sample count, eligible overlap, projected queue-wait benefit,
 additional runner cost, ambiguity, and false positives. A `proceed` result is
 only evidence for a separate reviewed rollout decision; it never changes the
 live Warrant schema, queue state, merge-queue policy, or protected branch.
+
+## Opt-in bounded qualification and exclusive landing
+
+Buildchain also defines an explicit production opt-in that turns successful
+shadow evidence into a separate v2 authority state. It does not widen or
+reinterpret the v1 Warrant queue. The accepted
+[`Qualification Lease and Landing Warrant ADR`](dev-delivery-qualification-landing-adr.md)
+and `contracts/dev-delivery-authority-v2.schema.json` are authoritative.
+
+In `bounded-qualification-landing` mode, a configured number of exact
+Qualification Leases may coexist. Each lease carries
+`authority = qualification-only` and `mergeGroupAdmission = false`. Completing
+qualification records evidence and releases that lease. Qualified candidates
+then wait for the one `Landing Warrant`, which alone carries
+`authority = merge-group-admission` and may be checked for `merge_group`
+admission.
+
+The public command family is explicit:
+
+```sh
+buildchain dev authority migrate --repository owner/repository \
+  --branch dev/v3/v3.0 --legacy-state v1-queue.json --execute --json
+buildchain dev authority lease-qualification --repository owner/repository \
+  --branch dev/v4/v4.0 --execute
+buildchain dev authority complete-qualification --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> \
+  --authority-token <root> --authority-generation 1 \
+  --evidence-root <qualification-root> --execute
+buildchain dev authority lease-landing --repository owner/repository \
+  --branch dev/v4/v4.0 --execute
+buildchain dev authority admit-merge-group --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> \
+  --authority-token <root> --authority-generation 1 \
+  --merge-group-head <sha>
+```
+
+Terminal settlement releases either authority immediately from exact evidence;
+it does not wait for TTL. Exact duplicate settlement is a state-root-preserving
+no-op. The default `buildchain dev warrant` commands, v1 state bytes, and
+single-flight behavior do not change while this mode is off.
 
 ## Workflow rollout and rollback
 

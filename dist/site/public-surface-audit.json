@@ -6,8 +6,8 @@
     "cliCommandCount": 114,
     "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 72,
-    "docCommandRefCount": 946,
+    "sitePageCount": 73,
+    "docCommandRefCount": 977,
     "failureCount": 0
   },
   "enumerated": {
@@ -3217,6 +3217,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:dev-delivery-qualification-landing-adr",
+        "category": "manual"
+      },
+      {
         "id": "manual:dev-delivery-warrant",
         "category": "manual"
       },
@@ -3994,6 +3998,46 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev merge-queue --repository"
       },
       {
@@ -4105,6 +4149,86 @@
         "id": "dev",
         "path": "docs/cli-reference.md",
         "command": "buildchain dev --help"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority admit-merge-group"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority admit-merge-group"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority complete-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority complete-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority lease-landing"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority lease-landing"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority lease-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority lease-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority migrate"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority migrate"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority observe"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority observe"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority settle"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority settle"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority submit"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority submit"
       },
       {
         "id": "dev",
@@ -4333,6 +4457,11 @@
       },
       {
         "id": "dev",
+        "path": "docs/dev-delivery-qualification-landing-adr.md",
+        "command": "buildchain dev warrant"
+      },
+      {
+        "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev warrant submit"
       },
@@ -4395,6 +4524,36 @@
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev warrant shadow-qualify"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev authority migrate"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev authority lease-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev authority complete-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev authority lease-landing"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev authority admit-merge-group"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant"
       },
       {
         "id": "dev",
@@ -8122,9 +8281,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "2db0002dc06d97c6ab975f3ba395d23a0c6d7fe2796ded9852a7a127e52637cd",
+    "cliRegistryDigest": "602f96c9e57cfdf707e3ee80a95c274afea4a1a5634c251e3cbca0183f01f4a9",
     "workflowRegistryDigest": "3f456e31419aa68bf7c6b00f3f19d2c452e5198e77c71285792d95ab1ebf6fc1",
-    "pageRegistryDigest": "f8cbbdc8e411ef8c753107476adebf7d6e69b83089c7a7e814cbe47c5b7f0a95"
+    "pageRegistryDigest": "d0d034ff115e04d5f56fe22bbe838942fe3d0b186ae302c34d2f1059b0e6d2c1"
   },
   "comparison": {
     "missingCliRegistry": [],
