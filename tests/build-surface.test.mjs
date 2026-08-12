@@ -1117,7 +1117,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(
     publicWorkflow,
-    /publication-authority-workflow-path: \.github\/workflows\/release-candidate-promote\.yml/,
+    /publication-authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/,
   );
   assert.match(workflow, /release-candidate-resolver\.mjs/);
   assert.match(workflow, /release-candidate-workflow-file:/);
