@@ -4917,6 +4917,516 @@
       ]
     },
     {
+      "id": "packages/core/dev-delivery-authority.js#acquireDevDeliveryLandingWarrant",
+      "name": "acquireDevDeliveryLandingWarrant",
+      "kind": "function",
+      "signature": "function acquireDevDeliveryLandingWarrant(stateInput, { now = new Date().toISOString(), leaseSeconds } = {})",
+      "parameters": [
+        {
+          "name": "stateInput",
+          "signature": "stateInput"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ now = new Date().toISOString(), leaseSeconds } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 439
+      },
+      "example": "import { acquireDevDeliveryLandingWarrant } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#acquireDevDeliveryQualificationLease",
+      "name": "acquireDevDeliveryQualificationLease",
+      "kind": "function",
+      "signature": "function acquireDevDeliveryQualificationLease(stateInput, { now = new Date().toISOString(), leaseSeconds } = {})",
+      "parameters": [
+        {
+          "name": "stateInput",
+          "signature": "stateInput"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ now = new Date().toISOString(), leaseSeconds } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 352
+      },
+      "example": "import { acquireDevDeliveryQualificationLease } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#admitDevDeliveryMergeGroup",
+      "name": "admitDevDeliveryMergeGroup",
+      "kind": "function",
+      "signature": "function admitDevDeliveryMergeGroup(stateInput, authorityInput, { mergeGroupHead, now = new Date().toISOString() } = {})",
+      "parameters": [
+        {
+          "name": "stateInput",
+          "signature": "stateInput"
+        },
+        {
+          "name": "authorityInput",
+          "signature": "authorityInput"
+        },
+        {
+          "name": "parameter3",
+          "signature": "{ mergeGroupHead, now = new Date().toISOString() } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 500
+      },
+      "example": "import { admitDevDeliveryMergeGroup } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#completeDevDeliveryQualification",
+      "name": "completeDevDeliveryQualification",
+      "kind": "function",
+      "signature": "function completeDevDeliveryQualification(stateInput, leaseInput, { evidenceRoot, now = new Date().toISOString() } = {})",
+      "parameters": [
+        {
+          "name": "stateInput",
+          "signature": "stateInput"
+        },
+        {
+          "name": "leaseInput",
+          "signature": "leaseInput"
+        },
+        {
+          "name": "parameter3",
+          "signature": "{ evidenceRoot, now = new Date().toISOString() } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 404
+      },
+      "example": "import { completeDevDeliveryQualification } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#createDevDeliveryAuthorityState",
+      "name": "createDevDeliveryAuthorityState",
+      "kind": "function",
+      "signature": "function createDevDeliveryAuthorityState({ repository: repositoryInput, protectedBase: protectedBaseInput, policy = {}, now = new Date().toISOString() } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ repository: repositoryInput, protectedBase: protectedBaseInput, policy = {}, now = new Date().toISOString() } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 103
+      },
+      "example": "import { createDevDeliveryAuthorityState } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#DEV_DELIVERY_AUTHORITY_CONTRACT",
+      "name": "DEV_DELIVERY_AUTHORITY_CONTRACT",
+      "kind": "constant",
+      "signature": "const DEV_DELIVERY_AUTHORITY_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 5
+      },
+      "example": "import { DEV_DELIVERY_AUTHORITY_CONTRACT } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#DEV_DELIVERY_AUTHORITY_MIGRATION_SCHEMA",
+      "name": "DEV_DELIVERY_AUTHORITY_MIGRATION_SCHEMA",
+      "kind": "constant",
+      "signature": "const DEV_DELIVERY_AUTHORITY_MIGRATION_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 11
+      },
+      "example": "import { DEV_DELIVERY_AUTHORITY_MIGRATION_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#DEV_DELIVERY_AUTHORITY_MODE",
+      "name": "DEV_DELIVERY_AUTHORITY_MODE",
+      "kind": "constant",
+      "signature": "const DEV_DELIVERY_AUTHORITY_MODE",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 6
+      },
+      "example": "import { DEV_DELIVERY_AUTHORITY_MODE } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#DEV_DELIVERY_AUTHORITY_RECEIPT_SCHEMA",
+      "name": "DEV_DELIVERY_AUTHORITY_RECEIPT_SCHEMA",
+      "kind": "constant",
+      "signature": "const DEV_DELIVERY_AUTHORITY_RECEIPT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 9
+      },
+      "example": "import { DEV_DELIVERY_AUTHORITY_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#DEV_DELIVERY_LANDING_WARRANT_SCHEMA",
+      "name": "DEV_DELIVERY_LANDING_WARRANT_SCHEMA",
+      "kind": "constant",
+      "signature": "const DEV_DELIVERY_LANDING_WARRANT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 8
+      },
+      "example": "import { DEV_DELIVERY_LANDING_WARRANT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#DEV_DELIVERY_MERGE_GROUP_ADMISSION_SCHEMA",
+      "name": "DEV_DELIVERY_MERGE_GROUP_ADMISSION_SCHEMA",
+      "kind": "constant",
+      "signature": "const DEV_DELIVERY_MERGE_GROUP_ADMISSION_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 10
+      },
+      "example": "import { DEV_DELIVERY_MERGE_GROUP_ADMISSION_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#DEV_DELIVERY_QUALIFICATION_LEASE_SCHEMA",
+      "name": "DEV_DELIVERY_QUALIFICATION_LEASE_SCHEMA",
+      "kind": "constant",
+      "signature": "const DEV_DELIVERY_QUALIFICATION_LEASE_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 7
+      },
+      "example": "import { DEV_DELIVERY_QUALIFICATION_LEASE_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#migrateDevDeliveryAuthorityState",
+      "name": "migrateDevDeliveryAuthorityState",
+      "kind": "function",
+      "signature": "function migrateDevDeliveryAuthorityState(queueInput, { policy = {}, now = new Date().toISOString() } = {})",
+      "parameters": [
+        {
+          "name": "queueInput",
+          "signature": "queueInput"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ policy = {}, now = new Date().toISOString() } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 204
+      },
+      "example": "import { migrateDevDeliveryAuthorityState } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#normalizeDevDeliveryAuthorityState",
+      "name": "normalizeDevDeliveryAuthorityState",
+      "kind": "function",
+      "signature": "function normalizeDevDeliveryAuthorityState(input, expected = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        },
+        {
+          "name": "expected",
+          "signature": "expected = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 145
+      },
+      "example": "import { normalizeDevDeliveryAuthorityState } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#observeDevDeliveryAuthorityState",
+      "name": "observeDevDeliveryAuthorityState",
+      "kind": "function",
+      "signature": "function observeDevDeliveryAuthorityState(stateInput, { now = new Date().toISOString() } = {})",
+      "parameters": [
+        {
+          "name": "stateInput",
+          "signature": "stateInput"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ now = new Date().toISOString() } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 582
+      },
+      "example": "import { observeDevDeliveryAuthorityState } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#settleDevDeliveryAuthorityCandidate",
+      "name": "settleDevDeliveryAuthorityCandidate",
+      "kind": "function",
+      "signature": "function settleDevDeliveryAuthorityCandidate(stateInput, input, { now = new Date().toISOString() } = {})",
+      "parameters": [
+        {
+          "name": "stateInput",
+          "signature": "stateInput"
+        },
+        {
+          "name": "input",
+          "signature": "input"
+        },
+        {
+          "name": "parameter3",
+          "signature": "{ now = new Date().toISOString() } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 523
+      },
+      "example": "import { settleDevDeliveryAuthorityCandidate } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-authority.js#submitDevDeliveryAuthorityCandidate",
+      "name": "submitDevDeliveryAuthorityCandidate",
+      "kind": "function",
+      "signature": "function submitDevDeliveryAuthorityCandidate(stateInput, input, { now = new Date().toISOString() } = {})",
+      "parameters": [
+        {
+          "name": "stateInput",
+          "signature": "stateInput"
+        },
+        {
+          "name": "input",
+          "signature": "input"
+        },
+        {
+          "name": "parameter3",
+          "signature": "{ now = new Date().toISOString() } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-authority.js",
+        "line": 297
+      },
+      "example": "import { submitDevDeliveryAuthorityCandidate } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/dev-delivery-common.js#devDeliveryContentRoot",
       "name": "devDeliveryContentRoot",
       "kind": "function",
@@ -23975,11 +24485,50 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/dev-delivery-authority",
+      "export": "./dev-delivery-authority",
+      "target": "./packages/core/dev-delivery-authority.js",
+      "digest": "sha256:7d79d8cf94ff190f2f8f7dd3453711128b778df5ff714511b334a32ab3f18d1a",
+      "summary": "Opt-in bounded Qualification Lease, exclusive Landing Warrant, exact v1 migration, admission, and terminal settlement APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 17,
+      "symbolIds": [
+        "packages/core/dev-delivery-authority.js#acquireDevDeliveryLandingWarrant",
+        "packages/core/dev-delivery-authority.js#acquireDevDeliveryQualificationLease",
+        "packages/core/dev-delivery-authority.js#admitDevDeliveryMergeGroup",
+        "packages/core/dev-delivery-authority.js#completeDevDeliveryQualification",
+        "packages/core/dev-delivery-authority.js#createDevDeliveryAuthorityState",
+        "packages/core/dev-delivery-authority.js#DEV_DELIVERY_AUTHORITY_CONTRACT",
+        "packages/core/dev-delivery-authority.js#DEV_DELIVERY_AUTHORITY_MIGRATION_SCHEMA",
+        "packages/core/dev-delivery-authority.js#DEV_DELIVERY_AUTHORITY_MODE",
+        "packages/core/dev-delivery-authority.js#DEV_DELIVERY_AUTHORITY_RECEIPT_SCHEMA",
+        "packages/core/dev-delivery-authority.js#DEV_DELIVERY_LANDING_WARRANT_SCHEMA",
+        "packages/core/dev-delivery-authority.js#DEV_DELIVERY_MERGE_GROUP_ADMISSION_SCHEMA",
+        "packages/core/dev-delivery-authority.js#DEV_DELIVERY_QUALIFICATION_LEASE_SCHEMA",
+        "packages/core/dev-delivery-authority.js#migrateDevDeliveryAuthorityState",
+        "packages/core/dev-delivery-authority.js#normalizeDevDeliveryAuthorityState",
+        "packages/core/dev-delivery-authority.js#observeDevDeliveryAuthorityState",
+        "packages/core/dev-delivery-authority.js#settleDevDeliveryAuthorityCandidate",
+        "packages/core/dev-delivery-authority.js#submitDevDeliveryAuthorityCandidate"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
       "digest": "sha256:8d354aa31faf225201b9adb04ff7ca7fc26984b89b47dd60ac1f8c696a3b4347",
-      "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
+      "summary": "Durable single-flight Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
@@ -25539,7 +26088,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:fa1989343b87e717ca26a181f7f5c29bf779030635e2513428af2834753aa46c"
+      "digest": "sha256:1ea55e9c24cfb241d87414e6452061673f187792ff9deab9f1966be0c2c88e29"
     },
     {
       "id": "build-facts",

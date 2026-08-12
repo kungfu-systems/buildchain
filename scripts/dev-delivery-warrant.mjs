@@ -73,13 +73,14 @@ function decodeBlob(blob) {
 }
 
 export class GitHubDevDeliveryStore {
-  constructor({ repository, token, apiUrl = "https://api.github.com", fetchImpl = globalThis.fetch } = {}) {
+  constructor({ repository, token, apiUrl = "https://api.github.com", fetchImpl = globalThis.fetch, createInitialState = createDevDeliveryQueue } = {}) {
     this.repository = normalizeRepository(repository);
     if (!fetchImpl) throw new Error("fetch is required");
     if (!token) throw new Error("GITHUB_TOKEN is required for the GitHub dev delivery store");
     this.token = token;
     this.apiUrl = apiUrl.replace(/\/+$/, "");
     this.fetch = fetchImpl;
+    this.createInitialState = createInitialState;
   }
 
   async request(method, requestPath, body) {
@@ -113,7 +114,7 @@ export class GitHubDevDeliveryStore {
       return {
         exists: false,
         commitSha: "",
-        queue: createDevDeliveryQueue({
+        queue: this.createInitialState({
           repository: this.repository.fullName,
           protectedBase,
           now,

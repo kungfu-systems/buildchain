@@ -269,6 +269,94 @@ buildchain create runner-provenance --input-json <file-or-json> [--output <file>
 buildchain dev
 ```
 
+### `buildchain dev authority admit-merge-group`
+
+- Help: `buildchain dev authority admit-merge-group --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority complete-qualification`
+
+- Help: `buildchain dev authority complete-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority lease-landing`
+
+- Help: `buildchain dev authority lease-landing --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority lease-qualification`
+
+- Help: `buildchain dev authority lease-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority migrate`
+
+- Help: `buildchain dev authority migrate --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority observe`
+
+- Help: `buildchain dev authority observe --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority settle`
+
+- Help: `buildchain dev authority settle --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority submit`
+
+- Help: `buildchain dev authority submit --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
 ### `buildchain dev merge-queue`
 
 - Help: `buildchain dev merge-queue --help`
