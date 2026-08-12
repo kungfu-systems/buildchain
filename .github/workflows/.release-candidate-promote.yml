@@ -1068,7 +1068,6 @@ jobs:
             echo "::error::publication plan version/tag mismatch: ${BUILDCHAIN_PUBLICATION_VERSION} != ${BUILDCHAIN_PUBLICATION_EXACT_TAG}"
             exit 1
           fi
-
   publication-authority:
     name: Seal product publication capability
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
@@ -1114,8 +1113,9 @@ jobs:
       evidence-manifest-pattern: ${{ needs.release-candidate-preflight.outputs.manifest-pattern }}
       evidence-payload-pattern: ${{ needs.release-candidate-preflight.outputs.payload-pattern }}
       dry-run: ${{ inputs.dry-run }}
-    secrets: inherit
-
+    secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+      BUILDCHAIN_GOVERNANCE_READ_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
   qualification-plan:
     name: Bind consumer publication predicate
     needs: [preflight]
