@@ -1608,7 +1608,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 277
+        "line": 299
       },
       "example": "import { assertBuildchainCompatibilityProjection } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -1717,7 +1717,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 360
+        "line": 382
       },
       "example": "import { contractSummary } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1746,7 +1746,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 158
+        "line": 180
       },
       "example": "import { createBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -1775,7 +1775,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 253
+        "line": 275
       },
       "example": "import { createBuildchainCompatibilityProofRegistry } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -1804,7 +1804,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 323
+        "line": 345
       },
       "example": "import { createBuildchainCompatibilityVerificationReceipt } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -1828,7 +1828,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 230
+        "line": 252
       },
       "example": "import { createHistoricalBuildchainCompatibilityProofs } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -1857,7 +1857,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 454
+        "line": 476
       },
       "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1886,7 +1886,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 592
+        "line": 614
       },
       "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1919,7 +1919,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 206
+        "line": 228
       },
       "example": "import { verifyBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -1948,7 +1948,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 347
+        "line": 369
       },
       "example": "import { verifyBuildchainCompatibilityVerificationReceipt } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -25539,7 +25539,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:4663cf32a0116a8605e7b8a475fc4b38e02b81ca21af59e49be0043f3eb99a02"
+      "digest": "sha256:37102c168f1eb23f2e9d5a86a4e2df366a755ef102626088232c8599d9cdf91e"
     },
     {
       "id": "build-facts",
