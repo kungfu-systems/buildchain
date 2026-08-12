@@ -70,7 +70,9 @@
     "packages/core/v4-stable-publication-fence.js",
     "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
     "packages/core/v4-partial-mutation-recovery-qualification.js",
-    "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs"
+    "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs",
+    "packages/core/v4-adopter-delivery-parity.js",
+    "crates/buildchain-v4-contracts/src/adopter_delivery.rs"
   ],
   "ownershipRules": [
     {
@@ -428,6 +430,7 @@
         "packages/core/v4-release-activation-shadow.js",
         "packages/core/v4-stable-publication-fence.js",
         "packages/core/v4-partial-mutation-recovery-qualification.js",
+        "packages/core/v4-adopter-delivery-parity.js",
         "packages/core/v4-stage-capsule.js",
         "packages/core/v4-stage-capsule-store.js",
         "packages/core/v4-stage-capsule-local-store.js",
@@ -445,7 +448,8 @@
         "crates/buildchain-v4-contracts/src/release_activation_shadow/model.rs",
         "crates/buildchain-v4-contracts/src/release_activation_shadow/journal.rs",
         "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
-        "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs"
+        "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs",
+        "crates/buildchain-v4-contracts/src/adopter_delivery.rs"
       ],
       "tests": [
         "tests/v4-architecture.test.mjs",
@@ -458,7 +462,8 @@
         "tests/v4-stage-capsule.test.mjs",
         "tests/v4-stage-capsule-store.test.mjs",
         "tests/v4-platform-stage-checkpoints.test.mjs",
-        "tests/v4-stage-capsule-qualification.test.mjs"
+        "tests/v4-stage-capsule-qualification.test.mjs",
+        "tests/v4-adopter-delivery-parity.test.mjs"
       ],
       "contracts": [
         "architecture/v4-architecture-constitution.md",
@@ -475,6 +480,7 @@
         "architecture/v4-stage-capsule-store-contract.json",
         "architecture/v4-platform-stage-checkpoints.json",
         "architecture/v4-stage-capsule-qualification.json",
+        "architecture/v4-adopter-delivery-parity.json",
         "contracts/v4-host-contract-v1.schema.json",
         "contracts/v4-provider-operation-journal-v1.schema.json",
         "contracts/v4-release-activation-shadow-v1.schema.json",

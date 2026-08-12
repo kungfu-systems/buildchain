@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-adopter-delivery-parity-plan",
+  "sourceAuthority": {
+    "branch": "dev/v3/v3.0",
+    "commit": "c3f58d76391c1c6ceddfc900a68e91c7ab82a575",
+    "vectorSuiteRoot": "sha256:cf329805d928a9883cbafbdfdf21ef66c6a0889ed8dfe14356b4e0d25d6738f9",
+    "kfdPackage": "@kungfu-tech/kfd@1.0.0-alpha.62"
+  },
+  "target": {
+    "branch": "dev/v4/v4.0",
+    "baseline": "3079091f770ce9fdca950e106259e34e5171f763",
+    "mode": "effect-disabled",
+    "productionWriterAuthority": false
+  },
+  "vectors": [
+    {
+      "id": "golden-two-driver-offline-replay",
+      "mode": "gate-core-parity"
+    },
+    {
+      "id": "negative-driver-mismatch",
+      "mode": "gate-core-parity"
+    },
+    {
+      "id": "negative-category-conflict",
+      "mode": "published-kfd-driver-parity"
+    },
+    {
+      "id": "negative-evidence-substitution",
+      "mode": "retained-v3-release-passport-boundary"
+    },
+    {
+      "id": "negative-stale-package-cut",
+      "mode": "published-kfd-driver-parity"
+    },
+    {
+      "id": "fault-driver-throw",
+      "mode": "gate-core-parity"
+    }
+  ],
+  "nonClaims": [
+    "The Rust projection has no provider, credential, release, signing or production-writer authority.",
+    "KFD semantics are evaluated only by exact published KFD bytes before the effect-disabled carrier projection.",
+    "Release Passport evidence substitution remains on the protected v3 boundary and is not reimplemented as a v4 writer."
+  ]
+}

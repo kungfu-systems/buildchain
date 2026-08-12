@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
-    "maxHandMaintainedSourceFiles": 339,
-    "maxHandMaintainedSourceLines": 130821,
+    "maxHandMaintainedSourceFiles": 344,
+    "maxHandMaintainedSourceLines": 132414,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 23636,
-    "latestTransition": "The v4 reusable build surface can optionally finalize and verify artifact bytes on each trusted GitHub-hosted platform before resealing the deterministic manifest.",
-    "rationale": "The bounded workflow addition lets consumers verify signed or explicitly unsigned final bytes with native platform tooling after detached signing settlement. The mode is opt-in, rejects self-hosted platform runners, preserves the control-runner default, and reseals the final artifact only after the consumer policy succeeds. The workflow ceiling is the measured total for this reviewed transition and cannot grow implicitly."
+    "latestTransition": "The protected v3 adopter-delivery gate and published KFD category driver are forward-ported to v4 with an effect-disabled Rust parity projection bound to the exact v3 vector authority.",
+    "rationale": "The five bounded source files retain the protocol-neutral gate, published-KFD consumer driver, and an independently evaluated Rust projection that has no provider or production-writer authority. Exact v3 decisions, fail-closed diagnostics, replay roots, and KFD package identity are covered by rooted parity vectors; the measured file and line ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

@@ -37,7 +37,7 @@ const standardsPath = require.resolve("@kungfu-tech/kfd/standards.json");
 const standards = JSON.parse(fs.readFileSync(standardsPath, "utf8"));
 const sourceSha = "a".repeat(40);
 const checkedAt = "2026-07-26T12:00:00.000Z";
-const kfdPackageArtifactRoot = "sha256:07bea3dacab8cba10901539a5acb958db1ee09738fd424c9933f9baa2187675b";
+const kfdPackageArtifactRoot = "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c";
 
 function tempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-kfd-product-gate-"));
