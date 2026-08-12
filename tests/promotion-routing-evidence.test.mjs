@@ -70,11 +70,11 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
   );
   assert.match(
     workflow,
-    /bash \.buildchain\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
+    /bash \.buildchain\/runtime\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
   );
   assert.match(
     workflow,
-    /node \.buildchain\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs/,
+    /node \.buildchain\/runtime\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs/,
   );
   assert.ok(checkoutShell >= 0, "promote job must checkout the selected shell");
   assert.ok(
