@@ -243,6 +243,7 @@ test("stable route calls the hidden advanced workflow through the current major 
   });
   assert.match(generated, /STABLE_SHELL_REF: v4/);
   assert.match(generated, new RegExp(`STABLE_SHELL_CALL_REF: ${pinnedPromotionShellSha}`));
+  assert.match(generated, /if \[\[ "\$\{ref\}" =~ \^\[0-9a-fA-F\]\{40\}\$ \]\]; then sha="\$\{ref,,\}"/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
   assert.match(
