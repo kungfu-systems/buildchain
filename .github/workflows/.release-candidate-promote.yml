@@ -991,7 +991,7 @@ jobs:
         if: ${{ inputs.resume-candidate-run-id == '' }}
         shell: bash
         run: |
-          case "${PACKAGE_MANAGER}" in
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts; case "${PACKAGE_MANAGER}" in
             pnpm)
               corepack enable
               corepack pnpm --version
