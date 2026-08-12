@@ -926,7 +926,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:485c55c362476de980eb35c32c1f58b780520f96c924ac316eb515de60696243"
+      "auditDigest": "sha256:9fdb16bac3b7d2b4a1cacd684e06b4f029d4d4ff41a0d80b54217fc59e010abd"
     },
     {
       "contractVersion": 1,
@@ -975,7 +975,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:485c55c362476de980eb35c32c1f58b780520f96c924ac316eb515de60696243"
+      "auditDigest": "sha256:9fdb16bac3b7d2b4a1cacd684e06b4f029d4d4ff41a0d80b54217fc59e010abd"
     },
     {
       "contractVersion": 1,
@@ -1125,7 +1125,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:76c7533430e36b4675b960be6a9bfa027db80638f87fb1a760ccd47c149531bb"
+      "auditDigest": "sha256:4b31a0588bad10ebe4005984beb10d890ce631c150b59f3f11b12c95ea431be5"
     },
     {
       "contractVersion": 1,
@@ -1147,7 +1147,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:77d83706fea0f37219e8dbb5c84db17e2caac44a568caa7085dfef4a8548d6b1"
+      "auditDigest": "sha256:5f6dc623f216d3d903417a9e551217498fd14b622524f991c425035430aac399"
     },
     {
       "contractVersion": 1,
@@ -4084,5 +4084,5 @@
   ],
   "compatibilityProofRegistryRoot": "sha256:aec674d174461493e3493b3fe3164d62745a9ce18cb6a560f94bd99f2759eb53",
   "compatibilityDigest": "sha256:eb2fafb181b33002f81102a966f0a801ab1798101446635703ab6acfea51d9aa",
-  "contractDigest": "sha256:68b34e019870d326f662de17cdf959bd916d9c04ae3b5040f2836af569bb8e10"
+  "contractDigest": "sha256:1acd56985783025965af9672e316eed881f3d79817baec76848ac1553f384172"
 }

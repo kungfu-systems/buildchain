@@ -35,6 +35,13 @@
     "./kfd": "./packages/core/kfd.js",
     "./kfd-product-gates": "./packages/core/kfd-product-gates.js",
     "./kfd-adopter-manifest": "./packages/core/kfd-adopter-manifest.js",
+    "./adopter-delivery-gate": "./packages/core/adopter-delivery-gate.js",
+    "./kfd-adopter-category-driver": "./packages/core/kfd-adopter-category-driver.js",
+    "./buildchain-delivery-infrastructure": "./packages/core/buildchain-delivery-infrastructure.js",
+    "./buildchain-delivery-bootstrap": "./packages/core/buildchain-delivery-bootstrap.js",
+    "./legacy-kfd-adopter-driver": "./packages/core/legacy-kfd-adopter-driver.js",
+    "./adopter-delivery-passport": "./packages/core/adopter-delivery-passport.js",
+    "./adopter-delivery-vectors": "./packages/core/adopter-delivery-vectors.js",
     "./kfd-adopter-release-binding": "./packages/core/artifact-verification-envelope.js",
     "./kfd-agent-hub": "./packages/core/kfd-agent-hub.js",
     "./buildchain-layout": "./packages/core/buildchain-layout.js",
@@ -148,7 +155,7 @@
     "typescript": "^5.9.0"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.60",
+    "@kungfu-tech/kfd": "1.0.0-alpha.62",
     "ajv": "8.20.0",
     "smol-toml": "1.7.0"
   }

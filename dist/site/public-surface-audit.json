@@ -6,7 +6,7 @@
     "cliCommandCount": 114,
     "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 73,
+    "sitePageCount": 74,
     "docCommandRefCount": 989,
     "failureCount": 0
   },
@@ -3177,6 +3177,10 @@
       {
         "id": "fixture:web-surface-shaped",
         "category": "fixture"
+      },
+      {
+        "id": "manual:adopter-delivery-gate",
+        "category": "manual"
       },
       {
         "id": "manual:artifact-verification-envelope",
@@ -8345,7 +8349,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "76cbcd88996ba645e90fb4f3d45b9cd3d07f9c5db1a008d0b391b29f1115b4fb",
     "workflowRegistryDigest": "21970cd7b1998190bc6f063f5eb98508da99dbfd1ce628c8f5c0c1dc49c23bd9",
-    "pageRegistryDigest": "a5589edc87cc9e1835d3a2e32aa40f3121a28e0974340242fa4f0c93d3684912"
+    "pageRegistryDigest": "3fd56bfa0ee59d7e89e82c5a7863f2308c345a71d64078e4af24b265ea0ae0dd"
   },
   "comparison": {
     "missingCliRegistry": [],

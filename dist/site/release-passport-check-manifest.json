@@ -43,6 +43,7 @@
       "platformArtifactManifests",
       "distTagPromotion",
       "controllerReceipts",
+      "adopterDelivery",
       "kfdAdopter",
       "kfdSupport",
       "githubArtifactAttestations",
