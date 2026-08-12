@@ -1327,15 +1327,6 @@ jobs:
           clean: true
           persist-credentials: false
 
-      - name: Checkout selected promotion workflow shell
-        if: ${{ inputs.promotion-shell-ref != '' }}
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.promotion-shell-sha }}
-          path: .buildchain/runtime/promotion-shell
-          persist-credentials: false
-
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
@@ -1437,6 +1428,15 @@ jobs:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ inputs.buildchain-ref || 'v3' }}
           path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Checkout selected promotion workflow shell
+        if: ${{ inputs.promotion-shell-ref != '' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.promotion-shell-sha }}
+          path: .buildchain/runtime/promotion-shell
           persist-credentials: false
 
       - name: Resolve checked out Buildchain runtime
