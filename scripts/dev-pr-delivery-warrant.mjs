@@ -133,7 +133,6 @@ export async function readCurrentDeliveryQueueState(client, repository, targetBr
   const { queue } = await store.read({
     stateRef: defaultDevDeliveryStateRef(targetBranch),
     protectedBase: targetBranch,
-    now: new Date().toISOString(),
   });
   return queue;
 }
