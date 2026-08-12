@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 105,
+  "generation": 106,
   "fencingCounter": 34,
   "policy": {
     "agingSeconds": 900,
@@ -1117,8 +1117,32 @@
       "recoveries": 0,
       "status": "selected",
       "terminal": null
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 2630,
+      "assignmentRoot": "sha256:1c437a43e3739ce52133439103000325954278e3aebdec7aa9fffae8b1ce9bdd",
+      "initiativeRoot": "sha256:a1aabfd42e2152e26922fd8be729451cf7956af7f5dbdb3c331e853b0cacaa30",
+      "sourceIdentityRoot": "sha256:8b4a466e09b19585947a077cc87e1e59d4d4d113115b7921022c9ba4e5616473",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:4e9bf7211b188070385e8dcf4a2fc65dd88b1a95bdcce8d05eaf557e6a2683a1",
+      "sourceHead": "b09d70c5dce211ac4bbc8f4ab00404162af528e7",
+      "sourcePatchRoot": "sha256:985e497cb53bdad805bc1957b96eda974b52a8c5f88dda060d92c5a6a587a2d8",
+      "sourceProofRoot": "sha256:8e32839cfbe3d164d4aedb573838ffd0714695eb64254d78420f29966c536293",
+      "planRoot": "sha256:b3864a24bcb87919b616ac1c8d08f3f1b0c08c185e6edada4019b8ce61f0c3b6",
+      "closureRoot": "sha256:a6b23b4dee4f9e6a28efaaae7104f888186a531d910a0cbf5d2af4dfc343132d",
+      "dependencyRoot": "sha256:e5bbff135ed07fe843d2233ebfbaba510d2ec7f4be187a6fbaefac31fa6ffd70",
+      "toolchainRoot": "sha256:6661df80d92a171d425927406c46d38a8230ab297e17bfcc7927775c57590e6c",
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-12T04:06:03.324Z",
+      "updatedAt": "2026-08-12T04:06:03.324Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null
     }
   ],
-  "updatedAt": "2026-08-12T03:21:55.653Z",
-  "stateRoot": "sha256:82e715af68d2f586e6435398b9c571ee0ce7bc46240cd6711eadf54690664556"
+  "updatedAt": "2026-08-12T04:06:03.324Z",
+  "stateRoot": "sha256:d5ebb4f92cd653ae604c7ab62ab2851a1396d4cfa22a5624c3c03c920fa446b6"
 }
