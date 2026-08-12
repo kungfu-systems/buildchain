@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -11,6 +12,7 @@ import {
   renderMacosJitBootstrap,
   verifyMacosEc2JitQualification,
 } from "../scripts/aws-macos-jit-core.mjs";
+import { writeMacosJitQualificationEnvironment } from "../scripts/aws-macos-jit.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -99,6 +101,23 @@ test("macOS JIT evidence binds exact source, host, AMI, runner, and lifecycle", 
   assert.equal(evidence.source.sha, "a".repeat(40));
   assert.equal(evidence.aws.hostId, "h-0123456789abcdef0");
   assert.match(evidence.digest, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("macOS JIT qualification disables signing requests without exposing credentials", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-macos-jit-env-"),
+  );
+  try {
+    const githubEnv = path.join(workspace, "github-env");
+    assert.equal(writeMacosJitQualificationEnvironment(githubEnv), true);
+    assert.equal(
+      fs.readFileSync(githubEnv, "utf8"),
+      "BUILDCHAIN_SIGNING_REQUESTS_ENABLED=false\n",
+    );
+    assert.equal(writeMacosJitQualificationEnvironment(""), false);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("macOS phase requires three jobs, a full job, 24 hours, and zero residue", () => {

@@ -275,16 +275,19 @@ export function sealArtifactSigningRequests({
   sourceTreeSha = process.env.BUILDCHAIN_SOURCE_TREE_SHA,
   runtimeSha = process.env.BUILDCHAIN_RUNTIME_SHA,
   platformId = process.env.BUILDCHAIN_PLATFORM_ID,
+  requestsEnabled = process.env.BUILDCHAIN_SIGNING_REQUESTS_ENABLED !== "false",
 } = {}) {
   const resolvedWorkspace = path.resolve(workspace);
   const resolvedCwd = path.resolve(resolvedWorkspace, cwd);
   assertInside(resolvedWorkspace, resolvedCwd, "signing working directory");
   const loaded = loadBuildchainConfig(resolvedCwd);
   const declarations = loaded?.config?.signing?.artifacts || [];
-  const selected = declarations.filter(
-    (entry) =>
-      entry.platforms.length === 0 || entry.platforms.includes(platformId),
-  );
+  const selected = requestsEnabled
+    ? declarations.filter(
+        (entry) =>
+          entry.platforms.length === 0 || entry.platforms.includes(platformId),
+      )
+    : [];
   const resolvedOutputRoot = path.resolve(resolvedWorkspace, outputRoot);
   assertInside(resolvedWorkspace, resolvedOutputRoot, "signing request output");
   if (selected.length === 0) {

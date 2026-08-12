@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "0de402c3877e4c55dbd07b2f4891facce5be8ba8",
     "maxHandMaintainedSourceFiles": 314,
-    "maxHandMaintainedSourceLines": 123330,
+    "maxHandMaintainedSourceLines": 123505,
     "maxWorkflowFiles": 69,
     "maxWorkflowLines": 24247,
-    "latestTransition": "The v3 Alpha tail reseal reuses one exact retained four-platform candidate and reruns only its failed macOS finalization boundary.",
-    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. Terminal settlement selects that exact active chained attempt before an older same-head predecessor, so a recovered native failure cannot block verified merge settlement. Divergent base replay supplies only a process-scoped committer identity to the no-commit conflict probe, leaving runner and repository Git configuration untouched. Architecture inventory ignores generated .buildchain runtime material so parallel bundle tests cannot create transient sources. The macOS JIT rebind binds each earlier non-counting startup or terminal failure to an exact run and source SHA, preserves non-empty S3 evidence for historical AWS execution failures, and admits a current preflight failure only when exactly one Trust gate fails, every other job is skipped, no JIT label appears, and prior-source S3 evidence remains empty. The opt-in Alpha tail reseal binds one exact failed consumer run, source tree, floating v3-alpha contract resolution, retained artifact digests, signing authority result, and reviewed consumer controller; it skips all product build jobs, revalidates every retained platform, reruns only macOS signing finalization, and emits a standard rooted candidate Passport for existing recovery. The generated channel router collapses the advanced workflow's normal-or-reseal output fallback back to the existing alpha-or-stable public contract. This exact 314-file, 123330-source-line and 24247-workflow-line ceiling cannot grow implicitly."
+    "latestTransition": "The compatibility authority records one protected, directed proof for the reviewed build-channel-router stage-model transition.",
+    "rationale": "The three added source files isolate native-proof authority, heartbeat-supervised execution, and provider orchestration. The reusable workflow and generated consumer projection acquire a provisional Warrant before paid native work, atomically qualify it before merge-queue admission, and fail closed on expiry, cancellation, conflict, exact-head change, rename overlap, or other semantic drift. A delayed duplicate exact-head run accepts only the already-qualified active candidate with matching rooted native proof, skips native work, and repeats exact-head queue admission without weakening any check. Terminal settlement selects that exact active chained attempt before an older same-head predecessor, so a recovered native failure cannot block verified merge settlement. Divergent base replay supplies only a process-scoped committer identity to the no-commit conflict probe, leaving runner and repository Git configuration untouched. Architecture inventory ignores generated .buildchain runtime material so parallel bundle tests cannot create transient sources. The macOS JIT rebind binds each earlier non-counting startup, terminal failure, or preflight failure to an exact run and source SHA. Historical AWS execution failures require non-empty source-specific S3 evidence, while historical preflight failures require the exact Trust-gate failure shape, retained GitHub evidence, no JIT-labelled job, and zero source-specific S3 evidence. A mixed-result rebind additionally requires every successful run to be explicitly inventoried, terminally successful, backed by completed jobs, and retain at least one artifact before any source or AWS tag mutation. The opt-in Alpha tail reseal binds one exact failed consumer run, source tree, floating v3-alpha contract resolution, retained artifact digests, signing authority result, and reviewed consumer controller; it skips all product build jobs, revalidates every retained platform, reruns only macOS signing finalization, and emits a standard rooted candidate Passport for existing recovery. The generated channel router collapses the advanced workflow's normal-or-reseal output fallback back to the existing alpha-or-stable public contract. The macOS JIT provenance step now explicitly suppresses signing-request generation for qualification-only jobs, preventing any signing or notarization authority dispatch without weakening default consumer enforcement. This exact 314-file, 123505-source-line and 24247-workflow-line ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -20,16 +20,16 @@
   },
   "approvedNewFileTransitions": {
     "scripts/aws-macos-jit-controller-core.mjs": {
-      "maxLines": 672,
-      "rationale": "The macOS plan contract carries sorted exact current preflight or terminal run ids plus historical startup and terminal run/source inventories, keeping paid-capacity, zero-dispatch, and evidence-preservation policy explicit. This exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 722,
+      "rationale": "The macOS plan contract carries sorted exact current preflight, terminal-failure, or terminal-success run ids plus historical startup, terminal, and preflight run/source inventories, keeping paid-capacity, zero-dispatch, and source-specific evidence-preservation policy explicit. This exact reviewed ceiling cannot grow implicitly."
     },
     "scripts/aws-macos-jit-controller.mjs": {
-      "maxLines": 749,
-      "rationale": "The operator entrypoint retains rehydration and explicit after-failure rebind modes, adding exact preflight and historical failure JSON parsing with matching execution confirmations. Evidence checks and mutation remain in the separately bounded source-rebind module. This exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 796,
+      "rationale": "The operator entrypoint retains rehydration and explicit after-failure rebind modes, adding exact current and historical preflight, historical terminal, and successful-run JSON parsing with matching execution confirmations. Evidence checks and mutation remain in the separately bounded source-rebind module. This exact reviewed ceiling cannot grow implicitly."
     },
     "scripts/aws-macos-jit-source-rebind.mjs": {
-      "maxLines": 683,
-      "rationale": "The source-rebind authority keeps forward-only GitHub ref mutation, exact campaign resource ownership, historical failure inventories, source-specific S3 evidence rules, and compensated rollback in one auditable zero-allocation transaction. Preflight Trust-gate failures are separately proven to have no JIT-labelled job or AWS evidence. This exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 724,
+      "rationale": "The source-rebind authority keeps forward-only GitHub ref mutation, exact campaign resource ownership, historical terminal, historical preflight, and successful-run inventories, source-specific S3 evidence rules, and compensated rollback in one auditable zero-allocation transaction. Historical preflight Trust-gate failures are separately proven to have no JIT-labelled job or AWS evidence. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/next-development-transition.js": {
       "maxLines": 738,
@@ -60,8 +60,8 @@
       "rationale": "The Release Train contract adds one rooted successor-repair lifecycle with compare-and-swap, frozen origin provenance, exact cut and Dev patch identity, independent candidate-build eligibility, publication gating and deterministic validation; this exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/buildchain-compatibility-proof.js": {
-      "maxLines": 609,
-      "rationale": "The compatibility authority now performs channel binding before all legacy early exits while retaining rooted additive and breaking-drift proofs in the existing single evaluator module. This exact reviewed ceiling cannot grow implicitly."
+      "maxLines": 631,
+      "rationale": "The compatibility authority now performs channel binding before all legacy early exits while retaining rooted additive and breaking-drift proofs in the existing single evaluator module. The added protected router relation binds the exact accepted PR, merge cut, source and target digests without weakening unknown-drift rejection. This exact reviewed ceiling cannot grow implicitly."
     },
     "packages/core/kfd-adopter-manifest.js": {
       "maxLines": 390,
@@ -1350,6 +1350,11 @@
       "maxLines": 180,
       "maxComplexity": 36,
       "rationale": "The targeted admission transaction keeps exact PR and head revalidation, explicit readiness mutation, independent approval and check observation, queue status, and typed receipt emission in one auditable function; this exact complexity ceiling cannot grow."
+    },
+    "scripts/aws-macos-jit-controller.mjs#confirm": {
+      "maxLines": 133,
+      "maxComplexity": 28,
+      "rationale": "The operator confirmation gate delegates exact historical-preflight inventory comparison while preserving its audited complexity, and compares every campaign, source, resource, failed-run, historical-run, and successful-run inventory before dispatching any mutation; this exact line and complexity ceiling cannot grow implicitly."
     }
   },
   "selectedFunctionBudgets": {

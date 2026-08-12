@@ -508,6 +508,20 @@ function commonValues(execute) {
   };
 }
 
+function confirmHistoricalPreflightFailures(plan) {
+  const confirmed = flag("confirm-historical-preflight-failure-runs-json")
+    ? jsonArrayArg("confirm-historical-preflight-failure-runs-json")
+    : [];
+  if (
+    JSON.stringify(confirmed) !==
+    JSON.stringify(plan.github.historicalPreflightFailureRuns)
+  ) {
+    throw new Error(
+      "--confirm-historical-preflight-failure-runs-json must equal the exact historical preflight failure inventory",
+    );
+  }
+}
+
 function confirm(plan) {
   if (arg("confirm-source-sha") !== plan.source.sha) {
     throw new Error("--confirm-source-sha must equal the exact source SHA");
@@ -566,6 +580,17 @@ function confirm(plan) {
           "--confirm-historical-terminal-failure-runs-json must equal the exact historical terminal failure inventory",
         );
       }
+      const confirmedSuccessfulRuns = flag("confirm-successful-run-ids-json")
+        ? jsonArrayArg("confirm-successful-run-ids-json").map(String)
+        : [];
+      if (
+        JSON.stringify(confirmedSuccessfulRuns) !==
+        JSON.stringify(plan.github.successfulRunIds)
+      ) {
+        throw new Error(
+          "--confirm-successful-run-ids-json must equal the exact successful run inventory",
+        );
+      }
     } else if (plan.github.priorRunPolicy === "preflight-failure") {
       const confirmed = jsonArrayArg(
         "confirm-preflight-failure-run-ids-json",
@@ -602,7 +627,19 @@ function confirm(plan) {
           "--confirm-historical-terminal-failure-runs-json must equal the exact historical terminal failure inventory",
         );
       }
+      const confirmedSuccessfulRuns = flag("confirm-successful-run-ids-json")
+        ? jsonArrayArg("confirm-successful-run-ids-json").map(String)
+        : [];
+      if (
+        JSON.stringify(confirmedSuccessfulRuns) !==
+        JSON.stringify(plan.github.successfulRunIds)
+      ) {
+        throw new Error(
+          "--confirm-successful-run-ids-json must equal the exact successful run inventory",
+        );
+      }
     }
+    confirmHistoricalPreflightFailures(plan);
   }
   if (plan.kind === "instance-rehydrate-plan") {
     if (arg("confirm-host-id") !== plan.aws.hostId) {
@@ -695,6 +732,16 @@ export function main() {
         (afterFailure || afterPreflightFailure) &&
         flag("historical-terminal-failure-runs-json")
           ? jsonArrayArg("historical-terminal-failure-runs-json")
+          : [],
+      historicalPreflightFailureRuns:
+        (afterFailure || afterPreflightFailure) &&
+        flag("historical-preflight-failure-runs-json")
+          ? jsonArrayArg("historical-preflight-failure-runs-json")
+          : [],
+      successfulRunIds:
+        (afterFailure || afterPreflightFailure) &&
+        flag("successful-run-ids-json")
+          ? jsonArrayArg("successful-run-ids-json")
           : [],
     });
     return emit(plan, mode, execute, () =>
