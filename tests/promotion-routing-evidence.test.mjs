@@ -65,6 +65,7 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
   const checkoutShell = promoteJob.indexOf(
     "path: .buildchain/runtime/promotion-shell",
   );
+  const checkoutRuntime = promoteJob.indexOf("path: .buildchain/runtime\n");
   const recordRouting = promoteJob.indexOf(
     "node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs",
   );
@@ -77,6 +78,10 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
     /node \.buildchain\/runtime\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs/,
   );
   assert.ok(checkoutShell >= 0, "promote job must checkout the selected shell");
+  assert.ok(
+    checkoutRuntime < checkoutShell,
+    "promote job must checkout the parent runtime before the nested selected shell",
+  );
   assert.ok(
     checkoutShell < recordRouting,
     "promote job must checkout the selected shell before using its helper",
