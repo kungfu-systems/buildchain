@@ -86,9 +86,11 @@ evidence. Ready state and approval are established before provisional
 selection.
 
 Native Qualification Proof is separate. It binds semantic source and patch,
-plan, affected closure, dependency graph, toolchain, covered paths, native
-shard evidence, and the exact dev base used by the native composition. Before
-reuse, the consumer classifies the dev delta:
+plan, affected closure, dependency graph, toolchain, the exact execution
+environment contract, covered paths, native shard evidence, and the exact dev
+base used by the native composition. Before reuse, the consumer roots the
+complete attributed Dev delta, including both sides of every rename, then
+classifies it:
 
 - unchanged semantic roots plus an unrelated fully attributed base delta reuse
   native qualification and run only a cheap Project Cut replay. GitHub's `behind`
@@ -97,8 +99,15 @@ reuse, the consumer classifies the dev delta:
   context roots, and a qualified `project.cut.merge-queue-admission/v1`
   receipt;
 - an overlapping delta reruns affected native shards or the full native plan;
-- an unknown graph or changed source, plan, closure, dependency, or toolchain
-  root fails closed to full native qualification.
+- an unknown or truncated graph, ambiguous rename, missing attribution, or
+  changed source, plan, closure, dependency, toolchain, or environment root
+  fails closed to full native qualification.
+
+The reuse decision binds the exact old and current Dev heads, normalized changed
+paths and rename pairs in `baseDeltaRoot`. This makes local and hosted replay of
+the same inputs byte-deterministic. Generated outputs that participate in the
+affected closure must be listed in `affected-paths-json`; a delta touching one
+of those surfaces is overlap, not a documentation-only advance.
 
 Integration Delivery Proof is separate and cannot be cached across candidates.
 It binds the exact current dev base, replay tree, GitHub `merge_group` head and
@@ -123,10 +132,12 @@ buildchain dev warrant select --repository owner/repository \
   --branch dev/v4/v4.0 --execute
 
 buildchain dev proof native --branch dev/v4/v4.0 \
-  --qualified-base <sha> --affected-paths-json '["packages/native"]' ...
+  --qualified-base <sha> --environment-root <root> \
+  --affected-paths-json '["packages/native"]' ...
 
 buildchain dev proof classify-native --source-proof native-proof.json \
-  --current-base <sha> --graph-known true --changed-paths-json '[]' ...
+  --current-base <sha> --graph-known true --attribution-complete true \
+  --changed-paths-json '[]' --renames-json '[]' ...
 
 buildchain dev warrant qualify --repository owner/repository \
   --branch dev/v4/v4.0 --fencing-token <root> --lease-generation 1 \
@@ -264,6 +275,14 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   controller discovers that another candidate owns the active Warrant, a
   configured consumer workflow is dispatched immediately for that exact PR,
   head, and source run; the candidate is not left waiting for a patrol cron.
+
+The controller persists a completed native proof before its final base
+reclassification. A later exact retry can supply that proof and avoid the
+expensive native command when the rooted delta still proves reuse safe. A
+duplicate dispatch against the same already-qualified Warrant returns the same
+proof and reuse roots without another queue mutation. Both result forms carry
+`landingAuthority: false`: only the live qualified Warrant plus exact-head
+GitHub merge-queue admission can authorize landing.
 
 The required controller checks the protected base again after native work. A
 disjoint attributed delta reuses the proof. Overlap or unknown attribution

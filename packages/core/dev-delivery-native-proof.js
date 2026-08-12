@@ -10,11 +10,15 @@ import {
 } from "./dev-delivery-common.js";
 
 export const NATIVE_QUALIFICATION_PROOF_SCHEMA =
+  "kungfu.buildchain.native-qualification-proof/v2";
+const LEGACY_NATIVE_QUALIFICATION_PROOF_SCHEMA =
   "kungfu.buildchain.native-qualification-proof/v1";
 export const NATIVE_PROOF_REUSE_DECISION_SCHEMA =
   "kungfu.buildchain.native-proof-reuse-decision/v1";
 export const DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA =
   "kungfu.buildchain.dev-delivery-qualification-receipt/v1";
+export const NATIVE_PROOF_BASE_DELTA_SCHEMA =
+  "kungfu.buildchain.native-proof-base-delta/v1";
 
 const NATIVE_QUALIFICATION_ROOT_SEMANTICS = "semantic-native-identity-v1";
 
@@ -35,6 +39,35 @@ function normalizedPaths(values) {
         .filter(Boolean),
     ),
   ].sort();
+}
+
+function normalizedRenames(values) {
+  if (!Array.isArray(values)) throw new Error("renames must be a JSON array");
+  return values
+    .map((entry) => ({
+      from: normalizedPaths([entry?.from])[0] || "",
+      to: normalizedPaths([entry?.to])[0] || "",
+    }))
+    .filter((entry) => entry.from && entry.to)
+    .sort(
+      (left, right) =>
+        left.from.localeCompare(right.from) || left.to.localeCompare(right.to),
+    );
+}
+
+export function createNativeProofBaseDelta(input = {}) {
+  const body = {
+    schema: NATIVE_PROOF_BASE_DELTA_SCHEMA,
+    repository: repository(input.repository),
+    protectedBase: protectedBase(input.protectedBase),
+    qualifiedBase: exactSha(input.qualifiedBase, "qualifiedBase"),
+    currentBase: exactSha(input.currentBase, "currentBase"),
+    graphKnown: input.graphKnown === true,
+    attributionComplete: input.attributionComplete === true,
+    changedPaths: normalizedPaths(input.changedPaths || []),
+    renames: normalizedRenames(input.renames || []),
+  };
+  return { ...body, deltaRoot: devDeliveryContentRoot(body) };
 }
 
 function proofIdentity(body) {
@@ -67,6 +100,7 @@ export function createNativeQualificationProof(input = {}) {
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
     toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    environmentRoot: exactRoot(input.environmentRoot, "environmentRoot"),
     qualifiedBase: exactSha(input.qualifiedBase, "qualifiedBase"),
     affectedPaths: normalizedPaths(input.affectedPaths || []),
     shardEvidenceRoots: exactRoots(
@@ -85,7 +119,12 @@ export function createNativeQualificationProof(input = {}) {
 export function verifyNativeQualificationProof(proofInput, expected = {}) {
   try {
     const proof = clone(proofInput || {});
-    if (proof.schema !== NATIVE_QUALIFICATION_PROOF_SCHEMA) {
+    if (
+      ![
+        NATIVE_QUALIFICATION_PROOF_SCHEMA,
+        LEGACY_NATIVE_QUALIFICATION_PROOF_SCHEMA,
+      ].includes(proof.schema)
+    ) {
       return { ok: false, reason: "unsupported-schema" };
     }
     const proofRoot = proof.proofRoot;
@@ -106,7 +145,26 @@ export function verifyNativeQualificationProof(proofInput, expected = {}) {
         return { ok: false, reason: `${field}-mismatch` };
       }
     }
-    createNativeQualificationProof(proof);
+    if (proof.schema === NATIVE_QUALIFICATION_PROOF_SCHEMA) {
+      createNativeQualificationProof(proof);
+    } else {
+      repository(proof.repository);
+      protectedBase(proof.protectedBase);
+      exactSha(proof.qualifiedBase, "qualifiedBase");
+      for (const field of [
+        "sourceIdentityRoot",
+        "sourcePatchRoot",
+        "planRoot",
+        "closureRoot",
+        "dependencyRoot",
+        "toolchainRoot",
+      ]) {
+        exactRoot(proof[field], field);
+      }
+      normalizedPaths(proof.affectedPaths || []);
+      exactRoots(proof.shardEvidenceRoots, "shardEvidenceRoots");
+      timestamp(proof.qualifiedAt, "qualifiedAt");
+    }
     return { ok: true, reason: "exact-native-proof", proofRoot };
   } catch (error) {
     return { ok: false, reason: "invalid-proof", error: error.message };
@@ -136,7 +194,10 @@ function nativeReuseBody(proof, current) {
     qualifiedBase: verification.ok ? proof.qualifiedBase : null,
     currentBase,
     graphKnown: current.graphKnown === true,
+    attributionComplete: current.attributionComplete === true,
     changedPaths,
+    renames: normalizedRenames(current.renames || []),
+    baseDeltaRoot: null,
     overlappingPaths: [],
     reusable: false,
     action: "rerun-full-native-qualification",
@@ -152,6 +213,7 @@ function nativeReuseBody(proof, current) {
     "closureRoot",
     "dependencyRoot",
     "toolchainRoot",
+    "environmentRoot",
   ];
   for (const field of semanticFields) {
     if (!current[field] || current[field] !== proof[field]) {
@@ -164,6 +226,18 @@ function nativeReuseBody(proof, current) {
   if (!currentBase) {
     return { ...base, reason: "current-base-unknown" };
   }
+  const delta = createNativeProofBaseDelta({
+    repository: proof.repository,
+    protectedBase: proof.protectedBase,
+    qualifiedBase: proof.qualifiedBase,
+    currentBase,
+    graphKnown: current.graphKnown,
+    attributionComplete: current.attributionComplete,
+    changedPaths,
+    renames: current.renames || [],
+  });
+  base.baseDeltaRoot = delta.deltaRoot;
+  base.renames = delta.renames;
   if (currentBase === proof.qualifiedBase) {
     return {
       ...base,
@@ -173,13 +247,22 @@ function nativeReuseBody(proof, current) {
       requiredValidation: "exact-merge-group",
     };
   }
-  if (current.graphKnown !== true || !Array.isArray(current.changedPaths)) {
+  if (
+    current.graphKnown !== true ||
+    current.attributionComplete !== true ||
+    !Array.isArray(current.changedPaths) ||
+    !Array.isArray(current.renames)
+  ) {
     return { ...base, reason: "base-delta-attribution-unknown" };
   }
   if (proof.affectedPaths.length === 0) {
     return { ...base, reason: "affected-closure-paths-unknown" };
   }
-  const overlap = changedPaths.filter((changedPath) =>
+  const attributedPaths = [
+    ...changedPaths,
+    ...base.renames.flatMap((rename) => [rename.from, rename.to]),
+  ];
+  const overlap = [...new Set(attributedPaths)].filter((changedPath) =>
     proof.affectedPaths.some((affectedPath) =>
       pathsOverlap(changedPath, affectedPath),
     ),
@@ -269,6 +352,7 @@ export function createDevDeliveryWarrantQualifier({
           closureRoot: active.closureRoot,
           dependencyRoot: active.dependencyRoot,
           toolchainRoot: active.toolchainRoot,
+          environmentRoot: active.environmentRoot,
         });
         if (!proofVerification.ok) {
           throw new Error(`native proof rejected: ${proofVerification.reason}`);
@@ -285,6 +369,7 @@ export function createDevDeliveryWarrantQualifier({
               closureRoot: active.closureRoot,
               dependencyRoot: active.dependencyRoot,
               toolchainRoot: active.toolchainRoot,
+              environmentRoot: active.environmentRoot,
             },
           },
         );

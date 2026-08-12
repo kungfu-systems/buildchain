@@ -7,7 +7,7 @@ import { compareReleaseBlockerPriority, normalizeReleaseBlockerPriorityClaim } f
 export { devDeliveryContentRoot } from "./dev-delivery-common.js";
 export { RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA, createReleaseBlockerPriorityClaim } from "./release-blocker-priority.js";
 export { SOURCE_QUALIFICATION_PROOF_SCHEMA, PROJECT_CUT_REPLAY_PROOF_SCHEMA, INTEGRATION_DELIVERY_PROOF_SCHEMA, classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "./dev-delivery-proof.js";
-export { DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA, NATIVE_QUALIFICATION_PROOF_SCHEMA, NATIVE_PROOF_REUSE_DECISION_SCHEMA, createNativeProofReuseDecision, createNativeQualificationProof, verifyNativeProofReuseDecision, verifyNativeQualificationProof } from "./dev-delivery-native-proof.js";
+export { DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA, NATIVE_QUALIFICATION_PROOF_SCHEMA, NATIVE_PROOF_REUSE_DECISION_SCHEMA, NATIVE_PROOF_BASE_DELTA_SCHEMA, createNativeProofBaseDelta, createNativeProofReuseDecision, createNativeQualificationProof, verifyNativeProofReuseDecision, verifyNativeQualificationProof } from "./dev-delivery-native-proof.js";
 export { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA };
 export const DEV_DELIVERY_QUEUE_CONTRACT = "kungfu-buildchain-dev-delivery-warrant-queue";
 export const DEV_DELIVERY_WARRANT_SCHEMA = "kungfu.buildchain.dev-delivery-warrant/v1";
@@ -72,7 +72,7 @@ function normalizeCandidate(input, expected) {
     planRoot: exactRoot(input.planRoot, "planRoot"),
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
-    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"), ...(input.environmentRoot ? { environmentRoot: exactRoot(input.environmentRoot, "environmentRoot") } : {}),
     ...(Object.hasOwn(input, "sourceWorkflowRunId") ? { sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0) } : {}),
     priority: priority(input.priority),
     enqueuedAt: timestamp(input.enqueuedAt, "candidate enqueuedAt"),
@@ -197,7 +197,7 @@ function submissionReceipt({ before, after, candidate, action, now }) {
     planRoot: candidate.planRoot,
     closureRoot: candidate.closureRoot,
     dependencyRoot: candidate.dependencyRoot,
-    toolchainRoot: candidate.toolchainRoot,
+    toolchainRoot: candidate.toolchainRoot, ...(candidate.environmentRoot ? { environmentRoot: candidate.environmentRoot } : {}),
     ...(Object.hasOwn(candidate, "affectedPaths") ? { affectedPaths: candidate.affectedPaths } : {}),
     sourceWorkflowRunId: candidate.sourceWorkflowRunId,
     ...(Object.hasOwn(candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: candidate.releaseBlockerPriority } : {}),
@@ -239,7 +239,7 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
         if (TERMINAL_STATES.has(existing.status)) {
           throw new Error(`candidate ${attemptedCandidate.candidateId} is terminal and cannot be resubmitted`);
         }
-        const exactProofFields = ["sourcePatchRoot", "sourceProofRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot"];
+        const exactProofFields = ["sourcePatchRoot", "sourceProofRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot", "environmentRoot"];
         const exactProofMatches = exactProofFields.every((field) => existing[field] === attemptedCandidate[field]) && JSON.stringify(existing.affectedPaths || []) === JSON.stringify(attemptedCandidate.affectedPaths || []) && existing.releaseBlockerPriority?.claimRoot === attemptedCandidate.releaseBlockerPriority?.claimRoot;
         if (existing.sourceHead === attemptedCandidate.sourceHead && exactProofMatches) {
           action = "duplicate-noop";
@@ -395,7 +395,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
         planRoot: candidate.planRoot,
         closureRoot: candidate.closureRoot,
         dependencyRoot: candidate.dependencyRoot,
-        toolchainRoot: candidate.toolchainRoot,
+        toolchainRoot: candidate.toolchainRoot, ...(candidate.environmentRoot ? { environmentRoot: candidate.environmentRoot } : {}),
         ...(Object.hasOwn(candidate, "affectedPaths") ? { affectedPaths: candidate.affectedPaths } : {}),
         sourceWorkflowRunId: candidate.sourceWorkflowRunId,
         ...(Object.hasOwn(candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: candidate.releaseBlockerPriority } : {}),
@@ -433,7 +433,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
     planRoot: transaction.result.candidate.planRoot,
     closureRoot: transaction.result.candidate.closureRoot,
     dependencyRoot: transaction.result.candidate.dependencyRoot,
-    toolchainRoot: transaction.result.candidate.toolchainRoot,
+    toolchainRoot: transaction.result.candidate.toolchainRoot, ...(transaction.result.candidate.environmentRoot ? { environmentRoot: transaction.result.candidate.environmentRoot } : {}),
     sourceWorkflowRunId: transaction.result.candidate.sourceWorkflowRunId,
     ...(Object.hasOwn(transaction.result.candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: transaction.result.candidate.releaseBlockerPriority } : {}),
     deliveryClass: transaction.result.candidate.deliveryClass,
@@ -633,7 +633,7 @@ export function observeDevDeliveryQueue(queueInput, { now = new Date().toISOStri
       planRoot: entry.candidate.planRoot,
       closureRoot: entry.candidate.closureRoot,
       dependencyRoot: entry.candidate.dependencyRoot,
-      toolchainRoot: entry.candidate.toolchainRoot,
+      toolchainRoot: entry.candidate.toolchainRoot, ...(entry.candidate.environmentRoot ? { environmentRoot: entry.candidate.environmentRoot } : {}),
       sourceWorkflowRunId: entry.candidate.sourceWorkflowRunId || 0,
       affectedPaths: entry.candidate.affectedPaths || [],
       deliveryClass: entry.candidate.deliveryClass,

@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:4a60b4de6dab7cb419a61b07f851df31cb1596bab99d4bc95b2fb7e1b6cd1f03",
+      "digest": "sha256:542c7e6de9bb543ca3698e6f388c3cc1ac7ca9fb341287155482276e1e9b170f",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -547,7 +547,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:0f12fd05004e9359789b455f56b19cb9bcdbc392ec1e16d322571234e8ec10d6",
+      "digest": "sha256:af1be0d4b9f110807534f1111e5003b2454908993183215badcf7a33b9f48461",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"

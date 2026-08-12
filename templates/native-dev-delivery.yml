@@ -39,6 +39,9 @@ on:
       toolchain-root:
         description: "Native toolchain root"
         required: true
+      environment-root:
+        description: "Native execution environment contract root"
+        required: true
       affected-paths-json:
         description: "JSON array representing the affected closure"
         required: true
@@ -71,6 +74,7 @@ jobs:
       closure-root: ${{ github.event.client_payload.candidate.closureRoot || inputs.closure-root }}
       dependency-root: ${{ github.event.client_payload.candidate.dependencyRoot || inputs.dependency-root }}
       toolchain-root: ${{ github.event.client_payload.candidate.toolchainRoot || inputs.toolchain-root }}
+      environment-root: ${{ github.event.client_payload.candidate.environmentRoot || inputs.environment-root }}
       affected-paths-json: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload.candidate.affectedPaths) || inputs.affected-paths-json }}
       native-proof-json: ${{ inputs.native-proof-json || '' }}
       native-command: cmake -S . -B build && cmake --build build --parallel && ctest --test-dir build --output-on-failure
