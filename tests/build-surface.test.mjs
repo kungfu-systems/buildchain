@@ -2930,6 +2930,14 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
   }
 });
 
+test("pinned self runtime inherits the explicitly declared contract-lock lane", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  assert.match(
+    workflow,
+    /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: \$\{\{ steps\.runtime\.outputs\.runtime-override == 'true' \|\| steps\.runtime\.outputs\.runtime-trust-decision == 'pinned-self' \}\}/,
+  );
+});
+
 test("web-surface release PR close hands production to the protected main push", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.web-surface.yml"), "utf8");
   assert.match(workflow, /trustedClosedReleasePrRuntime/);
