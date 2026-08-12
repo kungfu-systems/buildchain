@@ -132,7 +132,7 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe>
                              --repository <owner/repo> --branch <dev/vN/vN.M>
                              [--execute] [--output <file>] [--json]
-  buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe>
+  buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe>
                              --repository <owner/repo> --branch <dev/vN/vN.M>
                              [--execute] [--output <file>] [--json]
   buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration>

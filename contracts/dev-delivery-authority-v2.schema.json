@@ -48,7 +48,9 @@
       "properties": {
         "maxQualificationLeases": { "type": "integer", "minimum": 1 },
         "qualificationLeaseSeconds": { "type": "integer", "minimum": 1 },
-        "landingLeaseSeconds": { "type": "integer", "minimum": 1 }
+        "landingLeaseSeconds": { "type": "integer", "minimum": 1 },
+        "maxLandingOvertakes": { "type": "integer", "minimum": 0 },
+        "maxQualificationAttempts": { "type": "integer", "minimum": 1 }
       }
     },
     "qualificationLeases": {
@@ -100,6 +102,7 @@
         "token": { "$ref": "#/$defs/root" },
         "generation": { "type": "integer", "minimum": 1 },
         "issuedAt": { "type": "string", "format": "date-time" },
+        "heartbeatAt": { "type": "string", "format": "date-time" },
         "expiresAt": { "type": "string", "format": "date-time" }
       }
     },
@@ -126,6 +129,7 @@
         "token": { "$ref": "#/$defs/root" },
         "generation": { "type": "integer", "minimum": 1 },
         "issuedAt": { "type": "string", "format": "date-time" },
+        "heartbeatAt": { "type": "string", "format": "date-time" },
         "expiresAt": { "type": "string", "format": "date-time" }
       }
     },
@@ -216,6 +220,13 @@
         "closureRoot": { "$ref": "#/$defs/root" },
         "dependencyRoot": { "$ref": "#/$defs/root" },
         "toolchainRoot": { "$ref": "#/$defs/root" },
+        "qualificationDomains": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/root" }
+        },
+        "qualificationAttempts": { "type": "integer", "minimum": 0 },
+        "landingOvertakes": { "type": "integer", "minimum": 0 },
         "enqueuedAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" },
         "status": {
