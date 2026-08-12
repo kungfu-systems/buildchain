@@ -29,7 +29,7 @@ on:
         { description: "Exact immutable PR head", type: string, required: true }
       outcome:
         {
-          description: "merged, terminal-failure, dequeued, or cancelled",
+          description: "merged, terminal-failure, dequeued, cancelled, or superseded",
           type: string,
           required: true,
         }
@@ -110,7 +110,7 @@ jobs:
         shell: bash
         run: |
           case "${OUTCOME}" in
-            merged|terminal-failure|dequeued|cancelled) ;;
+            merged|terminal-failure|dequeued|cancelled|superseded) ;;
             *)
               echo "::error::unsupported terminal Warrant outcome: ${OUTCOME}"
               exit 1

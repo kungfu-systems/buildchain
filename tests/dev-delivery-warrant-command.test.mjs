@@ -138,30 +138,56 @@ test("selection and observation use the same durable state contract", async () =
   assert.equal(observed.observation.activeWarrant.fencingToken, selected.warrant.fencingToken);
 });
 
-test("expired Warrant recovery and reselection persist as one expected-old transition", async () => {
+test("expired Warrant selection remains blocked until exact fenced settlement", async () => {
   const store = new MemoryStore();
   await runDevDeliveryCommand(submitOptions({ execute: true }), store);
-  const selected = await runDevDeliveryCommand({ command: "select", repository: "kungfu-systems/kungfu", branch: "dev/v4/v4.0", now: "2026-08-04T00:02:00Z", leaseSeconds: 60, execute: true }, store);
-  const reselected = await runDevDeliveryCommand({ command: "select", repository: "kungfu-systems/kungfu", branch: "dev/v4/v4.0", now: "2026-08-04T00:04:00Z", leaseSeconds: 60, execute: true }, store);
+  const selected = await runDevDeliveryCommand(
+    {
+      command: "select",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      now: "2026-08-04T00:02:00Z",
+      leaseSeconds: 60,
+      execute: true,
+    },
+    store,
+  );
+  const reselected = await runDevDeliveryCommand(
+    {
+      command: "select",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      now: "2026-08-04T00:04:00Z",
+      leaseSeconds: 60,
+      execute: true,
+    },
+    store,
+  );
   assert.equal(reselected.receipt.expectedOldStateRoot, selected.after.stateRoot);
-  assert.equal(reselected.warrant.generation, selected.warrant.generation + 1);
-  assert.equal(reselected.mutationApplied, true);
-  assert.equal(store.writes.length, 3);
+  assert.equal(reselected.receipt.selected, false);
+  assert.equal(reselected.receipt.reason, "expired-active-warrant-awaits-fenced-settlement");
+  assert.equal(reselected.warrant.generation, selected.warrant.generation);
+  assert.equal(reselected.warrant.fencingToken, selected.warrant.fencingToken);
+  assert.equal(reselected.mutationApplied, false);
+  assert.equal(store.writes.length, 2);
 });
 
 test("terminal settlement records a verified non-applicable no-op without writing", async () => {
   const store = new MemoryStore();
-  const result = await runDevDeliveryCommand({
-    command: "settle",
-    repository: "kungfu-systems/kungfu",
-    branch: "dev/v4/v4.0",
-    pullRequestNumber: 2545,
-    expectedSourceHead: "c".repeat(40),
-    outcome: "merged",
-    reason: "Warrant rollout was off",
-    now: "2026-08-04T00:02:00Z",
-    execute: true,
-  }, store);
+  const result = await runDevDeliveryCommand(
+    {
+      command: "settle",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      pullRequestNumber: 2545,
+      expectedSourceHead: "c".repeat(40),
+      outcome: "merged",
+      reason: "Warrant rollout was off",
+      now: "2026-08-04T00:02:00Z",
+      execute: true,
+    },
+    store,
+  );
   assert.equal(result.mode, "execute");
   assert.equal(result.mutationApplied, false);
   assert.equal(result.receipt.action, "terminal-event-not-applicable");
@@ -171,26 +197,35 @@ test("terminal settlement records a verified non-applicable no-op without writin
 });
 
 test("terminal settlement reconciles a concurrent identical winner as an exact no-op", async () => {
-  const submitted = submitDevDeliveryCandidate(initialQueue(), {
-    ...submitOptions(),
-    pullRequestNumber: 2549,
-  }, { now: "2026-08-04T00:01:00Z" });
-  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:02:00Z" });
+  const submitted = submitDevDeliveryCandidate(
+    initialQueue(),
+    {
+      ...submitOptions(),
+      pullRequestNumber: 2549,
+    },
+    { now: "2026-08-04T00:01:00Z" },
+  );
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:02:00Z",
+  });
   const store = new ConcurrentTerminalStore(selected.queue);
-  const result = await runDevDeliveryCommand({
-    command: "settle",
-    repository: "kungfu-systems/kungfu",
-    branch: "dev/v4/v4.0",
-    pullRequestNumber: 2549,
-    expectedSourceHead: "a".repeat(40),
-    fencingToken: selected.warrant.fencingToken,
-    leaseGeneration: selected.warrant.generation,
-    outcome: "merged",
-    evidenceRoot: ROOT("e"),
-    reason: "protected pull request merged",
-    now: "2026-08-04T00:03:00Z",
-    execute: true,
-  }, store);
+  const result = await runDevDeliveryCommand(
+    {
+      command: "settle",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      pullRequestNumber: 2549,
+      expectedSourceHead: "a".repeat(40),
+      fencingToken: selected.warrant.fencingToken,
+      leaseGeneration: selected.warrant.generation,
+      outcome: "merged",
+      evidenceRoot: ROOT("e"),
+      reason: "protected pull request merged",
+      now: "2026-08-04T00:03:00Z",
+      execute: true,
+    },
+    store,
+  );
   assert.equal(result.mutationApplied, false);
   assert.equal(result.receipt.action, "duplicate-terminal-event-noop");
   assert.equal(result.before.commitSha, "c".repeat(40));
@@ -356,7 +391,10 @@ test("GitHub state store advances a non-forced child commit and verifies its imm
   assert.deepEqual(commitCall.body.parents, [beforeCommit]);
   const updateCall = calls.find((call) => call.method === "PATCH");
   assert.equal(updateCall.body.force, false);
-  assert.equal(calls.some((call) => call.method === "GET" && call.url.includes("/git/ref/heads/")), false);
+  assert.equal(
+    calls.some((call) => call.method === "GET" && call.url.includes("/git/ref/heads/")),
+    false,
+  );
 });
 
 test("GitHub state store exposes a concurrent non-fast-forward rejection", async () => {

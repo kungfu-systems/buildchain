@@ -23,7 +23,14 @@ export const DEV_DELIVERY_PRIORITIES = Object.freeze({
 
 export const DEV_DELIVERY_CLASSES = Object.freeze(["non-native-fast", "native-proof-required", "cross-platform", "release"]);
 
-const TERMINAL_STATES = new Set(["merged", "terminal-failure", "dequeued", "cancelled"]);
+const TERMINAL_STATES = new Set(["merged", "terminal-failure", "dequeued", "cancelled", "superseded"]);
+const TERMINAL_CLASSES = Object.freeze({
+  merged: "authoritative-completion",
+  "terminal-failure": "authoritative-failure",
+  cancelled: "authoritative-cancellation",
+  superseded: "authoritative-supersession",
+  dequeued: "transient-dequeue",
+});
 function nonNegativeInteger(value, label, fallback = 0) {
   const parsed = Number(value ?? fallback);
   if (!Number.isInteger(parsed) || parsed < 0) throw new Error(`${label} must be a non-negative integer`);
@@ -72,8 +79,15 @@ function normalizeCandidate(input, expected) {
     planRoot: exactRoot(input.planRoot, "planRoot"),
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
-    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"), ...(input.environmentRoot ? { environmentRoot: exactRoot(input.environmentRoot, "environmentRoot") } : {}),
-    ...(Object.hasOwn(input, "sourceWorkflowRunId") ? { sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0) } : {}),
+    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    ...(input.environmentRoot
+      ? { environmentRoot: exactRoot(input.environmentRoot, "environmentRoot") }
+      : {}),
+    ...(Object.hasOwn(input, "sourceWorkflowRunId")
+      ? {
+          sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0),
+        }
+      : {}),
     priority: priority(input.priority),
     enqueuedAt: timestamp(input.enqueuedAt, "candidate enqueuedAt"),
     updatedAt: timestamp(input.updatedAt || input.enqueuedAt, "candidate updatedAt"),
@@ -228,7 +242,13 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
         },
         queue,
       );
-      const chainedInput = chainedDevDeliveryAttemptInput({ queue, candidate, input, currentTime, terminalStates: TERMINAL_STATES });
+      const chainedInput = chainedDevDeliveryAttemptInput({
+        queue,
+        candidate,
+        input,
+        currentTime,
+        terminalStates: TERMINAL_STATES,
+      });
       const attemptedCandidate = chainedInput ? normalizeCandidate(chainedInput, queue) : candidate;
       const conflicting = queue.candidates.find((entry) => entry.pullRequestNumber === attemptedCandidate.pullRequestNumber && entry.candidateId !== attemptedCandidate.candidateId && !TERMINAL_STATES.has(entry.status));
       if (conflicting) throw new Error(`PR #${candidate.pullRequestNumber} already has a different active semantic source`);
@@ -325,26 +345,26 @@ function warrantToken(input) {
 
 export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOString(), leaseSeconds } = {}) {
   const currentTime = timestamp(now, "now");
-  let queue = normalizeDevDeliveryQueue(queueInput);
+  const queue = normalizeDevDeliveryQueue(queueInput);
   let recoveryReceipt = null;
   if (queue.activeWarrant && Date.parse(queue.activeWarrant.expiresAt) <= Date.parse(currentTime)) {
     const recovered = recoverExpiredDevDeliveryWarrant(queue, {
       now: currentTime,
     });
-    queue = recovered.queue;
     recoveryReceipt = recovered.receipt;
   }
   if (queue.activeWarrant) {
+    const expired = Date.parse(queue.activeWarrant.expiresAt) <= Date.parse(currentTime);
     const receipt = {
       schema: DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA,
-      selected: true,
-      reason: "non-preemptive-active-warrant",
+      selected: !expired,
+      reason: expired ? "expired-active-warrant-awaits-fenced-settlement" : "non-preemptive-active-warrant",
       candidateId: queue.activeWarrant.candidateId,
       fencingToken: queue.activeWarrant.fencingToken,
       leaseGeneration: queue.activeWarrant.generation,
       expectedOldStateRoot: recoveryReceipt?.expectedOldStateRoot || queue.stateRoot,
       nextStateRoot: queue.stateRoot,
-      nextAction: "Continue the active delivery attempt; later candidates remain visibly queued.",
+      nextAction: expired ? "Prove the stale native worker stopped, then close this exact fenced generation before selecting a successor." : "Continue the active delivery attempt; later candidates remain visibly queued.",
     };
     return {
       queue,
@@ -435,7 +455,11 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
     dependencyRoot: transaction.result.candidate.dependencyRoot,
     toolchainRoot: transaction.result.candidate.toolchainRoot, ...(transaction.result.candidate.environmentRoot ? { environmentRoot: transaction.result.candidate.environmentRoot } : {}),
     sourceWorkflowRunId: transaction.result.candidate.sourceWorkflowRunId,
-    ...(Object.hasOwn(transaction.result.candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: transaction.result.candidate.releaseBlockerPriority } : {}),
+    ...(Object.hasOwn(transaction.result.candidate, "releaseBlockerPriority")
+      ? {
+          releaseBlockerPriority: transaction.result.candidate.releaseBlockerPriority,
+        }
+      : {}),
     deliveryClass: transaction.result.candidate.deliveryClass,
     queueAgeSeconds: selected.priority.ageSeconds,
     basePriority: selected.priority.basePriority,
@@ -497,8 +521,13 @@ export function heartbeatDevDeliveryWarrant(queueInput, warrant, { now = new Dat
   };
 }
 
-const qualifyDevDeliveryWarrantTransition = createDevDeliveryWarrantQualifier({ transition, assertWarrantMutation });
-export function qualifyDevDeliveryWarrant(queueInput, warrant, options) { return qualifyDevDeliveryWarrantTransition(queueInput, warrant, options); }
+const qualifyDevDeliveryWarrantTransition = createDevDeliveryWarrantQualifier({
+  transition,
+  assertWarrantMutation,
+});
+export function qualifyDevDeliveryWarrant(queueInput, warrant, options) {
+  return qualifyDevDeliveryWarrantTransition(queueInput, warrant, options);
+}
 export function recoverExpiredDevDeliveryWarrant(queueInput, { now = new Date().toISOString() } = {}) {
   const currentTime = timestamp(now, "now");
   const before = normalizeDevDeliveryQueue(queueInput);
@@ -517,33 +546,21 @@ export function recoverExpiredDevDeliveryWarrant(queueInput, { now = new Date().
       receiptRoot: devDeliveryContentRoot(receipt),
     };
   }
-  const transaction = transition(
-    before,
-    (queue) => {
-      const expired = clone(queue.activeWarrant);
-      const candidate = queue.candidates.find((entry) => entry.candidateId === expired.candidateId);
-      candidate.status = "queued";
-      candidate.recoveries += 1;
-      candidate.attempts += 1;
-      candidate.updatedAt = currentTime;
-      queue.activeWarrant = null;
-      return { candidate, expired };
-    },
-    currentTime,
-  );
+  const expired = before.activeWarrant;
+  const candidate = before.candidates.find((entry) => entry.candidateId === expired.candidateId);
   const receipt = {
     schema: DEV_DELIVERY_LEASE_RECEIPT_SCHEMA,
-    action: "recovered-expired-lease",
-    candidateId: transaction.result.candidate.candidateId,
-    rejectedFencingToken: transaction.result.expired.fencingToken,
-    expiredLeaseGeneration: transaction.result.expired.generation,
-    retainedEnqueuedAt: transaction.result.candidate.enqueuedAt,
-    expectedOldStateRoot: transaction.expectedOldStateRoot,
-    nextStateRoot: transaction.after.stateRoot,
-    nextAction: "Re-select through the queue to mint a new lease generation and fencing token.",
+    action: "expired-lease-fenced-stop-required",
+    candidateId: candidate.candidateId,
+    rejectedFencingToken: expired.fencingToken,
+    expiredLeaseGeneration: expired.generation,
+    retainedEnqueuedAt: candidate.enqueuedAt,
+    expectedOldStateRoot: before.stateRoot,
+    nextStateRoot: before.stateRoot,
+    nextAction: "Prove the stale native worker stopped, then close this exact fenced generation before selecting a successor.",
   };
   return {
-    queue: transaction.after,
+    queue: before,
     receipt,
     receiptRoot: devDeliveryContentRoot(receipt),
   };
@@ -555,16 +572,22 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
   if (!TERMINAL_STATES.has(normalizedOutcome)) {
     throw new Error(`outcome must be one of ${[...TERMINAL_STATES].join(", ")}`);
   }
+  if (normalizedOutcome === "dequeued") {
+    throw new Error("transient dequeue cannot close an active Delivery Warrant");
+  }
   const transaction = transition(
     queueInput,
     (queue, before) => {
-      assertWarrantMutation(before, warrant, currentTime, { allowExpired: true });
+      assertWarrantMutation(before, warrant, currentTime, {
+        allowExpired: true,
+      });
       const active = clone(queue.activeWarrant);
       const candidate = queue.candidates.find((entry) => entry.candidateId === active.candidateId);
       candidate.status = normalizedOutcome;
       candidate.updatedAt = currentTime;
       candidate.terminal = {
         outcome: normalizedOutcome,
+        terminalClass: TERMINAL_CLASSES[normalizedOutcome],
         reason: text(reason),
         evidenceRoot: exactRoot(evidenceRoot, "evidenceRoot"),
         closedAt: currentTime,
@@ -580,6 +603,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
     schema: DEV_DELIVERY_LEASE_RECEIPT_SCHEMA,
     action: "terminal-closeout",
     outcome: normalizedOutcome,
+    terminalClass: TERMINAL_CLASSES[normalizedOutcome],
     reason: text(reason),
     candidateId: transaction.result.candidate.candidateId,
     fencingToken: transaction.result.active.fencingToken,
@@ -597,8 +621,15 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
 }
 
 const cancelQueuedDevDeliveryCandidateTransition = createCancelQueuedDevDeliveryCandidate(normalizeDevDeliveryQueue);
-export function cancelQueuedDevDeliveryCandidate(queueInput, input, options) { return cancelQueuedDevDeliveryCandidateTransition(queueInput, input, options); }
-export const settleDevDeliveryTerminalEvent = createDevDeliveryTerminalSettler({ normalizeQueue: normalizeDevDeliveryQueue, closeWarrant: closeDevDeliveryWarrant, cancelQueued: cancelQueuedDevDeliveryCandidate, terminalStates: TERMINAL_STATES });
+export function cancelQueuedDevDeliveryCandidate(queueInput, input, options) {
+  return cancelQueuedDevDeliveryCandidateTransition(queueInput, input, options);
+}
+export const settleDevDeliveryTerminalEvent = createDevDeliveryTerminalSettler({
+  normalizeQueue: normalizeDevDeliveryQueue,
+  closeWarrant: closeDevDeliveryWarrant,
+  cancelQueued: cancelQueuedDevDeliveryCandidate,
+  terminalStates: TERMINAL_STATES,
+});
 
 export function observeDevDeliveryQueue(queueInput, { now = new Date().toISOString() } = {}) {
   const queue = normalizeDevDeliveryQueue(queueInput);
