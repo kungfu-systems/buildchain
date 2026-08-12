@@ -227,6 +227,21 @@ function submissionReceipt({ before, after, candidate, action, now }) {
   };
 }
 
+function reconcileSourceWorkflowRunId(existing, attempted, activeCandidateId, currentTime) {
+  const current = existing.sourceWorkflowRunId || 0;
+  const next = attempted.sourceWorkflowRunId || 0;
+  if (existing.sourceHead !== attempted.sourceHead) {
+    existing.sourceWorkflowRunId = next;
+    return "head-change";
+  }
+  if (current > 0 && next > 0 && current !== next) throw new Error("candidate sourceWorkflowRunId cannot change for the same sourceHead");
+  if (current !== 0 || next === 0) return "retained";
+  if (activeCandidateId === existing.candidateId) return "active";
+  existing.sourceWorkflowRunId = next;
+  existing.updatedAt = currentTime;
+  return "upgraded";
+}
+
 export function submitDevDeliveryCandidate(queueInput, input, { now = new Date().toISOString() } = {}) {
   const transaction = transition(
     queueInput,
@@ -261,8 +276,10 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
         }
         const exactProofFields = ["sourcePatchRoot", "sourceProofRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot", "environmentRoot"];
         const exactProofMatches = exactProofFields.every((field) => existing[field] === attemptedCandidate[field]) && JSON.stringify(existing.affectedPaths || []) === JSON.stringify(attemptedCandidate.affectedPaths || []) && existing.releaseBlockerPriority?.claimRoot === attemptedCandidate.releaseBlockerPriority?.claimRoot;
+        const bindingAction = reconcileSourceWorkflowRunId(existing, attemptedCandidate, before.activeWarrant?.candidateId, currentTime);
         if (existing.sourceHead === attemptedCandidate.sourceHead && exactProofMatches) {
-          action = "duplicate-noop";
+          if (bindingAction === "active") return { candidate: existing, action: "active-warrant-retained-noop" };
+          action = bindingAction === "upgraded" ? "source-workflow-run-upgrade-retained-age" : "duplicate-noop";
           selected = existing;
         } else {
           if (before.activeWarrant?.candidateId === existing.candidateId) {
