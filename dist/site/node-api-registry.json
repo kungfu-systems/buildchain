@@ -18786,11 +18786,11 @@
       "id": "packages/core/release-passport-contract.js#buildReleaseArtifactEvidence",
       "name": "buildReleaseArtifactEvidence",
       "kind": "function",
-      "signature": "function buildReleaseArtifactEvidence({ normalizedAssets = [], repository = \"\", tag = \"\", sourceSha = \"\", workflow = {}, kfdAdopter } = {})",
+      "signature": "function buildReleaseArtifactEvidence({ normalizedAssets = [], repository = \"\", tag = \"\", sourceSha = \"\", workflow = {}, adopterDelivery, kfdAdopter } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ normalizedAssets = [], repository = \"\", tag = \"\", sourceSha = \"\", workflow = {}, kfdAdopter } = {}"
+          "signature": "{ normalizedAssets = [], repository = \"\", tag = \"\", sourceSha = \"\", workflow = {}, adopterDelivery, kfdAdopter } = {}"
         }
       ],
       "returns": "unknown",
@@ -18802,7 +18802,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 359
+        "line": 362
       },
       "example": "import { buildReleaseArtifactEvidence } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -18831,7 +18831,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 408
+        "line": 412
       },
       "example": "import { collectKfdAdopterReleaseEvidence } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -18860,7 +18860,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 159
+        "line": 162
       },
       "example": "import { createReleasePassportCheckManifest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18889,7 +18889,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 336
+        "line": 339
       },
       "example": "import { defaultReleaseAgentIndex } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -18918,7 +18918,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 318
+        "line": 321
       },
       "example": "import { defaultReleaseImpact } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -18947,7 +18947,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 348
+        "line": 351
       },
       "example": "import { defaultReleaseLlmsText } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -18976,7 +18976,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 301
+        "line": 304
       },
       "example": "import { defaultReleaseProductMechanism } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -19005,7 +19005,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 388
+        "line": 392
       },
       "example": "import { prepareReleasePassportKfdSections } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -19029,7 +19029,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 15
+        "line": 16
       },
       "example": "import { RELEASE_CHECK_REPORT_CONTRACT } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -19053,7 +19053,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 19
+        "line": 20
       },
       "example": "import { RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19077,7 +19077,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 14
+        "line": 15
       },
       "example": "import { RELEASE_PASSPORT_CONTRACT } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -19101,7 +19101,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 26
+        "line": 27
       },
       "example": "import { RELEASE_PASSPORT_SCHEMA } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19125,7 +19125,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 17
+        "line": 18
       },
       "example": "import { RELEASE_PASSPORT_SCHEMA_ID } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19154,7 +19154,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 456
+        "line": 460
       },
       "example": "import { resolveReleasePassportVerificationInputs } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -19183,7 +19183,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 432
+        "line": 436
       },
       "example": "import { validateKfdAdopterReleaseEvidence } from \"@kungfu-tech/buildchain/release-passport-contract\";",
       "maturity": "stable",
@@ -19212,7 +19212,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport-contract.js",
-        "line": 277
+        "line": 280
       },
       "example": "import { validateReleasePassportSchema } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19236,7 +19236,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 40
+        "line": 44
       },
       "example": "import { AGENT_INDEX_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19260,7 +19260,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 38
+        "line": 42
       },
       "example": "import { ARTIFACT_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19289,7 +19289,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1499
+        "line": 1507
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19302,11 +19302,11 @@
       "id": "packages/core/release-passport.js#createArtifactEvidence",
       "name": "createArtifactEvidence",
       "kind": "function",
-      "signature": "function createArtifactEvidence({ assets = [], repository = \"\", tag = \"\", sourceSha = \"\", workflow = {}, kfdAdopter = undefined } = {})",
+      "signature": "function createArtifactEvidence({ assets = [], repository = \"\", tag = \"\", sourceSha = \"\", workflow = {}, adopterDelivery = undefined, kfdAdopter = undefined } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ assets = [], repository = \"\", tag = \"\", sourceSha = \"\", workflow = {}, kfdAdopter = undefined } = {}"
+          "signature": "{ assets = [], repository = \"\", tag = \"\", sourceSha = \"\", workflow = {}, adopterDelivery = undefined, kfdAdopter = undefined } = {}"
         }
       ],
       "returns": "unknown",
@@ -19318,7 +19318,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1163
+        "line": 1167
       },
       "example": "import { createArtifactEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19347,7 +19347,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 236
+        "line": 240
       },
       "example": "import { createInvariantPassportGate } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -19376,7 +19376,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2666
+        "line": 2682
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19389,11 +19389,11 @@
       "id": "packages/core/release-passport.js#createReleasePassport",
       "name": "createReleasePassport",
       "kind": "function",
-      "signature": "function createReleasePassport({ cwd = process.cwd(), repository = \"\", tag = \"\", sourceSha = \"\", line = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", productMechanismPath = \"product-mechanism.json\", artifactEvidencePath = \"artifact-evidence.json\", impactPath = \"impact.json\", agentIndexPath = \"agent-index.json\", checkReportPath = \"check-report.json\", publishEvidencePath = \"\", transactionStatePath = \"\", assets = [], packageSet = undefined, anchorManifest = undefined, versionMaterial = undefined, publishEvidence = undefined, trustedPublishing = undefined, transaction = undefined, buildSummary = undefined, buildFacts = [], platformArtifactManifests = [], distTagPromotionEvidence = undefined, release = {}, publish = {}, impact = undefined, workflow = {}, kfd1 = undefined, kfd2Claims = [], kfd3 = undefined, kfdAdopter = undefined, kfdAdopterManifestEvidencePath = \"\", kfdAdopterGateEvidencePath = \"\", kfdSupport = undefined, kfdSupportEvidencePath = \"\", invariantPassports = undefined, releaseEvidence = [], kfdAgentHubEvidence = undefined, kfdAgentHubEvidencePath = \"\", controllerReceipts = [], controllerReceiptReferences = [], githubArtifactAttestations = [], checkedAt = \"\", } = {})",
+      "signature": "function createReleasePassport({ cwd = process.cwd(), repository = \"\", tag = \"\", sourceSha = \"\", line = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", productMechanismPath = \"product-mechanism.json\", artifactEvidencePath = \"artifact-evidence.json\", impactPath = \"impact.json\", agentIndexPath = \"agent-index.json\", checkReportPath = \"check-report.json\", publishEvidencePath = \"\", transactionStatePath = \"\", assets = [], packageSet = undefined, anchorManifest = undefined, versionMaterial = undefined, publishEvidence = undefined, trustedPublishing = undefined, transaction = undefined, buildSummary = undefined, buildFacts = [], platformArtifactManifests = [], distTagPromotionEvidence = undefined, release = {}, publish = {}, impact = undefined, workflow = {}, kfd1 = undefined, kfd2Claims = [], kfd3 = undefined, adopterDelivery = undefined, kfdAdopter = undefined, kfdAdopterManifestEvidencePath = \"\", kfdAdopterGateEvidencePath = \"\", kfdSupport = undefined, kfdSupportEvidencePath = \"\", invariantPassports = undefined, releaseEvidence = [], kfdAgentHubEvidence = undefined, kfdAgentHubEvidencePath = \"\", controllerReceipts = [], controllerReceiptReferences = [], githubArtifactAttestations = [], checkedAt = \"\", } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), repository = \"\", tag = \"\", sourceSha = \"\", line = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", productMechanismPath = \"product-mechanism.json\", artifactEvidencePath = \"artifact-evidence.json\", impactPath = \"impact.json\", agentIndexPath = \"agent-index.json\", checkReportPath = \"check-report.json\", publishEvidencePath = \"\", transactionStatePath = \"\", assets = [], packageSet = undefined, anchorManifest = undefined, versionMaterial = undefined, publishEvidence = undefined, trustedPublishing = undefined, transaction = undefined, buildSummary = undefined, buildFacts = [], platformArtifactManifests = [], distTagPromotionEvidence = undefined, release = {}, publish = {}, impact = undefined, workflow = {}, kfd1 = undefined, kfd2Claims = [], kfd3 = undefined, kfdAdopter = undefined, kfdAdopterManifestEvidencePath = \"\", kfdAdopterGateEvidencePath = \"\", kfdSupport = undefined, kfdSupportEvidencePath = \"\", invariantPassports = undefined, releaseEvidence = [], kfdAgentHubEvidence = undefined, kfdAgentHubEvidencePath = \"\", controllerReceipts = [], controllerReceiptReferences = [], githubArtifactAttestations = [], checkedAt = \"\", } = {}"
+          "signature": "{ cwd = process.cwd(), repository = \"\", tag = \"\", sourceSha = \"\", line = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", productMechanismPath = \"product-mechanism.json\", artifactEvidencePath = \"artifact-evidence.json\", impactPath = \"impact.json\", agentIndexPath = \"agent-index.json\", checkReportPath = \"check-report.json\", publishEvidencePath = \"\", transactionStatePath = \"\", assets = [], packageSet = undefined, anchorManifest = undefined, versionMaterial = undefined, publishEvidence = undefined, trustedPublishing = undefined, transaction = undefined, buildSummary = undefined, buildFacts = [], platformArtifactManifests = [], distTagPromotionEvidence = undefined, release = {}, publish = {}, impact = undefined, workflow = {}, kfd1 = undefined, kfd2Claims = [], kfd3 = undefined, adopterDelivery = undefined, kfdAdopter = undefined, kfdAdopterManifestEvidencePath = \"\", kfdAdopterGateEvidencePath = \"\", kfdSupport = undefined, kfdSupportEvidencePath = \"\", invariantPassports = undefined, releaseEvidence = [], kfdAgentHubEvidence = undefined, kfdAgentHubEvidencePath = \"\", controllerReceipts = [], controllerReceiptReferences = [], githubArtifactAttestations = [], checkedAt = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -19405,7 +19405,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1198
+        "line": 1204
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19434,7 +19434,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2820
+        "line": 2836
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19458,7 +19458,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 39
+        "line": 43
       },
       "example": "import { IMPACT_LEDGER_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19482,7 +19482,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 45
+        "line": 49
       },
       "example": "import { INVARIANT_PASSPORT_GATE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -19506,7 +19506,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 46
+        "line": 50
       },
       "example": "import { KFD_AGENT_HUB_RELEASE_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -19530,7 +19530,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 43
+        "line": 47
       },
       "example": "import { KFD2_RELEASE_TRUST_PASSPORT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19554,7 +19554,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 44
+        "line": 48
       },
       "example": "import { KFD2_TRUST_PROOF_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19583,7 +19583,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2849
+        "line": 2865
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19607,7 +19607,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 41
+        "line": 45
       },
       "example": "import { PRODUCT_MECHANISM_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19644,7 +19644,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2736
+        "line": 2752
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19692,7 +19692,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 42
+        "line": 46
       },
       "example": "import { RELEASE_EVIDENCE_ATTACHMENT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19746,7 +19746,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 251
+        "line": 255
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19775,7 +19775,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 146
+        "line": 150
       },
       "example": "import { sha256Text } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19799,7 +19799,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2861
+        "line": 2877
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19828,7 +19828,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2785
+        "line": 2801
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25896,7 +25896,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:485c55c362476de980eb35c32c1f58b780520f96c924ac316eb515de60696243",
+      "digest": "sha256:9fdb16bac3b7d2b4a1cacd684e06b4f029d4d4ff41a0d80b54217fc59e010abd",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -25941,7 +25941,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport-contract",
       "export": "./release-passport-contract",
       "target": "./packages/core/release-passport-contract.js",
-      "digest": "sha256:a0d1beb5ac8849ddd79e8da7c2862a9d3bec9e2d6ebd8f1b653b7f6bde6b2e97",
+      "digest": "sha256:7cd6792ade459026541775373d963dff276077ee35c764088092b7cd5604437b",
       "summary": "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -26303,7 +26303,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:a99695c87ba95ef44ef4c761399e26558659b879f23211adb729d265e6e24758"
+      "digest": "sha256:7a35fb21269e38e4cfc202c4ed090fd2a7e4cc8f0697ba6c84d9fc09205da07f"
     },
     {
       "id": "build-facts",
