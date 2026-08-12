@@ -7,10 +7,11 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use buildchain_v4_contracts::{
     EventEnvelope, ReceiptEnvelope, canonical_bytes, content_root,
     plan_partial_mutation_recovery_bytes, plan_stage_capsule_resume_bytes,
-    project_delivery_warrant_state_bytes, project_release_activation_bytes,
-    project_stable_publication_bytes, run_delivery_warrant_trace_fixture,
-    run_provider_operation_journal_fixture, run_provider_readback_fixture,
-    run_stage_capsule_fixture, run_stage_capsule_store_fixture, validate_clock,
+    project_adopter_delivery_parity_bytes, project_delivery_warrant_state_bytes,
+    project_release_activation_bytes, project_stable_publication_bytes,
+    run_delivery_warrant_trace_fixture, run_provider_operation_journal_fixture,
+    run_provider_readback_fixture, run_stage_capsule_fixture, run_stage_capsule_store_fixture,
+    validate_clock,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -19,6 +20,7 @@ const HOST_REQUEST_CONTRACT: &str = "kungfu-buildchain-v4-host-request";
 const HOST_RESPONSE_CONTRACT: &str = "kungfu-buildchain-v4-host-response";
 const HOST_CAPABILITIES: &[&str] = &[
     "canonical-input-v1",
+    "adopter-delivery-parity-projection-v1",
     "delivery-warrant-state-projection-v1",
     "delivery-warrant-trace-projection-v1",
     "diagnostics-v1",
@@ -382,7 +384,9 @@ fn run_shadow_host() -> Result<(), String> {
         .collect::<Vec<_>>();
     let supported_command = matches!(
         request.command.id.as_str(),
-        "delivery-warrant.trace-project" | "delivery-warrant.state-project"
+        "delivery-warrant.trace-project"
+            | "delivery-warrant.state-project"
+            | "adopter-delivery.parity-project"
     );
     let response =
         if !unsupported.is_empty() || !supported_command || !request.command.arguments.is_empty() {
@@ -417,6 +421,19 @@ fn run_shadow_host() -> Result<(), String> {
                         })
                     }),
                 "delivery-warrant.state-project" => project_delivery_warrant_state_bytes(&input)
+                    .and_then(|value| {
+                        serde_json::to_value(value).map_err(|error| {
+                            Box::new(buildchain_v4_contracts::ContractFault {
+                                schema: buildchain_v4_contracts::CONTRACT_FAULT_CONTRACT.to_owned(),
+                                code: "projection-serialization-failed".to_owned(),
+                                fault_class: "validation".to_owned(),
+                                path: "$/projection".to_owned(),
+                                message: error.to_string(),
+                                retry: "stop".to_owned(),
+                            })
+                        })
+                    }),
+                "adopter-delivery.parity-project" => project_adopter_delivery_parity_bytes(&input)
                     .and_then(|value| {
                         serde_json::to_value(value).map_err(|error| {
                             Box::new(buildchain_v4_contracts::ContractFault {
@@ -482,7 +499,21 @@ fn run() -> Result<(), String> {
         [command, request_path] if command == "partial-mutation-recovery" => {
             run_partial_mutation_recovery_request(request_path)
         }
-        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store|provider-operation-journal|provider-readback|resume-plan|release-activation|stable-publication|partial-mutation-recovery INPUT.json|host]".to_owned()),
+        [command, request_path] if command == "adopter-delivery-parity" => {
+            let bytes = if request_path == "-" {
+                read_stdin()?
+            } else {
+                fs::read(request_path)
+                    .map_err(|error| format!("cannot read adopter delivery parity input: {error}"))?
+            };
+            let projection = project_adopter_delivery_parity_bytes(&bytes)
+                .map_err(|fault| format!("{} at {}: {}", fault.code, fault.path, fault.message))?;
+            serde_json::to_writer(std::io::stdout().lock(), &projection)
+                .map_err(|error| error.to_string())?;
+            println!();
+            Ok(())
+        }
+        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store|provider-operation-journal|provider-readback|resume-plan|release-activation|stable-publication|partial-mutation-recovery|adopter-delivery-parity INPUT.json|host]".to_owned()),
     }
 }
 
