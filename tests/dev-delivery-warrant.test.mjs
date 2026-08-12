@@ -92,6 +92,30 @@ test("duplicate submission is idempotent and safe head repair retains queue age"
   assert.equal(repaired.receipt.sourceProofRoot, ROOTS.proof);
 });
 
+test("exact duplicate admission upgrades a legacy zero source workflow binding without resetting queue age", () => {
+  const first = submit(queue(), 100, "2026-08-04T00:00:00Z", { sourceWorkflowRunId: 0 });
+  const upgraded = submitDevDeliveryCandidate(first.queue, candidate(100), {
+    now: "2026-08-04T00:05:00Z",
+  });
+
+  assert.equal(upgraded.receipt.action, "source-workflow-run-upgrade-retained-age");
+  assert.equal(upgraded.receipt.sourceWorkflowRunId, 31000000100);
+  assert.equal(upgraded.queue.candidates[0].sourceWorkflowRunId, 31000000100);
+  assert.equal(upgraded.queue.candidates[0].enqueuedAt, "2026-08-04T00:00:00.000Z");
+  assert.equal(upgraded.queue.candidates[0].attempts, 1);
+
+  const legacyReplay = submitDevDeliveryCandidate(upgraded.queue, candidate(100, { sourceWorkflowRunId: 0 }), {
+    now: "2026-08-04T00:10:00Z",
+  });
+  assert.equal(legacyReplay.receipt.action, "duplicate-noop");
+  assert.equal(legacyReplay.queue.candidates[0].sourceWorkflowRunId, 31000000100);
+
+  assert.throws(
+    () => submitDevDeliveryCandidate(upgraded.queue, candidate(100, { sourceWorkflowRunId: 31000000999 }), { now: "2026-08-04T00:10:00Z" }),
+    /sourceWorkflowRunId cannot change for the same sourceHead/u,
+  );
+});
+
 test("active exact-head Warrant ignores regenerated proof timestamps without rewriting proof", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const selected = selectDevDeliveryWarrant(first.queue, {
@@ -105,6 +129,21 @@ test("active exact-head Warrant ignores regenerated proof timestamps without rew
   assert.equal(replayed.queue.candidates[0].sourceProofRoot, ROOTS.proof);
   assert.equal(replayed.queue.candidates[0].attempts, 1);
   assert.equal(replayed.queue.candidates[0].updatedAt, "2026-08-04T00:00:01.000Z");
+});
+
+test("active Warrant rejects a candidate-only source workflow binding upgrade", () => {
+  const first = submit(queue(), 100, "2026-08-04T00:00:00Z", { sourceWorkflowRunId: 0 });
+  const selected = selectDevDeliveryWarrant(first.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+  const replayed = submitDevDeliveryCandidate(selected.queue, candidate(100), {
+    now: "2026-08-04T00:05:00Z",
+  });
+
+  assert.equal(replayed.receipt.action, "active-warrant-retained-noop");
+  assert.equal(replayed.queue.candidates[0].sourceWorkflowRunId, 0);
+  assert.equal(replayed.queue.activeWarrant.sourceWorkflowRunId, 0);
+  assert.equal(replayed.queue.activeWarrant.fencingToken, selected.warrant.fencingToken);
 });
 
 test("active Warrant still rejects an exact semantic candidate head change", () => {
