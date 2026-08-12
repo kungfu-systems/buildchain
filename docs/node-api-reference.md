@@ -1745,6 +1745,15 @@ Target: `./packages/core/buildchain-delivery-infrastructure.js`. Public symbols:
 | `createBuildchainDeliveryInfrastructureInstanceManifest` | function: function createBuildchainDeliveryInfrastructureInstanceManifest({ instanceId, adopterManifest, source, artifact, release, evidence = [], } = {}) | { instanceId, adopterManifest, source, artifact, release, evidence = [], } = {} | unknown | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { createBuildchainDeliveryInfrastructureInstanceManifest } from "@kungfu-tech/buildchain/buildchain-delivery-infrastructure";` | `packages/core/buildchain-delivery-infrastructure.js:61` |
 | `verifyBuildchainDeliveryInfrastructureInstance` | function: function verifyBuildchainDeliveryInfrastructureInstance(manifest, { adopterManifest, verifiedAt, maxAgeSeconds } = {}) | manifest, { adopterManifest, verifiedAt, maxAgeSeconds } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { verifyBuildchainDeliveryInfrastructureInstance } from "@kungfu-tech/buildchain/buildchain-delivery-infrastructure";` | `packages/core/buildchain-delivery-infrastructure.js:155` |
 
+## `@kungfu-tech/buildchain/buildchain-delivery-bootstrap`
+
+Target: `./packages/core/buildchain-delivery-bootstrap.js`. Public symbols: 2.
+
+| Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT` | constant: const BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT | none | value | Import does not declare a throw contract. | none-on-import | `import { BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT } from "@kungfu-tech/buildchain/buildchain-delivery-bootstrap";` | `packages/core/buildchain-delivery-bootstrap.js:4` |
+| `qualifyBuildchainDeliveryInfrastructureBootstrap` | function: function qualifyBuildchainDeliveryInfrastructureBootstrap({ authority, candidate, gateResult, warrant, transitionEvidence, } = {}) | { authority, candidate, gateResult, warrant, transitionEvidence, } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | may-write-or-invoke-external-actions | `import { qualifyBuildchainDeliveryInfrastructureBootstrap } from "@kungfu-tech/buildchain/buildchain-delivery-bootstrap";` | `packages/core/buildchain-delivery-bootstrap.js:122` |
+
 ## `@kungfu-tech/buildchain/legacy-kfd-adopter-driver`
 
 Target: `./packages/core/legacy-kfd-adopter-driver.js`. Public symbols: 4.

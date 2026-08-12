@@ -64,6 +64,19 @@ declaration-only, non-transferable result: it grants no runtime, publication,
 promotion, or certification authority. Buildchain's anti-circular N-1 release
 qualification remains a separate release gate.
 
+### Buildchain anti-circular bootstrap
+
+`@kungfu-tech/buildchain/buildchain-delivery-bootstrap` verifies that one exact
+candidate is supported by a distinct protected and publicly released N-1 cut,
+its passed project gate result, and its merged Delivery Warrant evidence. The
+candidate must name the exact authority version; source or package reuse is
+rejected. Changes to the gate, protocol, or selected profile additionally need
+content-rooted compatibility and independent-review evidence.
+
+The result is evidence only. It always retains `qualifying: false`,
+`selfCertified: false`, and `releaseAuthorized: false`; publication and release
+authority remain with the protected delivery and release mechanisms.
+
 ## Fail-closed boundaries
 
 - Driver and artifact-profile selection require an exact `id@version` match.
