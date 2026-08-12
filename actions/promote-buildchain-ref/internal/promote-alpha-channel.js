@@ -463,7 +463,6 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
   }
   return { selectedAlpha, alpha };
 }
-
 async function finalizeAlphaPublication(context, state, publication) {
   const { selectedAlpha, alpha } = publication;
   if (context.advancedPublicationTransaction) {
@@ -482,6 +481,7 @@ async function finalizeAlphaPublication(context, state, publication) {
         "",
       ),
     });
+    await context.updateTag(context.rule.alphaTag, alpha.sha); await context.updateMajorAlphaFloatingTag({ sha: alpha.sha });
     await context.markComplete();
     context.updates.push({
       action: "finalized-advanced-publication",
