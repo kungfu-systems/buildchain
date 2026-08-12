@@ -110,6 +110,28 @@ const HISTORICAL_ACCEPTANCES = [
       compatibilityDigest: "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102",
     },
   },
+  {
+    proofId: "build-channel-router-d40dd0-to-30549a",
+    surfaceId: "controller:build-channel-router",
+    surfaceKind: "controller",
+    sourceBreakingDigest: "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273",
+    targetBreakingDigest: "sha256:30549aa26cd1e1dd81f10fe3529d3c6e3f8438a6efa0100c47ebae4d2f3d71df",
+    evidence: {
+      kind: "protected-pull-request-contract-acceptance",
+      pullRequest: "https://github.com/kungfu-systems/buildchain/pull/2549",
+      protectedBase: "dev/v3/v3.0",
+      sourceCommit: "0d87b772265066f5e6157e1ba6a2ba1021fb5225",
+      mergeCommit: "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
+      contractDigest: "sha256:2584ba36ab54cd5e9bab9e34dfc08d87a55dc57de1be7641492bf7ceb1366350",
+      compatibilityDigest: "sha256:80f65cc191b1f771475184edf8a1bf9c10dd69bb58060aa09313d0e1e57f508a",
+    },
+    cut: {
+      kind: "protected-git-cut",
+      repository: "kungfu-systems/buildchain",
+      protectedBase: "dev/v3/v3.0",
+      commit: "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
+    },
+  },
 ];
 
 function exactText(value, label) {
