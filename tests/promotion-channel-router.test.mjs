@@ -10,7 +10,7 @@ import { resolvePromotionChannel } from "../scripts/promotion-channel-router.mjs
 import { resolvePromotionIdentities } from "../scripts/promotion-identity-resolver.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
-const pinnedPromotionShellSha = "98dc8e3d628b558bc8b35a91a821ad6c97334b77";
+const pinnedPromotionShellSha = "da831a6a7b55c87dcd13b0e9e3e35bede76defb5";
 const shellRouting = parsePromotionShellRouting(
   fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
   { major: 4 },
