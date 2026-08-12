@@ -236,6 +236,7 @@ export function nodeApiMeta(exportName) {
     "./kfd-adopter-manifest": { group: "kfd-trust", summary: "Exact-cut KFD adopter manifest verification, Buildchain evidence binding, and one-way legacy support-matrix projection APIs." },
     "./adopter-delivery-gate": { group: "release-passport-trust", summary: "Protocol-neutral exact-driver and explicit artifact-profile delivery gate APIs." },
     "./kfd-adopter-category-driver": { group: "kfd-trust", summary: "Thin delivery driver over exact published KFD category profiles and instance verification." },
+    "./buildchain-delivery-infrastructure": { group: "kfd-trust", summary: "Buildchain-owned delivery-infrastructure category instance construction and published-KFD verification APIs." },
     "./legacy-kfd-adopter-driver": { group: "kfd-trust", summary: "Explicit one-way legacy standard adopter manifest and support-matrix delivery adapter." },
     "./adopter-delivery-passport": { group: "release-passport-trust", summary: "Exact adopter delivery gate binding and Release Passport evidence verification APIs." },
     "./adopter-delivery-vectors": { group: "release-passport-trust", summary: "Rooted golden, negative, fault, and offline replay vector suite APIs." },

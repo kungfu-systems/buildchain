@@ -47,6 +47,23 @@ Caller-supplied catalog overrides are ignored. The legacy driver is a separate
 one-way adapter for the existing standard adopter manifest and support-matrix
 projection; it is not KFD declaration authority.
 
+### Buildchain delivery-infrastructure instance
+
+`@kungfu-tech/buildchain/buildchain-delivery-infrastructure` constructs the
+Buildchain-owned project instance for the published
+`kfd.adopter-category/delivery-infrastructure@1.0.0` profile. Callers provide a
+release-bound full-cut adopter manifest plus exact source, package, release, and
+project evidence coordinates. The constructor derives the selected obligation
+set from published KFD bytes and stamps every evidence item with the same
+project, adopter-manifest, package-cut, and category-selection roots.
+
+The constructor rejects private or unknown requirement IDs instead of silently
+extending the KFD profile. Verification delegates back to the published KFD
+full-manifest and category-instance verifiers. A passing instance is still a
+declaration-only, non-transferable result: it grants no runtime, publication,
+promotion, or certification authority. Buildchain's anti-circular N-1 release
+qualification remains a separate release gate.
+
 ## Fail-closed boundaries
 
 - Driver and artifact-profile selection require an exact `id@version` match.
