@@ -3225,6 +3225,59 @@
       ]
     },
     {
+      "id": "packages/core/buildchain-delivery-bootstrap.js#BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT",
+      "name": "BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-bootstrap.js",
+        "line": 4
+      },
+      "example": "import { BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT } from \"@kungfu-tech/buildchain/buildchain-delivery-bootstrap\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-bootstrap.js#qualifyBuildchainDeliveryInfrastructureBootstrap",
+      "name": "qualifyBuildchainDeliveryInfrastructureBootstrap",
+      "kind": "function",
+      "signature": "function qualifyBuildchainDeliveryInfrastructureBootstrap({ authority, candidate, gateResult, warrant, transitionEvidence, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ authority, candidate, gateResult, warrant, transitionEvidence, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-bootstrap.js",
+        "line": 122
+      },
+      "example": "import { qualifyBuildchainDeliveryInfrastructureBootstrap } from \"@kungfu-tech/buildchain/buildchain-delivery-bootstrap\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
       "name": "BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
       "kind": "constant",
@@ -25968,6 +26021,30 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/buildchain-delivery-bootstrap",
+      "export": "./buildchain-delivery-bootstrap",
+      "target": "./packages/core/buildchain-delivery-bootstrap.js",
+      "digest": "sha256:9eb0296ced6458fdc407437b05d3691eceb6a52ee9f1ca305d2a4bda48b8ead5",
+      "summary": "Anti-circular protected N-1 bootstrap evidence verification for one exact Buildchain delivery-infrastructure candidate.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 2,
+      "symbolIds": [
+        "packages/core/buildchain-delivery-bootstrap.js#BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT",
+        "packages/core/buildchain-delivery-bootstrap.js#qualifyBuildchainDeliveryInfrastructureBootstrap"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/legacy-kfd-adopter-driver",
       "export": "./legacy-kfd-adopter-driver",
       "target": "./packages/core/legacy-kfd-adopter-driver.js",
@@ -27382,7 +27459,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:9b6c97549418bf0fc6bc9af16dbdd67a9a10b0f7494254e75df5c5c729cebf08"
+      "digest": "sha256:abc275255e38f639b4566df72e4b8b71e4b282d0f17b6a021f036e860cb5c657"
     },
     {
       "id": "build-facts",
