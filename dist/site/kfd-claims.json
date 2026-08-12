@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "0056e1e8d85382648d6d35a394d1bb9f34c2fd4304111cb1dfc6f25c6f490b63",
+    "sha256": "731cf2767b89e34a68c76c7908368aa01fec11641bd0d16d194b8ee54a63d848",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 71,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "0056e1e8d85382648d6d35a394d1bb9f34c2fd4304111cb1dfc6f25c6f490b63",
+      "sha256": "731cf2767b89e34a68c76c7908368aa01fec11641bd0d16d194b8ee54a63d848",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 71,
@@ -3526,9 +3526,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 88,
+          "inputCount": 90,
           "inputs": [
             "artifact-compression-level",
+            "artifact-finalization-command",
+            "artifact-finalization-on-platform",
             "artifact-name",
             "artifact-name-template",
             "artifact-paths",
@@ -4290,9 +4292,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 91,
+          "inputCount": 93,
           "inputs": [
             "artifact-compression-level",
+            "artifact-finalization-command",
+            "artifact-finalization-on-platform",
             "artifact-name",
             "artifact-name-template",
             "artifact-paths",

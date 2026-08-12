@@ -76,6 +76,16 @@ on:
         default: '["ubuntu-24.04"]'
         type: string
         required: false
+      artifact-finalization-command:
+        description: "Optional consumer verification command over final artifact bytes before manifest resealing"
+        default: ""
+        type: string
+        required: false
+      artifact-finalization-on-platform:
+        description: "Run trusted artifact finalization on each GitHub-hosted platform runner instead of the control runner"
+        default: false
+        type: boolean
+        required: false
       fail-fast:
         description: "Cancel sibling platform lanes after a required matrix failure; false retains all-platform diagnostics"
         default: false
@@ -2551,8 +2561,8 @@ jobs:
           exit 1
 
   finalize-artifact-signing:
-    name: Finalize signed artifact ${{ matrix.platform.name }}
-    runs-on: ubuntu-24.04
+    name: Finalize artifact ${{ matrix.platform.name }}
+    runs-on: ${{ fromJSON(inputs.artifact-finalization-on-platform && matrix.platform.runner || inputs.control-runner-json) }}
     needs:
       - trust-gate
       - resolve-contract
@@ -2568,6 +2578,15 @@ jobs:
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
     steps:
+      - name: Enforce trusted platform-native finalization
+        if: ${{ inputs.artifact-finalization-on-platform }}
+        shell: bash
+        run: |
+          if [[ "${{ matrix.platform.githubHosted }}" != "true" ]]; then
+            echo "::error::artifact-finalization-on-platform requires a GitHub-hosted platform runner"
+            exit 1
+          fi
+
       - name: Checkout exact consumer source
         uses: actions/checkout@v7.0.0
         with:
@@ -2631,7 +2650,6 @@ jobs:
           BUILDCHAIN_EXPECTED_PLATFORM_ID: ${{ matrix.platform.id }}
 
       - name: Download pre-signing deterministic artifact
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -2674,8 +2692,20 @@ jobs:
           BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/signing/results/${{ matrix.platform.id }}
           BUILDCHAIN_SIGNING_IMPORTED_EVIDENCE_ROOT: .buildchain/artifacts/signing/${{ matrix.platform.id }}
 
+      - name: Verify final artifact bytes with consumer policy
+        if: ${{ inputs.artifact-finalization-command != '' }}
+        working-directory: ${{ steps.delegation.outputs.working-directory }}
+        run: ${{ inputs.artifact-finalization-command }}
+        env:
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SIGNING_REQUEST_COUNT: ${{ steps.delegation.outputs.request-count }}
+          BUILDCHAIN_ARTIFACT_SIGNING_STATE: ${{ steps.delegation.outputs.request-count == '0' && 'unsigned' || 'signed' }}
+
       - name: Recompute manifest over final signed bytes
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
+        if: ${{ steps.delegation.outputs.request-count != '0' || inputs.artifact-finalization-command != '' }}
         run: >-
           node .buildchain/runtime/scripts/run-lifecycle.mjs
           --cwd "${{ steps.delegation.outputs.working-directory }}"
@@ -2700,8 +2730,8 @@ jobs:
             .buildchain/artifacts/signing
           BUILDCHAIN_EXPECTED_ARTIFACTS_JSON: ${{ inputs.expected-artifacts-json }}
 
-      - name: Publish final signed deterministic artifact
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
+      - name: Publish final deterministic artifact
+        if: ${{ steps.delegation.outputs.request-count != '0' || inputs.artifact-finalization-command != '' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.delegation.outputs.artifact-name }}

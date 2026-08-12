@@ -1387,6 +1387,14 @@ with:
 `self-hosted`; a self-hosted control plane must not be exposed to untrusted fork
 events or arbitrary caller-controlled workflow code.
 
+Consumers that must verify platform-native properties of the final bytes can
+set `artifact-finalization-command` and `artifact-finalization-on-platform:
+true`. Buildchain then imports any signed result (or preserves the declared
+unsigned artifact), runs the command on the matching GitHub-hosted platform,
+and reseals the manifest before publishing the final deterministic artifact.
+Platform-native finalization fails closed for self-hosted runners so signing
+authority credentials and final bytes stay inside the trusted hosted boundary.
+
 `require-trusted-event` controls access to build runners. It does not override
 the publish gate: pull requests remain non-publishing events.
 

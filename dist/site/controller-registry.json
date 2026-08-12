@@ -126,6 +126,14 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "artifact-finalization-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "artifact-finalization-on-platform": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -524,7 +532,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:892399121774be056bdcf18bf6d51a7029568843adb9f2b2a0365b45e8205474"
+      "digest": "sha256:18bd484d8425b54ad533adde64f874c151a0a90de878c5498cfb99709cb53ea3"
     },
     {
       "schemaVersion": 1,
@@ -573,6 +581,14 @@
           "source": "workflow-call-secret"
         },
         "artifact-compression-level": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "artifact-finalization-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "artifact-finalization-on-platform": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -970,7 +986,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:9d84f63a740475294602fbd4ba331763128cebcac238f1e67980e7b404efb8ea"
+      "digest": "sha256:47b73fb19d61c06911278ce99f8433596a8539097fdc18fe11f05b0d3c2109c0"
     },
     {
       "schemaVersion": 1,
@@ -2434,5 +2450,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:8092f7c9dc855210534d74586f2b36b653f27a7ae3e2eb7a70e720945161affa"
+  "digest": "sha256:34776744f57db27b04eec061ea5ff01043b72119475a2bf623c87834cb30bb3d"
 }

@@ -8,9 +8,9 @@
     "maxHandMaintainedSourceFiles": 339,
     "maxHandMaintainedSourceLines": 130821,
     "maxWorkflowFiles": 71,
-    "maxWorkflowLines": 23590,
-    "latestTransition": "The protected v3 KFD adopter-manifest provider inputs and exact public KFD package dependency are forward-ported into the v4 release-tail action without changing v4 routing or publication authority.",
-    "rationale": "The bounded compatibility port adds one package-only adopter manifest authority, forwards recovered artifacts by path, and binds release-passport evidence to the exact standard adopter closure already required by the protected v3 alpha recovery shell. The KFD dependency remains exact and lockfile-integrity pinned at the public adopter-conformance release. V4 keeps its own channel routing, contract-lock identity, provider journals, and zero-second-writer invariants. The new ceilings are the measured source and workflow totals for this reviewed transition and cannot grow implicitly."
+    "maxWorkflowLines": 23636,
+    "latestTransition": "The v4 reusable build surface can optionally finalize and verify artifact bytes on each trusted GitHub-hosted platform before resealing the deterministic manifest.",
+    "rationale": "The bounded workflow addition lets consumers verify signed or explicitly unsigned final bytes with native platform tooling after detached signing settlement. The mode is opt-in, rejects self-hosted platform runners, preserves the control-runner default, and reseals the final artifact only after the consumer policy succeeds. The workflow ceiling is the measured total for this reviewed transition and cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -431,6 +431,8 @@
         "reusable": true,
         "inputs": [
           "artifact-compression-level",
+          "artifact-finalization-command",
+          "artifact-finalization-on-platform",
           "artifact-name",
           "artifact-name-template",
           "artifact-paths",
@@ -576,7 +578,7 @@
           "trusted-event"
         ]
       },
-      "rationale": "The reusable build surface adds optional router-owned expected channel and major inputs. Existing direct consumers preserve prior behavior when they are absent; trusted opaque-shell runs must provide both so the contract gate can bind shell, runtime, and lock without inferring identity from either runtime or lock."
+      "rationale": "The reusable build surface adds an opt-in final-byte verification command and trusted platform-native finalization mode. Existing consumers preserve control-runner behavior when both inputs are absent; platform-native mode rejects self-hosted runners and reseals artifacts only after consumer policy succeeds."
     },
     "workflow:build": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -586,6 +588,8 @@
         "reusable": true,
         "inputs": [
           "artifact-compression-level",
+          "artifact-finalization-command",
+          "artifact-finalization-on-platform",
           "artifact-name",
           "artifact-name-template",
           "artifact-paths",
@@ -737,7 +741,7 @@
           "trusted-event"
         ]
       },
-      "rationale": "The generated channel router forwards its explicit resolved lane and major into the reusable build gate. This is additive for existing callers and prevents opaque PR or trusted override shells from deriving channel identity from a runtime ref or contract lock."
+      "rationale": "The generated channel router forwards the opt-in final-byte verification command and trusted platform-native finalization mode unchanged to the reusable build surface. Existing callers retain the control-runner default; the advanced workflow owns the hosted-runner guard and final artifact reseal."
     },
 
     "workflow:paper-release-sealed": {

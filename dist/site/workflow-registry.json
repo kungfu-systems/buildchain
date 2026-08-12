@@ -93,6 +93,8 @@
       "reusable": true,
       "inputs": [
         "artifact-compression-level",
+        "artifact-finalization-command",
+        "artifact-finalization-on-platform",
         "artifact-name",
         "artifact-name-template",
         "artifact-paths",
@@ -181,7 +183,7 @@
         "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 88,
+      "inputCount": 90,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1220,6 +1222,8 @@
       "reusable": true,
       "inputs": [
         "artifact-compression-level",
+        "artifact-finalization-command",
+        "artifact-finalization-on-platform",
         "artifact-name",
         "artifact-name-template",
         "artifact-paths",
@@ -1311,7 +1315,7 @@
         "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 91,
+      "inputCount": 93,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
