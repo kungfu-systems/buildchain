@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 114,
+  "generation": 115,
   "fencingCounter": 36,
   "policy": {
     "agingSeconds": 900,
@@ -1188,8 +1188,57 @@
         "tests/kfd-product-gates.test.mjs",
         "tests/v4-adopter-delivery-parity.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 2677,
+      "assignmentRoot": "sha256:7ed22fb544ed6ebfd56bb836f9f98bf54b0bd5ddd752c97eb60902de086dc585",
+      "initiativeRoot": "sha256:43bc8a7b792280616b0bba3c2e2b30844471c3c007973114bb51910421f50b39",
+      "sourceIdentityRoot": "sha256:254f9185e875888e879f6b66d544496380dd396ec649280eeb5df8bd97a1d910",
+      "deliveryClass": "native-proof-required",
+      "identitySemantics": "chained-attempt-v2",
+      "predecessorCandidateId": "sha256:53eaad5b87de70cd13da2c63f62b5ca07e62cc7592ee5618e4dcb29f0784fe09",
+      "candidateId": "sha256:53e05789a4e4140ad505bd45bbeb644d732a3fa584908d7d01909d2f8d1fc3eb",
+      "sourceHead": "0da63178d3fba1be79463bf6c39822262fe44b88",
+      "sourcePatchRoot": "sha256:c3a6a37803ddc46afcc3ac67f2e0417050f936a5edd522d48f3a24b903b68801",
+      "sourceProofRoot": "sha256:4cdc9b525de8c3ba41ccf9b8272958fa0959a25a3f49c6cd522a9df7a76ae283",
+      "planRoot": "sha256:cfbb999ec70200ee76f26899b3e322d80f10d670cef394869f69a22937a0856b",
+      "closureRoot": "sha256:3370af4f69ede459916c5f2862b2a2f798a46d4bb9ac67c3f7c3f3ebaa845f1c",
+      "dependencyRoot": "sha256:00655328fc1ef1ee9714aa35d0875d9a0c9f3175a2a14fa50d2e2b428fdf180b",
+      "toolchainRoot": "sha256:4d95c40284c9e5aa10f32855af2d8a21863c73e289b4c812e7557998f6f7f719",
+      "environmentRoot": "sha256:c4d45e47dc3daabcbabf349d0404301039c7c55a44632c9e764f5f5d60d79b6f",
+      "sourceWorkflowRunId": 0,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-12T19:26:56.180Z",
+      "updatedAt": "2026-08-12T19:26:56.180Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/promote-buildchain-ref/dist/index.js",
+        "architecture/internal-capabilities.json",
+        "architecture/maintainability-policy.json",
+        "architecture/v4-adopter-delivery-parity.json",
+        "crates/buildchain-v4-contracts/src/adopter_delivery.rs",
+        "crates/buildchain-v4-contracts/src/lib.rs",
+        "crates/buildchain-v4-contracts/src/main.rs",
+        "dist/site/kfd-upstream-aggregate.json",
+        "package.json",
+        "packages/core/adopter-delivery-gate.js",
+        "packages/core/adopter-delivery-json.js",
+        "packages/core/kfd-adopter-category-driver.js",
+        "packages/core/v4-adopter-delivery-parity.js",
+        "pnpm-lock.yaml",
+        "tests/adopter-delivery-gate.test.mjs",
+        "tests/internal-architecture.test.mjs",
+        "tests/kfd-adopter-category-driver.test.mjs",
+        "tests/kfd-product-gates.test.mjs",
+        "tests/v4-adopter-delivery-parity.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-12T19:25:51.295Z",
-  "stateRoot": "sha256:4f2d9b8b2f0b23a7db1fd07533265e7e8a044de9e2d0daa43f53793dc6fdd101"
+  "updatedAt": "2026-08-12T19:26:56.180Z",
+  "stateRoot": "sha256:95718c4518be788a023545d69c7ceb693271ccb164e35309f337ba59977e4949"
 }
