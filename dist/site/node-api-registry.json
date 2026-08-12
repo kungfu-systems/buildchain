@@ -1521,7 +1521,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-channel-identity.js",
-        "line": 97
+        "line": 96
       },
       "example": "import { evaluateBuildchainChannelBinding } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -26088,7 +26088,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:a611d21d039a00f6067cd8b55c61fa1b71f7838c5227f2bd7404463573c5907a"
+      "digest": "sha256:1ea55e9c24cfb241d87414e6452061673f187792ff9deab9f1966be0c2c88e29"
     },
     {
       "id": "build-facts",

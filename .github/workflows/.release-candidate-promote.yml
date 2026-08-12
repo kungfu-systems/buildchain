@@ -991,7 +991,7 @@ jobs:
         if: ${{ inputs.resume-candidate-run-id == '' }}
         shell: bash
         run: |
-          case "${PACKAGE_MANAGER}" in
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts; case "${PACKAGE_MANAGER}" in
             pnpm)
               corepack enable
               corepack pnpm --version
@@ -1486,7 +1486,7 @@ jobs:
         shell: bash
         run: |
           if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
-            node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+            if [[ "${{ inputs.promotion-shell-ref }}" =~ ^(refs/heads/)?(train|authority)/v([0-9]+)/ ]]; then expected_major="${BASH_REMATCH[3]}"; else expected_major=""; fi; BUILDCHAIN_EXPECTED_CHANNEL="${{ inputs.promotion-publication-channel }}" BUILDCHAIN_EXPECTED_MAJOR="$expected_major" node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"

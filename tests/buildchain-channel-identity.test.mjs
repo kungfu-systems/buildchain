@@ -96,3 +96,34 @@ test("trusted opaque runtimes inherit a declared lane but never bypass its major
     "opaque runtimes require a trusted lane binding",
   );
 });
+
+test("train shells supply their major while the router supplies their channel", () => {
+  assert.equal(
+    evaluateBuildchainChannelBinding({
+      workflowShellRef: "train/v3/v3.0/consumer-equivalent-self-dogfood",
+      expectedChannel: "alpha",
+      runtimeRef: "v3-alpha",
+      lockRef: "v3-alpha",
+    }).ok,
+    true,
+  );
+  assert.equal(
+    evaluateBuildchainChannelBinding({
+      workflowShellRef: "train/v3/v3.0/consumer-equivalent-self-dogfood",
+      runtimeRef: "v3-alpha",
+      lockRef: "v3-alpha",
+    }).ok,
+    false,
+    "train shells still require an explicit routed channel",
+  );
+  assert.equal(
+    evaluateBuildchainChannelBinding({
+      workflowShellRef: "a".repeat(40),
+      expectedChannel: "alpha",
+      runtimeRef: "v3-alpha",
+      lockRef: "v3-alpha",
+    }).ok,
+    false,
+    "exact-SHA shells still require an explicit major",
+  );
+});

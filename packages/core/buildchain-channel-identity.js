@@ -73,9 +73,8 @@ function expectedReasons(expected, { expectedChannel, expectedMajor }) {
   if (Number.isInteger(expected.shell.major) && expected.shell.major !== expected.major) {
     reasons.push(`workflow shell ${expected.shell.ref} is v${expected.shell.major}, expected v${expected.major}`);
   }
-  if (!expected.shell.channel && (!expectedChannel || !expectedMajor)) {
-    reasons.push(`workflow shell ${expected.shell.ref || "(missing)"} does not declare a stable or alpha channel`);
-  }
+  if (!expected.shell.channel && !expectedChannel) reasons.push(`workflow shell ${expected.shell.ref || "(missing)"} does not declare a stable or alpha channel`);
+  if (!Number.isInteger(expected.shell.major) && !expectedMajor) reasons.push(`workflow shell ${expected.shell.ref || "(missing)"} does not declare a Buildchain major`);
   return reasons;
 }
 

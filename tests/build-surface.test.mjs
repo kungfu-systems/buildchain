@@ -227,6 +227,9 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
+  assert.match(promotion, /"\$\{\{ inputs\.promotion-shell-ref \}\}" =~/);
+  assert.match(promotion, /\(train\|authority\)\/v\(\[0-9\]\+\)\//);
+  assert.match(promotion, /BUILDCHAIN_EXPECTED_MAJOR="\$expected_major"/);
   assert.match(
     promotion,
     /"id":"publication-authority","status":"\$\{\{ needs\.promote\.result == 'success' && 'success' \|\| needs\.publication-authority\.result \}\}"/,
@@ -1189,8 +1192,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(publicationPlan, /name: Validate consumer package manager contract/);
   assert.match(publicationPlan, /publish-transaction-override: \$\{\{ inputs\.publish-transaction-override \}\}/);
+  assert.match(publicationPlan, /corepack pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/);
   assert.match(publicationPlan, /corepack pnpm install --frozen-lockfile/);
-  assert.doesNotMatch(publicationPlan, /corepack pnpm@11\.7\.0/);
   assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);
   assert.match(publicationPlan, /npm ci/);
   assert.match(publicationPlan, /Skipping dependency install for custom package manager/);
