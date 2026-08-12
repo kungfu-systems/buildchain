@@ -1,4 +1,9 @@
-import crypto from "node:crypto";
+import {
+  adopterDeliveryGateDigest,
+  isAdopterDeliveryJsonValue,
+} from "./adopter-delivery-json.js";
+
+export { adopterDeliveryGateDigest } from "./adopter-delivery-json.js";
 
 export const ADOPTER_DELIVERY_GATE_REQUEST_CONTRACT =
   "kungfu-buildchain-adopter-delivery-request";
@@ -15,21 +20,6 @@ const VERSION_PATTERN = /^[1-9][0-9]*\.[0-9]+\.[0-9]+$/;
 const GIT_COMMIT_COORDINATE_PATTERN = /^[^@\s]+@[0-9a-f]{40}$/;
 const PACKAGE_COORDINATE_PATTERN =
   /^(?:@[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*|[a-z0-9][a-z0-9._-]*)@[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
-
-function stableJson(value) {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
-  if (value && typeof value === "object") {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-export function adopterDeliveryGateDigest(value) {
-  return `sha256:${crypto.createHash("sha256").update(stableJson(value)).digest("hex")}`;
-}
 
 function issue(code, path, message) {
   return { code, path, message };
@@ -180,13 +170,14 @@ function validateRequest(request) {
   if (
     !request.declaration ||
     typeof request.declaration !== "object" ||
-    Array.isArray(request.declaration)
+    Array.isArray(request.declaration) ||
+    !isAdopterDeliveryJsonValue(request.declaration)
   ) {
     issues.push(
       issue(
         "delivery-input-invalid",
         "/declaration",
-        "Expected a protocol-owned JSON object.",
+        "Expected a finite acyclic protocol-owned JSON object.",
       ),
     );
   }
@@ -345,7 +336,14 @@ function normalizeProfileResult(result) {
       ],
     };
   }
-  return result;
+  return {
+    valid: result.valid,
+    issues: result.issues.map(({ code, path, message }) => ({
+      code,
+      path,
+      message,
+    })),
+  };
 }
 
 function normalizeDriverResult(result) {
@@ -357,7 +355,8 @@ function normalizeDriverResult(result) {
     !ROOT_PATTERN.test(result.reportRoot ?? "") ||
     !Array.isArray(result.issues) ||
     result.issues.some((entry) => !validIssue(entry)) ||
-    !Object.hasOwn(result, "report")
+    !Object.hasOwn(result, "report") ||
+    !isAdopterDeliveryJsonValue(result.report)
   ) {
     return {
       valid: false,
@@ -372,7 +371,16 @@ function normalizeDriverResult(result) {
       ],
     };
   }
-  return result;
+  return {
+    valid: result.valid,
+    report: structuredClone(result.report),
+    reportRoot: result.reportRoot,
+    issues: result.issues.map(({ code, path, message }) => ({
+      code,
+      path,
+      message,
+    })),
+  };
 }
 
 function gateResult(
