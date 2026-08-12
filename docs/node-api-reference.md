@@ -1734,6 +1734,17 @@ Target: `./packages/core/kfd-adopter-category-driver.js`. Public symbols: 6.
 | `resolvePublishedKfdAdopterCategoryProfiles` | function: function resolvePublishedKfdAdopterCategoryProfiles(selection) | selection | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { resolvePublishedKfdAdopterCategoryProfiles } from "@kungfu-tech/buildchain/kfd-adopter-category-driver";` | `packages/core/kfd-adopter-category-driver.js:45` |
 | `verifyPublishedKfdAdopterCategoryInstance` | function: function verifyPublishedKfdAdopterCategoryInstance(instanceManifest, { adopterManifest, verifiedAt, maxAgeSeconds } = {}) | instanceManifest, { adopterManifest, verifiedAt, maxAgeSeconds } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { verifyPublishedKfdAdopterCategoryInstance } from "@kungfu-tech/buildchain/kfd-adopter-category-driver";` | `packages/core/kfd-adopter-category-driver.js:52` |
 
+## `@kungfu-tech/buildchain/buildchain-delivery-infrastructure`
+
+Target: `./packages/core/buildchain-delivery-infrastructure.js`. Public symbols: 4.
+
+| Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID` | constant: const BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID | none | value | Import does not declare a throw contract. | none-on-import | `import { BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID } from "@kungfu-tech/buildchain/buildchain-delivery-infrastructure";` | `packages/core/buildchain-delivery-infrastructure.js:8` |
+| `BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE` | constant: const BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE | none | value | Import does not declare a throw contract. | none-on-import | `import { BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE } from "@kungfu-tech/buildchain/buildchain-delivery-infrastructure";` | `packages/core/buildchain-delivery-infrastructure.js:10` |
+| `createBuildchainDeliveryInfrastructureInstanceManifest` | function: function createBuildchainDeliveryInfrastructureInstanceManifest({ instanceId, adopterManifest, source, artifact, release, evidence = [], } = {}) | { instanceId, adopterManifest, source, artifact, release, evidence = [], } = {} | unknown | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { createBuildchainDeliveryInfrastructureInstanceManifest } from "@kungfu-tech/buildchain/buildchain-delivery-infrastructure";` | `packages/core/buildchain-delivery-infrastructure.js:61` |
+| `verifyBuildchainDeliveryInfrastructureInstance` | function: function verifyBuildchainDeliveryInfrastructureInstance(manifest, { adopterManifest, verifiedAt, maxAgeSeconds } = {}) | manifest, { adopterManifest, verifiedAt, maxAgeSeconds } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { verifyBuildchainDeliveryInfrastructureInstance } from "@kungfu-tech/buildchain/buildchain-delivery-infrastructure";` | `packages/core/buildchain-delivery-infrastructure.js:155` |
+
 ## `@kungfu-tech/buildchain/legacy-kfd-adopter-driver`
 
 Target: `./packages/core/legacy-kfd-adopter-driver.js`. Public symbols: 4.

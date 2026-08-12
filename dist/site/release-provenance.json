@@ -34,6 +34,7 @@
       "./kfd-adopter-manifest": "./packages/core/kfd-adopter-manifest.js",
       "./adopter-delivery-gate": "./packages/core/adopter-delivery-gate.js",
       "./kfd-adopter-category-driver": "./packages/core/kfd-adopter-category-driver.js",
+      "./buildchain-delivery-infrastructure": "./packages/core/buildchain-delivery-infrastructure.js",
       "./legacy-kfd-adopter-driver": "./packages/core/legacy-kfd-adopter-driver.js",
       "./adopter-delivery-passport": "./packages/core/adopter-delivery-passport.js",
       "./adopter-delivery-vectors": "./packages/core/adopter-delivery-vectors.js",

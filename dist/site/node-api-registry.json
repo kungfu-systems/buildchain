@@ -3225,6 +3225,116 @@
       ]
     },
     {
+      "id": "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
+      "name": "BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-infrastructure.js",
+        "line": 8
+      },
+      "example": "import { BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID } from \"@kungfu-tech/buildchain/buildchain-delivery-infrastructure\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE",
+      "name": "BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-infrastructure.js",
+        "line": 10
+      },
+      "example": "import { BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE } from \"@kungfu-tech/buildchain/buildchain-delivery-infrastructure\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-infrastructure.js#createBuildchainDeliveryInfrastructureInstanceManifest",
+      "name": "createBuildchainDeliveryInfrastructureInstanceManifest",
+      "kind": "function",
+      "signature": "function createBuildchainDeliveryInfrastructureInstanceManifest({ instanceId, adopterManifest, source, artifact, release, evidence = [], } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ instanceId, adopterManifest, source, artifact, release, evidence = [], } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-infrastructure.js",
+        "line": 61
+      },
+      "example": "import { createBuildchainDeliveryInfrastructureInstanceManifest } from \"@kungfu-tech/buildchain/buildchain-delivery-infrastructure\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-infrastructure.js#verifyBuildchainDeliveryInfrastructureInstance",
+      "name": "verifyBuildchainDeliveryInfrastructureInstance",
+      "kind": "function",
+      "signature": "function verifyBuildchainDeliveryInfrastructureInstance(manifest, { adopterManifest, verifiedAt, maxAgeSeconds } = {})",
+      "parameters": [
+        {
+          "name": "manifest",
+          "signature": "manifest"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ adopterManifest, verifiedAt, maxAgeSeconds } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-infrastructure.js",
+        "line": 155
+      },
+      "example": "import { verifyBuildchainDeliveryInfrastructureInstance } from \"@kungfu-tech/buildchain/buildchain-delivery-infrastructure\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/buildchain-kfd-claims.js#BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT",
       "name": "BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT",
       "kind": "constant",
@@ -25832,6 +25942,32 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/buildchain-delivery-infrastructure",
+      "export": "./buildchain-delivery-infrastructure",
+      "target": "./packages/core/buildchain-delivery-infrastructure.js",
+      "digest": "sha256:fab2e4eee94fe1801f6414b03487189d9a03f422e5bf45cfc8e59fc7d8d0ff59",
+      "summary": "Buildchain-owned delivery-infrastructure category instance construction and published-KFD verification APIs.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 4,
+      "symbolIds": [
+        "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
+        "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE",
+        "packages/core/buildchain-delivery-infrastructure.js#createBuildchainDeliveryInfrastructureInstanceManifest",
+        "packages/core/buildchain-delivery-infrastructure.js#verifyBuildchainDeliveryInfrastructureInstance"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/legacy-kfd-adopter-driver",
       "export": "./legacy-kfd-adopter-driver",
       "target": "./packages/core/legacy-kfd-adopter-driver.js",
@@ -27246,7 +27382,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:62f90845a9bfeeaf14cd7daaed1b34bb4ff16b92ea17eabef7559b57800a3be8"
+      "digest": "sha256:9b6c97549418bf0fc6bc9af16dbdd67a9a10b0f7494254e75df5c5c729cebf08"
     },
     {
       "id": "build-facts",
