@@ -2,7 +2,20 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { acquireDevDeliveryLandingWarrant, acquireDevDeliveryQualificationLease, admitDevDeliveryMergeGroup, completeDevDeliveryQualification, createDevDeliveryAuthorityState, migrateDevDeliveryAuthorityState, observeDevDeliveryAuthorityState, settleDevDeliveryAuthorityCandidate, submitDevDeliveryAuthorityCandidate } from "../packages/core/dev-delivery-authority.js";
+import {
+  acquireDevDeliveryLandingWarrant,
+  acquireDevDeliveryQualificationLease,
+  admitDevDeliveryMergeGroup,
+  completeDevDeliveryQualification,
+  createDevDeliveryAuthorityState,
+  heartbeatDevDeliveryLandingWarrant,
+  heartbeatDevDeliveryQualificationLease,
+  migrateDevDeliveryAuthorityState,
+  observeDevDeliveryAuthorityState,
+  recoverDevDeliveryAuthority,
+  settleDevDeliveryAuthorityCandidate,
+  submitDevDeliveryAuthorityCandidate,
+} from "../packages/core/dev-delivery-authority.js";
 import { GitHubDevDeliveryStore } from "./dev-delivery-warrant.mjs";
 
 const STATE_REF_PREFIX = "buildchain/dev-delivery-authority/";
@@ -16,6 +29,12 @@ function positiveInteger(value, label, fallback = 0) {
   if (!Number.isInteger(parsed) || parsed < 1) {
     throw new Error(`${label} must be a positive integer`);
   }
+  return parsed;
+}
+
+function nonNegativeInteger(value, label, fallback = 0) {
+  const parsed = Number(value === undefined || value === "" ? fallback : value);
+  if (!Number.isInteger(parsed) || parsed < 0) throw new Error(`${label} must be a non-negative integer`);
   return parsed;
 }
 
@@ -60,6 +79,18 @@ function identity(state, options) {
   };
 }
 
+function rootedList(value) {
+  if (Array.isArray(value)) return value;
+  let parsed;
+  try {
+    parsed = JSON.parse(value || "[]");
+  } catch (cause) {
+    throw new Error(`qualification domains must be a JSON array: ${cause.message}`);
+  }
+  if (!Array.isArray(parsed)) throw new Error("qualification domains must be a JSON array");
+  return parsed;
+}
+
 function transitionFor(command, state, options) {
   if (command === "migrate") {
     if (!options.legacyState) {
@@ -86,6 +117,7 @@ function transitionFor(command, state, options) {
         dependencyRoot: options.dependencyRoot,
         toolchainRoot: options.toolchainRoot,
         deliveryClass: options.deliveryClass,
+        qualificationDomains: rootedList(options.qualificationDomains),
       },
       { now: options.now },
     );
@@ -102,12 +134,25 @@ function transitionFor(command, state, options) {
       now: options.now,
     });
   }
+  if (command === "heartbeat-qualification") {
+    return heartbeatDevDeliveryQualificationLease(state, identity(state, options), {
+      now: options.now,
+      leaseSeconds: options.leaseSeconds,
+    });
+  }
   if (command === "lease-landing") {
     return acquireDevDeliveryLandingWarrant(state, {
       now: options.now,
       leaseSeconds: options.leaseSeconds,
     });
   }
+  if (command === "heartbeat-landing") {
+    return heartbeatDevDeliveryLandingWarrant(state, identity(state, options), {
+      now: options.now,
+      leaseSeconds: options.leaseSeconds,
+    });
+  }
+  if (command === "recover") return recoverDevDeliveryAuthority(state, { now: options.now });
   if (command === "settle") {
     return settleDevDeliveryAuthorityCandidate(
       state,
@@ -149,6 +194,8 @@ export async function runDevDeliveryAuthorityCommand(optionsInput = {}, clientIn
             maxQualificationLeases: positiveInteger(options.maxQualificationLeases, "maxQualificationLeases", 2),
             qualificationLeaseSeconds: positiveInteger(options.qualificationLeaseSeconds, "qualificationLeaseSeconds", 3600),
             landingLeaseSeconds: positiveInteger(options.landingLeaseSeconds, "landingLeaseSeconds", 900),
+            maxLandingOvertakes: nonNegativeInteger(options.maxLandingOvertakes, "maxLandingOvertakes", 2),
+            maxQualificationAttempts: positiveInteger(options.maxQualificationAttempts, "maxQualificationAttempts", 3),
           },
           now,
         }),
@@ -272,6 +319,7 @@ export function devDeliveryAuthorityCliOptions(args = [], environment = process.
     toolchainRoot: flag(rest, "toolchain-root", environment.BUILDCHAIN_DEV_DELIVERY_TOOLCHAIN_ROOT),
     legacyStatePath: flag(rest, "legacy-state", environment.BUILDCHAIN_DEV_AUTHORITY_LEGACY_STATE),
     deliveryClass: flag(rest, "delivery-class", environment.BUILDCHAIN_DEV_DELIVERY_CLASS),
+    qualificationDomains: flag(rest, "qualification-domains", environment.BUILDCHAIN_DEV_QUALIFICATION_DOMAINS || "[]"),
     authorityToken: flag(rest, "authority-token", environment.BUILDCHAIN_DEV_AUTHORITY_TOKEN),
     authorityGeneration: flag(rest, "authority-generation", environment.BUILDCHAIN_DEV_AUTHORITY_GENERATION),
     evidenceRoot: flag(rest, "evidence-root", environment.BUILDCHAIN_DEV_DELIVERY_EVIDENCE_ROOT),
@@ -282,6 +330,8 @@ export function devDeliveryAuthorityCliOptions(args = [], environment = process.
     maxQualificationLeases: flag(rest, "max-qualification-leases", environment.BUILDCHAIN_DEV_MAX_QUALIFICATION_LEASES || "2"),
     qualificationLeaseSeconds: flag(rest, "qualification-lease-seconds", environment.BUILDCHAIN_DEV_QUALIFICATION_LEASE_SECONDS || "3600"),
     landingLeaseSeconds: flag(rest, "landing-lease-seconds", environment.BUILDCHAIN_DEV_LANDING_LEASE_SECONDS || "900"),
+    maxLandingOvertakes: flag(rest, "max-landing-overtakes", environment.BUILDCHAIN_DEV_MAX_LANDING_OVERTAKES || "2"),
+    maxQualificationAttempts: flag(rest, "max-qualification-attempts", environment.BUILDCHAIN_DEV_MAX_QUALIFICATION_ATTEMPTS || "3"),
     now: flag(rest, "now", environment.BUILDCHAIN_DEV_DELIVERY_NOW),
     outputPath: flag(rest, "output", environment.BUILDCHAIN_DEV_DELIVERY_OUTPUT || ".buildchain/dev-delivery/authority-result.json"),
     execute: hasFlag(rest, "execute"),
@@ -290,7 +340,7 @@ export function devDeliveryAuthorityCliOptions(args = [], environment = process.
 }
 
 function usage() {
-  return "Usage: buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--legacy-state <v1-queue.json>] [--execute] [--output <file>] [--json]\n";
+  return "Usage: buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--qualification-domains <json>] [--legacy-state <v1-queue.json>] [--execute] [--output <file>] [--json]\n";
 }
 
 async function main() {
@@ -300,7 +350,7 @@ async function main() {
     return;
   }
   const options = devDeliveryAuthorityCliOptions(args);
-  if (!["submit", "migrate", "lease-qualification", "complete-qualification", "lease-landing", "admit-merge-group", "settle", "observe"].includes(options.command)) {
+  if (!["submit", "migrate", "lease-qualification", "heartbeat-qualification", "complete-qualification", "lease-landing", "heartbeat-landing", "recover", "admit-merge-group", "settle", "observe"].includes(options.command)) {
     throw new Error(usage().trim());
   }
   const result = await runDevDeliveryAuthorityCommand(options);

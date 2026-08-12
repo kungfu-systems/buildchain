@@ -204,6 +204,14 @@ then wait for the one `Landing Warrant`, which alone carries
 `authority = merge-group-admission` and may be checked for `merge_group`
 admission.
 
+Concurrency is granted only across disjoint rooted `qualificationDomains`.
+Overlap and unknown domains are held behind the active safety boundary with an
+explicit content-rooted reason. `maxLandingOvertakes` prevents a slow older
+candidate from being bypassed indefinitely, while `maxQualificationAttempts`
+turns repeated heartbeat loss into a rooted terminal failure. Every release
+returns a deterministic rooted wake instruction; an exact duplicate release or
+recovery is a state-root-preserving no-op.
+
 The public command family is explicit:
 
 ```sh
@@ -211,11 +219,19 @@ buildchain dev authority migrate --repository owner/repository \
   --branch dev/v3/v3.0 --legacy-state v1-queue.json --execute --json
 buildchain dev authority lease-qualification --repository owner/repository \
   --branch dev/v4/v4.0 --execute
+buildchain dev authority heartbeat-qualification --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> \
+  --authority-token <root> --authority-generation 1 --execute
 buildchain dev authority complete-qualification --repository owner/repository \
   --branch dev/v4/v4.0 --candidate-id <root> \
   --authority-token <root> --authority-generation 1 \
   --evidence-root <qualification-root> --execute
 buildchain dev authority lease-landing --repository owner/repository \
+  --branch dev/v4/v4.0 --execute
+buildchain dev authority heartbeat-landing --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> \
+  --authority-token <root> --authority-generation 1 --execute
+buildchain dev authority recover --repository owner/repository \
   --branch dev/v4/v4.0 --execute
 buildchain dev authority admit-merge-group --repository owner/repository \
   --branch dev/v4/v4.0 --candidate-id <root> \
