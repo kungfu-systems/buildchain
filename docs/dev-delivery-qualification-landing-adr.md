@@ -50,7 +50,11 @@ A Qualification Lease carries:
 
 It authorizes expensive qualification work only. It cannot authorize GitHub
 `merge_group`, cannot be upgraded in place to landing authority, and is removed
-when qualification evidence is recorded.
+when qualification evidence is recorded. Each new candidate declares a sorted
+set of rooted `qualificationDomains`. Candidates with disjoint sets may hold
+leases concurrently. An overlapping set is serialized; an empty set is treated
+as unknown and therefore conflicts with every active candidate. The scheduler
+returns a content-rooted reason for either refusal.
 
 The Landing Warrant carries:
 
@@ -73,6 +77,27 @@ continues to serialize durable mutations. These checks retain the existing
 two-phase safety rule: source/native qualification is evidence, while the
 exclusive final authority is candidate- and integration-specific.
 
+## Bounded scheduler and recovery
+
+Landing selection is FIFO among candidates that have completed qualification.
+When a later candidate receives a Landing Warrant, each older nonterminal
+candidate consumes one durable overtake from its
+`policy.maxLandingOvertakes` budget. Once an older candidate reaches that
+bound, later candidates cannot receive a Warrant. The older candidate receives
+the next landing priority after qualification, or reaches a rooted terminal
+failure after `policy.maxQualificationAttempts` heartbeat expiries. This makes
+the bound independent of controller restart frequency or later arrival rate;
+setting it to zero enforces strict FIFO landing priority.
+
+Qualification Leases and Landing Warrants both support fenced heartbeats. A
+missed heartbeat is recovered at expiry; recovery releases capacity and emits
+a deterministic content-rooted wake instruction for the next domain-eligible
+qualification candidates and the next fair landing candidate. Completion,
+cancellation, terminal failure, dequeue, and already-merged settlement emit the
+same wake shape. Exact duplicate heartbeats, recovery, and terminal events are
+state-root-preserving no-ops. Competing controllers still commit through one
+expected-old, non-force ref update, so only one transition can become durable.
+
 ## Terminal settlement
 
 Terminal provider evidence is authoritative cleanup input. A matching merged,
@@ -91,11 +116,11 @@ TTL recovery remains crash recovery, not the normal terminal cleanup path.
   [`contracts/dev-delivery-authority-v2.schema.json`](../contracts/dev-delivery-authority-v2.schema.json),
   packaged as `dist/site/schemas/dev-delivery-authority-v2.schema.json`.
 - Node API: `@kungfu-tech/buildchain/dev-delivery-authority` exports the v2
-  state, migration, lease, Landing, admission, observation, and settlement
-  functions. `@kungfu-tech/buildchain/dev-delivery-warrant` remains byte- and
-  behavior-compatible for v1 consumers.
+  state, migration, lease, heartbeat, recovery, Landing, admission,
+  observation, and settlement functions. `@kungfu-tech/buildchain/dev-delivery-warrant`
+  remains byte- and behavior-compatible for v1 consumers.
 - CLI: `buildchain dev authority
-<migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe>`.
+<migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe>`.
 - Generated references: [`cli-reference.md`](cli-reference.md) and
   [`node-api-reference.md`](node-api-reference.md).
 

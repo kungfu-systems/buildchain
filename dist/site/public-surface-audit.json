@@ -7,7 +7,7 @@
     "workflowCount": 69,
     "actionCount": 7,
     "sitePageCount": 73,
-    "docCommandRefCount": 977,
+    "docCommandRefCount": 989,
     "failureCount": 0
   },
   "enumerated": {
@@ -4038,6 +4038,21 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev merge-queue --repository"
       },
       {
@@ -4173,6 +4188,26 @@
       {
         "id": "dev",
         "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority heartbeat-landing"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority heartbeat-landing"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority heartbeat-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority heartbeat-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
         "command": "buildchain dev authority lease-landing"
       },
       {
@@ -4209,6 +4244,16 @@
         "id": "dev",
         "path": "docs/cli-reference.md",
         "command": "buildchain dev authority observe"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority recover"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain dev authority recover"
       },
       {
         "id": "dev",
@@ -4538,12 +4583,27 @@
       {
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev authority heartbeat-qualification"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev authority complete-qualification"
       },
       {
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev authority lease-landing"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev authority heartbeat-landing"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev authority recover"
       },
       {
         "id": "dev",
@@ -8281,9 +8341,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "602f96c9e57cfdf707e3ee80a95c274afea4a1a5634c251e3cbca0183f01f4a9",
+    "cliRegistryDigest": "76cbcd88996ba645e90fb4f3d45b9cd3d07f9c5db1a008d0b391b29f1115b4fb",
     "workflowRegistryDigest": "3f456e31419aa68bf7c6b00f3f19d2c452e5198e77c71285792d95ab1ebf6fc1",
-    "pageRegistryDigest": "97c49097a713b199e59587535dc2592c19e770d4d8d356861d2590f9278b053f"
+    "pageRegistryDigest": "7d65073b1cd8aac3916845055af15eb643c1d48f6f2aa0b474d50f3f43265519"
   },
   "comparison": {
     "missingCliRegistry": [],

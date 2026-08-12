@@ -7,13 +7,27 @@ import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 
 import { createDevDeliveryQueue, selectDevDeliveryWarrant, submitDevDeliveryCandidate as submitLegacyDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
-import { DEV_DELIVERY_AUTHORITY_MODE, acquireDevDeliveryLandingWarrant, acquireDevDeliveryQualificationLease, admitDevDeliveryMergeGroup, completeDevDeliveryQualification, createDevDeliveryAuthorityState, migrateDevDeliveryAuthorityState, normalizeDevDeliveryAuthorityState, settleDevDeliveryAuthorityCandidate, submitDevDeliveryAuthorityCandidate } from "../packages/core/dev-delivery-authority.js";
+import {
+  DEV_DELIVERY_AUTHORITY_MODE,
+  acquireDevDeliveryLandingWarrant,
+  acquireDevDeliveryQualificationLease,
+  admitDevDeliveryMergeGroup,
+  completeDevDeliveryQualification,
+  createDevDeliveryAuthorityState,
+  heartbeatDevDeliveryQualificationLease,
+  migrateDevDeliveryAuthorityState,
+  normalizeDevDeliveryAuthorityState,
+  observeDevDeliveryAuthorityState,
+  recoverDevDeliveryAuthority,
+  settleDevDeliveryAuthorityCandidate,
+  submitDevDeliveryAuthorityCandidate,
+} from "../packages/core/dev-delivery-authority.js";
 import { defaultDevDeliveryAuthorityStateRef, devDeliveryAuthorityCliOptions, runDevDeliveryAuthorityCommand } from "../scripts/dev-delivery-authority.mjs";
 
 const root = (digit) => `sha256:${digit.repeat(64)}`;
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-function candidate(number) {
+function candidate(number, overrides = {}) {
   const digit = ((number % 8) + 1).toString(16);
   return {
     pullRequestNumber: number,
@@ -28,10 +42,12 @@ function candidate(number) {
     dependencyRoot: root("7"),
     toolchainRoot: root("8"),
     deliveryClass: "native-proof-required",
+    qualificationDomains: [root(digit)],
+    ...overrides,
   };
 }
 
-function authorityState() {
+function authorityState(policy = {}) {
   return createDevDeliveryAuthorityState({
     repository: "kungfu-systems/kungfu",
     protectedBase: "dev/v4/v4.0",
@@ -39,6 +55,7 @@ function authorityState() {
       maxQualificationLeases: 2,
       qualificationLeaseSeconds: 600,
       landingLeaseSeconds: 300,
+      ...policy,
     },
     now: "2026-08-12T00:00:00Z",
   });
@@ -180,15 +197,7 @@ test("proof drift and merge settlement without Landing authority fail closed", (
   const submitted = submitDevDeliveryAuthorityCandidate(authorityState(), candidate(175), {
     now: "2026-08-12T00:20:01Z",
   });
-  assert.throws(
-    () =>
-      submitDevDeliveryAuthorityCandidate(
-        submitted.state,
-        { ...candidate(175), toolchainRoot: root("f") },
-        { now: "2026-08-12T00:20:02Z" },
-      ),
-    /different active authority state/,
-  );
+  assert.throws(() => submitDevDeliveryAuthorityCandidate(submitted.state, { ...candidate(175), toolchainRoot: root("f") }, { now: "2026-08-12T00:20:02Z" }), /different active authority state/);
   assert.throws(
     () =>
       settleDevDeliveryAuthorityCandidate(
@@ -217,10 +226,7 @@ test("proof drift and merge settlement without Landing authority fail closed", (
     expiresAt: "2026-08-12T00:30:01.000Z",
   };
   delete corrupted.stateRoot;
-  assert.throws(
-    () => normalizeDevDeliveryAuthorityState(corrupted),
-    /qualified or landing candidate requires qualification evidence/,
-  );
+  assert.throws(() => normalizeDevDeliveryAuthorityState(corrupted), /qualified or landing candidate requires qualification evidence/);
 });
 
 test("issue #2410 terminal settlement releases authority immediately and is idempotent", () => {
@@ -287,6 +293,283 @@ test("issue #2410 terminal settlement releases authority immediately and is idem
   assert.equal(duplicate.receipt.expectedOldStateRoot, merged.state.stateRoot);
   assert.equal(duplicate.receipt.nextStateRoot, merged.state.stateRoot);
   assert.equal(duplicate.state.authorityMode, DEV_DELIVERY_AUTHORITY_MODE);
+});
+
+test("rooted safety domains permit disjoint leases and block overlap or unknown domains", () => {
+  const domainA = root("a");
+  const domainB = root("b");
+  let state = submitDevDeliveryAuthorityCandidate(authorityState({ maxQualificationLeases: 3 }), candidate(210, { qualificationDomains: [domainA] }), { now: "2026-08-12T01:10:01Z" }).state;
+  state = submitDevDeliveryAuthorityCandidate(state, candidate(211, { qualificationDomains: [domainB] }), { now: "2026-08-12T01:10:02Z" }).state;
+  state = submitDevDeliveryAuthorityCandidate(state, candidate(212, { qualificationDomains: [domainA] }), { now: "2026-08-12T01:10:03Z" }).state;
+  state = submitDevDeliveryAuthorityCandidate(state, candidate(213, { qualificationDomains: [] }), { now: "2026-08-12T01:10:04Z" }).state;
+
+  const first = acquireDevDeliveryQualificationLease(state, {
+    now: "2026-08-12T01:10:05Z",
+  });
+  const disjoint = acquireDevDeliveryQualificationLease(first.state, {
+    now: "2026-08-12T01:10:06Z",
+  });
+  assert.equal(disjoint.state.qualificationLeases.length, 2);
+
+  const blocked = acquireDevDeliveryQualificationLease(disjoint.state, {
+    now: "2026-08-12T01:10:07Z",
+  });
+  assert.equal(blocked.lease, null);
+  assert.equal(blocked.receipt.action, "qualification-safety-boundary-noop");
+  assert.deepEqual(
+    blocked.receipt.blockedReasons.map((reason) => reason.code),
+    ["overlapping-qualification-domain", "unknown-qualification-domain"],
+  );
+  assert.ok(blocked.receipt.blockedReasons.every((reason) => /^sha256:[0-9a-f]{64}$/.test(reason.reasonRoot)));
+  assert.equal(blocked.state.stateRoot, disjoint.state.stateRoot);
+});
+
+test("bounded overtaking reserves eventual landing priority for a slow predecessor", () => {
+  let state = authorityState({
+    maxQualificationLeases: 4,
+    maxLandingOvertakes: 2,
+  });
+  const inputs = [candidate(220, { qualificationDomains: [root("9")] }), candidate(221, { qualificationDomains: [root("a")] }), candidate(222, { qualificationDomains: [root("b")] }), candidate(223, { qualificationDomains: [root("c")] })];
+  for (let index = 0; index < inputs.length; index += 1) {
+    state = submitDevDeliveryAuthorityCandidate(state, inputs[index], {
+      now: `2026-08-12T01:20:0${index + 1}Z`,
+    }).state;
+  }
+  const leases = [];
+  for (let index = 0; index < inputs.length; index += 1) {
+    const leased = acquireDevDeliveryQualificationLease(state, {
+      now: `2026-08-12T01:20:1${index}Z`,
+    });
+    leases.push(leased.lease);
+    state = leased.state;
+  }
+
+  for (let index = 1; index <= 2; index += 1) {
+    state = completeDevDeliveryQualification(state, leases[index], {
+      evidenceRoot: root(index === 1 ? "d" : "e"),
+      now: `2026-08-12T01:20:2${index}Z`,
+    }).state;
+    const landing = acquireDevDeliveryLandingWarrant(state, {
+      now: `2026-08-12T01:20:3${index}Z`,
+    });
+    assert.equal(landing.warrant.candidateId, state.candidates[index].candidateId);
+    state = settleDevDeliveryAuthorityCandidate(
+      landing.state,
+      {
+        pullRequestNumber: inputs[index].pullRequestNumber,
+        sourceHead: inputs[index].sourceHead,
+        outcome: "merged",
+        evidenceRoot: root(index === 1 ? "f" : "8"),
+        authorityToken: landing.warrant.token,
+        authorityGeneration: landing.warrant.generation,
+      },
+      { now: `2026-08-12T01:20:4${index}Z` },
+    ).state;
+  }
+
+  state = completeDevDeliveryQualification(state, leases[3], {
+    evidenceRoot: root("7"),
+    now: "2026-08-12T01:20:50Z",
+  }).state;
+  const bounded = acquireDevDeliveryLandingWarrant(state, {
+    now: "2026-08-12T01:20:51Z",
+  });
+  assert.equal(bounded.warrant, null);
+  assert.equal(bounded.receipt.action, "landing-overtake-bound-noop");
+  assert.equal(bounded.receipt.blockedReason.code, "landing-overtake-bound-reached");
+  assert.equal(state.candidates[0].landingOvertakes, 2);
+
+  state = completeDevDeliveryQualification(state, leases[0], {
+    evidenceRoot: root("6"),
+    now: "2026-08-12T01:20:52Z",
+  }).state;
+  const priority = acquireDevDeliveryLandingWarrant(state, {
+    now: "2026-08-12T01:20:53Z",
+  });
+  assert.equal(priority.warrant.candidateId, state.candidates[0].candidateId);
+});
+
+test("a zero overtake bound enforces strict FIFO landing priority", () => {
+  let state = authorityState({ maxQualificationLeases: 2, maxLandingOvertakes: 0 });
+  const slow = candidate(224, { qualificationDomains: [root("9")] });
+  const fast = candidate(225, { qualificationDomains: [root("a")] });
+  state = submitDevDeliveryAuthorityCandidate(state, slow, { now: "2026-08-12T01:25:01Z" }).state;
+  state = submitDevDeliveryAuthorityCandidate(state, fast, { now: "2026-08-12T01:25:02Z" }).state;
+  const slowLease = acquireDevDeliveryQualificationLease(state, { now: "2026-08-12T01:25:03Z" });
+  const fastLease = acquireDevDeliveryQualificationLease(slowLease.state, { now: "2026-08-12T01:25:04Z" });
+  const qualifiedFast = completeDevDeliveryQualification(fastLease.state, fastLease.lease, { evidenceRoot: root("b"), now: "2026-08-12T01:25:05Z" });
+  const blocked = acquireDevDeliveryLandingWarrant(qualifiedFast.state, { now: "2026-08-12T01:25:06Z" });
+  assert.equal(blocked.warrant, null);
+  assert.equal(blocked.receipt.blockedReason.code, "landing-overtake-bound-reached");
+  const qualifiedSlow = completeDevDeliveryQualification(blocked.state, slowLease.lease, { evidenceRoot: root("c"), now: "2026-08-12T01:25:07Z" });
+  const priority = acquireDevDeliveryLandingWarrant(qualifiedSlow.state, { now: "2026-08-12T01:25:08Z" });
+  assert.equal(priority.warrant.candidateId, qualifiedSlow.state.candidates[0].candidateId);
+});
+
+test("heartbeat loss terminates at the attempt bound and wakes capacity idempotently", () => {
+  let state = authorityState({
+    maxQualificationLeases: 1,
+    maxQualificationAttempts: 1,
+    qualificationLeaseSeconds: 10,
+  });
+  state = submitDevDeliveryAuthorityCandidate(state, candidate(230, { qualificationDomains: [root("a")] }), { now: "2026-08-12T01:30:01Z" }).state;
+  state = submitDevDeliveryAuthorityCandidate(state, candidate(231, { qualificationDomains: [root("b")] }), { now: "2026-08-12T01:30:02Z" }).state;
+  const leased = acquireDevDeliveryQualificationLease(state, {
+    now: "2026-08-12T01:30:03Z",
+    leaseSeconds: 10,
+  });
+  const heartbeat = heartbeatDevDeliveryQualificationLease(leased.state, leased.lease, { now: "2026-08-12T01:30:08Z", leaseSeconds: 10 });
+  const beforeExpiry = recoverDevDeliveryAuthority(heartbeat.state, {
+    now: "2026-08-12T01:30:17Z",
+  });
+  assert.equal(beforeExpiry.receipt.action, "no-expired-authority-noop");
+  assert.equal(beforeExpiry.state.stateRoot, heartbeat.state.stateRoot);
+
+  const recovered = recoverDevDeliveryAuthority(heartbeat.state, {
+    now: "2026-08-12T01:30:19Z",
+  });
+  const duplicateController = recoverDevDeliveryAuthority(heartbeat.state, {
+    now: "2026-08-12T01:30:19Z",
+  });
+  assert.equal(duplicateController.receipt.expectedOldStateRoot, recovered.receipt.expectedOldStateRoot);
+  assert.equal(duplicateController.state.stateRoot, recovered.state.stateRoot);
+  assert.equal(duplicateController.wake.wakeRoot, recovered.wake.wakeRoot);
+  assert.equal(recovered.state.qualificationLeases.length, 0);
+  assert.equal(recovered.state.candidates[0].status, "terminal-failure");
+  assert.equal(recovered.state.candidates[0].terminal.reason, "qualification-heartbeat-expired-terminal");
+  assert.deepEqual(recovered.wake.qualificationCandidateIds, [recovered.state.candidates[1].candidateId]);
+
+  const duplicate = recoverDevDeliveryAuthority(recovered.state, {
+    now: "2026-08-12T01:30:19Z",
+  });
+  assert.equal(duplicate.state.stateRoot, recovered.state.stateRoot);
+  assert.equal(duplicate.wake.wakeRoot, recovered.wake.wakeRoot);
+});
+
+test("cancellation and already-merged reconciliation release and wake exactly once", () => {
+  let state = authorityState({ maxQualificationLeases: 1 });
+  const cancelledInput = candidate(240, { qualificationDomains: [root("a")] });
+  const nextInput = candidate(241, { qualificationDomains: [root("b")] });
+  state = submitDevDeliveryAuthorityCandidate(state, cancelledInput, {
+    now: "2026-08-12T01:40:01Z",
+  }).state;
+  state = submitDevDeliveryAuthorityCandidate(state, nextInput, {
+    now: "2026-08-12T01:40:02Z",
+  }).state;
+  const leased = acquireDevDeliveryQualificationLease(state, {
+    now: "2026-08-12T01:40:03Z",
+  });
+  const cancelled = settleDevDeliveryAuthorityCandidate(
+    leased.state,
+    {
+      pullRequestNumber: cancelledInput.pullRequestNumber,
+      sourceHead: cancelledInput.sourceHead,
+      outcome: "cancelled",
+      evidenceRoot: root("c"),
+      authorityToken: leased.lease.token,
+      authorityGeneration: leased.lease.generation,
+    },
+    { now: "2026-08-12T01:40:04Z" },
+  );
+  assert.deepEqual(cancelled.wake.qualificationCandidateIds, [cancelled.state.candidates[1].candidateId]);
+  const duplicateCancellation = settleDevDeliveryAuthorityCandidate(
+    cancelled.state,
+    {
+      pullRequestNumber: cancelledInput.pullRequestNumber,
+      sourceHead: cancelledInput.sourceHead,
+      outcome: "cancelled",
+      evidenceRoot: root("c"),
+    },
+    { now: "2026-08-12T01:40:05Z" },
+  );
+  assert.equal(duplicateCancellation.state.stateRoot, cancelled.state.stateRoot);
+  assert.equal(duplicateCancellation.wake.wakeRoot, cancelled.wake.wakeRoot);
+
+  const nextLease = acquireDevDeliveryQualificationLease(cancelled.state, {
+    now: "2026-08-12T01:40:06Z",
+  });
+  const qualified = completeDevDeliveryQualification(nextLease.state, nextLease.lease, { evidenceRoot: root("d"), now: "2026-08-12T01:40:07Z" });
+  const landing = acquireDevDeliveryLandingWarrant(qualified.state, {
+    now: "2026-08-12T01:40:08Z",
+  });
+  const merged = settleDevDeliveryAuthorityCandidate(
+    landing.state,
+    {
+      pullRequestNumber: nextInput.pullRequestNumber,
+      sourceHead: nextInput.sourceHead,
+      outcome: "merged",
+      evidenceRoot: root("e"),
+      authorityToken: landing.warrant.token,
+      authorityGeneration: landing.warrant.generation,
+      reason: "provider-already-merged-reconciliation",
+    },
+    { now: "2026-08-12T01:40:09Z" },
+  );
+  assert.equal(merged.state.landingWarrant, null);
+  assert.equal(merged.receipt.releasedAuthority.kind, "landing-warrant");
+  assert.equal(
+    observeDevDeliveryAuthorityState(merged.state, {
+      now: "2026-08-12T01:40:10Z",
+    }).landing.active,
+    null,
+  );
+});
+
+test("stress scheduling never exposes more than one Landing Warrant", () => {
+  let state = authorityState({
+    maxQualificationLeases: 4,
+    maxLandingOvertakes: 3,
+  });
+  const inputs = Array.from({ length: 24 }, (_, index) =>
+    candidate(500 + index, {
+      qualificationDomains: [`sha256:${(index + 1).toString(16).padStart(64, "0")}`],
+    }),
+  );
+  for (let index = 0; index < inputs.length; index += 1) {
+    state = submitDevDeliveryAuthorityCandidate(state, inputs[index], {
+      now: new Date(Date.parse("2026-08-12T04:00:00Z") + index * 1000).toISOString(),
+    }).state;
+  }
+
+  let clock = Date.parse("2026-08-12T04:01:00Z");
+  let maximumLandingWarrants = 0;
+  while (state.candidates.some((entry) => !["merged", "terminal-failure", "dequeued", "cancelled"].includes(entry.status))) {
+    while (state.qualificationLeases.length < state.policy.maxQualificationLeases && state.candidates.some((entry) => entry.status === "queued")) {
+      state = acquireDevDeliveryQualificationLease(state, {
+        now: new Date(clock++).toISOString(),
+      }).state;
+    }
+    for (const lease of [...state.qualificationLeases]) {
+      state = completeDevDeliveryQualification(state, lease, {
+        evidenceRoot: root("a"),
+        now: new Date(clock++).toISOString(),
+      }).state;
+    }
+    const landing = acquireDevDeliveryLandingWarrant(state, {
+      now: new Date(clock++).toISOString(),
+    });
+    state = landing.state;
+    const observation = observeDevDeliveryAuthorityState(state, {
+      now: new Date(clock++).toISOString(),
+    });
+    maximumLandingWarrants = Math.max(maximumLandingWarrants, Number(Boolean(observation.landing.active)));
+    assert.equal(state.candidates.filter((entry) => entry.status === "landing").length, Number(Boolean(observation.landing.active)));
+    const input = inputs.find((entry) => entry.pullRequestNumber === state.candidates.find((entry) => entry.candidateId === landing.warrant.candidateId).pullRequestNumber);
+    state = settleDevDeliveryAuthorityCandidate(
+      state,
+      {
+        pullRequestNumber: input.pullRequestNumber,
+        sourceHead: input.sourceHead,
+        outcome: "merged",
+        evidenceRoot: root("b"),
+        authorityToken: landing.warrant.token,
+        authorityGeneration: landing.warrant.generation,
+      },
+      { now: new Date(clock++).toISOString() },
+    ).state;
+  }
+  assert.equal(maximumLandingWarrants, 1);
+  assert.equal(state.candidates.filter((entry) => entry.status === "merged").length, inputs.length);
 });
 
 test("public authority CLI stays opt-in and persists through expected-old state writes", async () => {

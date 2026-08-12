@@ -277,7 +277,7 @@ buildchain dev
 - Syntax:
 
 ```text
-buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev authority complete-qualification`
@@ -288,7 +288,29 @@ buildchain dev authority <migrate|submit|lease-qualification|complete-qualificat
 - Syntax:
 
 ```text
-buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority heartbeat-landing`
+
+- Help: `buildchain dev authority heartbeat-landing --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority heartbeat-qualification`
+
+- Help: `buildchain dev authority heartbeat-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev authority lease-landing`
@@ -299,7 +321,7 @@ buildchain dev authority <migrate|submit|lease-qualification|complete-qualificat
 - Syntax:
 
 ```text
-buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev authority lease-qualification`
@@ -310,7 +332,7 @@ buildchain dev authority <migrate|submit|lease-qualification|complete-qualificat
 - Syntax:
 
 ```text
-buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev authority migrate`
@@ -321,7 +343,7 @@ buildchain dev authority <migrate|submit|lease-qualification|complete-qualificat
 - Syntax:
 
 ```text
-buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev authority observe`
@@ -332,7 +354,18 @@ buildchain dev authority <migrate|submit|lease-qualification|complete-qualificat
 - Syntax:
 
 ```text
-buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority recover`
+
+- Help: `buildchain dev authority recover --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev authority settle`
@@ -343,7 +376,7 @@ buildchain dev authority <migrate|submit|lease-qualification|complete-qualificat
 - Syntax:
 
 ```text
-buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev authority submit`
@@ -354,7 +387,7 @@ buildchain dev authority <migrate|submit|lease-qualification|complete-qualificat
 - Syntax:
 
 ```text
-buildchain dev authority <migrate|submit|lease-qualification|complete-qualification|lease-landing|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev merge-queue`
