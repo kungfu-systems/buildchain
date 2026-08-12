@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 408,
+  "generation": 409,
   "fencingCounter": 111,
   "policy": {
     "agingSeconds": 900,
@@ -3544,8 +3544,48 @@
         "tests/dev-delivery-warrant-command.test.mjs",
         "tests/dev-delivery-warrant.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2664,
+      "assignmentRoot": "sha256:599e7e07e2e07bd8f9f6971fa32bc1a58071b64dede4e6fbd3fce488275218e4",
+      "initiativeRoot": "sha256:f15dc05f5657faa1f89d4a69b228b2b2c734b0f1d550e617e3f0e7adf12b35e5",
+      "sourceIdentityRoot": "sha256:fbad28c2b13c789dfabfccbc5daaa47806a39623bdc79b3ffd3078b6b42dbfaf",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:488683d714aa8986e3785b4489a790fd4767587c058300cdacfac67d1a450194",
+      "sourceHead": "ea23bde2f25397809ec5d1313cd78f6228f28bc8",
+      "sourcePatchRoot": "sha256:2c2ed1bce93d09d16123157d3ecf22bde41491e606fd0185f06475839b6de664",
+      "sourceProofRoot": "sha256:3fdf131c71dd969f4d1d73f6d92c90ecde3f1e0bff26f37bc94132cd3fc603c0",
+      "planRoot": "sha256:6778bf6eb02c1bc61aa2de5dbaac95261b3253889dd22b3db50fb65d3bd75787",
+      "closureRoot": "sha256:cb5aff3cd867a5117fd87df633e7d608fea4f158e3786170743e0188a6bb8f26",
+      "dependencyRoot": "sha256:24a10c6f495421b6f4b8babc983d668ed9fac4ff4d67e13aac62335bc83a0955",
+      "toolchainRoot": "sha256:496a07d906989db32ed6b559af7e235a9228406dd42ee7e31ee314613bbbd628",
+      "environmentRoot": "sha256:08468814383b300caa017514fcf06ec4bc3d12917ab20a20cf3089abd3d64a38",
+      "sourceWorkflowRunId": 0,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-12T15:58:11.689Z",
+      "updatedAt": "2026-08-12T15:58:11.689Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/site-manifest.json",
+        "docs/node-api-reference.md",
+        "packages/core/dev-delivery-warrant.js",
+        "tests/dev-delivery-warrant.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-12T10:57:36.153Z",
-  "stateRoot": "sha256:9c0690edd6784cf96bcc766cf84438252abb5b7f2f5d0455c2468f6719f396b5"
+  "updatedAt": "2026-08-12T15:58:11.689Z",
+  "stateRoot": "sha256:25a37563a02b39a3109339e3e7f6e334924a41e62a96e1e85ad54f72ffa14ab5"
 }
