@@ -122,19 +122,18 @@ export function readDeliveryWarrantResult(options, pullRequest) {
 }
 
 export async function readCurrentDeliveryQueueState(client, repository, targetBranch) {
-  if (typeof client.getDevDeliveryQueueState === "function") {
-    return client.getDevDeliveryQueueState(targetBranch);
+  if (typeof client.getDevDeliveryQueueState === "function") return client.getDevDeliveryQueueState(targetBranch);
+  const stateRef = `buildchain/dev-delivery-warrant/${targetBranch.replaceAll("/", "-")}`, query = new URLSearchParams({ ref: stateRef });
+  const { data } = await client.request("GET", `/repos/${repository.owner}/${repository.repo}/contents/queue.json?${query}`);
+  if (data?.type !== "file") mismatch("delivery-warrant-current-readback-invalid");
+  let encoded = data?.encoding === "base64" && data?.content ? data : undefined;
+  if (!encoded) {
+    const blobSha = String(data?.sha || "").trim().toLowerCase(); if (!SHA_PATTERN.test(blobSha)) mismatch("delivery-warrant-current-readback-invalid");
+    const { data: blob } = await client.request("GET", `/repos/${repository.owner}/${repository.repo}/git/blobs/${blobSha}`);
+    if (String(blob?.sha || "").trim().toLowerCase() !== blobSha) mismatch("delivery-warrant-current-readback-invalid");
+    encoded = blob;
   }
-  const stateRef = `buildchain/dev-delivery-warrant/${targetBranch.replaceAll("/", "-")}`;
-  const query = new URLSearchParams({ ref: stateRef });
-  const { data } = await client.request(
-    "GET",
-    `/repos/${repository.owner}/${repository.repo}/contents/queue.json?${query}`,
-  );
-  if (data?.type !== "file" || data?.encoding !== "base64" || !data?.content) {
-    mismatch("delivery-warrant-current-readback-invalid");
-  }
-  return JSON.parse(Buffer.from(String(data.content).replace(/\s+/g, ""), "base64").toString("utf8"));
+  if (encoded?.encoding !== "base64" || !encoded?.content) mismatch("delivery-warrant-current-readback-invalid"); return JSON.parse(Buffer.from(String(encoded.content).replace(/\s+/g, ""), "base64").toString("utf8"));
 }
 
 export async function verifyCurrentDeliveryWarrant(client, options, pullRequest, warrant) {
