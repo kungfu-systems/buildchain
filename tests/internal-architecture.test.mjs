@@ -47,6 +47,21 @@ test("repository source inventory includes untracked files before commit", (t) =
   ]);
 });
 
+test("repository source inventory excludes transient root test sandboxes", (t) => {
+  const temporaryRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-architecture-transient-"),
+  );
+  t.after(() => fs.rmSync(temporaryRoot, { recursive: true, force: true }));
+  execFileSync("git", ["init", "-q"], { cwd: temporaryRoot });
+  fs.mkdirSync(path.join(temporaryRoot, ".tmp-fixture"));
+  fs.writeFileSync(
+    path.join(temporaryRoot, ".tmp-fixture", "fixture.cjs"),
+    "module.exports = {};\n",
+  );
+
+  assert.deepEqual(repositorySourceFiles(temporaryRoot), []);
+});
+
 test("internal architecture check rejects an unowned repository source", () => {
   const unowned = structuredClone(index);
   unowned.ownershipRules = unowned.ownershipRules.filter(
