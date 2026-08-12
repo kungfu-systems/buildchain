@@ -130,6 +130,7 @@ function repositorySourceFiles(root) {
     .filter(Boolean)
     .filter((file) => fs.existsSync(path.resolve(root, file)))
     .filter((file) => repositorySourceExtensions.has(path.extname(file)))
+    .filter((file) => !file.startsWith(".tmp-"))
     .filter((file) => !file.startsWith("tests/"))
     .filter((file) => !/(?:^|\/)tests?\//u.test(file))
     .filter((file) => !/^actions\/[^/]+\/dist\//u.test(file))
