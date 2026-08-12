@@ -9,7 +9,7 @@ for name in ROUTER_REF ROUTER_SHA SHELL_REF SHELL_SHA RUNTIME_REF RUNTIME_SHA LO
 done
 
 router_sha="$(git -C .buildchain/promotion-router rev-parse HEAD)"
-shell_sha="$(git -C .buildchain/promotion-shell rev-parse HEAD)"
+shell_sha="$(git -C .buildchain/runtime/promotion-shell rev-parse HEAD)"
 runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
 expected_router_sha="${ROUTER_SHA:-}"
 expected_shell_sha="${SHELL_SHA:-}"

@@ -341,7 +341,7 @@ test("promotion router contains no native build job and delegates candidate reus
   assert.match(advanced, /CALLED_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
   assert.match(
     advanced,
-    /bash \.buildchain\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
+    /bash \.buildchain\/runtime\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
   );
   assert.match(
     bindingVerifier,
