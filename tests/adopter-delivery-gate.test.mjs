@@ -181,6 +181,49 @@ test("unknown and malformed states fail closed with deterministic diagnostics", 
   assert.equal(malformed.status, "failed");
 });
 
+test("non-JSON declarations and driver reports fail closed without unstable cloning", () => {
+  const invalidReport = defineAdopterProtocolDriver({
+    interface: ADOPTER_PROTOCOL_DRIVER_INTERFACE,
+    id: "example.protocol/non-json",
+    version: "1.0.0",
+    verify() {
+      return {
+        valid: true,
+        report: { observed: Number.NaN },
+        reportRoot: root("invalid-report"),
+        issues: [],
+      };
+    },
+  });
+  const gate = createAdopterDeliveryGate({
+    drivers: [driver("example.protocol/alpha"), invalidReport],
+    artifactProfiles: [createGitCommitArtifactProfile()],
+  });
+  const cyclic = { accepted: true };
+  cyclic.self = cyclic;
+
+  const invalidDeclaration = gate.evaluate({
+    ...request(),
+    declaration: cyclic,
+  });
+  const invalidDriverReport = gate.evaluate(
+    request({ protocol: "example.protocol/non-json" }),
+  );
+
+  assert.deepEqual(
+    invalidDeclaration.issues.map(({ code }) => code),
+    ["delivery-input-invalid"],
+  );
+  assert.deepEqual(
+    invalidDriverReport.issues.map(({ code }) => code),
+    ["delivery-driver-result-invalid"],
+  );
+  assert.throws(
+    () => adopterDeliveryGateDigest({ value: undefined }),
+    /finite acyclic JSON values/,
+  );
+});
+
 test("driver exceptions and invalid results fail closed", () => {
   const broken = defineAdopterProtocolDriver({
     interface: ADOPTER_PROTOCOL_DRIVER_INTERFACE,
