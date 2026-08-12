@@ -388,7 +388,7 @@ jobs:
           persist-credentials: false
 
       - name: Mint bounded governance auditor token
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID != '' }}
         id: governance-auditor
         uses: actions/create-github-app-token@v3
         with:
@@ -399,7 +399,7 @@ jobs:
       - name: Collect and verify exact live GitHub governance authority
         if: ${{ !inputs.dry-run }}
         env:
-          GH_TOKEN: ${{ steps.governance-auditor.outputs.token }}
+          GH_TOKEN: ${{ steps.governance-auditor.outputs.token || github.token }}
           BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY: ${{ inputs.evidence-repository || github.repository }}
           BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF: ${{ inputs.target-ref }}
           BUILDCHAIN_AUTHORITY_REF: ${{ inputs.buildchain-ref }}
