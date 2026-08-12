@@ -238,8 +238,8 @@ test("governed promotion resumes its exact durable transaction after the target 
     refs: new Map([
       ["heads/alpha/v1/v1.0", advancedSha],
       ["heads/dev/v1/v1.0", advancedSha],
-      ["tags/v1.0-alpha", advancedSha],
-      ["tags/v1-alpha", advancedSha],
+      ["tags/v1.0-alpha", OTHER_SHA],
+      ["tags/v1-alpha", OTHER_SHA],
     ]),
   });
   commits.set(releaseSha, {
@@ -336,8 +336,8 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(refs.get("heads/alpha/v1/v1.0"), advancedSha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), advancedSha);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
-  assert.equal(refs.get("tags/v1.0-alpha"), advancedSha);
-  assert.equal(refs.get("tags/v1-alpha"), advancedSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), releaseSha);
+  assert.equal(refs.get("tags/v1-alpha"), releaseSha);
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
   assert.equal(result.updates[0].action, "resumed-advanced-publication");
   assert.equal(result.updates.at(-1).action, "finalized-advanced-publication");
