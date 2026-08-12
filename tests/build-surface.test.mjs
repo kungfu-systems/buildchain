@@ -1570,9 +1570,9 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
   assert.match(workflow, /native-roots-json:/);
-  assert.match(workflow, /github\.event\.client_payload\.pullRequestNumber/u);
-  assert.match(workflow, /github\.event\.client_payload\.assignmentRoot/u);
-  assert.match(workflow, /github\.event\.client_payload\.initiativeRoot/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.pullRequestNumber/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.assignmentRoot/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.initiativeRoot/u);
   assert.match(workflow, /source-identity-root:/);
   assert.match(workflow, /source-patch-root:/);
   assert.match(workflow, /plan-root:/);
@@ -1587,8 +1587,8 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /permissions:\n  actions: write/);
   assert.match(workflow, /delivery-warrant-mode: required/);
-  assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.deliveryClass \|\| 'native-proof-required' \}\}/u);
-  assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.priority \|\| 'ordinary' \}\}/u);
+  assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| 'native-proof-required' \}\}/u);
+  assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.candidate\.priority \|\| 'ordinary' \}\}/u);
   assert.match(workflow, /required-status-checks: check/);
   assert.match(
     workflow,
@@ -1597,7 +1597,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /landing-mode: queue/);
   assert.match(workflow, /dry-run: false/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
-  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ github\.event\.client_payload\.pullRequestNumber \|\| inputs\.expected-pr-number \}\} · two-phase Delivery Warrant"/u);
+  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ github\.event\.client_payload\.candidate\.pullRequestNumber \|\| inputs\.expected-pr-number \}\} · two-phase Delivery Warrant"/u);
   assert.match(workflow, /repository_dispatch:/u);
   assert.match(workflow, /buildchain-dev-delivery-wake/u);
   const controller = fs.readFileSync(

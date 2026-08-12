@@ -1,6 +1,6 @@
 name: Buildchain Dev Delivery
 
-run-name: "Buildchain PR #${{ github.event.client_payload.pullRequestNumber || inputs.expected-pr-number }} · two-phase Delivery Warrant"
+run-name: "Buildchain PR #${{ github.event.client_payload.candidate.pullRequestNumber || inputs.expected-pr-number }} · two-phase Delivery Warrant"
 
 on:
   workflow_dispatch:
@@ -79,26 +79,26 @@ jobs:
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ github.sha }}
-      target-branch: ${{ github.event.client_payload.targetBranch || 'dev/v3/v3.0' }}
-      expected-pr-number: ${{ github.event.client_payload.pullRequestNumber || fromJSON(github.event.inputs.expected-pr-number) }}
-      expected-head-sha: ${{ github.event.client_payload.sourceHead || github.event.inputs.expected-head-sha }}
-      source-workflow-run-id: ${{ github.event.client_payload.sourceWorkflowRunId || fromJSON(github.run_id) }}
+      target-branch: ${{ github.event.client_payload.candidate.targetBranch || 'dev/v3/v3.0' }}
+      expected-pr-number: ${{ github.event.client_payload.candidate.pullRequestNumber || fromJSON(github.event.inputs.expected-pr-number) }}
+      expected-head-sha: ${{ github.event.client_payload.candidate.sourceHead || github.event.inputs.expected-head-sha }}
+      source-workflow-run-id: ${{ github.event.client_payload.candidate.sourceWorkflowRunId || fromJSON(github.run_id) }}
       delivery-warrant-mode: required
-      assignment-root: ${{ github.event.client_payload.assignmentRoot || fromJSON(github.event.inputs.native-roots-json).assignmentRoot }}
-      initiative-root: ${{ github.event.client_payload.initiativeRoot || fromJSON(github.event.inputs.native-roots-json).initiativeRoot }}
-      source-identity-root: ${{ github.event.client_payload.sourceIdentityRoot || github.event.inputs.source-identity-root }}
-      source-patch-root: ${{ github.event.client_payload.sourcePatchRoot || github.event.inputs.source-patch-root }}
-      plan-root: ${{ github.event.client_payload.planRoot || github.event.inputs.plan-root }}
-      closure-root: ${{ github.event.client_payload.closureRoot || github.event.inputs.closure-root }}
-      dependency-root: ${{ github.event.client_payload.dependencyRoot || github.event.inputs.dependency-root }}
-      toolchain-root: ${{ github.event.client_payload.toolchainRoot || github.event.inputs.toolchain-root }}
-      environment-root: ${{ github.event.client_payload.environmentRoot || github.event.inputs.environment-root }}
-      affected-paths-json: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload.affectedPaths) || github.event.inputs.affected-paths-json }}
+      assignment-root: ${{ github.event.client_payload.candidate.assignmentRoot || fromJSON(github.event.inputs.native-roots-json).assignmentRoot }}
+      initiative-root: ${{ github.event.client_payload.candidate.initiativeRoot || fromJSON(github.event.inputs.native-roots-json).initiativeRoot }}
+      source-identity-root: ${{ github.event.client_payload.candidate.sourceIdentityRoot || github.event.inputs.source-identity-root }}
+      source-patch-root: ${{ github.event.client_payload.candidate.sourcePatchRoot || github.event.inputs.source-patch-root }}
+      plan-root: ${{ github.event.client_payload.candidate.planRoot || github.event.inputs.plan-root }}
+      closure-root: ${{ github.event.client_payload.candidate.closureRoot || github.event.inputs.closure-root }}
+      dependency-root: ${{ github.event.client_payload.candidate.dependencyRoot || github.event.inputs.dependency-root }}
+      toolchain-root: ${{ github.event.client_payload.candidate.toolchainRoot || github.event.inputs.toolchain-root }}
+      environment-root: ${{ github.event.client_payload.candidate.environmentRoot || github.event.inputs.environment-root }}
+      affected-paths-json: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload.candidate.affectedPaths) || github.event.inputs.affected-paths-json }}
       native-proof-json: ${{ github.event.inputs.native-proof-json || '' }}
       native-command: ${{ github.event.inputs.native-command || 'node --test tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-native-run.test.mjs' }}
       native-heartbeat-seconds: ${{ github.event.inputs.native-heartbeat-seconds && fromJSON(github.event.inputs.native-heartbeat-seconds) || 30 }}
-      delivery-class: ${{ github.event.client_payload.deliveryClass || 'native-proof-required' }}
-      delivery-priority: ${{ github.event.client_payload.priority || 'ordinary' }}
+      delivery-class: ${{ github.event.client_payload.candidate.deliveryClass || 'native-proof-required' }}
+      delivery-priority: ${{ github.event.client_payload.candidate.priority || 'ordinary' }}
       required-status-checks: check
       ready-label: ready
       block-labels: blocked,do-not-merge,work-in-progress

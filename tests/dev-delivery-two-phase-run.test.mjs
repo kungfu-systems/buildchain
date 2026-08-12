@@ -111,6 +111,30 @@ test("GitHub base delta attributes both sides of a rename", async () => {
   });
 });
 
+test("GitHub wake preserves the complete candidate under one dispatch property", async () => {
+  const requests = [];
+  const client = new GitHubTwoPhaseClient({
+    repository: "kungfu-systems/buildchain",
+    token: "fixture",
+    apiUrl: "https://example.invalid",
+    fetchImpl: async (url, requestOptions) => {
+      requests.push({ url, requestOptions });
+      return { ok: true, text: async () => "" };
+    },
+  });
+  const candidate = Object.fromEntries(
+    Array.from({ length: 24 }, (_, index) => [`binding${index}`, ROOT("a")]),
+  );
+
+  await client.wake("buildchain-dev-delivery-wake", candidate);
+
+  assert.equal(requests.length, 1);
+  const body = JSON.parse(requests[0].requestOptions.body);
+  assert.equal(body.event_type, "buildchain-dev-delivery-wake");
+  assert.deepEqual(Object.keys(body.client_payload), ["candidate"]);
+  assert.deepEqual(body.client_payload.candidate, candidate);
+});
+
 function options(directory, proofPath) {
   return {
     repository: "kungfu-systems/buildchain",

@@ -133,7 +133,8 @@ export class GitHubTwoPhaseClient {
       method: "POST",
       body: {
         event_type: eventType,
-        client_payload: candidate,
+        // Preserve every binding in one property under GitHub's ten-property limit.
+        client_payload: { candidate },
       },
     });
   }
