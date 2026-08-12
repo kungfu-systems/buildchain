@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 402,
+  "generation": 403,
   "fencingCounter": 110,
   "policy": {
     "agingSeconds": 900,
@@ -3488,8 +3488,56 @@
         "tests/cli.test.mjs",
         "tests/dev-delivery-two-phase-run.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2654,
+      "assignmentRoot": "sha256:a5c8a6d5a584e0c84f9468f4feba3c942fd843f306a9e1fb96b84b714667e9ca",
+      "initiativeRoot": "sha256:c646a44ad39c1070cb2e591351eaead622cf54e84f1a5f2a820b809d107ac503",
+      "sourceIdentityRoot": "sha256:4e1210636068aea65c6306382c4db984e407c8c37aaca709eccc48863daadee8",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:c94825c04c6e8e1533b4c788a8919b3c6156ac8cc90909cc08102c5591009548",
+      "sourceHead": "f4a72d33dc2bf764896cbe769c91b5907a6a9f2d",
+      "sourcePatchRoot": "sha256:46cf56ff9b0f7dff7dc5c50199342f826caaeaab5c9774cd739b5d5a60169b78",
+      "sourceProofRoot": "sha256:66f54063901df28d742ebc73b34c1526e31b9ed38fc77e7351fa80cbe5089401",
+      "planRoot": "sha256:981508d295f0ec523b4bd569207497aa2bf9d57ae4ee51b57d95ac1f9dea8208",
+      "closureRoot": "sha256:b2e51975b724102791419b791f5590db81f67eeea5d916b402beaf3c4d6a0ee2",
+      "dependencyRoot": "sha256:c829f2ee2d754ddbbc7b4bc751404865d674b146454ed5cba68942c9dae733e8",
+      "toolchainRoot": "sha256:9224f423ee26fa45570265fe5c44582661b01e8f58c3164e830be8255bb89500",
+      "environmentRoot": "sha256:5b176e5b4b9c96cfeeec7bd6541dab2236d18e9516b7820c8f1e0b671749baaa",
+      "sourceWorkflowRunId": 0,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-12T10:48:31.150Z",
+      "updatedAt": "2026-08-12T10:48:31.150Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/dev-delivery-warrant-close.yml",
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/publication-registry.json",
+        "dist/site/site-manifest.json",
+        "docs/dev-delivery-warrant.md",
+        "docs/node-api-reference.md",
+        "packages/core/dev-delivery-warrant-settlement.js",
+        "packages/core/dev-delivery-warrant.js",
+        "scripts/dev-delivery-native-run.mjs",
+        "tests/dev-delivery-native-run.test.mjs",
+        "tests/dev-delivery-two-phase.test.mjs",
+        "tests/dev-delivery-warrant-command.test.mjs",
+        "tests/dev-delivery-warrant.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-12T09:29:30.047Z",
-  "stateRoot": "sha256:d5e557eb0563453350f4f478bc57bdb2e3be9577c9c885b4fd3e373d12f4fd03"
+  "updatedAt": "2026-08-12T10:48:31.150Z",
+  "stateRoot": "sha256:f176876382e4bb2d53c1088d0fd0578be81215aa104aa699fa0d547ec13d97c4"
 }
