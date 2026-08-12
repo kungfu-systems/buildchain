@@ -202,7 +202,7 @@ on:
       KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
         description: "Private key for the dedicated read-only GitHub governance auditor App"
         required: false
-      BUILDCHAIN_PROMOTION_TOKEN:
+      BUILDCHAIN_GOVERNANCE_READ_TOKEN:
         description: "Optional consumer-owned token used as the live governance read fallback"
         required: false
 permissions:
@@ -399,7 +399,7 @@ jobs:
       - name: Collect and verify exact live GitHub governance authority
         if: ${{ !inputs.dry-run }}
         env:
-          GH_TOKEN: ${{ steps.governance-auditor.outputs.token || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          GH_TOKEN: ${{ steps.governance-auditor.outputs.token || secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
           BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY: ${{ inputs.evidence-repository || github.repository }}
           BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF: ${{ inputs.target-ref }}
           BUILDCHAIN_AUTHORITY_REF: ${{ inputs.buildchain-ref }}

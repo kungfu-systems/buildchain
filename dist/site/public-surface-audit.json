@@ -949,7 +949,7 @@
         ],
         "inputCount": 37,
         "secrets": [
-          "BUILDCHAIN_PROMOTION_TOKEN",
+          "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
         "secretCount": 2,
@@ -8343,7 +8343,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "76cbcd88996ba645e90fb4f3d45b9cd3d07f9c5db1a008d0b391b29f1115b4fb",
-    "workflowRegistryDigest": "4354c33115d2721a2ff650a0b7eed74b7f0ba056159336ff4ccfa02dc4c1e862",
+    "workflowRegistryDigest": "a7ff6b8a846302a932f50279844648c70c17b4597667cd23b50c8af49c7b9baa",
     "pageRegistryDigest": "d0f305e8dbee441d6e935f192485ec3945d4de44bc979023df025a1a4fa96135"
   },
   "comparison": {

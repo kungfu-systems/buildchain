@@ -947,7 +947,7 @@
           "used-nonces-json"
         ],
         "secrets": [
-          "BUILDCHAIN_PROMOTION_TOKEN",
+          "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
         "outputs": [
