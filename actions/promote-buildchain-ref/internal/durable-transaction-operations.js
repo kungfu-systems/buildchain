@@ -1,3 +1,5 @@
+function finalizationRequirements(material, rematerialize = false) { return (material?.artifacts || []).map((artifact) => rematerialize && artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
+
 function createDurableTransactionOperations(context) {
   const {
     octokit,
@@ -36,7 +38,7 @@ function createDurableTransactionOperations(context) {
     publishDistTag,
     publishPackageSetOrder,
     publishPackageMain,
-    publishRematerializeOnResume,
+    publishRematerializeOnResume: rematerialize,
     expectedPublicationVersion,
     requirePublicationQualification,
     publicationCapabilityJson,
@@ -125,7 +127,7 @@ function createDurableTransactionOperations(context) {
     releaseMaterialShaOverride = releaseMaterialSha,
     publishToolingShaOverride = publishToolingSha,
     publishDistTagOverride = publishDistTag,
-    durablePublicationMaterial,
+    durablePublicationMaterial: material,
     allowVersionStateFinalization = false,
   }) => {
     const transactionVersion = version;
@@ -169,11 +171,9 @@ function createDurableTransactionOperations(context) {
       transactionStatePath,
       expectedTransactionId,
       publishSealedBundleRoot,
-      publishSealedBundleManifest: durablePublicationMaterial
-        ? ""
-        : publishSealedBundleManifest,
-      publishRequiredArtifactsJson: durablePublicationMaterial
-        ? JSON.stringify(durablePublicationMaterial.artifacts || [])
+      publishSealedBundleManifest: material ? "" : publishSealedBundleManifest,
+      publishRequiredArtifactsJson: material
+        ? JSON.stringify(finalizationRequirements(material, rematerialize))
         : publishRequiredArtifactsJson,
       releaseMaterialSha: releaseMaterialShaOverride,
       publishToolingSha: publishToolingShaOverride,
@@ -182,7 +182,7 @@ function createDurableTransactionOperations(context) {
       publishDistTag: publishDistTagOverride,
       publishPackageSetOrder,
       publishPackageMain,
-      publishRematerializeOnResume,
+      publishRematerializeOnResume: rematerialize,
       actor,
       runId,
       explicitOverride: publishTransactionOverride,

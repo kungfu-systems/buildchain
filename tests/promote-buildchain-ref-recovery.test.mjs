@@ -2352,7 +2352,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     kind: "github-release",
     name: "rematerialization-fixture",
     ref: process.env.BUILDCHAIN_VERSION,
-    digest: "sha256:${"1".repeat(64)}"
+    digest: "sha256:" + String(count).repeat(64)
   }]
 }, null, 2) + "\\n");
 `,
@@ -2374,6 +2374,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     channel: "alpha",
     line: "v1.0",
     publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([{ kind: "github-release", name: "rematerialization-fixture", ref_template: "{version}" }]),
     publishEvidencePath: evidencePath,
     transactionStatePath: statePath,
   };
