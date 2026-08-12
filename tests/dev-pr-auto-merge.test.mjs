@@ -773,6 +773,45 @@ test("GitHub client reads the current Delivery Warrant queue from its protected 
   );
 });
 
+test("GitHub client reads a Delivery Warrant queue larger than the Contents API inline limit by exact blob identity", async () => {
+  const requests = [], blobSha = "c".repeat(40);
+  const queueState = { activeWarrant: { candidateId: ROOT }, candidates: [{ candidateId: ROOT, status: "qualified" }], retainedHistory: "x".repeat(1024 * 1024) };
+  const serialized = JSON.stringify(queueState); assert.ok(Buffer.byteLength(serialized) > 1024 * 1024);
+  const fakeFetch = async (url, init) => {
+    requests.push({ url, init });
+    if (url.includes("/contents/queue.json?")) {
+      return new Response(JSON.stringify({
+        type: "file", encoding: "none", content: "", sha: blobSha, size: Buffer.byteLength(serialized),
+      }));
+    }
+    if (url.endsWith(`/git/blobs/${blobSha}`)) {
+      return new Response(JSON.stringify({
+        sha: blobSha, encoding: "base64", content: Buffer.from(serialized).toString("base64"),
+      }));
+    }
+    return new Response(JSON.stringify({ message: "not found" }), { status: 404 });
+  };
+  const github = new GitHubClient({ token: "test-token", repository: { owner: "kungfu-systems", repo: "kungfu" }, fetchImpl: fakeFetch });
+
+  assert.deepEqual(
+    await readCurrentDeliveryQueueState(github, { owner: "kungfu-systems", repo: "kungfu" }, "dev/v4/v4.0"),
+    queueState,
+  );
+  assert.equal(requests.length, 2);
+  assert.match(requests[1].url, new RegExp(`/git/blobs/${blobSha}$`, "u"));
+});
+
+test("Delivery Warrant queue readback rejects blob identity drift", async () => {
+  const blobSha = "d".repeat(40);
+  const fake = { request: async (_method, requestPath) => requestPath.includes("/contents/")
+    ? { data: { type: "file", encoding: "none", sha: blobSha } }
+    : { data: { sha: "e".repeat(40), encoding: "base64", content: "e30=" } } };
+  await assert.rejects(
+    readCurrentDeliveryQueueState(fake, { owner: "kungfu-systems", repo: "kungfu" }, "dev/v4/v4.0"),
+    { code: "delivery-warrant-current-readback-invalid" },
+  );
+});
+
 const exactHead = "a".repeat(40);
 const movedHead = "b".repeat(40);
 const targetedOptions = {
