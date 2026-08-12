@@ -432,9 +432,10 @@
       ],
       "inputCount": 37,
       "secrets": [
+        "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
         "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
       ],
-      "secretCount": 1,
+      "secretCount": 2,
       "outputs": [
         "capability-artifact",
         "capability-digest",
