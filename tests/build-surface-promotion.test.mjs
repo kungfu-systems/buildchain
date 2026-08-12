@@ -689,6 +689,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(action, /release-passport-adopter-delivery-json:/);
   assert.match(action, /release-passport-kfd-adopter-manifest-json:/);
   assert.match(action, /release-passport-kfd-support-matrix-json:/);
   assert.match(action, /release-passport-kfd-product-gate-jsons:/);
@@ -714,6 +715,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
+  assert.match(implementation, /releasePassportAdopterDeliveryJson/);
   assert.match(implementation, /releasePassportKfdAdopterManifestJson/);
   assert.match(implementation, /releasePassportKfdSupportMatrixJson/);
   assert.match(implementation, /releasePassportKfdProductGateJsons/);
@@ -729,6 +731,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
+  assert.match(docs, /release-passport-adopter-delivery-json/);
   assert.match(docs, /release-passport-kfd-adopter-manifest-json/);
   assert.match(docs, /release-passport-kfd-support-matrix-json/);
   assert.match(docs, /release-passport-kfd-product-gate-jsons/);

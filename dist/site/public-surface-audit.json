@@ -1042,6 +1042,7 @@
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-adopter-delivery-json",
           "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
@@ -1079,7 +1080,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 111,
+        "inputCount": 112,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2564,6 +2565,7 @@
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-adopter-delivery-json",
           "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
@@ -2601,7 +2603,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 102,
+        "inputCount": 103,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2957,6 +2959,7 @@
           "release-candidate-version",
           "release-material-sha",
           "release-passport",
+          "release-passport-adopter-delivery-json",
           "release-passport-attachment-command",
           "release-passport-build-summary-path",
           "release-passport-buildchain-self-kfd",
@@ -2991,7 +2994,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 81
+        "inputCount": 82
       },
       {
         "id": "release-tail",
@@ -8347,9 +8350,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "76cbcd88996ba645e90fb4f3d45b9cd3d07f9c5db1a008d0b391b29f1115b4fb",
-    "workflowRegistryDigest": "21970cd7b1998190bc6f063f5eb98508da99dbfd1ce628c8f5c0c1dc49c23bd9",
-    "pageRegistryDigest": "3fd56bfa0ee59d7e89e82c5a7863f2308c345a71d64078e4af24b265ea0ae0dd"
+    "cliRegistryDigest": "613ca42d3fe36e953603221d1cf16478ba84e6cf27dd6d11ddb2c1caea42ec3b",
+    "workflowRegistryDigest": "c5aefe50c768463842608803e7d08531023377254a336153061a66e6d9768e34",
+    "pageRegistryDigest": "6b9512d264da4b9a351cc64541ea9377ec84705c46860ccebd00de12eca01b5c"
   },
   "comparison": {
     "missingCliRegistry": [],
