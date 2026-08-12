@@ -270,8 +270,11 @@ disjoint attributed delta reuses the proof. Overlap or unknown attribution
 triggers one automatic revalidation on the latest base; continued overlap,
 native failure, cancellation, semantic head movement, or an unrecoverable merge
 conflict closes the exact fence. The next queued candidate is notified through
-the `buildchain-dev-delivery-wake` repository event. If cancellation prevents
-cleanup, lease expiry recovers retained queue age and mints a new fence.
+the `buildchain-dev-delivery-wake` repository event. Its complete semantic
+candidate is carried under the single `client_payload.candidate` envelope so
+GitHub's ten-property top-level limit cannot discard proof bindings. If
+cancellation prevents cleanup, lease expiry recovers retained queue age and
+mints a new fence.
 
 Consumers should deploy `shadow` first, inspect receipts, then change their
 protected caller to `required`. Rollback is a reviewed caller change back to
