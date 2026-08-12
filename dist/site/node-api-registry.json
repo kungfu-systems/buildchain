@@ -18514,6 +18514,92 @@
       ]
     },
     {
+      "id": "packages/core/published-delivery-authority.js#loadPublishedBuildchainDeliveryAuthority",
+      "name": "loadPublishedBuildchainDeliveryAuthority",
+      "kind": "function",
+      "signature": "async function loadPublishedBuildchainDeliveryAuthority({ buildchain, kfd, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ buildchain, kfd, } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "local-filesystem-write"
+      ],
+      "source": {
+        "path": "packages/core/published-delivery-authority.js",
+        "line": 153
+      },
+      "example": "import { loadPublishedBuildchainDeliveryAuthority } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/published-delivery-authority.js#PUBLISHED_DELIVERY_AUTHORITY_CONTRACT",
+      "name": "PUBLISHED_DELIVERY_AUTHORITY_CONTRACT",
+      "kind": "constant",
+      "signature": "const PUBLISHED_DELIVERY_AUTHORITY_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/published-delivery-authority.js",
+        "line": 12
+      },
+      "example": "import { PUBLISHED_DELIVERY_AUTHORITY_CONTRACT } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/published-delivery-authority.js#withPublishedBuildchainDeliveryAuthority",
+      "name": "withPublishedBuildchainDeliveryAuthority",
+      "kind": "function",
+      "signature": "async function withPublishedBuildchainDeliveryAuthority(declarations, operation)",
+      "parameters": [
+        {
+          "name": "declarations",
+          "signature": "declarations"
+        },
+        {
+          "name": "operation",
+          "signature": "operation"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/published-delivery-authority.js",
+        "line": 206
+      },
+      "example": "import { withPublishedBuildchainDeliveryAuthority } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/readme-badges.js#BADGE_BUNDLE_DEFAULT_CLAIMS",
       "name": "BADGE_BUNDLE_DEFAULT_CLAIMS",
       "kind": "constant",
@@ -26126,6 +26212,31 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/published-delivery-authority",
+      "export": "./published-delivery-authority",
+      "target": "./packages/core/published-delivery-authority.js",
+      "digest": "sha256:eeb858b9675be1361e4d4330a674a81eb5ccf7d01d4f08736ed8b346a72a13fc",
+      "summary": "Exact npm archive-byte loading and constrained N-1 delivery authority imports with guaranteed cleanup.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 3,
+      "symbolIds": [
+        "packages/core/published-delivery-authority.js#loadPublishedBuildchainDeliveryAuthority",
+        "packages/core/published-delivery-authority.js#PUBLISHED_DELIVERY_AUTHORITY_CONTRACT",
+        "packages/core/published-delivery-authority.js#withPublishedBuildchainDeliveryAuthority"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/legacy-kfd-adopter-driver",
       "export": "./legacy-kfd-adopter-driver",
       "target": "./packages/core/legacy-kfd-adopter-driver.js",
@@ -27540,7 +27651,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:ffb62c954d422a3f671bfb81278af64f4b58426bb593f166514b721d0fe3dc24"
+      "digest": "sha256:35c67375cf3fd5476814a0e4f3ee19e575e2c6cf3517d7ea47128f7fdc09c1dd"
     },
     {
       "id": "build-facts",
