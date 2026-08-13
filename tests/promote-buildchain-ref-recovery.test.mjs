@@ -4329,6 +4329,80 @@ test("release promotion rerun reuses prepared next alpha version commit", async 
   );
 });
 
+test("release recovery reuses protected next-alpha state before exact tags exist", async () => {
+  const sourceAlphaSha = "b".repeat(40);
+  const releaseSha = "c".repeat(40);
+  const preparedAlphaSha = "d".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, blobs, commits, trees } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", releaseSha],
+      ["heads/alpha/v1/v1.0", preparedAlphaSha],
+      ["tags/v1.0.0-alpha.0", sourceAlphaSha],
+      ["tags/v1.0.0", releaseSha],
+    ]),
+  });
+  const addPackageTree = (commitSha, treeSha, blobSha, version, parents = []) => {
+    blobs.set(blobSha, {
+      content: Buffer.from(JSON.stringify({
+        name: "@kungfu-tech/buildchain",
+        version,
+        packageManager: "pnpm@11.7.0",
+      }, null, 2) + "\n").toString("base64"),
+      encoding: "base64",
+    });
+    trees.set(treeSha, [
+      { path: "package.json", mode: "100644", type: "blob", sha: blobSha },
+    ]);
+    commits.set(commitSha, {
+      sha: commitSha,
+      tree: { sha: treeSha },
+      parents: parents.map((sha) => ({ sha })),
+    });
+  };
+  addPackageTree(sourceAlphaSha, "tree-source-alpha", "blob-source-alpha", "1.0.0-alpha.0");
+  addPackageTree(releaseSha, "tree-release", "blob-release", "1.0.0", [sourceAlphaSha]);
+  addPackageTree(
+    preparedAlphaSha,
+    "tree-prepared-alpha",
+    "blob-prepared-alpha",
+    "1.0.1-alpha.0",
+    [releaseSha],
+  );
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: releaseSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+  });
+
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), preparedAlphaSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), preparedAlphaSha);
+  assert.equal(refs.get("tags/v1.0.1-alpha.0"), preparedAlphaSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), preparedAlphaSha);
+  assert.equal(result.nextAlphaSha, preparedAlphaSha);
+  assert.deepEqual(
+    result.updates.find(
+      (update) => update.action === "existing-compatible-version-state",
+    ),
+    {
+      ref: "alpha/v1/v1.0",
+      action: "existing-compatible-version-state",
+      sha: preparedAlphaSha,
+      version: "1.0.1-alpha.0",
+    },
+  );
+});
+
 test("release promotion rerun resumes durable stable transaction after alpha advanced", async () => {
   const sourceSha = "c".repeat(40);
   const alphaSha = "d".repeat(40);

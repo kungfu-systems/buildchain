@@ -2443,6 +2443,17 @@ test("release finalization merges protected alpha next-alpha ancestry", async ()
             };
             throw error;
           }
+          if (ref === "heads/alpha/v1/v1.0" && sha.startsWith("commit-3")) {
+            const error = new Error("Repository rule violations found");
+            error.status = 422;
+            error.response = {
+              data: {
+                message:
+                  "Repository rule violations found: Changes must be made through a pull request.",
+              },
+            };
+            throw error;
+          }
           refs.set(ref, sha);
           return {};
         },
@@ -2497,16 +2508,31 @@ test("release finalization merges protected alpha next-alpha ancestry", async ()
   const nextAlphaSha = commits[1].sha;
   const nextAlphaMergeSha = commits[2].sha;
   assert.equal(refs.get("heads/release/v1/v1.0"), releaseSha);
-  assert.equal(refs.get("heads/alpha/v1/v1.0"), nextAlphaMergeSha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), OTHER_SHA);
   assert.deepEqual(commits[1].parents, [releaseSha]);
   assert.deepEqual(commits[2].parents, [OTHER_SHA, nextAlphaSha]);
-  assert.equal(createdPullRequest, undefined);
-  assert.equal(result.nextAlphaSha, nextAlphaMergeSha);
+  assert.deepEqual(createdPullRequest, {
+    html_url: "https://github.com/kungfu-systems/buildchain/pull/test",
+    head: versionStateBranchName("alpha/v1/v1.0", nextAlphaMergeSha),
+    base: "alpha/v1/v1.0",
+    title: "Prepare v1.0.1-alpha.0",
+  });
+  assert.equal(result.nextAlphaSha, nextAlphaSha);
+  assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
   assert.equal(
     result.updates.some(
       (update) =>
         update.ref === "alpha/v1/v1.0" &&
         update.action === "created-version-state-merge" &&
+        update.sha === nextAlphaMergeSha,
+    ),
+    true,
+  );
+  assert.equal(
+    result.updates.some(
+      (update) =>
+        update.ref === "alpha/v1/v1.0" &&
+        update.action === "pending-version-state-pr" &&
         update.sha === nextAlphaMergeSha,
     ),
     true,
