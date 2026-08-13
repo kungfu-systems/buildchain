@@ -476,6 +476,14 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /publish-transaction: "true"/);
   assert.match(workflow, /name: Materialize the planned version in the candidate workspace/);
   assert.match(workflow, /node scripts\/materialize-self-release-candidate-version\.mjs/);
+  assert.match(workflow, /name: Self-dogfood exact Buildchain candidate through public N-1 authority/);
+  assert.match(workflow, /buildchain\/dev-delivery-warrant\/dev-v3-v3\.0/);
+  assert.match(workflow, /@kungfu-tech\/buildchain@\$\{BUILDCHAIN_AUTHORITY_VERSION\}/);
+  assert.match(workflow, /@kungfu-tech\/kfd@\$\{KFD_AUTHORITY_VERSION\}/);
+  assert.match(workflow, /createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood/);
+  assert.match(workflow, /"adopter-delivery\.json": result\.gateResult/);
+  assert.match(workflow, /"buildchain-delivery-self-dogfood\.json": result/);
+  assert.match(workflow, /manifest\.files\.push/);
   assert.match(workflow, /EXPECTED_VERSION: \$\{\{ steps\.publication-plan\.outputs\.planned-publication-version \}\}/);
   assert.match(workflow, /sealed package version .* differs from planned publication/);
   assert.ok(

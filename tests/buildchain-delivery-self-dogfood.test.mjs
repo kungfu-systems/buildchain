@@ -26,6 +26,7 @@ import {
 import {
   BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT,
   createBuildchainDeliveryInfrastructureSelfDogfood,
+  createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood,
   createPublishedBuildchainDeliveryInfrastructureSelfDogfood,
 } from "../packages/core/buildchain-delivery-self-dogfood.js";
 import {
@@ -261,15 +262,19 @@ async function authorityArchive(
     await mkdir(manifestRoot, { recursive: true });
     await writeFile(
       path.join(manifestRoot, "manifest.json"),
-      `${JSON.stringify({
-        kfdCut: {
-          package: {
-            name,
-            version,
-            artifactRoot: semanticArtifactRoot,
+      `${JSON.stringify(
+        {
+          kfdCut: {
+            package: {
+              name,
+              version,
+              artifactRoot: semanticArtifactRoot,
+            },
           },
         },
-      }, null, 2)}\n`,
+        null,
+        2,
+      )}\n`,
     );
   }
   const archivePath = path.join(
@@ -343,4 +348,38 @@ test("published archive bytes supply every self-dogfood semantic ability", async
     authorityPackages.buildchain.artifactRoot,
   );
   assert.match(result.publishedAuthorityRoot, /^sha256:[0-9a-f]{64}$/);
+
+  const candidateResult =
+    await createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood({
+      authorityPackages,
+      authoritySourceCommit: commit("a"),
+      candidatePackage: {
+        name: "@kungfu-tech/buildchain",
+        version: "3.0.9-alpha.11",
+        artifactRoot: candidatePackageRoot,
+      },
+      warrantCandidate: {
+        status: "merged",
+        sourceHead: commit("b"),
+        sourceProofRoot: root("candidate-source-proof"),
+        terminal: {
+          outcome: "merged",
+          nativeProofRoot: root("candidate-native-proof"),
+          evidenceRoot: root("candidate-integration-proof"),
+        },
+      },
+      source,
+      release,
+      verifiedAt: checkedAt,
+      maxAgeSeconds,
+    });
+
+  assert.equal(candidateResult.status, "passed");
+  assert.equal(candidateResult.gateResult.status, "passed");
+  assert.equal(candidateResult.candidate.sourceCommit, commit("b"));
+  assert.equal(
+    candidateResult.adopterManifest.kfdCut.package.artifactRoot,
+    kfdPackageRoot,
+  );
+  assert.equal(candidateResult.releaseAuthorized, false);
 });

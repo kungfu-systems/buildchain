@@ -3402,7 +3402,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-delivery-self-dogfood.js",
-        "line": 4
+        "line": 6
       },
       "example": "import { BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT } from \"@kungfu-tech/buildchain/buildchain-delivery-self-dogfood\";",
       "maturity": "stable",
@@ -3435,9 +3435,38 @@
       ],
       "source": {
         "path": "packages/core/buildchain-delivery-self-dogfood.js",
-        "line": 55
+        "line": 151
       },
       "example": "import { createBuildchainDeliveryInfrastructureSelfDogfood } from \"@kungfu-tech/buildchain/buildchain-delivery-self-dogfood\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-self-dogfood.js#createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood",
+      "name": "createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood",
+      "kind": "function",
+      "signature": "async function createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood({ authorityPackages, authoritySourceCommit, candidatePackage, warrantCandidate, source, release, verifiedAt, maxAgeSeconds = 86400, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ authorityPackages, authoritySourceCommit, candidatePackage, warrantCandidate, source, release, verifiedAt, maxAgeSeconds = 86400, } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-self-dogfood.js",
+        "line": 306
+      },
+      "example": "import { createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood } from \"@kungfu-tech/buildchain/buildchain-delivery-self-dogfood\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -3464,7 +3493,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-delivery-self-dogfood.js",
-        "line": 187
+        "line": 283
       },
       "example": "import { createPublishedBuildchainDeliveryInfrastructureSelfDogfood } from \"@kungfu-tech/buildchain/buildchain-delivery-self-dogfood\";",
       "maturity": "stable",
@@ -7001,7 +7030,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 641
+        "line": 642
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7386,7 +7415,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 651
+        "line": 652
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7546,7 +7575,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 644
+        "line": 645
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -25878,7 +25907,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:7cbbac67c7e77142e77a64ff9cdadae235b00bc388d33896d115a584bf93618b",
+      "digest": "sha256:8693f1bdd159920a4b73dcd740b198170c0c0211810463fb45a5c9625371d1c5",
       "summary": "Durable single-flight Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -26220,17 +26249,18 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood",
       "export": "./buildchain-delivery-self-dogfood",
       "target": "./packages/core/buildchain-delivery-self-dogfood.js",
-      "digest": "sha256:7d7ca0e01c22995fff3bc63d175114871c08eb3f4f29d26fd7f4a3b02f8c2f1a",
+      "digest": "sha256:ae96c8211dc4f8efcf6d6939249553b1ac41d39f484c797ba9c9e92ec8ea15f7",
       "summary": "Pure exact-package self-dogfood assembly through injected published N-1 Buildchain and KFD abilities.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 3,
+      "symbolCount": 4,
       "symbolIds": [
         "packages/core/buildchain-delivery-self-dogfood.js#BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT",
         "packages/core/buildchain-delivery-self-dogfood.js#createBuildchainDeliveryInfrastructureSelfDogfood",
+        "packages/core/buildchain-delivery-self-dogfood.js#createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood",
         "packages/core/buildchain-delivery-self-dogfood.js#createPublishedBuildchainDeliveryInfrastructureSelfDogfood"
       ],
       "owner": "buildchain-core",
@@ -27681,7 +27711,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:ebce78a32aaeb21b92a951541d2f8dc8e00cf52a5211f2825bb53f4ffc891208"
+      "digest": "sha256:aaf6b568170bb7083935b622a628ef67e269892727ce083f46e7b02be6b2cd0b"
     },
     {
       "id": "build-facts",

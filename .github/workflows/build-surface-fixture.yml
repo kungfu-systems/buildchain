@@ -50,10 +50,12 @@ jobs:
     permissions:
       actions: read
       contents: read
+      pull-requests: read
     steps:
       - name: Checkout exact candidate source
         uses: actions/checkout@v7.0.0
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - uses: actions/setup-node@v6.4.0
@@ -155,6 +157,189 @@ jobs:
           NODE
         env:
           EXPECTED_VERSION: ${{ steps.publication-plan.outputs.planned-publication-version }}
+
+      - name: Self-dogfood exact Buildchain candidate through public N-1 authority
+        if: ${{ startsWith(github.base_ref, 'alpha/') }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_CANDIDATE_VERSION: ${{ steps.publication-plan.outputs.planned-publication-version }}
+          BUILDCHAIN_SOURCE_DEV_SHA: ${{ github.event.pull_request.head.sha }}
+          BUILDCHAIN_AUTHORITY_VERSION: 3.0.9-alpha.10
+          BUILDCHAIN_AUTHORITY_SOURCE_COMMIT: af9a46e55f2bd2a6b9905a7793e885569257767e
+          BUILDCHAIN_AUTHORITY_ARCHIVE_ROOT: sha256:62306fe864d414e3bff3523be94ae18ef513956b96e4637261432fb95a2a246e
+          KFD_AUTHORITY_VERSION: 1.0.0-alpha.62
+          KFD_AUTHORITY_ARCHIVE_ROOT: sha256:1386745e9c4eba394216951ae71ae7877feb28686978a23044e1e309b4870339
+          KFD_AUTHORITY_ARTIFACT_ROOT: sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c
+        run: |
+          set -euo pipefail
+          evidence_dir=.buildchain/buildchain-package-candidate/self-dogfood
+          authority_dir="${evidence_dir}/authority"
+          payload_dir=.buildchain/buildchain-package-candidate/payload
+          mkdir -p "${authority_dir}"
+
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/commits/${BUILDCHAIN_SOURCE_DEV_SHA}/pulls" \
+            > "${evidence_dir}/source-pulls.json"
+          gh api --method GET \
+            "repos/${GITHUB_REPOSITORY}/contents/queue.json" \
+            -f ref=buildchain/dev-delivery-warrant/dev-v3-v3.0 \
+            --jq .content \
+            | tr -d '\n' \
+            | base64 --decode \
+            > "${evidence_dir}/warrant-queue.json"
+
+          source_head="$(node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const pulls = JSON.parse(fs.readFileSync(".buildchain/buildchain-package-candidate/self-dogfood/source-pulls.json", "utf8"));
+          const matches = pulls.filter((pull) =>
+            pull.merged_at &&
+            pull.base?.ref === "dev/v3/v3.0" &&
+            pull.merge_commit_sha === process.env.BUILDCHAIN_SOURCE_DEV_SHA
+          );
+          if (matches.length !== 1) throw new Error(`expected one merged Dev PR for ${process.env.BUILDCHAIN_SOURCE_DEV_SHA}, found ${matches.length}`);
+          process.stdout.write(matches[0].head.sha);
+          NODE
+          )"
+          gh api "repos/${GITHUB_REPOSITORY}/git/commits/${source_head}" \
+            > "${evidence_dir}/source-commit.json"
+
+          npm pack "@kungfu-tech/buildchain@${BUILDCHAIN_AUTHORITY_VERSION}" \
+            --ignore-scripts --json --pack-destination "${authority_dir}" \
+            > "${evidence_dir}/buildchain-pack.json"
+          npm pack "@kungfu-tech/kfd@${KFD_AUTHORITY_VERSION}" \
+            --ignore-scripts --json --pack-destination "${authority_dir}" \
+            > "${evidence_dir}/kfd-pack.json"
+
+          VERIFIED_AT="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" \
+          PAYLOAD_DIR="${payload_dir}" AUTHORITY_DIR="${authority_dir}" \
+          node --input-type=module <<'NODE'
+          import crypto from "node:crypto";
+          import fs from "node:fs";
+          import path from "node:path";
+          import { adopterDeliveryGateDigest } from "./packages/core/adopter-delivery-gate.js";
+          import { createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood } from "./packages/core/buildchain-delivery-self-dogfood.js";
+          import { sha256Json } from "./packages/core/release-candidate.js";
+
+          const read = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
+          const sha256File = (file) => `sha256:${crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex")}`;
+          const packedArchive = (metadataFile) => {
+            const metadata = read(metadataFile);
+            if (metadata.length !== 1 || !metadata[0].filename) throw new Error(`invalid npm pack metadata: ${metadataFile}`);
+            return path.join(process.env.AUTHORITY_DIR, metadata[0].filename);
+          };
+          const evidenceDir = ".buildchain/buildchain-package-candidate/self-dogfood";
+          const manifestPath = path.join(process.env.PAYLOAD_DIR, "product-payload-manifest.json");
+          const manifest = read(manifestPath);
+          const tarballs = manifest.files.filter((file) => file.path.endsWith(".tgz"));
+          if (tarballs.length !== 1) throw new Error(`expected one bound candidate tarball, found ${tarballs.length}`);
+          const candidateArchive = path.join(process.env.PAYLOAD_DIR, tarballs[0].path);
+          const candidateRoot = sha256File(candidateArchive);
+          if (candidateRoot !== tarballs[0].sha256) throw new Error("candidate archive differs from product payload manifest");
+
+          const pulls = read(`${evidenceDir}/source-pulls.json`);
+          const pullMatches = pulls.filter((pull) =>
+            pull.merged_at &&
+            pull.base?.ref === "dev/v3/v3.0" &&
+            pull.merge_commit_sha === process.env.BUILDCHAIN_SOURCE_DEV_SHA
+          );
+          if (pullMatches.length !== 1) throw new Error(`expected one merged Dev PR, found ${pullMatches.length}`);
+          const pull = pullMatches[0];
+          const queue = read(`${evidenceDir}/warrant-queue.json`);
+          const warrantMatches = queue.candidates.filter((candidate) =>
+            candidate.pullRequestNumber === pull.number &&
+            candidate.sourceHead === pull.head.sha &&
+            candidate.status === "merged" &&
+            candidate.terminal?.outcome === "merged"
+          );
+          if (warrantMatches.length !== 1) throw new Error(`expected one terminal Warrant candidate for PR #${pull.number}, found ${warrantMatches.length}`);
+          const warrantCandidate = warrantMatches[0];
+          const sourceTree = read(`${evidenceDir}/source-commit.json`).tree?.sha;
+          const devTree = String((await import("node:child_process")).execFileSync(
+            "git", ["show", "-s", "--format=%T", process.env.BUILDCHAIN_SOURCE_DEV_SHA], { encoding: "utf8" },
+          )).trim();
+          if (!/^[0-9a-f]{40}$/.test(sourceTree) || sourceTree !== devTree) {
+            throw new Error(`Dev merge tree ${devTree} differs from reviewed source tree ${sourceTree || "<empty>"}`);
+          }
+
+          const buildchainArchive = packedArchive(`${evidenceDir}/buildchain-pack.json`);
+          const kfdArchive = packedArchive(`${evidenceDir}/kfd-pack.json`);
+          const authorityPackages = {
+            buildchain: {
+              name: "@kungfu-tech/buildchain",
+              version: process.env.BUILDCHAIN_AUTHORITY_VERSION,
+              archivePath: buildchainArchive,
+              archiveRoot: process.env.BUILDCHAIN_AUTHORITY_ARCHIVE_ROOT,
+              artifactRoot: process.env.BUILDCHAIN_AUTHORITY_ARCHIVE_ROOT,
+            },
+            kfd: {
+              name: "@kungfu-tech/kfd",
+              version: process.env.KFD_AUTHORITY_VERSION,
+              archivePath: kfdArchive,
+              archiveRoot: process.env.KFD_AUTHORITY_ARCHIVE_ROOT,
+              artifactRoot: process.env.KFD_AUTHORITY_ARTIFACT_ROOT,
+            },
+          };
+          const source = {
+            kind: "git-commit",
+            coordinate: `kungfu-systems/buildchain@${warrantCandidate.sourceHead}`,
+            root: adopterDeliveryGateDigest({
+              repository: process.env.GITHUB_REPOSITORY,
+              sourceHead: warrantCandidate.sourceHead,
+              sourceTree,
+              devMerge: process.env.BUILDCHAIN_SOURCE_DEV_SHA,
+              devTree,
+            }),
+          };
+          const release = {
+            kind: "release",
+            coordinate: `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/tag/v${process.env.BUILDCHAIN_CANDIDATE_VERSION}`,
+            root: adopterDeliveryGateDigest({
+              version: process.env.BUILDCHAIN_CANDIDATE_VERSION,
+              sourceDevSha: process.env.BUILDCHAIN_SOURCE_DEV_SHA,
+              candidateRoot,
+              productCandidateRoot: manifest.candidateRoot,
+            }),
+          };
+          const result = await createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood({
+            authorityPackages,
+            authoritySourceCommit: process.env.BUILDCHAIN_AUTHORITY_SOURCE_COMMIT,
+            candidatePackage: {
+              name: "@kungfu-tech/buildchain",
+              version: process.env.BUILDCHAIN_CANDIDATE_VERSION,
+              artifactRoot: candidateRoot,
+            },
+            warrantCandidate,
+            source,
+            release,
+            verifiedAt: process.env.VERIFIED_AT,
+          });
+          if (
+            result.status !== "passed" ||
+            result.gateResult?.status !== "passed" ||
+            result.qualifying !== false ||
+            result.selfCertified !== false ||
+            result.releaseAuthorized !== false
+          ) throw new Error("candidate self-dogfood did not fail closed to non-authority evidence");
+
+          const evidenceFiles = {
+            "adopter-delivery.json": result.gateResult,
+            "buildchain-delivery-self-dogfood.json": result,
+            "kfd-adopter-manifest.json": result.adopterManifest,
+          };
+          for (const [name, value] of Object.entries(evidenceFiles)) {
+            fs.writeFileSync(path.join(process.env.PAYLOAD_DIR, name), `${JSON.stringify(value, null, 2)}\n`);
+          }
+          manifest.files.push(...Object.keys(evidenceFiles).map((name) => {
+            const file = path.join(process.env.PAYLOAD_DIR, name);
+            return { path: name, size: fs.statSync(file).size, sha256: sha256File(file) };
+          }));
+          manifest.files.sort((left, right) => left.path.localeCompare(right.path));
+          const { root: _oldRoot, ...rootInput } = manifest;
+          manifest.root = `sha256:${sha256Json(rootInput)}`;
+          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+          NODE
 
       - name: Upload sealed Buildchain product payload
         uses: actions/upload-artifact@v7.0.1
