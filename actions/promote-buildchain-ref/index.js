@@ -9,7 +9,6 @@ import {
   publishSelectedGitHubRelease,
   recoveryCompletedBeforeThisRun,
 } from "./github-release.js";
-
 export { reuseCompleteGitHubReleaseEvidence } from "./reuse-complete-release.js";
 export {
   collectGitHubReleaseEvidenceAssets,
@@ -225,6 +224,7 @@ async function main() {
   const generatedStatusCheckToken = core.getInput("generated-status-check-token") || token;
   const generatedPullRequestToken = core.getInput("generated-pull-request-token") || token;
   const generatedRefUpdateToken = core.getInput("generated-ref-update-token") || token;
+  const tagUpdateToken = process.env.BUILDCHAIN_TAG_UPDATE_TOKEN || token;
   const branchProtectionBypassApps = core.getInput("branch-protection-bypass-apps");
   const branchProtectionBypassUsers = core.getInput("branch-protection-bypass-users");
   const branchProtectionBypassTeams = core.getInput("branch-protection-bypass-teams");
@@ -306,6 +306,7 @@ async function main() {
     generatedPullRequestToken === token ? octokit : github.getOctokit(generatedPullRequestToken);
   const refUpdateOctokit =
     generatedRefUpdateToken === token ? octokit : github.getOctokit(generatedRefUpdateToken);
+  const tagUpdateOctokit = tagUpdateToken === token ? octokit : github.getOctokit(tagUpdateToken);
   if (requirePublishSourceLock) {
     const sourceLockReport = validateRequiredPublishSourceLock({
       sha,
@@ -343,6 +344,7 @@ async function main() {
     statusCheckOctokit,
     pullRequestOctokit,
     refUpdateOctokit,
+    tagUpdateOctokit,
     branchProtectionBypassApps,
     branchProtectionBypassUsers,
     branchProtectionBypassTeams,

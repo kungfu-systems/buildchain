@@ -1784,12 +1784,12 @@ jobs:
             echo "::error::publication commit, release activation, and receipt-only evidence synthesis must be configured together"
             exit 1
           fi
-
       - name: Promote-only publish
         id: promote
         env:
           BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
           BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
+          BUILDCHAIN_TAG_UPDATE_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
           token: ${{ github.token }}

@@ -156,8 +156,10 @@ trusted channel workflow:
 
 ```yaml
 - uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v3
+  env:
+    BUILDCHAIN_TAG_UPDATE_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
   with:
-    token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+    token: ${{ github.token }}
     generated-ref-update-token: ${{ github.token }}
     sha: ${{ github.sha }}
     target-ref: release/v3/v3.0
@@ -511,11 +513,14 @@ governance semantics:
   with either the `verification-command` input or `buildchain.toml`
   `lifecycle.verify` before any tags or channel refs move.
 
-The reusable promotion workflow keeps governance reads, generated status checks,
-and generated ref updates on the run-scoped `github.token`. When branch
-protection rejects generated bookkeeping, it supplies `BUILDCHAIN_PROMOTION_TOKEN`
-only through `generated-pull-request-token` so the same-repository recovery PR can
-be listed or created without broadening the governance client. Protected branch
+The reusable promotion workflow keeps governance reads, provider finalization,
+generated status checks, and generated ref updates on the run-scoped
+`github.token`. It exposes `BUILDCHAIN_PROMOTION_TOKEN` only through the
+step-scoped `BUILDCHAIN_TAG_UPDATE_TOKEN` environment variable and the
+`generated-pull-request-token`: the former creates or moves public release tags,
+while the latter lists or creates the
+same-repository recovery PR when branch protection rejects generated bookkeeping.
+Protected branch
 review and check rules guard human channel merges, while the reusable build trust
 gate checks the source-lock channel HEAD and merged same-repository PR lineage
 before heavy build runners start. This action still independently rechecks PR
