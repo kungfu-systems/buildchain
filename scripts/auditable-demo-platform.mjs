@@ -7,6 +7,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { materializeDemoPresentation, validateDemoPresentation } from "./auditable-demo-presentation.mjs";
 import { copyVerifiedRegular, verifyBundleChecksums } from "./auditable-demo-bundle-verification.mjs";
+import { boundedLongFormFps, LONG_FORM_MAX_DURATION_MS } from "./auditable-demo-renditions.mjs";
 
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const SAFE_ID = /^[a-z0-9][a-z0-9._-]{0,63}$/u;
@@ -26,7 +27,7 @@ const RENDITIONS = [
   { id: "720p", role: "responsive", columns: 150, rows: 28, width: 1280, height: 720 },
 ];
 const STANDARD_MAX_SECONDS = 60;
-const LONG_FORM_MAX_SECONDS = 360;
+const LONG_FORM_MAX_SECONDS = LONG_FORM_MAX_DURATION_MS / 1000;
 const PRESENTATION_FRAMED = "presentation-framed";
 const TERMINAL_FILL = "terminal-fill";
 const MAX_EXECUTABLE_FILES = 32;
@@ -305,7 +306,7 @@ function projection(capture, transcript, demo, rendition, durationClass, sharedC
     id: `${demo.id}-${rendition.id}`.slice(0, 64),
     width: rendition.width,
     height: rendition.height,
-    fps: policy.durationClass === "long-form" ? 10 : 15,
+    fps: policy.durationClass === "long-form" ? boundedLongFormFps(durationMs) : 15,
     ...(policy.durationClass === "long-form" ? { durationClass: "long-form" } : {}),
     compositionMode,
     durationMs,
