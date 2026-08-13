@@ -275,6 +275,59 @@ async function collectPromotionVersionMaterial(
   };
 }
 
+async function remoteVersionStateFilesMatch(
+  context,
+  { currentSha, generatedSha, paths },
+) {
+  if (
+    !currentSha ||
+    !generatedSha ||
+    !paths?.length ||
+    typeof context.octokit.rest.git.getBlob !== "function"
+  ) {
+    return false;
+  }
+  let current;
+  let generated;
+  try {
+    [current, generated] = await Promise.all([
+      context.collectRemoteVersionMaterial({
+        octokit: context.octokit,
+        owner: context.owner,
+        repo: context.repo,
+        commitSha: currentSha,
+        paths,
+      }),
+      context.collectRemoteVersionMaterial({
+        octokit: context.octokit,
+        owner: context.owner,
+        repo: context.repo,
+        commitSha: generatedSha,
+        paths,
+      }),
+    ]);
+  } catch (error) {
+    if (
+      error?.status === 404 ||
+      error?.response?.status === 404 ||
+      error?.response?.data?.message === "Reference does not exist"
+    ) {
+      return false;
+    }
+    throw error;
+  }
+  return current.every((entry, index) => {
+    const expected = generated[index];
+    return (
+      entry.path === expected?.path &&
+      entry.present === true &&
+      expected.present === true &&
+      entry.bytes === expected.bytes &&
+      entry.sha256 === expected.sha256
+    );
+  });
+}
+
 async function createReleasePromotionCommit(context, state) {
   const releaseVersion = context.stripTagPrefix(
     state.selectedReleaseCandidate.tag,
@@ -471,6 +524,7 @@ async function prepareReleaseNextAlpha(context, state) {
       ? selectedNextAlpha.sha
       : context.sha;
     let nextAlphaVersionStateFiles = [];
+    let nextAlphaVersionFiles = [];
     if (context.versionState && selectedNextAlpha.exists && nextAlphaSha) {
       context.updates.push({
         version: nextAlphaVersion,
@@ -486,6 +540,7 @@ async function prepareReleaseNextAlpha(context, state) {
       });
       nextAlphaSha = nextAlphaCommit.sha;
       nextAlphaVersionStateFiles = nextAlphaCommit.files || [];
+      nextAlphaVersionFiles = nextAlphaCommit.versionFiles || [];
     }
     if (context.versionState) {
       const nextDevRef = `dev/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`;
@@ -493,18 +548,36 @@ async function prepareReleaseNextAlpha(context, state) {
         await context.updateDefaultBranch(nextDevRef);
       }
       const nextAlphaRef = `alpha/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`;
-      const nextAlphaUpdate = await context.updateBranch(
-        nextAlphaRef,
-        nextAlphaSha,
-        "updated",
-        {
-          title: `Prepare ${selectedNextAlpha.tag}`,
-          body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
-          allowPendingPullRequest: true,
-          allowMergeCommitOnNonFastForward: true,
-          allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
-        },
-      );
+      const currentNextAlphaSha = await context.readRefSha(`heads/${nextAlphaRef}`);
+      const currentVersionStateMatches = await remoteVersionStateFilesMatch(context, {
+        currentSha: currentNextAlphaSha,
+        generatedSha: nextAlphaSha,
+        paths: nextAlphaVersionFiles,
+      });
+      let nextAlphaUpdate;
+      if (currentVersionStateMatches) {
+        nextAlphaSha = currentNextAlphaSha;
+        nextAlphaUpdate = { updated: true, existing: true };
+        context.updates.push({
+          ref: nextAlphaRef,
+          action: "existing-compatible-version-state",
+          sha: nextAlphaSha,
+          version: nextAlphaVersion,
+        });
+      } else {
+        nextAlphaUpdate = await context.updateBranch(
+          nextAlphaRef,
+          nextAlphaSha,
+          "updated",
+          {
+            title: `Prepare ${selectedNextAlpha.tag}`,
+            body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+            allowPendingPullRequest: true,
+            allowMergeCommitOnNonFastForward: true,
+            allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
+          },
+        );
+      }
       if (nextAlphaUpdate.pending) {
         return context.withPublishTransaction({
           owner: context.owner,
@@ -520,13 +593,27 @@ async function prepareReleaseNextAlpha(context, state) {
         });
       }
       if (nextAlphaUpdate.mergeSha) nextAlphaSha = nextAlphaUpdate.mergeSha;
-      await context.updateBranch(nextDevRef, nextAlphaSha, "updated", {
+      const nextDevUpdate = await context.updateBranch(nextDevRef, nextAlphaSha, "updated", {
         title: `Prepare ${selectedNextAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+        allowPendingPullRequest: true,
         allowMergeCommitOnNonFastForward: true,
         allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
         reconciliationVersion: nextAlphaVersion,
       });
+      if (nextDevUpdate.pending) {
+        return context.withPublishTransaction({
+          owner: context.owner,
+          repo: context.repo,
+          sourceSha: context.sha,
+          sha: state.releaseSha,
+          nextAlphaSha,
+          targetRef: context.targetRef,
+          pendingPullRequest:
+            nextDevUpdate.pullRequest.html_url || nextDevUpdate.pullRequest.url,
+          updates: context.updates,
+        });
+      }
     }
     await context.ensureTag(selectedNextAlpha.tag, nextAlphaSha);
     await context.updateTag(context.rule.alphaTag, nextAlphaSha);
