@@ -1820,6 +1820,7 @@ jobs:
           PUBLICATION_VERSION: ${{ needs.publication-plan.outputs.version }}
           DRY_RUN: ${{ inputs.dry-run }}
         with:
+          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           script: |
             const channel = process.env.CHANNEL;
             const targetRef = process.env.TARGET_REF;
@@ -1847,7 +1848,6 @@ jobs:
             core.setOutput("ref", gateRef);
             core.setOutput("sha", targetSha);
             core.setOutput("locked", "true");
-
       - name: Validate release activation command chain
         if: ${{ inputs.release-activation-command != '' || inputs.release-passport-evidence-command != '' }}
         env:
