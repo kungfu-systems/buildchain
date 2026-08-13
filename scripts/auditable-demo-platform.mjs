@@ -8,7 +8,6 @@ import { pathToFileURL } from "node:url";
 import { materializeDemoPresentation, validateDemoPresentation } from "./auditable-demo-presentation.mjs";
 import { copyVerifiedRegular, verifyBundleChecksums } from "./auditable-demo-bundle-verification.mjs";
 import { boundedLongFormFps, LONG_FORM_MAX_DURATION_MS } from "./auditable-demo-renditions.mjs";
-
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const SAFE_ID = /^[a-z0-9][a-z0-9._-]{0,63}$/u;
 const SAFE_MARKER = /^[a-z0-9][a-z0-9._:-]{0,79}$/u;
