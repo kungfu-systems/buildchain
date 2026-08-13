@@ -19,9 +19,9 @@
   "state": "complete",
   "previous_state": "finalizing",
   "actor": "kungfu-origin",
-  "run_id": "31685853268",
+  "run_id": "31691550857",
   "superseded_by": "",
-  "failure": "",
+  "failure": "Command failed: node scripts/npm-publish-transaction.mjs",
   "artifacts": [
     {
       "group": "node",
@@ -113,5 +113,5 @@
   },
   "resume_command": "buildchain paper resume --version \"4.0.0-alpha.1\" --state-ref \"refs/heads/buildchain/release-state/4-0-0-alpha-1\"",
   "created_at": "2026-08-13T09:08:56.649Z",
-  "updated_at": "2026-08-13T09:29:31.289Z"
+  "updated_at": "2026-08-13T10:37:38.282Z"
 }
