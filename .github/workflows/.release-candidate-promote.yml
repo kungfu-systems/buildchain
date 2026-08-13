@@ -1855,7 +1855,10 @@ jobs:
           BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ github.token }}
+          # Exact tags may point at commits that update workflow files, which
+          # requires the promotion credential's workflows scope. Protected
+          # generated branch updates remain bound to github.token below.
+          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           sha: ${{ needs.preflight.outputs.requested-sha }}
           target-ref: ${{ needs.preflight.outputs.target-ref }}
           dry-run: ${{ inputs.dry-run }}
