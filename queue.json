@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 491,
+  "generation": 492,
   "fencingCounter": 123,
   "policy": {
     "agingSeconds": 900,
@@ -4212,8 +4212,54 @@
         "tests/buildchain-delivery-self-dogfood.test.mjs",
         "tests/published-delivery-authority.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2690,
+      "assignmentRoot": "sha256:8f55ca1dff163a7b862d9e5c1a568db4a5a470fa33539226ed4f4f417b298455",
+      "initiativeRoot": "sha256:c45531dbd7d307c3a0f429440a6c910b0b9d2c01d5e689e2d60653ab2b7bdf99",
+      "sourceIdentityRoot": "sha256:171487dad5a895966f2175abf3a02c34dad2bb990cc55de4128a92c44bb9b478",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:fc9b8cdd56009e00219ae82d8f909c4e50b70e840516d50860159a654add6817",
+      "sourceHead": "96d6e2632cc1387a22227c6de88575d3897457ac",
+      "sourcePatchRoot": "sha256:d99c2d6cde296751c380c75e93db791d3bc9a1ce3d15e8ed8ea6fdd4b420ba97",
+      "sourceProofRoot": "sha256:7a24a3f6b08de794c04a24ff84d448def8ac16b8a9417ec276170637f78da618",
+      "planRoot": "sha256:cb42f9c1fbaa0f15a1907a1e910428079b08a8be2784fee2bfa55a4565fe8423",
+      "closureRoot": "sha256:da04ca526cd909f51a26655d1b3d066d5c70ccbd334ba55e6a040a9d0f03d7bd",
+      "dependencyRoot": "sha256:fad152024545cdf81f45395d18cdea2fce2f95c6db7d2f3289aafccdf7965595",
+      "toolchainRoot": "sha256:46106d04bf99109b4f96d0308b6852a6c7a847f7db221719f393c2bf095b356e",
+      "environmentRoot": "sha256:217852871c6660a4307ecdad6130719416f1e96102949431929f98c5a177f8f2",
+      "sourceWorkflowRunId": 0,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-13T01:20:27.423Z",
+      "updatedAt": "2026-08-13T01:20:27.423Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/.release-candidate-promote.yml",
+        ".github/workflows/build-surface-fixture.yml",
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/site-manifest.json",
+        "docs/node-api-reference.md",
+        "packages/core/buildchain-delivery-self-dogfood.js",
+        "packages/core/dev-delivery-warrant.js",
+        "tests/build-surface-promotion.test.mjs",
+        "tests/build-surface.test.mjs",
+        "tests/buildchain-delivery-self-dogfood.test.mjs",
+        "tests/dev-delivery-warrant.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-13T00:56:13.648Z",
-  "stateRoot": "sha256:7ace57677e391184970ea79ae3468e0da1b6e01905b069eca7ecd68d5763c5c5"
+  "updatedAt": "2026-08-13T01:20:27.423Z",
+  "stateRoot": "sha256:f4294862f9577942ac8fe0927293db0ba7a43d2c50adfcd33ba70a2f4ae8addf"
 }
