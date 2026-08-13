@@ -227,7 +227,7 @@ export function npmPublishTransaction({
         cwd: resolvedCwd,
         args: [
           "publish",
-          pack.tarballPath,
+          ...(pack.tarballPath ? [pack.tarballPath] : []),
           "--access",
           access,
           "--tag",
