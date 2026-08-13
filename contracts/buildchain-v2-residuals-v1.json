@@ -2,8 +2,8 @@
   "contract": "buildchain.v2-residual-inventory/v1",
   "scope": ".github/workflows on the current default branch",
   "policy": {
-    "runtimeDefault": "v3",
-    "dogfoodRuntimeDefault": "v3-alpha",
+    "runtimeDefault": "v4",
+    "dogfoodRuntimeDefault": "v4-alpha",
     "unclassifiedV2TokensAllowed": false
   },
   "entries": [

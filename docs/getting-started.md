@@ -83,7 +83,7 @@ The generated caller should contain one reusable `uses:` edge and a manual
 ```bash
 rg -n 'uses:|buildchain-ref:' .github/workflows/build.yml
 pnpm exec buildchain release --dry-run \
-  --target-ref alpha/v3/v3.0 \
+  --target-ref alpha/v4/v4.0 \
   --json
 ```
 

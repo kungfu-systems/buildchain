@@ -23,7 +23,7 @@
       "title": "Golden Path",
       "path": "docs/getting-started.md",
       "plane": "use",
-      "digest": "sha256:806224481f542786ed2e60226417bd1ba673099a3110f564357792bdbf637403",
+      "digest": "sha256:72adec660d001a3fb77cd990f2bacdb6f46c8eb4927533d408c3755dab02a94e",
       "capabilityGroup": "getting-started",
       "audience": [
         "consumer",
@@ -51,7 +51,7 @@
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
       "plane": "use",
-      "digest": "sha256:b9d87becf94efff804495ee3beea5da795241ae4402186102baa846c87c7bf14",
+      "digest": "sha256:c04ba24a8bed696c02f68af4dd05bd2363fa06b85c54d49a4316efb36b7cf865",
       "capabilityGroup": "getting-started",
       "audience": [
         "consumer"
@@ -318,7 +318,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:142d4c11dde521dae8d829372ef28eb0b7b4d05ff29d0ce35d7fc33a7230dca5",
+      "digest": "sha256:fad47682ed909f7b16f58bb8c24c51a943eb704a0a50ab6e033d745ee16a809a",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -445,7 +445,7 @@
       "title": "Declarative release-tail contract",
       "path": "docs/release-tail-contract.md",
       "plane": "verify",
-      "digest": "sha256:3992fabcf6e9750c17bf025b782ac209096313de6a77897c21a108d160df045c",
+      "digest": "sha256:db5d38df0af0f7ce76ff93cc78a0d96a0738a40f6f40f7c1a0cfd78ca9f4f22a",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -489,7 +489,7 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:dc54b8a264489341984ca6157b07d1956e934366f937b7412a21df7f025d2d8d",
+      "digest": "sha256:f2086d06a64f9321d7c1d62f93b37a169f781ba5bed4b714b5a8cb6509953c6e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",

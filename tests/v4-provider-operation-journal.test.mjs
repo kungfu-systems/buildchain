@@ -142,7 +142,7 @@ test("closed identity excludes provider, credential, response, clock, and runner
     );
 });
 
-test("architecture freezes one schema authority, one fold writer, and shadow-only effects", () => {
+test("architecture freezes one schema authority, one fold writer, and the v4 production adapter", () => {
   const contract = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -156,14 +156,14 @@ test("architecture freezes one schema authority, one fold writer, and shadow-onl
     contract.schemaAuthority,
     "contracts/v4-provider-operation-journal-v1.schema.json",
   );
-  assert.equal(contract.mode, "shadow-fixture-only");
+  assert.equal(contract.mode, "production-journal");
   assert.deepEqual(contract.authority, {
-    productionWriter: "typescript-v3",
+    productionWriter: "v4-domain",
     productionWriterCount: 1,
-    stateFoldAuthority: "rust-shadow-core",
+    stateFoldAuthority: "rust-v4-core",
     stateFoldWriterCount: 1,
-    typescript: "contract-and-conformance-plane",
-    productionWriteChange: false,
+    typescript: "provider-adapter-and-conformance-plane",
+    productionWriteChange: true,
   });
   assert.deepEqual(contract.budgets, {
     schemaAuthorities: 1,
@@ -172,7 +172,7 @@ test("architecture freezes one schema authority, one fold writer, and shadow-onl
     providerSdkImportsInContracts: 0,
     providerSdkImportsInRustDomain: 0,
     liveProviderMutations: 0,
-    productionWriteAuthorityChanges: 0,
+    productionWriteAuthorityChanges: 1,
     v3ConsumerBehaviorChanges: 0,
   });
 });

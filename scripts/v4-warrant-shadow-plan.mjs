@@ -127,8 +127,14 @@ function validatePlan({ plan, manifest, bootstrap }) {
       issues,
     );
     required(
-      plan.legacyAuthority.writer === machine.writer.runtime,
-      "plan must retain the manifest legacy writer",
+      plan.legacyAuthority.writer === "typescript-v3",
+      "plan must retain the qualified v3 comparison writer",
+      issues,
+    );
+    required(
+      machine.writer.runtime === "typescript-v4" &&
+        machine.migrationPhase === "legacy-retired",
+      "manifest must close the v4 writer cutover",
       issues,
     );
   }

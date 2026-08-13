@@ -407,8 +407,8 @@ pub fn project_stable_publication(
     let qualification = validate_qualification(&request, &candidate_root, &targets)?;
     let mut plan = StablePublicationPlan {
         schema: STABLE_PUBLICATION_PLAN_CONTRACT.to_owned(),
-        mode: "shadow-only".to_owned(),
-        production_authority: "v3".to_owned(),
+        mode: "production".to_owned(),
+        production_authority: "v4".to_owned(),
         declared_at: request.declared_at,
         candidate: request.candidate,
         candidate_root: candidate_root.clone(),
@@ -434,8 +434,8 @@ pub fn project_stable_publication(
     )?;
     let mut fence = StablePublicationFence {
         schema: STABLE_PUBLICATION_FENCE_CONTRACT.to_owned(),
-        decision: "allow-shadow-plan".to_owned(),
-        effect_count: 0,
+        decision: "allow-publication".to_owned(),
+        effect_count: plan.targets.len() as u8,
         candidate_root,
         qualification_mode: plan.qualification.mode.clone(),
         qualification_root: plan.qualification.qualification_root.clone(),

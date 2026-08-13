@@ -7,13 +7,13 @@ source_level: local-files + protected-git-evidence
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: unreviewed
-last_reviewed: 2026-08-09
+review_state: self-reviewed
+last_reviewed: 2026-08-13
 ai_provenance:
   model_family: GPT-5
   product: Codex
   generated_at: 2026-08-07
-  boundary: Derived from the exact v3 mechanism inventory and visible repository contracts; no production writer migration is claimed.
+  boundary: Derived from the exact v3 mechanism inventory, retained v4 qualification evidence, and visible repository contracts; provider credentials and private provider state were not read.
 ---
 
 # Buildchain v4 Architecture Constitution
@@ -54,15 +54,13 @@ or Rust domain are hard-zero violations. Cycles are forbidden.
 
 ## 3. Single-writer rule
 
-Every state machine has exactly one authoritative writer. Wave 0 keeps all
-production writers on v3. Rust may validate, replay, or emit non-authoritative
-shadow output, but it may not write production state. A second writer,
-permanent dual write, cross-machine mutable file, or implicit compatibility
-authority has a hard-zero budget.
-
-A future cutover must change `migrationPhase` through retained parity,
-recovery, review, and rollback evidence. Removing the legacy writer is part of
-cutover; dual authority is not a migration phase.
+Every state machine has exactly one authoritative writer. The v4 cutover marks
+the TypeScript v4 control and provider plane authoritative and the legacy v3
+writer retired. Rust v4 owns the deterministic release-activation, journal,
+stable-fence, and recovery domain semantics while the TypeScript v4 adapter
+remains byte-equivalent at that boundary. A second writer, permanent dual
+write, cross-machine mutable file, or implicit compatibility authority has a
+hard-zero budget.
 
 ## 4. Explicit complexity budgets
 
@@ -84,12 +82,13 @@ migration phase, recovery policy, and budgets. `architecture list` and
 `architecture show` are generated directly from the validated manifest; no
 second hand-maintained architecture list is authoritative.
 
-## 6. Non-claims
+## 6. Production cutover boundary
 
-This Wave 0 constitution does not migrate Delivery Warrant, Release
-Transaction, activation, publication, or any other production writer to Rust.
-It does not select a final Rust/libnode ABI, introduce a daemon or service
-database, move consumers to v4, or publish v4 as stable.
+The v4 line owns Delivery Warrant, Release Transaction, activation,
+publication, propagation, and release-tail state. This does not introduce a
+daemon, a service database, provider SDKs in contracts or Rust domain code, or
+a second writer. The retained `release/v3/v3.0` coordinate is rollback evidence
+only and cannot regain production authority without a new reviewed cutover.
 
 ## 7. Wave 0 host boundary
 
@@ -132,10 +131,11 @@ effects, release effects, and public cutover remain outside this transition.
 
 The executable provider operation journal contract is
 [`v4-provider-operation-journal-contract.json`](v4-provider-operation-journal-contract.json).
-It freezes one closed schema authority and one Rust shadow state-fold authority
+It freezes one closed schema authority and one Rust v4 state-fold authority
 for append-only intent, attempt, rooted observation, confirmation, and
-reconciliation records. The TypeScript plane performs contract and conformance
-projection against the same fixtures; v3 remains the sole production writer.
+reconciliation records. The TypeScript v4 plane performs provider adaptation
+and conformance projection against the same fixtures; v4 is the sole
+production writer.
 
 Logical operation identity excludes attempt ordinals and mutable provider or
 runner facts. Every retry preserves `operationRoot`, while every attempt and
@@ -155,14 +155,14 @@ the operation or advance release state without independent journal
 qualification. Conflicting, malformed, and root-mismatched evidence fails
 closed with typed faults.
 
-## 10. Wave 3 release activation shadow domain
+## 10. Release activation production domain
 
 The executable release activation boundary is
 [`v4-release-activation-shadow-domain.json`](v4-release-activation-shadow-domain.json).
 It consumes an explicit qualification root, dependency graph, compensation
 boundaries, provider-operation identities, and append-only journal facts to
-derive one deterministic activation plan and resume state. Rust is the sole
-shadow plan-and-fold authority; TypeScript must remain byte-equivalent against
+derive one deterministic activation plan and resume state. Rust is the sole v4
+plan-and-fold authority; TypeScript must remain byte-equivalent against
 the same closed schema and fixture.
 
 Confirmed operations are never eligible for replay. Attempting, observed, and
@@ -170,23 +170,25 @@ confirmable operations require provider-neutral readback before any retry,
 while planned or retryable operations become eligible only after every declared
 dependency is confirmed. Missing qualification, dependency cycles, operation or
 authority drift, conflicting event ordinals, and impossible journal transitions
-fail closed. This domain performs no provider call or live mutation, and v3
-remains the sole production activation authority.
+fail closed. This pure domain performs no provider call itself; the TypeScript
+v4 provider adapter may execute only exact eligible operations and must append
+rooted readback before confirmation or retry.
 
-## 11. Wave 3 stable publication fence
+## 11. Stable publication production fence
 
-The stable-candidate publication shadow boundary is governed by
+The stable-candidate production publication boundary is governed by
 [`v4-stable-publication-fence.json`](v4-stable-publication-fence.json). It
 binds one exact candidate root to source, metadata, provider-operation journal,
 protected ancestry, provider confirmations, and an independently sealed
-qualification before a shadow publication plan can exist.
+qualification before a production publication plan can exist.
 
 Candidate generation N cannot qualify itself. An N-1 policy requires the
 immediately preceding authority generation; an independent-seal policy requires
 a qualifier authority distinct from the publisher authority. Stable refs, npm
-tags, OCI tags, and GitHub Releases remain target-shaped facts only. The fence
-emits zero effects, performs no network or credential operation, changes no
-public or protected ref, and preserves TypeScript v3 as sole production writer.
+tags, OCI tags, and GitHub Releases remain exact target-shaped facts. The pure
+fence authorizes the exact target count but performs no network or credential
+operation itself; only the TypeScript v4 provider adapter may apply authorized
+targets, and it must read them back before completion.
 
 ## 12. Wave 3 partial-mutation recovery qualification
 
@@ -201,7 +203,8 @@ Every nonterminal operation maps deterministically to `retry`, `wait`,
 `terminal-noop` facts and never re-enter the next-operation set. Missing,
 expired, corrupt, conflicting, cross-boundary, or attempt-budget-exhausted
 evidence fails closed at an exact Stage Capsule or provider-operation
-checkpoint. The Rust domain is the sole shadow planner and TypeScript is a
+checkpoint. The Rust domain is the sole v4 planner and TypeScript is a
 byte-equivalent projection. Both are pure: they perform zero provider,
-filesystem, network, credential, ref, package, image, or release mutation, and
-v3 remains the sole production writer.
+filesystem, network, credential, ref, package, image, or release mutation.
+Their exact plan is the only recovery authority consumed by the TypeScript v4
+provider adapter.

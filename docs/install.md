@@ -6,8 +6,8 @@ adopting a new version.
 
 ## Standalone Binary
 
-Buildchain v3.0.0 does not publish standalone platform archives. This section
-documents the verified legacy binary release contract; v3 consumers should use
+Buildchain v4.0.0 does not publish standalone platform archives. This section
+documents the verified legacy binary release contract; v4 consumers should use
 the npm package or repository workflow surface below.
 
 Use the archive that matches the platform:
@@ -64,7 +64,7 @@ Stable consumers should pin the exact Buildchain version they have validated,
 for example:
 
 ```bash
-pnpm add -D @kungfu-tech/buildchain@3.0.0
+pnpm add -D @kungfu-tech/buildchain@4.0.0
 ```
 
 If a repository dogfoods a just-published Buildchain version and pnpm's release
@@ -74,7 +74,7 @@ all packages:
 
 ```yaml
 minimumReleaseAgeExclude:
-  - '@kungfu-tech/buildchain@3.0.0'
+  - '@kungfu-tech/buildchain@4.0.0'
 ```
 
 Remove that entry after the package is old enough for the repository's normal
@@ -89,7 +89,7 @@ packages.
 ```bash
 npx @kungfu-tech/buildchain init --type package --package-manager pnpm
 npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v4/v4.0
 ```
 
 Use `.buildchain/buildchain.toml` to declare lifecycle commands. The commands may use Node

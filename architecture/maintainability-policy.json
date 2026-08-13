@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132414,
+    "maxHandMaintainedSourceLines": 132430,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 23636,
-    "latestTransition": "The protected v3 adopter-delivery gate and published KFD category driver are forward-ported to v4 with an effect-disabled Rust parity projection bound to the exact v3 vector authority.",
-    "rationale": "The five bounded source files retain the protocol-neutral gate, published-KFD consumer driver, and an independently evaluated Rust projection that has no provider or production-writer authority. Exact v3 decisions, fail-closed diagnostics, replay roots, and KFD package identity are covered by rooted parity vectors; the measured file and line ceilings cannot grow implicitly."
+    "latestTransition": "The v4 architecture and Warrant-plan validators now fail closed unless production release authority, writers, and migration phases have completed the v3-to-v4 cutover.",
+    "rationale": "Sixteen validation lines close the production-authority, fallback, rollback, writer-runtime, legacy-retirement, and historical-comparison separation invariants required for the v4 release. This exact measured ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,14 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/v4-architecture.mjs": {
+      "maxLines": 610,
+      "rationale": "The v4 architecture validator adds only the bounded production-authority, fallback, rollback, writer-runtime, and legacy-retirement checks required for the final release cutover. This exact reviewed ceiling cannot grow implicitly."
+    },
+    "scripts/v4-warrant-shadow-plan.mjs": {
+      "maxLines": 601,
+      "rationale": "The historical v3 comparison plan now separately verifies that the live manifest is v4-authoritative and legacy-retired, preventing comparison evidence from being mistaken for production authority. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/buildchain-channel-identity.js": {
       "maxLines": 119,
       "rationale": "The single major-independent classifier and triad evaluator keep shell, runtime, and contract-lock lane identity in one bounded fail-closed authority shared by stable and alpha consumers. This exact reviewed ceiling cannot grow implicitly."
@@ -1237,6 +1245,11 @@
     }
   },
   "approvedExtractedDebt": {
+    "scripts/v4-warrant-shadow-plan.mjs#validatePlan": {
+      "maxLines": 182,
+      "maxComplexity": 26,
+      "rationale": "The validator adds one conjunctive terminal assertion that separates retained v3 comparison evidence from the live v4 writer and retired migration phase. This exact reviewed ceiling cannot grow implicitly."
+    },
     "packages/core/release-tail-provider-plane.js#normalizeCapability": {
       "maxLines": 255,
       "maxComplexity": 25,

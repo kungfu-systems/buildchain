@@ -10,7 +10,7 @@ on:
         type: string
       buildchain-ref:
         description: Buildchain runtime ref
-        default: v3-alpha
+        default: v4-alpha
         required: false
         type: string
       source-branch:
@@ -100,7 +100,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+          ref: ${{ inputs.buildchain-ref || 'v4-alpha' }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -156,7 +156,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+          ref: ${{ inputs.buildchain-ref || 'v4-alpha' }}
           path: .buildchain/runtime
           persist-credentials: false
 

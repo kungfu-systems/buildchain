@@ -238,6 +238,8 @@ function validateCapabilities(capabilities, inventory, issues) {
     }
     if (!MIGRATION_PHASES.has(capability?.migrationPhase))
       issues.push(`${capability?.id} has invalid migrationPhase`);
+    if (capability?.migrationPhase !== "legacy-retired")
+      issues.push(`${capability?.id} must retire its legacy v3 authority`);
   }
   for (const id of inventoryById.keys()) {
     if (!(capabilities || []).some((entry) => entry.sourceInventoryId === id))
@@ -279,8 +281,12 @@ function validateStateMachines(machines, capabilityIds, issues) {
       `${coordinate}.writer.runtime`,
       issues,
     );
+    if (machine?.writer?.runtime !== "typescript-v4")
+      issues.push(`${machine?.id} writer.runtime must be typescript-v4`);
     if (!MIGRATION_PHASES.has(machine?.migrationPhase))
       issues.push(`${machine?.id} has invalid migrationPhase`);
+    if (machine?.migrationPhase !== "legacy-retired")
+      issues.push(`${machine?.id} must retire its legacy v3 writer`);
     for (const field of [
       "undeclaredStates",
       "undeclaredEvents",
@@ -302,8 +308,12 @@ function validateManifest({ manifest, inventory, bootstrap, ledger }) {
     issues.push("manifest contract is invalid");
   if (manifest?.releaseLine?.branch !== "dev/v4/v4.0")
     issues.push("releaseLine.branch must be dev/v4/v4.0");
-  if (manifest?.releaseLine?.productionFallback !== "dev/v3/v3.0")
-    issues.push("releaseLine.productionFallback must remain dev/v3/v3.0");
+  if (manifest?.releaseLine?.productionAuthority !== "v4-native")
+    issues.push("releaseLine.productionAuthority must be v4-native");
+  if (manifest?.releaseLine?.productionFallback !== null)
+    issues.push("releaseLine.productionFallback must be null after cutover");
+  if (manifest?.releaseLine?.rollbackRef !== "release/v3/v3.0")
+    issues.push("releaseLine.rollbackRef must retain release/v3/v3.0");
   if (
     manifest?.releaseLine?.qualificationMode !==
     "exact-n-minus-one-git-revision"

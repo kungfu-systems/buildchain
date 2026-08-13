@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://buildchain.libkungfu.dev/schema/v4-partial-mutation-recovery-v1.schema.json",
   "title": "Buildchain v4 partial provider mutation recovery request",
-  "description": "Closed shadow-only evidence contract for deterministic partial provider mutation recovery planning. It grants no provider or production write authority.",
+  "description": "Closed production evidence contract for deterministic partial provider mutation recovery planning. Provider effects remain outside this pure planner and require the exact authorized plan.",
   "type": "object",
   "additionalProperties": false,
   "required": [

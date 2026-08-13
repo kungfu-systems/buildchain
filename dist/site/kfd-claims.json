@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "9737fb95405db6864ad18c7c408f5a595519c8c520b9e4e4bfe4a0111f0e3b51",
+    "sha256": "15660c51f278a79d52498bd8538d1839da1d5ae3ebdf16d3c8f728d6b2751694",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 71,
       "actionCount": 7,
-      "sitePageCount": 74,
+      "sitePageCount": 75,
       "docCommandRefCount": 919,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "9737fb95405db6864ad18c7c408f5a595519c8c520b9e4e4bfe4a0111f0e3b51",
+      "sha256": "15660c51f278a79d52498bd8538d1839da1d5ae3ebdf16d3c8f728d6b2751694",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 71,
         "actionCount": 7,
-        "sitePageCount": 74,
+        "sitePageCount": 75,
         "docCommandRefCount": 919,
         "failureCount": 0
       },
@@ -6578,6 +6578,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-production-release",
+          "name": "site-page:manual:v4-production-release",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-stage-capsule",
           "name": "site-page:manual:v4-stage-capsule",
           "kind": "site-page",
@@ -6796,6 +6808,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 432
+    "publicSurfaceCount": 433
   }
 }

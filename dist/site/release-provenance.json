@@ -96,7 +96,7 @@
   "packageManager": "pnpm@11.7.0",
   "inventoryRelease": "buildchain-v2",
   "stableRefs": {
-    "actions": "kungfu-systems/buildchain/actions/<name>@v3",
-    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3"
+    "actions": "kungfu-systems/buildchain/actions/<name>@v4",
+    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v4"
   }
 }

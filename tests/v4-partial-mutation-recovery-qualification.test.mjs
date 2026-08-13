@@ -68,8 +68,8 @@ test("fixture scenarios produce one deterministic bounded recovery classificatio
       entry.expectedNextStepIds,
       entry.id,
     );
-    assert.equal(left.mode, "shadow-only");
-    assert.equal(left.productionAuthority, "v3");
+    assert.equal(left.mode, "production");
+    assert.equal(left.productionAuthority, "v4");
     assert.equal(left.zeroExternalMutations, true);
     assert.equal(left.complexity.externalMutationCount, 0);
     observed.add(left.classification);
@@ -272,7 +272,7 @@ test("Rust and TypeScript emit byte-equivalent recovery decisions and roots", ()
   assert.deepEqual(JSON.parse(result.stdout), typescript);
 });
 
-test("the closed architecture contract keeps the qualification shadow-only and effect-free", () => {
+test("the closed architecture contract keeps production recovery bounded and effect-free", () => {
   const schema = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -294,8 +294,8 @@ test("the closed architecture contract keeps the qualification shadow-only and e
   assert.equal(schema.additionalProperties, false);
   assert.equal(schema.$defs.stageResume.additionalProperties, false);
   assert.equal(schema.$defs.activation.additionalProperties, false);
-  assert.equal(architecture.mode, "shadow-only");
-  assert.equal(architecture.productionAuthority, "typescript-v3");
+  assert.equal(architecture.mode, "production");
+  assert.equal(architecture.productionAuthority, "v4-domain");
   assert.equal(architecture.budgets.liveProviderMutations, 0);
   assert.equal(architecture.budgets.networkWrites, 0);
   assert.equal(architecture.budgets.credentialReads, 0);

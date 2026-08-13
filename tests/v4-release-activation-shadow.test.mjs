@@ -102,7 +102,7 @@ test("qualified resume never replays confirmed work and requires readback for un
   assert.equal(state.eligibleSteps.includes("oci-image"), false);
 });
 
-test("all rooted confirmations close the shadow plan without granting production authority", () => {
+test("all rooted confirmations close the production plan under v4 authority", () => {
   const request = clone(fixture);
   request.events = [
     ...successfulEvents("github-release"),
@@ -112,8 +112,8 @@ test("all rooted confirmations close the shadow plan without granting production
   const projection = projectV4ReleaseActivation(request);
   assert.equal(projection.state.phase, "complete");
   assert.deepEqual(projection.state.eligibleSteps, []);
-  assert.equal(projection.plan.mode, "shadow-only");
-  assert.equal(projection.plan.productionAuthority, "v3");
+  assert.equal(projection.plan.mode, "production");
+  assert.equal(projection.plan.productionAuthority, "v4");
 });
 
 test("activation validation fails closed on qualification, graph, identity, authority, and evidence drift", () => {
@@ -225,7 +225,7 @@ test("ASCII step ordering is byte-stable across the Rust and TypeScript boundary
   assert.deepEqual(JSON.parse(result.stdout).plan, typescript);
 });
 
-test("the sole schema and architecture authorities remain closed and shadow-only", () => {
+test("the sole schema and architecture authorities remain closed and production-v4", () => {
   const schema = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -252,8 +252,9 @@ test("the sole schema and architecture authorities remain closed and shadow-only
       (kind) => `#/$defs/${kind}`,
     ),
   );
-  assert.equal(architecture.mode, "shadow-only");
-  assert.equal(architecture.authority.productionWriter, "typescript-v3");
+  assert.equal(architecture.mode, "production");
+  assert.equal(architecture.authority.productionWriter, "v4-domain");
+  assert.equal(architecture.authority.productionWriteChange, true);
   assert.deepEqual(architecture.budgets, {
     schemaAuthorities: 1,
     planAndFoldWriters: 1,
@@ -261,7 +262,7 @@ test("the sole schema and architecture authorities remain closed and shadow-only
     providerSdkImportsInContracts: 0,
     providerSdkImportsInRustDomain: 0,
     liveProviderMutations: 0,
-    productionWriteAuthorityChanges: 0,
+    productionWriteAuthorityChanges: 1,
     v3ConsumerBehaviorChanges: 0,
   });
 });

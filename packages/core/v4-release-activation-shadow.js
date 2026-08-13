@@ -343,8 +343,8 @@ export function planV4ReleaseActivation(request) {
   const { steps } = normalizeRequest(request);
   const payload = {
     schema: V4_RELEASE_ACTIVATION_PLAN_CONTRACT,
-    mode: "shadow-only",
-    productionAuthority: "v3",
+    mode: "production",
+    productionAuthority: "v4",
     declaredAt: request.declaredAt,
     transactionRoot: request.transactionRoot,
     qualificationRoot: request.qualificationRoot,
@@ -495,8 +495,8 @@ export function foldV4ReleaseActivation(request) {
         : "active";
   const payload = {
     schema: V4_RELEASE_ACTIVATION_STATE_CONTRACT,
-    mode: "shadow-only",
-    productionAuthority: "v3",
+    mode: "production",
+    productionAuthority: "v4",
     planRoot: plan.planRoot,
     phase,
     stepStates,

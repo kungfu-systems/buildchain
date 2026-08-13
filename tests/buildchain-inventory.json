@@ -85,8 +85,8 @@
     ".github/workflows/.batch-pull-request.yml"
   ],
   "stableRefs": {
-    "actions": "kungfu-systems/buildchain/actions/<name>@v3",
-    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3"
+    "actions": "kungfu-systems/buildchain/actions/<name>@v4",
+    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v4"
   },
   "verification": [
     "buildchain.toml lifecycle.verify",

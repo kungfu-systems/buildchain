@@ -6,8 +6,8 @@
   "stageCapsulePredecessor": "architecture/v4-stage-capsule-resume-planner.json",
   "activationPredecessor": "architecture/v4-release-activation-shadow-domain.json",
   "journalPredecessor": "architecture/v4-provider-operation-journal-contract.json",
-  "mode": "shadow-only",
-  "productionAuthority": "typescript-v3",
+  "mode": "production",
+  "productionAuthority": "v4-domain",
   "classificationPriority": [
     "escalate",
     "compensate",
@@ -35,7 +35,7 @@
     "repeated evaluation of identical rooted evidence is byte-identical",
     "missing corrupt conflicting expired or cross-boundary evidence fails closed",
     "Stage Capsule rejection precedes all provider recovery planning",
-    "the planner emits zero external mutations and grants no production authority"
+    "the planner emits zero external mutations and authorizes only bounded provider-adapter recovery"
   ],
   "implementations": {
     "rustDomain": "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs",
@@ -58,7 +58,7 @@
     "filesystemWrites": 0,
     "ambientClockReads": 0,
     "unboundedRetries": 0,
-    "productionWriteAuthorityChanges": 0,
+    "productionWriteAuthorityChanges": 1,
     "v3ConsumerBehaviorChanges": 0
   },
   "successor": "wave-3-reconciliation"

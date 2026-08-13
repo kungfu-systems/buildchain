@@ -6,11 +6,18 @@
     "line": "v4.0"
   },
   "versionImpact": {
-    "final": "minor",
+    "final": "major",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v4.0 establishes a qualified N-1 architecture bootstrap while preserving the protected v3.0 line as production fallback."
+    "rationale": "Buildchain v4.0 retires v3 publication authority and establishes the protected v4 line, v4 provider journal, activation planner, recovery planner, and stable publication fence as the sole production release authority."
   },
   "surfaceImpacts": [
+    {
+      "id": "v4-production-authority-cutover",
+      "impact": "major",
+      "class": "publication-authority",
+      "rationale": "The protected v4 release line owns the shared alpha channel and all v4 production state-machine writers; exact v4 activation, provider readback, bounded recovery, and stable fencing replace the former v3-authoritative shadow declarations without introducing a second writer.",
+      "source": "architecture/v4-capability-state-machine-manifest.json"
+    },
     {
       "id": "resume-from-candidate-run",
       "impact": "minor",

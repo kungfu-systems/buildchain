@@ -253,11 +253,11 @@ test("Rust Delivery Warrant domain freezes the protected manifest surface", () =
   ])
     assert.equal(domain.includes(`"${value}"`), true, value);
   assert.deepEqual(warrant.writer, {
-    runtime: "typescript-v3",
+    runtime: "typescript-v4",
     authoritative: true,
     secondWriterBudget: 0,
   });
-  assert.equal(warrant.migrationPhase, "legacy-authoritative");
+  assert.equal(warrant.migrationPhase, "legacy-retired");
 });
 
 test("Rust pure domain cannot hide a provider, writer, ambient clock, or unbounded retry", () => {
