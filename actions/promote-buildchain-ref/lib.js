@@ -192,7 +192,7 @@ function rematerializedNpmPackEnvironment({ cwd, env }) {
   if (!required.some((artifact) => artifact.kind === "npm" && artifact.name === pkg.name)) return undefined;
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rematerialized-npm-"));
   try {
-    const packed = JSON.parse(execFileSync("npm", ["pack", "--json", "--pack-destination", temporaryRoot, "--registry=https://registry.npmjs.org/"], {
+    const packed = JSON.parse(execNpmSync(["pack", "--json", "--pack-destination", temporaryRoot, "--registry=https://registry.npmjs.org/"], {
       cwd, env: { ...process.env, ...env }, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"],
     }));
     const result = Array.isArray(packed) ? packed[0] : packed;
