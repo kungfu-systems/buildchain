@@ -423,7 +423,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
     initiativeRoot: flag(rest, "initiative-root", environment.BUILDCHAIN_DEV_DELIVERY_INITIATIVE_ROOT),
     sourceIdentityRoot: flag(rest, "source-identity-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_IDENTITY_ROOT),
     sourcePatchRoot: flag(rest, "source-patch-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PATCH_ROOT),
-    sourceProofRoot: flag(rest, "source-proof-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PROOF_ROOT),
+    sourceProofRoot: flag(rest, "source-proof-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PROOF_ROOT), sourceWorkflowRunId: flag(rest, "source-workflow-run-id", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_WORKFLOW_RUN_ID),
     affectedPaths: flag(rest, "affected-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_AFFECTED_PATHS || "[]"),
     nativeProofPath: flag(rest, "native-proof", environment.BUILDCHAIN_DEV_DELIVERY_NATIVE_PROOF),
     nativeReuseDecisionPath: flag(rest, "native-reuse-decision", environment.BUILDCHAIN_DEV_DELIVERY_NATIVE_REUSE_DECISION),
