@@ -173,7 +173,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
   assert.match(
     wrapper,
-    /generated-ref-update-token: \$\{\{ github\.token \}\}/,
+    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
   );
   const selfPromotion = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
