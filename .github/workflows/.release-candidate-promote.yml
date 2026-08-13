@@ -1872,7 +1872,7 @@ jobs:
         with:
           # Exact tags may point at commits that update workflow files, which
           # requires the promotion credential's workflows scope. Protected
-          # generated branch updates remain bound to github.token below.
+          # generated branch updates use the same bounded promotion credential.
           token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           sha: ${{ needs.preflight.outputs.requested-sha }}
           target-ref: ${{ needs.preflight.outputs.target-ref }}
@@ -1883,7 +1883,7 @@ jobs:
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
           generated-pull-request-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
-          generated-ref-update-token: ${{ github.token }}
+          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}

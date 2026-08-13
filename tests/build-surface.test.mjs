@@ -1280,7 +1280,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(
     workflow,
-    /generated-ref-update-token: \$\{\{ github\.token \}\}/,
+    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
   );
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
