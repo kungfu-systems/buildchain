@@ -1962,6 +1962,8 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
   }
   const breakingContract = structuredClone(bootstrapContract);
   breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
+  breakingContract.surfaces[0].compatibleBreakingDigests = [];
+  breakingContract.surfaces[0].compatibilityProofRoots = [];
   const breakingEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
     current: breakingContract,
