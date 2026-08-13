@@ -6,7 +6,10 @@ import {
   createDurableTransactionOperations,
   createRefMutationOperations,
 } from "../actions/promote-buildchain-ref/lib.js";
-import { promoteAlphaChannel } from "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js";
+import {
+  promoteAlphaChannel,
+  selectAlphaCandidate,
+} from "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js";
 import { promoteMajorChannel } from "../actions/promote-buildchain-ref/internal/promote-major-channel.js";
 import { promoteReleaseChannel } from "../actions/promote-buildchain-ref/internal/promote-release-channel.js";
 import { createDurableTransactionOperations as createDurableTransactionOperationsModule } from "../actions/promote-buildchain-ref/internal/durable-transaction-operations.js";
@@ -50,6 +53,39 @@ test("promotion facade delegates to independently owned channel modules", () => 
       `${channel} channel module is ${moduleLines} lines`,
     );
   }
+});
+
+test("alpha recovery selects the exact advanced publication transaction before an older contained transaction", () => {
+  const oldTransaction = {
+    version: "3.0.9-alpha.12",
+    exact_tag: "v3.0.9-alpha.12",
+    release_sha: "a".repeat(40),
+  };
+  const advancedPublicationTransaction = {
+    version: "3.0.9-alpha.13",
+    exact_tag: "v3.0.9-alpha.13",
+    release_sha: "b".repeat(40),
+  };
+
+  assert.deepEqual(
+    selectAlphaCandidate(
+      { advancedPublicationTransaction },
+      {
+        explicitAlphaTags: [],
+        transactionOpen: true,
+        containsTransaction: true,
+        settled: false,
+        currentAlpha: {
+          tag: oldTransaction.exact_tag,
+          transaction: oldTransaction,
+        },
+      },
+    ),
+    {
+      tag: advancedPublicationTransaction.exact_tag,
+      transaction: advancedPublicationTransaction,
+    },
+  );
 });
 
 test("ref mutation responsibility plans provider operations without mutating during dry-run", async () => {
