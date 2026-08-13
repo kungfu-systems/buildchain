@@ -67,6 +67,7 @@ const {
   publishGitHubReleaseEvidence,
 } = await import("../actions/promote-buildchain-ref/index.js");
 const {
+  containedReleaseExecutionIdentity,
   transactionContainedInRelease,
 } = await import("../actions/promote-buildchain-ref/internal/promote-release-channel.js");
 
@@ -118,6 +119,33 @@ test("stable recovery checks the advanced protected head for sealed release mate
 
   assert.equal(contained, true);
   assert.deepEqual(checkedReleaseShas, [protectedMergeSha]);
+});
+
+test("stable recovery reuses the complete transaction publication identity", () => {
+  const transaction = {
+    state: "complete",
+    source_sha: "1".repeat(40),
+    release_sha: "2".repeat(40),
+    release_material_sha: "3".repeat(40),
+    publish_tooling_sha: "4".repeat(40),
+  };
+  const execution = containedReleaseExecutionIdentity(
+    {
+      sha: "5".repeat(40),
+      advancedPublicationTransaction: transaction,
+    },
+    {
+      containsPublishedMaterial: true,
+      currentReleaseTransaction: transaction,
+      releaseSha: "6".repeat(40),
+    },
+  );
+
+  assert.equal(execution.transaction, transaction);
+  assert.equal(execution.sourceSha, transaction.source_sha);
+  assert.equal(execution.releaseSha, transaction.release_sha);
+  assert.equal(execution.releaseMaterialSha, transaction.release_material_sha);
+  assert.equal(execution.publishToolingSha, transaction.publish_tooling_sha);
 });
 
 test("publish transaction resumes matching alpha durable state refs", async () => {

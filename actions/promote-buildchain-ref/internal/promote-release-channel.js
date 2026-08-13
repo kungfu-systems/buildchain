@@ -100,6 +100,21 @@ async function transactionContainedInRelease(context, transaction) {
   );
 }
 
+function containedReleaseExecutionIdentity(context, state) {
+  const transaction =
+    state.containsPublishedMaterial &&
+    context.advancedPublicationTransaction?.state === "complete"
+      ? context.advancedPublicationTransaction
+      : undefined;
+  return {
+    transaction,
+    releaseSha: transaction?.release_sha || state.releaseSha,
+    sourceSha: transaction?.source_sha || context.sha,
+    releaseMaterialSha: transaction?.release_material_sha,
+    publishToolingSha: transaction?.publish_tooling_sha,
+  };
+}
+
 async function resolveReleaseAlphaMaterial(context, state) {
   const sourceAlpha = context.latestAlphaForPatch(
     context.lineRefs,
@@ -272,7 +287,12 @@ async function createReleasePromotionCommit(context, state) {
       state.containsPublishedMaterial,
     ),
   });
-  const releaseSha = releaseCommit.sha;
+  const containedCompleteTransaction =
+    state.containsPublishedMaterial &&
+    context.advancedPublicationTransaction?.state === "complete";
+  const releaseSha = containedCompleteTransaction
+    ? context.advancedChannelSha || context.sha
+    : releaseCommit.sha;
   if (context.requireGovernance && !context.dryRun) {
     if (!state.sourceAlpha?.sha) {
       throw new Error(
@@ -322,12 +342,17 @@ async function createReleasePromotionCommit(context, state) {
 }
 
 async function finalizeReleasePublication(context, state) {
+  const execution = containedReleaseExecutionIdentity(context, state);
+  const containedCompleteTransaction = execution.transaction;
   await context.executePublishTransaction({
     version: state.releaseCommit.publishVersion || state.releaseVersion,
     exactTag: state.selectedReleaseCandidate.tag,
     channel: context.rule.channel,
     line: context.rule.releasePrefix,
-    releaseSha: state.releaseSha,
+    releaseSha: execution.releaseSha,
+    sourceShaOverride: execution.sourceSha,
+    releaseMaterialShaOverride: execution.releaseMaterialSha,
+    publishToolingShaOverride: execution.publishToolingSha,
     releaseCandidateVersion: context.stripTagPrefix(
       state.sourceAlphaMaterial?.exactTag ||
         state.sourceAlphaMaterial?.tag ||
@@ -335,7 +360,7 @@ async function finalizeReleasePublication(context, state) {
     ),
     allowVersionStateFinalization: state.releaseCommit.action === "existing",
   });
-  if (context.versionState) {
+  if (context.versionState && !containedCompleteTransaction) {
     await context.markFinalizing();
     const targetUpdate = await context.updateBranch(
       context.targetRef,
@@ -544,4 +569,8 @@ async function promoteReleaseChannel(context) {
   return prepareReleaseNextAlpha(context, finalized);
 }
 
-export { promoteReleaseChannel, transactionContainedInRelease };
+export {
+  containedReleaseExecutionIdentity,
+  promoteReleaseChannel,
+  transactionContainedInRelease,
+};
