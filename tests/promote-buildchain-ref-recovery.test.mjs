@@ -652,6 +652,7 @@ test("published alpha finalization stays bound to its exact transaction after th
     refs: new Map([
       ["heads/alpha/v1/v1.0", channelMergeSha],
       ["heads/dev/v1/v1.0", channelMergeSha],
+      [`tags/${exactTag}`, transactionSourceSha],
     ]),
   });
   commits.set(channelMergeSha, {

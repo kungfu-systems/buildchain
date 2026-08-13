@@ -16,12 +16,21 @@ function flag(name, fallback = "") {
   return index === -1 ? fallback : String(process.argv[index + 1] || "");
 }
 
-function commandJson(command, args, label) {
-  const result = spawnSyncCommand(command, args, {
+function commandJson(command, args, label, { publicReadFallback = false } = {}) {
+  const options = {
     encoding: "utf8",
     timeout: 60_000,
     maxBuffer: GITHUB_JSON_MAX_BUFFER,
-  });
+  };
+  let result = spawnSyncCommand(command, args, options);
+  const fallbackToken = String(process.env.BUILDCHAIN_GITHUB_PUBLIC_READ_TOKEN || "");
+  const primaryToken = String(process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "");
+  if (result.status !== 0 && publicReadFallback && fallbackToken && fallbackToken !== primaryToken) {
+    result = spawnSyncCommand(command, args, {
+      ...options,
+      env: { ...process.env, GH_TOKEN: fallbackToken, GITHUB_TOKEN: fallbackToken },
+    });
+  }
   if (result.status !== 0) {
     const category = /401|E401|unauthorized/i.test(result.stderr) ? "unauthorized" : "unavailable";
     throw new Error(`${label} is ${category}; publication control-plane audit fails closed`);
@@ -33,18 +42,22 @@ function commandJson(command, args, label) {
   }
 }
 
-function githubJson(apiPath, label) {
-  return commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label);
+function githubJson(apiPath, label, { publicReadFallback = false } = {}) {
+  return commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label, { publicReadFallback });
 }
 
-function githubJsonOptional(apiPath, label, fallback) {
+function githubPublicJson(apiPath, label) {
+  return githubJson(apiPath, label, { publicReadFallback: true });
+}
+
+function githubJsonOptional(apiPath, label, fallback, fallbackPattern = /404|not found/i) {
   const result = spawnSyncCommand("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
     encoding: "utf8",
     timeout: 60_000,
     maxBuffer: GITHUB_JSON_MAX_BUFFER,
   });
   if (result.status !== 0) {
-    if (/404|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
+    if (fallbackPattern.test(`${result.stdout}\n${result.stderr}`)) return fallback;
     const category = /401|403|unauthorized|forbidden/i.test(`${result.stdout}\n${result.stderr}`) ? "unauthorized" : "unavailable";
     throw new Error(`${label} is ${category}; publication control-plane audit fails closed`);
   }
@@ -56,20 +69,7 @@ function githubJsonOptional(apiPath, label, fallback) {
 }
 
 function githubJsonReadLimited(apiPath, label, fallback) {
-  const result = spawnSyncCommand("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
-    encoding: "utf8",
-    timeout: 60_000,
-    maxBuffer: GITHUB_JSON_MAX_BUFFER,
-  });
-  if (result.status !== 0) {
-    if (/401|403|404|unauthorized|forbidden|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
-    throw new Error(`${label} is unavailable; publication control-plane audit fails closed`);
-  }
-  try {
-    return JSON.parse(result.stdout);
-  } catch {
-    throw new Error(`${label} did not return JSON; publication control-plane audit fails closed`);
-  }
+  return githubJsonOptional(apiPath, label, fallback, /401|403|404|unauthorized|forbidden|not found/i);
 }
 
 function rulesetIncludesBranch(ruleset, branch, defaultBranch) {
@@ -218,7 +218,7 @@ function main() {
   if (!repository || !branch) throw new Error("--repository and --branch are required");
 
   const encodedWorkflow = workflowPath.split("/").map(encodeURIComponent).join("/");
-  const workflowFile = githubJson(
+  const workflowFile = githubPublicJson(
     `repos/${workflowRepository}/contents/${encodedWorkflow}${workflowRef ? `?ref=${encodeURIComponent(workflowRef)}` : ""}`,
     "publication workflow source",
   );
@@ -231,8 +231,8 @@ function main() {
     !/^\s*[a-z-]+:\s*write\s*$/m.test(workflowHeader) &&
     !/permissions\s*:\s*write-all/i.test(workflowHeader);
 
-  const repositoryState = githubJson(`repos/${repository}`, "repository metadata");
-  const branchState = githubJson(`repos/${repository}/branches/${encodeURIComponent(branch)}`, "branch summary");
+  const repositoryState = githubPublicJson(`repos/${repository}`, "repository metadata");
+  const branchState = githubPublicJson(`repos/${repository}/branches/${encodeURIComponent(branch)}`, "branch summary");
   const exactTransactionSource = /^[0-9a-f]{40}$/.test(sourceSha);
   const protection = exactTransactionSource
     ? null
@@ -290,7 +290,7 @@ function main() {
     if (!/^[0-9a-f]{40}$/.test(sourceSha)) {
       throw new Error("--source-sha is required when detailed branch policy is not readable");
     }
-    const sourceCommit = githubJson(`repos/${repository}/commits/${sourceSha}`, "source commit");
+    const sourceCommit = githubPublicJson(`repos/${repository}/commits/${sourceSha}`, "source commit");
     const sourceParents = Array.isArray(sourceCommit.parents) ? sourceCommit.parents.map((entry) => String(entry?.sha || "").toLowerCase()) : [];
     const sourceChangedPaths = Array.isArray(sourceCommit.files) ? sourceCommit.files.map((entry) => String(entry?.filename || "")) : [];
     const sourceMessage = String(sourceCommit.commit?.message || "").split("\n", 1)[0];
@@ -305,7 +305,7 @@ function main() {
     const branchHeadSha = String(branchState.commit?.sha || "").toLowerCase();
     const sourceComparison = sourceSha === branchHeadSha
       ? null
-      : githubJson(
+      : githubPublicJson(
         `repos/${repository}/compare/${sourceSha}...${branchHeadSha}`,
         "source protected-branch lineage",
       );
@@ -313,7 +313,7 @@ function main() {
       sourceComparison?.status === "ahead" &&
       String(sourceComparison?.merge_base_commit?.sha || "").toLowerCase() === sourceSha
     );
-    let pullRequests = githubJson(`repos/${repository}/commits/${authorizationSha}/pulls`, "source pull-request lineage");
+    let pullRequests = githubPublicJson(`repos/${repository}/commits/${authorizationSha}/pulls`, "source pull-request lineage");
     let mergedPullRequest = (Array.isArray(pullRequests) ? pullRequests : []).find((entry) =>
       entry?.merged_at &&
       (
@@ -324,7 +324,7 @@ function main() {
       entry.head?.repo?.full_name === repository
     );
     if (!mergedPullRequest && allowReleaseReconciliation) {
-      const packageFile = githubJson(
+      const packageFile = githubPublicJson(
         `repos/${repository}/contents/package.json?ref=${encodeURIComponent(sourceSha)}`,
         "release reconciliation package metadata",
       );
@@ -340,7 +340,7 @@ function main() {
       });
       if (releaseReconciliation.qualifying) {
         authorizationSha = parentSha;
-        pullRequests = githubJson(`repos/${repository}/commits/${authorizationSha}/pulls`, "release parent pull-request lineage");
+        pullRequests = githubPublicJson(`repos/${repository}/commits/${authorizationSha}/pulls`, "release parent pull-request lineage");
         mergedPullRequest = (Array.isArray(pullRequests) ? pullRequests : []).find((entry) =>
           entry?.merged_at &&
           entry.merge_commit_sha === authorizationSha &&
@@ -350,7 +350,7 @@ function main() {
       }
     }
     const reviews = mergedPullRequest
-      ? githubJson(`repos/${repository}/pulls/${mergedPullRequest.number}/reviews?per_page=100`, "source pull-request reviews")
+      ? githubPublicJson(`repos/${repository}/pulls/${mergedPullRequest.number}/reviews?per_page=100`, "source pull-request reviews")
       : [];
     const latestReviews = new Map();
     for (const review of Array.isArray(reviews) ? reviews : []) {
@@ -378,7 +378,7 @@ function main() {
       (prefixedRequiredStatusChecks.length === 1 ? prefixedRequiredStatusChecks[0] : requiredStatusCheck);
     const requiredStatusCheckMatchCount = exactRequiredStatusCheck ? 1 : prefixedRequiredStatusChecks.length;
     const checkRuns = /^[0-9a-f]{40}$/.test(pullRequestHeadSha)
-      ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?check_name=${encodeURIComponent(resolvedRequiredStatusCheck)}&filter=latest&per_page=100`, "merged pull-request required check runs")
+      ? githubPublicJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?check_name=${encodeURIComponent(resolvedRequiredStatusCheck)}&filter=latest&per_page=100`, "merged pull-request required check runs")
       : { check_runs: [] };
     const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) =>
       entry.context === resolvedRequiredStatusCheck
