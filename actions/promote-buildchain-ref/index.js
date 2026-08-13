@@ -159,6 +159,10 @@ async function publishReleaseTail({
       : artifactPaths,
     reuseExistingCompleteEvidence: recoveryCompletedBeforeThisRun(
       releaseCandidateRecoveryReceiptPath,
+    ) || result.updates.some(
+      (update) =>
+        update.action === "resumed-advanced-publication" &&
+        update.transactionState === "complete",
     ),
     targetRef,
   };
