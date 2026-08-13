@@ -379,6 +379,68 @@ function locateManifest(root, platformId) {
   return matches[0];
 }
 
+export function restoreTailResealManifestRunIdentity() {
+  const request = normalizeTailResealRequest(readJson(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH,
+    "BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH",
+  )));
+  const platformId = required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID,
+    "BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID",
+  );
+  if (platformId !== "macos-arm64") {
+    throw new Error("tail reseal manifest run identity restoration is only valid for macos-arm64");
+  }
+  const platform = request.platforms.find((entry) => entry.id === platformId);
+  if (!platform) throw new Error(`tail reseal request does not bind platform ${platformId}`);
+
+  const manifestPath = path.resolve(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH,
+    "BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH",
+  ));
+  const preSigningManifestPath = path.resolve(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH,
+    "BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH",
+  ));
+  const manifest = object(readJson(manifestPath, "recomputed platform manifest"), "recomputed platform manifest");
+  const preSigning = object(readJson(preSigningManifestPath, "pre-signing platform manifest"), "pre-signing platform manifest");
+
+  for (const [label, value] of [
+    ["recomputed", manifest],
+    ["pre-signing", preSigning],
+  ]) {
+    if (value.contract !== "kungfu-buildchain-artifact") throw new Error(`${label} macos-arm64 manifest contract mismatch`);
+    if (value.artifactName !== platform.artifactName) throw new Error(`${label} macos-arm64 manifest artifact name mismatch`);
+    if (value.platform?.id !== platformId) throw new Error(`${label} macos-arm64 manifest platform mismatch`);
+    if (value.git?.repository !== request.repository || value.git?.sha !== request.source.sha) {
+      throw new Error(`${label} macos-arm64 manifest source mismatch`);
+    }
+  }
+  if (
+    String(preSigning.git?.runId || "") !== String(request.source.runId) ||
+    String(preSigning.git?.runAttempt || "") !== String(request.source.runAttempt)
+  ) throw new Error("pre-signing macos-arm64 manifest original run mismatch");
+
+  const currentRunId = required(process.env.GITHUB_RUN_ID, "GITHUB_RUN_ID");
+  const currentRunAttempt = required(process.env.GITHUB_RUN_ATTEMPT, "GITHUB_RUN_ATTEMPT");
+  const recomputedRun = `${String(manifest.git?.runId || "")}:${String(manifest.git?.runAttempt || "")}`;
+  const originalRun = `${request.source.runId}:${request.source.runAttempt}`;
+  const currentRun = `${currentRunId}:${currentRunAttempt}`;
+  if (recomputedRun !== originalRun && recomputedRun !== currentRun) {
+    throw new Error("recomputed macos-arm64 manifest run is neither the original build nor the current tail run");
+  }
+
+  manifest.git.runId = String(request.source.runId);
+  manifest.git.runAttempt = String(request.source.runAttempt);
+  writeJson(manifestPath, manifest);
+  appendOutputs({
+    "manifest-path": path.relative(process.cwd(), manifestPath),
+    "restored-run-id": request.source.runId,
+    "restored-run-attempt": request.source.runAttempt,
+  });
+  return manifest;
+}
+
 export function verifyTailResealPlatform() {
   const request = normalizeTailResealRequest(readJson(required(process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH, "BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH")));
   const platformId = required(process.env.BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID, "BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID");
@@ -509,9 +571,10 @@ export async function releaseCandidateTailResealCli(argv = process.argv.slice(2)
   const command = argv[0];
   if (command === "plan") return plan();
   if (command === "recover-signing") return recoverTailResealSigning();
+  if (command === "restore-manifest-run") return restoreTailResealManifestRunIdentity();
   if (command === "verify-platform") return verifyTailResealPlatform();
   if (command === "seal") return sealTailResealReceipt();
-  throw new Error("usage: release-candidate-tail-reseal.mjs <plan|recover-signing|verify-platform|seal>");
+  throw new Error("usage: release-candidate-tail-reseal.mjs <plan|recover-signing|restore-manifest-run|verify-platform|seal>");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

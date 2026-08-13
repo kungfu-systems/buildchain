@@ -7,6 +7,7 @@ import test from "node:test";
 
 import {
   normalizeTailResealRequest,
+  restoreTailResealManifestRunIdentity,
   tailResealFailureMode,
   sealTailResealReceipt,
   verifyTailResealPlatform,
@@ -165,6 +166,59 @@ test("platform verification rejects changed retained bytes", () => {
     }, () => verifyTailResealPlatform()),
     /size mismatch|digest mismatch/u,
   );
+});
+
+test("signed macOS manifest recomputation restores only the original build run identity", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-manifest-run-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  const preSigningManifestFile = path.join(root, "manifest-pre-signing.json");
+  fs.copyFileSync(manifestFile, preSigningManifestFile);
+  const recomputed = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  recomputed.git.runId = "999";
+  recomputed.git.runAttempt = "2";
+  recomputed.files[0].signed = true;
+  fs.writeFileSync(manifestFile, `${JSON.stringify(recomputed, null, 2)}\n`);
+
+  const restored = withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: preSigningManifestFile,
+    GITHUB_RUN_ID: "999",
+    GITHUB_RUN_ATTEMPT: "2",
+  }, () => restoreTailResealManifestRunIdentity());
+
+  assert.equal(restored.git.runId, "123");
+  assert.equal(restored.git.runAttempt, "1");
+  assert.equal(restored.files[0].signed, true);
+  withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: root,
+  }, () => verifyTailResealPlatform());
+});
+
+test("signed macOS manifest run restoration rejects unrelated recomputation identity", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-manifest-run-reject-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  const preSigningManifestFile = path.join(root, "manifest-pre-signing.json");
+  fs.copyFileSync(manifestFile, preSigningManifestFile);
+  const recomputed = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  recomputed.git.runId = "777";
+  fs.writeFileSync(manifestFile, `${JSON.stringify(recomputed, null, 2)}\n`);
+
+  assert.throws(() => withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: preSigningManifestFile,
+    GITHUB_RUN_ID: "999",
+    GITHUB_RUN_ATTEMPT: "1",
+  }, () => restoreTailResealManifestRunIdentity()), /neither the original build nor the current tail run/u);
 });
 
 test("tail reseal receipt records skipped build and current tooling separately", () => {
