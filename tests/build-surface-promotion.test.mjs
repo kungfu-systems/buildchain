@@ -462,7 +462,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.match(
     workflow,
-    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.result == 'success' && github\.event_name == 'pull_request' && \(startsWith\(github\.base_ref, 'alpha\/'\) \|\| startsWith\(github\.base_ref, 'release\/'\)\) \}\}/,
+    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.result == 'success' && github\.event_name == 'pull_request' && !startsWith\(github\.head_ref, 'buildchain\/version-state\/'\) && \(startsWith\(github\.base_ref, 'alpha\/'\) \|\| startsWith\(github\.base_ref, 'release\/'\)\) \}\}/,
   );
   assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
   assert.match(workflow, /merge-multiple: true/);
