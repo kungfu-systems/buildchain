@@ -3,15 +3,38 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 136,
-  "fencingCounter": 41,
+  "generation": 137,
+  "fencingCounter": 42,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:8f245994f3731a18ced1919954304bbceb74356e042834d727620519a3f009d7",
+    "pullRequestNumber": 2773,
+    "sourceHead": "9f04ebf6ee104726dc7dd88f3bfa423e564f8023",
+    "assignmentRoot": "sha256:8f55ca1dff163a7b862d9e5c1a568db4a5a470fa33539226ed4f4f417b298455",
+    "initiativeRoot": "sha256:c45531dbd7d307c3a0f429440a6c910b0b9d2c01d5e689e2d60653ab2b7bdf99",
+    "sourceIdentityRoot": "sha256:02b2403ef9ee291d1570c8d2bf0a345a937ca49da0ff5726602539a8d9d74f8c",
+    "sourcePatchRoot": "sha256:81a927a30d40e9f11cf5c1335427533dd0728462f5c81732cbff85167f203ebc",
+    "sourceProofRoot": "sha256:11b47e7de78d21be37c666682425ce8a291469183c8fc63d0f5b06c80998ebb9",
+    "planRoot": "sha256:4e49b31c79f53566e397b9fe55a1fabee572b8563dd8259084151eeff6ab4d54",
+    "closureRoot": "sha256:7a2d2e80f00724d8bd5b003d42fc9bce3937a4805bc19c99d323c950e2486a4b",
+    "dependencyRoot": "sha256:92b045f2c915e9b4f5d03e45edc2fe4f0883a6a6974a3a32f68bc6ff42b8b32d",
+    "toolchainRoot": "sha256:52af515b4ccb8e20d7981ca300d60f805aeff6638d2904cdfd1d6dd25e29f762",
+    "deliveryClass": "native-proof-required",
+    "generation": 42,
+    "expectedOldStateRoot": "sha256:fb37327bffcef395a256e33f33824aeb8f3a47efaedeccd9cfe70be18ab4294a",
+    "issuedAt": "2026-08-13T19:14:25.519Z",
+    "expiresAt": "2026-08-13T20:14:25.519Z",
+    "fencingToken": "sha256:5c8228aca53bf992cca3cae06a28c383bde2f7a97fcbc0ae4b5185e4011328cc",
+    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -1423,13 +1446,13 @@
       "toolchainRoot": "sha256:52af515b4ccb8e20d7981ca300d60f805aeff6638d2904cdfd1d6dd25e29f762",
       "priority": "ordinary",
       "enqueuedAt": "2026-08-13T19:10:41.353Z",
-      "updatedAt": "2026-08-13T19:10:41.353Z",
+      "updatedAt": "2026-08-13T19:14:25.519Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null
     }
   ],
-  "updatedAt": "2026-08-13T19:14:22.749Z",
-  "stateRoot": "sha256:fb37327bffcef395a256e33f33824aeb8f3a47efaedeccd9cfe70be18ab4294a"
+  "updatedAt": "2026-08-13T19:14:25.519Z",
+  "stateRoot": "sha256:6e20769039ed96f7def3913c50c446da7c46e6aabb907dfaa93854b6ba7dbcd6"
 }
