@@ -26,29 +26,33 @@ export function selfReleaseRouteIdentity(workflowText, jobId = "promote") {
     (entry) => entry.id === jobId,
   );
   if (!job) parityFailure(`reusable workflow job is missing: ${jobId}`);
+  const exactSelfBootstrap = job.uses === "./.github/workflows/.release-candidate-promote.yml";
   if (
-    job.uses.startsWith("./") ||
+    (job.uses.startsWith("./") && !exactSelfBootstrap) ||
     job.uses.includes("/.release-candidate-promote.yml@")
   ) {
     parityFailure(
       `authoritative caller uses an internal or checkout-relative route: ${job.uses}`,
     );
   }
-  if (job.uses !== SELF_RELEASE_PUBLIC_WORKFLOW) {
+  if (!exactSelfBootstrap && job.uses !== SELF_RELEASE_PUBLIC_WORKFLOW) {
     parityFailure(
       `caller uses ${job.uses}, expected ${SELF_RELEASE_PUBLIC_WORKFLOW}`,
     );
   }
-  if (literal(job, "buildchain-ref") !== SELF_RELEASE_REF) {
+  if (!exactSelfBootstrap && literal(job, "buildchain-ref") !== SELF_RELEASE_REF) {
     parityFailure("caller runtime ref differs from the public workflow ref");
   }
+  if (exactSelfBootstrap && (job?.with?.["buildchain-ref"]?.kind !== "expression" ||
+    !String(job?.with?.["buildchain-contract-lock-path"]?.value).includes(".buildchain/alpha-contract-lock.json")))
+    parityFailure("self-bootstrap must bind exact runtime and Alpha contract identities");
   if (literal(job, "declarative-release-tail") !== true) {
     parityFailure(
       "caller does not require the declarative release-tail provider plane",
     );
   }
   return {
-    publicWorkflow: job.uses,
+    publicWorkflow: SELF_RELEASE_PUBLIC_WORKFLOW,
     runtimeRef: SELF_RELEASE_REF,
     declarationContract: "kungfu-buildchain-release-tail-capabilities/v1",
     declarationCompiler:

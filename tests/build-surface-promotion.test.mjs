@@ -770,9 +770,8 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@15db8a9d7c39f7a649a0e3971af68490356dd9ac\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
-  assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
@@ -780,7 +779,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: 15db8a9d7c39f7a649a0e3971af68490356dd9ac/,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha/,
   );
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(
@@ -1875,10 +1874,9 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@15db8a9d7c39f7a649a0e3971af68490356dd9ac/,
+    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/,
   );
-  assert.match(promotion, /buildchain-ref: 15db8a9d7c39f7a649a0e3971af68490356dd9ac/);
-  assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
+  assert.match(promotion, /\.buildchain\/alpha-contract-lock\.json/);
 });
 
 test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transition", () => {
