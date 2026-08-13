@@ -1608,6 +1608,8 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| 'native-proof-required' \}\}/u);
   assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.candidate\.priority \|\| 'ordinary' \}\}/u);
   assert.match(workflow, /required-status-checks: check/);
+  assert.match(workflow, /queue-admission-context: Queue admission lease/);
+  assert.match(workflow, /active-lease-context: Queue family lease\/exact/);
   assert.match(
     workflow,
     /allowed-head-prefixes: feature\/,fix\/,chore\/,docs\/,ci\/,refactor\/,automation\/auditable-demo-/,
