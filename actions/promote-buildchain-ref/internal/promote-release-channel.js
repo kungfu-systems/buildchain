@@ -480,19 +480,34 @@ async function prepareReleaseNextAlpha(context, state) {
         return pendingNextAlphaResult(context, state, nextAlphaSha, nextAlphaUpdate);
       }
       if (nextAlphaUpdate.mergeSha) nextAlphaSha = nextAlphaUpdate.mergeSha;
-      const nextDevUpdate = await context.updateBranch(
-        nextDevRef,
-        nextAlphaSha,
-        "updated",
-        {
-          title: `Prepare ${selectedNextAlpha.tag}`,
-          body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
-          allowPendingPullRequest: true,
-          allowMergeCommitOnNonFastForward: true,
-          allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
-          reconciliationVersion: nextAlphaVersion,
-        },
-      );
+      const currentNextDevSha = await context.readRefSha(`heads/${nextDevRef}`);
+      const currentDevVersionStateMatches =
+        await context.remoteVersionStateFilesMatch({
+          octokit: context.octokit,
+          owner: context.owner,
+          repo: context.repo,
+          currentSha: currentNextDevSha,
+          generatedSha: nextAlphaSha,
+          paths: nextAlphaVersionFiles,
+        });
+      const nextDevUpdate = currentDevVersionStateMatches
+        ? { updated: true, existing: true }
+        : await context.updateBranch(nextDevRef, nextAlphaSha, "updated", {
+            title: `Prepare ${selectedNextAlpha.tag}`,
+            body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+            allowPendingPullRequest: true,
+            allowMergeCommitOnNonFastForward: true,
+            allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
+            reconciliationVersion: nextAlphaVersion,
+          });
+      if (currentDevVersionStateMatches) {
+        context.updates.push({
+          ref: nextDevRef,
+          action: "existing-compatible-version-state",
+          sha: currentNextDevSha,
+          version: nextAlphaVersion,
+        });
+      }
       if (nextDevUpdate.pending) {
         return pendingNextAlphaResult(context, state, nextAlphaSha, nextDevUpdate);
       }
