@@ -66,6 +66,9 @@ const {
   collectGitHubReleaseEvidenceAssets,
   publishGitHubReleaseEvidence,
 } = await import("../actions/promote-buildchain-ref/index.js");
+const {
+  transactionContainedInRelease,
+} = await import("../actions/promote-buildchain-ref/internal/promote-release-channel.js");
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 import {
@@ -83,6 +86,39 @@ import {
   transientGitHubError,
   versionStateBranchName,
 } from "./helpers/promote-buildchain-ref-fixtures.mjs";
+
+test("stable recovery checks the advanced protected head for sealed release material", async () => {
+  const requestedSourceSha = "1".repeat(40);
+  const protectedMergeSha = "2".repeat(40);
+  const sealedMaterialSha = "3".repeat(40);
+  const checkedReleaseShas = [];
+  const contained = await transactionContainedInRelease(
+    {
+      octokit: {},
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: requestedSourceSha,
+      advancedChannelSha: protectedMergeSha,
+      releaseCommitIncludesTransactionHead: async ({
+        releaseSha,
+        transactionReleaseSha,
+      }) => {
+        checkedReleaseShas.push(releaseSha);
+        return (
+          releaseSha === protectedMergeSha &&
+          transactionReleaseSha === sealedMaterialSha
+        );
+      },
+    },
+    {
+      release_sha: sealedMaterialSha,
+      release_material_sha: sealedMaterialSha,
+    },
+  );
+
+  assert.equal(contained, true);
+  assert.deepEqual(checkedReleaseShas, [protectedMergeSha]);
+});
 
 test("publish transaction resumes matching alpha durable state refs", async () => {
   const cwd = makeTempWorkspace({
