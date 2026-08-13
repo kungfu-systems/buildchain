@@ -24,6 +24,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                       [--require-lifecycle-stages <comma-list>]
   buildchain lifecycle run <stage> [--cwd <dir>] [--required]
                              [--artifact-name <name>] [--artifact-path <path>]...
+                             [--platform-id <id>] [--platform-name <name>]
                              [--manifest-path <path>] [--summary-path <path>]
                              [--process-summary <json>]
   buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]
@@ -39,6 +40,10 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-governance reconcile --repository <owner/repo>
                                --branch <dev|alpha|release/vN/vN.N>
                                --candidate-sha <sha> [--apply] [--json]
+  buildchain release-tail plan --declaration <json-or-path> [--output <path>]
+  buildchain release-tail init --declaration <json-or-path> [--state <path>]
+  buildchain release-tail <status|verify> [--state <path>] [--output <path>]
+  buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
   buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...
@@ -60,6 +65,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                                     [--kfd-3-prebuild-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-verify-cmd <command>]
+                                    [--kfd-adopter-manifest-json <json-or-path>]
                                     [--kfd-support-matrix-json <json-or-path>]
                                     [--kfd-product-gate-json <json-or-path>]...
                                     [--invariant-passport-json <json-or-path>]...
@@ -183,10 +189,11 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain kfd 7 schema [--schema <name>] [--json]
   buildchain kfd 7 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]
   buildchain kfd 7 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]
-  buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>...
+  buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>
                                   [--expected-source-sha <sha>] [--checked-at <date-time>]
                                   [--output <file>] [--json]
-  buildchain kfd support verify --projection-json <file-or-json>
+  buildchain kfd support verify --projection-json <file-or-json> --manifest-json <file-or-json>
+                                  --manifest-gate-json <file-or-json>
                                   [--expected-source-sha <sha>] [--checked-at <date-time>] [--json]
   buildchain sample process-tree [--interval-ms <n>] [--label <name>]
                                  [--output <jsonl>] [--summary-output <json>]
@@ -235,15 +242,15 @@ Examples:
   buildchain validate --require-version-state --require-lifecycle-stages build,verify
   buildchain lifecycle run build --artifact-path dist --artifact-name "{repo}-{version}-{platform}"
   buildchain npm dry-run --json
-  buildchain release --dry-run --target-ref alpha/v3/v3.0
-  buildchain release line open --major 3 --minor 1 --source-ref release/v3/v3.0 --json
+  buildchain release --dry-run --target-ref alpha/v4/v4.0
+  buildchain release line open --major 4 --minor 1 --source-ref release/v4/v4.0 --json
   buildchain span --event native.build -- cmake --build build
-  buildchain collect github-release --tag v3.0.0 --assets-dir dist --output-dir .buildchain/release-passport
+  buildchain collect github-release --tag v4.0.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain create publication-admission --input-json admission-input.json --output admission.json
   buildchain create runner-provenance --input-json runner-input.json --output runner.json
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
   buildchain verify publication-admission admission.json --registry-json publication-authority-registry.json --runner-json runner.json --control-plane-audit-json control-plane.json --expected-json expected.json --json
-  buildchain audit publication-control-plane --repository kungfu-systems/buildchain --branch release/v3/v3.0
+  buildchain audit publication-control-plane --repository kungfu-systems/buildchain --branch release/v4/v4.0
   buildchain verify artifact ./dist/buildchain-x86_64-unknown-linux-gnu.tar.gz --passport .buildchain/release-passport/buildchain.release.json
   buildchain verify artifact-envelope .buildchain/kfx/artifact-verification-envelope.json --json
   buildchain project kfx-admission .buildchain/kfx/artifact-verification-envelope.json --json

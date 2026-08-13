@@ -59,6 +59,45 @@ export {
 } from "./publish-transaction.js";
 
 export {
+  RELEASE_TAIL_CAPABILITY_REGISTRY,
+  RELEASE_TAIL_DECLARATION_CONTRACT,
+  RELEASE_TAIL_EFFECT_SCHEMA,
+  RELEASE_TAIL_OBSERVATION_SCHEMA,
+  RELEASE_TAIL_RECEIPT_SCHEMA,
+  RELEASE_TAIL_STATES,
+  RELEASE_TAIL_TRANSACTION_POLICY,
+  RELEASE_TAIL_TRANSACTION_SCHEMA,
+  compileReleaseTailDeclaration,
+  createReleaseTailAdapterSet,
+  createReleaseTailTransaction,
+  executeReleaseTailTransaction,
+  parseReleaseTailDeclaration,
+  readReleaseTailTransaction,
+  releaseTailRetryPolicyFromDeclaration,
+  releaseTailRoot,
+  releaseTailStableJson,
+  validateReleaseTailEffectPlan,
+  validateReleaseTailTransaction,
+  writeReleaseTailTransaction,
+} from "./release-tail-provider-plane.js";
+
+export {
+  ReleaseTailProviderError,
+  createActivationReceiptProjectorAdapter,
+  createGitHubReleaseAssetsAdapter,
+  createHttpJsonReadback,
+  createSignedStaticChannelAdapter,
+  createSiteReleaseActivationAdapter,
+  githubReleaseAssetsTargetRoot,
+} from "./release-tail-provider-adapters.js";
+
+export {
+  RELEASE_TAIL_COMPATIBILITY_CONTRACT,
+  RELEASE_TAIL_LEGACY_HOOKS,
+  diagnoseLegacyReleaseTailHooks,
+} from "./release-tail-compatibility.js";
+
+export {
   createPortableDevCachePlan,
   createPortableDevCacheReceipt,
   verifyPortableDevCachePlan,
@@ -248,6 +287,9 @@ export {
   verifyGithubGovernanceReceipt,
 } from "./github-governance-authority.js";
 
+export * from "./engineering-housekeeper.js";
+export * from "./engineering-housekeeper-github.js";
+
 export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,
   ARTIFACT_PASSPORT_POINTER_CONTRACT,
@@ -263,10 +305,14 @@ export {
 export {
   ARTIFACT_VERIFICATION_ENVELOPE_CHECK_CONTRACT,
   ARTIFACT_VERIFICATION_ENVELOPE_CONTRACT,
+  KFD_ADOPTER_RELEASE_BINDING_CONTRACT,
   KFX_ADMISSION_INPUTS_CONTRACT,
   artifactVerificationEnvelopeDigest,
+  createKfdAdopterReleaseBinding,
+  installedKfdPackageArtifactRoot,
   projectArtifactVerificationEnvelopeToKfx,
   sealArtifactVerificationReport,
+  validateKfdAdopterReleaseBinding,
   verifyArtifactVerificationEnvelope,
 } from "./artifact-verification-envelope.js";
 
@@ -446,15 +492,10 @@ export {
   KFD_PRODUCT_GATE_INPUT_CONTRACT,
   KFD_PRODUCT_GATE_INPUT_SCHEMA,
   KFD_PRODUCT_GATE_INPUT_SCHEMA_ID,
-  KFD_SUPPORT_PROJECTION_CONTRACT,
-  KFD_SUPPORT_PROJECTION_SCHEMA,
-  KFD_SUPPORT_PROJECTION_SCHEMA_ID,
-  createKfdSupportProjection,
   evaluateKfdProductGate,
   kfdProductGateDigest,
   kfdProductGates,
   validateKfdProductGateResult,
-  validateKfdSupportProjection,
   verifyKfdRecord,
 } from "./kfd-product-gates.js";
 

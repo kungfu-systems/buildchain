@@ -39,7 +39,7 @@ const common = [
 
 function operator(mode, extra = [], env = process.env) {
   return spawnSync(
-    "/bin/bash",
+    "bash",
     ["scripts/aws-windows-jit-operator.sh", mode, ...common, ...extra],
     { cwd: root, encoding: "utf8", env },
   );
@@ -79,11 +79,11 @@ test("Windows JIT operator emits one deterministic disabled plan", () => {
       const commandPath = path.join(fakeBin, command);
       fs.writeFileSync(commandPath, forbidden, { mode: 0o755 });
     }
-    const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}` };
+    const env = { ...process.env, PATH: `${fakeBin}${path.delimiter}${process.env.PATH}` };
     const first = operator("plan", [], env);
     const second = operator("plan", [], env);
     const defaultMode = spawnSync(
-      "/bin/bash",
+      "bash",
       ["scripts/aws-windows-jit-operator.sh", ...common],
       { cwd: root, encoding: "utf8", env },
     );
@@ -171,7 +171,7 @@ process.stdout.write('{"id":322620360,"state":"disabled_manually"}');
     );
     const env = {
       ...process.env,
-      PATH: `${fakeBin}:${process.env.PATH}`,
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
       FAKE_COMMAND_LOG: log,
     };
     const result = operator(
@@ -235,7 +235,7 @@ process.stdout.write(args.includes("actions/runners") ? '{"runners":[]}' : '{"id
     );
     const env = {
       ...process.env,
-      PATH: `${fakeBin}:${process.env.PATH}`,
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
       FAKE_COMMAND_LOG: log,
     };
     const result = operator(
@@ -318,7 +318,7 @@ else if (joined.includes("ce get-dimension-values")) {
     );
     const env = {
       ...process.env,
-      PATH: `${fakeBin}:${process.env.PATH}`,
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
       FAKE_COMMAND_LOG: log,
     };
     const result = operator(
@@ -358,7 +358,7 @@ else process.exit(91);
     executable(fakeBin, "gh", "#!/bin/sh\necho forbidden >&2\nexit 99\n");
     const env = {
       ...process.env,
-      PATH: `${fakeBin}:${process.env.PATH}`,
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
       FAKE_COMMAND_LOG: log,
     };
     const result = operator("launch-gate", [], env);
@@ -399,7 +399,7 @@ if (args.includes("workflow disable")) process.exit(0);
 process.stdout.write(args.includes("actions/runners") ? '{"runners":[]}' : '{"id":322620360,"state":"disabled_manually"}');
 `,
     );
-    const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}` };
+    const env = { ...process.env, PATH: `${fakeBin}${path.delimiter}${process.env.PATH}` };
     const confirmations = exactConfirmations(env);
     const first = operator("close", confirmations, env);
     const second = operator("close", confirmations, env);

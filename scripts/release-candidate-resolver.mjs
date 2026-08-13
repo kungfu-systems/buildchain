@@ -291,7 +291,7 @@ function readNpmPackageJsonFromTarball(tarballPath) {
   const errors = [];
   for (const candidate of candidates) {
     try {
-      return JSON.parse(execFileSync("tar", ["-xOf", tarballPath, candidate], { encoding: "utf8" }));
+      return JSON.parse(execFileSync("tar", ["-xOf", path.basename(tarballPath), candidate], { cwd: path.dirname(tarballPath), encoding: "utf8" }));
     } catch (error) {
       errors.push(error.stderr?.toString?.().trim() || error.message);
     }

@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-stage-capsule-resume-v1.schema.json",
+  "title": "Buildchain v4 Stage Capsule resume planner contract suite",
+  "description": "Closed pure request and plan contracts for deterministic Stage Capsule resume decisions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "request", "plan"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "request": { "$ref": "#/$defs/request" },
+    "plan": { "$ref": "#/$defs/plan" }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "clock": {
+      "type": "string",
+      "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "retentionPromise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "retainUntil"],
+      "properties": {
+        "class": { "$ref": "#/$defs/token" },
+        "retainUntil": { "$ref": "#/$defs/clock" }
+      }
+    },
+    "candidate": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["capsule", "availability"],
+      "properties": {
+        "capsule": {
+          "$ref": "v4-stage-capsule-v1.schema.json#/$defs/capsule"
+        },
+        "availability": {
+          "$ref": "v4-stage-capsule-v1.schema.json#/$defs/availability"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "dependencies",
+        "expectedIdentity",
+        "expectedRetentionPromise",
+        "candidate"
+      ],
+      "properties": {
+        "key": { "$ref": "#/$defs/token" },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/token" }
+        },
+        "expectedIdentity": {
+          "$ref": "v4-stage-capsule-v1.schema.json#/$defs/identity"
+        },
+        "expectedRetentionPromise": {
+          "$ref": "#/$defs/retentionPromise"
+        },
+        "candidate": { "$ref": "#/$defs/candidate" }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "provider",
+        "afterStages",
+        "providerReadback",
+        "mutation"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/token" },
+        "kind": { "$ref": "#/$defs/token" },
+        "provider": { "$ref": "#/$defs/token" },
+        "afterStages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/token" }
+        },
+        "providerReadback": { "const": true },
+        "mutation": { "const": false }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "evaluatedAt", "nodes", "targets", "effects"],
+      "properties": {
+        "schema": {
+          "const": "buildchain-v4-stage-capsule-resume-request/v1"
+        },
+        "evaluatedAt": { "$ref": "#/$defs/clock" },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/node" }
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/token" }
+        },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/effect" }
+        }
+      }
+    },
+    "cause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "expectedRoot", "observedRoot"],
+      "properties": {
+        "field": { "$ref": "#/$defs/token" },
+        "expectedRoot": { "$ref": "#/$defs/root" },
+        "observedRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "read": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "root"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/token" },
+        "name": { "$ref": "#/$defs/token" },
+        "root": { "$ref": "#/$defs/root" }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stageKey",
+        "platform",
+        "stage",
+        "decision",
+        "execution",
+        "reasonCode",
+        "capsuleRoot",
+        "availabilityRoot",
+        "invalidationCauses",
+        "requiredReads"
+      ],
+      "properties": {
+        "stageKey": { "$ref": "#/$defs/token" },
+        "platform": { "$ref": "#/$defs/token" },
+        "stage": { "$ref": "#/$defs/token" },
+        "decision": { "enum": ["reuse", "rebuild", "reject"] },
+        "execution": { "enum": ["reuse", "rebuild"] },
+        "reasonCode": { "$ref": "#/$defs/token" },
+        "capsuleRoot": {
+          "anyOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "availabilityRoot": {
+          "anyOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "invalidationCauses": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cause" }
+        },
+        "requiredReads": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/read" }
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "mode",
+        "productionAuthority",
+        "evaluatedAt",
+        "decisions",
+        "requiredRestores",
+        "requiredStages",
+        "requiredEffects",
+        "planRoot"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-stage-capsule-resume-plan/v1" },
+        "mode": { "const": "shadow-only" },
+        "productionAuthority": { "const": "v3" },
+        "evaluatedAt": { "$ref": "#/$defs/clock" },
+        "decisions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/decision" }
+        },
+        "requiredRestores": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/token" }
+        },
+        "requiredStages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/token" }
+        },
+        "requiredEffects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/effect" }
+        },
+        "planRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}

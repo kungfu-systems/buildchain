@@ -12,6 +12,16 @@ on:
         default: ""
         type: string
         required: false
+      buildchain-expected-channel:
+        description: "Explicit stable or alpha lane expected when a bootstrap workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-major:
+        description: "Explicit Buildchain major expected when a bootstrap workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
       promotion-router-ref:
         description: "Router workflow ref bound by the generated public wrapper"
         default: ""
@@ -227,6 +237,11 @@ on:
         default: true
         type: boolean
         required: false
+      declarative-release-tail:
+        description: "Publish and read back GitHub Release assets through the Buildchain declarative release-tail provider plane"
+        default: false
+        type: boolean
+        required: false
       github-release-title:
         description: "Optional GitHub Release title. Empty defaults to the public release tag."
         default: ""
@@ -381,9 +396,13 @@ on:
         description: "Product-owned command that emits KFD-3 artifact-side collaboration-interface witness JSON"
         default: ""
         type: string
+      release-passport-kfd-adopter-manifest-json:
+        description: "Standard full-cut adopter conformance manifest JSON path"
+        default: ""
+        type: string
         required: false
       release-passport-kfd-support-matrix-json:
-        description: "KFD-1..13 support matrix JSON path projected into the release passport"
+        description: "Legacy KFD support projection JSON path accepted only for exact manifest comparison"
         default: ""
         type: string
         required: false
@@ -633,6 +652,21 @@ on:
       github-artifact-attestation-publication-receipt-digest:
         description: "Read-back verified GitHub Release evidence publication receipt digest"
         value: ${{ jobs.publish-github-artifact-attestation-evidence.outputs.publication-receipt-digest }}
+      release-tail-declaration-root:
+        description: "Root of the declarative release-tail contract"
+        value: ${{ jobs.promote.outputs.release-tail-declaration-root }}
+      release-tail-transaction-state:
+        description: "Final declarative release-tail transaction state"
+        value: ${{ jobs.promote.outputs.release-tail-transaction-state }}
+      release-tail-transaction-root:
+        description: "Stable declarative release-tail transaction root"
+        value: ${{ jobs.promote.outputs.release-tail-transaction-root }}
+      release-tail-state-root:
+        description: "Root of the final declarative release-tail transaction state"
+        value: ${{ jobs.promote.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json:
+        description: "JSON array of standardized declarative release-tail receipt roots"
+        value: ${{ jobs.promote.outputs.release-tail-receipt-roots-json }}
       controller-receipt-artifact:
         description: "Controller receipt artifact name"
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
@@ -784,7 +818,7 @@ jobs:
         with:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ inputs.promotion-shell-sha }}
-          path: .buildchain/promotion-shell
+          path: .buildchain/runtime/promotion-shell
           persist-credentials: false
 
       - name: Checkout promotion router
@@ -835,7 +869,7 @@ jobs:
           ACTUAL_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
           CALLED_WORKFLOW_REF: ${{ job.workflow_ref }}
           CALLED_WORKFLOW_SHA: ${{ job.workflow_sha }}
-        run: bash .buildchain/promotion-shell/scripts/verify-promotion-router-binding.sh
+        run: bash .buildchain/runtime/promotion-shell/scripts/verify-promotion-router-binding.sh
 
       - name: Create release-candidate-promotion controller plan
         id: controller-plan
@@ -1049,7 +1083,6 @@ jobs:
             echo "::error::publication plan version/tag mismatch: ${BUILDCHAIN_PUBLICATION_VERSION} != ${BUILDCHAIN_PUBLICATION_EXACT_TAG}"
             exit 1
           fi
-
   publication-authority:
     name: Seal product publication capability
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
@@ -1095,8 +1128,9 @@ jobs:
       evidence-manifest-pattern: ${{ needs.release-candidate-preflight.outputs.manifest-pattern }}
       evidence-payload-pattern: ${{ needs.release-candidate-preflight.outputs.payload-pattern }}
       dry-run: ${{ inputs.dry-run }}
-    secrets: inherit
-
+    secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+      BUILDCHAIN_GOVERNANCE_READ_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
   qualification-plan:
     name: Bind consumer publication predicate
     needs: [preflight]
@@ -1274,6 +1308,11 @@ jobs:
       github-artifact-attestation-source-sha: ${{ steps.attestation-input.outputs.source-sha }}
       github-artifact-attestation-public-release-tag: ${{ steps.promote.outputs.public-release-tag }}
       github-artifact-attestation-github-release-url: ${{ steps.promote.outputs.github-release-url }}
+      release-tail-declaration-root: ${{ steps.promote.outputs.release-tail-declaration-root }}
+      release-tail-transaction-state: ${{ steps.promote.outputs.release-tail-transaction-state }}
+      release-tail-transaction-root: ${{ steps.promote.outputs.release-tail-transaction-root }}
+      release-tail-state-root: ${{ steps.promote.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json: ${{ steps.promote.outputs.release-tail-receipt-roots-json }}
     steps:
       - name: Download release-candidate-promotion controller plan
         uses: actions/download-artifact@v7.0.0
@@ -1286,15 +1325,6 @@ jobs:
         with:
           ref: ${{ needs.preflight.outputs.requested-sha }}
           clean: true
-          persist-credentials: false
-
-      - name: Checkout selected promotion workflow shell
-        if: ${{ inputs.promotion-shell-ref != '' }}
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.promotion-shell-sha }}
-          path: .buildchain/promotion-shell
           persist-credentials: false
 
       - uses: actions/setup-node@v6.4.0
@@ -1400,6 +1430,15 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Checkout selected promotion workflow shell
+        if: ${{ inputs.promotion-shell-ref != '' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.promotion-shell-sha }}
+          path: .buildchain/runtime/promotion-shell
+          persist-credentials: false
+
       - name: Resolve checked out Buildchain runtime
         id: buildchain-runtime
         shell: bash
@@ -1411,6 +1450,8 @@ jobs:
             runtime_class="exact-sha"
           elif [[ "${runtime_ref}" =~ ^(refs/heads/)?train/v[0-9]+/v[0-9]+\.[0-9]+/.+ ]]; then
             runtime_class="train"
+          elif [[ "${runtime_ref}" =~ ^(refs/heads/)?authority/v[0-9]+/v[0-9]+\.[0-9]+/.+ ]]; then
+            runtime_class="authority"
           elif [[ "${runtime_ref}" =~ ^v[0-9]+(\.[0-9]+)?$ || "${runtime_ref}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             runtime_class="stable"
           elif [[ "${runtime_ref}" =~ ^v[0-9]+(\.[0-9]+)?-alpha$ || "${runtime_ref}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
@@ -1420,6 +1461,10 @@ jobs:
             echo "ref=${runtime_ref}"
             echo "sha=${runtime_sha}"
             echo "class=${runtime_class}"
+            case "${runtime_class}" in
+              train|authority|exact-sha) echo "override=true" ;;
+              *) echo "override=false" ;;
+            esac
           } >> "${GITHUB_OUTPUT}"
         env:
           INPUT_BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
@@ -1444,7 +1489,7 @@ jobs:
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"
-              echo "contract-lock-compatible=true"
+              echo "contract-lock-compatible=false"
               echo "contract-lock-drift=false"
               echo "contract-lock-issue-needed=false"
               echo "contract-lock-issue-body-file="
@@ -1464,6 +1509,8 @@ jobs:
                 echo "- Note: the checked-out Buildchain runtime does not yet ship contract lock support."
               } >> "${GITHUB_STEP_SUMMARY}"
             fi
+            echo "::error::Buildchain runtime cannot prove channel-bound contract-lock semantics"
+            exit 1
           fi
         env:
           BUILDCHAIN_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-contract-lock-path }}
@@ -1473,6 +1520,10 @@ jobs:
           BUILDCHAIN_RUNTIME_REF: ${{ steps.buildchain-runtime.outputs.ref }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.buildchain-runtime.outputs.class }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ inputs.promotion-shell-ref || job.workflow_ref }}
+          BUILDCHAIN_EXPECTED_CHANNEL: ${{ inputs.buildchain-expected-channel }}
+          BUILDCHAIN_EXPECTED_MAJOR: ${{ inputs.buildchain-expected-major }}
+          BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ steps.buildchain-runtime.outputs.override }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Report consumer Buildchain contract drift
@@ -1603,7 +1654,7 @@ jobs:
           TARGET_REF: ${{ inputs.promotion-target-ref }}
           OVERRIDE_USED: ${{ inputs.promotion-override-used }}
           RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
-        run: node .buildchain/promotion-shell/scripts/promotion-routing-evidence.mjs
+        run: node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs
 
       - name: Resolve Buildchain stable candidate alpha
         id: buildchain-stable-candidate
@@ -1762,7 +1813,8 @@ jobs:
           publish-sealed-bundle-manifest: ${{ steps.rc.outputs.publish-sealed-bundle-manifest }}
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
-          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
+          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
+          publish-required-artifacts-path: ${{ inputs.publish-required-artifacts-json == '' && steps.rc.outputs.publish-required-artifacts-path || '' }}
           publish-mode: ${{ inputs.publish-mode }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           publish-dist-tag: ${{ inputs.publish-dist-tag }}
@@ -1790,6 +1842,7 @@ jobs:
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
           release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+          release-passport-kfd-adopter-manifest-json: ${{ inputs.release-passport-kfd-adopter-manifest-json }}
           release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}
           release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
           release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
@@ -1799,6 +1852,7 @@ jobs:
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           release-passport-github-artifact-attestation-policy-jsons: ${{ steps.attestation-policy.outputs.path }}
           github-release: ${{ inputs.github-release }}
+          declarative-release-tail: ${{ inputs.declarative-release-tail }}
           github-release-artifact-paths: ${{ steps.rc.outputs.release-candidate-github-release-artifact-paths }}
           github-release-title: ${{ inputs.github-release-title }}
           github-release-notes: ${{ inputs.github-release-notes }}
@@ -1810,6 +1864,17 @@ jobs:
           release-candidate-family-evidence-root: ${{ inputs.release-candidate-family-evidence-root }}
           release-candidate-family-initiative-id: ${{ inputs.release-candidate-family-initiative-id }}
           release-candidate-family-assignment-id: ${{ inputs.release-candidate-family-assignment-id }}
+
+      - name: Retain declarative release-tail contract and transaction
+        if: ${{ always() && inputs.declarative-release-tail && steps.promote.outputs.release-tail-state-path != '' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-tail-${{ needs.preflight.outputs.requested-sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            ${{ steps.promote.outputs.release-tail-declaration-path }}
+            ${{ steps.promote.outputs.release-tail-state-path }}
 
       - name: Stage sealed GitHub artifact attestation inputs
         id: attestation-input

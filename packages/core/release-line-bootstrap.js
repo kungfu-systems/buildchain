@@ -65,6 +65,26 @@ function writeJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+function relineBuildchainSummary(value, line) {
+  return String(value || "").replace(/^Buildchain v\d+\.\d+(?=\s)/u, `Buildchain ${line}`);
+}
+
+function updateReleaseImpactForLine(current, plan) {
+  return {
+    ...current,
+    release: {
+      ...(current.release && typeof current.release === "object" ? current.release : {}),
+      version: plan.initialVersion,
+      line: plan.line,
+    },
+    versionImpact: {
+      ...(current.versionImpact && typeof current.versionImpact === "object" ? current.versionImpact : {}),
+      rationale: relineBuildchainSummary(current.versionImpact?.rationale, plan.line),
+    },
+    summary: relineBuildchainSummary(current.summary, plan.line),
+  };
+}
+
 function updateReleaseImpactVersionState(cwd, plan) {
   const filePath = path.join(cwd, ".buildchain", "release-impact.json");
   if (!fs.existsSync(filePath)) {
@@ -74,14 +94,7 @@ function updateReleaseImpactVersionState(cwd, plan) {
   if (!current || typeof current !== "object" || Array.isArray(current)) {
     throw new Error(".buildchain/release-impact.json must be a JSON object");
   }
-  const next = {
-    ...current,
-    release: {
-      ...(current.release && typeof current.release === "object" ? current.release : {}),
-      version: plan.initialVersion,
-      line: plan.line,
-    },
-  };
+  const next = updateReleaseImpactForLine(current, plan);
   const content = writeJson(next);
   if (content !== writeJson(current)) {
     fs.writeFileSync(filePath, content);

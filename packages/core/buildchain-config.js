@@ -1,4 +1,3 @@
-import { execSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -8,6 +7,7 @@ import {
   BUILDCHAIN_CONFIG_PATH,
   resolveBuildchainConfigPath,
 } from "./buildchain-layout.js";
+import { runShellCommandSync } from "./spawn-command.js";
 
 const CONFIG_FILE = BUILDCHAIN_CONFIG_PATH;
 const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
@@ -1193,11 +1193,6 @@ function validateAnchoredDerivedVersionMaterialConfig(config) {
   if (derivedFiles.length === 0) {
     return;
   }
-  if (config.version.strategy !== "anchored" || config.version.next !== "manual") {
-    throw new Error(
-      "version.derived_files requires version.strategy = \"anchored\" and version.next = \"manual\"",
-    );
-  }
   const versionState =
     config.lifecycle?.["version-state"] ||
     config.lifecycle?.version_state;
@@ -1403,11 +1398,11 @@ export function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, sta
   };
   const runOnce = () => {
     if (selected.mode === "script") {
-      execSync(selected.script, execOptions);
+      runShellCommandSync(selected.script, execOptions);
       return;
     }
     for (const command of selected.commands) {
-      execSync(command, execOptions);
+      runShellCommandSync(command, execOptions);
     }
   };
   let lastError;

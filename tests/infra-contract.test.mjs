@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   applyInfraContract,
   applyInfraContractPropagation,
@@ -15,7 +16,7 @@ import {
   verifyInfraContractEvidenceBundle,
 } from "../scripts/infra-contract-core.mjs";
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function sortJson(value) {
   if (Array.isArray(value)) {

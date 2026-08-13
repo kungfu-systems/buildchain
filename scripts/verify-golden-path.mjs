@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function run(command, args, { cwd, json = false } = {}) {
-  const result = spawnSync(command, args, {
+  const result = spawnSyncCommand(command, args, {
     cwd,
     encoding: "utf8",
     env: {
@@ -89,7 +89,7 @@ export function verifyGoldenPath() {
     );
     const releaseDryRun = run(
       buildchain,
-      ["release", "--dry-run", "--target-ref", "alpha/v3/v3.0", "--json"],
+      ["release", "--dry-run", "--target-ref", "alpha/v4/v4.0", "--json"],
       { cwd: consumer, json: true },
     );
     const passportPath = path.join(
@@ -129,10 +129,10 @@ export function verifyGoldenPath() {
       "Golden Path validation did not retain the required lifecycle stages",
     );
     assert(
-      /uses:\s+kungfu-systems\/buildchain\/.github\/workflows\/.build.yml@v3/.test(
+      /uses:\s+kungfu-systems\/buildchain\/.github\/workflows\/.build.yml@v4/.test(
         workflow,
       ),
-      "Golden Path workflow is not a thin v3 reusable-workflow caller",
+      "Golden Path workflow is not a thin v4 reusable-workflow caller",
     );
     assert(
       /buildchain-ref:/.test(workflow),

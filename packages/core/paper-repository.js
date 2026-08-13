@@ -1,8 +1,8 @@
-import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { loadBuildchainConfig } from "./buildchain-config.js";
+import { spawnSyncCommand } from "./spawn-command.js";
 
 export const PAPER_PATHS = Object.freeze({
   config: ".buildchain/buildchain.toml",
@@ -77,7 +77,7 @@ export function commandResult(
   args,
   { cwd, env = process.env, timeout = 15000 } = {},
 ) {
-  const result = spawnSync(command, args, {
+  const result = spawnSyncCommand(command, args, {
     cwd,
     env,
     encoding: "utf8",

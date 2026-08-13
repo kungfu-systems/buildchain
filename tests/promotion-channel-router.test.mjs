@@ -10,9 +10,10 @@ import { resolvePromotionChannel } from "../scripts/promotion-channel-router.mjs
 import { resolvePromotionIdentities } from "../scripts/promotion-identity-resolver.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
+const pinnedPromotionShellSha = "b2f0d35424a38123b4c71612be27bebeeec1104d";
 const shellRouting = parsePromotionShellRouting(
   fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
-  { major: 3 },
+  { major: 4 },
 );
 
 const base = {
@@ -70,7 +71,7 @@ test("consumer target version does not override the Buildchain major", () => {
   assert.equal(result.runtimeRef, "v3");
 });
 
-test("train and exact-SHA overrides retain auto-only selection and target shell lane", () => {
+test("train and exact-SHA overrides are always bound to the target shell lane", () => {
   for (const requestedRef of ["train/v3/v3.0/promotion-router", "a".repeat(40)]) {
     const result = resolvePromotionChannel({ ...base, targetRef: "alpha/v3/v3.0", requestedRef });
     assert.equal(result.channel, "alpha");
@@ -78,14 +79,14 @@ test("train and exact-SHA overrides retain auto-only selection and target shell 
     assert.equal(result.runtimeRef, requestedRef);
     assert.equal(result.overrideUsed, true);
   }
-  assert.throws(
-    () => resolvePromotionChannel({
+  assert.equal(
+    resolvePromotionChannel({
       ...base,
       targetRef: "alpha/v3/v3.0",
       requestedChannel: "alpha",
       requestedRef: "a".repeat(40),
-    }),
-    /require buildchain-channel=auto/,
+    }).channel,
+    "alpha",
   );
 });
 
@@ -120,7 +121,7 @@ test("a matching workflow ref cannot authorize a different runtime SHA", () => {
     routerSha: "b".repeat(40),
   });
   assert.equal(result.overrideUsed, true);
-  assert.equal(result.selectionSource, "explicit-buildchain-ref");
+  assert.equal(result.selectionSource, "explicit-buildchain-ref+channel-evidence");
 });
 
 test("floating promotion refs resolve once even when the ref moves during routing", async () => {
@@ -162,9 +163,9 @@ function workflowFields(source, section) {
 
 test("generated promotion router preserves every public input and output exactly once", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
-  const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
   const current = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
-  const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-") || name === "publication-authority-workflow-path"));
+  const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-") || name === "publication-authority-workflow-path" || name === "buildchain-expected-channel" || name === "buildchain-expected-major"));
   const expectedInputs = workflowFields(advanced, "inputs").filter((name) => !internal.has(name));
   expectedInputs.push("buildchain-channel", "buildchain-alpha-contract-lock-path", "buildchain-stable-contract-lock-path");
   const actualInputs = workflowFields(generated, "inputs");
@@ -174,6 +175,8 @@ test("generated promotion router preserves every public input and output exactly
   assert.equal(current, generated);
   assert.deepEqual([...actualInputs].sort(), [...expectedInputs].sort());
   assert.equal(new Set(actualInputs).size, actualInputs.length);
+  assert.equal(generated.match(/buildchain-expected-channel: \$\{\{ needs\.resolve-promotion\.outputs\.channel \}\}/g)?.length, 2);
+  assert.equal(generated.match(/buildchain-expected-major: "4"/g)?.length, 2);
   for (const output of expectedOutputs) assert.ok(actualOutputs.includes(output), `missing output ${output}`);
   assert.equal(new Set(actualOutputs).size, actualOutputs.length);
 });
@@ -184,24 +187,24 @@ test("generated router delegates alpha and stable lanes to their configured shel
     "name: Release Candidate Promote Advanced",
     "name: Release Candidate Promote Advanced Alpha Fixture",
   );
-  const generated = generateChannelPromotionWorkflow(fixture, { major: 3, shellRouting });
+  const generated = generateChannelPromotionWorkflow(fixture, { major: 4, shellRouting });
 
   assert.match(
     generated,
-    /\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
+    new RegExp(`\\.release-candidate-promote\\.yml@${pinnedPromotionShellSha}`),
   );
-  assert.match(generated, /\.release-candidate-promote\.yml@v3(?:\n|$)/);
+  assert.equal(generated.match(new RegExp(`\\.release-candidate-promote\\.yml@${pinnedPromotionShellSha}`, "g"))?.length, 2);
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
 });
 
 test("stable route calls the hidden advanced workflow through the current major ref", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
-  const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
 
   assert.deepEqual(shellRouting.stable, {
-    logicalRef: "v3",
-    callRef: "v3",
+    logicalRef: "v4",
+    callRef: pinnedPromotionShellSha,
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
     unsupportedInputs: [
@@ -223,6 +226,7 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-passport-evidence-command",
       "release-passport-evidence-jsons",
       "release-passport-evidence-path",
+      "release-passport-kfd-adopter-manifest-json",
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
       "release-propagation-config-path",
@@ -237,8 +241,9 @@ test("stable route calls the hidden advanced workflow through the current major 
       "resume-transaction-id",
     ],
   });
-  assert.match(generated, /STABLE_SHELL_REF: v3/);
-  assert.match(generated, /STABLE_SHELL_CALL_REF: v3/);
+  assert.match(generated, /STABLE_SHELL_REF: v4/);
+  assert.match(generated, new RegExp(`STABLE_SHELL_CALL_REF: ${pinnedPromotionShellSha}`));
+  assert.match(generated, /if \[\[ "\$\{ref\}" =~ \^\[0-9a-fA-F\]\{40\}\$ \]\]; then sha="\$\{ref,,\}"/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
   assert.match(
@@ -256,21 +261,21 @@ test("stable route calls the hidden advanced workflow through the current major 
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
 });
 
-test("candidate recovery train calls the matching advanced alpha shell", () => {
+test("alpha route calls the matching current-major advanced shell", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
-  const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
 
-  assert.match(generated, /ALPHA_SHELL_REF: v3-alpha/);
-  assert.match(generated, /ALPHA_SHELL_CALL_REF: train\/v3\/v3\.0\/resume-candidate-run/);
+  assert.match(generated, /ALPHA_SHELL_REF: v4-alpha/);
+  assert.match(generated, new RegExp(`ALPHA_SHELL_CALL_REF: ${pinnedPromotionShellSha}`));
   assert.match(
     generated,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@train\/v3\/v3\.0\/resume-candidate-run/,
+    new RegExp(`uses: kungfu-systems/buildchain/\\.github/workflows/\\.release-candidate-promote\\.yml@${pinnedPromotionShellSha}`),
   );
 });
 
 test("stable route forwards only inputs supported by the current workflow shell", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
-  const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
   const stableBlock = generated.slice(generated.indexOf("  stable:\n"));
 
   for (const name of workflowFields(advanced, "inputs")) {
@@ -280,6 +285,7 @@ test("stable route forwards only inputs supported by the current workflow shell"
   for (const name of shellRouting.stable.unsupportedInputs) {
     assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
+  assert.doesNotMatch(stableBlock, /^      release-passport-kfd-adopter-manifest-json:/m);
   assert.doesNotMatch(stableBlock, /^      release-passport-kfd-support-matrix-json:/m);
   assert.doesNotMatch(stableBlock, /^      release-passport-kfd-product-gate-jsons:/m);
   assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-policy-json:/m);
@@ -309,7 +315,7 @@ test("stable route forwards only inputs supported by the current workflow shell"
 
 test("alpha router coerces string job output before forwarding a boolean input", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
-  const generated = generateChannelPromotionWorkflow(advanced, { major: 3, shellRouting });
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
   const alphaBlock = generated.slice(generated.indexOf("  alpha:\n"), generated.indexOf("  stable:\n"));
 
   assert.match(
@@ -335,7 +341,7 @@ test("promotion router contains no native build job and delegates candidate reus
   assert.match(advanced, /CALLED_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
   assert.match(
     advanced,
-    /bash \.buildchain\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
+    /bash \.buildchain\/runtime\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
   );
   assert.match(
     bindingVerifier,

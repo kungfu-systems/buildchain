@@ -2,15 +2,22 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "3.0.6-alpha.10",
-    "line": "v3.0"
+    "version": "4.0.0-alpha.1",
+    "line": "v4.0"
   },
   "versionImpact": {
-    "final": "minor",
+    "final": "major",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v3.0 converges compatible v2.14 release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
+    "rationale": "Buildchain v4.0 retires v3 publication authority and establishes the protected v4 line, v4 provider journal, activation planner, recovery planner, and stable publication fence as the sole production release authority."
   },
   "surfaceImpacts": [
+    {
+      "id": "v4-production-authority-cutover",
+      "impact": "major",
+      "class": "publication-authority",
+      "rationale": "The protected v4 release line owns the shared alpha channel and all v4 production state-machine writers; exact v4 activation, provider readback, bounded recovery, and stable fencing replace the former v3-authoritative shadow declarations without introducing a second writer.",
+      "source": "architecture/v4-capability-state-machine-manifest.json"
+    },
     {
       "id": "resume-from-candidate-run",
       "impact": "minor",
@@ -460,9 +467,9 @@
       "source": ".github/workflows/.release-candidate-promote.yml"
     }
   ],
-  "classification": "minor",
-  "breaking": false,
+  "classification": "major",
+  "breaking": true,
   "security": false,
-  "migrationRequired": false,
-  "summary": "Buildchain v3.0 extends sealed evidence, release governance, and generated public reference metadata with fail-closed recovery from an exact prior candidate run, configurable trusted control runners, auditable-demo web-delivery qualification, anchored derived version material, source-bound immutable package tags, aligned propagation receipts, claim-only package propagation Work capture, dual-channel promotion workflow-shell routing, and complete CLI and Node API registries."
+  "migrationRequired": true,
+  "summary": "Buildchain v4.0 establishes the Architecture Constitution, exact N-1 bootstrap qualification, and protected v4 release-line governance as the sole production publication authority."
 }

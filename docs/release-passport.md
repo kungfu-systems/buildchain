@@ -399,18 +399,24 @@ instead of trusting docs or release notes.
 
 ### KFD support projection
 
-Pass `--kfd-support-matrix-json` together with three
-`--kfd-product-gate-json` arguments for KFD-4, KFD-5, and KFD-7. The collector
-verifies the product-owned KFD-1..13 matrix against the installed
-`@kungfu-tech/kfd` standards, binds each gate to the exact release source and
-fresh evidence cut, and emits `kfd-support.json`. The identical projection is
-embedded as `kfdSupport` in `buildchain.release.json`.
+Pass the standard full-cut declaration with `--kfd-adopter-manifest-json`
+together with three `--kfd-product-gate-json` arguments for KFD-4, KFD-5, and
+KFD-7. The collector invokes the verifier from the exact installed
+`@kungfu-tech/kfd` package, binds the package artifact, registry and verifier
+roots, the exact Buildchain source, the manifest/report/bundle witness roots,
+and the existing product-gate roots. It emits `kfd-adopter-manifest.json`,
+`kfd-adopter-manifest-gate.json`, and a legacy `kfd-support.json` projection.
+The release passport and `artifact-evidence.json` carry the same rooted
+`kfdAdopter` binding.
 
-Release verification fails closed when the sibling is missing or differs,
-when a gate expires, when matrix and gate status disagree, or when a matrix
-widens KFD-4/5 candidate, KFD-6 unsupported, KFD-8..13 draft, or any non-shipped
-state. A passed projection is release evidence only; product qualification,
-activation, certification, and support ownership remain outside Buildchain.
+The adopter manifest is the sole declaration authority. The old
+`--kfd-support-matrix-json` input is retained only as a compatibility check: if
+supplied with the manifest, it must exactly equal the generated legacy
+projection. Release verification fails closed when any sibling, package root,
+source root, witness root, gate root, passport binding, or artifact-evidence
+binding differs. A passed binding is release evidence only; product
+qualification, activation, certification, and support ownership remain outside
+Buildchain.
 
 ### Floating Buildchain contract lock
 

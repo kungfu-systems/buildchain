@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
     with:
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted

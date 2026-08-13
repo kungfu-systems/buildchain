@@ -441,6 +441,58 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/engineering-housekeeper-daily.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/engineering-housekeeper-daily.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/engineering-housekeeper-monthly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/engineering-housekeeper-monthly.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/engineering-housekeeper-weekly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/engineering-housekeeper-weekly.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/engineering-housekeeper.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/engineering-housekeeper.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/github-artifact-attestation.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": true,
@@ -621,6 +673,24 @@
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/release-tail.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "artifact.publish",
+        "release.activate",
+        "released-evidence.synthesize",
+        "signed-channel.commit"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/release-tail.yml",
+      "environment": "caller-bound",
+      "environmentMode": "caller-bound",
+      "runnerPolicy": "qualified-measured",
       "notes": ""
     },
     {
@@ -945,6 +1015,32 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/engineering-housekeeper-daily.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/engineering-housekeeper-monthly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/engineering-housekeeper-weekly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/engineering-housekeeper.yml",
+      "signals": [],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/github-artifact-attestation.yml",
       "signals": [
         "write-permission",
@@ -1055,6 +1151,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/release-tail.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/release-verify.yml",
       "signals": [
         "write-permission"
@@ -1079,10 +1182,20 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/v4-public-consumer-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/v4-stage-capsule-canary.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/verify.yml",
       "signals": [],
       "classified": false
     }
   ],
-  "registryDigest": "fd4b5def78f58e64badfd6d9d4cce801cab3c15ae81aa89357ef02d15f7ad99d"
+  "registryDigest": "456987223fcd21bb1db29583187fcbefacf91668a1a245ed1fb186ffe95c15c3"
 }

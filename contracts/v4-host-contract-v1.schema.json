@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/v4-host-contract-v1.schema.json",
+  "title": "Buildchain v4 Host Contract",
+  "oneOf": [{ "$ref": "#/$defs/request" }, { "$ref": "#/$defs/response" }],
+  "$defs": {
+    "encodedBytes": {
+      "type": "object",
+      "required": ["encoding", "bytes"],
+      "additionalProperties": false,
+      "properties": {
+        "encoding": { "const": "base64" },
+        "bytes": { "type": "string", "contentEncoding": "base64" }
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": ["id", "arguments"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "arguments": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "contract",
+        "protocolVersion",
+        "requestId",
+        "command",
+        "input",
+        "requiredCapabilities",
+        "timeoutMs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "contract": { "const": "kungfu-buildchain-v4-host-request" },
+        "protocolVersion": { "const": "1.0" },
+        "requestId": { "type": "string", "minLength": 1 },
+        "command": { "$ref": "#/$defs/command" },
+        "input": { "$ref": "#/$defs/encodedBytes" },
+        "requiredCapabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30000
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["code", "message", "retryable"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string" },
+        "retryable": { "type": "boolean" }
+      }
+    },
+    "response": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "contract",
+        "protocolVersion",
+        "requestId",
+        "status",
+        "host",
+        "command",
+        "output",
+        "structuredResult",
+        "diagnostics",
+        "exit"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "contract": { "const": "kungfu-buildchain-v4-host-response" },
+        "protocolVersion": { "const": "1.0" },
+        "requestId": { "type": "string", "minLength": 1 },
+        "status": {
+          "enum": ["ok", "unsupported", "failed", "cancelled"]
+        },
+        "host": {
+          "type": "object",
+          "required": ["kind", "implementation", "capabilities"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "type": "string", "minLength": 1 },
+            "implementation": { "type": "string", "minLength": 1 },
+            "capabilities": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "command": { "$ref": "#/$defs/command" },
+        "output": {
+          "type": "object",
+          "required": ["stdout", "stderr"],
+          "additionalProperties": false,
+          "properties": {
+            "stdout": { "$ref": "#/$defs/encodedBytes" },
+            "stderr": { "$ref": "#/$defs/encodedBytes" }
+          }
+        },
+        "structuredResult": true,
+        "diagnostics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/diagnostic" }
+        },
+        "exit": {
+          "type": "object",
+          "required": ["code", "signal"],
+          "additionalProperties": false,
+          "properties": {
+            "code": { "type": "integer", "minimum": 0, "maximum": 255 },
+            "signal": { "type": ["string", "null"] }
+          }
+        }
+      }
+    }
+  }
+}

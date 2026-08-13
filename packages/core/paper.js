@@ -1021,10 +1021,11 @@ export function planPaperMigration({
     "rev-parse",
     "--show-toplevel",
   ]);
-  if (
-    !repositoryRoot ||
-    fs.realpathSync(repositoryRoot) !== fs.realpathSync(resolvedCwd)
-  ) {
+  const repositoryPrefix = gitValue(resolvedCwd, [
+    "rev-parse",
+    "--show-prefix",
+  ]).replace(/\/+$/u, "");
+  if (!repositoryRoot || repositoryPrefix) {
     throw new Error("paper migration must target the exact repository root");
   }
   const source = {
@@ -1115,7 +1116,7 @@ export function planPaperMigration({
               id: "refresh-pnpm-lock",
               command: "pnpm install --lockfile-only",
               description:
-                "Bind the exact Buildchain v3 dependency into pnpm-lock.yaml after the reviewed package update.",
+                "Bind the exact Buildchain semantic dependency into pnpm-lock.yaml after the reviewed package update.",
             },
           ],
   };

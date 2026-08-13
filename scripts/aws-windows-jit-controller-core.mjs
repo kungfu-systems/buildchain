@@ -230,7 +230,7 @@ export function windowsRunInstancesArgs(
   }
   const resolvedBootstrap = exact(
     bootstrapPath,
-    /^(?:<rendered-bootstrap>|\/[^\0]+)$/,
+    /^(?:<rendered-bootstrap>|\/[^\0]+|[A-Za-z]:[\\/][^\0]+)$/,
     "bootstrapPath",
   );
   const args = [

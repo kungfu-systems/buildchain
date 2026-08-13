@@ -106,8 +106,8 @@ function paperFleetEntry({
     ),
     workCheck(
       "package.buildchain-v3",
-      dependency === buildchainVersion && /^3\./.test(dependency),
-      "package.json pins the exact Buildchain v3 runtime.",
+      dependency === buildchainVersion && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(dependency),
+      "package.json pins the exact Buildchain semantic runtime.",
       "buildchain paper migrate --write --json",
     ),
     workCheck(

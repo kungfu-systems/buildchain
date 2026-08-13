@@ -125,7 +125,7 @@ permissions:
 
 jobs:
   stable:
-    uses: kungfu-systems/buildchain/.github/workflows/stable-candidate-patrol.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/stable-candidate-patrol.yml@v4
     with:
       release-now: ${{ inputs.release-now }}
       dry-run: false
@@ -165,15 +165,15 @@ returned a GraphQL error in the response body.
 
 ## Exact-source stable promotion
 
-For a selected `3.0.2-alpha.4`, Patrol creates the immutable source branch:
+For a selected `4.0.2-alpha.4`, Patrol creates the immutable source branch:
 
 ```text
-publish-gate/release/v3/v3.0/3.0.2-alpha.4
+publish-gate/release/v4/v4.0/4.0.2-alpha.4
 ```
 
-and opens it against `release/v3/v3.0`. This is an existing strict Buildchain
-governance path. The PR freezes the qualified candidate even if `v3.0-alpha`
-or `alpha/v3/v3.0` has already moved to alpha.5. Normal Verify,
+and opens it against `release/v4/v4.0`. This is an existing strict Buildchain
+governance path. The PR freezes the qualified candidate even if `v4.0-alpha`
+or `alpha/v4/v4.0` has already moved to alpha.5. Normal Verify,
 release-candidate resolution, source-tree equivalence, publish transaction,
 passport, registry, tag, and floating-ref checks still run.
 
@@ -206,7 +206,7 @@ step; the durable authority record remains the candidate ledger entry and PR.
 The default ledger ref is derived from the release line, for example:
 
 ```text
-buildchain/candidate-ledger/v3/v3.0
+buildchain/candidate-ledger/v4/v4.0
 ```
 
 It stores `.buildchain/stable-candidate-ledger.json`. Patrol runs are serialized

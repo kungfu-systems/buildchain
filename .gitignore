@@ -3,6 +3,7 @@
 .xinfa/atlas/
 .xinfa/cache/
 node_modules/
+crates/*/target/
 .buildchain/artifacts/
 .buildchain/diagnostics/
 .buildchain/logs/

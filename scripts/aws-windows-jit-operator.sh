@@ -110,7 +110,19 @@ require_bounded_time_window() {
 }
 
 sha256_file() {
-  shasum -a 256 "$1" | awk '{print "sha256:" $1}'
+  node -e '
+    const crypto = require("node:crypto");
+    const fs = require("node:fs");
+    process.stdout.write(`sha256:${crypto.createHash("sha256").update(fs.readFileSync(process.argv[1])).digest("hex")}`);
+  ' "$1"
+}
+
+sha256_stdin() {
+  node -e '
+    const crypto = require("node:crypto");
+    const fs = require("node:fs");
+    process.stdout.write(`sha256:${crypto.createHash("sha256").update(fs.readFileSync(0)).digest("hex")}`);
+  '
 }
 
 make_plan() {
@@ -148,7 +160,7 @@ make_plan() {
     --argjson slots "$max_accepted_instances" \
     --argjson budget "$budget_limit_usd" \
     '{schemaVersion:1,contract:$contract,kind:"operator-plan",mode:"dry-run",account:{id:$account},aws:{region:$region,budgetGuard:{stackName:$guard_stack,budgetName:$budget_name,dimensionFilter:{usageType:$usage_type,operation:$operation,region:$region},killParameterName:$kill_parameter},campaignStackName:("kungfu-buildchain-windows-jit-"+$campaign),vpcId:$vpc,subnetId:$subnet,oidcProviderArn:$oidc,campaignTemplate:{path:$campaign_template,digest:$campaign_template_digest},budgetTemplate:{path:$budget_template,digest:$budget_template_digest}},campaign:{id:$campaign,observedAt:$observed_at,expiresAt:$expires_at,maxAcceptedInstances:$slots},source:{sha:$source_sha,ref:$source_ref},github:{repository:$repository,workflowId:$workflow_id,requiredState:"disabled_manually"},cost:{start:$cost_start,end:$cost_end,dimensionFilter:{usageType:$usage_type,operation:$operation,region:$region},resourceOwnershipTag:{key:$tag_key,value:$tag_value},phaseBudgetLimitUsd:$budget,maximumInstanceReservationUsd:4.35,providerTelemetryMayLag:true},safety:{defaultAction:"plan-only",workflowEnabledDuringPrepare:false,dispatchDuringPrepare:false,paidCapacityDuringPrepare:false,budgetRequired:true,budgetDimensionVisibilityRequired:true,budgetAlarmIsDefenseInDepth:true,atomicCampaignReservationIsAuthoritative:true,uniqueCampaignStackRequired:true,zeroResidueRequired:true}}')
-  digest=$(printf '%s' "$body" | shasum -a 256 | awk '{print "sha256:" $1}')
+  digest=$(printf '%s' "$body" | sha256_stdin)
   printf '%s' "$body" | jq --arg digest "$digest" '. + {digest:$digest}'
 }
 

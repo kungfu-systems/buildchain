@@ -18,7 +18,7 @@ on:
       target-ref:
         description: "Buildchain channel branch to promote"
         required: true
-        default: "alpha/v3/v3.0"
+        default: "alpha/v4/v4.0"
       dry-run:
         description: "Only print planned tag updates"
         required: true
@@ -166,6 +166,9 @@ jobs:
       # recovery dispatch. This prevents a source-tree defect from making its
       # own governed recovery path permanently unreachable.
       buildchain-ref: ${{ github.event.workflow_run.head_sha || ((inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') && github.sha) || inputs.sha || github.sha }}
+      buildchain-expected-channel: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && 'alpha' || 'stable' }}
+      buildchain-expected-major: "4"
+      buildchain-contract-lock-path: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && '.buildchain/alpha-contract-lock.json' || '.buildchain/contract-lock.json' }}
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       package-manager: pnpm

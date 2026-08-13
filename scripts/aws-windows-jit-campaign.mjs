@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: Apache-2.0
 
-import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 import {
   createWindowsJitCampaignArmPlan,
   windowsCampaignArmItems,
@@ -16,7 +16,7 @@ function arg(name, fallback = "") {
 
 function aws(plan, serviceArgs) {
   const profile = arg("aws-profile");
-  const result = spawnSync(
+  const result = spawnSyncCommand(
     "aws",
     [
       ...(profile ? ["--profile", profile] : []),

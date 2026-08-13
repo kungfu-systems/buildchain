@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   DEFAULT_ARTIFACT_NAME_TEMPLATE,
   LINUX_CONTAINER_PRESETS,
@@ -90,7 +91,7 @@ import {
 } from "../packages/core/diagnostics.js";
 
 const root = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
+  path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
 
@@ -99,8 +100,8 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
     fs.readFileSync(path.join(root, "contracts/buildchain-v2-residuals-v1.json"), "utf8"),
   );
   assert.equal(inventory.contract, "buildchain.v2-residual-inventory/v1");
-  assert.equal(inventory.policy.runtimeDefault, "v3");
-  assert.equal(inventory.policy.dogfoodRuntimeDefault, "v3-alpha");
+  assert.equal(inventory.policy.runtimeDefault, "v4");
+  assert.equal(inventory.policy.dogfoodRuntimeDefault, "v4-alpha");
   assert.equal(inventory.policy.unclassifiedV2TokensAllowed, false);
 
   const allowedClassifications = new Set([
@@ -187,8 +188,8 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.doesNotMatch(channelRouter, /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/);
   assert.match(
     channelRouter,
-    /  summarize:\n    name: Summarize build contract\n    needs:\n      - build\n      - controller-receipt/,
-    "the public router must emit a stable top-level aggregate independent of nested workflow job names",
+    /needs:\n      - resolve-channel\n      - override\n      - alpha\n      - stable\n      - controller-receipt/,
+    "the aggregate must include the trusted exact-runtime self-dogfood lane",
   );
   assert.match(channelRouter, /Enforce public channel router aggregate/);
 
@@ -208,7 +209,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(
     libnodeConsumer,
-    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v3/,
+    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/,
   );
 
   const reusableBuild = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
@@ -282,6 +283,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(
     workflow,
     /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
+  );
+  assert.match(
+    workflow,
+    /artifact-finalization-command:\n\s+description: "Optional consumer verification command over final artifact bytes before manifest resealing"/,
+  );
+  assert.match(
+    workflow,
+    /artifact-finalization-on-platform:\n\s+description: "Run trusted artifact finalization on each GitHub-hosted platform runner instead of the control runner"[\s\S]*?default: false[\s\S]*?type: boolean/,
   );
   assert.equal(
     (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
@@ -438,6 +447,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /runtime-sha/);
   assert.match(workflow, /Checkout consumer contract lock/);
   assert.match(workflow, /buildchain-contract-lock\.mjs check/);
+  assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/);
+  assert.match(workflow, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME:/);
+  assert.doesNotMatch(workflow, /contract-lock-compatible=true/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /contract-lock-status=/);
   assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
@@ -496,7 +510,29 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/Publish signing finalization delegation/g) || []).length, 1);
   assert.match(workflow, /artifact-signing-control:[\s\S]*?runs-on: ubuntu-24\.04/);
   assert.match(workflow, /artifact-signing-control:[\s\S]*?needs:[\s\S]*?- build-native[\s\S]*?- build-linux-container/);
-  assert.match(workflow, /finalize-artifact-signing:[\s\S]*?runs-on: ubuntu-24\.04/);
+  assert.match(
+    workflow,
+    /finalize-artifact-signing:[\s\S]*?runs-on: \$\{\{ fromJSON\(inputs\.artifact-finalization-on-platform && matrix\.platform\.runner \|\| inputs\.control-runner-json\) \}\}/,
+  );
+  assert.match(
+    workflow,
+    /Enforce trusted platform-native finalization[\s\S]*?artifact-finalization-on-platform requires a GitHub-hosted platform runner/,
+  );
+  const finalizationJob = workflow.slice(
+    workflow.indexOf("  finalize-artifact-signing:"),
+    workflow.indexOf("\n  credential-island-macos:", workflow.indexOf("  finalize-artifact-signing:")),
+  );
+  assert.match(finalizationJob, /Download pre-signing deterministic artifact\n\s+uses:/);
+  assert.doesNotMatch(finalizationJob, /Download pre-signing deterministic artifact\n\s+if:/);
+  assert.match(finalizationJob, /Verify final artifact bytes with consumer policy/);
+  assert.match(finalizationJob, /BUILDCHAIN_ARTIFACT_SIGNING_STATE:/);
+  assert.ok(
+    finalizationJob.indexOf("Verify and import final signed bytes") <
+      finalizationJob.indexOf("Verify final artifact bytes with consumer policy") &&
+      finalizationJob.indexOf("Verify final artifact bytes with consumer policy") <
+        finalizationJob.indexOf("Recompute manifest over final signed bytes"),
+    "consumer final-byte verification must run after signed-byte import and before manifest resealing",
+  );
   assert.match(workflow, /needs\.artifact-signing-control\.result == 'success'/);
   assert.match(workflow, /needs\.finalize-artifact-signing\.result == 'success'/);
   assert.equal(
@@ -619,6 +655,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-runner-burst-core\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-windows-jit-core\.mjs/);
   assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-macos-jit-core\.mjs/);
+  assert.doesNotMatch(
+    fs.readFileSync(path.resolve(import.meta.dirname, "..", "scripts", "git-fetch-process-tree.mjs"), "utf8"),
+    /from\s+["']\.\.\//,
+    "the flattened runtime bootstrap must not import files outside scripts/",
+  );
   assert.equal((workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length, 0);
   assert.equal(
     (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-controller\.mjs seal/g) || []).length,
@@ -689,7 +730,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   const deterministicPayloadUploads = [
     ...workflow.matchAll(
-      /\n      - name: (?:Upload|Publish final signed) deterministic artifact\n([\s\S]*?)(?=\n      - name:|\n  [a-z])/g,
+      /\n      - name: (?:Upload|Publish final(?: signed)?) deterministic artifact\n([\s\S]*?)(?=\n      - name:|\n  [a-z])/g,
     ),
   ];
   assert.equal(deterministicPayloadUploads.length, 4);
@@ -1076,7 +1117,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(
     publicWorkflow,
-    /publication-authority-workflow-path: \.github\/workflows\/release-candidate-promote\.yml/,
+    /publication-authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/,
   );
   assert.match(workflow, /release-candidate-resolver\.mjs/);
   assert.match(workflow, /release-candidate-workflow-file:/);
@@ -1084,9 +1125,13 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-workflow-name:/);
   assert.match(workflow, /default: "Build"/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /buildchain-expected-channel:/);
+  assert.match(workflow, /buildchain-expected-major:/);
   assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
   assert.match(workflow, /Resolve checked out Buildchain runtime/);
   assert.match(workflow, /Check Buildchain contract lock/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /allow-repository:/);
   assert.match(workflow, /default: ""/);
@@ -1121,6 +1166,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-json:/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-json \}\}/);
   assert.match(workflow, /release-passport-kfd-support-matrix-json:/);
   assert.match(workflow, /release-passport-kfd-support-matrix-json: \$\{\{ inputs\.release-passport-kfd-support-matrix-json \}\}/);
   assert.match(workflow, /release-passport-kfd-product-gate-jsons:/);
@@ -1275,7 +1322,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-family-assignment-id:/);
   assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
   assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
-  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \|\| steps\.rc\.outputs\.publish-required-artifacts-json \}\}/);
+  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \}\}/);
+  assert.match(workflow, /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/);
   assert.match(workflow, /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/);
   assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
   assert.match(workflow, /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/);
@@ -1642,7 +1690,7 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
   assert.match(dogfoodDaily, /required-status-checks: check/);
-  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
+  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
   assert.match(dogfoodDaily, /landing-mode: queue/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
@@ -1650,13 +1698,13 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /pull-requests: write/);
   assert.match(dogfoodWeekly, /schedule:/);
   assert.match(dogfoodWeekly, /uses: \.\/\.github\/workflows\/patrol-weekly\.yml/);
-  assert.match(dogfoodWeekly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
+  assert.match(dogfoodWeekly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
   assert.doesNotMatch(dogfoodWeekly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodWeekly, /contents: write/);
   assert.match(dogfoodWeekly, /pull-requests: write/);
   assert.match(dogfoodMonthly, /schedule:/);
   assert.match(dogfoodMonthly, /uses: \.\/\.github\/workflows\/patrol-monthly\.yml/);
-  assert.match(dogfoodMonthly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
+  assert.match(dogfoodMonthly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
   assert.doesNotMatch(dogfoodMonthly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodMonthly, /contents: write/);
   assert.match(dogfoodMonthly, /pull-requests: write/);
@@ -1697,7 +1745,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(ledger, /publish-gate\/release/);
   assert.match(implementation, /BUILDCHAIN_STABLE_RELEASE_NOW/);
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
-  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
+  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
   assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(
     dogfood,
@@ -1707,7 +1755,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(qualification, /statuses: write/);
   assert.match(qualification, /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(qualification, /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/);
-  assert.match(qualification, /name: buildchain-v3-alpha-self-dogfood-evidence/);
+  assert.match(qualification, /name: buildchain-v4-dual-channel-self-dogfood-evidence/);
   assert.match(qualification, /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/);
   assert.match(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/);
   assert.doesNotMatch(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.candidate-sha \}\}/);
@@ -1811,6 +1859,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Validate apply inputs before build/);
   assert.match(workflow, /Check Buildchain contract lock/);
   assert.match(workflow, /buildchain-contract-lock\.mjs check/);
+  assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
+  assert.doesNotMatch(workflow, /contract-lock-compatible=true/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /contract-lock-status=/);
   assert.ok(
@@ -2878,6 +2928,14 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
     assert.match(workflow, /\? "official-channel"/);
     assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
   }
+});
+
+test("pinned self runtime inherits the explicitly declared contract-lock lane", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  assert.match(
+    workflow,
+    /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: \$\{\{ steps\.runtime\.outputs\.runtime-override == 'true' \|\| steps\.runtime\.outputs\.runtime-trust-decision == 'pinned-self' \}\}/,
+  );
 });
 
 test("web-surface release PR close hands production to the protected main push", () => {

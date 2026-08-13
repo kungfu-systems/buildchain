@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-08-06T06:16:10.942Z",
-  "publishedAt": "2026-08-06T06:16:10.942Z",
+  "generatedAt": "2026-08-13T04:09:41.094Z",
+  "publishedAt": "2026-08-13T04:09:41.094Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "507c67140e094085af9c0431557fa32ed65a43df",
+  "sourceRevision": "6c50dd5b201bec9a8d46aeb203cc01dff9bd2708",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.6-alpha.10",
+    "version": "4.0.0-alpha.1",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0230f9083023f4c80b567b2d13887dcbc9d31b46ad6cb6f81f95f509669e7cbb"
+      "digest": "sha256:94a4866f5a44f97ab10ad460c4d9ff39c58aa28e231311425af2fcb857aa8c72"
     },
     {
       "id": "getting-started",
@@ -61,7 +61,7 @@
       "path": "docs/getting-started.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:806224481f542786ed2e60226417bd1ba673099a3110f564357792bdbf637403"
+      "digest": "sha256:72adec660d001a3fb77cd990f2bacdb6f46c8eb4927533d408c3755dab02a94e"
     },
     {
       "id": "auditable-demo",
@@ -77,7 +77,7 @@
       "path": "docs/install.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:b9d87becf94efff804495ee3beea5da795241ae4402186102baa846c87c7bf14"
+      "digest": "sha256:c04ba24a8bed696c02f68af4dd05bd2363fa06b85c54d49a4316efb36b7cf865"
     },
     {
       "id": "release-passport",
@@ -85,7 +85,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:e1ca1d470de4faeb9f7f0a57228aebbc166d0c96d03a5603fc576ad955c497a4"
+      "digest": "sha256:4ce3c2edb095d7a103b3b1d22033b4ac3709ce709f8990b21995d491898bd051"
     },
     {
       "id": "github-artifact-attestation",
@@ -126,6 +126,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:d76bbd75aab3c4dd94756c1c64562a125e74369c7c8b97342dbcacc5d7561602"
+    },
+    {
+      "id": "release-train",
+      "title": "Release Train and Release Cut",
+      "path": "docs/release-train.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:6989ada03d381e68fdec55b26b76b2070fb37969826eadc0a989844a732ba557"
     },
     {
       "id": "release-propagation",
@@ -221,7 +229,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1707dd8989e1630b5ba9381c6f8aabbbc64288590628cbae9058ea6f56f9037c"
+      "digest": "sha256:fad47682ed909f7b16f58bb8c24c51a943eb704a0a50ab6e033d745ee16a809a"
     },
     {
       "id": "cli-reference",
@@ -229,7 +237,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1e6e44723d8e668de6d5a4d06f132f817043946e4fa8c7aea18bb6d89f517438"
+      "digest": "sha256:0aa0c937ca4f3f239f67c10a3e656ca0934cd3618bf84639525ea1fbd685c055"
     },
     {
       "id": "node-api-reference",
@@ -237,7 +245,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f5592359584e98ab4283d56b0262fdcf9c5da61f48033cecad1b0404aa95bd2e"
+      "digest": "sha256:f8200ba1fbe5779408b4a1e82a0e28a5e8f696b05f97efd2d286d3008755fdbb"
     },
     {
       "id": "build-facts",
@@ -253,7 +261,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:3a6143e450ab7976a50788fee48ec4d7313706774ff5cf8f71075a7b9e196e01"
+      "digest": "sha256:4efc8fb6f94293b75606aa0631dfa122edccc970c2cfc00c7e35f81817ea8335"
     },
     {
       "id": "kfd-agent-hub",
@@ -277,7 +285,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7bc04f658d7e298872756278c60143d8edf5dfb841d0b0d3ea62af8028735b54"
+      "digest": "sha256:54cadd6e2f168ca40d9ed66d2f9848d5d56c9d05759bf0454f5027b1df274796"
     },
     {
       "id": "publish-transaction",
@@ -288,12 +296,28 @@
       "digest": "sha256:72466943bb459f6857f23ac6f92bcf4714dcd2f535c38a9f0e34864b36404e06"
     },
     {
+      "id": "release-tail-contract",
+      "title": "Declarative release-tail contract",
+      "path": "docs/release-tail-contract.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:db5d38df0af0f7ce76ff93cc78a0d96a0738a40f6f40f7c1a0cfd78ca9f4f22a"
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "title": "Declarative release-tail provider plane",
+      "path": "docs/release-tail-provider-plane.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:80b39ba4f0a8ed723e2a03e7efff0fee1e891245f7d1bf343edc75011aded801"
+    },
+    {
       "id": "release-governance",
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:34fb81d1dd9f913cbed6ee76ac9f0bdb095669e55c1bee67389601fd494470cf"
+      "digest": "sha256:6dfe8a9b974040fc1465b0da696519b4e97b0b901e30d852ffacda0d193810af"
     },
     {
       "id": "release-flow",
@@ -301,7 +325,7 @@
       "path": "docs/release-flow.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:dc54b8a264489341984ca6157b07d1956e934366f937b7412a21df7f025d2d8d"
+      "digest": "sha256:f2086d06a64f9321d7c1d62f93b37a169f781ba5bed4b714b5a8cb6509953c6e"
     },
     {
       "id": "runtime-train-validation",
@@ -309,7 +333,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1a4ce3fc2c150f88bc4d32123a108478ba5d73d0d69b8a95bf0d6670e32618a0"
+      "digest": "sha256:f0a1cdb7fe5f72fc2ed921f1aeadbd16184dda16be3727e4193fa2af250325db"
     },
     {
       "id": "versioning",
@@ -317,7 +341,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:793db9414d11aeb314ff2d37a52481826ca5f636d08eaf93772d37962a51484f"
+      "digest": "sha256:7f6e377abf976e9eb9c5f0fd2baec96922ca44d9ab7dd08178608657fa858978"
     },
     {
       "id": "web-surface-deployments",

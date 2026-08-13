@@ -8,6 +8,7 @@ import { evaluateBuildchainContractLock } from "../packages/core/buildchain-cont
 import {
   canAdmitSelfDogfoodLockEvaluation,
   contractForSelfDogfoodEvaluation,
+  hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
 import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
@@ -195,10 +196,19 @@ const selfDogfoodAlphaLock = JSON.parse(
 const currentBuildchainContract = JSON.parse(
   fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
 );
+const selfDogfoodBootstrapAuthority = JSON.parse(
+  fs.readFileSync(path.join(root, "architecture/v4-bootstrap-authority.json"), "utf8"),
+);
 const selfDogfoodMajorResolution = resolveSelfDogfoodMajor({
   packageVersion: rootPackage.version,
   alphaRef: selfDogfoodAlphaLock.buildchain?.ref,
-  majorBootstrap: process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true",
+  majorBootstrap:
+    process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true" ||
+    hasQualifiedSelfDogfoodBootstrapAuthority({
+      packageVersion: rootPackage.version,
+      alphaRef: selfDogfoodAlphaLock.buildchain?.ref,
+      authority: selfDogfoodBootstrapAuthority,
+    }),
 });
 const selfDogfoodMajor = String(selfDogfoodMajorResolution.workflowMajor);
 if (!/^[0-9a-f]{40}$/.test(selfDogfoodAlphaLock.buildchain?.resolvedSha || "")) {
@@ -215,7 +225,7 @@ const selfDogfoodAlphaEvaluation = evaluateBuildchainContractLock({
   }),
   runtimeRef: `v${selfDogfoodMajor}-alpha`,
   runtimeSha: "current-development-contract",
-  runtimeClass: "alpha",
+  runtimeClass: "alpha", workflowShellRef: `v${selfDogfoodMajor}-alpha`,
 });
 if (
   !canAdmitSelfDogfoodLockEvaluation({
@@ -305,12 +315,20 @@ if (!promotionOverrideAuthorization.includes("promotion runtime override is only
 for (const requiredSnippet of [
   "buildchain-channel:",
   "uses: ./.github/workflows/.build.yml",
+  "needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'alpha'",
+  "needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'stable'",
   "needs.resolve-channel.outputs.buildchain-ref",
   "needs.resolve-channel.outputs.contract-lock-path",
 ]) {
   if (!channelBuildWorkflow.includes(requiredSnippet)) {
     throw new Error(`channel build workflow missing routing contract: ${requiredSnippet}`);
   }
+}
+if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 3) {
+  throw new Error("channel build workflow must bind override, alpha, and stable to the exact caller workflow shell");
+}
+if (channelBuildWorkflow.includes("uses: kungfu-systems/buildchain/.github/workflows/.build.yml@")) {
+  throw new Error("channel build workflow must not statically fetch another channel shell before its ref exists");
 }
 for (const requiredSnippet of [
   "group: buildchain-release-promotion-${{ github.repository }}",
@@ -730,8 +748,8 @@ const registeredActionIds = (workflowRegistry.actions || []).map((entry) => entr
 const readmeActionIndex = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
-if (registeredActionIds.length !== 6) {
-  throw new Error(`workflow-registry.json must expose the six current action entries, got ${registeredActionIds.length}`);
+if (registeredActionIds.length !== 7) {
+  throw new Error(`workflow-registry.json must expose the seven current action entries, got ${registeredActionIds.length}`);
 }
 for (const actionId of registeredActionIds) {
   if (!readmeActionIndex.includes(`actions/${actionId}`) || !mapActionIndex.includes(`actions/${actionId}`)) {
@@ -893,7 +911,7 @@ for (const requiredSnippet of [
 for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
   for (const requiredSnippet of [
     "minimumReleaseAgeExclude",
-    "@kungfu-tech/buildchain@3.0.0",
+    "@kungfu-tech/buildchain@4.0.0",
     "package/version-specific",
   ]) {
     if (!docSource.includes(requiredSnippet)) {
@@ -1019,8 +1037,8 @@ for (const requiredSnippet of [
   "release-passport-kfd-3-artifact-witness-jsons:",
   "release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}",
   "release-passport-kfd-3-artifact-verify-command:",
-  "release-passport-kfd-support-matrix-json:",
-  "release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}",
+  "release-passport-kfd-adopter-manifest-json:", "release-passport-kfd-adopter-manifest-json: ${{ inputs.release-passport-kfd-adopter-manifest-json }}",
+  "release-passport-kfd-support-matrix-json:", "release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}",
   "release-passport-kfd-product-gate-jsons:",
   "release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}",
   "release-passport-invariant-passport-jsons:",
@@ -1114,7 +1132,7 @@ for (const retiredWorkflow of [
   }
 }
 const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/action.yml"), "utf8");
-const promoteBuildchainRefIndex = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/index.js"), "utf8");
+const promoteBuildchainRefIndex = ["actions/promote-buildchain-ref/index.js", "actions/promote-buildchain-ref/github-release.js"].map((entry) => fs.readFileSync(path.join(root, entry), "utf8")).join("\n");
 for (const requiredSnippet of [
   "github-release:",
   "github-release-title:",
@@ -1243,12 +1261,12 @@ if (inventory.release !== "buildchain-v2") {
   throw new Error("inventory release must be buildchain-v2");
 }
 
-if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v3") {
-  throw new Error("inventory stable action ref must point at @v3");
+if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v4") {
+  throw new Error("inventory stable action ref must point at @v4");
 }
 
-if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3") {
-  throw new Error("inventory stable workflow ref must point at @v3");
+if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v4") {
+  throw new Error("inventory stable workflow ref must point at @v4");
 }
 if (inventory.safety?.releasePassport?.line !== "v2.2") {
   throw new Error("release passport inventory must be registered as a v2.2 surface");

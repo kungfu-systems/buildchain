@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain-v4-delivery-warrant-trace-fixture/v1",
+  "runner": "buildchain-v4-delivery-warrant-fixture-runner/v1",
+  "trace": {
+    "id": "replay-stale-fence-readback",
+    "kind": "replay",
+    "initialState": {
+      "schema": "buildchain-v4-delivery-warrant-state/v1",
+      "generation": 7,
+      "fencingCounter": 3,
+      "activeWarrant": {
+        "candidateId": "candidate-120",
+        "fencingToken": "fence-3",
+        "generation": 7
+      },
+      "candidates": [
+        {
+          "candidateId": "candidate-120",
+          "pullRequestNumber": 120,
+          "status": "selected"
+        }
+      ]
+    },
+    "initialStateRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+    "steps": [
+      {
+        "sequence": 0,
+        "id": "reject-stale-fence",
+        "operation": "heartbeat",
+        "event": {
+          "schema": "buildchain-v4-event-envelope/v1",
+          "eventId": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "eventType": "heartbeat-requested",
+          "occurredAt": "2026-08-07T01:02:02.000Z",
+          "subjectRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+          "payload": {
+            "candidateId": "candidate-120",
+            "fencingToken": "fence-2"
+          }
+        },
+        "decision": {
+          "action": null,
+          "fault": {
+            "schema": "buildchain-v4-contract-fault/v1",
+            "code": "stale-fencing-token",
+            "class": "concurrency",
+            "path": "$/warrant/fencingToken",
+            "message": "retained replay used an obsolete fence",
+            "retry": "reselect"
+          }
+        },
+        "priorStateRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+        "successorState": {
+          "schema": "buildchain-v4-delivery-warrant-state/v1",
+          "generation": 7,
+          "fencingCounter": 3,
+          "activeWarrant": {
+            "candidateId": "candidate-120",
+            "fencingToken": "fence-3",
+            "generation": 7
+          },
+          "candidates": [
+            {
+              "candidateId": "candidate-120",
+              "pullRequestNumber": 120,
+              "status": "selected"
+            }
+          ]
+        },
+        "successorRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+        "effects": [],
+        "observations": [
+          {
+            "sequence": 0,
+            "type": "fence-check",
+            "payload": {
+              "expected": "fence-3",
+              "observed": "fence-2",
+              "status": "rejected"
+            }
+          }
+        ],
+        "receipt": {
+          "schema": "buildchain-v4-receipt-envelope/v1",
+          "receiptType": "heartbeat-rejected",
+          "recordedAt": "2026-08-07T01:02:02.000Z",
+          "eventRoot": "sha256:81e5b6575ea1fdb10c6c43f56c446522299853358ee79bc5e146795f1d6daa80",
+          "priorStateRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+          "nextStateRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+          "outcome": "rejected",
+          "fault": {
+            "schema": "buildchain-v4-contract-fault/v1",
+            "code": "stale-fencing-token",
+            "class": "concurrency",
+            "path": "$/warrant/fencingToken",
+            "message": "retained replay used an obsolete fence",
+            "retry": "reselect"
+          }
+        },
+        "receiptRoot": "sha256:050b24ff2de6f4335fa7c5fd87524cd0fa6e1449c5017c2a91fd1d98c092c684"
+      },
+      {
+        "sequence": 1,
+        "id": "readback",
+        "operation": "response-loss-readback",
+        "event": {
+          "schema": "buildchain-v4-event-envelope/v1",
+          "eventId": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "eventType": "state-readback",
+          "occurredAt": "2026-08-07T01:02:03.000Z",
+          "subjectRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+          "payload": {
+            "observedStateRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838"
+          }
+        },
+        "decision": { "action": "committed-readback", "fault": null },
+        "priorStateRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+        "successorState": {
+          "schema": "buildchain-v4-delivery-warrant-state/v1",
+          "generation": 7,
+          "fencingCounter": 3,
+          "activeWarrant": {
+            "candidateId": "candidate-120",
+            "fencingToken": "fence-3",
+            "generation": 7
+          },
+          "candidates": [
+            {
+              "candidateId": "candidate-120",
+              "pullRequestNumber": 120,
+              "status": "selected"
+            }
+          ]
+        },
+        "successorRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+        "effects": [],
+        "observations": [
+          {
+            "sequence": 0,
+            "type": "state-readback",
+            "payload": {
+              "readbackRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+              "status": "matched"
+            }
+          }
+        ],
+        "receipt": {
+          "schema": "buildchain-v4-receipt-envelope/v1",
+          "receiptType": "state-readback",
+          "recordedAt": "2026-08-07T01:02:03.000Z",
+          "eventRoot": "sha256:8abfbfd5e2c74920418970ea4078dacfe44a21d545994160faccddd7ca4718d5",
+          "priorStateRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+          "nextStateRoot": "sha256:95c5c4d52c39b8dcc2169566b152197e1788a2bd8342bdb0c08c2e803bc3d838",
+          "outcome": "noop",
+          "fault": null
+        },
+        "receiptRoot": "sha256:bcb2e02324b19b39e8af8dc3e85cb20c4558ad9607afeb1b9034bfa2f3a17161"
+      }
+    ]
+  },
+  "expectedProjectionRoot": "sha256:f8948514f60c289d475279be927153a7a3d92813d5c8704a1f08ad54f6b01fcd"
+}

@@ -11,6 +11,7 @@ import {
   loadBuildchainConfig,
   runLifecycleStage,
 } from "../../packages/core/buildchain-config.js";
+import { spawnSyncCommand } from "../../packages/core/spawn-command.js";
 import {
   DEFAULT_REPOSITORY,
   LEGACY_MAJOR_GATE_REF,
@@ -334,8 +335,7 @@ function validatePublishContractForArtifacts({ channel, contract, requiredArtifa
 function readExistingNpmIntegrity({ cwd, artifact }) {
   const spec = npmPackageSpec(artifact);
   try {
-    const output = execFileSync(
-      "npm",
+    const output = execNpmSync(
       ["view", spec, "dist.integrity", "--json"],
       {
         cwd,
@@ -702,6 +702,20 @@ function npmTokenLooksConfigured() {
   );
 }
 
+function execNpmSync(args, options) {
+  const result = spawnSyncCommand("npm", args, options);
+  if (result.error) throw result.error;
+  if (result.status !== 0 || result.signal) {
+    const error = new Error(`npm exited with status ${result.status ?? ""}`);
+    error.status = result.status ?? 1;
+    error.signal = result.signal || "";
+    error.stdout = result.stdout;
+    error.stderr = result.stderr;
+    throw error;
+  }
+  return result.stdout;
+}
+
 function preflightNpmTokenAuth({ cwd, registry = "https://registry.npmjs.org/",
 } = {}) {
   if (!npmTokenLooksConfigured()) {
@@ -709,7 +723,7 @@ function preflightNpmTokenAuth({ cwd, registry = "https://registry.npmjs.org/",
     );
   }
   try {
-    execFileSync("npm", ["whoami", `--registry=${registry}`], {
+    execNpmSync(["whoami", `--registry=${registry}`], {
       cwd,
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],
@@ -723,8 +737,7 @@ function preflightNpmTokenAuth({ cwd, registry = "https://registry.npmjs.org/",
 
 function npmDistTagAlreadyPoints({ cwd, artifact, distTag }) {
   try {
-    const output = execFileSync(
-      "npm",
+    const output = execNpmSync(
       ["view", artifact.name, `dist-tags.${distTag}`, "--json"],
       {
         cwd,
@@ -754,7 +767,7 @@ function promoteExistingNpmArtifacts({ cwd, artifacts, distTag }) {
       promoted.add(key);
       continue;
     }
-    execFileSync("npm", ["dist-tag", "add", spec, distTag], {
+    execNpmSync(["dist-tag", "add", spec, distTag], {
       cwd,
       env: process.env,
       stdio: "inherit",
@@ -1836,6 +1849,7 @@ async function collectAndPersistReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  kfdAdopterManifestJson = "",
   kfdSupportMatrixJson = "",
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
@@ -1958,6 +1972,7 @@ async function collectAndPersistReleasePassport({
     kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
     kfd3ArtifactWitnessJsons: resolvedKfd3ArtifactWitnessJsons,
     kfd3ArtifactVerifyCommand,
+    kfdAdopterManifestJson,
     kfdSupportMatrixJson,
     kfdProductGateJsons,
     invariantPassportJsons,
@@ -3243,6 +3258,7 @@ function createRefMutationOperations(context) {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -3869,6 +3885,7 @@ function createReconciliationOperations(context) {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -3911,7 +3928,6 @@ function createReconciliationOperations(context) {
         `Version-state PR changed files outside declared version state: ${unexpected.join(", ")}`);
     }
   };
-
   const listChangedPathsBetweenTrees = async ({ baseSha, headSha }) => {
     const [baseCommitResult, headCommitResult] = await Promise.all([
       getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha }),
@@ -4554,6 +4570,7 @@ async function promoteBuildchainRefs({
   releasePassportKfd3PrebuildWitnessJsons = "",
   releasePassportKfd3ArtifactWitnessJsons = "",
   releasePassportKfd3ArtifactVerifyCommand = "",
+  releasePassportKfdAdopterManifestJson = "",
   releasePassportKfdSupportMatrixJson = "",
   releasePassportKfdProductGateJsons = "",
   releasePassportInvariantPassportJsons = "",
@@ -4765,6 +4782,7 @@ async function promoteBuildchainRefs({
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,

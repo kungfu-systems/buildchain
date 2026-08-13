@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 113,
-    "workflowCount": 64,
-    "actionCount": 6,
-    "sitePageCount": 65,
-    "docCommandRefCount": 896,
+    "cliCommandCount": 114,
+    "workflowCount": 71,
+    "actionCount": 7,
+    "sitePageCount": 75,
+    "docCommandRefCount": 919,
     "failureCount": 0
   },
   "enumerated": {
@@ -320,7 +320,7 @@
       {
         "id": "kfd-support",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>..."
+        "usage": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>"
       },
       {
         "id": "kfd-upstream-check",
@@ -498,6 +498,11 @@
         "usage": "buildchain release-propagation <plan|write-lock|work|entry|pickup> ..."
       },
       {
+        "id": "release-tail",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain release-tail plan --declaration <json-or-path> [--output <path>]"
+      },
+      {
         "id": "release-transaction",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain release <inspect|recover|finalize|abort> ..."
@@ -649,6 +654,8 @@
         "reusable": true,
         "inputs": [
           "artifact-compression-level",
+          "artifact-finalization-command",
+          "artifact-finalization-on-platform",
           "artifact-name",
           "artifact-name-template",
           "artifact-paths",
@@ -669,6 +676,8 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "cache-dependency-lock-root",
@@ -735,7 +744,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 86,
+        "inputCount": 90,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -944,9 +953,10 @@
         ],
         "inputCount": 37,
         "secrets": [
+          "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
-        "secretCount": 1,
+        "secretCount": 2,
         "outputs": [
           "capability-artifact",
           "capability-digest",
@@ -970,9 +980,12 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "channel",
+          "declarative-release-tail",
           "dry-run",
           "github-artifact-attestation-environment",
           "github-artifact-attestation-policy-json",
@@ -1048,6 +1061,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -1071,7 +1085,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 109,
+        "inputCount": 113,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1108,9 +1122,14 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
-          "release-propagation-work-artifact"
+          "release-propagation-work-artifact",
+          "release-tail-declaration-root",
+          "release-tail-receipt-roots-json",
+          "release-tail-state-root",
+          "release-tail-transaction-root",
+          "release-tail-transaction-state"
         ],
-        "outputCount": 23
+        "outputCount": 28
       },
       {
         "id": ".release-docker",
@@ -1535,6 +1554,8 @@
         "reusable": true,
         "inputs": [
           "artifact-compression-level",
+          "artifact-finalization-command",
+          "artifact-finalization-on-platform",
           "artifact-name",
           "artifact-name-template",
           "artifact-paths",
@@ -1557,6 +1578,8 @@
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
@@ -1624,7 +1647,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 89,
+        "inputCount": 93,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1888,17 +1911,24 @@
         "secretCount": 1,
         "outputs": [
           "active-candidate-pr",
+          "candidate-generation",
+          "candidate-tree-sha",
           "controller-state",
+          "cut-root",
+          "drift-root",
           "eligible",
+          "hold-root",
           "next-candidate-sha",
           "prior-state-root",
           "promotion-pr",
           "result-path",
+          "runtime-sha",
           "selected-sha",
           "settlement-action",
-          "source-lock-ref"
+          "source-lock-ref",
+          "train-root"
         ],
-        "outputCount": 10
+        "outputCount": 17
       },
       {
         "id": "dev-delivery-warrant-cancel",
@@ -2063,6 +2093,79 @@
           "state"
         ],
         "outputCount": 7
+      },
+      {
+        "id": "engineering-housekeeper-daily",
+        "path": ".github/workflows/engineering-housekeeper-daily.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper-monthly",
+        "path": ".github/workflows/engineering-housekeeper-monthly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper-weekly",
+        "path": ".github/workflows/engineering-housekeeper-weekly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "engineering-housekeeper",
+        "path": ".github/workflows/engineering-housekeeper.yml",
+        "reusable": true,
+        "inputs": [
+          "apply-enabled",
+          "artifact-prefix",
+          "artifact-retention-days",
+          "buildchain-ref",
+          "buildchain-repository",
+          "max-actions",
+          "mode",
+          "protected-patterns",
+          "repository",
+          "retained-patterns",
+          "stale-days",
+          "stale-pull-request-label",
+          "target-branch",
+          "temporary-branch-patterns"
+        ],
+        "inputCount": 14,
+        "secrets": [
+          "housekeeper_app_id",
+          "housekeeper_app_private_key",
+          "housekeeper_token"
+        ],
+        "secretCount": 3,
+        "outputs": [
+          "action-count",
+          "branch-receipt-root",
+          "outcome",
+          "plan-artifact",
+          "plan-root",
+          "pull-request-receipt-root",
+          "receipt-artifact",
+          "report-artifact",
+          "report-receipt-root"
+        ],
+        "outputCount": 9
       },
       {
         "id": "github-artifact-attestation",
@@ -2409,6 +2512,7 @@
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
           "channel",
+          "declarative-release-tail",
           "dry-run",
           "github-artifact-attestation-environment",
           "github-artifact-attestation-policy-json",
@@ -2472,6 +2576,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
@@ -2495,7 +2600,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 100,
+        "inputCount": 102,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2544,9 +2649,14 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
-          "release-propagation-work-artifact"
+          "release-propagation-work-artifact",
+          "release-tail-declaration-root",
+          "release-tail-receipt-roots-json",
+          "release-tail-state-root",
+          "release-tail-transaction-root",
+          "release-tail-transaction-state"
         ],
-        "outputCount": 35
+        "outputCount": 40
       },
       {
         "id": "release-governance-reconcile",
@@ -2637,6 +2747,29 @@
         "outputCount": 13
       },
       {
+        "id": "release-tail",
+        "path": ".github/workflows/release-tail.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "declaration-path",
+          "execute",
+          "provider-bindings-path",
+          "state-path"
+        ],
+        "inputCount": 5,
+        "secrets": [
+          "http-token"
+        ],
+        "secretCount": 1,
+        "outputs": [
+          "state-root",
+          "transaction-root",
+          "transaction-state"
+        ],
+        "outputCount": 3
+      },
+      {
         "id": "release-verify",
         "path": ".github/workflows/release-verify.yml",
         "reusable": false,
@@ -2708,6 +2841,35 @@
         "outputCount": 6
       },
       {
+        "id": "v4-public-consumer-dogfood",
+        "path": ".github/workflows/v4-public-consumer-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "v4-stage-capsule-canary",
+        "path": ".github/workflows/v4-stage-capsule-canary.yml",
+        "reusable": true,
+        "inputs": [
+          "build-artifact-path",
+          "consumer",
+          "go-version",
+          "install-artifact-path",
+          "node-version",
+          "verify-artifact-path"
+        ],
+        "inputCount": 6,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "verify",
         "path": ".github/workflows/verify.yml",
         "reusable": false,
@@ -2776,6 +2938,7 @@
           "branch-protection-bypass-apps",
           "branch-protection-bypass-teams",
           "branch-protection-bypass-users",
+          "declarative-release-tail",
           "dry-run",
           "expected-publication-version",
           "generated-pull-request-token",
@@ -2799,6 +2962,7 @@
           "publish-package-set-order",
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
+          "publish-required-artifacts-path",
           "publish-sealed-bundle-manifest",
           "publish-sealed-bundle-root",
           "publish-source-locked",
@@ -2831,12 +2995,14 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
           "release-passport-promotion-routing-json",
+          "release-tail-state-path",
           "require-governance",
           "require-publication-qualification",
           "require-publish-source-lock",
@@ -2849,7 +3015,20 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 76
+        "inputCount": 80
+      },
+      {
+        "id": "release-tail",
+        "path": "actions/release-tail/action.yml",
+        "inputs": [
+          "declaration",
+          "execute",
+          "github-token",
+          "http-token",
+          "provider-bindings",
+          "state-path"
+        ],
+        "inputCount": 6
       },
       {
         "id": "report-buildchain-issue",
@@ -2952,6 +3131,10 @@
       },
       {
         "id": "action:promote-buildchain-ref",
+        "category": "action"
+      },
+      {
+        "id": "action:release-tail",
         "category": "action"
       },
       {
@@ -3067,6 +3250,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:engineering-housekeeper",
+        "category": "manual"
+      },
+      {
         "id": "manual:getting-started",
         "category": "manual"
       },
@@ -3167,6 +3354,18 @@
         "category": "manual"
       },
       {
+        "id": "manual:release-tail-contract",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-tail-provider-plane",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-train",
+        "category": "manual"
+      },
+      {
         "id": "manual:reusable-build-surface",
         "category": "manual"
       },
@@ -3188,6 +3387,26 @@
       },
       {
         "id": "manual:toolkit-observability",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-canonical-contracts",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-delivery-warrant-read-candidate",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-delivery-warrant-semantic-diff",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-production-release",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-stage-capsule",
         "category": "manual"
       },
       {
@@ -4108,6 +4327,11 @@
         "id": "dev",
         "path": "docs/release-governance.md",
         "command": "buildchain dev pr-admit"
+      },
+      {
+        "id": "dev",
+        "path": "docs/v4-delivery-warrant-read-candidate.md",
+        "command": "buildchain dev warrant observe"
       },
       {
         "id": "diagnostics-summary",
@@ -7050,6 +7274,116 @@
         "command": "buildchain release-propagation work push-branch"
       },
       {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail compat --hooks-json"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail init --declaration"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail plan --declaration"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail compat"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail compat --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail init"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail init --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail plan"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail plan --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail status"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail status --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail verify"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail verify --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/release-tail-provider-plane.md",
+        "command": "buildchain release-tail plan --declaration"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/release-tail-provider-plane.md",
+        "command": "buildchain release-tail init --declaration"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/release-tail-provider-plane.md",
+        "command": "buildchain release-tail verify --state"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/release-tail-provider-plane.md",
+        "command": "buildchain release-tail plan"
+      },
+      {
         "id": "release-transaction",
         "path": "docs/cli-reference.md",
         "command": "buildchain release"
@@ -7690,9 +8024,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "9b88e7e494dc0252719c9557d5335114eb686d556a096f7260bfb1bc8fc2e74a",
-    "workflowRegistryDigest": "b8d8226430132d16f40865603ff710197bb3ab9cea12d79082a3e4ad0f82a22b",
-    "pageRegistryDigest": "39c7274ae3e68fe9ca26e53463cfe54aa259cd4e90a9df328e2e063c445d64b8"
+    "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
+    "workflowRegistryDigest": "b25f3f11b5bb21d7bdcd8f5dcd9810244f32ff2207df9898922294543e523279",
+    "pageRegistryDigest": "b916ca61d67cbb86708d4d314c4811bde37878644326ac073cd3b372d3708730"
   },
   "comparison": {
     "missingCliRegistry": [],

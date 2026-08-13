@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-delivery-warrant-trace-v1.schema.json",
+  "title": "Buildchain v4 Delivery Warrant retained trace fixture",
+  "description": "Closed provider-free input for the shared JavaScript and Rust semantic projection runner.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "runner",
+    "trace",
+    "expectedProjectionRoot"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": {
+      "const": "buildchain-v4-delivery-warrant-trace-fixture/v1"
+    },
+    "runner": {
+      "const": "buildchain-v4-delivery-warrant-fixture-runner/v1"
+    },
+    "trace": { "$ref": "#/$defs/trace" },
+    "expectedProjectionRoot": { "$ref": "#/$defs/root" }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "clock": {
+      "type": "string",
+      "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "code", "class", "path", "message", "retry"],
+      "properties": {
+        "schema": { "const": "buildchain-v4-contract-fault/v1" },
+        "code": { "$ref": "#/$defs/token" },
+        "class": {
+          "enum": ["validation", "concurrency", "authority", "idempotence"]
+        },
+        "path": { "type": "string", "pattern": "^\\$" },
+        "message": { "type": "string", "minLength": 1 },
+        "retry": { "enum": ["stop", "reread", "redecide", "reselect"] }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "eventId",
+        "eventType",
+        "occurredAt",
+        "subjectRoot",
+        "payload"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-event-envelope/v1" },
+        "eventId": { "$ref": "#/$defs/root" },
+        "eventType": { "$ref": "#/$defs/token" },
+        "occurredAt": { "$ref": "#/$defs/clock" },
+        "subjectRoot": { "$ref": "#/$defs/root" },
+        "payload": true
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "receiptType",
+        "recordedAt",
+        "eventRoot",
+        "priorStateRoot",
+        "nextStateRoot",
+        "outcome",
+        "fault"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-receipt-envelope/v1" },
+        "receiptType": { "$ref": "#/$defs/token" },
+        "recordedAt": { "$ref": "#/$defs/clock" },
+        "eventRoot": { "$ref": "#/$defs/root" },
+        "priorStateRoot": { "$ref": "#/$defs/root" },
+        "nextStateRoot": { "$ref": "#/$defs/root" },
+        "outcome": { "enum": ["accepted", "rejected", "noop"] },
+        "fault": {
+          "oneOf": [{ "$ref": "#/$defs/fault" }, { "type": "null" }]
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "fault"],
+      "oneOf": [
+        {
+          "properties": {
+            "action": { "$ref": "#/$defs/token" },
+            "fault": { "type": "null" }
+          }
+        },
+        {
+          "properties": {
+            "action": { "type": "null" },
+            "fault": { "$ref": "#/$defs/fault" }
+          }
+        }
+      ]
+    },
+    "orderedEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "type", "payload"],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 0 },
+        "type": { "$ref": "#/$defs/token" },
+        "payload": true
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "generation",
+        "fencingCounter",
+        "activeWarrant",
+        "candidates"
+      ],
+      "properties": {
+        "schema": { "const": "buildchain-v4-delivery-warrant-state/v1" },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "fencingCounter": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "activeWarrant": {
+          "oneOf": [{ "type": "object" }, { "type": "null" }]
+        },
+        "candidates": {
+          "type": "array",
+          "items": { "type": "object" }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "id",
+        "operation",
+        "event",
+        "decision",
+        "priorStateRoot",
+        "successorState",
+        "successorRoot",
+        "effects",
+        "observations",
+        "receipt",
+        "receiptRoot"
+      ],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 0 },
+        "id": { "$ref": "#/$defs/token" },
+        "operation": { "$ref": "#/$defs/token" },
+        "event": { "$ref": "#/$defs/event" },
+        "decision": { "$ref": "#/$defs/decision" },
+        "priorStateRoot": { "$ref": "#/$defs/root" },
+        "successorState": { "$ref": "#/$defs/state" },
+        "successorRoot": { "$ref": "#/$defs/root" },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/orderedEntry" }
+        },
+        "observations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/orderedEntry" }
+        },
+        "receipt": { "$ref": "#/$defs/receipt" },
+        "receiptRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "initialState", "initialStateRoot", "steps"],
+      "properties": {
+        "id": { "$ref": "#/$defs/token" },
+        "kind": { "enum": ["golden", "property", "replay"] },
+        "initialState": { "$ref": "#/$defs/state" },
+        "initialStateRoot": { "$ref": "#/$defs/root" },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/step" }
+        }
+      }
+    }
+  }
+}

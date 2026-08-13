@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/v4-delivery-warrant-shadow-bootstrap-plan-v1.schema.json",
+  "title": "Buildchain v4 Delivery Warrant Shadow and Bootstrap Plan",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "contract",
+    "releaseLine",
+    "sourceCut",
+    "legacyAuthority",
+    "canonicalContract",
+    "transitionMatrix",
+    "primitives",
+    "boundaries",
+    "faultModel",
+    "shadow",
+    "authority",
+    "rollout",
+    "legacyDisagreements",
+    "wave0Reconciliation",
+    "wave1",
+    "wave1Reconciliation",
+    "wave2",
+    "protectedDelivery"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": {
+      "const": "kungfu-buildchain-v4-delivery-warrant-shadow-bootstrap-plan"
+    },
+    "releaseLine": { "const": "dev/v4/v4.0" },
+    "sourceCut": { "$ref": "#/$defs/object" },
+    "legacyAuthority": { "$ref": "#/$defs/object" },
+    "canonicalContract": { "$ref": "#/$defs/object" },
+    "transitionMatrix": {
+      "type": "array",
+      "minItems": 7,
+      "items": { "$ref": "#/$defs/transition" }
+    },
+    "primitives": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "$ref": "#/$defs/primitive" }
+    },
+    "boundaries": { "$ref": "#/$defs/object" },
+    "faultModel": { "$ref": "#/$defs/nonEmptyObjectArray" },
+    "shadow": { "$ref": "#/$defs/object" },
+    "authority": { "$ref": "#/$defs/object" },
+    "rollout": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/rollout" }
+    },
+    "legacyDisagreements": { "$ref": "#/$defs/nonEmptyObjectArray" },
+    "wave0Reconciliation": { "$ref": "#/$defs/reconciliation" },
+    "wave1": { "$ref": "#/$defs/wave" },
+    "wave1Reconciliation": { "$ref": "#/$defs/wave1Reconciliation" },
+    "wave2": { "$ref": "#/$defs/wave2" },
+    "protectedDelivery": { "$ref": "#/$defs/object" }
+  },
+  "$defs": {
+    "object": { "type": "object", "minProperties": 1 },
+    "stringArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "nonEmptyObjectArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/object" }
+    },
+    "transition": {
+      "type": "object",
+      "required": [
+        "event",
+        "from",
+        "guards",
+        "generation",
+        "fencing",
+        "clock",
+        "roots",
+        "errors",
+        "recovery",
+        "idempotence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "event": { "type": "string", "minLength": 1 },
+        "from": { "$ref": "#/$defs/stringArray" },
+        "guards": { "$ref": "#/$defs/stringArray" },
+        "generation": { "type": "string", "minLength": 1 },
+        "fencing": { "type": "string", "minLength": 1 },
+        "clock": { "type": "string", "minLength": 1 },
+        "roots": { "$ref": "#/$defs/stringArray" },
+        "errors": { "$ref": "#/$defs/stringArray" },
+        "recovery": { "type": "string", "minLength": 1 },
+        "idempotence": { "type": "string", "minLength": 1 }
+      }
+    },
+    "primitive": {
+      "type": "object",
+      "required": ["id", "input", "output", "effects"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "input": { "type": "string", "minLength": 1 },
+        "output": { "type": "string", "minLength": 1 },
+        "effects": { "type": "string", "minLength": 1 }
+      }
+    },
+    "rollout": {
+      "type": "object",
+      "required": [
+        "id",
+        "authority",
+        "entry",
+        "exit",
+        "rollback",
+        "evidence",
+        "stopConditions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "authority": { "type": "string", "minLength": 1 },
+        "entry": { "$ref": "#/$defs/stringArray" },
+        "exit": { "$ref": "#/$defs/stringArray" },
+        "rollback": { "$ref": "#/$defs/stringArray" },
+        "evidence": { "$ref": "#/$defs/stringArray" },
+        "stopConditions": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "required": [
+        "sourceRevision",
+        "productionAuthority",
+        "children",
+        "initiativeMatrix",
+        "conflicts",
+        "entryDecision",
+        "residualResponsibility"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "productionAuthority": { "const": "typescript-v3" },
+        "children": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/childEvidence" }
+        },
+        "initiativeMatrix": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/matrixRow" }
+        },
+        "conflicts": { "$ref": "#/$defs/nonEmptyObjectArray" },
+        "entryDecision": { "const": "wave1-implementation-open" },
+        "residualResponsibility": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "childEvidence": {
+      "type": "object",
+      "required": [
+        "id",
+        "status",
+        "base",
+        "pullRequest",
+        "sourceRevision",
+        "mergeRevision",
+        "review",
+        "checks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": { "const": "proved" },
+        "base": { "type": "string", "pattern": "^dev/v[34]/v[34]\\.0$" },
+        "pullRequest": { "type": "integer", "minimum": 1 },
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "mergeRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "review": { "const": "exact-head-approved-by-kungfu-origin" },
+        "checks": { "type": "string", "minLength": 1 }
+      }
+    },
+    "matrixRow": {
+      "type": "object",
+      "required": ["id", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["proved", "partial", "missing", "invalidated"] }
+      }
+    },
+    "wave": {
+      "type": "object",
+      "required": ["entryGate", "readCandidateEntryGate", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "entryGate": { "const": "wave0-reconciliation-proved" },
+        "readCandidateEntryGate": {
+          "const": "all-shadow-zero-diff-gates-pass"
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/waveNode" }
+        }
+      }
+    },
+    "waveNode": {
+      "type": "object",
+      "required": ["id", "dependsOn", "deliverable"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "dependsOn": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "deliverable": { "type": "string", "minLength": 1 }
+      }
+    },
+    "wave1Reconciliation": {
+      "type": "object",
+      "required": [
+        "sourceRevision",
+        "productionAuthority",
+        "parentInitiativeState",
+        "children",
+        "initiativeMatrix",
+        "conflicts",
+        "decision",
+        "residualResponsibility"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "productionAuthority": { "const": "typescript-v3" },
+        "parentInitiativeState": { "const": "inert" },
+        "children": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/wave1ChildEvidence" }
+        },
+        "initiativeMatrix": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": { "$ref": "#/$defs/matrixRow" }
+        },
+        "conflicts": { "$ref": "#/$defs/nonEmptyObjectArray" },
+        "decision": {
+          "const": "capture-wave2-resumable-release-foundation"
+        },
+        "residualResponsibility": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "wave1ChildEvidence": {
+      "type": "object",
+      "required": [
+        "id",
+        "assignmentId",
+        "status",
+        "pullRequest",
+        "sourceRevision",
+        "mergeRevision",
+        "treeRevision",
+        "captureReceiptRoot",
+        "sealRoot",
+        "review",
+        "checks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "assignmentId": { "type": "string", "minLength": 1 },
+        "status": { "const": "proved" },
+        "pullRequest": { "type": "integer", "minimum": 1 },
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "mergeRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "treeRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "captureReceiptRoot": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "sealRoot": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "review": { "const": "exact-head-approved-by-kungfu-origin" },
+        "checks": { "type": "string", "minLength": 1 }
+      }
+    },
+    "wave2": {
+      "type": "object",
+      "required": ["authority", "mode", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "authority": { "const": "typescript-v3" },
+        "mode": { "const": "effect-disabled-shadow-foundation" },
+        "nodes": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/waveNode" }
+        }
+      }
+    }
+  }
+}

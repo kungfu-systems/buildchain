@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-04
-  visible_context: Existing Buildchain source locks, Kungfu exact-source Alpha preflight, Dev Patrol, cancelled duplicate runs, protected auto-merge policy, repository release governance, and the consumer-owned settlement renderer threat model.
+  generated_at: 2026-08-11
+  visible_context: Buildchain v4 parity of the proven v3 Release Train and Release Cut contracts, existing source locks, exact-source Alpha preflight, Dev Patrol, cancelled duplicate runs, protected auto-merge policy, repository release governance, and the consumer-owned settlement renderer threat model.
   invisible_context_boundary: No credentials, private logs, or private configuration were used.
 ---
 
@@ -33,11 +33,20 @@ head), and selects the newest commit that satisfies all of these conditions:
   succeeded; and
 - both runs are within the caller's evidence age limit.
 
-The selected commit can be behind the observed development head when newer
+When no managed candidate is active, the selected commit can be behind the observed development head when newer
 commits have not completed both workflows yet. The decision binds the observed
 head, selected SHA, and count of skipped newer commits. This makes a slow native
 verification lane live under continuous development without silently treating
 an unqualified head as releasable.
+
+Before any new selection, the v4 controller now resolves the open managed PR and
+validates its embedded authoritative Release Train. If one exists, the frozen
+Release Cut wins: Candidate Patrol does not scan for or retain a newer qualified
+candidate. It returns the cut's exact candidate commit, candidate tree,
+generation, Alpha base, Buildchain runtime and authority roots. A newer dev head
+is appended once as a rooted, non-invalidating observation. Repeated webhooks or
+a restarted controller observing the same dev head reuse the existing
+observation and do not change the candidate identity.
 
 A cancelled workflow run carries no qualification verdict, so a newer
 cancelled duplicate does not erase the prior completed verdict for the same
@@ -64,15 +73,19 @@ The companion state is
 - `eligible-for-settlement`: a qualified candidate exists and no managed Alpha
   candidate PR is active;
 - `active`: exactly one managed candidate PR is open;
-- `retained-next`: an active PR remains authoritative and the newest different
-  qualified SHA is retained as `nextCandidate`;
+- `held`: the active Release Cut failed exact candidate, tree, Alpha-base,
+  runtime or route readback and cannot resume;
+- `superseded`: the embedded train contains a valid explicit supersession
+  transition;
 - `stale`: the available exact-SHA evidence pair is outside policy age; or
 - `blocked`: qualification or reconciliation failed closed.
 
-When a newer qualified SHA replaces an earlier `nextCandidate`, the state also
-records that earlier SHA as `supersededCandidate`. Every state carries exact
-repository, source/target refs and SHAs, workflow-run evidence through the
-candidate decision, and canonical decision/state roots.
+New v4 states embed the complete `kungfu-buildchain-release-train/v1` record.
+`held` states include a rooted `kungfu-buildchain-release-train-hold/v1`
+receipt with the expected cut and observed coordinates. Dev movement alone is
+not an allowed supersession cause. Legacy markers remain readable by the core
+contract, but the active-train workflow refuses to manufacture missing Release
+Cut authority for an already-open legacy PR.
 
 ## Reusable workflow
 
@@ -107,20 +120,32 @@ the rendered bytes. Concurrent qualification progress therefore fails closed
 and is recomputed by the next patrol instead of attaching a declaration to the
 wrong candidate.
 
-The separately permissioned `settle` job re-runs the exact observation before
-any write. With no active managed candidate, it creates one branch named from
+The separately permissioned `settle` job checks out the exact Buildchain runtime
+commit used by `observe`, re-runs the exact observation, and compare-and-swap
+checks the selected SHA, prior controller root and Release Cut root before any
+write. With no active managed candidate, it reads the candidate tree and creates
+one rooted Release Cut before it creates one branch named from
 the target branch and the first 12 characters of the full source SHA. An
 existing branch must point to the same full SHA or the run fails. With one
-active managed candidate, it only updates the machine-readable state marker in
-that PR body so repeated events and rapid dev progress cannot create another
-candidate PR or another heavy candidate build. Foreign human-authored Alpha PRs
-are ignored. More than one open Buildchain-managed candidate fails closed.
+active managed candidate, it validates the candidate ref, tree, Alpha base and
+runtime before returning that same SHA to every checkout/build consumer. It only
+updates the machine-readable state marker when a new dev observation or hold
+receipt must be persisted. Repeated events and rapid dev progress cannot create
+another candidate PR or another heavy candidate build. Foreign human-authored
+Alpha PRs are ignored. More than one open Buildchain-managed candidate fails
+closed.
 
 The PR body is the bounded durable controller state: it preserves the active
-candidate and newest retained `nextCandidate` without introducing an always-on
-service. Once the active PR settles or is abandoned, the next execution
-recomputes current exact-SHA qualification and creates only the newest still
-fresh candidate. It never trusts a `workflow_run` trigger SHA as evidence.
+Release Train without introducing an always-on service. Once the active PR
+settles, is explicitly superseded, or is abandoned, the next execution may
+recompute current exact-SHA qualification and cut a new generation under the
+Release Train contract. It never trusts a `workflow_run` trigger SHA as
+evidence.
+
+The workflow exposes `train-root`, `cut-root`, `candidate-generation`,
+`candidate-tree-sha`, `runtime-sha`, `drift-root` and `hold-root` alongside the
+selected SHA. Alpha build orchestration should bind to those outputs and treat
+a non-empty hold root as a fail-closed result.
 
 The caller may additionally set `auto-merge: true` and choose `merge-method`
 from `merge`, `squash`, or `rebase`. Buildchain only arms GitHub auto-merge for

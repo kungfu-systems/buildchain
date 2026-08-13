@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 const EXACT_TAG_PATTERN = /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
@@ -27,7 +27,7 @@ function hasFlag(argv, name) {
 }
 
 function runCommand({ cwd, cmd, args }) {
-  const result = spawnSync(cmd, args, {
+  const result = spawnSyncCommand(cmd, args, {
     cwd,
     env: process.env,
     encoding: "utf8",

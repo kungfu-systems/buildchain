@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 const EXACT_TAG_PATTERN = /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
@@ -24,7 +24,7 @@ function readEnv(name, fallback = "") {
 }
 
 function runNpm({ cwd, args, allowFailure = false }) {
-  const result = spawnSync("npm", args, {
+  const result = spawnSyncCommand("npm", args, {
     cwd,
     env: process.env,
     encoding: "utf8",

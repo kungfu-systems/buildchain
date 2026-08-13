@@ -25,40 +25,59 @@ function parseAlphaRef(ref) {
   return Number(match[1]);
 }
 
-export function resolveSelfDogfoodMajor({
+function isExactSha(value) {
+  return /^[0-9a-f]{40}$/u.test(String(value || ""));
+}
+
+export function hasQualifiedSelfDogfoodBootstrapAuthority({
   packageVersion,
   alphaRef,
-  majorBootstrap = false,
+  authority,
 } = {}) {
   const version = parsePackageVersion(packageVersion);
   const acceptedMajor = parseAlphaRef(alphaRef);
-  if (acceptedMajor === version.major) {
-    return {
-      packageMajor: version.major,
-      workflowMajor: acceptedMajor,
-      bootstrap: false,
-    };
-  }
-
-  const stableBootstrap =
-    version.minor === 0 && version.patch === 0 && version.alpha === undefined;
-  const nextAlphaBootstrap =
-    version.minor === 0 && version.patch === 1 && version.alpha !== undefined;
-  if (
-    majorBootstrap === true &&
+  const releaseLine = authority?.releaseLine;
+  const qualification = authority?.qualification;
+  return (
     acceptedMajor + 1 === version.major &&
-    (stableBootstrap || nextAlphaBootstrap)
-  ) {
-    return {
-      packageMajor: version.major,
-      workflowMajor: acceptedMajor,
-      bootstrap: true,
-    };
-  }
-
-  throw new Error(
-    "Buildchain self-dogfood alpha lock must target the current major alpha ref",
+    authority?.contract ===
+      `kungfu-buildchain-v${version.major}-bootstrap-authority` &&
+    releaseLine?.candidateBranch ===
+      `dev/v${version.major}/v${version.major}.0` &&
+    String(releaseLine?.sourceBranch || "").startsWith(
+      `dev/v${acceptedMajor}/v${acceptedMajor}.`,
+    ) &&
+    releaseLine?.status === `qualified-protected-v${version.major}-bootstrap` &&
+    isExactSha(releaseLine?.sourceCommit) &&
+    isExactSha(releaseLine?.bootstrapCommit) &&
+    qualification?.contract ===
+      `kungfu-buildchain-v${version.major}-n-minus-one-qualification` &&
+    qualification?.authorityRevision === releaseLine.sourceCommit &&
+    qualification?.candidateRevision === releaseLine.bootstrapCommit &&
+    qualification?.candidateSelfQualified === false &&
+    qualification?.activeExceptions === 0 &&
+    /^sha256:[0-9a-f]{64}$/u.test(
+      String(qualification?.qualificationRoot || ""),
+    )
   );
+}
+
+export function resolveSelfDogfoodMajor({
+  packageVersion,
+  alphaRef,
+} = {}) {
+  const version = parsePackageVersion(packageVersion);
+  const acceptedMajor = parseAlphaRef(alphaRef);
+  if (acceptedMajor !== version.major) {
+    throw new Error(
+      "Buildchain self-dogfood alpha lock must target the current major alpha ref",
+    );
+  }
+  return {
+    packageMajor: version.major,
+    workflowMajor: acceptedMajor,
+    bootstrap: false,
+  };
 }
 
 export function contractForSelfDogfoodEvaluation({
@@ -68,18 +87,12 @@ export function contractForSelfDogfoodEvaluation({
   if (!currentContract || typeof currentContract !== "object") {
     throw new Error("Buildchain self-dogfood requires a current contract");
   }
-  if (!majorResolution?.bootstrap) {
-    return currentContract;
-  }
-  return {
-    ...currentContract,
-    majorLine: `v${majorResolution.workflowMajor}`,
-  };
+  return currentContract;
 }
 
 export function canAdmitSelfDogfoodLockEvaluation({
   evaluation,
   majorResolution,
 } = {}) {
-  return evaluation?.compatible === true || majorResolution?.bootstrap === true;
+  return evaluation?.compatible === true;
 }

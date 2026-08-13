@@ -49,7 +49,7 @@ Consumers should pin the exact Buildchain version that was validated in their
 repository. When dogfooding a fresh Buildchain release immediately after it is
 published, pnpm may block the install through a minimum release-age policy. In
 that case, add a temporary package/version-specific `minimumReleaseAgeExclude`
-entry, such as `@kungfu-tech/buildchain@3.0.0`, and remove it once the package
+entry, such as `@kungfu-tech/buildchain@4.0.0`, and remove it once the package
 has aged past the normal policy window. Do not replace that with a broad
 registry or scope-wide exclude. Paper scaffold and migration maintain the
 exact current entry in `pnpm-workspace.yaml` before refreshing the lockfile.
@@ -110,7 +110,7 @@ import publicSurfaceAudit from "@kungfu-tech/buildchain/site/public-surface-audi
 
 Use `dist/site/manual-registry.json` to find the packaged operating manuals and
 their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
-floating-ref contract world for a runtime such as `@v3`.
+floating-ref contract world for a runtime such as `@v4`.
 
 For exhaustive lookup, use the generated references rather than scanning this
 conceptual guide:
@@ -386,9 +386,9 @@ branch action, and initial version before any GitHub mutation happens:
 
 ```bash
 buildchain release line open \
-  --major 3 \
+  --major 4 \
   --minor 1 \
-  --source-ref release/v3/v3.0 \
+  --source-ref release/v4/v4.0 \
   --json
 ```
 
@@ -401,9 +401,9 @@ reconciliation succeeds, and opens the first dev-to-alpha channel PR:
 
 ```bash
 buildchain release line open \
-  --major 3 \
+  --major 4 \
   --minor 1 \
-  --source-ref release/v3/v3.0 \
+  --source-ref release/v4/v4.0 \
   --write \
   --json
 ```
@@ -442,9 +442,8 @@ buildchain kfd migrate-layout --write
 buildchain kfd 4 gate --input-json kfd-4-gate-input.json --output kfd-4-gate.json
 buildchain kfd 5 gate --input-json kfd-5-gate-input.json --output kfd-5-gate.json
 buildchain kfd 7 gate --input-json kfd-7-gate-input.json --output kfd-7-gate.json
-buildchain kfd support project --matrix-json support-matrix.json \
-  --gate-json kfd-4-gate.json --gate-json kfd-5-gate.json \
-  --gate-json kfd-7-gate.json --output kfd-support.json
+buildchain kfd support project --manifest-json adopter-manifest.json \
+  --manifest-gate-json adopter-manifest-gate.json --output kfd-support.json
 ```
 
 KFD-1 commands generate and validate contract-world release evidence:
@@ -995,10 +994,10 @@ even when the bundle hash has been refreshed.
 maintainer opens or merges a channel PR:
 
 ```bash
-buildchain release --dry-run --target-ref alpha/v3/v3.0
-buildchain release --dry-run --target-ref release/v3/v3.0 --sha <verified-sha>
-buildchain release dry-run --target-ref publish-gate/major --source-ref release/v3/v3.0
-buildchain release explain --target-ref alpha/v3/v3.0 --json
+buildchain release --dry-run --target-ref alpha/v4/v4.0
+buildchain release --dry-run --target-ref release/v4/v4.0 --sha <verified-sha>
+buildchain release dry-run --target-ref publish-gate/major --source-ref release/v4/v4.0
+buildchain release explain --target-ref alpha/v4/v4.0 --json
 ```
 
 This is a Buildchain-level dry-run, not an npm dry-run. It explains the legal
@@ -1013,7 +1012,7 @@ Pass `--json` for a machine-readable plan.
 for the publish transaction state:
 
 ```bash
-buildchain transaction inspect --version v3.0.1-alpha.2
+buildchain transaction inspect --version v4.0.1-alpha.2
 ```
 
 It reads or locally initializes the durable transaction record and validates
@@ -1040,9 +1039,9 @@ Buildchain's own npm package is published from
 `.github/workflows/buildchain-ref-promotion.yml`, inside the same publish
 transaction that promotes release refs:
 
-- `v3.0.3-alpha.0` publishes to npm with dist-tag `alpha`.
-- `v3.0.2` publishes to npm with dist-tag `latest`.
-- moving refs such as `v3`, `v3.0`, and `v3.0-alpha` do not match the publish
+- `v4.0.3-alpha.0` publishes to npm with dist-tag `alpha`.
+- `v4.0.2` publishes to npm with dist-tag `latest`.
+- moving refs such as `v4`, `v4.0`, and `v4.0-alpha` do not match the publish
   workflow and do not publish.
 
 The promotion workflow uses npm Trusted Publishing through GitHub Actions OIDC.

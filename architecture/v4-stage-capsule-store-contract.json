@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-stage-capsule-store-architecture",
+  "identityAuthority": "architecture/v4-stage-capsule-contract.json",
+  "schemaAuthority": "contracts/v4-stage-capsule-store-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-stage-capsule-store-v1/shared.json",
+  "implementations": {
+    "rust": "crates/buildchain-v4-contracts/src/stage_capsule_store.rs",
+    "typescriptContract": "packages/core/v4-stage-capsule-store.js",
+    "localReferenceStore": "packages/core/v4-stage-capsule-local-store.js"
+  },
+  "authority": {
+    "writer": "typescript-v3",
+    "rust": "validation-only",
+    "localStore": "reference-effect-only",
+    "providerAdapters": "effect-disabled-or-fixture-backed",
+    "productionWriteChange": false
+  },
+  "rootDomains": [
+    "stage-capsule-output-manifest",
+    "stage-capsule-retention-promise",
+    "stage-capsule-retention-state",
+    "stage-capsule-transport",
+    "stage-capsule-store-receipt",
+    "stage-capsule-quarantine"
+  ],
+  "separateFacts": [
+    "capsuleRoot",
+    "manifestRoot",
+    "retentionStateRoot",
+    "availabilityRoot",
+    "transportRoot",
+    "qualificationRoot",
+    "receiptRoot"
+  ],
+  "localLayout": {
+    "key": "lowercase-sha256-root",
+    "immutableFamilies": ["blobs", "capsules", "manifests", "records"],
+    "quarantine": "rooted-marker",
+    "ambientClock": false,
+    "network": false
+  },
+  "faultPriority": [
+    "quarantined",
+    "missing",
+    "root-mismatch",
+    "expired",
+    "partial",
+    "corrupt"
+  ],
+  "providerBoundaries": [
+    {
+      "provider": "github-artifacts",
+      "modes": ["effect-disabled", "fixture-backed"]
+    },
+    {
+      "provider": "s3-compatible",
+      "modes": ["effect-disabled", "fixture-backed"]
+    }
+  ],
+  "budgets": {
+    "newHandMaintainedSourceFiles": 3,
+    "providerSdkImports": 0,
+    "networkEffects": 0,
+    "productionProviderMutations": 0,
+    "cacheFallbacks": 0,
+    "credentialFields": 0,
+    "ambientClocks": 0,
+    "productionWriteAuthorityChanges": 0,
+    "v3ConsumerBehaviorChanges": 0
+  }
+}

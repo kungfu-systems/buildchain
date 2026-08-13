@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-stable-publication-fence-architecture",
+  "schemaAuthority": "contracts/v4-stable-publication-fence-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-stable-publication-fence-v1/shared.json",
+  "activationPredecessor": "architecture/v4-release-activation-shadow-domain.json",
+  "mode": "production",
+  "authority": {
+    "productionWriter": "v4-domain",
+    "productionWriterCount": 1,
+    "fenceAuthority": "rust-v4-core",
+    "fenceWriterCount": 1,
+    "typescript": "byte-equivalent-provider-adapter",
+    "candidateSelfQualification": false,
+    "productionWriteChange": true
+  },
+  "qualificationPolicies": {
+    "n-minus-one": "authority-generation-must-immediately-precede-candidate",
+    "independent-seal": "qualifier-authority-must-differ-from-publisher-authority",
+    "candidateRoot": "exact-content-root",
+    "coordinates": [
+      "source-root",
+      "metadata-root",
+      "journal-root",
+      "protected-ancestry-root",
+      "provider-confirmation-roots"
+    ]
+  },
+  "publicationTargets": ["stable-ref", "npm-tag", "oci-tag", "github-release"],
+  "implementations": {
+    "rustDomain": "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
+    "typescript": "packages/core/v4-stable-publication-fence.js"
+  },
+  "roots": [
+    "stable-publication-candidate",
+    "stable-publication-qualification",
+    "stable-publication-target",
+    "stable-publication-plan",
+    "stable-publication-fence"
+  ],
+  "rejects": [
+    "candidate-self-qualification",
+    "candidate-root-mismatch",
+    "qualification-publication-authority-collision",
+    "protected-ancestry-mismatch",
+    "source-mismatch",
+    "metadata-mismatch",
+    "journal-mismatch",
+    "provider-confirmation-mismatch",
+    "conflicting-publication-target"
+  ],
+  "budgets": {
+    "schemaAuthorities": 1,
+    "fenceWriters": 1,
+    "secondStateFoldWriters": 0,
+    "providerSdkImportsInContracts": 0,
+    "providerSdkImportsInRustDomain": 0,
+    "liveProviderMutations": 0,
+    "networkWrites": 0,
+    "credentialReads": 0,
+    "publicOrProtectedRefChanges": 0,
+    "productionWriteAuthorityChanges": 1,
+    "v3ConsumerBehaviorChanges": 0
+  },
+  "successor": "partial-mutation-recovery-qualification"
+}

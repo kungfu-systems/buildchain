@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 const {
   alphaDistTagForPromotion,
@@ -3004,7 +3005,7 @@ command = "node scripts/should-not-run.mjs"
   });
   const binDir = path.join(cwd, "bin");
   fs.mkdirSync(binDir);
-  fs.writeFileSync(
+  materializeCommandShim(
     path.join(binDir, "npm"),
     `#!/bin/sh
 echo "$@" >> "$NPM_LOG"
@@ -3026,7 +3027,6 @@ fi
 exit 64
 `,
   );
-  fs.chmodSync(path.join(binDir, "npm"), 0o755);
 
   const { octokit, refs, blobs, trees, commits } = createGitMock({
     refs: new Map([
@@ -3208,7 +3208,7 @@ command = "node scripts/should-not-run.mjs"
   });
   const binDir = path.join(cwd, "bin");
   fs.mkdirSync(binDir);
-  fs.writeFileSync(
+  materializeCommandShim(
     path.join(binDir, "npm"),
     `#!/bin/sh
 echo "$@" >> "$NPM_LOG"
@@ -3230,7 +3230,6 @@ fi
 exit 64
 `,
   );
-  fs.chmodSync(path.join(binDir, "npm"), 0o755);
 
   const { octokit, refs, commits, trees } = createGitMock({
     refs: new Map([

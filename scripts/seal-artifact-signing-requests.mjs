@@ -162,10 +162,11 @@ function inferKind(subjectPath, declaredKind) {
   return "binary";
 }
 
-function run(command, args) {
+function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    ...options,
   });
   if (result.error || result.status !== 0) {
     throw (
@@ -205,13 +206,17 @@ function archiveSubject({ subjectPath, outputRoot, id, kind, platform }) {
     format = "ditto-zip";
   } else {
     archivePath = path.join(artifactRoot, "subject.tar");
-    run("tar", [
-      "-cf",
-      archivePath,
-      "-C",
-      path.dirname(subjectPath),
-      path.basename(subjectPath),
-    ]);
+    run(
+      "tar",
+      [
+        "-cf",
+        path.basename(archivePath),
+        "-C",
+        path.dirname(subjectPath),
+        path.basename(subjectPath),
+      ],
+      { cwd: artifactRoot },
+    );
     format = "tar";
   }
   return {

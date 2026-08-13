@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-partial-mutation-recovery-v1.schema.json",
+  "title": "Buildchain v4 partial provider mutation recovery request",
+  "description": "Closed production evidence contract for deterministic partial provider mutation recovery planning. Provider effects remain outside this pure planner and require the exact authorized plan.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "evaluatedAt",
+    "sourceRoot",
+    "policyRoot",
+    "platformRoot",
+    "qualificationRoot",
+    "maxAttempts",
+    "compensableBoundaryRoots",
+    "stageResume",
+    "activation"
+  ],
+  "properties": {
+    "schema": {
+      "const": "buildchain-v4-partial-mutation-recovery-request/v1"
+    },
+    "evaluatedAt": { "$ref": "#/$defs/clock" },
+    "sourceRoot": { "$ref": "#/$defs/root" },
+    "policyRoot": { "$ref": "#/$defs/root" },
+    "platformRoot": { "$ref": "#/$defs/root" },
+    "qualificationRoot": { "$ref": "#/$defs/root" },
+    "maxAttempts": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "compensableBoundaryRoots": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/root" }
+    },
+    "stageResume": { "$ref": "#/$defs/stageResume" },
+    "activation": { "$ref": "#/$defs/activation" }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "clock": {
+      "type": "string",
+      "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "rootSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/root" }
+    },
+    "stageDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stageKey", "decision", "reasonCode"],
+      "properties": {
+        "stageKey": { "$ref": "#/$defs/token" },
+        "decision": { "enum": ["reuse", "rebuild", "reject"] },
+        "reasonCode": { "$ref": "#/$defs/token" }
+      }
+    },
+    "stageResume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "planRoot",
+        "sourceRoot",
+        "policyRoot",
+        "platformRoot",
+        "qualificationRoots",
+        "decisions"
+      ],
+      "properties": {
+        "schema": {
+          "const": "buildchain-v4-stage-capsule-resume-evidence/v1"
+        },
+        "planRoot": { "$ref": "#/$defs/root" },
+        "sourceRoot": { "$ref": "#/$defs/root" },
+        "policyRoot": { "$ref": "#/$defs/root" },
+        "platformRoot": { "$ref": "#/$defs/root" },
+        "qualificationRoots": { "$ref": "#/$defs/rootSet" },
+        "decisions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/stageDecision" }
+        }
+      }
+    },
+    "activationStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stepId",
+        "operationRoot",
+        "phase",
+        "journalRoot",
+        "journalStateRoot",
+        "compensationBoundaryRoot",
+        "attemptCount"
+      ],
+      "properties": {
+        "stepId": { "$ref": "#/$defs/token" },
+        "operationRoot": { "$ref": "#/$defs/root" },
+        "phase": {
+          "enum": [
+            "planned",
+            "intended",
+            "attempting",
+            "observed",
+            "confirmable",
+            "retryable",
+            "confirmed",
+            "rejected",
+            "terminal"
+          ]
+        },
+        "journalRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "journalStateRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "compensationBoundaryRoot": { "$ref": "#/$defs/root" },
+        "attemptCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "planRoot",
+        "stateRoot",
+        "qualificationRoot",
+        "policyRoot",
+        "steps"
+      ],
+      "properties": {
+        "schema": {
+          "const": "buildchain-v4-release-activation-recovery-evidence/v1"
+        },
+        "planRoot": { "$ref": "#/$defs/root" },
+        "stateRoot": { "$ref": "#/$defs/root" },
+        "qualificationRoot": { "$ref": "#/$defs/root" },
+        "policyRoot": { "$ref": "#/$defs/root" },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/activationStep" }
+        }
+      }
+    }
+  }
+}

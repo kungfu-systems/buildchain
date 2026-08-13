@@ -49,8 +49,8 @@ function runAws(args, { allowFailure = false } = {}) {
   return { ok: true, status: result.status, stdout, stderr };
 }
 
-function runAwsJson(args, options = {}) {
-  const result = runAws([...args, "--output", "json"], options);
+function runAwsJson(args, options = {}, runAwsCommand = runAws) {
+  const result = runAwsCommand([...args, "--output", "json"], options);
   if (!result.ok) {
     return { ok: false, data: null, stderr: result.stderr };
   }
@@ -83,10 +83,10 @@ function writeFunctionCode(tmpDir) {
   return file;
 }
 
-function ensureFunction({ name, comment, codeFile }) {
+function ensureFunction({ name, comment, codeFile, runAwsCommand }) {
   const described = runAwsJson(["cloudfront", "describe-function", "--name", name, "--stage", "DEVELOPMENT"], {
     allowFailure: true,
-  });
+  }, runAwsCommand);
   if (!described.ok) {
     const created = runAwsJson([
       "cloudfront",
@@ -97,7 +97,7 @@ function ensureFunction({ name, comment, codeFile }) {
       functionConfig(comment),
       "--function-code",
       `fileb://${codeFile}`,
-    ]);
+    ], {}, runAwsCommand);
     return {
       etag: created.data?.ETag || "",
       action: "created",
@@ -118,14 +118,14 @@ function ensureFunction({ name, comment, codeFile }) {
     functionConfig(comment),
     "--function-code",
     `fileb://${codeFile}`,
-  ]);
+  ], {}, runAwsCommand);
   return {
     etag: updated.data?.ETag || etag,
     action: "updated",
   };
 }
 
-function publishFunction({ name, etag }) {
+function publishFunction({ name, etag, runAwsCommand }) {
   if (!etag) {
     throw new Error(`cloudfront publish-function requires an ETag for ${name}`);
   }
@@ -136,7 +136,7 @@ function publishFunction({ name, etag }) {
     name,
     "--if-match",
     etag,
-  ]);
+  ], {}, runAwsCommand);
   const summary = published.data?.FunctionSummary || {};
   const arn = summary.FunctionMetadata?.FunctionARN || summary.FunctionARN || "";
   if (!arn) {
@@ -148,10 +148,10 @@ function publishFunction({ name, etag }) {
   };
 }
 
-function attachFunction({ distributionId, functionArn }) {
+function attachFunction({ distributionId, functionArn, runAwsCommand }) {
   let previousViewerRequestFunction;
   for (let attempt = 1; attempt <= DISTRIBUTION_UPDATE_MAX_ATTEMPTS; attempt += 1) {
-    const current = runAwsJson(["cloudfront", "get-distribution-config", "--id", distributionId]);
+    const current = runAwsJson(["cloudfront", "get-distribution-config", "--id", distributionId], {}, runAwsCommand);
     const etag = current.data?.ETag || "";
     const config = current.data?.DistributionConfig;
     if (!etag || !config) {
@@ -207,7 +207,7 @@ function attachFunction({ distributionId, functionArn }) {
         "--distribution-config",
         `file://${configFile}`,
       ];
-      updated = runAws(args, { allowFailure: true });
+      updated = runAwsCommand(args, { allowFailure: true });
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
@@ -233,7 +233,7 @@ function attachFunction({ distributionId, functionArn }) {
 export function ensureCloudFrontDirectoryIndexRewrite({
   distributionId = "",
   functionName = "",
-  comment = "Buildchain web-surface directory index rewrite",
+  comment = "Buildchain web-surface directory index rewrite", runAwsCommand = runAws,
 } = {}) {
   if (!distributionId) {
     throw new Error("--distribution-id is required");
@@ -244,9 +244,9 @@ export function ensureCloudFrontDirectoryIndexRewrite({
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-cloudfront-function-"));
   try {
     const codeFile = writeFunctionCode(tmpDir);
-    const ensured = ensureFunction({ name: functionName, comment, codeFile });
-    const published = publishFunction({ name: functionName, etag: ensured.etag });
-    const attached = attachFunction({ distributionId, functionArn: published.arn });
+    const ensured = ensureFunction({ name: functionName, comment, codeFile, runAwsCommand });
+    const published = publishFunction({ name: functionName, etag: ensured.etag, runAwsCommand });
+    const attached = attachFunction({ distributionId, functionArn: published.arn, runAwsCommand });
     return {
       schemaVersion: 1,
       contract: "kungfu-buildchain-web-surface-cloudfront-directory-index-rewrite",

@@ -30,6 +30,8 @@
       "./issue-reporting": "./packages/core/issue-reporting.js",
       "./kfd": "./packages/core/kfd.js",
       "./kfd-product-gates": "./packages/core/kfd-product-gates.js",
+      "./kfd-adopter-manifest": "./packages/core/kfd-adopter-manifest.js",
+      "./kfd-adopter-release-binding": "./packages/core/artifact-verification-envelope.js",
       "./kfd-agent-hub": "./packages/core/kfd-agent-hub.js",
       "./buildchain-layout": "./packages/core/buildchain-layout.js",
       "./release-line-bootstrap": "./packages/core/release-line-bootstrap.js",
@@ -46,14 +48,20 @@
       "./publication-control-plane-audit": "./packages/core/publication-control-plane-audit.js",
       "./buildchain-publication-authority": "./packages/core/buildchain-publication-authority.js",
       "./github-governance-authority": "./packages/core/github-governance-authority.js",
+      "./engineering-housekeeper": "./packages/core/engineering-housekeeper.js",
+      "./engineering-housekeeper-github": "./packages/core/engineering-housekeeper-github.js",
       "./kfd-gate": "./packages/core/kfd-gate.js",
       "./release-candidate": "./packages/core/release-candidate.js",
       "./release-candidate-recovery": "./packages/core/release-candidate-recovery.js",
+      "./release-train": "./packages/core/release-train.js",
       "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",
       "./release-passport": "./packages/core/release-passport.js",
       "./release-passport-contract": "./packages/core/release-passport-contract.js",
       "./release-propagation": "./packages/core/release-propagation.js",
       "./release-activation-transaction": "./packages/core/release-activation-transaction.js",
+      "./release-tail-provider-plane": "./packages/core/release-tail-provider-plane.js",
+      "./release-tail-provider-adapters": "./packages/core/release-tail-provider-adapters.js",
+      "./release-tail-compatibility": "./packages/core/release-tail-compatibility.js",
       "./surface-manifest": "./packages/core/surface-manifest.js",
       "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
       "./site/buildchain-site.json": "./dist/site/buildchain-site.json",
@@ -88,7 +96,7 @@
   "packageManager": "pnpm@11.7.0",
   "inventoryRelease": "buildchain-v2",
   "stableRefs": {
-    "actions": "kungfu-systems/buildchain/actions/<name>@v3",
-    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3"
+    "actions": "kungfu-systems/buildchain/actions/<name>@v4",
+    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v4"
   }
 }

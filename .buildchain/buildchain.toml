@@ -39,7 +39,10 @@ path = "dist/site/kfd-upstream-aggregate.json"
 key = "product.version"
 
 [lifecycle.install]
-command = "corepack pnpm@11.7.0 install --frozen-lockfile"
+command = "corepack enable pnpm && corepack pnpm@11.7.0 install --frozen-lockfile"
+
+[lifecycle.build]
+command = "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:site"
 
 [lifecycle.verify]
 commands = [
@@ -53,7 +56,7 @@ command = "node scripts/generate-site-bundle.mjs"
 command = "node scripts/npm-publish-transaction.mjs"
 
 [publish]
-shared_alpha_authority_major = 3
+shared_alpha_authority_major = 4
 
 [governance.dev.merge_queue]
 mode = "enabled"

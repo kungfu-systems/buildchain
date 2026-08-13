@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-stage-capsule-architecture",
+  "schemaAuthority": "contracts/v4-stage-capsule-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-stage-capsule-v1/shared.json",
+  "storeSuccessor": "architecture/v4-stage-capsule-store-contract.json",
+  "authority": {
+    "writer": "typescript-v3",
+    "writerCount": 1,
+    "rust": "validation-only",
+    "productionWriteChange": false
+  },
+  "roots": {
+    "identity": "stage-capsule-identity",
+    "capsule": "stage-capsule",
+    "availability": "stage-capsule-availability"
+  },
+  "identityIncludes": [
+    "sourceRoot",
+    "platform",
+    "platformRoot",
+    "stage",
+    "toolchainRoots",
+    "runtimeRoot",
+    "policyRoot",
+    "declaredInputs",
+    "transformationRoot",
+    "outputManifestRoot",
+    "qualificationRoot",
+    "observationRoots"
+  ],
+  "identityExcludes": [
+    "providerRunId",
+    "providerArtifactId",
+    "runnerPath",
+    "credential",
+    "ambientClock",
+    "networkObservation",
+    "transportLocation",
+    "currentAvailability"
+  ],
+  "templateGuidance": {
+    "source": "contracts/fixtures/v4-stage-capsule-v1/shared.json",
+    "requiredRootOnlyFields": [
+      "toolchainRoots",
+      "declaredInputs",
+      "observationRoots",
+      "transports"
+    ],
+    "forbiddenRawFields": [
+      "providerRunId",
+      "providerArtifactId",
+      "runnerPath",
+      "credential",
+      "ambientClock",
+      "networkObservation"
+    ]
+  },
+  "reuse": {
+    "explicitEvaluationClock": true,
+    "failClosedStatuses": [
+      "missing",
+      "expired",
+      "partial",
+      "corrupt",
+      "quarantined",
+      "root-mismatch"
+    ],
+    "requiresExactRoots": [
+      "capsuleRoot",
+      "outputManifestRoot",
+      "qualificationRoot"
+    ]
+  },
+  "budgets": {
+    "schemaAuthorities": 1,
+    "writers": 1,
+    "secondWriters": 0,
+    "providerSdkImportsInContracts": 0,
+    "providerSdkImportsInRustDomain": 0,
+    "productionWriteAuthorityChanges": 0,
+    "v3ConsumerBehaviorChanges": 0
+  },
+  "successors": [
+    "store-retention",
+    "platform-stage-checkpoints",
+    "resume-planner",
+    "qualification-reconciliation"
+  ]
+}
