@@ -1155,6 +1155,12 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.doesNotMatch(workflow, /gate_path="\$\{BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT\}\/adopter-delivery\.json"/);
   assert.match(workflow, /adopter-delivery-path=/);
   assert.match(workflow, /self-dogfood-path=/);
+  assert.match(workflow, /buildchain-delivery-self-dogfood-release-evidence\.json/);
+  assert.match(workflow, /id: "buildchain-delivery-self-dogfood"/);
+  assert.match(workflow, /sourceSha: process\.env\.BUILDCHAIN_SOURCE_SHA/);
+  assert.match(workflow, /tag: `v\$\{process\.env\.BUILDCHAIN_EXPECTED_VERSION\}`/);
+  assert.match(workflow, /channel: "alpha"/);
+  assert.doesNotMatch(workflow, /self-dogfood-path=\$\{selfDogfoodPath\}/);
   assert.match(workflow, /release-passport-adopter-delivery-json: \$\{\{ steps\.buildchain-delivery-self-dogfood\.outputs\.adopter-delivery-path \|\| inputs\.release-passport-adopter-delivery-json \}\}/);
   assert.match(workflow, /github-artifact-attestation-policy-json:/);
   assert.match(workflow, /release-passport-github-artifact-attestation-policy-jsons: \$\{\{ steps\.attestation-policy\.outputs\.path \}\}/);
