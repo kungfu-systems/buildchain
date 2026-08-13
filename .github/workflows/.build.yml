@@ -546,7 +546,7 @@ on:
         value: ${{ jobs.trust-gate.outputs.publish-source-line }}
       publish-source-consumer-version:
         description: "Consumer version parsed from the publish-gate source ref"
-        value: ${{ jobs.trust-gate.outputs.publish-source-consumer-version }}
+        value: ${{ jobs.resolve-source.outputs.publish-source-consumer-version }}
       release-manifest-json:
         description: "Resolved release manifest JSON"
         value: ${{ jobs.resolve-source.outputs.release-manifest-json }}
@@ -2975,6 +2975,8 @@ jobs:
       authority-run-id: ${{ steps.plan.outputs.authority-run-id }}
       authority-result-artifact: ${{ steps.plan.outputs.authority-result-artifact }}
       controller-plan-artifact: ${{ steps.plan.outputs.controller-plan-artifact }}
+      failure-mode: ${{ steps.plan.outputs.failure-mode }}
+      recovered-signing-settlement-artifact: ${{ steps.names.outputs.recovered-signing-settlement-artifact }}
     steps:
       - name: Check out the floating v3 recovery tooling
         uses: actions/checkout@v7.0.0
@@ -2994,7 +2996,11 @@ jobs:
 
       - name: Resolve tail reseal request artifact
         id: names
-        run: echo "request-artifact=${ARTIFACT_NAME}-tail-reseal-request-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        run: |
+          {
+            echo "request-artifact=${ARTIFACT_NAME}-tail-reseal-request-${SOURCE_SHA}"
+            echo "recovered-signing-settlement-artifact=${ARTIFACT_NAME}-tail-reseal-signing-settlement-${SOURCE_SHA}"
+          } >> "$GITHUB_OUTPUT"
         env:
           ARTIFACT_NAME: ${{ inputs.artifact-name }}
           SOURCE_SHA: ${{ steps.plan.outputs.source-sha }}
@@ -3004,6 +3010,47 @@ jobs:
         with:
           name: ${{ steps.names.outputs.request-artifact }}
           path: .buildchain/tail-reseal/request.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Download original macOS signing control request
+        if: ${{ steps.plan.outputs.failure-mode == 'macos-signing-control' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.plan.outputs.source-run-id }}
+          name: ${{ inputs.artifact-name }}-signing-control-request-macos-arm64-${{ steps.plan.outputs.source-sha }}-${{ steps.plan.outputs.source-run-id }}-${{ steps.plan.outputs.source-run-attempt }}
+          path: .buildchain/signing/control-requests/macos-arm64
+
+      - name: Download original non-qualifying macOS signing receipt
+        if: ${{ steps.plan.outputs.failure-mode == 'macos-signing-control' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.plan.outputs.source-run-id }}
+          name: ${{ inputs.artifact-name }}-signing-controller-receipt-macos-arm64-${{ steps.plan.outputs.source-sha }}-${{ steps.plan.outputs.source-run-id }}-${{ steps.plan.outputs.source-run-attempt }}
+          path: .buildchain/signing/failed-controller-receipts/macos-arm64
+
+      - name: Recover exact macOS signing settlement from successful authority result
+        if: ${{ steps.plan.outputs.failure-mode == 'macos-signing-control' }}
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs recover-signing
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/macos-arm64/request.json
+          BUILDCHAIN_FAILED_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/failed-controller-receipts/macos-arm64/receipt.json
+          BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/controller-receipts/macos-arm64/receipt.json
+          BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/macos-arm64/delegation.json
+
+      - name: Retain recovered macOS signing settlement
+        if: ${{ steps.plan.outputs.failure-mode == 'macos-signing-control' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.recovered-signing-settlement-artifact }}
+          path: |
+            .buildchain/signing/controller-receipts/macos-arm64/receipt.json
+            .buildchain/signing/delegations/macos-arm64/delegation.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -3084,7 +3131,7 @@ jobs:
         run: corepack pnpm@11.7.0 install --dir .buildchain/candidate-runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Download macOS signing finalization delegation
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode == 'macos-finalization' }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -3104,7 +3151,7 @@ jobs:
           path: .buildchain/signing/control-requests/macos-arm64
 
       - name: Download macOS signing controller receipt
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode == 'macos-finalization' }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -3112,6 +3159,14 @@ jobs:
           run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
           name: ${{ inputs.artifact-name }}-signing-controller-receipt-macos-arm64-${{ needs.tail-reseal-plan.outputs.source-sha }}-${{ needs.tail-reseal-plan.outputs.source-run-id }}-${{ needs.tail-reseal-plan.outputs.source-run-attempt }}
           path: .buildchain/signing/controller-receipts/macos-arm64
+
+      - name: Download recovered macOS signing settlement
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode == 'macos-signing-control' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ needs.tail-reseal-plan.outputs.recovered-signing-settlement-artifact }}
+          path: .buildchain/signing
 
       - name: Verify macOS signing finalization delegation
         if: ${{ matrix.platform.id == 'macos-arm64' }}
@@ -3152,10 +3207,16 @@ jobs:
 
       - name: Preserve pre-signing macOS manifest
         if: ${{ matrix.platform.id == 'macos-arm64' }}
-        run: cp .buildchain/artifacts/macos-arm64/manifest.json .buildchain/artifacts/macos-arm64/manifest-pre-signing.json
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs prepare-manifest-recompute
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: macos-arm64
+          BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest.json
+          BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: .buildchain/tail-reseal/pre-signing/macos-arm64-manifest.json
 
       - name: Verify and import authoritative signed macOS bytes
         if: ${{ matrix.platform.id == 'macos-arm64' }}
+        id: signing-import
         run: node .buildchain/candidate-runtime/scripts/import-artifact-signing-results.mjs
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ steps.delegation.outputs.working-directory }}
@@ -3194,12 +3255,51 @@ jobs:
           BUILDCHAIN_ARTIFACT_PATHS: ${{ matrix.platform.artifactPaths }}
           BUILDCHAIN_EXPECTED_ARTIFACTS_JSON: ${{ inputs.expected-artifacts-json }}
 
+      - name: Restore original build identity after signed manifest recomputation
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs restore-manifest-run
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: macos-arm64
+          BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest.json
+          BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: .buildchain/tail-reseal/pre-signing/macos-arm64-manifest.json
+          BUILDCHAIN_TAIL_RESEAL_ARCHIVED_PRE_SIGNING_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest-pre-signing.json
+
       - name: Verify exact platform files before resealing
         run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs verify-platform
         env:
           BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
           BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
+
+      - name: Verify authoritative credential-island projection
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        id: credential-projection
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs verify-credential-projection
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
+          BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest.json
+          BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: ${{ steps.signing-import.outputs.credential-artifact-root }}
+
+      - name: Upload authoritative credential-island payload
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-macos-credential-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          path: ${{ steps.credential-projection.outputs.credential-artifact-root }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+
+      - name: Upload authoritative credential-island manifest
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-credential-manifest-macos-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          path: ${{ steps.credential-projection.outputs.credential-manifest-path }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload resealed platform payload
         uses: actions/upload-artifact@v7.0.1
@@ -3322,7 +3422,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"success"},{"id":"resolve-source","status":"success"},{"id":"anchored-release-preflight","status":"success"},{"id":"pre-build-contracts","status":"success"},{"id":"build","status":"success"},{"id":"signing-finalization","status":"success"},{"id":"credential-island","status":"skipped"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+            [{"id":"resolve-runtime","status":"success"},{"id":"resolve-source","status":"success"},{"id":"anchored-release-preflight","status":"success"},{"id":"pre-build-contracts","status":"success"},{"id":"build","status":"success"},{"id":"signing-finalization","status":"success"},{"id":"credential-island","status":"success"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: >-
             [{"kind":"tail-reseal-receipt","path":".buildchain/tail-reseal/receipt.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.tail-reseal-plan.outputs.source-sha }}

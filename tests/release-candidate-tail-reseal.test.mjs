@@ -7,7 +7,11 @@ import test from "node:test";
 
 import {
   normalizeTailResealRequest,
+  prepareTailResealMacosManifestRecompute,
+  restoreTailResealManifestRunIdentity,
+  tailResealFailureMode,
   sealTailResealReceipt,
+  verifyTailResealCredentialIslandProjection,
   verifyTailResealPlatform,
 } from "../scripts/release-candidate-tail-reseal.mjs";
 
@@ -125,6 +129,26 @@ test("tail reseal request requires one exact four-platform candidate", () => {
   );
 });
 
+test("tail reseal admits only the two exact macOS failure boundaries", () => {
+  assert.equal(tailResealFailureMode(request()), "macos-finalization");
+  assert.equal(tailResealFailureMode({
+    ...request(),
+    failure: {
+      jobId: 456,
+      jobName: "build / Control detached signing macOS ARM64",
+      stepName: "Enforce qualifying detached signing settlement",
+    },
+  }), "macos-signing-control");
+  assert.throws(() => tailResealFailureMode({
+    ...request(),
+    failure: {
+      jobId: 456,
+      jobName: "build / Linux x64",
+      stepName: "Build",
+    },
+  }), /outside the two exact macOS recovery boundaries/u);
+});
+
 test("platform verification rejects changed retained bytes", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-platform-"));
   const requestFile = path.join(root, "request.json");
@@ -144,6 +168,157 @@ test("platform verification rejects changed retained bytes", () => {
     }, () => verifyTailResealPlatform()),
     /size mismatch|digest mismatch/u,
   );
+});
+
+test("signed macOS manifest recomputation restores only the original build run identity", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-manifest-run-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  const preSigningManifestFile = path.join(root, "manifest-pre-signing.json");
+  const archivedPreSigningManifestFile = path.join(root, "archive", "manifest-pre-signing.json");
+  fs.copyFileSync(manifestFile, preSigningManifestFile);
+  const recomputed = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  recomputed.git.runId = "999";
+  recomputed.git.runAttempt = "2";
+  recomputed.files[0].signed = true;
+  fs.writeFileSync(manifestFile, `${JSON.stringify(recomputed, null, 2)}\n`);
+
+  const restored = withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: preSigningManifestFile,
+    BUILDCHAIN_TAIL_RESEAL_ARCHIVED_PRE_SIGNING_MANIFEST_PATH: archivedPreSigningManifestFile,
+    GITHUB_RUN_ID: "999",
+    GITHUB_RUN_ATTEMPT: "2",
+  }, () => restoreTailResealManifestRunIdentity());
+
+  assert.equal(restored.git.runId, "123");
+  assert.equal(restored.git.runAttempt, "1");
+  assert.equal(restored.files[0].signed, true);
+  assert.equal(digest(archivedPreSigningManifestFile), digest(preSigningManifestFile));
+  withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: root,
+  }, () => verifyTailResealPlatform());
+});
+
+test("macOS manifest recompute preparation removes only self-invalidating generated evidence", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-manifest-prepare-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  const manifestDirectory = path.dirname(manifestFile);
+  const summaryFile = path.join(manifestDirectory, "summary.json");
+  const diagnosticsFile = path.join(manifestDirectory, "diagnostics.json");
+  const productFile = path.join(root, "product", "macos-arm64", "payload.bin");
+  const preservedFile = path.join(root, ".buildchain", "tail-reseal", "pre-signing", "macos-arm64-manifest.json");
+  fs.writeFileSync(summaryFile, "summary\n");
+  fs.writeFileSync(diagnosticsFile, "diagnostics\n");
+
+  withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: preservedFile,
+  }, () => prepareTailResealMacosManifestRecompute());
+
+  assert.equal(fs.existsSync(manifestFile), false);
+  assert.equal(fs.existsSync(summaryFile), false);
+  assert.equal(fs.existsSync(diagnosticsFile), false);
+  assert.equal(fs.existsSync(productFile), true);
+  assert.equal(JSON.parse(fs.readFileSync(preservedFile, "utf8")).git.runId, "123");
+});
+
+test("macOS manifest recompute preparation rejects preservation inside the scanned evidence directory", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-manifest-prepare-reject-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  assert.throws(() => withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: path.join(path.dirname(manifestFile), "manifest-pre-signing.json"),
+  }, () => prepareTailResealMacosManifestRecompute()), /outside the recomputed artifact directory/u);
+});
+
+test("signed macOS manifest run restoration rejects unrelated recomputation identity", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-manifest-run-reject-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  const preSigningManifestFile = path.join(root, "manifest-pre-signing.json");
+  fs.copyFileSync(manifestFile, preSigningManifestFile);
+  const recomputed = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  recomputed.git.runId = "777";
+  fs.writeFileSync(manifestFile, `${JSON.stringify(recomputed, null, 2)}\n`);
+
+  assert.throws(() => withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: preSigningManifestFile,
+    GITHUB_RUN_ID: "999",
+    GITHUB_RUN_ATTEMPT: "1",
+  }, () => restoreTailResealManifestRunIdentity()), /neither the original build nor the current tail run/u);
+});
+
+test("credential-island projection is already byte-bound by the retained macOS manifest", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-credential-projection-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  const credentialRoot = path.join(root, ".buildchain", "artifacts", "signing", "macos-arm64", "desktop", "credential-artifact");
+  const credentialFiles = [
+    ["product/release/credential-island-evidence.json", "evidence"],
+    ["product/release/product.dmg", "dmg"],
+    ["product/release/product.zip", "zip"],
+  ].map(([relative, contents]) => {
+    const absolute = path.join(credentialRoot, relative);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    fs.writeFileSync(absolute, contents);
+    return { path: relative, size: fs.statSync(absolute).size, sha256: digest(absolute) };
+  });
+  const credentialManifest = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-artifact",
+    artifactName: `product-macos-credential-${SOURCE_SHA}`,
+    platform: { id: "macos-arm64-credential", os: "macos", arch: "arm64" },
+    git: { repository: "owner/product", sha: SOURCE_SHA },
+    lifecycle: { stage: "credential-island", executed: true },
+    expectedArtifacts: { ok: true },
+    files: credentialFiles,
+  };
+  const credentialManifestFile = path.join(credentialRoot, "manifest.json");
+  fs.writeFileSync(credentialManifestFile, `${JSON.stringify(credentialManifest, null, 2)}\n`);
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  for (const absolute of [credentialManifestFile, ...credentialFiles.map((entry) => path.join(credentialRoot, entry.path))]) {
+    manifest.files.push({
+      path: path.relative(root, absolute).split(path.sep).join("/"),
+      size: fs.statSync(absolute).size,
+      sha256: digest(absolute),
+    });
+  }
+  fs.writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const projected = withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: root,
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: credentialRoot,
+  }, () => verifyTailResealCredentialIslandProjection());
+  assert.equal(projected.platform.id, "macos-arm64-credential");
+
+  fs.writeFileSync(path.join(credentialRoot, "product/release/product.zip"), "changed");
+  assert.throws(() => withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: root,
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: credentialRoot,
+  }, () => verifyTailResealCredentialIslandProjection()), /size mismatch|digest mismatch/u);
 });
 
 test("tail reseal receipt records skipped build and current tooling separately", () => {
