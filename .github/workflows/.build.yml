@@ -3249,6 +3249,15 @@ jobs:
           BUILDCHAIN_ARTIFACT_PATHS: ${{ matrix.platform.artifactPaths }}
           BUILDCHAIN_EXPECTED_ARTIFACTS_JSON: ${{ inputs.expected-artifacts-json }}
 
+      - name: Restore original build identity after signed manifest recomputation
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs restore-manifest-run
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: macos-arm64
+          BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest.json
+          BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest-pre-signing.json
+
       - name: Verify exact platform files before resealing
         run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs verify-platform
         env:
