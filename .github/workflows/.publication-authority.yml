@@ -670,11 +670,11 @@ jobs:
           github-token: ${{ github.token }}
           name: ${{ inputs.evidence-controller-artifact }}
           path: .buildchain/publication-evidence/binary-controller
-
       - name: Audit managed release-candidate publication control plane
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' }}
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.governance-auditor.outputs.token || secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
+          BUILDCHAIN_GITHUB_PUBLIC_READ_TOKEN: ${{ github.token }}
           BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
         shell: bash
         run: |
@@ -721,11 +721,11 @@ jobs:
           BUILDCHAIN_CONSUMER_PREDICATE_DIGEST: ${{ inputs.consumer-predicate-digest }}
         shell: bash
         run: node .buildchain/authority-runtime/scripts/assemble-self-publication-admission.mjs
-
       - name: Audit managed paper publication control plane
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'publication-artifact' }}
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.governance-auditor.outputs.token || secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
+          BUILDCHAIN_GITHUB_PUBLIC_READ_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -763,11 +763,11 @@ jobs:
           BUILDCHAIN_CONSUMER_PREDICATE_DIGEST: ${{ inputs.consumer-predicate-digest }}
         shell: bash
         run: node .buildchain/authority-runtime/scripts/assemble-publication-artifact-admission.mjs
-
       - name: Audit managed binary release publication control plane
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'binary-release-assets' }}
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.governance-auditor.outputs.token || secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
+          BUILDCHAIN_GITHUB_PUBLIC_READ_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
