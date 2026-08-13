@@ -82,7 +82,7 @@ test("N-1 and independently sealed evidence are explicit and never self-authoriz
     independentlySealed.candidate.generation;
   assert.equal(
     projectV4StablePublication(independentlySealed).fence.decision,
-    "allow-shadow-plan",
+    "allow-publication",
   );
 
   const selfQualified = clone(fixture);
@@ -138,12 +138,12 @@ test("Rust and TypeScript produce byte-equivalent shadow plans and fence roots",
   );
 });
 
-test("the fence creates no effects and preserves v3 production authority", () => {
+test("the fence authorizes the exact target set under v4 production authority", () => {
   const projection = projectV4StablePublication(fixture);
-  assert.equal(projection.plan.mode, "shadow-only");
-  assert.equal(projection.plan.productionAuthority, "v3");
-  assert.equal(projection.fence.effectCount, 0);
-  assert.equal(projection.fence.decision, "allow-shadow-plan");
+  assert.equal(projection.plan.mode, "production");
+  assert.equal(projection.plan.productionAuthority, "v4");
+  assert.equal(projection.fence.effectCount, 4);
+  assert.equal(projection.fence.decision, "allow-publication");
   assert.deepEqual(projection.plan.targets.map(({ kind }) => kind).sort(), [
     "github-release",
     "npm-tag",
@@ -152,7 +152,7 @@ test("the fence creates no effects and preserves v3 production authority", () =>
   ]);
 });
 
-test("the schema and architecture are closed, single-writer, and shadow-only", () => {
+test("the schema and architecture are closed, single-writer, and production-v4", () => {
   const schema = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -175,8 +175,9 @@ test("the schema and architecture are closed, single-writer, and shadow-only", (
   assert.equal(schema.$defs.candidate.additionalProperties, false);
   assert.equal(schema.$defs.qualification.additionalProperties, false);
   assert.equal(schema.$defs.target.additionalProperties, false);
-  assert.equal(architecture.mode, "shadow-only");
-  assert.equal(architecture.authority.productionWriter, "typescript-v3");
+  assert.equal(architecture.mode, "production");
+  assert.equal(architecture.authority.productionWriter, "v4-domain");
+  assert.equal(architecture.authority.productionWriteChange, true);
   assert.equal(architecture.authority.candidateSelfQualification, false);
   assert.deepEqual(architecture.budgets, {
     schemaAuthorities: 1,
@@ -188,12 +189,12 @@ test("the schema and architecture are closed, single-writer, and shadow-only", (
     networkWrites: 0,
     credentialReads: 0,
     publicOrProtectedRefChanges: 0,
-    productionWriteAuthorityChanges: 0,
+    productionWriteAuthorityChanges: 1,
     v3ConsumerBehaviorChanges: 0,
   });
 });
 
-test("shadow fence implementations contain no provider, network, filesystem, process, or ambient authority", () => {
+test("production fence implementations contain no provider, network, filesystem, process, or ambient authority", () => {
   const javascript = fs.readFileSync(
     new URL("../packages/core/v4-stable-publication-fence.js", import.meta.url),
     "utf8",

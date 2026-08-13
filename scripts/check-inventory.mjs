@@ -911,7 +911,7 @@ for (const requiredSnippet of [
 for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
   for (const requiredSnippet of [
     "minimumReleaseAgeExclude",
-    "@kungfu-tech/buildchain@3.0.0",
+    "@kungfu-tech/buildchain@4.0.0",
     "package/version-specific",
   ]) {
     if (!docSource.includes(requiredSnippet)) {
@@ -1261,12 +1261,12 @@ if (inventory.release !== "buildchain-v2") {
   throw new Error("inventory release must be buildchain-v2");
 }
 
-if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v3") {
-  throw new Error("inventory stable action ref must point at @v3");
+if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v4") {
+  throw new Error("inventory stable action ref must point at @v4");
 }
 
-if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3") {
-  throw new Error("inventory stable workflow ref must point at @v3");
+if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v4") {
+  throw new Error("inventory stable workflow ref must point at @v4");
 }
 if (inventory.safety?.releasePassport?.line !== "v2.2") {
   throw new Error("release passport inventory must be registered as a v2.2 surface");

@@ -321,8 +321,8 @@ export function planV4StablePublication(request) {
   );
   const payload = {
     schema: V4_STABLE_PUBLICATION_PLAN_CONTRACT,
-    mode: "shadow-only",
-    productionAuthority: "v3",
+    mode: "production",
+    productionAuthority: "v4",
     declaredAt: request.declaredAt,
     candidate,
     candidateRoot,
@@ -340,8 +340,8 @@ export function projectV4StablePublication(request) {
   const plan = planV4StablePublication(request);
   const payload = {
     schema: V4_STABLE_PUBLICATION_FENCE_CONTRACT,
-    decision: "allow-shadow-plan",
-    effectCount: 0,
+    decision: "allow-publication",
+    effectCount: plan.targets.length,
     candidateRoot: plan.candidateRoot,
     qualificationMode: plan.qualification.mode,
     qualificationRoot: plan.qualification.qualificationRoot,

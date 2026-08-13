@@ -332,8 +332,8 @@ fn plan(request: &ReleaseActivationRequest) -> ContractResult<ReleaseActivationP
     let steps = normalize_steps(request)?;
     let mut result = ReleaseActivationPlan {
         schema: RELEASE_ACTIVATION_PLAN_CONTRACT.to_owned(),
-        mode: "shadow-only".to_owned(),
-        production_authority: "v3".to_owned(),
+        mode: "production".to_owned(),
+        production_authority: "v4".to_owned(),
         declared_at: request.declared_at.clone(),
         transaction_root: request.transaction_root.clone(),
         qualification_root: qualification_root.to_owned(),
@@ -452,8 +452,8 @@ pub fn project_release_activation(
     };
     let mut state = ReleaseActivationState {
         schema: RELEASE_ACTIVATION_STATE_CONTRACT.to_owned(),
-        mode: "shadow-only".to_owned(),
-        production_authority: "v3".to_owned(),
+        mode: "production".to_owned(),
+        production_authority: "v4".to_owned(),
         plan_root: plan.plan_root.clone(),
         phase: phase.to_owned(),
         step_states,

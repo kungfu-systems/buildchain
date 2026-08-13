@@ -30,7 +30,7 @@ jobs:
   patrol:
     uses: ./.github/workflows/stable-candidate-patrol.yml
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || 'v3-alpha' }}
+      buildchain-ref: ${{ inputs.buildchain-ref || 'v4-alpha' }}
       release-now: ${{ inputs.release-now }}
       auto-approve: true
       dry-run: ${{ inputs.dry-run || false }}

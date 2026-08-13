@@ -159,7 +159,7 @@ test("readback output is consumed by the journal but cannot confirm release stat
   );
 });
 
-test("one closed schema and architecture retain shadow-only zero-authority budgets", () => {
+test("one closed schema and architecture retain bounded v4 production authority", () => {
   const schema = JSON.parse(
     fs.readFileSync(
       new URL(
@@ -196,7 +196,7 @@ test("one closed schema and architecture retain shadow-only zero-authority budge
   );
   assert.equal(architecture.budgets.providerSdkImportsInRustDomain, 0);
   assert.equal(architecture.budgets.liveProviderMutations, 0);
-  assert.equal(architecture.budgets.productionWriteAuthorityChanges, 0);
+  assert.equal(architecture.budgets.productionWriteAuthorityChanges, 1);
 });
 
 test("readback implementations contain no live provider, network, filesystem, or ambient authority", () => {

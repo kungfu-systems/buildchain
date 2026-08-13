@@ -15,7 +15,7 @@ import {
 
 const root = path.resolve(import.meta.dirname, "..");
 
-test("v4 architecture contract validates with zero production writer migrations", () => {
+test("v4 architecture contract validates with every production writer migrated", () => {
   const { report } = loadArchitecture(root);
   assert.deepEqual(report, {
     schemaVersion: 1,
@@ -27,7 +27,7 @@ test("v4 architecture contract validates with zero production writer migrations"
     dependencyLayers: 6,
     dependencyCycles: 0,
     activeExceptions: 0,
-    productionWriterMigrations: 0,
+    productionWriterMigrations: 6,
   });
 });
 
@@ -52,14 +52,14 @@ test("architecture list and show are generated from the validated manifest", () 
   );
   assert.equal(
     architectureShow("engineering-housekeeper", root).capability.migrationPhase,
-    "legacy-authoritative",
+    "legacy-retired",
   );
   const shown = architectureShow("publish-transaction", root);
   assert.equal(
     shown.capability.owner,
     "Buildchain package and release publication plane",
   );
-  assert.equal(shown.stateMachines[0].writer.runtime, "typescript-v3");
+  assert.equal(shown.stateMachines[0].writer.runtime, "typescript-v4");
   assert.equal(shown.stateMachines[0].writer.secondWriterBudget, 0);
   assert.throws(
     () => architectureShow("missing", root),

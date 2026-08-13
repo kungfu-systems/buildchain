@@ -648,7 +648,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /buildchain-expected-channel: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && 'alpha' \|\| 'stable' \}\}/,
   );
-  assert.match(workflow, /buildchain-expected-major: "3"/);
+  assert.match(workflow, /buildchain-expected-major: "4"/);
   assert.match(
     workflow,
     /buildchain-contract-lock-path: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && '\.buildchain\/alpha-contract-lock\.json' \|\| '\.buildchain\/contract-lock\.json' \}\}/,

@@ -494,8 +494,8 @@ pub fn plan_partial_mutation_recovery(
         .map(|operation| operation.checkpoint.clone());
     let payload = json!({
         "schema": PARTIAL_MUTATION_RECOVERY_PLAN_CONTRACT,
-        "mode": "shadow-only",
-        "productionAuthority": "v3",
+        "mode": "production",
+        "productionAuthority": "v4",
         "evaluatedAt": request.evaluated_at,
         "sourceRoot": request.source_root,
         "policyRoot": request.policy_root,
@@ -513,8 +513,8 @@ pub fn plan_partial_mutation_recovery(
     });
     Ok(PartialMutationRecoveryPlan {
         schema: PARTIAL_MUTATION_RECOVERY_PLAN_CONTRACT.to_owned(),
-        mode: "shadow-only".to_owned(),
-        production_authority: "v3".to_owned(),
+        mode: "production".to_owned(),
+        production_authority: "v4".to_owned(),
         evaluated_at: request.evaluated_at.clone(),
         source_root: request.source_root.clone(),
         policy_root: request.policy_root.clone(),

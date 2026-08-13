@@ -366,8 +366,8 @@ export function planV4PartialMutationRecovery(request) {
     .sort();
   const payload = {
     schema: V4_PARTIAL_MUTATION_RECOVERY_PLAN_CONTRACT,
-    mode: "shadow-only",
-    productionAuthority: "v3",
+    mode: "production",
+    productionAuthority: "v4",
     evaluatedAt: request.evaluatedAt,
     sourceRoot: request.sourceRoot,
     policyRoot: request.policyRoot,

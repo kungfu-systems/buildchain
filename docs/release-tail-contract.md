@@ -7,8 +7,8 @@ source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: unreviewed
-last_reviewed: 2026-08-07
+review_state: self-reviewed
+last_reviewed: 2026-08-13
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -33,11 +33,12 @@ implementation is documented in
 provider plane does not itself cut over a consumer, run a release, or
 reinterpret an already published release.
 
-The v4 line carries this contract as a read-only compatibility and migration
-boundary. It does not change the v4 capability manifest's authoritative
-`typescript-v3` writer or its `legacy-authoritative` migration phase. Any
-future writer cutover must update the v4 manifest through its retained parity,
-recovery, review, rollback, and N-1 qualification gates.
+The v4 line carries this contract as its production release-tail boundary. The
+v4 capability manifest names `typescript-v4` as the sole writer and marks the
+legacy v3 writer retired. Deterministic v4 journal, activation, stable-fence,
+recovery, provider readback, rollback, and N-1 qualification contracts gate
+every provider mutation; the retained v3 release ref is rollback evidence, not
+an active fallback writer.
 
 ## Current executable surfaces
 

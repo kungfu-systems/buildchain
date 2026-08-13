@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "contract": "kungfu-buildchain-v4-release-activation-shadow-architecture",
+  "contract": "kungfu-buildchain-v4-release-activation-production-architecture",
   "schemaAuthority": "contracts/v4-release-activation-shadow-v1.schema.json",
   "fixtureAuthority": "contracts/fixtures/v4-release-activation-shadow-v1/shared.json",
   "journalAuthority": "architecture/v4-provider-operation-journal-contract.json",
-  "mode": "shadow-only",
+  "mode": "production",
   "authority": {
-    "productionWriter": "typescript-v3",
+    "productionWriter": "v4-domain",
     "productionWriterCount": 1,
-    "planAndFoldAuthority": "rust-shadow-core",
+    "planAndFoldAuthority": "rust-v4-core",
     "planAndFoldWriterCount": 1,
-    "typescript": "byte-equivalent-contract-projection",
-    "productionWriteChange": false
+    "typescript": "byte-equivalent-provider-adapter",
+    "productionWriteChange": true
   },
   "implementations": {
     "rustDomain": "crates/buildchain-v4-contracts/src/release_activation_shadow.rs",
@@ -51,7 +51,7 @@
     "providerSdkImportsInContracts": 0,
     "providerSdkImportsInRustDomain": 0,
     "liveProviderMutations": 0,
-    "productionWriteAuthorityChanges": 0,
+    "productionWriteAuthorityChanges": 1,
     "v3ConsumerBehaviorChanges": 0
   },
   "successors": [

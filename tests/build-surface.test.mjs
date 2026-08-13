@@ -100,8 +100,8 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
     fs.readFileSync(path.join(root, "contracts/buildchain-v2-residuals-v1.json"), "utf8"),
   );
   assert.equal(inventory.contract, "buildchain.v2-residual-inventory/v1");
-  assert.equal(inventory.policy.runtimeDefault, "v3");
-  assert.equal(inventory.policy.dogfoodRuntimeDefault, "v3-alpha");
+  assert.equal(inventory.policy.runtimeDefault, "v4");
+  assert.equal(inventory.policy.dogfoodRuntimeDefault, "v4-alpha");
   assert.equal(inventory.policy.unclassifiedV2TokensAllowed, false);
 
   const allowedClassifications = new Set([
@@ -209,7 +209,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(
     libnodeConsumer,
-    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v3/,
+    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/,
   );
 
   const reusableBuild = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
@@ -1690,7 +1690,7 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
   assert.match(dogfoodDaily, /required-status-checks: check/);
-  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
+  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
   assert.match(dogfoodDaily, /landing-mode: queue/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
@@ -1698,13 +1698,13 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /pull-requests: write/);
   assert.match(dogfoodWeekly, /schedule:/);
   assert.match(dogfoodWeekly, /uses: \.\/\.github\/workflows\/patrol-weekly\.yml/);
-  assert.match(dogfoodWeekly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
+  assert.match(dogfoodWeekly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
   assert.doesNotMatch(dogfoodWeekly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodWeekly, /contents: write/);
   assert.match(dogfoodWeekly, /pull-requests: write/);
   assert.match(dogfoodMonthly, /schedule:/);
   assert.match(dogfoodMonthly, /uses: \.\/\.github\/workflows\/patrol-monthly\.yml/);
-  assert.match(dogfoodMonthly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
+  assert.match(dogfoodMonthly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
   assert.doesNotMatch(dogfoodMonthly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodMonthly, /contents: write/);
   assert.match(dogfoodMonthly, /pull-requests: write/);
@@ -1745,7 +1745,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(ledger, /publish-gate\/release/);
   assert.match(implementation, /BUILDCHAIN_STABLE_RELEASE_NOW/);
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
-  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3-alpha' \}\}/);
+  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
   assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(
     dogfood,
@@ -1755,7 +1755,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(qualification, /statuses: write/);
   assert.match(qualification, /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
   assert.match(qualification, /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/);
-  assert.match(qualification, /name: buildchain-v3-alpha-self-dogfood-evidence/);
+  assert.match(qualification, /name: buildchain-v4-dual-channel-self-dogfood-evidence/);
   assert.match(qualification, /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/);
   assert.match(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/);
   assert.doesNotMatch(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.candidate-sha \}\}/);

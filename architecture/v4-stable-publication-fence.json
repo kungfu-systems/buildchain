@@ -4,15 +4,15 @@
   "schemaAuthority": "contracts/v4-stable-publication-fence-v1.schema.json",
   "fixtureAuthority": "contracts/fixtures/v4-stable-publication-fence-v1/shared.json",
   "activationPredecessor": "architecture/v4-release-activation-shadow-domain.json",
-  "mode": "shadow-only",
+  "mode": "production",
   "authority": {
-    "productionWriter": "typescript-v3",
+    "productionWriter": "v4-domain",
     "productionWriterCount": 1,
-    "fenceAuthority": "rust-shadow-core",
+    "fenceAuthority": "rust-v4-core",
     "fenceWriterCount": 1,
-    "typescript": "byte-equivalent-contract-projection",
+    "typescript": "byte-equivalent-provider-adapter",
     "candidateSelfQualification": false,
-    "productionWriteChange": false
+    "productionWriteChange": true
   },
   "qualificationPolicies": {
     "n-minus-one": "authority-generation-must-immediately-precede-candidate",
@@ -26,7 +26,7 @@
       "provider-confirmation-roots"
     ]
   },
-  "shadowTargets": ["stable-ref", "npm-tag", "oci-tag", "github-release"],
+  "publicationTargets": ["stable-ref", "npm-tag", "oci-tag", "github-release"],
   "implementations": {
     "rustDomain": "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
     "typescript": "packages/core/v4-stable-publication-fence.js"
@@ -59,7 +59,7 @@
     "networkWrites": 0,
     "credentialReads": 0,
     "publicOrProtectedRefChanges": 0,
-    "productionWriteAuthorityChanges": 0,
+    "productionWriteAuthorityChanges": 1,
     "v3ConsumerBehaviorChanges": 0
   },
   "successor": "partial-mutation-recovery-qualification"

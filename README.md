@@ -61,6 +61,9 @@ The same mechanism releases Buildchain itself.
 | writing JavaScript automation | [Generated Node API Reference](docs/node-api-reference.md) | every public subpath and symbol with source-derived signatures and behavior boundaries |
 | operating an advanced build or release | [Documentation Map](docs/MAP.md) | capability-, intent-, and maturity-based navigation to normative contracts |
 
+Production release operators should also read the
+[Buildchain v4 production release runbook](docs/v4-production-release.md).
+
 The Golden Path is the beginner lane. Advanced workflow, signing, publishing,
 and governance manuals remain separate so a first-time consumer does not need
 to understand the entire release control plane before reaching a valid local
@@ -93,17 +96,18 @@ New repository adopters should follow the [15–30 minute Golden Path](docs/gett
 The commands below are the shorter verification-only route for an existing
 consumer.
 
-For v3, use the published npm package and verify the release passport before
+For v4, use the published npm package and verify the release passport before
 trusting release evidence:
 
 ```bash
-curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v3.0.0/buildchain.release.json
-curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v3.0.0/artifact-evidence.json
-npx @kungfu-tech/buildchain@3.0.0 verify release-passport buildchain.release.json
-npx @kungfu-tech/buildchain@3.0.0 version
+curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v4.0.0/buildchain.release.json
+curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v4.0.0/artifact-evidence.json
+npx @kungfu-tech/buildchain@4.0.0 verify release-passport buildchain.release.json
+npx @kungfu-tech/buildchain@4.0.0 version
 ```
 
-The v3.0.0 release publishes evidence assets but no standalone platform archives.
+The v4.0.0 release publishes evidence assets and platform archives through the
+same protected promotion transaction.
 The names below describe the optional archive contract used by legacy release
 lines:
 
@@ -211,13 +215,13 @@ Consumers can report Buildchain-owned workflow failures directly to the
 Buildchain repository with a scoped issue-write token:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v3
+- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v4
   if: failure()
   with:
     token: ${{ steps.buildchain-issue-token.outputs.token }}
     summary: "Reusable build failed before artifact finalization"
     failure-code: reusable-build-failed
-    buildchain-ref: v3
+    buildchain-ref: v4
     diagnostics-path: .buildchain/artifacts/diagnostics.json
 ```
 
@@ -233,7 +237,7 @@ Bootstrap a repository:
 ```bash
 npx @kungfu-tech/buildchain init --type package --package-manager pnpm
 npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v4/v4.0
 ```
 
 Bootstrap and inspect a governed paper repository through one interface:
@@ -242,7 +246,7 @@ Bootstrap and inspect a governed paper repository through one interface:
 npx @kungfu-tech/buildchain paper scaffold \
   --package @kungfu-tech/paper-example \
   --repository kungfu-systems/paper-example
-pnpm add -D @kungfu-tech/buildchain@<exact-v3-version>
+pnpm add -D @kungfu-tech/buildchain@<exact-v4-version>
 pnpm exec buildchain paper work start <topic>
 pnpm exec buildchain paper work submit
 pnpm exec buildchain paper preflight --offline
@@ -327,15 +331,15 @@ Stable consumers should reference actions and workflows through floating major
 refs after reviewing the exact release passport:
 
 ```yaml
-uses: kungfu-systems/buildchain/actions/validate-config@v3
+uses: kungfu-systems/buildchain/actions/validate-config@v4
 ```
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
 ```
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3
+uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4
 ```
 
 ## Release Model
