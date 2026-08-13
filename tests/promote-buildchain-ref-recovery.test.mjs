@@ -2688,6 +2688,57 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     ).tarballPath,
     recoveredTarball,
   );
+
+  const rematerializedCwd = makeTempWorkspace({
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+for (const name of [
+  "BUILDCHAIN_SEALED_BUNDLE_ROOT",
+  "BUILDCHAIN_SEALED_NPM_TARBALL",
+  "BUILDCHAIN_SEALED_NPM_INTEGRITY",
+  "BUILDCHAIN_SEALED_NPM_SHA256"
+]) {
+  if (process.env[name]) {
+    throw new Error(name + " must not select restored alpha bytes during rematerialization");
+  }
+}
+fs.writeFileSync("rematerialized-package.txt", process.env.BUILDCHAIN_VERSION + "\\n");
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-tech/paper",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:" + "9".repeat(64)
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const rematerialized = await runPublishTransaction({
+    ...transactionArgs,
+    cwd: rematerializedCwd,
+    runId: "fresh-runner-rematerialization",
+    publishRematerializeOnResume: true,
+  });
+
+  assert.equal(rematerialized.validation.valid, true);
+  assert.equal(
+    fs.readFileSync(path.join(rematerializedCwd, "rematerialized-package.txt"), "utf8"),
+    `${version}\n`,
+  );
+  assert.equal(
+    JSON.parse(fs.readFileSync(rematerialized.distTagEvidencePath, "utf8")).source,
+    "resume-rematerialized:workflow-input",
+  );
 });
 
 test("publish transaction durable ref updates when create races existing ref visibility", async () => {

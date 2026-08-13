@@ -1390,7 +1390,8 @@ function publishTransactionEnvironment({
   version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
   requiredArtifacts, publishContract,
-}) {
+}, { useSealedBundle = true } = {}) {
+  const sealedBundle = useSealedBundle ? sealedBundleVerification : undefined;
   return {
     BUILDCHAIN_VERSION: version,
     BUILDCHAIN_CHANNEL: channel,
@@ -1408,12 +1409,12 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
     BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
     BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
-    BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundleVerification?.root || "",
+    BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundle?.root || "",
     BUILDCHAIN_SEALED_NPM_TARBALL:
-      sealedBundleVerification?.npm.absolutePath || "",
+      sealedBundle?.npm.absolutePath || "",
     BUILDCHAIN_SEALED_NPM_INTEGRITY:
-      sealedBundleVerification?.npm.integrity || "",
-    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundleVerification?.npm.sha256 || "",
+      sealedBundle?.npm.integrity || "",
+    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundle?.npm.sha256 || "",
     BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
@@ -1543,7 +1544,7 @@ async function runPublishTransaction(options) {
         cwd,
         command: publishCommand,
         loadedConfig,
-        env: publishEnvironment,
+        env: publishTransactionEnvironment(context, { useSealedBundle: false }),
       });
       if (publishSource === "none") {
         throw new Error(
