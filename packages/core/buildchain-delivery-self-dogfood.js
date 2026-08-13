@@ -1,4 +1,5 @@
 import { adopterDeliveryGateDigest } from "./adopter-delivery-gate.js";
+import { withPublishedBuildchainDeliveryAuthority } from "./published-delivery-authority.js";
 
 export const BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT =
   "kungfu-buildchain-delivery-infrastructure-self-dogfood/v1";
@@ -181,4 +182,27 @@ export function createBuildchainDeliveryInfrastructureSelfDogfood(
   };
   result.selfDogfoodRoot = adopterDeliveryGateDigest(result);
   return result;
+}
+
+export async function createPublishedBuildchainDeliveryInfrastructureSelfDogfood({
+  authorityPackages,
+  selfDogfood,
+} = {}) {
+  return withPublishedBuildchainDeliveryAuthority(
+    authorityPackages,
+    async ({ packages, authorityRuntime, authorityRoot }) => {
+      const result = createBuildchainDeliveryInfrastructureSelfDogfood(
+        {
+          ...structuredClone(selfDogfood ?? {}),
+          authorityPackage: packages.buildchain,
+          kfdPackage: packages.kfd,
+        },
+        authorityRuntime,
+      );
+      return {
+        ...result,
+        publishedAuthorityRoot: authorityRoot,
+      };
+    },
+  );
 }
