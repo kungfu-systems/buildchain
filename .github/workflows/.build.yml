@@ -2975,6 +2975,8 @@ jobs:
       authority-run-id: ${{ steps.plan.outputs.authority-run-id }}
       authority-result-artifact: ${{ steps.plan.outputs.authority-result-artifact }}
       controller-plan-artifact: ${{ steps.plan.outputs.controller-plan-artifact }}
+      failure-mode: ${{ steps.plan.outputs.failure-mode }}
+      recovered-signing-settlement-artifact: ${{ steps.names.outputs.recovered-signing-settlement-artifact }}
     steps:
       - name: Check out the floating v3 recovery tooling
         uses: actions/checkout@v7.0.0
@@ -2994,7 +2996,11 @@ jobs:
 
       - name: Resolve tail reseal request artifact
         id: names
-        run: echo "request-artifact=${ARTIFACT_NAME}-tail-reseal-request-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        run: |
+          {
+            echo "request-artifact=${ARTIFACT_NAME}-tail-reseal-request-${SOURCE_SHA}"
+            echo "recovered-signing-settlement-artifact=${ARTIFACT_NAME}-tail-reseal-signing-settlement-${SOURCE_SHA}"
+          } >> "$GITHUB_OUTPUT"
         env:
           ARTIFACT_NAME: ${{ inputs.artifact-name }}
           SOURCE_SHA: ${{ steps.plan.outputs.source-sha }}
@@ -3004,6 +3010,47 @@ jobs:
         with:
           name: ${{ steps.names.outputs.request-artifact }}
           path: .buildchain/tail-reseal/request.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Download original macOS signing control request
+        if: ${{ steps.plan.outputs.failure-mode == 'macos-signing-control' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.plan.outputs.source-run-id }}
+          name: ${{ inputs.artifact-name }}-signing-control-request-macos-arm64-${{ steps.plan.outputs.source-sha }}-${{ steps.plan.outputs.source-run-id }}-${{ steps.plan.outputs.source-run-attempt }}
+          path: .buildchain/signing/control-requests/macos-arm64
+
+      - name: Download original non-qualifying macOS signing receipt
+        if: ${{ steps.plan.outputs.failure-mode == 'macos-signing-control' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.plan.outputs.source-run-id }}
+          name: ${{ inputs.artifact-name }}-signing-controller-receipt-macos-arm64-${{ steps.plan.outputs.source-sha }}-${{ steps.plan.outputs.source-run-id }}-${{ steps.plan.outputs.source-run-attempt }}
+          path: .buildchain/signing/failed-controller-receipts/macos-arm64
+
+      - name: Recover exact macOS signing settlement from successful authority result
+        if: ${{ steps.plan.outputs.failure-mode == 'macos-signing-control' }}
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs recover-signing
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/macos-arm64/request.json
+          BUILDCHAIN_FAILED_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/failed-controller-receipts/macos-arm64/receipt.json
+          BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/controller-receipts/macos-arm64/receipt.json
+          BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/macos-arm64/delegation.json
+
+      - name: Retain recovered macOS signing settlement
+        if: ${{ steps.plan.outputs.failure-mode == 'macos-signing-control' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.recovered-signing-settlement-artifact }}
+          path: |
+            .buildchain/signing/controller-receipts/macos-arm64/receipt.json
+            .buildchain/signing/delegations/macos-arm64/delegation.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -3084,7 +3131,7 @@ jobs:
         run: corepack pnpm@11.7.0 install --dir .buildchain/candidate-runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Download macOS signing finalization delegation
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode == 'macos-finalization' }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -3104,7 +3151,7 @@ jobs:
           path: .buildchain/signing/control-requests/macos-arm64
 
       - name: Download macOS signing controller receipt
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode == 'macos-finalization' }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -3112,6 +3159,14 @@ jobs:
           run-id: ${{ needs.tail-reseal-plan.outputs.source-run-id }}
           name: ${{ inputs.artifact-name }}-signing-controller-receipt-macos-arm64-${{ needs.tail-reseal-plan.outputs.source-sha }}-${{ needs.tail-reseal-plan.outputs.source-run-id }}-${{ needs.tail-reseal-plan.outputs.source-run-attempt }}
           path: .buildchain/signing/controller-receipts/macos-arm64
+
+      - name: Download recovered macOS signing settlement
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode == 'macos-signing-control' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          name: ${{ needs.tail-reseal-plan.outputs.recovered-signing-settlement-artifact }}
+          path: .buildchain/signing
 
       - name: Verify macOS signing finalization delegation
         if: ${{ matrix.platform.id == 'macos-arm64' }}
