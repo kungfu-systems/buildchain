@@ -130,6 +130,8 @@ export async function ensureGitHubRelease({
     if (tagRef.status === 404) {
       throw new Error(`Git tag ${metadata.tag} does not exist in ${repository}`);
     }
+    // Existing exact tags are authoritative; target_commitish is redundant and
+    // can require workflow mutation authority for workflow-changing commits.
     const created = await githubRequest({
       apiUrl,
       token,
@@ -141,7 +143,6 @@ export async function ensureGitHubRelease({
         body: notes || `Buildchain release passport assets for ${metadata.tag}.`,
         prerelease: metadata.prerelease,
         make_latest: metadata.makeLatest,
-        ...(target ? { target_commitish: target } : {}),
       },
     });
     return { action: "created", release: created.data, metadata };
@@ -156,7 +157,6 @@ export async function ensureGitHubRelease({
       name: title || existing.data.name || metadata.tag,
       prerelease: metadata.prerelease,
       make_latest: metadata.makeLatest,
-      ...(target ? { target_commitish: target } : {}),
     },
   });
   return { action: "updated", release: patched.data, metadata };

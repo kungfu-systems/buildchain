@@ -3470,7 +3470,7 @@ function createRefMutationOperations(context) {
       if (!notFound(error)) {
         throw error;
       }
-      await octokit.rest.git.createRef({
+      await context.tagUpdateOctokit.rest.git.createRef({
         owner,
         repo,
         ref: `refs/tags/${tag}`,
@@ -3486,10 +3486,8 @@ function createRefMutationOperations(context) {
       return;
     }
     try {
-      const tagRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: `tags/${tag}` });
-      if (tagRef?.object?.sha === tagSha)
-        return void updates.push({ tag, action: "existing", sha: tagSha });
-      await octokit.rest.git.updateRef({
+      const tagRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: `tags/${tag}` }); if (tagRef?.object?.sha === tagSha) return void updates.push({ tag, action: "existing", sha: tagSha });
+      await context.tagUpdateOctokit.rest.git.updateRef({
         owner,
         repo,
         ref: `tags/${tag}`,
@@ -3501,7 +3499,7 @@ function createRefMutationOperations(context) {
       if (!notFound(error)) {
         throw error;
       }
-      await octokit.rest.git.createRef({
+      await context.tagUpdateOctokit.rest.git.createRef({
         owner,
         repo,
         ref: `refs/tags/${tag}`,
@@ -4653,6 +4651,7 @@ async function promoteBuildchainRefs({
   statusCheckOctokit = octokit,
   pullRequestOctokit = octokit,
   refUpdateOctokit = octokit,
+  tagUpdateOctokit = octokit,
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
   branchProtectionBypassTeams = "",
@@ -4744,9 +4743,7 @@ async function promoteBuildchainRefs({
       now: publicationQualificationNow || new Date(),
     });
   };
-  assertPublicationQualification();
-  const requestedTags = tags ? resolveTagsForTarget(targetRef, tags) : undefined;
-
+  assertPublicationQualification(); const requestedTags = tags ? resolveTagsForTarget(targetRef, tags) : undefined;
   const { data: branchRef } = await octokit.rest.git.getRef({
     owner,
     repo,
@@ -4865,6 +4862,7 @@ async function promoteBuildchainRefs({
     statusCheckOctokit,
     pullRequestOctokit,
     refUpdateOctokit,
+    tagUpdateOctokit,
     branchProtectionBypassApps,
     branchProtectionBypassUsers,
     branchProtectionBypassTeams,

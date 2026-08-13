@@ -87,6 +87,7 @@ test("ensureGitHubRelease creates alpha releases with explicit metadata", async 
     tag: "v2.6.2-alpha.0",
     title: "v2.6.2-alpha.0",
     notes: "notes",
+    target: "a".repeat(40),
   });
 
   assert.equal(result.action, "created");
@@ -131,7 +132,6 @@ test("ensureGitHubRelease patches stable releases with latest metadata", async (
     name: "v2.6.1",
     prerelease: false,
     make_latest: "true",
-    target_commitish: "b".repeat(40),
   });
 });
 
