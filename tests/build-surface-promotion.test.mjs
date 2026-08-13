@@ -781,6 +781,11 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha/,
   );
+  assert.match(
+    workflow,
+    /promotion-publication-channel: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && 'alpha' \|\| 'stable' \}\}/,
+  );
+  assert.match(workflow, /promotion-target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(
     workflow,
