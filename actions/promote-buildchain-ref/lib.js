@@ -3585,7 +3585,7 @@ function createRefMutationOperations(context) {
       }
     }
     const branchWriteOctokit = protectedUpdate ? refUpdateOctokit || octokit : octokit;
-    const openVersionStatePullRequest = async ({ error }) => {
+    const openVersionStatePullRequest = async ({ error, pendingSha = branchSha }) => {
       const message = error?.response?.data?.message || error?.message || String(error || "");
       if (
         !protectedUpdate?.allowPendingPullRequest ||
@@ -3594,24 +3594,24 @@ function createRefMutationOperations(context) {
       ) {
         throw protectedBranchDirectUpdateError({ branch, branchSha, error });
       }
-      const versionStateBranch = versionStateBranchName(branch, branchSha);
+      const versionStateBranch = versionStateBranchName(branch, pendingSha);
       const versionStateRef = `heads/${versionStateBranch}`;
       const existingVersionStateSha = await readRefSha(versionStateRef);
-      if (existingVersionStateSha && existingVersionStateSha !== branchSha) {
+      if (existingVersionStateSha && existingVersionStateSha !== pendingSha) {
         throw new Error(
-          `Buildchain generated version-state branch ${versionStateBranch} points at ${existingVersionStateSha}, not ${branchSha}`);
+          `Buildchain generated version-state branch ${versionStateBranch} points at ${existingVersionStateSha}, not ${pendingSha}`);
       }
       if (!existingVersionStateSha) {
         await branchWriteOctokit.rest.git.createRef({
           owner,
           repo,
           ref: `refs/${versionStateRef}`,
-          sha: branchSha,
+          sha: pendingSha,
         });
         updates.push({
           ref: versionStateBranch,
           action: "created-version-state-pr-head",
-          sha: branchSha,
+          sha: pendingSha,
         });
       }
       if (typeof pullRequestOctokit.rest.pulls?.list === "function") {
@@ -3627,7 +3627,7 @@ function createRefMutationOperations(context) {
           updates.push({
             ref: branch,
             action: "pending-version-state-pr",
-            sha: branchSha,
+            sha: pendingSha,
             pullRequest: existingPullRequest.html_url || existingPullRequest.url,
           });
           return {
@@ -3653,7 +3653,7 @@ function createRefMutationOperations(context) {
       updates.push({
         ref: branch,
         action: "pending-version-state-pr",
-        sha: branchSha,
+        sha: pendingSha,
         pullRequest: pullRequest.html_url || pullRequest.url,
       });
       return { updated: false, pending: true, currentSha, pullRequest };
@@ -3852,13 +3852,27 @@ function createRefMutationOperations(context) {
               sha: mergeSha,
             });
           }
-          await branchWriteOctokit.rest.git.updateRef({
-            owner,
-            repo,
-            ref: `heads/${branch}`,
-            sha: mergeSha,
-            force: false,
-          });
+          try {
+            await branchWriteOctokit.rest.git.updateRef({
+              owner,
+              repo,
+              ref: `heads/${branch}`,
+              sha: mergeSha,
+              force: false,
+            });
+          } catch (mergeUpdateError) {
+            if (
+              protectedUpdate?.allowPendingPullRequest &&
+              (protectedBranchUpdateRejected(mergeUpdateError) ||
+                nonFastForwardUpdateRejected(mergeUpdateError))
+            ) {
+              return openVersionStatePullRequest({
+                error: mergeUpdateError,
+                pendingSha: mergeSha,
+              });
+            }
+            throw mergeUpdateError;
+          }
           updates.push({ ref: branch, action, sha: mergeSha });
           return { updated: true, mergeSha };
         }
