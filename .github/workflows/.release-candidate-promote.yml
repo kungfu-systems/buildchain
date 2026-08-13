@@ -1490,7 +1490,14 @@ jobs:
         shell: bash
         run: |
           if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
-            if [[ "${{ inputs.promotion-shell-ref }}" =~ ^(refs/heads/)?(train|authority)/v([0-9]+)/ ]]; then expected_major="${BASH_REMATCH[3]}"; else expected_major=""; fi; BUILDCHAIN_EXPECTED_CHANNEL="${{ inputs.promotion-publication-channel }}" BUILDCHAIN_EXPECTED_MAJOR="$expected_major" node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+            if [[ "${{ inputs.promotion-shell-ref }}" =~ ^(refs/heads/)?(train|authority)/v([0-9]+)/ ]]; then
+              expected_major="${BASH_REMATCH[3]}"
+            elif [[ "${{ inputs.promotion-target-ref || inputs.target-ref }}" =~ ^(alpha|release)/v([0-9]+)/ ]]; then
+              expected_major="${BASH_REMATCH[2]}"
+            else
+              expected_major=""
+            fi
+            BUILDCHAIN_EXPECTED_CHANNEL="${{ inputs.promotion-publication-channel }}" BUILDCHAIN_EXPECTED_MAJOR="$expected_major" node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"

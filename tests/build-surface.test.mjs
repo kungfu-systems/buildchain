@@ -229,6 +229,8 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(promotion, /"\$\{\{ inputs\.promotion-shell-ref \}\}" =~/);
   assert.match(promotion, /\(train\|authority\)\/v\(\[0-9\]\+\)\//);
+  assert.match(promotion, /inputs\.promotion-target-ref \|\| inputs\.target-ref/);
+  assert.match(promotion, /\^\(alpha\|release\)\/v\(\[0-9\]\+\)\//);
   assert.match(promotion, /BUILDCHAIN_EXPECTED_MAJOR="\$expected_major"/);
   assert.match(
     promotion,
