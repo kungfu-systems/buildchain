@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 553,
+  "generation": 554,
   "fencingCounter": 133,
   "policy": {
     "agingSeconds": 900,
@@ -4720,8 +4720,38 @@
         "tests/build-surface-promotion.test.mjs",
         "tests/buildchain-compatibility-proof.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2720,
+      "assignmentRoot": "sha256:8f55ca1dff163a7b862d9e5c1a568db4a5a470fa33539226ed4f4f417b298455",
+      "initiativeRoot": "sha256:c45531dbd7d307c3a0f429440a6c910b0b9d2c01d5e689e2d60653ab2b7bdf99",
+      "sourceIdentityRoot": "sha256:30c2044b87b48ac121fb9d0fdbb65575fbb41c176717643c7495d554959ac5db",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:39254c072742150a27c1dd79421797bebf21741ad904cf2f821f30fa6a268f49",
+      "sourceHead": "ab61915262e35792b2c5e42a1f415ec898b85585",
+      "sourcePatchRoot": "sha256:711eb3abd082933e53845b20c92f972360ce25514b0c7c1f50b8468adb6e9d29",
+      "sourceProofRoot": "sha256:7374b6d19e566d5fbd3a75eeffeeb7f7e9c6d558169f91de95ada0cc9977af21",
+      "planRoot": "sha256:633b3a9e986616cb5277d6caa363ddffd91ae2993d99e3d2bcaea2e3f2c55929",
+      "closureRoot": "sha256:9574457b605a8d6769f3f867195d89dd9da68cb225f102c218685ecedd897b12",
+      "dependencyRoot": "sha256:c1b5ffadfad1b3e605db4d85954c67b854d167cf5e7c34715d7a3935782077c0",
+      "toolchainRoot": "sha256:e47bb305eb0bb860436a8da9462f13ec146f58de3bae42fb433dcaa89587b8f9",
+      "environmentRoot": "sha256:bca147ba80625996a082a446fb8ccc713c92152387832eb737fab29d229c8e92",
+      "sourceWorkflowRunId": 31676107643,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-13T07:02:09.400Z",
+      "updatedAt": "2026-08-13T07:02:09.400Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/build-surface-fixture.yml",
+        "tests/build-surface-promotion.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-13T06:51:30.294Z",
-  "stateRoot": "sha256:ac2a49648f79b04ec4d2edccffefc8cb6455d3b1aeca5a7303372116c1206aed"
+  "updatedAt": "2026-08-13T07:02:09.400Z",
+  "stateRoot": "sha256:552b7d2a243433cade78526a3d63279b9fd143fb81b9cc6bbe18f8a365dea3e9"
 }
