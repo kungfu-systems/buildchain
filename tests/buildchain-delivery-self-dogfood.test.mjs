@@ -25,6 +25,8 @@ import {
 } from "../packages/core/buildchain-delivery-infrastructure.js";
 import {
   BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT,
+  BUILDCHAIN_DELIVERY_SELF_DOGFOOD_RELEASE_EVIDENCE_CONTRACT,
+  createBuildchainDeliverySelfDogfoodReleaseEvidence,
   createBuildchainDeliveryInfrastructureSelfDogfood,
   createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood,
   createPublishedBuildchainDeliveryInfrastructureSelfDogfood,
@@ -198,6 +200,71 @@ test("published N-1 Buildchain and KFD abilities self-dogfood an exact candidate
   assert.equal(result.selfCertified, false);
   assert.equal(result.releaseAuthorized, false);
   assert.match(result.selfDogfoodRoot, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("self-dogfood release evidence binds an immutable candidate to exact release coordinates", () => {
+  const selfDogfood = createBuildchainDeliveryInfrastructureSelfDogfood(
+    fixture(),
+    authorityRuntime,
+  );
+  selfDogfood.publishedAuthorityRoot = root("published-authority");
+  selfDogfood.adopterManifest = structuredClone(fixture().adopterManifest);
+  selfDogfood.deliveryEvidence = structuredClone(fixture().evidence);
+  const sourceSha = commit("c");
+  const evidence = createBuildchainDeliverySelfDogfoodReleaseEvidence({
+    selfDogfood,
+    sourceSha,
+    tag: "v3.0.9-alpha.11",
+    channel: "alpha",
+  });
+
+  assert.equal(
+    evidence.contract,
+    BUILDCHAIN_DELIVERY_SELF_DOGFOOD_RELEASE_EVIDENCE_CONTRACT,
+  );
+  assert.equal(evidence.id, "buildchain-delivery-self-dogfood");
+  assert.deepEqual(evidence.release, {
+    sourceSha,
+    tag: "v3.0.9-alpha.11",
+    channel: "alpha",
+  });
+  assert.equal(evidence.evidence.declaredRoot, selfDogfood.selfDogfoodRoot);
+  assert.equal(
+    evidence.evidence.candidateSourceCommit,
+    selfDogfood.candidate.sourceCommit,
+  );
+  assert.deepEqual(evidence.evidence.document, selfDogfood);
+
+  assert.throws(
+    () =>
+      createBuildchainDeliverySelfDogfoodReleaseEvidence({
+        selfDogfood: { ...selfDogfood, selfDogfoodRoot: root("wrong") },
+        sourceSha,
+        tag: "v3.0.9-alpha.11",
+        channel: "alpha",
+      }),
+    /root is invalid/,
+  );
+  assert.throws(
+    () =>
+      createBuildchainDeliverySelfDogfoodReleaseEvidence({
+        selfDogfood,
+        sourceSha,
+        tag: "v3.0.9-alpha.12",
+        channel: "alpha",
+      }),
+    /tag does not match/,
+  );
+  assert.throws(
+    () =>
+      createBuildchainDeliverySelfDogfoodReleaseEvidence({
+        selfDogfood,
+        sourceSha,
+        tag: "v3.0.9-alpha.11",
+        channel: "preview",
+      }),
+    /channel is invalid/,
+  );
 });
 
 test("package substitution and missing N-1 abilities fail closed", () => {

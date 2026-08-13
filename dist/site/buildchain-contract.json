@@ -743,7 +743,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:66edbb3eb91e6fbfcd38f0aa79ad2b13c66325a24dc17b2a1e124d4552153f86",
+      "auditDigest": "sha256:01f9b57a7fdb2b633a748016e8e925a1ea534ec60f79da29db7159bf472850d3",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1299,7 +1299,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:9fe1164277d52325b24f373f9e5710a54e4b6d12ee51d33d7a997b7b04fcfc6f"
+      "auditDigest": "sha256:d92d655f18542419873e2e63f1a2f9c92957e7571424e7841cf143ec28f6b8bd"
     },
     {
       "contractVersion": 1,
@@ -1321,7 +1321,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:c850cfb42f0173bcfe3c5d7dce199d2a95546535c84b9fe8f5fffebbbc40422b"
+      "auditDigest": "sha256:03cfeb943c0d7dd8545c18673c36bb5c00497f225b57c5b1b0f958fb9dec7f11"
     },
     {
       "contractVersion": 1,
@@ -4048,7 +4048,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:66edbb3eb91e6fbfcd38f0aa79ad2b13c66325a24dc17b2a1e124d4552153f86"
+      "auditDigest": "sha256:01f9b57a7fdb2b633a748016e8e925a1ea534ec60f79da29db7159bf472850d3"
     },
     {
       "contractVersion": 1,
@@ -4269,5 +4269,5 @@
   ],
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:57d37609068590238f547a133b6b69ee994b452825030447d20529683ba61fbd",
-  "contractDigest": "sha256:659f43a4bf3d333bab31143ebea5bceb22f0405e71efcb02d4b4ab14ed417b03"
+  "contractDigest": "sha256:3a46b71b99454db241ff156c8ab9e91f0774e7a86349a12312aadfa533985b98"
 }

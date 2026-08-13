@@ -1074,6 +1074,7 @@ jobs:
           fi
   publication-authority:
     name: Seal product publication capability
+    # prettier-ignore
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     permissions:
@@ -1165,6 +1166,7 @@ jobs:
 
   publication-qualification:
     name: Run consumer publication predicate
+    # prettier-ignore
     needs: [preflight, controller-plan, qualification-plan, publication-authority]
     if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
@@ -1262,6 +1264,7 @@ jobs:
 
   promote:
     name: Promote release candidate
+    # prettier-ignore
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification]
     if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
@@ -1608,11 +1611,16 @@ jobs:
         env:
           BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
           BUILDCHAIN_EXPECTED_VERSION: ${{ needs.publication-plan.outputs.version }}
+          BUILDCHAIN_RELEASE_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_RELEASE_TAG: v${{ needs.publication-plan.outputs.version }}
+          BUILDCHAIN_RELEASE_CHANNEL: ${{ needs.preflight.outputs.channel }}
         run: |
           set -euo pipefail
-          node <<'NODE'
-          const fs = require("node:fs");
-          const path = require("node:path");
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+
+          import { createBuildchainDeliverySelfDogfoodReleaseEvidence } from "./.buildchain/runtime/packages/core/buildchain-delivery-self-dogfood.js";
 
           const read = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
           const findExactPayloadFile = (filename) => {
@@ -1647,9 +1655,22 @@ jobs:
           if (JSON.stringify(gate) !== JSON.stringify(selfDogfood.gateResult)) {
             throw new Error("sealed adopter delivery result differs from self-dogfood gate result");
           }
+          const releaseEvidencePath = path.join(
+            ".buildchain",
+            "release-candidate",
+            "buildchain-delivery-self-dogfood-release-evidence.json",
+          );
+          const releaseEvidence = createBuildchainDeliverySelfDogfoodReleaseEvidence({
+            selfDogfood,
+            sourceSha: process.env.BUILDCHAIN_RELEASE_SOURCE_SHA,
+            tag: process.env.BUILDCHAIN_RELEASE_TAG,
+            channel: process.env.BUILDCHAIN_RELEASE_CHANNEL,
+          });
+          fs.mkdirSync(path.dirname(releaseEvidencePath), { recursive: true });
+          fs.writeFileSync(releaseEvidencePath, `${JSON.stringify(releaseEvidence, null, 2)}\n`);
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
-            `adopter-delivery-path=${gatePath}\nself-dogfood-path=${selfDogfoodPath}\n`,
+            `adopter-delivery-path=${gatePath}\nself-dogfood-path=${releaseEvidencePath}\n`,
           );
           NODE
 
@@ -2410,6 +2431,7 @@ jobs:
 
   controller-receipt:
     name: Record release-candidate promotion controller receipt
+    # prettier-ignore
     needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote, github-artifact-attestation, publish-github-artifact-attestation-evidence]
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04

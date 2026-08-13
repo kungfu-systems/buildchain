@@ -5,6 +5,8 @@ import { withPublishedBuildchainDeliveryAuthority } from "./published-delivery-a
 
 export const BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT =
   "kungfu-buildchain-delivery-infrastructure-self-dogfood/v1";
+export const BUILDCHAIN_DELIVERY_SELF_DOGFOOD_RELEASE_EVIDENCE_CONTRACT =
+  "kungfu-buildchain-delivery-infrastructure-self-dogfood-release-evidence/v1";
 
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
@@ -278,6 +280,67 @@ export function createBuildchainDeliveryInfrastructureSelfDogfood(
   };
   result.selfDogfoodRoot = adopterDeliveryGateDigest(result);
   return result;
+}
+
+export function createBuildchainDeliverySelfDogfoodReleaseEvidence({
+  selfDogfood,
+  sourceSha,
+  tag,
+  channel,
+} = {}) {
+  if (
+    selfDogfood?.contract !== BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT ||
+    selfDogfood.status !== "passed" ||
+    selfDogfood.gateResult?.status !== "passed" ||
+    selfDogfood.qualifying !== false ||
+    selfDogfood.selfCertified !== false ||
+    selfDogfood.releaseAuthorized !== false ||
+    !ROOT_PATTERN.test(selfDogfood.selfDogfoodRoot ?? "") ||
+    typeof selfDogfood.candidate?.version !== "string" ||
+    selfDogfood.candidate.version.length === 0 ||
+    !SHA_PATTERN.test(selfDogfood.candidate?.sourceCommit ?? "")
+  ) {
+    throw new TypeError(
+      "Buildchain delivery self-dogfood evidence is incomplete",
+    );
+  }
+  const rootInput = structuredClone(selfDogfood);
+  for (const field of [
+    "selfDogfoodRoot",
+    "publishedAuthorityRoot",
+    "adopterManifest",
+    "deliveryEvidence",
+  ]) {
+    delete rootInput[field];
+  }
+  if (adopterDeliveryGateDigest(rootInput) !== selfDogfood.selfDogfoodRoot) {
+    throw new TypeError("Buildchain delivery self-dogfood root is invalid");
+  }
+  if (!SHA_PATTERN.test(sourceSha ?? "")) {
+    throw new TypeError("release evidence source SHA is invalid");
+  }
+  if (tag !== `v${selfDogfood.candidate.version}`) {
+    throw new TypeError(
+      "release evidence tag does not match the candidate version",
+    );
+  }
+  if (!["alpha", "release", "stable"].includes(channel)) {
+    throw new TypeError("release evidence channel is invalid");
+  }
+
+  return {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_DELIVERY_SELF_DOGFOOD_RELEASE_EVIDENCE_CONTRACT,
+    id: "buildchain-delivery-self-dogfood",
+    kind: "delivery-infrastructure-self-dogfood",
+    release: { sourceSha, tag, channel },
+    evidence: {
+      contract: selfDogfood.contract,
+      declaredRoot: selfDogfood.selfDogfoodRoot,
+      candidateSourceCommit: selfDogfood.candidate.sourceCommit,
+      document: structuredClone(selfDogfood),
+    },
+  };
 }
 
 export async function createPublishedBuildchainDeliveryInfrastructureSelfDogfood({
