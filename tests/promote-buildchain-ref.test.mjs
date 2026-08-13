@@ -574,6 +574,84 @@ test("channel promotion PR lineage retries transient GitHub API failures", async
   }
 });
 
+test("channel promotion accepts the exact protected target merge commit regardless of source branch name", async () => {
+  const exactMerge = {
+    number: 404,
+    merged_at: "2026-08-13T12:39:17Z",
+    merge_commit_sha: SHA,
+    base: { ref: "alpha/v1/v1.0" },
+    head: {
+      ref: "feature/alpha64-channel-promotion",
+      repo: { full_name: "kungfu-systems/buildchain" },
+    },
+  };
+  const octokit = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            exactMerge,
+            {
+              number: 406,
+              merged_at: null,
+              merge_commit_sha: OTHER_SHA,
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "feature/next-alpha-channel-promotion",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  assert.equal(
+    await assertChannelPromotionPr({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+    }),
+    exactMerge,
+  );
+});
+
+test("channel promotion rejects an arbitrary merged PR that only contains the promoted commit", async () => {
+  const octokit = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-08-13T12:39:17Z",
+              merge_commit_sha: OTHER_SHA,
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "feature/unrelated-channel-promotion",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  await assert.rejects(
+    assertChannelPromotionPr({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+    }),
+    /must come from a merged same-repository PR/,
+  );
+});
+
 test("release transaction complete transition clears stale failure", () => {
   const record = {
     schema: 1,
