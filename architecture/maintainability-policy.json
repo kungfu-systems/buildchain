@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132430,
+    "maxHandMaintainedSourceLines": 132432,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 23636,
     "latestTransition": "The v4 architecture and Warrant-plan validators now fail closed unless production release authority, writers, and migration phases have completed the v3-to-v4 cutover.",
@@ -80,6 +80,10 @@
       "maxFunctionLines": 681,
       "maxFunctionComplexity": 30,
       "rationale": "The existing v4 contract evaluator invokes the shared shell-runtime-lock binding before every compatibility or early-success path while preserving the prior contract-world, Release Train, and drift behavior. Its public advanced-workflow projection now declares the two optional expected lane inputs consumed by that unchanged evaluator. This exact public-contract wiring ceiling cannot grow implicitly."
+    },
+    "packages/core/github-governance-authority.js": {
+      "maxLines": 1368,
+      "rationale": "The publication authority now declares the alpha/v4/v4.0 and release/v4/v4.0 protected channels required for the v4 public train. This exact two-line channel transition cannot grow implicitly."
     },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
