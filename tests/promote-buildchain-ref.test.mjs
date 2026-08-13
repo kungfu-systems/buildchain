@@ -742,7 +742,7 @@ test("promote action publishes semver GitHub Release evidence assets", async (t)
       const body = JSON.parse(options.body);
       assert.equal(body.prerelease, true);
       assert.equal(body.make_latest, "false");
-      assert.equal(body.target_commitish, SHA);
+      assert.equal("target_commitish" in body, false);
       return new Response(JSON.stringify({ id: 123, html_url: "https://github.test/release" }), { status: 201 });
     }
     throw new Error(`unexpected request: ${options.method || "GET"} ${url}`);
