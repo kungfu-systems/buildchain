@@ -164,6 +164,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.equal(publicWrapper.match(/attestations: write/g)?.length, 3);
   assert.equal(publicWrapper.match(/pull-requests: write/g)?.length, 3);
   assert.match(wrapper, /token: \$\{\{ github\.token \}\}/);
+  assert.match(wrapper, /id: publish-gate[\s\S]*github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/);
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(
     wrapper,
@@ -174,7 +175,6 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
     wrapper,
     /generated-ref-update-token: \$\{\{ github\.token \}\}/,
   );
-
   const selfPromotion = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
     "utf8",
