@@ -115,6 +115,19 @@ function containedReleaseExecutionIdentity(context, state) {
   };
 }
 
+function pendingNextAlphaResult(context, state, nextAlphaSha, update) {
+  return context.withPublishTransaction({
+    owner: context.owner,
+    repo: context.repo,
+    sourceSha: context.sha,
+    sha: state.releaseSha,
+    nextAlphaSha,
+    targetRef: context.targetRef,
+    pendingPullRequest: update.pullRequest.html_url || update.pullRequest.url,
+    updates: context.updates,
+  });
+}
+
 async function resolveReleaseAlphaMaterial(context, state) {
   const sourceAlpha = context.latestAlphaForPatch(
     context.lineRefs,
@@ -208,126 +221,6 @@ async function resolveReleaseAlphaMaterial(context, state) {
   };
 }
 
-async function collectPromotionVersionMaterial(
-  context,
-  releaseCommit,
-  releaseSha,
-  sourceAlphaMaterial,
-) {
-  if (
-    !(releaseCommit.derivedVersionMaterial?.length > 0) ||
-    !sourceAlphaMaterial?.sha
-  ) {
-    return undefined;
-  }
-  const allowedPaths =
-    releaseCommit.releaseTreeAllowedPaths || releaseCommit.files;
-  const [alphaCommit, releaseCommitInfo, alphaMaterial, releaseMaterial] =
-    await Promise.all([
-      context.getCommitInfo(
-        context.octokit,
-        context.owner,
-        context.repo,
-        sourceAlphaMaterial.sha,
-      ),
-      context.getCommitInfo(
-        context.octokit,
-        context.owner,
-        context.repo,
-        releaseSha,
-      ),
-      context.collectRemoteVersionMaterial({
-        octokit: context.octokit,
-        owner: context.owner,
-        repo: context.repo,
-        commitSha: sourceAlphaMaterial.sha,
-        paths: allowedPaths,
-      }),
-      context.collectRemoteVersionMaterial({
-        octokit: context.octokit,
-        owner: context.owner,
-        repo: context.repo,
-        commitSha: releaseSha,
-        paths: allowedPaths,
-      }),
-    ]);
-  return {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-anchored-version-material/v1",
-    strategy: releaseCommit.versionStrategy,
-    alpha: {
-      ref: sourceAlphaMaterial.tag,
-      commit: sourceAlphaMaterial.sha,
-      tree: alphaCommit.treeSha,
-      material: alphaMaterial,
-    },
-    release: {
-      ref: context.targetRef,
-      commit: releaseSha,
-      tree: releaseCommitInfo.treeSha,
-      material: releaseMaterial,
-    },
-    allowedPaths,
-    versionFiles: releaseCommit.files,
-    manifest: releaseCommit.anchorManifest?.path || "",
-    derivedPaths: releaseCommit.derivedVersionMaterial.map((file) => file.path),
-    derivedFiles: releaseCommit.derivedVersionMaterial,
-  };
-}
-
-async function remoteVersionStateFilesMatch(
-  context,
-  { currentSha, generatedSha, paths },
-) {
-  if (
-    !currentSha ||
-    !generatedSha ||
-    !paths?.length ||
-    typeof context.octokit.rest.git.getBlob !== "function"
-  ) {
-    return false;
-  }
-  let current;
-  let generated;
-  try {
-    [current, generated] = await Promise.all([
-      context.collectRemoteVersionMaterial({
-        octokit: context.octokit,
-        owner: context.owner,
-        repo: context.repo,
-        commitSha: currentSha,
-        paths,
-      }),
-      context.collectRemoteVersionMaterial({
-        octokit: context.octokit,
-        owner: context.owner,
-        repo: context.repo,
-        commitSha: generatedSha,
-        paths,
-      }),
-    ]);
-  } catch (error) {
-    if (
-      error?.status === 404 ||
-      error?.response?.status === 404 ||
-      error?.response?.data?.message === "Reference does not exist"
-    ) {
-      return false;
-    }
-    throw error;
-  }
-  return current.every((entry, index) => {
-    const expected = generated[index];
-    return (
-      entry.path === expected?.path &&
-      entry.present === true &&
-      expected.present === true &&
-      entry.bytes === expected.bytes &&
-      entry.sha256 === expected.sha256
-    );
-  });
-}
-
 async function createReleasePromotionCommit(context, state) {
   const releaseVersion = context.stripTagPrefix(
     state.selectedReleaseCandidate.tag,
@@ -379,7 +272,7 @@ async function createReleasePromotionCommit(context, state) {
         : undefined,
     });
   }
-  const promotionVersionMaterial = await collectPromotionVersionMaterial(
+  const promotionVersionMaterial = await context.collectPromotionVersionMaterial(
     context,
     releaseCommit,
     releaseSha,
@@ -548,8 +441,13 @@ async function prepareReleaseNextAlpha(context, state) {
         await context.updateDefaultBranch(nextDevRef);
       }
       const nextAlphaRef = `alpha/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`;
-      const currentNextAlphaSha = await context.readRefSha(`heads/${nextAlphaRef}`);
-      const currentVersionStateMatches = await remoteVersionStateFilesMatch(context, {
+      const currentNextAlphaSha = await context.readRefSha(
+        `heads/${nextAlphaRef}`,
+      );
+      const currentVersionStateMatches = await context.remoteVersionStateFilesMatch({
+        octokit: context.octokit,
+        owner: context.owner,
+        repo: context.repo,
         currentSha: currentNextAlphaSha,
         generatedSha: nextAlphaSha,
         paths: nextAlphaVersionFiles,
@@ -579,40 +477,24 @@ async function prepareReleaseNextAlpha(context, state) {
         );
       }
       if (nextAlphaUpdate.pending) {
-        return context.withPublishTransaction({
-          owner: context.owner,
-          repo: context.repo,
-          sourceSha: context.sha,
-          sha: state.releaseSha,
-          nextAlphaSha,
-          targetRef: context.targetRef,
-          pendingPullRequest:
-            nextAlphaUpdate.pullRequest.html_url ||
-            nextAlphaUpdate.pullRequest.url,
-          updates: context.updates,
-        });
+        return pendingNextAlphaResult(context, state, nextAlphaSha, nextAlphaUpdate);
       }
       if (nextAlphaUpdate.mergeSha) nextAlphaSha = nextAlphaUpdate.mergeSha;
-      const nextDevUpdate = await context.updateBranch(nextDevRef, nextAlphaSha, "updated", {
-        title: `Prepare ${selectedNextAlpha.tag}`,
-        body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
-        allowPendingPullRequest: true,
-        allowMergeCommitOnNonFastForward: true,
-        allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
-        reconciliationVersion: nextAlphaVersion,
-      });
+      const nextDevUpdate = await context.updateBranch(
+        nextDevRef,
+        nextAlphaSha,
+        "updated",
+        {
+          title: `Prepare ${selectedNextAlpha.tag}`,
+          body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+          allowPendingPullRequest: true,
+          allowMergeCommitOnNonFastForward: true,
+          allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
+          reconciliationVersion: nextAlphaVersion,
+        },
+      );
       if (nextDevUpdate.pending) {
-        return context.withPublishTransaction({
-          owner: context.owner,
-          repo: context.repo,
-          sourceSha: context.sha,
-          sha: state.releaseSha,
-          nextAlphaSha,
-          targetRef: context.targetRef,
-          pendingPullRequest:
-            nextDevUpdate.pullRequest.html_url || nextDevUpdate.pullRequest.url,
-          updates: context.updates,
-        });
+        return pendingNextAlphaResult(context, state, nextAlphaSha, nextDevUpdate);
       }
     }
     await context.ensureTag(selectedNextAlpha.tag, nextAlphaSha);

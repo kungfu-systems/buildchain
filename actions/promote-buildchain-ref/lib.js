@@ -46,7 +46,9 @@ import {
   writeJsonContent,
 } from "./internal/version-state.js";
 import {
+  collectPromotionVersionMaterial,
   collectRemoteVersionMaterial,
+  remoteVersionStateFilesMatch,
   getGitCommitWithRetry,
   getGitRefOrUndefined,
   listPullRequestsAssociatedWithCommitWithRetry,
@@ -4938,6 +4940,8 @@ async function promoteBuildchainRefs({
     beginTransactionFinalization,
     collectAndPersistReleasePassport,
     collectRemoteVersionMaterial,
+    collectPromotionVersionMaterial,
+    remoteVersionStateFilesMatch,
     completeTransactionFinalization,
     currentAlphaVersionState,
     currentConfiguredVersion,

@@ -19,10 +19,6 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
-    "actions/promote-buildchain-ref/internal/promote-release-channel.js": {
-      "maxLines": 664,
-      "rationale": "The isolated release-channel controller now owns exact stable finalization, next-alpha material reuse, and protected reconciliation PR handoff without expanding the shared promotion action boundary. This exact reviewed ceiling cannot grow implicitly."
-    },
     "scripts/v4-architecture.mjs": {
       "maxLines": 610,
       "rationale": "The v4 architecture validator adds only the bounded production-authority, fallback, rollback, writer-runtime, and legacy-retirement checks required for the final release cutover. This exact reviewed ceiling cannot grow implicitly."
