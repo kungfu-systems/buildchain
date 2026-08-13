@@ -3216,6 +3216,7 @@ jobs:
 
       - name: Verify and import authoritative signed macOS bytes
         if: ${{ matrix.platform.id == 'macos-arm64' }}
+        id: signing-import
         run: node .buildchain/candidate-runtime/scripts/import-artifact-signing-results.mjs
         env:
           BUILDCHAIN_SIGNING_CWD: ${{ steps.delegation.outputs.working-directory }}
@@ -3270,6 +3271,35 @@ jobs:
           BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
           BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
+
+      - name: Verify authoritative credential-island projection
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        id: credential-projection
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs verify-credential-projection
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
+          BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest.json
+          BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: ${{ steps.signing-import.outputs.credential-artifact-root }}
+
+      - name: Upload authoritative credential-island payload
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-macos-credential-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          path: ${{ steps.credential-projection.outputs.credential-artifact-root }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+
+      - name: Upload authoritative credential-island manifest
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-credential-manifest-macos-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          path: ${{ steps.credential-projection.outputs.credential-manifest-path }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload resealed platform payload
         uses: actions/upload-artifact@v7.0.1
@@ -3392,7 +3422,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"success"},{"id":"resolve-source","status":"success"},{"id":"anchored-release-preflight","status":"success"},{"id":"pre-build-contracts","status":"success"},{"id":"build","status":"success"},{"id":"signing-finalization","status":"success"},{"id":"credential-island","status":"skipped"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+            [{"id":"resolve-runtime","status":"success"},{"id":"resolve-source","status":"success"},{"id":"anchored-release-preflight","status":"success"},{"id":"pre-build-contracts","status":"success"},{"id":"build","status":"success"},{"id":"signing-finalization","status":"success"},{"id":"credential-island","status":"success"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: >-
             [{"kind":"tail-reseal-receipt","path":".buildchain/tail-reseal/receipt.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.tail-reseal-plan.outputs.source-sha }}

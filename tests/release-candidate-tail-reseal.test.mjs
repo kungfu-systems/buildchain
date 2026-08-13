@@ -11,6 +11,7 @@ import {
   restoreTailResealManifestRunIdentity,
   tailResealFailureMode,
   sealTailResealReceipt,
+  verifyTailResealCredentialIslandProjection,
   verifyTailResealPlatform,
 } from "../scripts/release-candidate-tail-reseal.mjs";
 
@@ -263,6 +264,61 @@ test("signed macOS manifest run restoration rejects unrelated recomputation iden
     GITHUB_RUN_ID: "999",
     GITHUB_RUN_ATTEMPT: "1",
   }, () => restoreTailResealManifestRunIdentity()), /neither the original build nor the current tail run/u);
+});
+
+test("credential-island projection is already byte-bound by the retained macOS manifest", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-credential-projection-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  const credentialRoot = path.join(root, ".buildchain", "artifacts", "signing", "macos-arm64", "desktop", "credential-artifact");
+  const credentialFiles = [
+    ["product/release/credential-island-evidence.json", "evidence"],
+    ["product/release/product.dmg", "dmg"],
+    ["product/release/product.zip", "zip"],
+  ].map(([relative, contents]) => {
+    const absolute = path.join(credentialRoot, relative);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    fs.writeFileSync(absolute, contents);
+    return { path: relative, size: fs.statSync(absolute).size, sha256: digest(absolute) };
+  });
+  const credentialManifest = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-artifact",
+    artifactName: `product-macos-credential-${SOURCE_SHA}`,
+    platform: { id: "macos-arm64-credential", os: "macos", arch: "arm64" },
+    git: { repository: "owner/product", sha: SOURCE_SHA },
+    lifecycle: { stage: "credential-island", executed: true },
+    expectedArtifacts: { ok: true },
+    files: credentialFiles,
+  };
+  const credentialManifestFile = path.join(credentialRoot, "manifest.json");
+  fs.writeFileSync(credentialManifestFile, `${JSON.stringify(credentialManifest, null, 2)}\n`);
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  for (const absolute of [credentialManifestFile, ...credentialFiles.map((entry) => path.join(credentialRoot, entry.path))]) {
+    manifest.files.push({
+      path: path.relative(root, absolute).split(path.sep).join("/"),
+      size: fs.statSync(absolute).size,
+      sha256: digest(absolute),
+    });
+  }
+  fs.writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const projected = withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: root,
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: credentialRoot,
+  }, () => verifyTailResealCredentialIslandProjection());
+  assert.equal(projected.platform.id, "macos-arm64-credential");
+
+  fs.writeFileSync(path.join(credentialRoot, "product/release/product.zip"), "changed");
+  assert.throws(() => withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: root,
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: credentialRoot,
+  }, () => verifyTailResealCredentialIslandProjection()), /size mismatch|digest mismatch/u);
 });
 
 test("tail reseal receipt records skipped build and current tooling separately", () => {
