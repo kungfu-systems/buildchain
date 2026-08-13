@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { spawnSyncCommand } from "../packages/core/spawn-command.js";
@@ -105,6 +106,20 @@ function sealedPackResult() {
   };
 }
 
+function materializedPackResult({ cwd, registry }) {
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-npm-pack-"));
+  try {
+    const pack = parsePackResult(runNpm({
+      cwd,
+      args: ["pack", "--json", "--pack-destination", temporaryRoot, `--registry=${registry}`],
+    }).stdout);
+    return { ...pack, tarballPath: path.join(temporaryRoot, pack.filename), temporaryRoot };
+  } catch (error) {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
 function parseNpmView(stdout) {
   const raw = String(stdout || "").trim();
   if (!raw) {
@@ -188,46 +203,11 @@ export function npmPublishTransaction({
   const exactTag = assertPackageVersion({ pkg, expectedVersion });
   const distTag = readEnv("BUILDCHAIN_NPM_DIST_TAG", pkg.version.includes("-") ? "alpha" : "latest");
 
-  const pack =
-    sealedPackResult() ||
-    parsePackResult(
-      runNpm({
-        cwd: resolvedCwd,
-        args: ["pack", "--dry-run", "--json", `--registry=${registry}`],
-      }).stdout,
-    );
+  const pack = sealedPackResult() || materializedPackResult({ cwd: resolvedCwd, registry });
   const digest = artifactDigest(pack);
 
-  const existingDigest = skipRegistryLookup
-    ? undefined
-    : publishedDigest({
-        cwd: resolvedCwd,
-        name: pkg.name,
-        version: pkg.version,
-        registry,
-      });
-  let publishAction = "already-published";
-  if (existingDigest) {
-    if (existingDigest !== digest) {
-      throw new Error(`artifact digest mismatch: npm:${pkg.name}@${pkg.version}`);
-    }
-  } else if (dryRunPublish) {
-    publishAction = "dry-run";
-  } else {
-    runNpm({
-      cwd: resolvedCwd,
-      args: [
-        "publish",
-        ...(pack.tarballPath ? [pack.tarballPath] : []),
-        "--access",
-        access,
-        "--tag",
-        distTag,
-        `--registry=${registry}`,
-      ],
-    });
-    publishAction = "published";
-    const registryDigest = skipRegistryLookup
+  try {
+    const existingDigest = skipRegistryLookup
       ? undefined
       : publishedDigest({
           cwd: resolvedCwd,
@@ -235,60 +215,92 @@ export function npmPublishTransaction({
           version: pkg.version,
           registry,
         });
-    if (registryDigest && registryDigest !== digest) {
-      throw new Error(`artifact digest mismatch: npm:${pkg.name}@${pkg.version}`);
+    let publishAction = "already-published";
+    if (existingDigest) {
+      if (existingDigest !== digest) {
+        throw new Error(`artifact digest mismatch: npm:${pkg.name}@${pkg.version}`);
+      }
+    } else if (dryRunPublish) {
+      publishAction = "dry-run";
+    } else {
+      runNpm({
+        cwd: resolvedCwd,
+        args: [
+          "publish",
+          ...(pack.tarballPath ? [pack.tarballPath] : []),
+          "--access",
+          access,
+          "--tag",
+          distTag,
+          `--registry=${registry}`,
+        ],
+      });
+      publishAction = "published";
+      const registryDigest = skipRegistryLookup
+        ? undefined
+        : publishedDigest({
+            cwd: resolvedCwd,
+            name: pkg.name,
+            version: pkg.version,
+            registry,
+          });
+      if (registryDigest && registryDigest !== digest) {
+        throw new Error(`artifact digest mismatch: npm:${pkg.name}@${pkg.version}`);
+      }
     }
-  }
 
-  const evidencePath = readEnv("BUILDCHAIN_PUBLISH_EVIDENCE");
-  if (!evidencePath) {
-    throw new Error("BUILDCHAIN_PUBLISH_EVIDENCE is required");
-  }
-  const evidence = {
-    schema: 1,
-    version: expectedVersion || pkg.version,
-    channel: readEnv("BUILDCHAIN_CHANNEL"),
-    source_sha: readEnv("BUILDCHAIN_SOURCE_SHA"),
-    release_sha: readEnv("BUILDCHAIN_RELEASE_SHA"),
-    target_ref: readEnv("BUILDCHAIN_TARGET_REF"),
-    release_material_sha: readEnv("BUILDCHAIN_RELEASE_MATERIAL_SHA", readEnv("BUILDCHAIN_RELEASE_SHA")),
-    publish_tooling_sha: readEnv("BUILDCHAIN_PUBLISH_TOOLING_SHA", readEnv("BUILDCHAIN_RELEASE_SHA")),
-    artifacts: [{
-      group: "node",
-      kind: "npm",
-      name: pkg.name,
-      ref: pkg.version,
-      digest,
-    }],
-  };
-  const resolvedEvidencePath = writeEvidence({
-    cwd: resolvedCwd,
-    evidencePath,
-    evidence,
-  });
-  writeGitHubOutputs({
-    version: pkg.version,
-    "exact-tag": exactTag,
-    "dist-tag": distTag,
-    "artifact-digest": digest,
-    "publish-action": publishAction,
-    "publish-evidence": resolvedEvidencePath,
-  });
-  return {
-    schemaVersion: 1,
-    package: {
-      name: pkg.name,
+    const evidencePath = readEnv("BUILDCHAIN_PUBLISH_EVIDENCE");
+    if (!evidencePath) {
+      throw new Error("BUILDCHAIN_PUBLISH_EVIDENCE is required");
+    }
+    const evidence = {
+      schema: 1,
+      version: expectedVersion || pkg.version,
+      channel: readEnv("BUILDCHAIN_CHANNEL"),
+      source_sha: readEnv("BUILDCHAIN_SOURCE_SHA"),
+      release_sha: readEnv("BUILDCHAIN_RELEASE_SHA"),
+      target_ref: readEnv("BUILDCHAIN_TARGET_REF"),
+      release_material_sha: readEnv("BUILDCHAIN_RELEASE_MATERIAL_SHA", readEnv("BUILDCHAIN_RELEASE_SHA")),
+      publish_tooling_sha: readEnv("BUILDCHAIN_PUBLISH_TOOLING_SHA", readEnv("BUILDCHAIN_RELEASE_SHA")),
+      artifacts: [{
+        group: "node",
+        kind: "npm",
+        name: pkg.name,
+        ref: pkg.version,
+        digest,
+      }],
+    };
+    const resolvedEvidencePath = writeEvidence({
+      cwd: resolvedCwd,
+      evidencePath,
+      evidence,
+    });
+    writeGitHubOutputs({
       version: pkg.version,
-    },
-    exactTag,
-    distTag,
-    registry,
-    publishAction,
-    pack,
-    sealedBundleRoot: readEnv("BUILDCHAIN_SEALED_BUNDLE_ROOT"),
-    evidencePath: resolvedEvidencePath,
-    evidence,
-  };
+      "exact-tag": exactTag,
+      "dist-tag": distTag,
+      "artifact-digest": digest,
+      "publish-action": publishAction,
+      "publish-evidence": resolvedEvidencePath,
+    });
+    return {
+      schemaVersion: 1,
+      package: {
+        name: pkg.name,
+        version: pkg.version,
+      },
+      exactTag,
+      distTag,
+      registry,
+      publishAction,
+      pack: { ...pack, temporaryRoot: undefined },
+      sealedBundleRoot: readEnv("BUILDCHAIN_SEALED_BUNDLE_ROOT"),
+      evidencePath: resolvedEvidencePath,
+      evidence,
+    };
+  } finally {
+    if (pack.temporaryRoot) fs.rmSync(pack.temporaryRoot, { recursive: true, force: true });
+  }
 }
 
 function usage() {

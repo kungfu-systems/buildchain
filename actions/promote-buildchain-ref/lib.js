@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import os from "node:os";
 import { execFileSync, execSync } from "node:child_process";
 import {
   discoverConfiguredDerivedVersionMaterial,
@@ -183,6 +184,34 @@ function runPublishCommand({ cwd, command, loadedConfig, env }) {
   return "none";
 }
 
+function rematerializedNpmPackEnvironment({ cwd, env }) {
+  const packagePath = path.join(cwd, "package.json");
+  if (!fs.existsSync(packagePath)) return undefined;
+  const pkg = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  const required = JSON.parse(env.BUILDCHAIN_REQUIRED_ARTIFACTS || "[]");
+  if (!required.some((artifact) => artifact.kind === "npm" && artifact.name === pkg.name)) return undefined;
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rematerialized-npm-"));
+  try {
+    const packed = JSON.parse(execFileSync("npm", ["pack", "--json", "--pack-destination", temporaryRoot, "--registry=https://registry.npmjs.org/"], {
+      cwd, env: { ...process.env, ...env }, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"],
+    }));
+    const result = Array.isArray(packed) ? packed[0] : packed;
+    if (!result?.filename) throw new Error("rematerialized npm pack did not return a filename");
+    const tarballPath = path.join(temporaryRoot, result.filename);
+    const bytes = fs.readFileSync(tarballPath);
+    return { temporaryRoot, env: {
+      ...env,
+      BUILDCHAIN_SEALED_BUNDLE_ROOT: "",
+      BUILDCHAIN_SEALED_NPM_TARBALL: tarballPath,
+      BUILDCHAIN_SEALED_NPM_INTEGRITY: `sha512-${crypto.createHash("sha512").update(bytes).digest("base64")}`,
+      BUILDCHAIN_SEALED_NPM_SHA256: crypto.createHash("sha256").update(bytes).digest("hex"),
+    } };
+  } catch (error) {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
 function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, version }) {
   const discovered = discoverVersionStateFiles(cwd);
   const changedFiles = updateVersionStateContents(discovered.files, version);
@@ -197,7 +226,12 @@ function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, vers
     for (const [index, file] of changedFiles.entries()) {
       fs.writeFileSync(originals[index].resolved, file.content);
     }
-    return runPublishCommand({ cwd, command, loadedConfig, env });
+    const npmPack = rematerializedNpmPackEnvironment({ cwd, env });
+    try {
+      return runPublishCommand({ cwd, command, loadedConfig, env: npmPack?.env || env });
+    } finally {
+      if (npmPack?.temporaryRoot) fs.rmSync(npmPack.temporaryRoot, { recursive: true, force: true });
+    }
   } finally {
     for (const original of originals) {
       fs.writeFileSync(original.resolved, original.content);
