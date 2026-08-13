@@ -18,9 +18,16 @@ const RENDITION_SET_NON_AUTHORITIES = [
 ];
 const MAX_BUNDLE_MEMBER_BYTES = 8 * 1024 * 1024;
 export const MAX_LONG_FORM_RENDERER_MANIFEST_BYTES = 64 * 1024 * 1024;
+export const LONG_FORM_MAX_DURATION_MS = 360_000;
+export const LONG_FORM_MAX_FPS = 10;
+export const MAX_RENDER_FRAMES = 1_800;
 const PRESENTATION_FRAMED = "presentation-framed";
 const TERMINAL_FILL = "terminal-fill";
 const GEOMETRY_TOLERANCE = 0.001;
+
+export function boundedLongFormFps(durationMs) {
+  return Math.max(1, Math.min(LONG_FORM_MAX_FPS, Math.floor((MAX_RENDER_FRAMES * 1000) / durationMs)));
+}
 
 function closeEnough(left, right, tolerance = GEOMETRY_TOLERANCE) {
   return Number.isFinite(left) && Number.isFinite(right) && Math.abs(left - right) <= tolerance;
@@ -238,10 +245,11 @@ function validateLongFormManifestRendition(entry, declaration, index, helpers) {
       && scene?.height === declaration.height
       && Number.isInteger(scene?.durationMs)
       && scene.durationMs >= 500
-      && scene.durationMs <= 180000
+      && scene.durationMs <= LONG_FORM_MAX_DURATION_MS
       && Number.isInteger(scene?.fps)
       && scene.fps >= 1
-      && scene.fps <= 10
+      && scene.fps <= LONG_FORM_MAX_FPS
+      && Math.ceil((scene.durationMs / 1000) * scene.fps) <= MAX_RENDER_FRAMES
       && capture?.schema === "kungfu.terminal-capture/v1"
       && digestPattern.test(capture?.root)
       && Number.isInteger(capture?.durationMs)
@@ -293,7 +301,7 @@ export function validateTerminalCapture(value, scene, helpers) {
   exactKeys(value.dimensions, ["columns", "rows"], [], "terminalCapture.dimensions");
   integer(value.dimensions.columns, 80, 200, "terminalCapture.dimensions.columns");
   integer(value.dimensions.rows, 24, 80, "terminalCapture.dimensions.rows");
-  const maximumDurationMs = scene.durationClass === "long-form" ? 180000 : 60000;
+  const maximumDurationMs = scene.durationClass === "long-form" ? LONG_FORM_MAX_DURATION_MS : 60000;
   const durationMs = integer(value.durationMs, 500, maximumDurationMs, "terminalCapture.durationMs");
   invariant(
     durationMs <= scene.durationMs && scene.durationMs - durationMs <= 2000,
