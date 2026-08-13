@@ -8,6 +8,7 @@ import {
 } from "../actions/promote-buildchain-ref/lib.js";
 import {
   promoteAlphaChannel,
+  publishAlphaCandidate,
   selectAlphaCandidate,
 } from "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js";
 import { promoteMajorChannel } from "../actions/promote-buildchain-ref/internal/promote-major-channel.js";
@@ -86,6 +87,33 @@ test("alpha recovery selects the exact advanced publication transaction before a
       transaction: advancedPublicationTransaction,
     },
   );
+});
+
+test("alpha recovery keeps an advanced publication bound to its durable sealed bundle", async () => {
+  const transaction = {
+    version: "3.0.9-alpha.13",
+    exact_tag: "v3.0.9-alpha.13",
+    release_sha: "b".repeat(40),
+    sealed_bundle: { root: `sha256:${"c".repeat(64)}` },
+  };
+  const executions = [];
+
+  const publication = await publishAlphaCandidate(
+    {
+      rule: { channel: "alpha", releasePrefix: "v3.0" },
+      stripTagPrefix: (tag) => tag.replace(/^v/, ""),
+      transactionHasPublishedMaterial: () => true,
+      executePublishTransaction: async (options) => executions.push(options),
+    },
+    { currentAlpha: undefined, alphaPublishDistTag: "alpha" },
+    { tag: transaction.exact_tag, transaction },
+  );
+
+  assert.equal(publication.alpha.sha, transaction.release_sha);
+  assert.equal(executions.length, 1);
+  assert.equal(executions[0].version, transaction.version);
+  assert.equal(executions[0].releaseSha, transaction.release_sha);
+  assert.equal(executions[0].durablePublicationMaterial, transaction);
 });
 
 test("ref mutation responsibility plans provider operations without mutating during dry-run", async () => {
