@@ -2195,6 +2195,7 @@ fs.writeFileSync(manifestPath, JSON.stringify({
       targetRef: "release/v1/v1.0",
       cwd,
       publishTransaction: true,
+      publishRematerializeOnResume: true,
       requireVersionState: true,
       expectedPublicationVersion: "1.0.0",
     });

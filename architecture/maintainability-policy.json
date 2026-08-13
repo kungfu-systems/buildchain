@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132572,
+    "maxHandMaintainedSourceLines": 132577,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 23636,
     "latestTransition": "Stable recovery now reuses the exact complete transaction publication identity after its generated material enters the protected release branch.",
-    "rationale": "Twenty-nine recovery and regression lines prevent a protected-merge retry from rematerializing already published npm bytes while preserving exact source, release, material, and tooling identities. This exact measured ceiling cannot grow implicitly."
+    "rationale": "Thirty-four recovery and regression lines prevent a protected-merge retry from rematerializing already published npm bytes while preserving exact source, release, material, and tooling identities. This exact measured ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
