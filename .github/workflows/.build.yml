@@ -3207,7 +3207,12 @@ jobs:
 
       - name: Preserve pre-signing macOS manifest
         if: ${{ matrix.platform.id == 'macos-arm64' }}
-        run: cp .buildchain/artifacts/macos-arm64/manifest.json .buildchain/artifacts/macos-arm64/manifest-pre-signing.json
+        run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs prepare-manifest-recompute
+        env:
+          BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
+          BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: macos-arm64
+          BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest.json
+          BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: .buildchain/tail-reseal/pre-signing/macos-arm64-manifest.json
 
       - name: Verify and import authoritative signed macOS bytes
         if: ${{ matrix.platform.id == 'macos-arm64' }}
@@ -3256,7 +3261,8 @@ jobs:
           BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
           BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: macos-arm64
           BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest.json
-          BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest-pre-signing.json
+          BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: .buildchain/tail-reseal/pre-signing/macos-arm64-manifest.json
+          BUILDCHAIN_TAIL_RESEAL_ARCHIVED_PRE_SIGNING_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest-pre-signing.json
 
       - name: Verify exact platform files before resealing
         run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs verify-platform

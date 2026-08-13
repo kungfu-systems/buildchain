@@ -379,6 +379,61 @@ function locateManifest(root, platformId) {
   return matches[0];
 }
 
+function assertMacosTailManifest({ request, platform, manifest, label }) {
+  if (manifest.contract !== "kungfu-buildchain-artifact") throw new Error(`${label} macos-arm64 manifest contract mismatch`);
+  if (manifest.artifactName !== platform.artifactName) throw new Error(`${label} macos-arm64 manifest artifact name mismatch`);
+  if (manifest.platform?.id !== "macos-arm64") throw new Error(`${label} macos-arm64 manifest platform mismatch`);
+  if (manifest.git?.repository !== request.repository || manifest.git?.sha !== request.source.sha) {
+    throw new Error(`${label} macos-arm64 manifest source mismatch`);
+  }
+}
+
+export function prepareTailResealMacosManifestRecompute() {
+  const request = normalizeTailResealRequest(readJson(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH,
+    "BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH",
+  )));
+  const platformId = required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID,
+    "BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID",
+  );
+  if (platformId !== "macos-arm64") {
+    throw new Error("tail reseal manifest recompute preparation is only valid for macos-arm64");
+  }
+  const platform = request.platforms.find((entry) => entry.id === platformId);
+  if (!platform) throw new Error(`tail reseal request does not bind platform ${platformId}`);
+
+  const manifestPath = path.resolve(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH,
+    "BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH",
+  ));
+  const preservedManifestPath = path.resolve(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH,
+    "BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH",
+  ));
+  const manifestDirectory = path.dirname(manifestPath);
+  if (preservedManifestPath === manifestPath || preservedManifestPath.startsWith(`${manifestDirectory}${path.sep}`)) {
+    throw new Error("pre-signing macos-arm64 manifest must be preserved outside the recomputed artifact directory");
+  }
+  const manifest = object(readJson(manifestPath, "pre-signing platform manifest"), "pre-signing platform manifest");
+  assertMacosTailManifest({ request, platform, manifest, label: "pre-signing" });
+  if (
+    String(manifest.git?.runId || "") !== String(request.source.runId) ||
+    String(manifest.git?.runAttempt || "") !== String(request.source.runAttempt)
+  ) throw new Error("pre-signing macos-arm64 manifest original run mismatch");
+
+  fs.mkdirSync(path.dirname(preservedManifestPath), { recursive: true });
+  fs.copyFileSync(manifestPath, preservedManifestPath);
+  for (const generated of ["manifest.json", "summary.json", "diagnostics.json"]) {
+    const generatedPath = path.join(manifestDirectory, generated);
+    if (fs.existsSync(generatedPath)) fs.rmSync(generatedPath);
+  }
+  appendOutputs({
+    "pre-signing-manifest-path": path.relative(process.cwd(), preservedManifestPath),
+  });
+  return manifest;
+}
+
 export function restoreTailResealManifestRunIdentity() {
   const request = normalizeTailResealRequest(readJson(required(
     process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH,
@@ -405,17 +460,8 @@ export function restoreTailResealManifestRunIdentity() {
   const manifest = object(readJson(manifestPath, "recomputed platform manifest"), "recomputed platform manifest");
   const preSigning = object(readJson(preSigningManifestPath, "pre-signing platform manifest"), "pre-signing platform manifest");
 
-  for (const [label, value] of [
-    ["recomputed", manifest],
-    ["pre-signing", preSigning],
-  ]) {
-    if (value.contract !== "kungfu-buildchain-artifact") throw new Error(`${label} macos-arm64 manifest contract mismatch`);
-    if (value.artifactName !== platform.artifactName) throw new Error(`${label} macos-arm64 manifest artifact name mismatch`);
-    if (value.platform?.id !== platformId) throw new Error(`${label} macos-arm64 manifest platform mismatch`);
-    if (value.git?.repository !== request.repository || value.git?.sha !== request.source.sha) {
-      throw new Error(`${label} macos-arm64 manifest source mismatch`);
-    }
-  }
+  assertMacosTailManifest({ request, platform, manifest, label: "recomputed" });
+  assertMacosTailManifest({ request, platform, manifest: preSigning, label: "pre-signing" });
   if (
     String(preSigning.git?.runId || "") !== String(request.source.runId) ||
     String(preSigning.git?.runAttempt || "") !== String(request.source.runAttempt)
@@ -433,6 +479,14 @@ export function restoreTailResealManifestRunIdentity() {
   manifest.git.runId = String(request.source.runId);
   manifest.git.runAttempt = String(request.source.runAttempt);
   writeJson(manifestPath, manifest);
+  const archivedPreSigningManifestPath = String(
+    process.env.BUILDCHAIN_TAIL_RESEAL_ARCHIVED_PRE_SIGNING_MANIFEST_PATH || "",
+  ).trim();
+  if (archivedPreSigningManifestPath) {
+    const archivedPath = path.resolve(archivedPreSigningManifestPath);
+    fs.mkdirSync(path.dirname(archivedPath), { recursive: true });
+    fs.copyFileSync(preSigningManifestPath, archivedPath);
+  }
   appendOutputs({
     "manifest-path": path.relative(process.cwd(), manifestPath),
     "restored-run-id": request.source.runId,
@@ -571,10 +625,11 @@ export async function releaseCandidateTailResealCli(argv = process.argv.slice(2)
   const command = argv[0];
   if (command === "plan") return plan();
   if (command === "recover-signing") return recoverTailResealSigning();
+  if (command === "prepare-manifest-recompute") return prepareTailResealMacosManifestRecompute();
   if (command === "restore-manifest-run") return restoreTailResealManifestRunIdentity();
   if (command === "verify-platform") return verifyTailResealPlatform();
   if (command === "seal") return sealTailResealReceipt();
-  throw new Error("usage: release-candidate-tail-reseal.mjs <plan|recover-signing|restore-manifest-run|verify-platform|seal>");
+  throw new Error("usage: release-candidate-tail-reseal.mjs <plan|recover-signing|prepare-manifest-recompute|restore-manifest-run|verify-platform|seal>");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
