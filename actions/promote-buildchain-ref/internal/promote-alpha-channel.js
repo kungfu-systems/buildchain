@@ -273,7 +273,6 @@ async function finalizeContainedAlpha(context, state) {
     updates: context.updates,
   });
 }
-
 function selectAlphaCandidate(context, state) {
   const advanced = context.advancedPublicationTransaction;
   if (advanced) return { tag: advanced.exact_tag, transaction: advanced };
@@ -429,6 +428,7 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
       line: context.rule.releasePrefix,
       releaseSha: alpha.sha,
       publishDistTagOverride: state.alphaPublishDistTag,
+      durablePublicationMaterial: selectedAlpha.transaction,
       allowVersionStateFinalization:
         state.currentAlpha &&
         selectedAlpha.tag === state.currentAlpha.tag &&
@@ -596,4 +596,4 @@ async function promoteAlphaChannel(context) {
   return finalizeAlphaPublication(context, state, publication);
 }
 
-export { promoteAlphaChannel, selectAlphaCandidate };
+export { promoteAlphaChannel, publishAlphaCandidate, selectAlphaCandidate };
