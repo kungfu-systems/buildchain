@@ -267,6 +267,27 @@ function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, vers
   }
 }
 
+function runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version }) {
+  if (existingNpmPromotion) {
+    throw new Error(
+      "publish-rematerialize-on-resume cannot replay promote-existing-version provider mutations",
+    );
+  }
+  const source = runRematerializedPublishCommand({
+    cwd,
+    command: publishCommand,
+    loadedConfig,
+    env: publishTransactionEnvironment(context, { useSealedBundle: false }),
+    version,
+  });
+  if (source === "none") {
+    throw new Error(
+      "publish-rematerialize-on-resume requires lifecycle.publish or publish-command",
+    );
+  }
+  return `resume-rematerialized:${source}`;
+}
+
 function npmPackageSpec(artifact) {
   return `${artifact.name}@${artifact.ref}`;
 }
@@ -1618,24 +1639,9 @@ async function runPublishTransaction(options) {
       throw new Error(`release transaction cannot recover: ${recovery.reason}`);
     }
     if (existing && validation?.valid && publishRematerializeOnResume) {
-      if (existingNpmPromotion) {
-        throw new Error(
-          "publish-rematerialize-on-resume cannot replay promote-existing-version provider mutations",
-        );
-      }
-      publishSource = runRematerializedPublishCommand({
-        cwd,
-        command: publishCommand,
-        loadedConfig,
-        env: publishTransactionEnvironment(context, { useSealedBundle: false }),
-        version,
+      publishSource = runResumeRematerializedPublish({
+        existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version,
       });
-      if (publishSource === "none") {
-        throw new Error(
-          "publish-rematerialize-on-resume requires lifecycle.publish or publish-command",
-        );
-      }
-      publishSource = `resume-rematerialized:${publishSource}`;
     }
     if (!validation?.valid) {
       if (transaction.state === "repair_required" && explicitOverride) {
@@ -1669,12 +1675,16 @@ async function runPublishTransaction(options) {
           artifacts: requiredArtifacts,
         });
       } else {
-        publishSource = runPublishCommand({
-          cwd,
-          command: publishCommand,
-          loadedConfig,
-          env: publishEnvironment,
-        });
+        publishSource = existing && publishRematerializeOnResume
+          ? runResumeRematerializedPublish({
+              existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version,
+            })
+          : runPublishCommand({
+              cwd,
+              command: publishCommand,
+              loadedConfig,
+              env: publishEnvironment,
+            });
       }
       if (publishSource === "none") {
         throw new Error("publish transaction requires lifecycle.publish, publish-command, or existing evidence",
