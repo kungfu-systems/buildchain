@@ -106,5 +106,5 @@
   },
   "resume_command": "buildchain paper resume --version \"4.0.1-alpha.0\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-0\"",
   "created_at": "2026-08-13T13:54:33.622Z",
-  "updated_at": "2026-08-13T13:54:50.098Z"
+  "updated_at": "2026-08-13T14:05:00.372Z"
 }
