@@ -184,12 +184,16 @@ function runPublishCommand({ cwd, command, loadedConfig, env }) {
   return "none";
 }
 
-function rematerializedNpmPackEnvironment({ cwd, env }) {
+function rematerializedNpmPackEnvironment({ cwd, env, version }) {
   const packagePath = path.join(cwd, "package.json");
   if (!fs.existsSync(packagePath)) return undefined;
   const pkg = JSON.parse(fs.readFileSync(packagePath, "utf8"));
   const required = JSON.parse(env.BUILDCHAIN_REQUIRED_ARTIFACTS || "[]");
-  if (!required.some((artifact) => artifact.kind === "npm" && artifact.name === pkg.name)) return undefined;
+  const requiredNpm = required.filter((artifact) => artifact.kind === "npm");
+  if (requiredNpm.length === 0) return undefined;
+  if (!requiredNpm.some((artifact) => artifact.name === pkg.name)) {
+    throw new Error(`rematerialized npm package does not match required artifacts: ${pkg.name}`);
+  }
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rematerialized-npm-"));
   try {
     const packed = JSON.parse(execNpmSync(["pack", "--json", "--pack-destination", temporaryRoot, "--registry=https://registry.npmjs.org/"], {
@@ -197,6 +201,11 @@ function rematerializedNpmPackEnvironment({ cwd, env }) {
     }));
     const result = Array.isArray(packed) ? packed[0] : packed;
     if (!result?.filename) throw new Error("rematerialized npm pack did not return a filename");
+    if (result.name !== pkg.name || result.version !== version) {
+      throw new Error(
+        `rematerialized npm pack identity mismatch: expected ${pkg.name}@${version}, got ${result.name || ""}@${result.version || ""}`,
+      );
+    }
     const tarballPath = path.join(temporaryRoot, result.filename);
     const bytes = fs.readFileSync(tarballPath);
     return { temporaryRoot, env: {
@@ -226,10 +235,29 @@ function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, vers
     for (const [index, file] of changedFiles.entries()) {
       fs.writeFileSync(originals[index].resolved, file.content);
     }
-    const npmPack = rematerializedNpmPackEnvironment({ cwd, env });
+    const npmPack = rematerializedNpmPackEnvironment({ cwd, env, version });
+    const sealedEnvironmentNames = [
+          "BUILDCHAIN_SEALED_BUNDLE_ROOT",
+          "BUILDCHAIN_SEALED_NPM_TARBALL",
+          "BUILDCHAIN_SEALED_NPM_INTEGRITY",
+          "BUILDCHAIN_SEALED_NPM_SHA256",
+        ];
+    const previousSealedEnvironment = npmPack
+      ? Object.fromEntries(sealedEnvironmentNames.map((name) => [name, process.env[name]]))
+      : undefined;
     try {
+      if (npmPack) {
+        Object.assign(
+          process.env,
+          Object.fromEntries(sealedEnvironmentNames.map((name) => [name, npmPack.env[name]])),
+        );
+      }
       return runPublishCommand({ cwd, command, loadedConfig, env: npmPack?.env || env });
     } finally {
+      for (const [name, value] of Object.entries(previousSealedEnvironment || {})) {
+        if (value === undefined) delete process.env[name];
+        else process.env[name] = value;
+      }
       if (npmPack?.temporaryRoot) fs.rmSync(npmPack.temporaryRoot, { recursive: true, force: true });
     }
   } finally {
