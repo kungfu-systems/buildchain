@@ -12,7 +12,7 @@ const HEAD_SHA = "b".repeat(40);
 const BRANCH_HEAD_SHA = "c".repeat(40);
 const MERGE_SHA = "d".repeat(40);
 
-function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit) {
+function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit, workflowUnavailable) {
   const workflow = `permissions:\n  contents: read\njobs:\n  promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: read\n      id-token: write\n`;
   const responses = {
     "repos/kungfu-systems/buildchain/contents/.github/workflows/release-candidate-promote.yml": {
@@ -100,23 +100,47 @@ function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCom
       merge_base_commit: { sha: SOURCE_SHA },
     },
   };
-  return `#!/usr/bin/env node\nconst responses = ${JSON.stringify(responses)};\nconst route = process.argv[3];\nif (!(route in responses)) { console.error(\`missing fake route: \${route}\`); process.exit(1); }\nprocess.stdout.write(JSON.stringify(responses[route]));\n`;
+  return `#!/usr/bin/env node\nconst responses = ${JSON.stringify(responses)};\nconst route = process.argv[3];\nif (${JSON.stringify(workflowUnavailable)} && route.startsWith("repos/kungfu-systems/buildchain/contents/")) { console.error("workflow API unavailable"); process.exit(1); }\nif (!(route in responses)) { console.error(\`missing fake route: \${route}\`); process.exit(1); }\nprocess.stdout.write(JSON.stringify(responses[route]));\n`;
 }
 
-function runAudit({ requiredCheckConclusion = "success", historicalSource = false, largeSourceCommit = false } = {}) {
+function runAudit({
+  requiredCheckConclusion = "success",
+  historicalSource = false,
+  largeSourceCommit = false,
+  workflowUnavailable = false,
+  exactLocalWorkflow = false,
+  mismatchedLocalWorkflow = false,
+} = {}) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-control-plane-"));
   const bin = path.join(cwd, "bin");
   fs.mkdirSync(bin);
   const gh = path.join(bin, "gh");
-  fs.writeFileSync(gh, fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit));
+  fs.writeFileSync(gh, fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit, workflowUnavailable));
   fs.chmodSync(gh, 0o755);
-  const result = spawnSync(process.execPath, [
+  let workflowRef = "";
+  if (exactLocalWorkflow || mismatchedLocalWorkflow) {
+    const workflowPath = path.join(cwd, ".github/workflows/release-candidate-promote.yml");
+    fs.mkdirSync(path.dirname(workflowPath), { recursive: true });
+    fs.writeFileSync(workflowPath, `permissions:\n  contents: read\njobs:\n  promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: read\n      id-token: write\n`);
+    for (const args of [
+      ["init", "-q"],
+      ["config", "user.name", "Test"],
+      ["config", "user.email", "test@example.com"],
+      ["add", ".github/workflows/release-candidate-promote.yml"],
+      ["commit", "-qm", "test workflow"],
+    ]) assert.equal(spawnSync("git", args, { cwd }).status, 0);
+    workflowRef = spawnSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" }).stdout.trim();
+    if (mismatchedLocalWorkflow) workflowRef = "e".repeat(40);
+  }
+  const args = [
     path.join(root, "scripts/audit-publication-control-plane.mjs"),
     "--repository", "kungfu-systems/buildchain",
     "--branch", "alpha/v2/v2.14",
     "--source-sha", SOURCE_SHA,
     "--required-status-check", "check",
-  ], {
+  ];
+  if (workflowRef) args.push("--workflow-ref", workflowRef);
+  const result = spawnSync(process.execPath, args, {
     cwd,
     encoding: "utf8",
     env: {
@@ -127,6 +151,18 @@ function runAudit({ requiredCheckConclusion = "success", historicalSource = fals
   fs.rmSync(cwd, { recursive: true, force: true });
   return result;
 }
+
+test("publication control-plane audit uses an exact matching checkout when the workflow API is unavailable", () => {
+  const result = runAudit({ workflowUnavailable: true, exactLocalWorkflow: true });
+  assert.equal(result.status, 0, result.stderr);
+  assert(JSON.parse(result.stdout).facts.every((entry) => entry.status === "pass"));
+});
+
+test("publication control-plane audit rejects a mismatched checkout when the workflow API is unavailable", () => {
+  const result = runAudit({ workflowUnavailable: true, mismatchedLocalWorkflow: true });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /publication workflow source is unavailable/u);
+});
 
 test("non-strict managed rulesets require and accept exact provider transaction evidence", () => {
   const result = runAudit();

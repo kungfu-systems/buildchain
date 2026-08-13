@@ -37,6 +37,32 @@ function githubJson(apiPath, label) {
   return commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label);
 }
 
+function exactWorkflowText({ repository, workflowPath, workflowRef }) {
+  const encodedWorkflow = workflowPath.split("/").map(encodeURIComponent).join("/");
+  try {
+    const workflowFile = githubJson(
+      `repos/${repository}/contents/${encodedWorkflow}${workflowRef ? `?ref=${encodeURIComponent(workflowRef)}` : ""}`,
+      "publication workflow source",
+    );
+    return Buffer.from(String(workflowFile.content || ""), "base64").toString("utf8");
+  } catch (error) {
+    if (!/^[0-9a-fA-F]{40}$/.test(workflowRef)) throw error;
+    const checkoutHead = spawnSync("git", ["rev-parse", "HEAD"], {
+      encoding: "utf8",
+      timeout: 60_000,
+      maxBuffer: GITHUB_JSON_MAX_BUFFER,
+    });
+    if (checkoutHead.status !== 0 || checkoutHead.stdout.trim().toLowerCase() !== workflowRef.toLowerCase()) throw error;
+    const localWorkflow = spawnSync("git", ["show", `${workflowRef}:${workflowPath}`], {
+      encoding: "utf8",
+      timeout: 60_000,
+      maxBuffer: GITHUB_JSON_MAX_BUFFER,
+    });
+    if (localWorkflow.status !== 0 || !localWorkflow.stdout) throw error;
+    return localWorkflow.stdout;
+  }
+}
+
 function githubJsonOptional(apiPath, label, fallback) {
   const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
     encoding: "utf8",
@@ -217,12 +243,11 @@ function main() {
   const allowReleaseReconciliation = process.argv.includes("--allow-release-reconciliation");
   if (!repository || !branch) throw new Error("--repository and --branch are required");
 
-  const encodedWorkflow = workflowPath.split("/").map(encodeURIComponent).join("/");
-  const workflowFile = githubJson(
-    `repos/${workflowRepository}/contents/${encodedWorkflow}${workflowRef ? `?ref=${encodeURIComponent(workflowRef)}` : ""}`,
-    "publication workflow source",
-  );
-  const workflowText = Buffer.from(String(workflowFile.content || ""), "base64").toString("utf8");
+  const workflowText = exactWorkflowText({
+    repository: workflowRepository,
+    workflowPath,
+    workflowRef,
+  });
   const block = jobBlock(workflowText, jobId);
   if (!block) throw new Error(`publication workflow job is missing: ${workflowPath}#${jobId}`);
   const jobsOffset = workflowText.search(/^jobs:\s*$/m);
