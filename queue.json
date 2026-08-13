@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 668,
+  "generation": 669,
   "fencingCounter": 152,
   "policy": {
     "agingSeconds": 900,
@@ -5513,8 +5513,48 @@
         "dist/site/buildchain-contract.json",
         "tests/build-surface.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2782,
+      "assignmentRoot": "sha256:cd4a74f778eccb564b37a231f2b46481b5946d9ceff7512e91ada4f4c4ea2b42",
+      "initiativeRoot": "sha256:3191620789b9574f608970119e4750bc3941daf1ea0973815cd7c7e413fd351d",
+      "sourceIdentityRoot": "sha256:9e400fd81c40dc8493778a3254dc970277724650ead6f440f60507e3e5f7df56",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:342196f37db5c6c53319260644a7b1ebdddfa103970af6a8e9c3001dbe7e1f4d",
+      "sourceHead": "9a9d4107853b8007febab853b278c8710b4089b8",
+      "sourcePatchRoot": "sha256:44c962a403eb21b12714c48e34b3193fbf955c73252656bb8e33d8bfb2d8205b",
+      "sourceProofRoot": "sha256:6d8b9a14a233d8eae6ce0640b79c97a21a4d5eabc4efea94639f4251c7631612",
+      "planRoot": "sha256:986b0e4c095d07d6b2434594601ea47286354e32b49063a0300d544a9e6f47f0",
+      "closureRoot": "sha256:22932e6e97c70bb8d5e9ff522920b309a521e39c6190bd3c90bd30d6e987c0ca",
+      "dependencyRoot": "sha256:c59d2df77b25648131ac661623ca03c15456f96cf5fb17bd1f4b714d613d6a3f",
+      "toolchainRoot": "sha256:5aeb26f75b5e75a4efb7f0d7ec5ebdbbbed20020d34aa53d62720f45bfe6d113",
+      "environmentRoot": "sha256:b20d491fabd0c0cd519e00a1364eb58e2a66a7ef9726c74031611db10d30821c",
+      "sourceWorkflowRunId": 31744525956,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-13T21:12:01.450Z",
+      "updatedAt": "2026-08-13T21:12:01.450Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/promote-buildchain-ref/README.md",
+        "actions/promote-buildchain-ref/dist/index.js",
+        "actions/promote-buildchain-ref/lib.js",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/site-manifest.json",
+        "docs/release-governance.md",
+        "tests/promote-buildchain-ref.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-13T20:53:53.208Z",
-  "stateRoot": "sha256:7e944f280650651bfa1e40f2dfb72365adfcf6763e5dd1d4575abda990643230"
+  "updatedAt": "2026-08-13T21:12:01.450Z",
+  "stateRoot": "sha256:62c23578d8dc0d80108dba1ae8829d522bb141d896dce82cf730afb0c1fa1201"
 }
