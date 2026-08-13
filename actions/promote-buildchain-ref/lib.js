@@ -1094,6 +1094,16 @@ async function releaseCommitIncludesTransactionHead({
   return false;
 }
 
+async function releaseCommitMatchesTransactionMaterial({ octokit, owner, repo, releaseSha, transactionReleaseShas }) {
+  const { data: releaseCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: releaseSha });
+  for (const transactionReleaseSha of uniqueShas(transactionReleaseShas)) {
+    if (!(await releaseCommitIncludesTransactionHead({ octokit, owner, repo, releaseSha, transactionReleaseSha }))) continue;
+    const { data: transactionCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: transactionReleaseSha });
+    if (releaseCommit.tree?.sha === transactionCommit.tree?.sha) return true;
+  }
+  return false;
+}
+
 function uniqueShas(values) {
   return [...new Set(values.filter(Boolean))];
 }
@@ -2930,27 +2940,15 @@ async function resumableAlphaTransactionState({
       }
       throw error;
     }
-    const exactTransactionSource =
-      transaction?.source_sha === sourceSha ||
-      transaction?.release_sha === sourceSha ||
-      transaction?.release_material_sha === sourceSha;
-    const transactionInSourceHistory =
-      !transactionHasPublishedMaterial(transaction) &&
-      ((await releaseCommitIncludesTransactionHead({
-          octokit,
-          owner,
-          repo,
-          releaseSha: sourceSha,
-          transactionReleaseSha: transaction?.release_sha,
-        })) ||
-        (await releaseCommitIncludesTransactionHead({
-          octokit,
-          owner,
-          repo,
-          releaseSha: sourceSha,
-          transactionReleaseSha: transaction?.release_material_sha,
-        })
-      ));
+    const publishedMaterial = transactionHasPublishedMaterial(transaction);
+    const exactTransactionSource = [transaction?.source_sha, transaction?.release_sha, transaction?.release_material_sha].includes(sourceSha);
+    const includesTransactionHead = (transactionReleaseSha) => releaseCommitIncludesTransactionHead({ octokit, owner, repo, releaseSha: sourceSha, transactionReleaseSha });
+    const transactionInSourceHistory = !publishedMaterial && ((await includesTransactionHead(transaction?.release_sha)) || (await includesTransactionHead(transaction?.release_material_sha)));
+    const publishedMaterialMerge = publishedMaterial &&
+      await releaseCommitMatchesTransactionMaterial({
+        octokit, owner, repo, releaseSha: sourceSha,
+        transactionReleaseShas: [transaction?.release_sha, transaction?.release_material_sha],
+      });
     const exactCompletedTransaction =
       transaction?.state === "complete" && exactTransactionSource;
     if (
@@ -2961,7 +2959,8 @@ async function resumableAlphaTransactionState({
       !["abandoned", "failed_permanently"].includes(transaction.state) &&
       (exactCompletedTransaction ||
         (transaction.state !== "complete" &&
-          (exactTransactionSource || transactionInSourceHistory)))
+          (exactTransactionSource || transactionInSourceHistory ||
+            publishedMaterialMerge)))
     ) {
       return {
         ...candidate,
@@ -5073,6 +5072,7 @@ export {
   createTreeEquivalentReleaseImpact,
   createDurableTransactionOperations,
   createRefMutationOperations,
+  releaseCommitMatchesTransactionMaterial as testReleaseCommitMatchesTransactionMaterial,
   releasePassportArtifactFiles,
   validatePromotionReleaseCandidate,
 };
