@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 544,
+  "generation": 545,
   "fencingCounter": 131,
   "policy": {
     "agingSeconds": 900,
@@ -11,40 +11,7 @@
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v3/v3.0",
-    "candidateId": "sha256:197b53bf3353c9500ff6833dc5ef2a74a983b78100ee931e72584e362152f590",
-    "pullRequestNumber": 2715,
-    "sourceHead": "df421c0fa4088a7c33dde5cdec58fafcb57518c0",
-    "assignmentRoot": "sha256:8f55ca1dff163a7b862d9e5c1a568db4a5a470fa33539226ed4f4f417b298455",
-    "initiativeRoot": "sha256:c45531dbd7d307c3a0f429440a6c910b0b9d2c01d5e689e2d60653ab2b7bdf99",
-    "sourceIdentityRoot": "sha256:65ff40d6926f7bfc6bee736785276c8505c1353e730b7cd5d304f8664ab2140c",
-    "sourcePatchRoot": "sha256:6860c33e62018dff257c688903ade99da550149f33f28ba2a7e64554f89527a5",
-    "sourceProofRoot": "sha256:4f7b599f1da77c0eb9153a656c788b15ff89ca517b2714d70883363298df13d4",
-    "planRoot": "sha256:795a17a7861693469e53f420863777096849ae9d9085158a74e3885cc639487c",
-    "closureRoot": "sha256:9574457b605a8d6769f3f867195d89dd9da68cb225f102c218685ecedd897b12",
-    "dependencyRoot": "sha256:cacb9b052bcbc6334a11db121aac6d64153586fac50541c35c044668f25b26d0",
-    "toolchainRoot": "sha256:d5455f2ab444c5fb8909612eb7ba93047dd55e22b9fc510255e3fabc209e92a5",
-    "environmentRoot": "sha256:bca147ba80625996a082a446fb8ccc713c92152387832eb737fab29d229c8e92",
-    "affectedPaths": [
-      ".github/workflows/build-surface-fixture.yml",
-      "tests/build-surface-promotion.test.mjs"
-    ],
-    "sourceWorkflowRunId": 31671450102,
-    "deliveryClass": "native-proof-required",
-    "generation": 131,
-    "phase": "qualified",
-    "expectedOldStateRoot": "sha256:b8b9f795b014feebcdd249216a03254eb254b04e8925922a2321579beb01c694",
-    "issuedAt": "2026-08-13T05:46:20.561Z",
-    "expiresAt": "2026-08-13T06:46:40.404Z",
-    "fencingToken": "sha256:c5e92195503c97f1eafd0b994f432de16b8dbd29a6937909963dff1b08f05bd3",
-    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
-    "nativeProofRoot": "sha256:6956bd20a49de02d8c6fa7cf67787671a98773b2139f76567b2ae9006c4d3603",
-    "nativeProofReuseRoot": "sha256:a0ce15b101e4482b3b2ca4bd0f36961cdae1905fc25c530ddb92de13c73e505f",
-    "qualifiedAt": "2026-08-13T05:46:46.970Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -4593,17 +4560,26 @@
       "sourceWorkflowRunId": 31671450102,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-13T05:46:16.466Z",
-      "updatedAt": "2026-08-13T05:46:46.970Z",
+      "updatedAt": "2026-08-13T05:55:34.465Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "qualified",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "terminalClass": "authoritative-completion",
+        "reason": "PR #2715 merged through exact GitHub merge-group and push Verify contexts",
+        "evidenceRoot": "sha256:f03fd856bea3d2666eb6c031d37847443b629f312c38b941078752d57e0066f3",
+        "closedAt": "2026-08-13T05:55:34.465Z",
+        "fencingToken": "sha256:c5e92195503c97f1eafd0b994f432de16b8dbd29a6937909963dff1b08f05bd3",
+        "leaseGeneration": 131,
+        "nativeProofRoot": "sha256:6956bd20a49de02d8c6fa7cf67787671a98773b2139f76567b2ae9006c4d3603"
+      },
       "affectedPaths": [
         ".github/workflows/build-surface-fixture.yml",
         "tests/build-surface-promotion.test.mjs"
       ]
     }
   ],
-  "updatedAt": "2026-08-13T05:46:46.970Z",
-  "stateRoot": "sha256:e5c7b027665c0bdef6c11ca44c7e1ee177709a6878b1d1f6731123cd9ff35f47"
+  "updatedAt": "2026-08-13T05:55:34.465Z",
+  "stateRoot": "sha256:d3114506046e4aa5538e7c163a0bc05edcf2043cd0e47064014873c2549a40be"
 }
