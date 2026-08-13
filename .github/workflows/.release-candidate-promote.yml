@@ -1608,6 +1608,7 @@ jobs:
         env:
           BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
           BUILDCHAIN_EXPECTED_VERSION: ${{ needs.publication-plan.outputs.version }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
         run: |
           set -euo pipefail
           node <<'NODE'
@@ -1647,9 +1648,23 @@ jobs:
           if (JSON.stringify(gate) !== JSON.stringify(selfDogfood.gateResult)) {
             throw new Error("sealed adopter delivery result differs from self-dogfood gate result");
           }
+          const releaseEvidencePath = path.join(
+            process.env.RUNNER_TEMP,
+            "buildchain-delivery-self-dogfood-release-evidence.json",
+          );
+          fs.writeFileSync(releaseEvidencePath, `${JSON.stringify({
+            ...selfDogfood,
+            id: "buildchain-delivery-self-dogfood",
+            kind: "product-release-evidence",
+            release: {
+              sourceSha: process.env.BUILDCHAIN_SOURCE_SHA,
+              tag: `v${process.env.BUILDCHAIN_EXPECTED_VERSION}`,
+              channel: "alpha",
+            },
+          }, null, 2)}\n`);
           fs.appendFileSync(
             process.env.GITHUB_OUTPUT,
-            `adopter-delivery-path=${gatePath}\nself-dogfood-path=${selfDogfoodPath}\n`,
+            `adopter-delivery-path=${gatePath}\nself-dogfood-path=${releaseEvidencePath}\n`,
           );
           NODE
 
