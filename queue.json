@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 616,
+  "generation": 617,
   "fencingCounter": 144,
   "policy": {
     "agingSeconds": 900,
@@ -5175,8 +5175,39 @@
         "scripts/audit-publication-control-plane.mjs",
         "tests/publication-control-plane-script.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2776,
+      "assignmentRoot": "sha256:c3852e3d8b00f0f6aa792f967ad768cec3eda6cc3ab6f26aa1878388ff78514f",
+      "initiativeRoot": "sha256:f00b30385eda973ec7717b01cff2259960a985a795d0e130657cd73ed32e89b6",
+      "sourceIdentityRoot": "sha256:563db198e445b3c84a1d9cb33c8986c26886dca825658c54a900f6d654be57f4",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:f00ba431d8ecf5f24b82b63494763d3cae48a8a58d683d5535d513cd034ad25a",
+      "sourceHead": "1fb0e08683963d633139403c0d06db1180918fab",
+      "sourcePatchRoot": "sha256:1e1a25bb811e2f6df5d1304122171ced27395a62a0327ab9262e5de7c3615d35",
+      "sourceProofRoot": "sha256:96e00d0b140dc59671f496bec9bd21e0e4e6a0538ac6509b56f6655c3e857f1f",
+      "planRoot": "sha256:fac8691afed3b4f780cf32b3896a536c6486789ee3a6befb5b8054109099fffc",
+      "closureRoot": "sha256:82155e3937df7356b35cc06dd49305e3839e3f54599a55d8e7c606c9c372c8e5",
+      "dependencyRoot": "sha256:c59d2df77b25648131ac661623ca03c15456f96cf5fb17bd1f4b714d613d6a3f",
+      "toolchainRoot": "sha256:e9c02642d7ffb587e49e13e9b8c66b36eddfe3c3ea75bb822ca19365c8666652",
+      "environmentRoot": "sha256:929bbd268be091b639ea034e6496b9a647ee54637c3cdabe1934a870606ae575",
+      "sourceWorkflowRunId": 31735841600,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-13T19:26:38.171Z",
+      "updatedAt": "2026-08-13T19:26:38.171Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/promote-buildchain-ref/dist/index.js",
+        "actions/promote-buildchain-ref/lib.js",
+        "tests/promote-buildchain-ref-governance.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-13T18:00:05.727Z",
-  "stateRoot": "sha256:8b521dcb324b12e19b29c836fc7f359199055eb94e593077013421b9a67b5f90"
+  "updatedAt": "2026-08-13T19:26:38.171Z",
+  "stateRoot": "sha256:393b91b157c6db9cde0cd5ac9e9bc58a4f1e7dae98f65361a99046a593f989c8"
 }
