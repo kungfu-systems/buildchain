@@ -4,23 +4,38 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import {
+  assertArtifactSigningControlRequestContext,
+  readArtifactSigningControlRequest,
+  settleArtifactSigningControl,
+  validateArtifactSigningControllerReceipt,
+} from "./artifact-signing-controller.mjs";
+
 const CONTRACT = "kungfu-buildchain-release-candidate-tail-reseal/v1";
 const SHA = /^[0-9a-f]{40}$/u;
 const ROOT = /^sha256:[0-9a-f]{64}$/u;
 const REQUIRED_PLATFORMS = ["linux-arm64", "linux-x64", "macos-arm64", "windows-x64"];
-const REQUIRED_SUCCESS_JOBS = [
+const PLATFORM_BUILD_JOBS = [
   "build / Linux ARM64",
   "build / Linux x64",
   "build / macOS ARM64",
   "build / Windows x64",
+];
+const SIGNING_CONTROL_JOBS = [
   "build / Control detached signing Linux ARM64",
   "build / Control detached signing Linux x64",
   "build / Control detached signing macOS ARM64",
   "build / Control detached signing Windows x64",
+];
+const FINALIZED_PLATFORM_JOBS = [
   "build / Finalize signed artifact Linux ARM64",
   "build / Finalize signed artifact Linux x64",
   "build / Finalize signed artifact Windows x64",
 ];
+const FAILURE_MODES = {
+  finalization: "macos-finalization",
+  signingControl: "macos-signing-control",
+};
 
 function required(value, label) {
   const result = String(value ?? "").trim();
@@ -82,6 +97,19 @@ function sha256File(file) {
     fs.closeSync(descriptor);
   }
   return `sha256:${hash.digest("hex")}`;
+}
+
+export function tailResealFailureMode(request) {
+  const failure = object(request?.failure, "failure");
+  if (
+    failure.jobName === "build / Finalize signed artifact macOS ARM64" &&
+    failure.stepName === "Recompute manifest over final signed bytes"
+  ) return FAILURE_MODES.finalization;
+  if (
+    failure.jobName === "build / Control detached signing macOS ARM64" &&
+    failure.stepName === "Enforce qualifying detached signing settlement"
+  ) return FAILURE_MODES.signingControl;
+  throw new Error("tail reseal failure is outside the two exact macOS recovery boundaries");
 }
 
 function appendOutputs(values) {
@@ -243,7 +271,11 @@ function validateTailResealRun({ request, run }) {
 
 function validateTailResealJobs({ request, jobs }) {
   const byName = new Map(jobs.map((job) => [job.name, job]));
-  for (const name of REQUIRED_SUCCESS_JOBS) {
+  const failureMode = tailResealFailureMode(request);
+  const requiredSuccessJobs = failureMode === FAILURE_MODES.finalization
+    ? [...PLATFORM_BUILD_JOBS, ...SIGNING_CONTROL_JOBS, ...FINALIZED_PLATFORM_JOBS]
+    : [...PLATFORM_BUILD_JOBS, ...SIGNING_CONTROL_JOBS.filter((name) => !name.endsWith("macOS ARM64"))];
+  for (const name of requiredSuccessJobs) {
     if (byName.get(name)?.conclusion !== "success") throw new Error(`tail reseal required source job did not succeed: ${name}`);
   }
   const failedJob = jobs.find((job) => Number(job.id) === request.failure.jobId);
@@ -252,10 +284,16 @@ function validateTailResealJobs({ request, jobs }) {
     failedJob?.name === request.failure.jobName &&
     failedJob?.conclusion === "failure" &&
     JSON.stringify(failedSteps) === JSON.stringify([request.failure.stepName]);
-  if (!exactFailure) throw new Error("tail reseal failure boundary differs from the single allowed macOS finalization step");
-  if (request.failure.jobName !== "build / Finalize signed artifact macOS ARM64" || request.failure.stepName !== "Recompute manifest over final signed bytes") {
-    throw new Error("tail reseal only accepts the known macOS finalization blocker");
+  if (!exactFailure) throw new Error("tail reseal failure boundary differs from the selected exact macOS recovery step");
+  if (failureMode === FAILURE_MODES.signingControl) {
+    const controller = byName.get("build / Finalize build controller evidence");
+    const controllerFailures = (controller?.steps || []).filter((step) => step.conclusion === "failure").map((step) => step.name);
+    if (
+      controller?.conclusion !== "failure" ||
+      JSON.stringify(controllerFailures) !== JSON.stringify(["Enforce qualifying build controller receipt"])
+    ) throw new Error("tail reseal signing-control recovery requires the exact downstream controller failure");
   }
+  return failureMode;
 }
 
 function validateTailResealArtifacts({ request, artifacts, authorityRun, authorityArtifacts }) {
@@ -266,6 +304,9 @@ function validateTailResealArtifacts({ request, artifacts, authorityRun, authori
   const controllerPlan = artifacts.filter((artifact) => artifact.name === request.controllerPlanArtifact);
   if (controllerPlan.length !== 1 || controllerPlan[0].expired === true) throw new Error("tail reseal controller plan artifact is unavailable");
   if (authorityRun.status !== "completed" || authorityRun.conclusion !== "success") throw new Error("tail reseal signing authority run is not successful");
+  if (authorityRun.head_sha !== request.authority.runtimeSha || authorityRun.event !== "workflow_dispatch") {
+    throw new Error("tail reseal signing authority run identity mismatch");
+  }
   exactArtifact(authorityArtifacts, request.authority.resultArtifact, request.authority.resultArtifactDigest, "macOS signing authority result");
 }
 
@@ -291,6 +332,7 @@ function writeTailResealPlan(request) {
     "authority-run-id": request.authority.runId,
     "authority-result-artifact": request.authority.resultArtifact,
     "controller-plan-artifact": request.controllerPlanArtifact,
+    "failure-mode": tailResealFailureMode(request),
   });
 }
 
@@ -365,6 +407,59 @@ export function verifyTailResealPlatform() {
   return manifest;
 }
 
+export function recoverTailResealSigning() {
+  const request = normalizeTailResealRequest(readJson(required(process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH, "BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH")));
+  if (tailResealFailureMode(request) !== FAILURE_MODES.signingControl) {
+    throw new Error("signing settlement recovery is only valid for the exact macOS signing-control boundary");
+  }
+  if (request.authority.repository !== request.candidateRuntime.repository || request.authority.runtimeSha !== request.candidateRuntime.sha) {
+    throw new Error("signing settlement recovery authority differs from the exact candidate runtime");
+  }
+  const control = assertArtifactSigningControlRequestContext(readArtifactSigningControlRequest(), {
+    sourceRepository: request.repository,
+    sourceRunId: String(request.source.runId),
+    sourceRunAttempt: String(request.source.runAttempt),
+    sourceSha: request.source.sha,
+    sourceTreeSha: request.source.tree,
+    runtimeRepository: request.candidateRuntime.repository,
+    runtimeSha: request.candidateRuntime.sha,
+    platformId: "macos-arm64",
+  });
+  const failedReceipt = validateArtifactSigningControllerReceipt(readJson(
+    required(process.env.BUILDCHAIN_FAILED_SIGNING_CONTROLLER_RECEIPT_PATH, "BUILDCHAIN_FAILED_SIGNING_CONTROLLER_RECEIPT_PATH"),
+    "failed signing controller receipt",
+  ));
+  if (
+    failedReceipt.requestDigest !== control.digest ||
+    failedReceipt.qualifying !== false ||
+    failedReceipt.controller.status !== "failed" ||
+    failedReceipt.source.sha !== request.source.sha ||
+    failedReceipt.runtime.sha !== request.candidateRuntime.sha ||
+    failedReceipt.platform.id !== "macos-arm64"
+  ) throw new Error("original signing controller receipt is not the exact non-qualifying macOS settlement");
+  if (
+    control.authority.repository !== request.authority.repository ||
+    control.authority.resultArtifact !== request.authority.resultArtifact
+  ) throw new Error("successful authority result is not bound to the original signing control request");
+  const settled = settleArtifactSigningControl({
+    request: control,
+    authorityStatus: "succeeded",
+    authorityRunId: String(request.authority.runId),
+    authorityRuntimeSha: request.authority.runtimeSha,
+    authorityRunUrl: `https://github.com/${request.authority.repository}/actions/runs/${request.authority.runId}`,
+    authorityResultArtifact: request.authority.resultArtifact,
+    authorityCorrelationId: control.authority.correlationId,
+    authorityConclusion: "success",
+    controllerJob: "tail-reseal-signing-settlement",
+  });
+  if (!settled.receipt.qualifying || !settled.delegation) throw new Error("recovered signing settlement did not qualify");
+  appendOutputs({
+    "controller-receipt-digest": settled.receipt.digest,
+    "delegation-created": "true",
+  });
+  return settled;
+}
+
 export function sealTailResealReceipt() {
   const request = normalizeTailResealRequest(readJson(required(process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH, "BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH")));
   const manifestsRoot = path.resolve(required(process.env.BUILDCHAIN_TAIL_RESEAL_MANIFESTS_ROOT, "BUILDCHAIN_TAIL_RESEAL_MANIFESTS_ROOT"));
@@ -413,9 +508,10 @@ export function sealTailResealReceipt() {
 export async function releaseCandidateTailResealCli(argv = process.argv.slice(2)) {
   const command = argv[0];
   if (command === "plan") return plan();
+  if (command === "recover-signing") return recoverTailResealSigning();
   if (command === "verify-platform") return verifyTailResealPlatform();
   if (command === "seal") return sealTailResealReceipt();
-  throw new Error("usage: release-candidate-tail-reseal.mjs <plan|verify-platform|seal>");
+  throw new Error("usage: release-candidate-tail-reseal.mjs <plan|recover-signing|verify-platform|seal>");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
